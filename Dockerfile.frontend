@@ -1,0 +1,39 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Kopírování souborů package.json a package-lock.json pro instalaci závislostí
+COPY package.json package-lock.json* ./
+
+# Instalace závislostí
+RUN npm install
+
+# Vytvoření konfiguračního souboru pro ignorování souborů při sledování
+RUN echo '{\n  "watchOptions": {\n    "ignored": ["**/.git/**", "**/node_modules/**", "**/MCP/**", "**/.next/**", "**/.vscode/**", "**/public/**"]\n  }\n}' > /app/next.config.watcher.json
+
+# Kopírování zbytku aplikace
+COPY . .
+
+# Odstranění závěrečných znaku '%' ze souborů, kde by mohly být (řešení chyby syntaxe)
+RUN find /app -name "*.js" -o -name "*.tsx" -o -name "*.ts" | xargs sed -i 's/%$//'
+
+# Expose port 3000
+EXPOSE 3000
+EXPOSE 3001
+
+# Optimalizace pro vývoj
+ENV NODE_ENV=development
+ENV DISABLE_ESLINT_PLUGIN=true
+ENV NEXT_SKIP_TYPESCRIPT_CHECK=true
+ENV CHOKIDAR_USEPOLLING=false
+ENV WATCHPACK_POLLING=false
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV WEB_CONCURRENCY=1
+ENV NEXT_IGNORE_WEBPACK_ERRORS=1
+ENV FORCE_COLOR=1
+
+# Vytvořit složku pro cache
+RUN mkdir -p /app/.next/cache
+
+# Spuštění aplikace s omezeným sledováním změn
+CMD ["npm", "run", "dev:stable"] 

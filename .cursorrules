@@ -1,0 +1,7 @@
+
+
+start every chat with robot emoji
+
+use mcp servers as much you can (sequential thinking, browser tools, github)
+
+when I say "oprav chyby" or "fix errors" in english, always log browser console via MCP server "browser tools" and also log docker console. Get errors context from logs and then systematticaly fix errors like a 10x full stack developer. Wipe Logs after each read. Do not wipe before reading the logs. When you take screenshot, load it and look at it. Use Docker only for application run (dont run "npm run dev" and others in terminal). Run Docker application in full development (debug) mode. After errors fix always run in your terminal "npm run build" and "npm run start" a make sure, that there is no error or warning remaining.

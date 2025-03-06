@@ -1,0 +1,11 @@
+{
+  "settings": "Nastavení",
+  "profile": "Profil",
+  "security": "Zabezpečení",
+  "notifications": "Oznámení",
+  "segmentation": "Segmentace",
+  "api": "API klíče",
+  "logout": "Odhlásit se",
+  "platform": "Segmentation Platform",
+  "platformDesc": "Platforma pro vědce k segmentaci obrazových dat"
+} 
