@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    container_name: spheroseg-postgres
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: spheroseg
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - spheroseg-network
+
+  # Backend API Service
+  backend:
+    container_name: spheroseg-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/spheroseg
+      JWT_SECRET: your_jwt_secret_here
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - spheroseg-network
+
+  # Frontend (optional, uncomment if you want to run the frontend in Docker)
+  # frontend:
+  #   container_name: spheroseg-frontend
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.frontend
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   environment:
+  #     VITE_API_URL: http://localhost:8000
+  #   volumes:
+  #     - ./:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - spheroseg-network
+
+volumes:
+  postgres-data:
+
+networks:
+  spheroseg-network:
+    driver: bridge 

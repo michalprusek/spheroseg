@@ -1,76 +1,108 @@
-# Spheroseg Backend
+# Cell Segmentation Hub - Backend API
 
-Backend for the Spheroseg image segmentation platform. This service provides API endpoints for authenticating users, managing projects, uploading images, and running segmentation tasks.
+REST API server vytvořený v Node.js s Express a TypeScript pro aplikaci Cell Segmentation Hub.
 
-## Stack
+## Adresářová struktura
 
-- FastAPI: Modern, high-performance web framework for building APIs
-- PostgreSQL: Relational database for storing user data, projects, and metadata
-- MinIO: Object storage for images and segmentation masks
-- Celery: Distributed task queue for running segmentation tasks
-- Redis: Message broker for Celery
-- Docker: Containerization for all components
-
-## Setup
-
-### Running with Docker
-
-The easiest way to start the backend is using Docker Compose:
-
-```bash
-cd backend
-docker-compose up -d
+```
+/backend
+  /prisma       - Databázové modely a migrace
+  /src          - Zdrojový kód
+    /config     - Konfigurace aplikace
+    /controllers- Kontrolery pro API endpointy
+    /middleware - Express middlewary
+    /routes     - API trasy
+    /services   - Byznys logika a komunikace s databází
+    /utils      - Pomocné nástroje a utility
+  /tests        - Testy
+  /uploads      - Nahrané soubory
 ```
 
-This will start all the necessary services:
-- PostgreSQL database
-- MinIO object storage
-- Redis message broker
-- FastAPI backend
-- Celery worker for segmentation tasks
+## Požadavky
 
-### Without Docker
+- Node.js 18+
+- PostgreSQL
+- npm nebo yarn
 
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-2. Run PostgreSQL, MinIO and Redis separately
-
-3. Set environment variables:
-```bash
-export DATABASE_URL=postgresql://username:password@localhost:5432/spheroseg
-export MINIO_ENDPOINT=localhost:9000
-export MINIO_ACCESS_KEY=minioadmin
-export MINIO_SECRET_KEY=minioadmin
-export REDIS_URL=redis://localhost:6379/0
-```
-
-4. Start the FastAPI server:
-```bash
-cd backend
-uvicorn app.main:app --reload
-```
-
-5. Start the Celery worker:
-```bash
-cd backend
-celery -A worker.celery worker --loglevel=info
-```
-
-## API Documentation
-
-Once the server is running, you can access the interactive API documentation at:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-## Database Migrations
-
-The project uses Alembic for database migrations:
+## Instalace
 
 ```bash
-cd backend
-alembic revision --autogenerate -m "Description of the changes"
-alembic upgrade head
+# Instalace závislostí
+npm install
+
+# Kompilace TypeScript
+npm run build
 ```
+
+## Konfigurace
+
+Vytvořte soubor `.env` v adresáři `/backend` podle vzoru:
+
+```
+# Node environment
+NODE_ENV=development
+
+# Server configuration
+PORT=8000
+API_PREFIX=/api
+
+# Database configuration
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/spheroseg
+
+# JWT configuration
+JWT_SECRET=your_very_secure_jwt_secret_key_for_development
+JWT_EXPIRES_IN=24h
+
+# File storage
+STORAGE_TYPE=local
+UPLOADS_FOLDER=uploads
+MAX_FILE_SIZE=10485760
+```
+
+## Migrace a inicializace databáze
+
+```bash
+# Spuštění migrací
+npx prisma migrate deploy
+
+# Inicializace databáze pomocí seedu
+npx prisma db seed
+
+# Prohlížení databáze pomocí Prisma Studio
+npx prisma studio
+```
+
+## Spuštění
+
+```bash
+# Vývojový režim s hot-reloadem
+npm run dev
+
+# Produkční režim
+npm start
+```
+
+## API Dokumentace
+
+### Autentizace
+- `POST /api/auth/register` - Registrace nového uživatele
+- `POST /api/auth/login` - Přihlášení uživatele
+- `PUT /api/auth/password` - Změna hesla (vyžaduje autentizaci)
+
+### Uživatelé
+- `GET /api/users/profile` - Získání profilu přihlášeného uživatele
+- `PUT /api/users/profile` - Aktualizace profilu
+
+### Projekty
+- `POST /api/projects` - Vytvoření projektu
+- `GET /api/projects` - Seznam projektů
+- `GET /api/projects/:id` - Detail projektu
+- `PUT /api/projects/:id` - Aktualizace projektu
+- `DELETE /api/projects/:id` - Smazání projektu
+- `GET /api/projects/:projectId/images` - Seznam obrázků v projektu
+
+### Obrázky
+- `POST /api/images/:projectId` - Nahrání obrázku
+- `GET /api/images/:id` - Detail obrázku
+- `DELETE /api/images/:id` - Smazání obrázku
+- `PUT /api/images/:id/segmentation` - Aktualizace stavu segmentace 
