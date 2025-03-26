@@ -1,4 +1,4 @@
-# Struktura projektu Cell Segmentation Hub
+# Struktura projektu Spheroid Segmentation Platform
 
 ## Přehled
 
@@ -31,18 +31,38 @@ Frontend je implementován pomocí React, TypeScript a Vite. Využívá moderní
 
 Backend je implementován v Node.js s Express a TypeScript. Pro práci s databází používá Prisma ORM.
 
+### Technologie
+- Node.js a Express
+- TypeScript
+- PostgreSQL (Docker)
+- Prisma ORM
+- JWT autentizace
+- Multer pro ukládání souborů
+
 ### Adresářová struktura
 
-- `/backend/src` - Zdrojový kód
-  - `/backend/src/config` - Konfigurace aplikace
-  - `/backend/src/controllers` - Kontrolery pro zpracování HTTP požadavků
-  - `/backend/src/middleware` - Middlewary (auth, error handling)
-  - `/backend/src/routes` - Definice API tras
-  - `/backend/src/services` - Business logika
-  - `/backend/src/utils` - Pomocné utility
-- `/backend/prisma` - Prisma ORM schema a migrace
-- `/backend/tests` - Testy
-- `/backend/scripts` - Skripty pro vývoj a nasazení
+```
+backend/
+├── prisma/                 # Prisma schéma a migrace
+│   ├── migrations/         # Databázové migrace
+│   ├── schema.prisma       # Prisma model
+│   └── seed.ts             # Skript pro naplnění databáze
+├── scripts/                # Pomocné skripty
+│   └── init-db.sh          # Inicializace databáze
+├── src/                    # Zdrojový kód
+│   ├── config/             # Konfigurace
+│   ├── controllers/        # Kontrolery pro jednotlivé endpointy
+│   ├── middleware/         # Middleware
+│   ├── routes/             # Definice API tras
+│   ├── services/           # Servisní vrstva pro business logiku
+│   ├── utils/              # Pomocné utility
+│   └── index.ts            # Vstupní bod aplikace
+├── uploads/                # Adresář pro nahrané soubory
+├── .env                    # Konfigurační proměnné
+├── Dockerfile              # Docker konfigurace pro backend
+├── package.json            # Definice závislostí
+└── tsconfig.json           # TypeScript konfigurace
+```
 
 ### Klíčové soubory
 
@@ -55,6 +75,7 @@ Backend je implementován v Node.js s Express a TypeScript. Pro práci s databá
 
 - `/docker-compose.yml` - Konfigurace Docker Compose
 - `/backend/Dockerfile` - Dockerfile pro backend
+- `Dockerfile.frontend` - Konfigurace Docker image pro frontend
 
 ## Databázový model
 
@@ -105,9 +126,11 @@ Aplikace používá PostgreSQL databázi s následujícími hlavními tabulkami:
 - React 18
 - TypeScript
 - Vite
-- Shadcn/UI (postaveno na Tailwind CSS)
-- React Router
-- Zod pro validaci
+- Tailwind CSS
+- React Router DOM
+- React Query
+- Zod (validace)
+- Shadcn/ui komponenty
 
 ### Backend
 - Node.js
