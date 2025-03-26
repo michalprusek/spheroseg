@@ -1,113 +1,66 @@
+version: '3.8'
+
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:14-alpine
+    container_name: spheroseg-postgres
+    image: postgres:15-alpine
+    restart: always
     environment:
-      - POSTGRES_USER=spheroseg
-      - POSTGRES_PASSWORD=spheroseg
-      - POSTGRES_DB=spheroseg
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: spheroseg
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - spheroseg-network
 
-  # MinIO Object Storage
-  minio:
-    image: minio/minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
-
-  # Redis for Celery
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  # FastAPI Backend
-  api:
+  # Backend API Service
+  backend:
+    container_name: spheroseg-backend
     build:
       context: ./backend
-      dockerfile: ./app/Dockerfile
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/spheroseg
+      JWT_SECRET: your_jwt_secret_here
+      PORT: 8000
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://spheroseg:spheroseg@postgres:5432/spheroseg
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./backend:/app
-    depends_on:
-      - postgres
-      - minio
-      - redis
+      - /app/node_modules
+    networks:
+      - spheroseg-network
 
-  # Celery Worker
-  worker:
-    build:
-      context: ./backend
-      dockerfile: ./worker/Dockerfile
-    environment:
-      - DATABASE_URL=postgresql://spheroseg:spheroseg@postgres:5432/spheroseg
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - REDIS_URL=redis://redis:6379/0
-      - MODEL_CHECKPOINT_PATH=/app/models/checkpoint_epoch_9.pth.tar
-      - C_FORCE_ROOT=true
-      - PYTHONPATH=/app
-    volumes:
-      - ./backend:/app
-      - /Users/michalprusek/PycharmProjects/Výzkumák/test/run1/checkpoint_epoch_9.pth.tar:/app/models/checkpoint_epoch_9.pth.tar
-    deploy:
-      resources:
-        limits:
-          memory: 12G
-        reservations:
-          memory: 6G
-    command: celery -A worker.celery worker --loglevel=info --concurrency=1
-    depends_on:
-      - postgres
-      - minio
-      - redis
-      - api
-    restart: unless-stopped
-
-  # Next.js Frontend - Single frontend container
-  frontend:
-    build:
-      context: .
-      dockerfile: ./Dockerfile.frontend
-    ports:
-      - "3001:3001"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://api:8000
-      - NEXT_PUBLIC_MINIO_URL=http://minio:9000
-    volumes:
-      - ./app:/app/app
-      - ./components:/app/components
-      - ./lib:/app/lib
-      - ./hooks:/app/hooks
-      - ./pages:/app/pages
-      - ./public:/app/public
-      - ./public/favicon.ico:/app/public/favicon.ico
-      - ./package.json:/app/package.json
-      - ./next.config.mjs:/app/next.config.mjs
-      - ./tsconfig.json:/app/tsconfig.json
-    depends_on:
-      - api
+  # Frontend (optional, uncomment if you want to run the frontend in Docker)
+  # frontend:
+  #   container_name: spheroseg-frontend
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.frontend
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   environment:
+  #     VITE_API_URL: http://localhost:8000
+  #   volumes:
+  #     - ./:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - spheroseg-network
 
 volumes:
-  postgres_data:
-  minio_data:
-  redis_data:
+  postgres-data:
+
+networks:
+  spheroseg-network:
+    driver: bridge 
