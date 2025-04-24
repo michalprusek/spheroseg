@@ -1,0 +1,100 @@
+# Environments
+.env
+.env*.local
+!.env.example
+
+# Dependency directories
+node_modules/
+/frontend/node_modules/
+/server/node_modules/
+
+# Build outputs
+/dist/
+/frontend/dist/
+/server/dist/
+/build/
+/out/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Cache / Temporary files
+.DS_Store
+.cache/
+*.local
+*.sw?
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS generated files
+ehthumbs.db
+Thumbs.db
+
+# Python cache / build / distribution
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ML Specific
+/ML/*.pth.tar
+/ML/test_output/
+/ML/__pycache__/
+*.onnx
+
+# Uploads (ensure these are not tracked if they shouldn't be)
+/server/uploads/
+/frontend/uploads/
+/frontend/public/uploads/
+/frontend/public/lovable-uploads/
+
+# Testing / Coverage
+/coverage/
+.nyc_output/
+/playwright-report/
+/test-results/
+
+# Frontend Specific (from frontend/.gitignore, paths adjusted if needed)
+# Assuming 'dist' and 'node_modules' are already covered globally
+# dist-ssr # If used
+# *.local # Already covered
+# .DS_Store # Already covered
+# .vscode/* # Covered, except !.vscode/extensions.json (included above)
+# .idea # Already covered
+# *.suo # Already covered
+# *.ntvs* # Already covered
+# *.njsproj # Already covered
+# *.sln # Already covered
+# *.sw? # Already covered
+
+# Other project specific ignores
+# Add any other specific files/folders to ignore here 

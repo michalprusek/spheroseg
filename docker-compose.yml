@@ -1,0 +1,100 @@
+services:
+  db:
+    image: postgres:13
+    container_name: cellseg-db
+    restart: always
+    environment:
+      POSTGRES_DB: spheroseg
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - cellseg-net
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U user -d spheroseg"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
+  ml:
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile.ml
+    container_name: cellseg-ml
+    restart: always
+    volumes:
+      - uploads_data:/ML/uploads
+    networks:
+      - cellseg-net
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: ./Dockerfile
+      target: production
+    container_name: cellseg-backend
+    restart: always
+    ports:
+      - "5001:5000"
+    # env_file: # Comment out or remove env_file
+    #   - ./server/.env
+    environment:
+      - PORT=5000
+      - DATABASE_URL=postgresql://user:password@db:5432/spheroseg
+      - JWT_SECRET=your_very_secret_key_change_this_later
+      - ML_SERVICE_URL=http://ml:5000
+      # Add any other necessary env vars here
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      ml:
+        condition: service_started
+    networks:
+      - cellseg-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: cellseg-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - cellseg-net
+
+  # Development frontend with hot reload
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: cellseg-frontend-dev
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - uploads_data:/app/public/uploads
+    environment:
+      - VITE_API_BASE_URL=/api
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    networks:
+      - cellseg-net
+
+networks:
+  cellseg-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  uploads_data:

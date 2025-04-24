@@ -1,0 +1,13 @@
+# Core libraries for image processing and deep learning
+torch>=1.9.0
+numpy>=1.20.0
+opencv-python-headless>=4.5.0  # Headless version for server environments
+pillow>=8.0.0  # For image loading/saving
+
+# Additional libraries for data augmentation and progress tracking
+albumentations>=1.0.0  # For image augmentation
+tqdm>=4.60.0  # For progress bars
+
+# Additional dependencies that might be needed
+scipy>=1.7.0  # For scientific computing
+matplotlib>=3.4.0  # For visualization (if needed)
