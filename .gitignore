@@ -70,6 +70,7 @@ MANIFEST
 /ML/test_output/
 /ML/__pycache__/
 *.onnx
+/server/ML/checkpoint_epoch_9.pth.tar
 
 # Uploads (ensure these are not tracked if they shouldn't be)
 /server/uploads/
