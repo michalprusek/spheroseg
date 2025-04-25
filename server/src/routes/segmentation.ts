@@ -48,7 +48,6 @@ router.get('/images/:id/segmentation', authMiddleware, validate(getSegmentationS
 
         if (result.rows.length === 0) {
             // If no segmentation result found, return an empty result instead of 404
-            console.log(`No segmentation result found for image ${imageId}, returning empty result`);
             const emptyResult = {
                 image_id: imageId,
                 status: 'pending',
@@ -80,67 +79,42 @@ router.get('/images/:id/segmentation', authMiddleware, validate(getSegmentationS
     }
 });
 
-// GET /api/projects/:projectId/images/:imageId/segmentations - Get segmentation results for an image in a project
+// GET /api/projects/:projectId/segmentations/:imageId - Get segmentation results for an image in a project
 // @ts-ignore // TS2769: No overload matches this call.
-router.get('/projects/:projectId/images/:imageId/segmentations', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    console.log(`GET /api/projects/${req.params.projectId}/images/${req.params.imageId}/segmentations called`);
+router.get('/projects/:projectId/segmentations/:imageId', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId, imageId } = req.params;
 
-    console.log(`User ID: ${userId}, Project ID: ${projectId}, Image ID: ${imageId}`);
-
     if (!userId) {
-        console.log('Authentication error: No user ID');
         res.status(401).json({ message: 'Authentication error' });
         return;
     }
 
     try {
         // Verify user has access to the project
-        console.log(`Verifying project access for project ${projectId} and user ${userId}`);
         const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [projectId, userId]);
-        console.log(`Project check result: ${JSON.stringify(projectCheck.rows)}`);
 
         if (projectCheck.rows.length === 0) {
-            console.log(`Project not found or access denied for project ${projectId} and user ${userId}`);
             res.status(404).json({ message: 'Project not found or access denied' });
             return;
         }
 
-        // Verify image belongs to the project - first try by ID
-        console.log(`Verifying image ${imageId} belongs to project ${projectId}`);
-        let imageCheck;
-
-        // First try to find by UUID
-        if (imageId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-            console.log(`Trying to find image by UUID: ${imageId}`);
-            imageCheck = await pool.query('SELECT id FROM images WHERE id = $1 AND project_id = $2', [imageId, projectId]);
-        } else {
-            // If not a UUID, try by name directly
-            console.log(`Trying to find image by name: ${imageId}`);
-            imageCheck = await pool.query('SELECT id FROM images WHERE name = $1 AND project_id = $2', [imageId, projectId]);
-        }
-
-        console.log(`Image check result: ${JSON.stringify(imageCheck.rows)}`);
+        // Verify image belongs to the project using its UUID
+        const imageCheck = await pool.query('SELECT id FROM images WHERE id = $1 AND project_id = $2', [imageId, projectId]);
 
         if (imageCheck.rows.length === 0) {
-            console.log(`Image ${imageId} not found in project ${projectId}`);
             res.status(404).json({ message: 'Image not found in this project' });
             return;
         }
 
-        // Use the actual image ID from the database for the segmentation lookup
-        const actualImageId = imageCheck.rows[0].id;
-        console.log(`Using actual image ID: ${actualImageId}`);
+        // Use the actual image ID from the database for the segmentation lookup (which is just imageId now)
+        const actualImageId = imageId; // Directly use the validated imageId
 
         // Fetch segmentation result
-        console.log(`Fetching segmentation result for image ${actualImageId}`);
         const result = await pool.query('SELECT * FROM segmentation_results WHERE image_id = $1', [actualImageId]);
-        console.log(`Segmentation result: ${JSON.stringify(result.rows)}`);
 
         if (result.rows.length === 0) {
             // If no segmentation result found, return an empty result instead of 404
-            console.log(`No segmentation result found for image ${actualImageId}, returning empty result`);
             const emptyResult = {
                 image_id: actualImageId,
                 status: 'pending',
@@ -165,7 +139,6 @@ router.get('/projects/:projectId/images/:imageId/segmentations', authMiddleware,
             segmentationResult.polygons = [];
         }
 
-        console.log(`Returning segmentation result for image ${actualImageId}`);
         res.status(200).json(segmentationResult);
     } catch (error) {
         console.error('Error fetching segmentation results:', error);
@@ -206,7 +179,6 @@ router.post('/images/:id/segmentation', authMiddleware, validate(triggerSingleWi
             return;
         }
         const { storage_path: imagePath } = imageCheck.rows[0];
-        console.log(`Image path from DB: ${imagePath}`);
         // Ensure the user_id matches (redundant check due to query, but safe)
         if (imageCheck.rows[0].user_id !== userId) {
             res.status(403).json({ message: 'Access denied' });
@@ -400,67 +372,41 @@ router.put('/images/:id/segmentation', authMiddleware, validate(updateSegmentati
 // PUT /api/projects/:projectId/images/:imageId/segmentations - Update segmentation results for an image in a project
 // @ts-ignore // TS2769: No overload matches this call.
 router.put('/projects/:projectId/images/:imageId/segmentations', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    console.log(`PUT /api/projects/${req.params.projectId}/images/${req.params.imageId}/segmentations called`);
     const userId = req.user?.userId;
     const { projectId, imageId } = req.params;
     const segmentationData = req.body; // Expecting segmentation data with polygons
 
-    console.log(`User ID: ${userId}, Project ID: ${projectId}, Image ID: ${imageId}`);
-    console.log(`Segmentation data: ${JSON.stringify(segmentationData)}`);
-
     if (!userId) {
-        console.log('Authentication error: No user ID');
         res.status(401).json({ message: 'Authentication error' });
         return;
     }
 
     try {
         // Verify user has access to the project
-        console.log(`Verifying project access for project ${projectId} and user ${userId}`);
         const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [projectId, userId]);
-        console.log(`Project check result: ${JSON.stringify(projectCheck.rows)}`);
 
         if (projectCheck.rows.length === 0) {
-            console.log(`Project not found or access denied for project ${projectId} and user ${userId}`);
             res.status(404).json({ message: 'Project not found or access denied' });
             return;
         }
 
-        // Verify image belongs to the project - first try by ID
-        console.log(`Verifying image ${imageId} belongs to project ${projectId}`);
-        let imageCheck;
-
-        // First try to find by UUID
-        if (imageId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-            console.log(`Trying to find image by UUID: ${imageId}`);
-            imageCheck = await pool.query('SELECT id FROM images WHERE id = $1 AND project_id = $2', [imageId, projectId]);
-        } else {
-            // If not a UUID, try by name directly
-            console.log(`Trying to find image by name: ${imageId}`);
-            imageCheck = await pool.query('SELECT id FROM images WHERE name = $1 AND project_id = $2', [imageId, projectId]);
-        }
-
-        console.log(`Image check result: ${JSON.stringify(imageCheck.rows)}`);
+        // Verify image belongs to the project using its UUID
+        const imageCheck = await pool.query('SELECT id FROM images WHERE id = $1 AND project_id = $2', [imageId, projectId]);
 
         if (imageCheck.rows.length === 0) {
-            console.log(`Image ${imageId} not found in project ${projectId}`);
             res.status(404).json({ message: 'Image not found in this project' });
             return;
         }
 
-        // Use the actual image ID from the database for the segmentation lookup
-        const actualImageId = imageCheck.rows[0].id;
-        console.log(`Using actual image ID: ${actualImageId}`);
+        // Use the actual image ID from the database for the segmentation lookup (which is just imageId now)
+        const actualImageId = imageId; // Directly use the validated imageId
 
         // Check if segmentation result exists
-        console.log(`Checking if segmentation result exists for image ${actualImageId}`);
         const checkResult = await pool.query('SELECT id FROM segmentation_results WHERE image_id = $1', [actualImageId]);
-        console.log(`Check result: ${JSON.stringify(checkResult.rows)}`);
 
         let result;
         if (checkResult.rows.length === 0) {
             // Create new segmentation result
-            console.log(`Creating new segmentation result for image ${actualImageId}`);
             result = await pool.query(
                 `INSERT INTO segmentation_results (image_id, status, result_data, updated_at)
                  VALUES ($1, 'completed', $2, NOW())
@@ -469,7 +415,6 @@ router.put('/projects/:projectId/images/:imageId/segmentations', authMiddleware,
             );
         } else {
             // Update existing segmentation result
-            console.log(`Updating existing segmentation result for image ${actualImageId}`);
             result = await pool.query(
                 `UPDATE segmentation_results
                  SET result_data = $1, status = 'completed', updated_at = NOW()
@@ -478,13 +423,10 @@ router.put('/projects/:projectId/images/:imageId/segmentations', authMiddleware,
                 [segmentationData, actualImageId]
             );
         }
-        console.log(`Segmentation result: ${JSON.stringify(result.rows)}`);
 
         // Update image status
-        console.log(`Updating image status for image ${actualImageId}`);
         await pool.query("UPDATE images SET status = 'completed', updated_at = NOW() WHERE id = $1", [actualImageId]);
 
-        console.log(`Returning segmentation result for image ${actualImageId}`);
         res.status(200).json(result.rows[0]);
     } catch (error) {
         console.error('Error updating segmentation results:', error);
