@@ -1,0 +1,85 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "build/**"]
+    },
+    "build:prod": {
+      "dependsOn": ["^build:prod"],
+      "outputs": ["dist/**", ".next/**", "build/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "preview": {
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "outputs": [".eslintcache"]
+    },
+    "lint:fix": {
+      "cache": false
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "inputs": ["src/**/*.tsx", "src/**/*.ts", "test/**/*.ts", "test/**/*.tsx", "tests/**/*.py", "*.py"]
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:coverage": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"]
+    },
+    "test:ci": {
+      "dependsOn": ["build"],
+      "outputs": ["reports/**"]
+    },
+    "format": {
+      "cache": false
+    },
+    "format:check": {
+      "outputs": [".prettierignore"]
+    },
+    "clean": {
+      "cache": false
+    },
+    "code:check": {
+      "dependsOn": ["lint", "format:check"]
+    },
+    "code:fix": {
+      "dependsOn": ["lint:fix", "format"],
+      "cache": false
+    },
+    "test:ml": {
+      "cache": false
+    },
+    "segmentation": {
+      "cache": false
+    },
+    "extract": {
+      "cache": false
+    },
+    "deploy": {
+      "dependsOn": ["build:prod", "test"],
+      "cache": false
+    },
+    "deploy:dev": {
+      "dependsOn": ["build", "test"],
+      "cache": false
+    },
+    "migrate": {
+      "cache": false
+    },
+    "migrate:up": {
+      "cache": false
+    },
+    "migrate:down": {
+      "cache": false
+    }
+  }
+}

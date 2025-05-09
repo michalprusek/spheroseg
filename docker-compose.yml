@@ -1,100 +1,161 @@
 services:
+  # Database
   db:
-    image: postgres:13
-    container_name: cellseg-db
+    image: postgres:14-alpine
+    container_name: spheroseg-db
     restart: always
     environment:
       POSTGRES_DB: spheroseg
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
-      - cellseg-net
+      - spheroseg-network
     healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U user -d spheroseg"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
+      test: ["CMD-SHELL", "pg_isready -U postgres -d spheroseg"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  ml:
-    build:
-      context: .
-      dockerfile: ./server/Dockerfile.ml
-    container_name: cellseg-ml
-    restart: always
-    volumes:
-      - uploads_data:/ML/uploads
-    networks:
-      - cellseg-net
-
+  # Backend API using TypeScript server
   backend:
-    build:
-      context: ./server
-      dockerfile: ./Dockerfile
-      target: production
-    container_name: cellseg-backend
+    image: node:18-alpine
+    container_name: spheroseg-backend
     restart: always
-    ports:
-      - "5001:5000"
-    # env_file: # Comment out or remove env_file
-    #   - ./server/.env
-    environment:
-      - PORT=5000
-      - DATABASE_URL=postgresql://user:password@db:5432/spheroseg
-      - JWT_SECRET=your_very_secret_key_change_this_later
-      - ML_SERVICE_URL=http://ml:5000
-      # Add any other necessary env vars here
-    volumes:
-      - uploads_data:/app/uploads
     depends_on:
       db:
         condition: service_healthy
-      ml:
-        condition: service_started
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/spheroseg
+      - JWT_SECRET=development_secret_key
+      - LOG_LEVEL=debug
+      - ALLOW_CORS=true
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3003,http://localhost:3005,http://frontend:3000,http://frontend:80,*
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=spheroseg
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    volumes:
+      - ./packages/backend:/app
+      - uploads_data:/app/uploads
+      - ./packages/ml:/app/ML
+      - ./scripts/init-db-docker.js:/app/init-db-docker.js
     networks:
-      - cellseg-net
+      - spheroseg-network
+    working_dir: /app
+    command: >
+      sh -c "
+        mkdir -p /app/uploads &&
+        echo 'Starting server...' &&
+        node src/simple-server.js
+      "
 
+  # ML Service
+  ml:
+    build:
+      context: ./packages/ml
+      dockerfile: Dockerfile
+    container_name: spheroseg-ml
+    restart: always
+    volumes:
+      - ./packages/ml:/ML
+      - uploads_data:/ML/uploads
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MODEL_PATH=/ML/checkpoint_epoch_9.pth.tar
+      - DEBUG=true
+    networks:
+      - spheroseg-network
+
+  # Frontend with fixed configuration
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: production
-    container_name: cellseg-frontend
+      context: ./packages/frontend
+      dockerfile: Dockerfile.dev
+    container_name: spheroseg-frontend
     restart: always
-    ports:
-      - "80:80"
     depends_on:
       - backend
-    networks:
-      - cellseg-net
-
-  # Development frontend with hot reload
-  frontend-dev:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    container_name: cellseg-frontend-dev
-    restart: always
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - uploads_data:/app/public/uploads
     environment:
-      - VITE_API_BASE_URL=/api
-      - CHOKIDAR_USEPOLLING=true
+      # Use backend service name for container-to-container communication
+      - VITE_API_URL=http://backend:5001
+      - VITE_API_BASE_URL=
+      - PORT=3000
+      - VITE_NODE_ENV=development
+      - HOST=0.0.0.0
+      # Add standardized API path environment variables
+      - VITE_API_AUTH_PREFIX=/auth
+      - VITE_API_USERS_PREFIX=/users
+      - VITE_API_PROXY_ENABLED=true
+      - VITE_DOCKER_ENV=true
+    volumes:
+      - ./packages/frontend:/app
+      - frontend_uploads:/app/public/uploads
+      - /app/node_modules
+    networks:
+      - spheroseg-network
+    command: >
+      sh -c "
+        echo 'Starting frontend with API URL: http://backend:5001' &&
+        echo 'VITE_API_URL=http://backend:5001' > .env.local &&
+        echo 'VITE_API_BASE_URL=' >> .env.local &&
+        echo 'VITE_API_AUTH_PREFIX=/auth' >> .env.local &&
+        echo 'VITE_API_USERS_PREFIX=/users' >> .env.local &&
+        echo 'VITE_API_PROXY_ENABLED=true' >> .env.local &&
+        echo 'VITE_DOCKER_ENV=true' >> .env.local &&
+        npm run dev -- --host 0.0.0.0 --port 3000
+      "
+
+  # File sync service to copy uploads to frontend
+  file-sync:
+    image: alpine:latest
+    container_name: spheroseg-file-sync
+    restart: always
+    volumes:
+      - uploads_data:/source:ro
+      - frontend_uploads:/destination
+    command: >
+      sh -c "
+        apk add --no-cache inotify-tools rsync;
+        mkdir -p /destination;
+        while true; do
+          rsync -av --delete /source/ /destination/;
+          sleep 10;
+        done
+      "
+    networks:
+      - spheroseg-network
     depends_on:
       - backend
-    networks:
-      - cellseg-net
+      - frontend
 
-networks:
-  cellseg-net:
-    driver: bridge
+  # Database management UI
+  adminer:
+    image: adminer:latest
+    container_name: spheroseg-adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - spheroseg-network
 
 volumes:
   postgres_data:
   uploads_data:
+  frontend_uploads:
+
+networks:
+  spheroseg-network:
+    driver: bridge

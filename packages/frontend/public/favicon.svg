@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient background -->
+  <defs>
+    <linearGradient id="bg_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Rounded square background -->
+  <rect x="32" y="32" width="448" height="448" rx="80" fill="url(#bg_gradient)" filter="url(#shadow)"/>
+  
+  <!-- Large cell/spheroid -->
+  <circle cx="256" cy="256" r="160" fill="#F8FAFC" fill-opacity="0.9" stroke="#E2E8F0" stroke-width="8"/>
+  
+  <!-- Cell nucleus -->
+  <circle cx="256" cy="256" r="60" fill="#3B82F6" stroke="#2563EB" stroke-width="4"/>
+  
+  <!-- Segmentation lines/paths -->
+  <path d="M256 96 L256 416" stroke="#64748B" stroke-width="4" stroke-dasharray="15 10" stroke-linecap="round"/>
+  <path d="M96 256 L416 256" stroke="#64748B" stroke-width="4" stroke-dasharray="15 10" stroke-linecap="round"/>
+  
+  <!-- Highlight edge -->
+  <circle cx="256" cy="256" r="150" stroke="#F1F5F9" stroke-width="3" fill="none" stroke-dasharray="10 8"/>
+  
+  <!-- S letter for SpheroSeg -->
+  <path d="M271 236C271 226.059 262.941 218 253 218H246C236.059 218 228 226.059 228 236V236C228 245.941 236.059 254 246 254H258C267.941 254 276 262.059 276 272V272C276 281.941 267.941 290 258 290H251C241.059 290 233 281.941 233 272" 
+        stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
