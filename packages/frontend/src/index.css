@@ -1,0 +1,61 @@
+
+/* Basic styles for the application */
+
+/* Accordion animations for UI components */
+.animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}
+
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+/* Base font settings */
+body {
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Ensure proper height for all containers */
+html, body, #root {
+  height: 100%;
+}
+
+/* Basic reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Dark mode overrides - applied globally */
+.dark {
+  color: white;
+}
+
+.dark body {
+  background-color: #111827; /* gray-900 */
+}
+
+/* Animation for fade in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
