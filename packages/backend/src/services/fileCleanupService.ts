@@ -37,7 +37,7 @@ export interface FileCleanupResult {
 export async function cleanupProjectFiles(
   pool: Pool,
   projectId: string,
-  options: FileCleanupOptions = {}
+  options: FileCleanupOptions = {},
 ): Promise<FileCleanupResult> {
   const { transactionClient, dryRun = false } = options;
   const client = transactionClient || pool;
@@ -48,7 +48,10 @@ export async function cleanupProjectFiles(
     dryRun,
   };
 
-  logger.info(`Starting file cleanup for project ${projectId}`, { projectId, dryRun });
+  logger.info(`Starting file cleanup for project ${projectId}`, {
+    projectId,
+    dryRun,
+  });
 
   try {
     // 1. Get all images for the project
@@ -62,9 +65,9 @@ export async function cleanupProjectFiles(
     logger.debug(`Found ${images.length} images to clean up`, { projectId });
 
     // 2. Get all segmentation files for the project's images
-    const imageIds = images.map(img => img.id);
+    const imageIds = images.map((img) => img.id);
     let segmentationFiles: string[] = [];
-    
+
     if (imageIds.length > 0) {
       const segmentationQuery = `
         SELECT sr.image_id, sr.result_data->>'mask_path' as mask_path, 
@@ -73,9 +76,9 @@ export async function cleanupProjectFiles(
         WHERE sr.image_id = ANY($1::uuid[])
       `;
       const segmentationResults = await client.query(segmentationQuery, [imageIds]);
-      
+
       segmentationFiles = segmentationResults.rows
-        .flatMap(row => [row.mask_path, row.visualization_path])
+        .flatMap((row) => [row.mask_path, row.visualization_path])
         .filter(Boolean); // Remove nulls/undefined
     }
 
@@ -106,10 +109,13 @@ export async function cleanupProjectFiles(
 
     // 5. Delete files and directory
     if (dryRun) {
-      logger.info(`DRY RUN: Would delete ${filesToDelete.length} files and ${projectDirExists ? '1 directory' : '0 directories'}`, {
-        projectId,
-        fileCount: filesToDelete.length,
-      });
+      logger.info(
+        `DRY RUN: Would delete ${filesToDelete.length} files and ${projectDirExists ? '1 directory' : '0 directories'}`,
+        {
+          projectId,
+          fileCount: filesToDelete.length,
+        },
+      );
       return {
         success: true,
         deletedFiles: filesToDelete,
@@ -125,7 +131,10 @@ export async function cleanupProjectFiles(
         result.deletedFiles.push(filePath);
       } catch (error) {
         logger.warn(`Failed to delete file ${filePath}`, { error });
-        result.failedFiles.push({ path: filePath, error: error instanceof Error ? error.message : String(error) });
+        result.failedFiles.push({
+          path: filePath,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
@@ -134,38 +143,50 @@ export async function cleanupProjectFiles(
       try {
         // Get remaining files in directory first
         const remainingFiles = await imageUtils.getFilesInDirectory(projectDir, { recursive: true });
-        
+
         // Delete any remaining files
         for (const filePath of remainingFiles) {
           try {
             await imageUtils.deleteFile(filePath);
             result.deletedFiles.push(filePath);
           } catch (error) {
-            logger.warn(`Failed to delete remaining file ${filePath}`, { error });
-            result.failedFiles.push({ path: filePath, error: error instanceof Error ? error.message : String(error) });
+            logger.warn(`Failed to delete remaining file ${filePath}`, {
+              error,
+            });
+            result.failedFiles.push({
+              path: filePath,
+              error: error instanceof Error ? error.message : String(error),
+            });
           }
         }
-        
+
         // Remove the directory recursively
         fs.rmdirSync(projectDir, { recursive: true });
         logger.info(`Deleted project directory: ${projectDir}`);
       } catch (error) {
-        logger.error(`Failed to delete project directory ${projectDir}`, { error });
-        result.failedFiles.push({ path: projectDir, error: error instanceof Error ? error.message : String(error) });
+        logger.error(`Failed to delete project directory ${projectDir}`, {
+          error,
+        });
+        result.failedFiles.push({
+          path: projectDir,
+          error: error instanceof Error ? error.message : String(error),
+        });
         result.success = false;
       }
     }
 
     // Update the final success status
     result.success = result.success && result.failedFiles.length === 0;
-    
+
     return result;
   } catch (error) {
-    logger.error(`Error during file cleanup for project ${projectId}`, { error });
+    logger.error(`Error during file cleanup for project ${projectId}`, {
+      error,
+    });
     throw error;
   }
 }
 
 export default {
-  cleanupProjectFiles
+  cleanupProjectFiles,
 };

@@ -29,11 +29,7 @@ interface ProjectCardProps {
   onProjectDuplicated: (project: { id: string; name: string }) => void;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({
-  project,
-  onProjectDeleted,
-  onProjectDuplicated,
-}) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onProjectDeleted, onProjectDuplicated }) => {
   const { t } = useLanguage();
 
   const handleDelete = (deletedProjectId: string) => {
@@ -51,16 +47,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   const formattedTime = formatRelativeTime(project.updated_at);
 
-  const imageCountText = project.image_count === 1
-    ? `1 image`
-    : `${project.image_count} images`;
+  const imageCountText = project.image_count === 1 ? `1 image` : `${project.image_count} images`;
 
   const isShared = project.is_owner === false;
 
   return (
-    <Card
-      className="overflow-hidden transition-all duration-300 hover:shadow-lg"
-    >
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg">
       <Link to={`/project/${project.id}`} className="block">
         <div className="relative aspect-video bg-gray-100">
           {project.thumbnail_url ? (
@@ -70,6 +62,24 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               className="h-full w-full object-cover"
               onError={(e) => {
                 console.error(`Failed to load project thumbnail: ${project.thumbnail_url}`);
+
+                try {
+                  // Try with direct URL to backend including port
+                  if (project.thumbnail_url && !project.thumbnail_url.startsWith('blob:')) {
+                    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+                    const thumbnailPath = project.thumbnail_url.includes('uploads/')
+                      ? project.thumbnail_url.substring(project.thumbnail_url.indexOf('uploads/') + 8)
+                      : project.thumbnail_url;
+                    const directPath = `${backendUrl}/uploads/${thumbnailPath}`;
+                    console.log(`Trying direct backend URL for project thumbnail: ${directPath}`);
+                    e.currentTarget.src = directPath;
+                    return;
+                  }
+                } catch (err) {
+                  console.error('Error handling project thumbnail fallback:', err);
+                }
+
+                // Final fallback
                 e.currentTarget.src = '/placeholder.svg';
               }}
             />
@@ -78,11 +88,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               <Image className="h-12 w-12" />
             </div>
           )}
-          <Badge
-            className="absolute right-2 top-2 bg-blue-500 text-white"
-          >
-            {imageCountText}
-          </Badge>
+          <Badge className="absolute right-2 top-2 bg-blue-500 text-white">{imageCountText}</Badge>
         </div>
       </Link>
 
@@ -109,16 +115,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             {project.owner_name}
           </div>
         ) : (
-          <p className="text-gray-500 line-clamp-2">
-            {project.description || "No description provided"}
-          </p>
+          <p className="text-gray-500 line-clamp-2">{project.description || 'No description provided'}</p>
         )}
       </CardContent>
 
       <CardFooter className="flex justify-between items-center pt-2">
-        <p className="text-sm text-gray-500">
-          {formattedTime}
-        </p>
+        <p className="text-sm text-gray-500">{formattedTime}</p>
 
         <ProjectActions
           projectId={project.id}

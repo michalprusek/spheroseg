@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from 'react';
 import { SegmentationResult } from '@/lib/segmentation';
 
@@ -9,7 +8,7 @@ interface SegmentationContextType {
 
 const SegmentationContext = createContext<SegmentationContextType>({
   segmentation: null,
-  loading: false
+  loading: false,
 });
 
 export const useSegmentationContext = () => useContext(SegmentationContext);
@@ -20,14 +19,6 @@ interface SegmentationProviderProps {
   loading: boolean;
 }
 
-export const SegmentationProvider: React.FC<SegmentationProviderProps> = ({
-  children,
-  segmentation,
-  loading
-}) => {
-  return (
-    <SegmentationContext.Provider value={{ segmentation, loading }}>
-      {children}
-    </SegmentationContext.Provider>
-  );
+export const SegmentationProvider: React.FC<SegmentationProviderProps> = ({ children, segmentation, loading }) => {
+  return <SegmentationContext.Provider value={{ segmentation, loading }}>{children}</SegmentationContext.Provider>;
 };

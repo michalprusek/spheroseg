@@ -1,31 +1,24 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter
-} from "@/components/ui/card";
-import { toast } from "sonner";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
-import apiClient from "@/lib/apiClient";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import apiClient from '@/lib/apiClient';
 import axios, { AxiosError } from 'axios';
 import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from 'lucide-react';
 
 const RequestAccess = () => {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [organization, setOrganization] = useState("");
-  const [reason, setReason] = useState("");
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [organization, setOrganization] = useState('');
+  const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const { t } = useLanguage();
@@ -34,7 +27,7 @@ const RequestAccess = () => {
     e.preventDefault();
 
     if (!email || !name || !reason) {
-      toast.error(t('requestAccess.fillRequired') || "Please fill in all required fields (Email, Name, Reason)");
+      toast.error(t('requestAccess.fillRequired') || 'Please fill in all required fields (Email, Name, Reason)');
       return;
     }
 
@@ -48,10 +41,10 @@ const RequestAccess = () => {
       timestamp: new Date().toISOString(),
     };
 
-    console.log("Simulating sending access request email to prusemic@fjfi.cvut.cz with data:", requestData);
+    console.log('Simulating sending access request email to prusemic@fjfi.cvut.cz with data:', requestData);
 
     try {
-      await apiClient.post('/access-requests', requestData);
+      await apiClient.post('/api/access-requests', requestData);
 
       toast.success(t('requestAccess.submitSuccess') || 'Request submitted successfully!');
       setEmail('');
@@ -60,19 +53,19 @@ const RequestAccess = () => {
       setReason('');
       setSubmitted(true);
     } catch (error: unknown) {
-      console.error("Error submitting access request:", error);
+      console.error('Error submitting access request:', error);
       let errorMessage = t('requestAccess.submitError') || 'Failed to submit request.';
 
       if (axios.isAxiosError(error) && error.response) {
         errorMessage = error.response.data?.message || errorMessage;
         if (error.response.status === 409) {
-             errorMessage = t('requestAccess.alreadyPending') || 'An access request for this email is already pending.';
+          errorMessage = t('requestAccess.alreadyPending') || 'An access request for this email is already pending.';
         }
         if (error.response.status === 400 && error.response.data?.errors) {
-            const validationErrors = error.response.data.errors
-                .map((err: {path: string, message: string}) => `${err.path}: ${err.message}`)
-                .join('; ');
-            errorMessage = `${t('common.validationFailed')}: ${validationErrors}`;
+          const validationErrors = error.response.data.errors
+            .map((err: { path: string; message: string }) => `${err.path}: ${err.message}`)
+            .join('; ');
+          errorMessage = `${t('common.validationFailed')}: ${validationErrors}`;
         }
       } else if (error instanceof Error) {
         errorMessage = error.message;
@@ -105,12 +98,7 @@ const RequestAccess = () => {
         <CardContent className="p-6 space-y-4">
           {submitted ? (
             <div className="text-center py-8 space-y-4">
-              <svg
-                className="mx-auto h-16 w-16 text-green-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+              <svg className="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -118,12 +106,8 @@ const RequestAccess = () => {
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h3 className="text-lg font-medium dark:text-white">
-                {t('requestAccess.thankYou')}
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400">
-                {t('requestAccess.weWillContact')}
-              </p>
+              <h3 className="text-lg font-medium dark:text-white">{t('requestAccess.thankYou')}</h3>
+              <p className="text-gray-500 dark:text-gray-400">{t('requestAccess.weWillContact')}</p>
               <Button asChild className="mt-4 rounded-md">
                 <Link to="/">{t('common.back')}</Link>
               </Button>
@@ -198,11 +182,7 @@ const RequestAccess = () => {
                 </Link>
               </p>
 
-              <Button
-                type="submit"
-                className="w-full h-10 text-base font-semibold rounded-md"
-                disabled={isSubmitting}
-              >
+              <Button type="submit" className="w-full h-10 text-base font-semibold rounded-md" disabled={isSubmitting}>
                 {isSubmitting ? t('requestAccess.submittingRequest') : t('requestAccess.submitRequest')}
               </Button>
             </form>
@@ -215,34 +195,36 @@ const RequestAccess = () => {
               <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">{t('auth.alreadyHaveAccess')}</span>
+              <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                {t('auth.alreadyHaveAccess')}
+              </span>
             </div>
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
             <Link to="/sign-in">
-              <Button
-                variant="outline"
-                className="w-full h-10 text-base rounded-md"
-              >
+              <Button variant="outline" className="w-full h-10 text-base rounded-md">
                 {t('auth.signIn')}
               </Button>
             </Link>
             <Link to="/sign-up">
-              <Button
-                variant="outline"
-                className="w-full h-10 text-base rounded-md"
-              >
+              <Button variant="outline" className="w-full h-10 text-base rounded-md">
                 {t('auth.signUp')}
               </Button>
             </Link>
             <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-3">
               {t('auth.termsAndPrivacy')}{' '}
-              <Link to="/terms-of-service" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+              <Link
+                to="/terms-of-service"
+                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              >
                 {t('common.termsOfService')}
               </Link>{' '}
               {t('requestAccess.and')}{' '}
-              <Link to="/privacy-policy" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+              <Link
+                to="/privacy-policy"
+                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              >
                 {t('common.privacyPolicy')}
               </Link>
             </p>

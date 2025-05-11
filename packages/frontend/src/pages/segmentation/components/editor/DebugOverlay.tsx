@@ -24,7 +24,7 @@ const DebugOverlay: React.FC<DebugOverlayProps> = ({
   canvasWidth = 0,
   canvasHeight = 0,
   imageWidth = 0,
-  imageHeight = 0
+  imageHeight = 0,
 }) => {
   const [showDebugInfo, setShowDebugInfo] = useState(false);
 
@@ -33,7 +33,7 @@ const DebugOverlay: React.FC<DebugOverlayProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'd') {
         e.preventDefault();
-        setShowDebugInfo(prev => !prev);
+        setShowDebugInfo((prev) => !prev);
       }
     };
 
@@ -46,7 +46,7 @@ const DebugOverlay: React.FC<DebugOverlayProps> = ({
     // Same transformation as in getCanvasCoords
     return {
       x: screenPos.left / zoom - offset.x,
-      y: screenPos.top / zoom - offset.y
+      y: screenPos.top / zoom - offset.y,
     };
   };
 
@@ -54,7 +54,7 @@ const DebugOverlay: React.FC<DebugOverlayProps> = ({
   const getScreenCoordinates = (imagePos: Point): { left: number; top: number } => {
     return {
       left: (imagePos.x + offset.x) * zoom,
-      top: (imagePos.y + offset.y) * zoom
+      top: (imagePos.y + offset.y) * zoom,
     };
   };
 
@@ -65,10 +65,13 @@ const DebugOverlay: React.FC<DebugOverlayProps> = ({
   const verifiedScreenCoords = imageCoords ? getScreenCoordinates(imageCoords) : null;
 
   // Calculate transformation error (round-trip error)
-  const transformError = cursorScreenPosition && verifiedScreenCoords ? {
-    x: Math.abs(cursorScreenPosition.left - verifiedScreenCoords.left),
-    y: Math.abs(cursorScreenPosition.top - verifiedScreenCoords.top)
-  } : null;
+  const transformError =
+    cursorScreenPosition && verifiedScreenCoords
+      ? {
+          x: Math.abs(cursorScreenPosition.left - verifiedScreenCoords.left),
+          y: Math.abs(cursorScreenPosition.top - verifiedScreenCoords.top),
+        }
+      : null;
 
   // Calculate center points
   const canvasCenter = { x: canvasWidth / 2, y: canvasHeight / 2 };
@@ -173,17 +176,32 @@ const DebugOverlay: React.FC<DebugOverlayProps> = ({
             pointerEvents: 'none',
           }}
         >
-          <div><strong>Zoom:</strong> {zoom.toFixed(2)}</div>
-          <div><strong>Offset:</strong> ({offset.x.toFixed(2)}, {offset.y.toFixed(2)})</div>
+          <div>
+            <strong>Zoom:</strong> {zoom.toFixed(2)}
+          </div>
+          <div>
+            <strong>Offset:</strong> ({offset.x.toFixed(2)}, {offset.y.toFixed(2)})
+          </div>
           {imageCoords && (
-            <div><strong>Image Coords:</strong> ({imageCoords.x.toFixed(2)}, {imageCoords.y.toFixed(2)})</div>
+            <div>
+              <strong>Image Coords:</strong> ({imageCoords.x.toFixed(2)}, {imageCoords.y.toFixed(2)})
+            </div>
           )}
           {transformError && (
-            <div><strong>Transform Error:</strong> ({transformError.x.toFixed(4)}, {transformError.y.toFixed(4)})</div>
+            <div>
+              <strong>Transform Error:</strong> ({transformError.x.toFixed(4)}, {transformError.y.toFixed(4)})
+            </div>
           )}
-          <div><strong>Canvas Center:</strong> ({canvasCenter.x.toFixed(2)}, {canvasCenter.y.toFixed(2)})</div>
-          <div><strong>Image Center:</strong> ({imageCenter.x.toFixed(2)}, {imageCenter.y.toFixed(2)})</div>
-          <div><strong>Image Center on Canvas:</strong> ({imageCenterOnCanvas.left.toFixed(2)}, {imageCenterOnCanvas.top.toFixed(2)})</div>
+          <div>
+            <strong>Canvas Center:</strong> ({canvasCenter.x.toFixed(2)}, {canvasCenter.y.toFixed(2)})
+          </div>
+          <div>
+            <strong>Image Center:</strong> ({imageCenter.x.toFixed(2)}, {imageCenter.y.toFixed(2)})
+          </div>
+          <div>
+            <strong>Image Center on Canvas:</strong> ({imageCenterOnCanvas.left.toFixed(2)},{' '}
+            {imageCenterOnCanvas.top.toFixed(2)})
+          </div>
           <div style={{ marginTop: '5px', fontSize: '10px' }}>Press Ctrl+D to toggle this panel</div>
         </div>
       )}

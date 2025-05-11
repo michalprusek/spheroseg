@@ -27,7 +27,7 @@ export function useSlicing({
   tempPoints,
   setTempPoints,
   setInteractionState,
-  setEditMode
+  setEditMode,
 }: UseSlicingProps) {
   const { t } = useTranslation();
 
@@ -37,13 +37,16 @@ export function useSlicing({
    */
   const handleSliceAction = useCallback(() => {
     if (!selectedPolygonId || tempPoints.length !== 2 || !segmentationData) {
-      console.log("Cannot slice: missing data", { selectedPolygonId, tempPointsLength: tempPoints.length });
+      console.log('Cannot slice: missing data', {
+        selectedPolygonId,
+        tempPointsLength: tempPoints.length,
+      });
       return false;
     }
 
-    const polygon = segmentationData.polygons.find(p => p.id === selectedPolygonId);
+    const polygon = segmentationData.polygons.find((p) => p.id === selectedPolygonId);
     if (!polygon) {
-      console.error("Polygon not found:", selectedPolygonId);
+      console.error('Polygon not found:', selectedPolygonId);
       toast.error(t('segmentation.polygonNotFound') || 'Polygon not found');
       return false;
     }
@@ -55,14 +58,17 @@ export function useSlicing({
       const [newPolygon1, newPolygon2] = result;
 
       // Replace the original polygon with the two new ones
-      const updatedPolygons = segmentationData.polygons.filter(p => p.id !== selectedPolygonId);
+      const updatedPolygons = segmentationData.polygons.filter((p) => p.id !== selectedPolygonId);
       updatedPolygons.push(newPolygon1, newPolygon2);
 
       // Update segmentation data with history
-      setSegmentationData({
-        ...segmentationData,
-        polygons: updatedPolygons
-      }, false); // false = don't clear history
+      setSegmentationData(
+        {
+          ...segmentationData,
+          polygons: updatedPolygons,
+        },
+        false,
+      ); // false = don't clear history
 
       // Clear selection
       setSelectedPolygonId(null);
@@ -71,9 +77,9 @@ export function useSlicing({
 
       // Always reset temp points and slice start point
       setTempPoints([]);
-      setInteractionState(prev => ({
+      setInteractionState((prev) => ({
         ...prev,
-        sliceStartPoint: null
+        sliceStartPoint: null,
       }));
 
       // Reset edit mode to View after slicing
@@ -87,9 +93,9 @@ export function useSlicing({
 
       // Reset temp points on failure too
       setTempPoints([]);
-      setInteractionState(prev => ({
+      setInteractionState((prev) => ({
         ...prev,
-        sliceStartPoint: null
+        sliceStartPoint: null,
       }));
 
       return false;
@@ -103,7 +109,7 @@ export function useSlicing({
     setTempPoints,
     setInteractionState,
     setEditMode,
-    t
+    t,
   ]);
 
   return { handleSliceAction };

@@ -1,12 +1,5 @@
 import React from 'react';
-import { 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend
-} from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 interface PieChartContainerProps {
   data: any[];
@@ -30,7 +23,7 @@ const PieChartContainer: React.FC<PieChartContainerProps> = ({
   nameKey = 'name',
   tooltipFormatter,
   labelFormatter = ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`,
-  outerRadius = 150
+  outerRadius = 150,
 }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">

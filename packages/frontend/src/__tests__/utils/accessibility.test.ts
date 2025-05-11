@@ -1,10 +1,4 @@
-import { 
-  isKey, 
-  handleKeyboardActivation, 
-  createAccessibleId,
-  KeyCode,
-  srOnlyStyle
-} from '@/utils/accessibility';
+import { isKey, handleKeyboardActivation, createAccessibleId, KeyCode, srOnlyStyle } from '@/utils/accessibility';
 import { vi } from 'vitest';
 
 describe('Accessibility Utilities', () => {
@@ -34,23 +28,23 @@ describe('Accessibility Utilities', () => {
     it('should call the callback when the event key matches the default keys', () => {
       const callback = vi.fn();
       const preventDefault = vi.fn();
-      
+
       // Test Enter key
-      const enterEvent = { 
+      const enterEvent = {
         key: 'Enter',
-        preventDefault 
+        preventDefault,
       } as unknown as React.KeyboardEvent;
-      
+
       handleKeyboardActivation(enterEvent, callback);
       expect(callback).toHaveBeenCalledTimes(1);
       expect(preventDefault).toHaveBeenCalledTimes(1);
-      
+
       // Test Space key
-      const spaceEvent = { 
+      const spaceEvent = {
         key: ' ',
-        preventDefault 
+        preventDefault,
       } as unknown as React.KeyboardEvent;
-      
+
       handleKeyboardActivation(spaceEvent, callback);
       expect(callback).toHaveBeenCalledTimes(2);
       expect(preventDefault).toHaveBeenCalledTimes(2);
@@ -59,12 +53,12 @@ describe('Accessibility Utilities', () => {
     it('should call the callback when the event key matches the specified keys', () => {
       const callback = vi.fn();
       const preventDefault = vi.fn();
-      
-      const event = { 
+
+      const event = {
         key: 'ArrowDown',
-        preventDefault 
+        preventDefault,
       } as unknown as React.KeyboardEvent;
-      
+
       handleKeyboardActivation(event, callback, [KeyCode.ARROW_DOWN]);
       expect(callback).toHaveBeenCalledTimes(1);
       expect(preventDefault).toHaveBeenCalledTimes(1);
@@ -73,12 +67,12 @@ describe('Accessibility Utilities', () => {
     it('should not call the callback when the event key does not match the specified keys', () => {
       const callback = vi.fn();
       const preventDefault = vi.fn();
-      
-      const event = { 
+
+      const event = {
         key: 'a',
-        preventDefault 
+        preventDefault,
       } as unknown as React.KeyboardEvent;
-      
+
       handleKeyboardActivation(event, callback);
       expect(callback).not.toHaveBeenCalled();
       expect(preventDefault).not.toHaveBeenCalled();
@@ -94,17 +88,19 @@ describe('Accessibility Utilities', () => {
 
   describe('srOnlyStyle', () => {
     it('should have the correct CSS properties for screen reader only content', () => {
-      expect(srOnlyStyle).toEqual(expect.objectContaining({
-        position: 'absolute',
-        width: '1px',
-        height: '1px',
-        padding: '0',
-        margin: '-1px',
-        overflow: 'hidden',
-        clip: 'rect(0, 0, 0, 0)',
-        whiteSpace: 'nowrap',
-        borderWidth: '0',
-      }));
+      expect(srOnlyStyle).toEqual(
+        expect.objectContaining({
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: '0',
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          borderWidth: '0',
+        }),
+      );
     });
   });
 });

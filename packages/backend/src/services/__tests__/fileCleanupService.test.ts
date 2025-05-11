@@ -31,7 +31,7 @@ describe('fileCleanupService', () => {
   const mockPool = {
     query: jest.fn(),
   } as unknown as Pool;
-  
+
   // Reset mocks before each test
   beforeEach(() => {
     jest.clearAllMocks();
@@ -42,14 +42,22 @@ describe('fileCleanupService', () => {
       // Setup mock data
       const projectId = 'test-project-id';
       const mockImages = [
-        { id: 'img1', storage_path: 'test-project-id/image1.jpg', thumbnail_path: 'test-project-id/thumb-image1.jpg' },
-        { id: 'img2', storage_path: 'test-project-id/image2.jpg', thumbnail_path: 'test-project-id/thumb-image2.jpg' },
+        {
+          id: 'img1',
+          storage_path: 'test-project-id/image1.jpg',
+          thumbnail_path: 'test-project-id/thumb-image1.jpg',
+        },
+        {
+          id: 'img2',
+          storage_path: 'test-project-id/image2.jpg',
+          thumbnail_path: 'test-project-id/thumb-image2.jpg',
+        },
       ];
       const mockSegmentation = [
-        { 
-          image_id: 'img1', 
-          mask_path: 'test-project-id/mask1.png', 
-          visualization_path: 'test-project-id/viz1.png' 
+        {
+          image_id: 'img1',
+          mask_path: 'test-project-id/mask1.png',
+          visualization_path: 'test-project-id/viz1.png',
         },
       ];
 
@@ -67,28 +75,21 @@ describe('fileCleanupService', () => {
       (imageUtils.fileExists as jest.Mock).mockResolvedValue(true);
       (imageUtils.deleteFile as jest.Mock).mockResolvedValue(undefined);
       (imageUtils.getFilesInDirectory as jest.Mock).mockResolvedValue([
-        '/mock/upload/dir/test-project-id/extra-file.txt'
+        '/mock/upload/dir/test-project-id/extra-file.txt',
       ]);
 
       // Execute cleanup
       const result = await cleanupProjectFiles(mockPool, projectId);
 
       // Verify database queries
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('FROM images'),
-        [projectId]
-      );
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('FROM segmentation_results'),
-        [['img1', 'img2']]
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('FROM images'), [projectId]);
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('FROM segmentation_results'), [
+        ['img1', 'img2'],
+      ]);
 
       // Verify files deleted
       expect(imageUtils.deleteFile).toHaveBeenCalledTimes(7); // 2 original + 2 thumbnails + 2 segmentation + 1 extra
-      expect(fs.rmdirSync).toHaveBeenCalledWith(
-        '/mock/upload/dir/test-project-id',
-        { recursive: true }
-      );
+      expect(fs.rmdirSync).toHaveBeenCalledWith('/mock/upload/dir/test-project-id', { recursive: true });
 
       // Verify result
       expect(result.success).toBe(true);
@@ -100,7 +101,11 @@ describe('fileCleanupService', () => {
       // Setup mock data
       const projectId = 'test-project-id';
       const mockImages = [
-        { id: 'img1', storage_path: 'test-project-id/image1.jpg', thumbnail_path: null },
+        {
+          id: 'img1',
+          storage_path: 'test-project-id/image1.jpg',
+          thumbnail_path: null,
+        },
       ];
 
       // Mock image query response
@@ -120,9 +125,7 @@ describe('fileCleanupService', () => {
       const result = await cleanupProjectFiles(mockPool, projectId);
 
       // Verify image deletion attempt
-      expect(imageUtils.deleteFile).toHaveBeenCalledWith(
-        '/mock/upload/dir/test-project-id/image1.jpg'
-      );
+      expect(imageUtils.deleteFile).toHaveBeenCalledWith('/mock/upload/dir/test-project-id/image1.jpg');
 
       // Verify result includes failed file
       expect(result.success).toBe(false);
@@ -134,7 +137,11 @@ describe('fileCleanupService', () => {
       // Setup mock data
       const projectId = 'test-project-id';
       const mockImages = [
-        { id: 'img1', storage_path: 'test-project-id/image1.jpg', thumbnail_path: 'test-project-id/thumb-image1.jpg' },
+        {
+          id: 'img1',
+          storage_path: 'test-project-id/image1.jpg',
+          thumbnail_path: 'test-project-id/thumb-image1.jpg',
+        },
       ];
 
       // Mock image query response
@@ -149,7 +156,9 @@ describe('fileCleanupService', () => {
       (imageUtils.fileExists as jest.Mock).mockResolvedValue(true);
 
       // Execute cleanup in dry run mode
-      const result = await cleanupProjectFiles(mockPool, projectId, { dryRun: true });
+      const result = await cleanupProjectFiles(mockPool, projectId, {
+        dryRun: true,
+      });
 
       // Verify no actual deletion
       expect(imageUtils.deleteFile).not.toHaveBeenCalled();

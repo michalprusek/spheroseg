@@ -1,10 +1,10 @@
 /**
- * This file re-exports path utilities from shared utils package to maintain 
+ * This file re-exports path utilities from shared utils package to maintain
  * backward compatibility with existing code that imports from this location.
- * 
+ *
  * All path-related functionality has been consolidated into the shared utilities
  * in the shared/utils/pathUtils.ts file.
- * 
+ *
  * @deprecated Import from @shared/utils/pathUtils directly for new code
  */
 
@@ -28,7 +28,7 @@ export const {
   getAbsolutePath,
   extractPathFromUrl,
   dbPathToFilesystemPath,
-  normalizePathForDb
+  normalizePathForDb,
 } = pathUtils;
 
 // Export default for backward compatibility

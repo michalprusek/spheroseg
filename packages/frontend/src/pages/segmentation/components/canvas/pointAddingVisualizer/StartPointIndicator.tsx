@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Point } from '@/lib/segmentation';
 import { getPointRadius, getStrokeWidth, getColors } from './visualizationUtils';
@@ -33,7 +32,7 @@ const StartPointIndicator = ({ selectedVertexIndex, polygonPoints, zoom }: Start
         className="animate-pulse"
         style={{ pointerEvents: 'none' }}
       />
-      
+
       {/* Větší kruh pro zvýraznění */}
       <circle
         cx={startPoint.x}
@@ -44,7 +43,7 @@ const StartPointIndicator = ({ selectedVertexIndex, polygonPoints, zoom }: Start
         strokeWidth={strokeWidth * 1.2}
         style={{ pointerEvents: 'none' }}
       />
-      
+
       {/* Menší vnitřní kruh */}
       <circle
         cx={startPoint.x}

@@ -72,7 +72,7 @@ describe('UserProfileDropdown Component', () => {
     render(
       <BrowserRouter>
         <UserProfileDropdown username="JohnDoe" />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('TestUser')).toBeInTheDocument();
@@ -82,7 +82,7 @@ describe('UserProfileDropdown Component', () => {
     render(
       <BrowserRouter>
         <UserProfileDropdown username="JohnDoe" />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // Verify the dropdown button is rendered
@@ -97,7 +97,7 @@ describe('UserProfileDropdown Component', () => {
     render(
       <BrowserRouter>
         <UserProfileDropdown username="JohnDoe" />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // Verify the navigate function is available
@@ -108,7 +108,7 @@ describe('UserProfileDropdown Component', () => {
     render(
       <BrowserRouter>
         <UserProfileDropdown username="JohnDoe" />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // Verify the signOut function is available
@@ -122,7 +122,7 @@ describe('UserProfileDropdown Component', () => {
     render(
       <BrowserRouter>
         <UserProfileDropdown username="JohnDoe" />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // Verify localStorage was accessed

@@ -33,19 +33,19 @@ interface UseUserStatisticsOptions {
    * @default true
    */
   showToasts?: boolean;
-  
+
   /**
    * Whether to use cached data if available
    * @default true
    */
   useCache?: boolean;
-  
+
   /**
    * Cache expiration time in milliseconds
    * @default 5 minutes (300000 ms)
    */
   cacheExpiration?: number;
-  
+
   /**
    * Whether to automatically fetch data on mount
    * @default true
@@ -58,22 +58,22 @@ interface UseUserStatisticsReturn {
    * User statistics
    */
   statistics: UserStatistics | null;
-  
+
   /**
    * Whether data is being loaded
    */
   loading: boolean;
-  
+
   /**
    * Error message if fetch failed
    */
   error: string | null;
-  
+
   /**
    * Fetch user statistics
    */
   fetchStatistics: () => Promise<void>;
-  
+
   /**
    * Clear cached statistics
    */
@@ -86,11 +86,11 @@ const STATISTICS_CACHE_TIMESTAMP_KEY = 'spheroseg_user_statistics_timestamp';
 
 /**
  * Hook for fetching user statistics
- * 
+ *
  * @example
  * ```tsx
  * const { statistics, loading, error, fetchStatistics } = useUserStatistics();
- * 
+ *
  * return (
  *   <div>
  *     <h2>User Statistics</h2>
@@ -114,18 +114,18 @@ const STATISTICS_CACHE_TIMESTAMP_KEY = 'spheroseg_user_statistics_timestamp';
 export const useUserStatistics = (options: UseUserStatisticsOptions = {}): UseUserStatisticsReturn => {
   const { t } = useLanguage();
   const { user } = useAuth();
-  
-  const { 
-    showToasts = true, 
+
+  const {
+    showToasts = true,
     useCache = true,
     cacheExpiration = 5 * 60 * 1000, // 5 minutes
-    autoFetch = true
+    autoFetch = true,
   } = options;
-  
+
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Function to save statistics to cache
   const saveToCache = useCallback((data: UserStatistics) => {
     try {
@@ -136,13 +136,16 @@ export const useUserStatistics = (options: UseUserStatisticsOptions = {}): UseUs
       logger.warn('Failed to save statistics to cache', { error: err });
     }
   }, []);
-  
+
   // Function to load statistics from cache
-  const loadFromCache = useCallback((): { data: UserStatistics | null, timestamp: number } => {
+  const loadFromCache = useCallback((): {
+    data: UserStatistics | null;
+    timestamp: number;
+  } => {
     try {
       const cachedData = localStorage.getItem(STATISTICS_CACHE_KEY);
       const cachedTimestamp = localStorage.getItem(STATISTICS_CACHE_TIMESTAMP_KEY);
-      
+
       if (cachedData && cachedTimestamp) {
         const timestamp = parseInt(cachedTimestamp, 10);
         const data = JSON.parse(cachedData) as UserStatistics;
@@ -152,10 +155,10 @@ export const useUserStatistics = (options: UseUserStatisticsOptions = {}): UseUs
     } catch (err) {
       logger.warn('Failed to load statistics from cache', { error: err });
     }
-    
+
     return { data: null, timestamp: 0 };
   }, []);
-  
+
   // Function to clear cache
   const clearCache = useCallback(() => {
     try {
@@ -166,70 +169,87 @@ export const useUserStatistics = (options: UseUserStatisticsOptions = {}): UseUs
       logger.warn('Failed to clear statistics cache', { error: err });
     }
   }, []);
-  
+
   // Function to fetch statistics from API
   const fetchStatistics = useCallback(async (): Promise<void> => {
     if (!user?.id) {
       logger.warn('Cannot fetch statistics: user not logged in');
       return;
     }
-    
+
     // Check cache first if enabled
     if (useCache) {
       const { data: cachedData, timestamp } = loadFromCache();
       const cacheAge = Date.now() - timestamp;
-      
+
       if (cachedData && cacheAge < cacheExpiration) {
-        logger.info('Using cached statistics', { 
+        logger.info('Using cached statistics', {
           cacheAge: `${Math.round(cacheAge / 1000)}s`,
-          cacheExpiration: `${Math.round(cacheExpiration / 1000)}s`
+          cacheExpiration: `${Math.round(cacheExpiration / 1000)}s`,
         });
         setStatistics(cachedData);
         return;
       }
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       logger.info('Fetching user statistics');
-      
+
       // Try to fetch from /users/me/statistics first (detailed endpoint)
       try {
-        const response = await apiClient.get('/users/me/statistics');
+        const response = await apiClient.get('/api/users/me/statistics');
         const data = response.data;
-        
+
+        logger.debug('Raw statistics data:', data);
+
         // Transform data to match our interface
         const stats: UserStatistics = {
-          totalProjects: data.totalProjects || 0,
-          totalImages: data.totalImages || 0,
-          completedSegmentations: data.completedSegmentations || 0,
-          storageUsedMB: data.storageUsedMB,
-          storageUsedBytes: data.storageUsedBytes,
-          storageLimitBytes: data.storageLimitBytes,
-          recentActivity: data.recentActivity,
-          recentProjects: data.recentProjects,
-          recentImages: data.recentImages,
-          comparisons: data.comparisons
+          // Handle both formats - new format with totalProjects and old format with projects.count
+          totalProjects: data.totalProjects || data.projects?.count || 0,
+          // Handle both formats - new format with totalImages and old format with images.count
+          totalImages: data.totalImages || data.images?.count || 0,
+          // Handle both formats - new format with completedSegmentations and old format with segmentations.count
+          completedSegmentations: data.completedSegmentations || data.segmentations?.count || 0,
+          // Handle storage data
+          storageUsedMB:
+            data.storageUsedMB ||
+            (data.storage?.used ? Math.round((data.storage.used / (1024 * 1024)) * 100) / 100 : 0),
+          storageUsedBytes: data.storageUsedBytes || data.storage?.used?.toString() || '0',
+          storageLimitBytes: data.storageLimitBytes || data.storage?.limit?.toString() || '10737418240',
+          // Handle activity data
+          recentActivity: data.recentActivity || data.activity || [],
+          recentProjects: data.recentProjects || data.projects?.recent || [],
+          recentImages: data.recentImages || data.images?.recent || [],
+          // Handle comparisons
+          comparisons: data.comparisons || {
+            projectsThisMonth: 0,
+            projectsLastMonth: 0,
+            projectsChange: 0,
+            imagesThisMonth: 0,
+            imagesLastMonth: 0,
+            imagesChange: 0,
+          },
         };
-        
+
         logger.info('Fetched statistics from statistics endpoint');
-        
+
         setStatistics(stats);
-        
+
         // Save to cache if enabled
         if (useCache) {
           saveToCache(stats);
         }
-        
+
         return;
       } catch (statErr) {
         logger.warn('Statistics endpoint not available, falling back to stats endpoint', { error: statErr });
       }
-      
+
       // Fall back to /users/me/stats (basic endpoint)
-      const fallbackResponse = await apiClient.get('/users/me/stats');
+      const fallbackResponse = await apiClient.get('/api/users/me/stats');
       const fallbackData = fallbackResponse.data;
 
       logger.debug('Fallback data from /users/me/stats:', fallbackData);
@@ -242,7 +262,9 @@ export const useUserStatistics = (options: UseUserStatisticsOptions = {}): UseUs
         totalImages: fallbackData.totalImages || fallbackData.images_count || 0,
         // Handle both new format (completedSegmentations) and old format (segmentations_count)
         completedSegmentations: fallbackData.completedSegmentations || fallbackData.segmentations_count || 0,
-        storageUsedMB: fallbackData.storageUsedMB || Math.round(parseInt(fallbackData.storage_used_bytes || '0') / (1024 * 1024) * 100) / 100,
+        storageUsedMB:
+          fallbackData.storageUsedMB ||
+          Math.round((parseInt(fallbackData.storage_used_bytes || '0') / (1024 * 1024)) * 100) / 100,
         storageUsedBytes: fallbackData.storageUsedBytes || fallbackData.storage_used_bytes,
         storageLimitBytes: fallbackData.storageLimitBytes || fallbackData.storage_limit_bytes,
         recentActivity: fallbackData.recentActivity || fallbackData.recent_activity,
@@ -255,35 +277,35 @@ export const useUserStatistics = (options: UseUserStatisticsOptions = {}): UseUs
           projectsChange: fallbackData.projects_change || 0,
           imagesThisMonth: fallbackData.images_this_month || 0,
           imagesLastMonth: fallbackData.images_last_month || 0,
-          imagesChange: fallbackData.images_change || 0
-        }
+          imagesChange: fallbackData.images_change || 0,
+        },
       };
-      
+
       logger.info('Fetched statistics from stats endpoint');
-      
+
       setStatistics(stats);
-      
+
       // Save to cache if enabled
       if (useCache) {
         saveToCache(stats);
       }
     } catch (err) {
       logger.error('Failed to fetch statistics', { error: err });
-      
+
       let errorMessage = t('profile.fetchError') || 'Failed to load user statistics';
-      
+
       if (axios.isAxiosError(err) && err.response) {
         errorMessage = err.response.data?.message || errorMessage;
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
-      
+
       if (showToasts) {
         toast.error(errorMessage);
       }
-      
+
       // Try to use cached data even if it's expired
       if (useCache) {
         const { data: cachedData } = loadFromCache();
@@ -296,19 +318,19 @@ export const useUserStatistics = (options: UseUserStatisticsOptions = {}): UseUs
       setLoading(false);
     }
   }, [user?.id, showToasts, useCache, cacheExpiration, t, loadFromCache, saveToCache]);
-  
+
   // Fetch statistics on mount if autoFetch is enabled
   useEffect(() => {
     if (autoFetch) {
       fetchStatistics();
     }
   }, [autoFetch, fetchStatistics]);
-  
+
   return {
     statistics,
     loading,
     error,
     fetchStatistics,
-    clearCache
+    clearCache,
   };
 };

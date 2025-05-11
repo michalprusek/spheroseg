@@ -110,7 +110,9 @@ vi.mock('@/components/project/ProjectHeader', () => ({
 vi.mock('@/components/project/ProjectToolbar', () => ({
   default: ({ onToggleUploader, setViewMode, viewMode, onToggleSelectionMode }: any) => (
     <div data-testid="project-toolbar">
-      <button data-testid="toggle-uploader" onClick={onToggleUploader}>Toggle Uploader</button>
+      <button data-testid="toggle-uploader" onClick={onToggleUploader}>
+        Toggle Uploader
+      </button>
       <button data-testid="toggle-view-mode" onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}>
         Toggle View Mode
       </button>
@@ -130,7 +132,9 @@ vi.mock('@/components/project/ProjectImages', () => ({
 vi.mock('@/components/project/ProjectUploaderSection', () => ({
   default: ({ onCancel, segmentAfterUpload, onSegmentAfterUploadChange, onUploadComplete }: any) => (
     <div data-testid="project-uploader">
-      <button data-testid="cancel-upload" onClick={onCancel}>Cancel</button>
+      <button data-testid="cancel-upload" onClick={onCancel}>
+        Cancel
+      </button>
       <button data-testid="toggle-segment" onClick={() => onSegmentAfterUploadChange(!segmentAfterUpload)}>
         Toggle Segment
       </button>

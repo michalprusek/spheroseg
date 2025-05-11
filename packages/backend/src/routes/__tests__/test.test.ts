@@ -7,7 +7,7 @@ describe('Test Endpoint', () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       status: 'ok',
-      message: 'API is working'
+      message: 'API is working',
     });
   });
 });

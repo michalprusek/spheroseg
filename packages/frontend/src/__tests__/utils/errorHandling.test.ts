@@ -1,10 +1,10 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import axios, { AxiosError } from 'axios';
-import { 
-  getErrorType, 
-  getErrorSeverity, 
-  getErrorMessage, 
-  getErrorCode, 
+import {
+  getErrorType,
+  getErrorSeverity,
+  getErrorMessage,
+  getErrorCode,
   getErrorDetails,
   createErrorInfo,
   handleError,
@@ -12,7 +12,7 @@ import {
   ErrorSeverity,
   AppError,
   NetworkError,
-  ValidationError
+  ValidationError,
 } from '@/utils/errorHandling';
 import { toast } from 'sonner';
 
@@ -22,7 +22,7 @@ vi.mock('sonner', () => ({
     error: vi.fn(),
     warning: vi.fn(),
     info: vi.fn(),
-  }
+  },
 }));
 
 // Create mock for logger
@@ -32,12 +32,12 @@ vi.mock('@/utils/logger', () => ({
     warn: vi.fn(),
     info: vi.fn(),
     debug: vi.fn(),
-  }
+  },
 }));
 
 describe('Error Handling Utilities', () => {
   let logger: any;
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -141,14 +141,16 @@ describe('Error Handling Utilities', () => {
     it('should create a structured error info object', () => {
       const error = new Error('Test error');
       const info = createErrorInfo(error);
-      
-      expect(info).toEqual(expect.objectContaining({
-        type: expect.any(String),
-        severity: expect.any(String),
-        message: 'Test error',
-        originalError: error,
-        handled: false,
-      }));
+
+      expect(info).toEqual(
+        expect.objectContaining({
+          type: expect.any(String),
+          severity: expect.any(String),
+          message: 'Test error',
+          originalError: error,
+          handled: false,
+        }),
+      );
     });
 
     it('should override defaults with provided options', () => {
@@ -161,7 +163,7 @@ describe('Error Handling Utilities', () => {
         details: { field: 'test' },
         handled: true,
       });
-      
+
       expect(info).toEqual({
         type: ErrorType.VALIDATION,
         severity: ErrorSeverity.WARNING,
@@ -180,11 +182,11 @@ describe('Error Handling Utilities', () => {
       const loggerModule = await import('@/utils/logger');
       logger = loggerModule.default;
     });
-    
+
     it('should log the error and show toast based on severity', () => {
       const error = new Error('Test error');
       handleError(error);
-      
+
       expect(logger.error).toHaveBeenCalled();
       expect(toast.error).toHaveBeenCalledWith('Test error');
     });
@@ -192,7 +194,7 @@ describe('Error Handling Utilities', () => {
     it('should not show toast if showToast is false', () => {
       const error = new Error('Test error');
       handleError(error, { showToast: false });
-      
+
       expect(logger.error).toHaveBeenCalled();
       expect(toast.error).not.toHaveBeenCalled();
     });
@@ -200,7 +202,7 @@ describe('Error Handling Utilities', () => {
     it('should not log if logError is false', () => {
       const error = new Error('Test error');
       handleError(error, { logError: false });
-      
+
       expect(logger.error).not.toHaveBeenCalled();
       expect(toast.error).toHaveBeenCalled();
     });
@@ -212,7 +214,7 @@ describe('Error Handling Utilities', () => {
           severity: ErrorSeverity.WARNING,
         },
       });
-      
+
       expect(toast.warning).toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalled();
       expect(toast.error).not.toHaveBeenCalled();
@@ -225,7 +227,7 @@ describe('Error Handling Utilities', () => {
           severity: ErrorSeverity.INFO,
         },
       });
-      
+
       expect(toast.info).toHaveBeenCalled();
       expect(logger.info).toHaveBeenCalled();
       expect(toast.error).not.toHaveBeenCalled();
@@ -236,7 +238,7 @@ describe('Error Handling Utilities', () => {
   describe('Custom Error Classes', () => {
     it('should create AppError with correct properties', () => {
       const error = new AppError('Generic app error');
-      
+
       expect(error instanceof Error).toBe(true);
       expect(error.name).toBe('AppError');
       expect(error.message).toBe('Generic app error');
@@ -246,7 +248,7 @@ describe('Error Handling Utilities', () => {
 
     it('should create NetworkError with correct properties', () => {
       const error = new NetworkError('Network connection failed');
-      
+
       expect(error instanceof Error).toBe(true);
       expect(error.name).toBe('NetworkError');
       expect(error.message).toBe('Network connection failed');
@@ -257,12 +259,15 @@ describe('Error Handling Utilities', () => {
       const error = new ValidationError('Invalid input', {
         details: { field: 'email', message: 'Invalid email format' },
       });
-      
+
       expect(error instanceof Error).toBe(true);
       expect(error.name).toBe('ValidationError');
       expect(error.message).toBe('Invalid input');
       expect(error.type).toBe(ErrorType.VALIDATION);
-      expect(error.details).toEqual({ field: 'email', message: 'Invalid email format' });
+      expect(error.details).toEqual({
+        field: 'email',
+        message: 'Invalid email format',
+      });
     });
   });
 });

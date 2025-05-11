@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Point } from '@/lib/segmentation';
 import CanvasZoomInfo from './CanvasZoomInfo';
@@ -23,39 +22,30 @@ const CanvasUIElements = ({
   slicingMode,
   pointAddingMode,
   isShiftPressed,
-  sliceStartPoint
+  sliceStartPoint,
 }: CanvasUIElementsProps) => {
   return (
     <>
       <CanvasZoomInfo zoom={zoom} />
-      
+
       {editMode && (
-        <EditorModeFooter 
+        <EditorModeFooter
           mode="edit"
-          text={`Edit Mode - Vytváření nového polygonu ${isShiftPressed ? "(Auto-přidávání při držení Shift)" : ""}`}
-        />
-      )}
-      
-      {slicingMode && (
-        <EditorModeFooter 
-          mode="slice"
-          text={`Slicing Mode - Rozdělení polygonu ${sliceStartPoint ? "(Klikněte pro dokončení)" : "(Klikněte pro začátek)"}`}
-        />
-      )}
-      
-      {pointAddingMode && (
-        <EditorModeFooter 
-          mode="add"
-          text="Point Adding Mode - Přidávání bodů do polygonu"
+          text={`Edit Mode - Vytváření nového polygonu ${isShiftPressed ? '(Auto-přidávání při držení Shift)' : ''}`}
         />
       )}
 
-      {(editMode || slicingMode || pointAddingMode) && (
-        <EditorHelpTips 
-          editMode={editMode} 
-          slicingMode={slicingMode} 
-          pointAddingMode={pointAddingMode} 
+      {slicingMode && (
+        <EditorModeFooter
+          mode="slice"
+          text={`Slicing Mode - Rozdělení polygonu ${sliceStartPoint ? '(Klikněte pro dokončení)' : '(Klikněte pro začátek)'}`}
         />
+      )}
+
+      {pointAddingMode && <EditorModeFooter mode="add" text="Point Adding Mode - Přidávání bodů do polygonu" />}
+
+      {(editMode || slicingMode || pointAddingMode) && (
+        <EditorHelpTips editMode={editMode} slicingMode={slicingMode} pointAddingMode={pointAddingMode} />
       )}
     </>
   );

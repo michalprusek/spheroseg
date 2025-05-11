@@ -275,7 +275,7 @@ const server = http.createServer((req, res) => {
     }));
   }
   // Handle specific project details
-  else if (pathname.match(/^\/api\/projects\/project-/)) {
+  else if (pathname.match(/^\/api\/projects\/project-/) && req.method === 'GET') {
     const projectId = pathname.split('/').pop();
 
     // Try to find project in data
@@ -442,69 +442,6 @@ const server = http.createServer((req, res) => {
       }
     });
   }
-  // Handle batch segmentation endpoint
-  else if (pathname === '/images/segmentation/trigger-batch' || pathname === '/api/images/segmentation/trigger-batch') {
-    // Parse request body for batch segmentation
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-
-    req.on('end', () => {
-      try {
-        const data = JSON.parse(body);
-        console.log('Received batch segmentation request:', data);
-
-        res.setHeader('Content-Type', 'application/json');
-        res.statusCode = 200;
-        res.end(JSON.stringify({
-          success: true,
-          message: 'Batch segmentation triggered successfully',
-          jobId: 'mock-job-' + Date.now(),
-          imageIds: data.imageIds || [],
-          timestamp: new Date().toISOString()
-        }));
-      } catch (error) {
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({
-          error: 'Invalid request body',
-          message: error.message
-        }));
-      }
-    });
-  }
-  // Handle Socket.IO endpoint
-  else if (pathname === '/socket.io' || pathname.startsWith('/socket.io/')) {
-    handleSocketIORequest(req, res);
-  }
-  // Handle static files from uploads directory
-  else if (pathname.startsWith('/uploads/')) {
-    const filePath = path.join(__dirname, '..', pathname);
-
-    // Check if file exists
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-      if (err) {
-        res.statusCode = 404;
-        res.end(JSON.stringify({ error: "File not found" }));
-        return;
-      }
-
-      // Determine content type
-      let contentType = 'application/octet-stream';
-      if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-        contentType = 'image/jpeg';
-      } else if (filePath.endsWith('.png')) {
-        contentType = 'image/png';
-      } else if (filePath.endsWith('.json')) {
-        contentType = 'application/json';
-      }
-
-      // Stream the file
-      res.setHeader('Content-Type', contentType);
-      fs.createReadStream(filePath).pipe(res);
-    });
-  }
   // Handle DELETE project
   else if (pathname.match(/^\/api\/projects\/project-/) && req.method === 'DELETE') {
     const projectId = pathname.split('/').pop();
@@ -576,7 +513,70 @@ const server = http.createServer((req, res) => {
       }));
     }
   }
-  // Add support for project images endpoint
+  // Handle batch segmentation endpoint
+  else if (pathname === '/images/segmentation/trigger-batch' || pathname === '/api/images/segmentation/trigger-batch') {
+    // Parse request body for batch segmentation
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        console.log('Received batch segmentation request:', data);
+
+        res.setHeader('Content-Type', 'application/json');
+        res.statusCode = 200;
+        res.end(JSON.stringify({
+          success: true,
+          message: 'Batch segmentation triggered successfully',
+          jobId: 'mock-job-' + Date.now(),
+          imageIds: data.imageIds || [],
+          timestamp: new Date().toISOString()
+        }));
+      } catch (error) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          error: 'Invalid request body',
+          message: error.message
+        }));
+      }
+    });
+  }
+  // Handle Socket.IO endpoint
+  else if (pathname === '/socket.io' || pathname.startsWith('/socket.io/')) {
+    handleSocketIORequest(req, res);
+  }
+  // Handle static files from uploads directory
+  else if (pathname.startsWith('/uploads/')) {
+    const filePath = path.join(__dirname, '..', pathname);
+
+    // Check if file exists
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+      if (err) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: "File not found" }));
+        return;
+      }
+
+      // Determine content type
+      let contentType = 'application/octet-stream';
+      if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+        contentType = 'image/jpeg';
+      } else if (filePath.endsWith('.png')) {
+        contentType = 'image/png';
+      } else if (filePath.endsWith('.json')) {
+        contentType = 'application/json';
+      }
+
+      // Stream the file
+      res.setHeader('Content-Type', contentType);
+      fs.createReadStream(filePath).pipe(res);
+    });
+  }
+  // Add support for project images
   else if (pathname.match(/^\/api\/projects\/project-.*\/images$/)) {
     const projectId = pathname.split('/')[3]; // Extract project ID from URL
 

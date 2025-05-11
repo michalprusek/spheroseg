@@ -22,10 +22,15 @@ export const usePolygonWorker = () => {
   const workerRef = useRef<Worker | null>(null);
 
   // Create a ref for pending requests
-  const pendingRequestsRef = useRef<Map<string, {
-    resolve: (value: any) => void;
-    reject: (reason?: any) => void;
-  }>>(new Map());
+  const pendingRequestsRef = useRef<
+    Map<
+      string,
+      {
+        resolve: (value: any) => void;
+        reject: (reason?: any) => void;
+      }
+    >
+  >(new Map());
 
   // State for worker status
   const [isReady, setIsReady] = useState<boolean>(false);
@@ -35,10 +40,7 @@ export const usePolygonWorker = () => {
     // Create the worker
     try {
       // Create a new worker
-      const worker = new Worker(
-        new URL('../workers/polygonWorker.ts', import.meta.url),
-        { type: 'module' }
-      );
+      const worker = new Worker(new URL('../workers/polygonWorker.ts', import.meta.url), { type: 'module' });
 
       // Set up message handler
       worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
@@ -105,10 +107,7 @@ export const usePolygonWorker = () => {
   }, []);
 
   // Function to send a request to the worker
-  const sendRequest = useCallback(<T>(
-    operation: WorkerOperation,
-    data: any
-  ): Promise<T> => {
+  const sendRequest = useCallback(<T>(operation: WorkerOperation, data: any): Promise<T> => {
     return new Promise((resolve, reject) => {
       // Check if the worker is ready
       if (!workerRef.current) {
@@ -126,7 +125,7 @@ export const usePolygonWorker = () => {
       const request: WorkerRequest = {
         id,
         operation,
-        data
+        data,
       };
 
       // Send the request to the worker
@@ -135,50 +134,52 @@ export const usePolygonWorker = () => {
   }, []);
 
   // Function to check if a point is inside a polygon
-  const isPointInPolygon = useCallback((
-    point: Point,
-    polygon: Point[]
-  ): Promise<boolean> => {
-    return sendRequest('isPointInPolygon', { point, polygon });
-  }, [sendRequest]);
+  const isPointInPolygon = useCallback(
+    (point: Point, polygon: Point[]): Promise<boolean> => {
+      return sendRequest('isPointInPolygon', { point, polygon });
+    },
+    [sendRequest],
+  );
 
   // Function to slice a polygon with a line
-  const slicePolygon = useCallback((
-    polygon: Point[],
-    sliceStart: Point,
-    sliceEnd: Point
-  ): Promise<Point[][]> => {
-    return sendRequest('slicePolygon', { polygon, sliceStart, sliceEnd });
-  }, [sendRequest]);
+  const slicePolygon = useCallback(
+    (polygon: Point[], sliceStart: Point, sliceEnd: Point): Promise<Point[][]> => {
+      return sendRequest('slicePolygon', { polygon, sliceStart, sliceEnd });
+    },
+    [sendRequest],
+  );
 
   // Function to simplify a polygon
-  const simplifyPolygon = useCallback((
-    polygon: Point[],
-    epsilon: number
-  ): Promise<Point[]> => {
-    return sendRequest('simplifyPolygon', { polygon, epsilon });
-  }, [sendRequest]);
+  const simplifyPolygon = useCallback(
+    (polygon: Point[], epsilon: number): Promise<Point[]> => {
+      return sendRequest('simplifyPolygon', { polygon, epsilon });
+    },
+    [sendRequest],
+  );
 
   // Function to calculate polygon area
-  const calculatePolygonArea = useCallback((
-    polygon: Point[]
-  ): Promise<number> => {
-    return sendRequest('calculatePolygonArea', { polygon });
-  }, [sendRequest]);
+  const calculatePolygonArea = useCallback(
+    (polygon: Point[]): Promise<number> => {
+      return sendRequest('calculatePolygonArea', { polygon });
+    },
+    [sendRequest],
+  );
 
   // Function to calculate polygon perimeter
-  const calculatePolygonPerimeter = useCallback((
-    polygon: Point[]
-  ): Promise<number> => {
-    return sendRequest('calculatePolygonPerimeter', { polygon });
-  }, [sendRequest]);
+  const calculatePolygonPerimeter = useCallback(
+    (polygon: Point[]): Promise<number> => {
+      return sendRequest('calculatePolygonPerimeter', { polygon });
+    },
+    [sendRequest],
+  );
 
   // Function to calculate polygon bounding box
-  const calculateBoundingBox = useCallback((
-    polygon: Point[]
-  ): Promise<{ minX: number; minY: number; maxX: number; maxY: number }> => {
-    return sendRequest('calculateBoundingBox', { polygon });
-  }, [sendRequest]);
+  const calculateBoundingBox = useCallback(
+    (polygon: Point[]): Promise<{ minX: number; minY: number; maxX: number; maxY: number }> => {
+      return sendRequest('calculateBoundingBox', { polygon });
+    },
+    [sendRequest],
+  );
 
   return {
     isReady,
@@ -187,7 +188,7 @@ export const usePolygonWorker = () => {
     simplifyPolygon,
     calculatePolygonArea,
     calculatePolygonPerimeter,
-    calculateBoundingBox
+    calculateBoundingBox,
   };
 };
 

@@ -26,12 +26,12 @@ jest.mock('../db', () => ({
             title: 'Test Project',
             description: 'Test Description',
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]
+            updated_at: new Date().toISOString(),
+          },
+        ],
       };
     }
-    
+
     // Mock image data
     if (query.includes('SELECT * FROM images WHERE project_id')) {
       return {
@@ -48,7 +48,7 @@ jest.mock('../db', () => ({
             metadata: { format: 'image/jpeg', size: 102400 },
             status: 'completed',
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           },
           {
             id: 'test-image-id-2',
@@ -62,12 +62,12 @@ jest.mock('../db', () => ({
             metadata: { format: 'image/jpeg', size: 153600 },
             status: 'completed',
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]
+            updated_at: new Date().toISOString(),
+          },
+        ],
       };
     }
-    
+
     // Mock segmentation results
     if (query.includes('SELECT * FROM segmentation_results WHERE image_id')) {
       return {
@@ -86,8 +86,8 @@ jest.mock('../db', () => ({
                     { x: 100, y: 100 },
                     { x: 200, y: 100 },
                     { x: 200, y: 200 },
-                    { x: 100, y: 200 }
-                  ]
+                    { x: 100, y: 200 },
+                  ],
                 },
                 {
                   id: 'poly-2',
@@ -96,18 +96,18 @@ jest.mock('../db', () => ({
                     { x: 300, y: 300 },
                     { x: 400, y: 300 },
                     { x: 400, y: 400 },
-                    { x: 300, y: 400 }
-                  ]
-                }
-              ]
+                    { x: 300, y: 400 },
+                  ],
+                },
+              ],
             },
             metrics: {
               count: 2,
               totalArea: 20000,
-              averageArea: 10000
+              averageArea: 10000,
             },
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           },
           {
             id: 'test-segmentation-id-2',
@@ -123,26 +123,26 @@ jest.mock('../db', () => ({
                     { x: 200, y: 200 },
                     { x: 300, y: 200 },
                     { x: 300, y: 300 },
-                    { x: 200, y: 300 }
-                  ]
-                }
-              ]
+                    { x: 200, y: 300 },
+                  ],
+                },
+              ],
             },
             metrics: {
               count: 1,
               totalArea: 10000,
-              averageArea: 10000
+              averageArea: 10000,
             },
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]
+            updated_at: new Date().toISOString(),
+          },
+        ],
       };
     }
-    
+
     // Default empty response
     return { rows: [] };
-  })
+  }),
 }));
 
 // Mock file system operations
@@ -157,7 +157,7 @@ jest.mock('fs', () => {
         if (path.toString().includes('image')) {
           return Buffer.from('fake-image-data');
         }
-        
+
         // Default behavior
         return actualFs.promises.readFile(path);
       }),
@@ -165,9 +165,9 @@ jest.mock('fs', () => {
       stat: jest.fn().mockResolvedValue({
         isFile: () => true,
         size: 102400,
-        mtime: new Date()
-      })
-    }
+        mtime: new Date(),
+      }),
+    },
   };
 });
 
@@ -196,31 +196,31 @@ describe('Export API Comprehensive Tests', () => {
           includeSegmentation: 'true',
           includeMetrics: 'true',
           format: 'COCO',
-          imageIds: ['test-image-id-1', 'test-image-id-2']
+          imageIds: ['test-image-id-1', 'test-image-id-2'],
         });
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/application\/zip/);
-      
+
       // Verify the ZIP file content
       const zipBuffer = response.body;
       const zip = await JSZip.loadAsync(zipBuffer);
-      
+
       // Check for COCO annotation file
-      const hasCOCOFile = Object.keys(zip.files).some(name => 
-        name.includes('annotations.json') || name.includes('coco')
+      const hasCOCOFile = Object.keys(zip.files).some(
+        (name) => name.includes('annotations.json') || name.includes('coco'),
       );
       expect(hasCOCOFile).toBeTruthy();
-      
+
       // Verify COCO format content
-      const cocoFiles = Object.keys(zip.files).filter(name => 
-        name.includes('annotations.json') || name.includes('coco')
+      const cocoFiles = Object.keys(zip.files).filter(
+        (name) => name.includes('annotations.json') || name.includes('coco'),
       );
-      
+
       if (cocoFiles.length > 0) {
         const cocoFileContent = await zip.files[cocoFiles[0]].async('string');
         const cocoData = JSON.parse(cocoFileContent);
-        
+
         expect(cocoData).toHaveProperty('images');
         expect(cocoData).toHaveProperty('annotations');
         expect(cocoData).toHaveProperty('categories');
@@ -237,28 +237,26 @@ describe('Export API Comprehensive Tests', () => {
           includeSegmentation: 'true',
           includeMetrics: 'false',
           format: 'YOLO',
-          imageIds: ['test-image-id-1', 'test-image-id-2']
+          imageIds: ['test-image-id-1', 'test-image-id-2'],
         });
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/application\/zip/);
-      
+
       // Verify the ZIP file content
       const zipBuffer = response.body;
       const zip = await JSZip.loadAsync(zipBuffer);
-      
+
       // YOLO format creates .txt files with class x_center y_center width height
-      const txtFiles = Object.keys(zip.files).filter(name => 
-        name.endsWith('.txt') && !name.includes('metadata')
-      );
-      
+      const txtFiles = Object.keys(zip.files).filter((name) => name.endsWith('.txt') && !name.includes('metadata'));
+
       expect(txtFiles.length).toBeGreaterThan(0);
-      
+
       // Verify format of a YOLO annotation file
       if (txtFiles.length > 0) {
         const yoloFileContent = await zip.files[txtFiles[0]].async('string');
-        const lines = yoloFileContent.split('\n').filter(line => line.trim());
-        
+        const lines = yoloFileContent.split('\n').filter((line) => line.trim());
+
         if (lines.length > 0) {
           const parts = lines[0].split(' ');
           expect(parts.length).toBeGreaterThanOrEqual(5); // class_id x_center y_center width height
@@ -275,24 +273,22 @@ describe('Export API Comprehensive Tests', () => {
           includeSegmentation: 'true',
           includeMetrics: 'false',
           format: 'MASK',
-          imageIds: ['test-image-id-1', 'test-image-id-2']
+          imageIds: ['test-image-id-1', 'test-image-id-2'],
         });
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/application\/zip/);
-      
+
       // Verify the ZIP file content
       const zipBuffer = response.body;
       const zip = await JSZip.loadAsync(zipBuffer);
-      
+
       // Should have mask .png files
-      const maskFiles = Object.keys(zip.files).filter(name => 
-        name.includes('/masks/') && name.endsWith('.png')
-      );
-      
+      const maskFiles = Object.keys(zip.files).filter((name) => name.includes('/masks/') && name.endsWith('.png'));
+
       expect(maskFiles.length).toBeGreaterThan(0);
     });
-    
+
     it('should export project with polygon JSON format', async () => {
       const response = await request(app)
         .get('/api/projects/test-project-id/export')
@@ -301,31 +297,29 @@ describe('Export API Comprehensive Tests', () => {
           includeSegmentation: 'true',
           includeMetrics: 'false',
           format: 'POLYGONS',
-          imageIds: ['test-image-id-1', 'test-image-id-2']
+          imageIds: ['test-image-id-1', 'test-image-id-2'],
         });
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/application\/zip/);
-      
+
       // Verify the ZIP file content
       const zipBuffer = response.body;
       const zip = await JSZip.loadAsync(zipBuffer);
-      
+
       // Should have polygon JSON files
-      const polygonFiles = Object.keys(zip.files).filter(name => 
-        name.includes('polygons') && name.endsWith('.json')
-      );
-      
+      const polygonFiles = Object.keys(zip.files).filter((name) => name.includes('polygons') && name.endsWith('.json'));
+
       expect(polygonFiles.length).toBeGreaterThan(0);
-      
+
       // Verify polygon format
       if (polygonFiles.length > 0) {
         const polygonsContent = await zip.files[polygonFiles[0]].async('string');
         const polygonsData = JSON.parse(polygonsContent);
-        
+
         // Check if it's an array of polygons or has a polygons array property
-        const hasPolygons = Array.isArray(polygonsData) || 
-                           (polygonsData.polygons && Array.isArray(polygonsData.polygons));
+        const hasPolygons =
+          Array.isArray(polygonsData) || (polygonsData.polygons && Array.isArray(polygonsData.polygons));
         expect(hasPolygons).toBe(true);
       }
     });
@@ -337,11 +331,13 @@ describe('Export API Comprehensive Tests', () => {
         .get('/api/projects/test-project-id/export/metrics')
         .query({
           format: 'EXCEL',
-          imageIds: ['test-image-id-1', 'test-image-id-2']
+          imageIds: ['test-image-id-1', 'test-image-id-2'],
         });
 
       expect(response.status).toBe(200);
-      expect(response.headers['content-type']).toMatch(/application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/);
+      expect(response.headers['content-type']).toMatch(
+        /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/,
+      );
       expect(response.body).toBeTruthy();
     });
 
@@ -350,19 +346,19 @@ describe('Export API Comprehensive Tests', () => {
         .get('/api/projects/test-project-id/export/metrics')
         .query({
           format: 'CSV',
-          imageIds: ['test-image-id-1', 'test-image-id-2']
+          imageIds: ['test-image-id-1', 'test-image-id-2'],
         });
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/text\/csv/);
-      
+
       // Verify CSV structure
       const csvContent = response.text;
       const lines = csvContent.split('\n');
-      
+
       // Should have header and at least one data line
       expect(lines.length).toBeGreaterThan(1);
-      
+
       // Header should have common metric columns
       expect(lines[0]).toContain('Image Name');
       expect(lines[0]).toContain('Object ID');
@@ -376,13 +372,11 @@ describe('Export API Comprehensive Tests', () => {
       const db = require('../db');
       db.query.mockImplementationOnce(() => ({ rows: [] }));
 
-      const response = await request(app)
-        .get('/api/projects/non-existent-project/export')
-        .query({
-          includeMetadata: 'true',
-          includeSegmentation: 'true',
-          includeMetrics: 'true'
-        });
+      const response = await request(app).get('/api/projects/non-existent-project/export').query({
+        includeMetadata: 'true',
+        includeSegmentation: 'true',
+        includeMetrics: 'true',
+      });
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('message', 'Project not found or access denied');
@@ -396,7 +390,7 @@ describe('Export API Comprehensive Tests', () => {
           includeSegmentation: 'true',
           includeMetrics: 'true',
           format: 'INVALID_FORMAT',
-          imageIds: ['test-image-id-1', 'test-image-id-2']
+          imageIds: ['test-image-id-1', 'test-image-id-2'],
         });
 
       // Should revert to default format and not error out
@@ -416,7 +410,7 @@ describe('Export API Comprehensive Tests', () => {
           includeMetrics: 'true',
           includeImages: 'true',
           format: 'COCO',
-          imageIds: ['test-image-id-1', 'test-image-id-2']
+          imageIds: ['test-image-id-1', 'test-image-id-2'],
         });
 
       // Should still create a ZIP with other available data

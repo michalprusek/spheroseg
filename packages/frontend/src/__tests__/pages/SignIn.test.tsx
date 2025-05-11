@@ -11,8 +11,8 @@ const mockToastError = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
     success: mockToastSuccess,
-    error: mockToastError
-  }
+    error: mockToastError,
+  },
 }));
 
 // Mock the useNavigate hook
@@ -20,7 +20,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => vi.fn()
+    useNavigate: () => vi.fn(),
   };
 });
 
@@ -52,7 +52,7 @@ const MockSignIn = ({ isLoggedIn = false, signInSuccess = true, language = 'en' 
       noAccount: "Don't have an account?",
       signUp: 'Sign Up',
       alreadyLoggedIn: "You're already logged in",
-      goToDashboard: 'Go to Dashboard'
+      goToDashboard: 'Go to Dashboard',
     },
     cs: {
       title: 'Přihlásit se k účtu',
@@ -62,7 +62,7 @@ const MockSignIn = ({ isLoggedIn = false, signInSuccess = true, language = 'en' 
       noAccount: 'Nemáte účet?',
       signUp: 'Registrovat se',
       alreadyLoggedIn: 'Již jste přihlášeni',
-      goToDashboard: 'Přejít na nástěnku'
+      goToDashboard: 'Přejít na nástěnku',
     },
     de: {
       title: 'Melden Sie sich bei Ihrem Konto an',
@@ -72,8 +72,8 @@ const MockSignIn = ({ isLoggedIn = false, signInSuccess = true, language = 'en' 
       noAccount: 'Haben Sie kein Konto?',
       signUp: 'Registrieren',
       alreadyLoggedIn: 'Sie sind bereits angemeldet',
-      goToDashboard: 'Zum Dashboard'
-    }
+      goToDashboard: 'Zum Dashboard',
+    },
   };
 
   const t = translations[language] || translations.en;
@@ -93,26 +93,18 @@ const MockSignIn = ({ isLoggedIn = false, signInSuccess = true, language = 'en' 
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="email">{t.email}</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div>
           <label htmlFor="password">{t.password}</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <button type="submit">{t.signIn}</button>
       </form>
       <div>
-        <p>{t.noAccount} <a href="/sign-up">{t.signUp}</a></p>
+        <p>
+          {t.noAccount} <a href="/sign-up">{t.signUp}</a>
+        </p>
       </div>
     </div>
   );
@@ -121,12 +113,8 @@ const MockSignIn = ({ isLoggedIn = false, signInSuccess = true, language = 'en' 
 // Mock the actual SignIn component
 vi.mock('@/pages/SignIn', () => ({
   default: ({ isLoggedIn, signInSuccess, language }: any) => (
-    <MockSignIn
-      isLoggedIn={isLoggedIn}
-      signInSuccess={signInSuccess}
-      language={language}
-    />
-  )
+    <MockSignIn isLoggedIn={isLoggedIn} signInSuccess={signInSuccess} language={language} />
+  ),
 }));
 
 describe('SignIn Page', () => {
@@ -141,7 +129,7 @@ describe('SignIn Page', () => {
     return render(
       <BrowserRouter>
         <MockSignIn {...props} />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 
@@ -173,11 +161,11 @@ describe('SignIn Page', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText(/Email address/i), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText(/Password/i), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     // Submit the form
@@ -194,11 +182,11 @@ describe('SignIn Page', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText(/Email address/i), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText(/Password/i), {
-      target: { value: 'wrong-password' }
+      target: { value: 'wrong-password' },
     });
 
     // Submit the form

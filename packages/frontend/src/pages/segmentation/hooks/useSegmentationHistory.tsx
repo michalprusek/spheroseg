@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SegmentationResult, Point } from '@/lib/segmentation';
-import { toast } from "sonner";
+import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
@@ -19,7 +18,7 @@ interface EditAction {
  */
 export const useSegmentationHistory = (
   segmentation: SegmentationResult | null,
-  setSegmentation: (seg: SegmentationResult | null) => void
+  setSegmentation: (seg: SegmentationResult | null) => void,
 ) => {
   const { t } = useLanguage();
   const [history, setHistory] = useState<SegmentationResult[]>([]);
@@ -40,9 +39,12 @@ export const useSegmentationHistory = (
   const createStateHash = useCallback((seg: SegmentationResult | null): string => {
     if (!seg || !seg.polygons) return '';
     // Jednoduchý hash založený na počtu polygonů a bodů
-    return seg.polygons.map(p =>
-      `${p.id}:${p.points ? p.points.length : 0}:${p.points ? p.points.reduce((sum, pt) => sum + pt.x + pt.y, 0) : 0}`
-    ).join('|');
+    return seg.polygons
+      .map(
+        (p) =>
+          `${p.id}:${p.points ? p.points.length : 0}:${p.points ? p.points.reduce((sum, pt) => sum + pt.x + pt.y, 0) : 0}`,
+      )
+      .join('|');
   }, []);
 
   // Initialize history with the first segmentation
@@ -84,54 +86,56 @@ export const useSegmentationHistory = (
     historyThrottleTimeout.current = window.setTimeout(() => {
       // Truncate future history if we're not at the end
       if (historyIndex < history.length - 1) {
-        setHistory(prev => prev.slice(0, historyIndex + 1));
+        setHistory((prev) => prev.slice(0, historyIndex + 1));
       }
 
       // Aktualizace hashe
       lastStateHash.current = currentHash;
 
       // Add new history item
-      setHistory(prev => [...prev, structuredClone(segmentation)]);
-      setHistoryIndex(prev => prev + 1);
+      setHistory((prev) => [...prev, structuredClone(segmentation)]);
+      setHistoryIndex((prev) => prev + 1);
 
-      console.log("Added new history state", historyIndex + 1);
+      console.log('Added new history state', historyIndex + 1);
 
       historyThrottleTimeout.current = null;
     }, 300); // 300ms throttling
-
   }, [segmentation, historyIndex, history, ignoreNextUpdate, createStateHash]);
 
   // Upravená funkce pro trackování stavu tažení vertexu
-  const setDraggingVertex = useCallback((isDragging: boolean) => {
-    if (isDragging && !isDraggingVertex.current && segmentation) {
-      // Store the initial state when dragging starts
-      dragStartSegmentation.current = structuredClone(segmentation);
-      isDraggingVertex.current = true;
-    } else if (!isDragging && isDraggingVertex.current) {
-      // Add history item when dragging ends, if the state changed
-      isDraggingVertex.current = false;
+  const setDraggingVertex = useCallback(
+    (isDragging: boolean) => {
+      if (isDragging && !isDraggingVertex.current && segmentation) {
+        // Store the initial state when dragging starts
+        dragStartSegmentation.current = structuredClone(segmentation);
+        isDraggingVertex.current = true;
+      } else if (!isDragging && isDraggingVertex.current) {
+        // Add history item when dragging ends, if the state changed
+        isDraggingVertex.current = false;
 
-      if (dragStartSegmentation.current && segmentation) {
-        // Porovnání stavu pomocí hashe
-        const startHash = createStateHash(dragStartSegmentation.current);
-        const endHash = createStateHash(segmentation);
+        if (dragStartSegmentation.current && segmentation) {
+          // Porovnání stavu pomocí hashe
+          const startHash = createStateHash(dragStartSegmentation.current);
+          const endHash = createStateHash(segmentation);
 
-        if (startHash !== endHash) {
-          // Truncate future history if we're not at the end
-          if (historyIndex < history.length - 1) {
-            setHistory(prev => prev.slice(0, historyIndex + 1));
+          if (startHash !== endHash) {
+            // Truncate future history if we're not at the end
+            if (historyIndex < history.length - 1) {
+              setHistory((prev) => prev.slice(0, historyIndex + 1));
+            }
+
+            // Add new history item
+            setHistory((prev) => [...prev, structuredClone(segmentation)]);
+            setHistoryIndex((prev) => prev + 1);
+            lastStateHash.current = endHash;
+
+            console.log('Added vertex drag history state', historyIndex + 1);
           }
-
-          // Add new history item
-          setHistory(prev => [...prev, structuredClone(segmentation)]);
-          setHistoryIndex(prev => prev + 1);
-          lastStateHash.current = endHash;
-
-          console.log("Added vertex drag history state", historyIndex + 1);
         }
       }
-    }
-  }, [segmentation, historyIndex, history, createStateHash]);
+    },
+    [segmentation, historyIndex, history, createStateHash],
+  );
 
   /**
    * Vylepšená funkce Undo s lepší zpětnou vazbou
@@ -145,16 +149,16 @@ export const useSegmentationHistory = (
 
     if (historyIndex > 0) {
       setIgnoreNextUpdate(true);
-      setHistoryIndex(prev => prev - 1);
+      setHistoryIndex((prev) => prev - 1);
 
       const prevState = structuredClone(history[historyIndex - 1]);
       setSegmentation(prevState);
       lastStateHash.current = createStateHash(prevState);
 
       toast.info(t('segmentation.undoRestored'));
-      console.log("Undo to index", historyIndex - 1);
+      console.log('Undo to index', historyIndex - 1);
     } else {
-      toast.info("Nejsou k dispozici žádné akce pro Undo");
+      toast.info('Nejsou k dispozici žádné akce pro Undo');
     }
   }, [historyIndex, history, setSegmentation, createStateHash]);
 
@@ -164,70 +168,76 @@ export const useSegmentationHistory = (
   const handleRedo = useCallback(() => {
     // Pokud právě táhneme vertex, nemůžeme provést redo
     if (isDraggingVertex.current) {
-      toast.error("Nelze provést Redo během tažení bodu");
+      toast.error('Nelze provést Redo během tažení bodu');
       return;
     }
 
     if (historyIndex < history.length - 1) {
       setIgnoreNextUpdate(true);
-      setHistoryIndex(prev => prev + 1);
+      setHistoryIndex((prev) => prev + 1);
 
       const nextState = structuredClone(history[historyIndex + 1]);
       setSegmentation(nextState);
       lastStateHash.current = createStateHash(nextState);
 
-      toast.info("Redo: Obnoveno do následujícího stavu");
-      console.log("Redo to index", historyIndex + 1);
+      toast.info('Redo: Obnoveno do následujícího stavu');
+      console.log('Redo to index', historyIndex + 1);
     } else {
-      toast.info("Nejsou k dispozici žádné akce pro Redo");
+      toast.info('Nejsou k dispozici žádné akce pro Redo');
     }
   }, [historyIndex, history, setSegmentation, createStateHash]);
 
   /**
    * Vytvoření snapshotu historie pro pozdější návrat
    */
-  const createSnapshot = useCallback((name: string = "Snapshot"): number => {
-    if (!segmentation) return -1;
+  const createSnapshot = useCallback(
+    (name: string = 'Snapshot'): number => {
+      if (!segmentation) return -1;
 
-    // Ujistíme se, že aktuální stav je uložen v historii
-    const currentHash = createStateHash(segmentation);
-    if (lastStateHash.current !== currentHash) {
-      const clonedState = structuredClone(segmentation);
+      // Ujistíme se, že aktuální stav je uložen v historii
+      const currentHash = createStateHash(segmentation);
+      if (lastStateHash.current !== currentHash) {
+        const clonedState = structuredClone(segmentation);
 
-      // Truncate future history if we're not at the end
-      if (historyIndex < history.length - 1) {
-        setHistory(prev => prev.slice(0, historyIndex + 1));
+        // Truncate future history if we're not at the end
+        if (historyIndex < history.length - 1) {
+          setHistory((prev) => prev.slice(0, historyIndex + 1));
+        }
+
+        // Add new history item
+        setHistory((prev) => [...prev, clonedState]);
+        setHistoryIndex(history.length);
+        lastStateHash.current = currentHash;
       }
 
-      // Add new history item
-      setHistory(prev => [...prev, clonedState]);
-      setHistoryIndex(history.length);
-      lastStateHash.current = currentHash;
-    }
-
-    toast.success(`Vytvořen snapshot: ${name}`);
-    return historyIndex;
-  }, [segmentation, historyIndex, history, createStateHash]);
+      toast.success(`Vytvořen snapshot: ${name}`);
+      return historyIndex;
+    },
+    [segmentation, historyIndex, history, createStateHash],
+  );
 
   /**
    * Návrat k dříve vytvořenému snapshotu
    */
-  const restoreSnapshot = useCallback((index: number): boolean => {
-    if (index < 0 || index >= history.length) {
-      toast.error("Neplatný index snapshotu");
-      return false;
-    }
+  const restoreSnapshot = useCallback(
+    (index: number): boolean => {
+      if (index < 0 || index >= history.length) {
+        toast.error('Neplatný index snapshotu');
+        return false;
+      }
 
-    setIgnoreNextUpdate(true);
-    setHistoryIndex(index);
+      setIgnoreNextUpdate(true);
+      setHistoryIndex(index);
 
-    const restoredState = structuredClone(history[index]);
-    setSegmentation(restoredState);
-    lastStateHash.current = createStateHash(restoredState);
+      const restoredState = structuredClone(history[index]);
+      setSegmentation(restoredState);
+      lastStateHash.current = createStateHash(restoredState);
 
-    toast.success("Snapshot byl obnoven");
-    return true;
-  }, [history, setSegmentation, createStateHash]);
+      toast.success('Snapshot byl obnoven');
+      return true;
+    },
+    [history, setSegmentation, createStateHash],
+  );
 
   /**
    * Vymazání historie
@@ -240,7 +250,7 @@ export const useSegmentationHistory = (
     setHistoryIndex(0);
     lastStateHash.current = createStateHash(segmentation);
 
-    toast.info("Historie byla vymazána");
+    toast.info('Historie byla vymazána');
   }, [segmentation, createStateHash]);
 
   return {
@@ -251,6 +261,6 @@ export const useSegmentationHistory = (
     setDraggingVertex,
     createSnapshot,
     restoreSnapshot,
-    clearHistory
+    clearHistory,
   };
 };

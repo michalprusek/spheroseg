@@ -13,17 +13,11 @@ interface DuplicationProgressProps {
   onViewProject?: (projectId: string) => void;
 }
 
-const DuplicationProgress: React.FC<DuplicationProgressProps> = ({ 
-  task, 
-  onCancel, 
-  onViewProject 
-}) => {
+const DuplicationProgress: React.FC<DuplicationProgressProps> = ({ task, onCancel, onViewProject }) => {
   const { t } = useLanguage();
 
   // Format the created time as "x minutes/hours ago"
-  const timeAgo = task.created_at ? 
-    formatDistanceToNow(new Date(task.created_at), { addSuffix: true }) : 
-    '';
+  const timeAgo = task.created_at ? formatDistanceToNow(new Date(task.created_at), { addSuffix: true }) : '';
 
   // Determine status icon and color
   const getStatusIcon = (status: string) => {
@@ -82,11 +76,11 @@ const DuplicationProgress: React.FC<DuplicationProgressProps> = ({
   // Generate title based on available information
   const getTitle = () => {
     const fromTitle = task.original_project_title || t('projects.unknownProject') || 'Unknown Project';
-    
+
     if (task.status === 'completed' && task.new_project_title) {
       return `${fromTitle} → ${task.new_project_title}`;
     }
-    
+
     return `${t('projects.duplicating') || 'Duplicating'}: ${fromTitle}`;
   };
 
@@ -105,28 +99,29 @@ const DuplicationProgress: React.FC<DuplicationProgressProps> = ({
           </CardTitle>
           <div className="flex items-center gap-1.5">
             {getStatusIcon(task.status)}
-            <span className={`text-sm font-medium ${getStatusColor(task.status)}`}>
-              {getStatusText(task.status)}
-            </span>
+            <span className={`text-sm font-medium ${getStatusColor(task.status)}`}>{getStatusText(task.status)}</span>
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="pb-2">
         <div className="space-y-2">
           {/* Progress bar */}
           <div className="w-full">
-            <Progress 
-              value={task.progress} 
+            <Progress
+              value={task.progress}
               className={
-                task.status === 'completed' ? 'bg-green-100' : 
-                task.status === 'failed' ? 'bg-red-100' : 
-                task.status === 'cancelled' ? 'bg-yellow-100' : 
-                'bg-gray-100'
+                task.status === 'completed'
+                  ? 'bg-green-100'
+                  : task.status === 'failed'
+                    ? 'bg-red-100'
+                    : task.status === 'cancelled'
+                      ? 'bg-yellow-100'
+                      : 'bg-gray-100'
               }
             />
           </div>
-          
+
           {/* Progress details */}
           <div className="flex justify-between text-xs text-gray-500">
             <span>
@@ -134,38 +129,24 @@ const DuplicationProgress: React.FC<DuplicationProgressProps> = ({
             </span>
             <span>{task.progress}%</span>
           </div>
-          
+
           {/* Error message if any */}
-          {task.error_message && (
-            <div className="mt-2 text-xs text-red-500">
-              {task.error_message}
-            </div>
-          )}
-          
+          {task.error_message && <div className="mt-2 text-xs text-red-500">{task.error_message}</div>}
+
           {/* Time info */}
-          <div className="text-xs text-gray-500 mt-1">
-            {timeAgo}
-          </div>
+          <div className="text-xs text-gray-500 mt-1">{timeAgo}</div>
         </div>
       </CardContent>
-      
+
       <CardFooter className="pt-2 flex justify-end gap-2">
         {canCancel && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onCancel}
-          >
+          <Button variant="outline" size="sm" onClick={onCancel}>
             {t('common.cancel') || 'Cancel'}
           </Button>
         )}
-        
+
         {canViewProject && (
-          <Button 
-            variant="default" 
-            size="sm" 
-            onClick={() => onViewProject?.(task.new_project_id!)}
-          >
+          <Button variant="default" size="sm" onClick={() => onViewProject?.(task.new_project_id!)}>
             {t('projects.viewProject') || 'View Project'}
           </Button>
         )}

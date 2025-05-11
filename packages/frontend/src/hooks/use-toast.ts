@@ -1,4 +1,4 @@
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast } from 'sonner';
 
 // Directly export the toast function from sonner
 export const toast = sonnerToast;
@@ -6,11 +6,11 @@ export const toast = sonnerToast;
 // Remove the hook structure as it's no longer needed for simple toast calls
 // export const useToast = () => {
 //   const [toasts, setToasts] = useState<Toast[]>([]);
-//   
+//
 //   // Vracíme pouze funkci toast, ale zachováváme kompatibilitu s Toaster komponentou
-//   return { 
+//   return {
 //     toast,
-//     toasts 
+//     toasts
 //   };
 // };
 

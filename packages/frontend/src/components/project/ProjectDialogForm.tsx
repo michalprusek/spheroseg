@@ -1,15 +1,10 @@
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription
-} from "@/components/ui/dialog";
-import { useProjectForm } from "@/hooks/useProjectForm";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useProjectForm } from '@/hooks/useProjectForm';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectDialogFormProps {
   onSuccess?: (projectId: string) => void;
@@ -18,22 +13,14 @@ interface ProjectDialogFormProps {
 
 const ProjectDialogForm = ({ onSuccess, onClose }: ProjectDialogFormProps) => {
   const { t } = useLanguage();
-  const {
-    projectName,
-    setProjectName,
-    projectDescription,
-    setProjectDescription,
-    isCreating,
-    handleCreateProject
-  } = useProjectForm({ onSuccess, onClose });
+  const { projectName, setProjectName, projectDescription, setProjectDescription, isCreating, handleCreateProject } =
+    useProjectForm({ onSuccess, onClose });
 
   return (
     <>
       <DialogHeader>
         <DialogTitle>{t('projects.createProject')}</DialogTitle>
-        <DialogDescription>
-          {t('projects.createProjectDesc')}
-        </DialogDescription>
+        <DialogDescription>{t('projects.createProjectDesc')}</DialogDescription>
       </DialogHeader>
       <form onSubmit={(e) => handleCreateProject(e)}>
         <div className="grid gap-4 py-4">
@@ -65,10 +52,16 @@ const ProjectDialogForm = ({ onSuccess, onClose }: ProjectDialogFormProps) => {
           </div>
         </div>
         <DialogFooter>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isCreating || !projectName.trim()}
             data-testid="create-project-button"
+            onClick={() => {
+              // Additional validation and logging before form submission
+              if (projectName.trim()) {
+                console.log('Creating project with name:', projectName.trim());
+              }
+            }}
           >
             {isCreating ? t('projects.creatingProject') : t('projects.createProject')}
           </Button>

@@ -11,17 +11,17 @@ export enum SegmentationStatus {
   PROCESSING = 'processing',
   COMPLETED = 'completed',
   FAILED = 'failed',
-  SAVING = 'saving'
+  SAVING = 'saving',
 }
 
 export interface SegmentationData {
   id: string;
   image_id?: string;
-  imageId?: string; 
+  imageId?: string;
   status?: ImageStatus;
   result_data?: {
     polygons: Polygon[];
-    [key: string]: any;
+    [key: string]: unknown;
   };
   polygons: Polygon[];
   created_at?: string;
@@ -29,15 +29,15 @@ export interface SegmentationData {
   parameters?: {
     model?: string;
     threshold?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface SegmentationResult {
   id: string;
   polygons: Polygon[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface SegmentationResultData {

@@ -10,8 +10,16 @@ import { CanvasSegmentationData, Polygon } from '@/types';
 
 // Barvy pro jednotlivé polygony
 const POLYGON_COLORS = [
-  '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0',
-  '#33FFF0', '#F0FF33', '#FF3333', '#33FF33', '#3333FF'
+  '#FF5733',
+  '#33FF57',
+  '#3357FF',
+  '#F033FF',
+  '#FF33F0',
+  '#33FFF0',
+  '#F0FF33',
+  '#FF3333',
+  '#33FF33',
+  '#3333FF',
 ];
 
 /**
@@ -25,7 +33,7 @@ const POLYGON_COLORS = [
 export const maskToPolygons = async (
   maskUrl: string,
   imageWidth: number,
-  imageHeight: number
+  imageHeight: number,
 ): Promise<CanvasSegmentationData> => {
   return new Promise((resolve, reject) => {
     // Vytvoříme nový obrázek a načteme do něj masku
@@ -52,7 +60,7 @@ export const maskToPolygons = async (
         const data = imageData.data;
 
         // Vytvoříme mapu segmentů (každý unikátní pixel barvy = jeden segment)
-        const segments = new Map<number, { points: Set<string>, color: string }>();
+        const segments = new Map<number, { points: Set<string>; color: string }>();
 
         // Projdeme všechny pixely a identifikujeme segmenty
         for (let y = 0; y < canvas.height; y++) {
@@ -75,7 +83,7 @@ export const maskToPolygons = async (
               console.log(`Found new segment with color: rgb(${r},${g},${b})`);
               segments.set(colorId, {
                 points: new Set<string>(),
-                color: POLYGON_COLORS[segments.size % POLYGON_COLORS.length]
+                color: POLYGON_COLORS[segments.size % POLYGON_COLORS.length],
               });
             }
 
@@ -99,13 +107,13 @@ export const maskToPolygons = async (
           const segmentMask = new Uint8Array(width * height);
 
           // Naplníme masku hodnotami 255 pro body segmentu
-          segment.points.forEach(pointStr => {
+          segment.points.forEach((pointStr) => {
             const [x, y] = pointStr.split(',').map(Number);
             segmentMask[y * width + x] = 255;
           });
 
           // Najdeme hranice segmentu pomocí algoritmu sledování kontur
-          const boundaryPoints: {x: number, y: number}[] = [];
+          const boundaryPoints: { x: number; y: number }[] = [];
           const visited = new Set<string>();
 
           // Funkce pro kontrolu, zda je bod součástí segmentu
@@ -118,13 +126,14 @@ export const maskToPolygons = async (
           const addBoundaryPoint = (x: number, y: number) => {
             const key = `${x},${y}`;
             if (!visited.has(key)) {
-              boundaryPoints.push({x, y});
+              boundaryPoints.push({ x, y });
               visited.add(key);
             }
           };
 
           // Najdeme první bod segmentu jako výchozí bod pro sledování kontury
-          let startX = -1, startY = -1;
+          let startX = -1,
+            startY = -1;
           for (let y = 0; y < height && startY === -1; y++) {
             for (let x = 0; x < width && startX === -1; x++) {
               if (isSegmentPoint(x, y)) {
@@ -169,16 +178,15 @@ export const maskToPolygons = async (
               }
 
               if (!found) break; // Nemůžeme pokračovat v kontuře
-
             } while (x !== startX || y !== startY);
           }
 
           // Seřadíme hraniční body ve směru hodinových ručiček
           // Nejprve najdeme těžiště
-          const centroid = boundaryPoints.reduce(
-            (acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }),
-            { x: 0, y: 0 }
-          );
+          const centroid = boundaryPoints.reduce((acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }), {
+            x: 0,
+            y: 0,
+          });
           centroid.x /= boundaryPoints.length;
           centroid.y /= boundaryPoints.length;
 
@@ -200,7 +208,7 @@ export const maskToPolygons = async (
               id: uuidv4(),
               points: boundaryPoints,
               color: segment.color,
-              type: 'external' // Explicitně označíme jako externí polygon
+              type: 'external', // Explicitně označíme jako externí polygon
             });
           } else {
             // Pokud nemáme dostatek bodů, vytvoříme obdélník
@@ -209,7 +217,7 @@ export const maskToPolygons = async (
             let maxX = -Infinity;
             let maxY = -Infinity;
 
-            segment.points.forEach(pointStr => {
+            segment.points.forEach((pointStr) => {
               const [x, y] = pointStr.split(',').map(Number);
               minX = Math.min(minX, x);
               minY = Math.min(minY, y);
@@ -226,10 +234,10 @@ export const maskToPolygons = async (
                   { x: minX, y: minY },
                   { x: maxX, y: minY },
                   { x: maxX, y: maxY },
-                  { x: minX, y: maxY }
+                  { x: minX, y: maxY },
                 ],
                 color: segment.color,
-                type: 'external' // Explicitně označíme jako externí polygon
+                type: 'external', // Explicitně označíme jako externí polygon
               });
             } else {
               console.log(`Skipping too small segment with bounds: (${minX},${minY}) - (${maxX},${maxY})`);
@@ -246,7 +254,7 @@ export const maskToPolygons = async (
         resolve({
           polygons,
           imageWidth,
-          imageHeight
+          imageHeight,
         });
       } catch (error) {
         console.error('Error processing segmentation mask:', error);

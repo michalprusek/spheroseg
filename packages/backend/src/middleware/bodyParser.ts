@@ -7,15 +7,19 @@ import config from '../config';
  */
 export function setupBodyParser(app: Express): void {
   // Parse JSON bodies with size limit from config
-  app.use(express.json({ 
-    limit: config.server.maxRequestSize || '100mb' 
-  }));
-  
+  app.use(
+    express.json({
+      limit: config.server.maxRequestSize || '100mb',
+    }),
+  );
+
   // Parse URL-encoded bodies (as sent by HTML forms)
-  app.use(express.urlencoded({ 
-    extended: true,
-    limit: config.server.maxRequestSize || '100mb'
-  }));
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: config.server.maxRequestSize || '100mb',
+    }),
+  );
 }
 
 export default setupBodyParser;

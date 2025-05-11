@@ -3,13 +3,13 @@ import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import '@testing-library/jest-dom';
 
 // Mock the AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
 }));
 
 // Mock components for testing
@@ -21,9 +21,14 @@ describe('ProtectedRoute Component', () => {
     vi.clearAllMocks();
   });
 
-  const renderWithRouter = (authState: { user: any; loading: boolean }) => {
+  interface AuthState {
+    user: { id: string; email: string } | null;
+    loading: boolean;
+  }
+
+  const renderWithRouter = (authState: AuthState) => {
     // Set up the mock implementation for useAuth
-    (useAuth as any).mockReturnValue(authState);
+    (useAuth as jest.Mock).mockReturnValue(authState);
 
     return render(
       <MemoryRouter initialEntries={['/protected']}>
@@ -38,14 +43,14 @@ describe('ProtectedRoute Component', () => {
             }
           />
         </Routes>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
   };
 
   it('renders the protected content when user is authenticated', () => {
     renderWithRouter({
       user: { id: 'test-user-id', email: 'test@example.com' },
-      loading: false
+      loading: false,
     });
 
     // Protected content should be rendered
@@ -58,7 +63,7 @@ describe('ProtectedRoute Component', () => {
   it('redirects to login page when user is not authenticated', () => {
     renderWithRouter({
       user: null,
-      loading: false
+      loading: false,
     });
 
     // Protected content should not be rendered
@@ -71,7 +76,7 @@ describe('ProtectedRoute Component', () => {
   it('shows loading state while checking authentication', () => {
     renderWithRouter({
       user: null,
-      loading: true
+      loading: true,
     });
 
     // Protected content should not be rendered

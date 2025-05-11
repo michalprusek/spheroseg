@@ -47,10 +47,18 @@ const config = {
   server: {
     port: parseInt(process.env.PORT || `${DEFAULT_PORT}`, 10),
     host: process.env.HOST || '0.0.0.0',
-    corsOrigins: process.env.CORS_ORIGINS ?
-      process.env.CORS_ORIGINS.split(',') :
-      ['http://localhost:3000', 'http://localhost:3003', 'http://localhost:5001', 'http://localhost', 'http://localhost:80', 'http://127.0.0.1:49571', '*'],
-    publicUrl: process.env.PUBLIC_URL || 'http://localhost:5001'
+    corsOrigins: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',')
+      : [
+          'http://localhost:3000',
+          'http://localhost:3003',
+          'http://localhost:5001',
+          'http://localhost',
+          'http://localhost:80',
+          'http://127.0.0.1:49571',
+          '*',
+        ],
+    publicUrl: process.env.PUBLIC_URL || 'http://localhost:5001',
   },
 
   baseUrl: process.env.BASE_URL || 'http://localhost:5001',
@@ -63,7 +71,7 @@ const config = {
     password: process.env.DB_PASSWORD || 'postgres',
     ssl: process.env.DB_SSL === 'true',
     connectionString: process.env.DATABASE_URL,
-    maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '10', 10)
+    maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '10', 10),
   },
 
   auth: {
@@ -79,22 +87,21 @@ const config = {
     uploadDir: process.env.UPLOAD_DIR || DEFAULT_UPLOAD_DIR,
     avatarDir: process.env.AVATAR_DIR || DEFAULT_AVATAR_DIR,
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '104857600', 10), // 100MB
-    defaultUserLimitBytes: process.env.DEFAULT_USER_STORAGE_LIMIT_BYTES ? BigInt(process.env.DEFAULT_USER_STORAGE_LIMIT_BYTES) : DEFAULT_USER_LIMIT_BYTES,
-    allowedTypes: ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp']
+    defaultUserLimitBytes: process.env.DEFAULT_USER_STORAGE_LIMIT_BYTES
+      ? BigInt(process.env.DEFAULT_USER_STORAGE_LIMIT_BYTES)
+      : DEFAULT_USER_LIMIT_BYTES,
+    allowedTypes: ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
   },
 
   segmentation: {
-    maxConcurrentTasks: parseInt(
-      process.env.MAX_CONCURRENT_TASKS || `${DEFAULT_MAX_CONCURRENT_TASKS}`,
-      10
-    ),
+    maxConcurrentTasks: parseInt(process.env.MAX_CONCURRENT_TASKS || `${DEFAULT_MAX_CONCURRENT_TASKS}`, 10),
     checkpointPath: checkpointPath,
     checkpointExists: checkpointExists,
-    devicePreference: process.env.DEVICE_PREFERENCE || 'auto', // 'auto', 'cpu', 'cuda', 'mps'
+    devicePreference: process.env.DEVICE_PREFERENCE || 'best', // 'best', 'cpu', 'cuda', 'mps'
     mlScriptPath: process.env.ML_SCRIPT_PATH || '/app/ML/resunet_segmentation.py',
     mlServiceUrl: process.env.ML_SERVICE_URL || null, // null means direct Python execution
     queueDelay: parseInt(process.env.QUEUE_DELAY || '500', 10), // ms between queue processing
-    pythonExecutable: process.env.PYTHON_EXECUTABLE || 'python3'
+    pythonExecutable: process.env.PYTHON_EXECUTABLE || 'python3',
   },
 
   logging: {
@@ -103,16 +110,16 @@ const config = {
     enableFile: process.env.LOG_FILE === 'true' || process.env.NODE_ENV === 'production',
     logDir: process.env.LOG_DIR || path.join(ROOT_DIR, 'logs'),
   },
-  
+
   monitoring: {
     metricsEnabled: process.env.METRICS_ENABLED === 'true',
-    tracingEnabled: process.env.TRACING_ENABLED === 'true'
+    tracingEnabled: process.env.TRACING_ENABLED === 'true',
   },
-  
+
   security: {
     rateLimitRequests: parseInt(process.env.RATE_LIMIT_REQUESTS || '100', 10),
     rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '60', 10), // seconds
-  }
+  },
 };
 
 // Create necessary directories

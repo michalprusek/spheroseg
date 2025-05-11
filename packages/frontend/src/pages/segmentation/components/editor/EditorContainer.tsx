@@ -33,7 +33,7 @@ interface EditorContainerProps {
   saving: boolean;
   segmentation: CanvasSegmentationData | null;
   selectedPolygonId: string | null;
-  hoveredVertex: { polygonId: string | null, vertexIndex: number | null };
+  hoveredVertex: { polygonId: string | null; vertexIndex: number | null };
   zoom: number;
   translateX: number;
   translateY: number;
@@ -49,9 +49,17 @@ interface EditorContainerProps {
   cursorPosition: Point | null;
   editMode: EditMode;
   slicingMode: boolean;
-  pointAddingMode: { isActive: boolean; sourcePolygonId: string | null; pointIndex: number | null; };
+  pointAddingMode: {
+    isActive: boolean;
+    sourcePolygonId: string | null;
+    pointIndex: number | null;
+  };
   sliceStartPoint: Point | null;
-  hoveredSegment: { polygonId: string; segmentIndex: number; projectedPoint: Point | null } | null;
+  hoveredSegment: {
+    polygonId: string;
+    segmentIndex: number;
+    projectedPoint: Point | null;
+  } | null;
   canvasContainerRef: React.RefObject<HTMLDivElement>;
   projectImages: ProjectImage[];
   setSelectedPolygonId: (id: string | null) => void;
@@ -147,23 +155,32 @@ const EditorContainer = ({
   autoSaveStatus = 'idle',
   hasUnsavedChanges = false,
   toggleAutoSave = () => {},
-  saveNow
+  saveNow,
 }: EditorContainerProps) => {
   const keyboardShortcutsRef = React.useRef<KeyboardShortcutsHelpRef>(null);
 
   const { t } = useLanguage();
 
-  const currentImageIndex = projectImages?.findIndex(img => img.id === imageId) ?? -1;
+  const currentImageIndex = projectImages?.findIndex((img) => img.id === imageId) ?? -1;
   const totalImages = projectImages?.length ?? 0;
 
-  const [cursorScreenPosition, setCursorScreenPosition] = useState<{ left: number; top: number } | null>(null);
-  const [lastClickScreenPosition, setLastClickScreenPosition] = useState<{ left: number; top: number } | null>(null);
+  const [cursorScreenPosition, setCursorScreenPosition] = useState<{
+    left: number;
+    top: number;
+  } | null>(null);
+  const [lastClickScreenPosition, setLastClickScreenPosition] = useState<{
+    left: number;
+    top: number;
+  } | null>(null);
 
   const onContainerMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const container = canvasContainerRef.current;
     if (container) {
       const rect = container.getBoundingClientRect();
-      setCursorScreenPosition({ left: e.clientX - rect.left, top: e.clientY - rect.top });
+      setCursorScreenPosition({
+        left: e.clientX - rect.left,
+        top: e.clientY - rect.top,
+      });
     }
     _handleMouseMove(e);
   };
@@ -172,7 +189,10 @@ const EditorContainer = ({
     const container = canvasContainerRef.current;
     if (container) {
       const rect = container.getBoundingClientRect();
-      setLastClickScreenPosition({ left: e.clientX - rect.left, top: e.clientY - rect.top });
+      setLastClickScreenPosition({
+        left: e.clientX - rect.left,
+        top: e.clientY - rect.top,
+      });
     }
     _handleMouseDown(e);
   };
@@ -197,7 +217,9 @@ const EditorContainer = ({
       const link = document.createElement('a');
       const baseUrl = apiClient.getUri().replace(/\/$/, '');
       link.href = `${baseUrl}${exportUrl}`;
-      const filename = imageName ? `${imageName.split('.').slice(0, -1).join('.') || imageName}_mask.png` : `segmentation_mask_${imageId}.png`;
+      const filename = imageName
+        ? `${imageName.split('.').slice(0, -1).join('.') || imageName}_mask.png`
+        : `segmentation_mask_${imageId}.png`;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
@@ -205,8 +227,10 @@ const EditorContainer = ({
     } catch (error) {
       console.error('Error exporting segmentation mask:', error);
       if (axios.isAxiosError(error)) {
-         console.error('Axios error details:', error.response?.data || error.message);
-         toast.error(`${t('export.maskExportError') || 'Failed to export segmentation mask.'} Status: ${error.response?.status || 'N/A'}`);
+        console.error('Axios error details:', error.response?.data || error.message);
+        toast.error(
+          `${t('export.maskExportError') || 'Failed to export segmentation mask.'} Status: ${error.response?.status || 'N/A'}`,
+        );
       } else {
         toast.error(t('export.maskExportError') || 'Failed to export segmentation mask.');
       }
@@ -223,8 +247,22 @@ const EditorContainer = ({
     // Prevent default page scroll
   };
 
+  // Přidáme stav isResegmenting, který budeme sledovat
+  const [isResegmenting, setIsResegmenting] = useState(false);
+
+  // Wrapper pro handleResegmentCurrentImage, který bude sledovat stav resegmentace
+  const handleResegmentWithTracking = useCallback(async () => {
+    try {
+      setIsResegmenting(true);
+      await handleResegmentCurrentImage();
+    } finally {
+      // Po dokončení resegmentace resetujeme stav
+      setIsResegmenting(false);
+    }
+  }, [handleResegmentCurrentImage]);
+
   return (
-    <SegmentationProvider segmentation={segmentation} loading={loading}>
+    <SegmentationProvider segmentation={segmentation} loading={loading || isResegmenting}>
       <EditorLayout>
         <EditorHeader
           projectId={projectId}
@@ -237,7 +275,7 @@ const EditorContainer = ({
           totalImages={totalImages}
           onNavigate={navigateToImage}
           onSave={localHandleSave}
-          onResegmentCurrentImage={handleResegmentCurrentImage}
+          onResegmentCurrentImage={handleResegmentWithTracking}
           onExportMask={handleExportMask}
         />
 
@@ -261,13 +299,18 @@ const EditorContainer = ({
           />
 
           {/* Canvas + DebugOverlay wrapper */}
-          <div
-            ref={canvasContainerRef}
-            className="flex-1 relative w-full h-full overflow-hidden"
-          >
+          <div ref={canvasContainerRef} className="flex-1 relative w-full h-full overflow-hidden">
             <CanvasV2
               segmentationData={{ polygons: segmentation?.polygons ?? [] }} // Ensure polygons array exists
-              imageData={imageSrc ? { src: imageSrc, width: segmentation?.imageWidth ?? 0, height: segmentation?.imageHeight ?? 0 } : null} // Renamed from imageSrc and constructing ImageData
+              imageData={
+                imageSrc
+                  ? {
+                      src: imageSrc,
+                      width: segmentation?.imageWidth ?? 0,
+                      height: segmentation?.imageHeight ?? 0,
+                    }
+                  : null
+              } // Renamed from imageSrc and constructing ImageData
               tempPoints={tempPoints.points} // Pass the points array
               cursorPosition={cursorPosition}
               editMode={editMode} // Added missing prop
@@ -309,12 +352,27 @@ const EditorContainer = ({
                 if (keyboardShortcutsRef.current?.open) {
                   keyboardShortcutsRef.current.open();
                 } else {
-                  console.error('[EditorContainer Debug] keyboardShortcutsRef.current.open is not available or ref is null/undefined.');
+                  console.error(
+                    '[EditorContainer Debug] keyboardShortcutsRef.current.open is not available or ref is null/undefined.',
+                  );
                 }
               }}
               data-testid="keyboard-shortcuts-icon"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 16V8m0 0a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2z" /></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 16V8m0 0a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2z"
+                />
+              </svg>
               <span>{t('shortcuts.title') || 'Shortcuts'}</span>
             </button>
             <KeyboardShortcutsHelp ref={keyboardShortcutsRef} />
@@ -323,13 +381,20 @@ const EditorContainer = ({
 
         <StatusBar
           segmentation={segmentation}
-          editMode={editMode === EditMode.EditVertices ? 'edit' : slicingMode ? 'slice' : pointAddingMode.isActive ? 'add' : undefined}
+          editMode={
+            editMode === EditMode.EditVertices
+              ? 'edit'
+              : slicingMode
+                ? 'slice'
+                : pointAddingMode.isActive
+                  ? 'add'
+                  : undefined
+          }
           autoSaveEnabled={autoSaveEnabled}
           autoSaveStatus={autoSaveStatus}
           hasUnsavedChanges={hasUnsavedChanges}
           onToggleAutoSave={toggleAutoSave}
         />
-
       </EditorLayout>
     </SegmentationProvider>
   );

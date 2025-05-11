@@ -8,7 +8,9 @@ import { BrowserRouter } from 'react-router-dom';
 vi.mock('@/components/project/ProjectActions', () => ({
   default: ({ onDelete }: { onDelete: () => void }) => (
     <div data-testid="project-actions">
-      <button onClick={onDelete} data-testid="mock-delete-button">Delete</button>
+      <button onClick={onDelete} data-testid="mock-delete-button">
+        Delete
+      </button>
     </div>
   ),
 }));
@@ -21,9 +23,9 @@ vi.mock('@/contexts/AuthContext', () => ({
     token: 'test-token',
     signIn: vi.fn(),
     signUp: vi.fn(),
-    signOut: vi.fn()
+    signOut: vi.fn(),
   }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock the LanguageContext
@@ -32,9 +34,9 @@ vi.mock('@/contexts/LanguageContext', () => ({
     language: 'en',
     setLanguage: vi.fn(),
     t: (key: string) => key,
-    availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh']
+    availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
   }),
-  LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+  LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 describe('ProjectCard', () => {
@@ -54,7 +56,7 @@ describe('ProjectCard', () => {
     return render(
       <BrowserRouter>
         <ProjectCard {...props} />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

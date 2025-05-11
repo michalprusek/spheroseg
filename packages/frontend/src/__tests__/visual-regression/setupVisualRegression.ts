@@ -12,15 +12,15 @@ expect.extend({ toMatchImageSnapshot });
 export const visualConfig = {
   snapshotsDir: path.join(__dirname, 'snapshots'),
   threshold: 0.02, // Allow 2% pixel difference
-  
+
   // Visual comparison options
   comparisonOptions: {
     failureThreshold: 0.02,
     failureThresholdType: 'percent',
     updatePassedSnapshot: false,
     blur: 1, // Apply slight blur to reduce noise
-    allowSizeMismatch: false
-  }
+    allowSizeMismatch: false,
+  },
 };
 
 // Create snapshots directory if it doesn't exist
@@ -38,56 +38,56 @@ export const test = base.extend({
       // Take screenshot
       const screenshot = await page.screenshot({
         fullPage: false,
-        ...options
+        ...options,
       });
-      
+
       // Construct snapshot path
       const snapshotPath = path.join(visualConfig.snapshotsDir, `${name}.png`);
-      
+
       // If snapshot doesn't exist yet, save it
       if (!fs.existsSync(snapshotPath) && process.env.UPDATE_VISUAL_SNAPSHOTS) {
         fs.writeFileSync(snapshotPath, screenshot);
         console.log(`Created new snapshot: ${name}`);
         return;
       }
-      
+
       // Compare with existing snapshot
       expect(screenshot).toMatchImageSnapshot({
         customSnapshotIdentifier: name,
         customSnapshotsDir: visualConfig.snapshotsDir,
-        ...visualConfig.comparisonOptions
+        ...visualConfig.comparisonOptions,
       });
     };
-    
+
     // Add a method to compare a specific element
     page.compareElement = async (selector: string, name: string, options = {}) => {
       const element = await page.$(selector);
       if (!element) {
         throw new Error(`Element not found: ${selector}`);
       }
-      
+
       const screenshot = await element.screenshot(options);
-      
+
       // Construct snapshot path
       const snapshotPath = path.join(visualConfig.snapshotsDir, `${name}.png`);
-      
+
       // If snapshot doesn't exist yet, save it
       if (!fs.existsSync(snapshotPath) && process.env.UPDATE_VISUAL_SNAPSHOTS) {
         fs.writeFileSync(snapshotPath, screenshot);
         console.log(`Created new snapshot: ${name}`);
         return;
       }
-      
+
       // Compare with existing snapshot
       expect(screenshot).toMatchImageSnapshot({
         customSnapshotIdentifier: name,
         customSnapshotsDir: visualConfig.snapshotsDir,
-        ...visualConfig.comparisonOptions
+        ...visualConfig.comparisonOptions,
       });
     };
-    
+
     await use(page);
-  }
+  },
 });
 
 // Extend the Page interface with our custom methods

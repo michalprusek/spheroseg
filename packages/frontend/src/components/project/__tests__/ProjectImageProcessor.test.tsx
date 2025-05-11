@@ -10,15 +10,15 @@ vi.mock('sonner', () => ({
   toast: {
     info: vi.fn(),
     error: vi.fn(),
-    success: vi.fn()
-  }
+    success: vi.fn(),
+  },
 }));
 
 vi.mock('@/lib/apiClient', () => ({
   default: {
     post: vi.fn(),
-    put: vi.fn()
-  }
+    put: vi.fn(),
+  },
 }));
 
 vi.mock('@/contexts/LanguageContext', () => ({
@@ -31,11 +31,11 @@ vi.mock('@/contexts/LanguageContext', () => ({
         'imageProcessor.startSegmentationTooltip': 'Start segmentation',
         'imageProcessor.processingTooltip': 'Processing...',
         'imageProcessor.completedTooltip': 'Segmentation completed',
-        'imageProcessor.retryTooltip': 'Retry segmentation'
+        'imageProcessor.retryTooltip': 'Retry segmentation',
       };
       return translations[key] || key;
-    }
-  })
+    },
+  }),
 }));
 
 // Import the mocked modules
@@ -62,17 +62,17 @@ describe('ProjectImageProcessor Component', () => {
 
   it('renders correctly with pending status', () => {
     render(
-      <ProjectImageProcessor 
-        image={mockImage} 
-        onStatusChange={mockOnStatusChange} 
-        onResultChange={mockOnResultChange} 
-      />
+      <ProjectImageProcessor
+        image={mockImage}
+        onStatusChange={mockOnStatusChange}
+        onResultChange={mockOnResultChange}
+      />,
     );
 
     // Check if the button is rendered with the correct icon
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
-    
+
     // Check for play icon
     const playIcon = document.querySelector('.lucide-play');
     expect(playIcon).toBeInTheDocument();
@@ -85,18 +85,18 @@ describe('ProjectImageProcessor Component', () => {
     };
 
     render(
-      <ProjectImageProcessor 
-        image={processingImage} 
-        onStatusChange={mockOnStatusChange} 
-        onResultChange={mockOnResultChange} 
-      />
+      <ProjectImageProcessor
+        image={processingImage}
+        onStatusChange={mockOnStatusChange}
+        onResultChange={mockOnResultChange}
+      />,
     );
 
     // Check if the button is rendered with the loading spinner
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
     expect(button).toBeDisabled();
-    
+
     // Check for loading spinner
     const loadingIcon = document.querySelector('.lucide-loader-circle');
     expect(loadingIcon).toBeInTheDocument();
@@ -110,18 +110,18 @@ describe('ProjectImageProcessor Component', () => {
     };
 
     render(
-      <ProjectImageProcessor 
-        image={completedImage} 
-        onStatusChange={mockOnStatusChange} 
-        onResultChange={mockOnResultChange} 
-      />
+      <ProjectImageProcessor
+        image={completedImage}
+        onStatusChange={mockOnStatusChange}
+        onResultChange={mockOnResultChange}
+      />,
     );
 
     // Check if the button is rendered with the check icon
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
     expect(button).toBeDisabled();
-    
+
     // Check for check icon
     const checkIcon = document.querySelector('.lucide-circle-check-big');
     expect(checkIcon).toBeInTheDocument();
@@ -135,17 +135,17 @@ describe('ProjectImageProcessor Component', () => {
     };
 
     render(
-      <ProjectImageProcessor 
-        image={failedImage} 
-        onStatusChange={mockOnStatusChange} 
-        onResultChange={mockOnResultChange} 
-      />
+      <ProjectImageProcessor
+        image={failedImage}
+        onStatusChange={mockOnStatusChange}
+        onResultChange={mockOnResultChange}
+      />,
     );
 
     // Check if the button is rendered with the alert icon
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
-    
+
     // Check for alert icon
     const alertIcon = document.querySelector('.lucide-triangle-alert');
     expect(alertIcon).toBeInTheDocument();
@@ -157,11 +157,11 @@ describe('ProjectImageProcessor Component', () => {
     (apiClient.post as any).mockResolvedValueOnce({});
 
     render(
-      <ProjectImageProcessor 
-        image={mockImage} 
-        onStatusChange={mockOnStatusChange} 
-        onResultChange={mockOnResultChange} 
-      />
+      <ProjectImageProcessor
+        image={mockImage}
+        onStatusChange={mockOnStatusChange}
+        onResultChange={mockOnResultChange}
+      />,
     );
 
     // Click the segmentation button
@@ -170,10 +170,10 @@ describe('ProjectImageProcessor Component', () => {
 
     // Check if API was called with correct parameters
     expect(apiClient.post).toHaveBeenCalledWith(`/images/${mockImage.id}/segmentation`);
-    
+
     // Check if status change callback was called
     expect(mockOnStatusChange).toHaveBeenCalledWith(mockImage.id, 'processing');
-    
+
     // Check if toast notification was shown
     expect(toast.info).toHaveBeenCalledWith('Segmentation process started...');
   });
@@ -184,11 +184,11 @@ describe('ProjectImageProcessor Component', () => {
     (apiClient.post as any).mockRejectedValueOnce(new Error(errorMessage));
 
     render(
-      <ProjectImageProcessor 
-        image={mockImage} 
-        onStatusChange={mockOnStatusChange} 
-        onResultChange={mockOnResultChange} 
-      />
+      <ProjectImageProcessor
+        image={mockImage}
+        onStatusChange={mockOnStatusChange}
+        onResultChange={mockOnResultChange}
+      />,
     );
 
     // Click the segmentation button
@@ -199,7 +199,7 @@ describe('ProjectImageProcessor Component', () => {
     await waitFor(() => {
       // Check if status change callback was called with failed status
       expect(mockOnStatusChange).toHaveBeenCalledWith(mockImage.id, 'failed');
-      
+
       // Check if error toast was shown
       expect(toast.error).toHaveBeenCalled();
     });

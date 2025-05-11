@@ -12,15 +12,17 @@ const io = new SocketIOServer(server, {
   cors: {
     origin: ['http://localhost:3000', 'http://frontend:3000', '*'],
     methods: ['GET', 'POST'],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
 // Configure middleware
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://frontend:3000', '*'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: ['http://localhost:3000', 'http://frontend:3000', '*'],
+    credentials: true,
+  }),
+);
 
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
@@ -32,10 +34,10 @@ app.get('/api/health', (req, res) => {
 
 // Status endpoint
 app.get('/api/status', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'running',
     version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 

@@ -27,12 +27,14 @@ function getAllFiles(dir: string, extensions: string[] = ['.tsx', '.jsx']): stri
 }
 
 // Function to check for potential hardcoded text in a file
-function checkFileForHardcodedText(filePath: string): { file: string, line: number, text: string }[] {
+function checkFileForHardcodedText(filePath: string): { file: string; line: number; text: string }[] {
   // Skip checking test files and translation files
-  if (filePath.includes('__tests__') ||
-      filePath.includes('test.') ||
-      filePath.includes('locales/') ||
-      filePath.includes('i18n.ts')) {
+  if (
+    filePath.includes('__tests__') ||
+    filePath.includes('test.') ||
+    filePath.includes('locales/') ||
+    filePath.includes('i18n.ts')
+  ) {
     return [];
   }
 
@@ -40,10 +42,10 @@ function checkFileForHardcodedText(filePath: string): { file: string, line: numb
   const results = checkForHardcodedText(content);
 
   // Convert to the expected format
-  return results.map(result => ({
+  return results.map((result) => ({
     file: filePath,
     line: result.line,
-    text: result.text
+    text: result.text,
   }));
 }
 
@@ -55,9 +57,9 @@ describe('Hardcoded Text Check', () => {
     const srcDir = path.resolve(__dirname, '../../../src');
     const files = getAllFiles(srcDir);
 
-    let allResults: { file: string, line: number, text: string }[] = [];
+    let allResults: { file: string; line: number; text: string }[] = [];
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const results = checkFileForHardcodedText(file);
       allResults = [...allResults, ...results];
     });
@@ -67,7 +69,7 @@ describe('Hardcoded Text Check', () => {
       console.log('\nPotential hardcoded text found:');
       console.log('================================');
 
-      allResults.forEach(result => {
+      allResults.forEach((result) => {
         console.log(`File: ${path.relative(srcDir, result.file)}`);
         console.log(`Line: ${result.line}`);
         console.log(`Text: "${result.text}"`);

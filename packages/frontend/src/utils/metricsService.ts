@@ -11,7 +11,7 @@ class MetricsService {
   private flushInterval = 10000; // 10 seconds
   private componentRenderTimes: Record<string, number[]> = {};
   private pageLoadTimes: Record<string, number[]> = {};
-  private apiRequestTimes: Record<string, { duration: number, status: number }[]> = {};
+  private apiRequestTimes: Record<string, { duration: number; status: number }[]> = {};
   private flushTimer: NodeJS.Timeout | null = null;
 
   private constructor() {
@@ -52,7 +52,7 @@ class MetricsService {
       name,
       value,
       id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   };
 
@@ -87,7 +87,7 @@ class MetricsService {
           component,
           value: this.calculateP50(times),
           count: times.length,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
         this.componentRenderTimes[component] = [];
       }
@@ -101,7 +101,7 @@ class MetricsService {
           page,
           value: this.calculateP50(times),
           count: times.length,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
         this.pageLoadTimes[page] = [];
       }
@@ -110,16 +110,16 @@ class MetricsService {
     // Prepare data for API request times
     Object.entries(this.apiRequestTimes).forEach(([endpoint, requests]) => {
       if (requests.length > 0) {
-        const durations = requests.map(r => r.duration);
-        const successRate = requests.filter(r => r.status >= 200 && r.status < 300).length / requests.length;
-        
+        const durations = requests.map((r) => r.duration);
+        const successRate = requests.filter((r) => r.status >= 200 && r.status < 300).length / requests.length;
+
         this.buffer.push({
           type: 'api_request',
           endpoint,
           value: this.calculateP50(durations),
           count: requests.length,
           successRate,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
         this.apiRequestTimes[endpoint] = [];
       }
@@ -133,15 +133,15 @@ class MetricsService {
         fetch(this.metricsEndpoint, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify(this.buffer),
-          keepalive: true
-        }).catch(error => {
+          keepalive: true,
+        }).catch((error) => {
           console.error('Failed to send metrics:', error);
         });
       }
-      
+
       // Clear buffer after sending
       this.buffer = [];
     } catch (error) {
@@ -154,11 +154,11 @@ class MetricsService {
    */
   public trackComponentRender(componentName: string, renderTimeMs: number): void {
     if (!this.isEnabled) return;
-    
+
     if (!this.componentRenderTimes[componentName]) {
       this.componentRenderTimes[componentName] = [];
     }
-    
+
     this.componentRenderTimes[componentName].push(renderTimeMs);
   }
 
@@ -167,11 +167,11 @@ class MetricsService {
    */
   public trackPageLoad(pageName: string, loadTimeMs: number): void {
     if (!this.isEnabled) return;
-    
+
     if (!this.pageLoadTimes[pageName]) {
       this.pageLoadTimes[pageName] = [];
     }
-    
+
     this.pageLoadTimes[pageName].push(loadTimeMs);
   }
 
@@ -180,14 +180,14 @@ class MetricsService {
    */
   public trackApiRequest(endpoint: string, durationMs: number, statusCode: number): void {
     if (!this.isEnabled) return;
-    
+
     if (!this.apiRequestTimes[endpoint]) {
       this.apiRequestTimes[endpoint] = [];
     }
-    
+
     this.apiRequestTimes[endpoint].push({
       duration: durationMs,
-      status: statusCode
+      status: statusCode,
     });
   }
 
@@ -196,10 +196,10 @@ class MetricsService {
    */
   private calculateP50(values: number[]): number {
     if (values.length === 0) return 0;
-    
+
     const sorted = [...values].sort((a, b) => a - b);
     const midIndex = Math.floor(sorted.length / 2);
-    
+
     if (sorted.length % 2 === 0) {
       return (sorted[midIndex - 1] + sorted[midIndex]) / 2;
     } else {
@@ -218,7 +218,7 @@ export function useComponentRenderTracking(componentName: string) {
       callback();
       const end = performance.now();
       MetricsService.getInstance().trackComponentRender(componentName, end - start);
-    }
+    },
   };
 }
 
@@ -233,13 +233,9 @@ export function setupAxiosMetricsInterceptors(axiosInstance: any) {
     (response: any) => {
       const duration = performance.now() - response.config.metadata.startTime;
       const endpoint = response.config.url.replace(/\/[0-9a-f-]+(?=\/|$)/g, '/:id');
-      
-      MetricsService.getInstance().trackApiRequest(
-        endpoint, 
-        duration,
-        response.status
-      );
-      
+
+      MetricsService.getInstance().trackApiRequest(endpoint, duration, response.status);
+
       return response;
     },
     (error: any) => {
@@ -247,15 +243,11 @@ export function setupAxiosMetricsInterceptors(axiosInstance: any) {
         const duration = performance.now() - error.config.metadata.startTime;
         const endpoint = error.config.url.replace(/\/[0-9a-f-]+(?=\/|$)/g, '/:id');
         const status = error.response ? error.response.status : 0;
-        
-        MetricsService.getInstance().trackApiRequest(
-          endpoint,
-          duration,
-          status
-        );
+
+        MetricsService.getInstance().trackApiRequest(endpoint, duration, status);
       }
-      
+
       return Promise.reject(error);
-    }
+    },
   );
 }

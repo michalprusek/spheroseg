@@ -21,10 +21,7 @@ vi.mock('react-i18next', () => ({
 vi.mock('@/components/project/ProjectActions', () => ({
   default: ({ projectId, onDelete, onDuplicateSuccess }: any) => (
     <div data-testid="project-actions">
-      <button
-        data-testid="delete-button"
-        onClick={() => onDelete(projectId)}
-      >
+      <button data-testid="delete-button" onClick={() => onDelete(projectId)}>
         Delete
       </button>
       <button
@@ -73,7 +70,7 @@ describe('ProjectCard Component', () => {
     return render(
       <MemoryRouter>
         <ProjectCard {...defaultProps} {...props} />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
   };
 
@@ -145,9 +142,7 @@ describe('ProjectCard Component', () => {
     expect(links.length).toBeGreaterThan(0);
 
     // Check that at least one link has the correct href
-    const hasCorrectLink = links.some(link =>
-      link.getAttribute('href') === '/projects/project-1'
-    );
+    const hasCorrectLink = links.some((link) => link.getAttribute('href') === '/projects/project-1');
     expect(hasCorrectLink).toBe(true);
   });
 });

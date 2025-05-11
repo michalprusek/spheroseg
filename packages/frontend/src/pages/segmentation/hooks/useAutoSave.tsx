@@ -5,7 +5,7 @@ import { CanvasSegmentationData } from '@/types';
 
 /**
  * Hook for auto-saving segmentation data
- * 
+ *
  * @param segmentation The current segmentation data
  * @param historyIndex The current history index
  * @param historyLength The total length of the history
@@ -21,7 +21,7 @@ export const useAutoSave = (
   saving: boolean,
   handleSave: () => Promise<void>,
   autoSaveDelay: number = 30000,
-  enabled: boolean = true
+  enabled: boolean = true,
 ) => {
   const { t } = useLanguage();
   const [lastSavedIndex, setLastSavedIndex] = useState<number>(historyIndex);
@@ -72,7 +72,6 @@ export const useAutoSave = (
         toast.error(t('editor.autoSaveError') || 'Auto-save failed. Your changes are not saved.');
       }
     }, autoSaveDelay);
-
   }, [autoSaveEnabled, historyIndex, lastSavedIndex, saving, segmentation, handleSave, autoSaveDelay, t]);
 
   // Update lastSavedIndex when a manual save is successful
@@ -84,11 +83,11 @@ export const useAutoSave = (
 
   // Toggle auto-save
   const toggleAutoSave = () => {
-    setAutoSaveEnabled(prev => !prev);
+    setAutoSaveEnabled((prev) => !prev);
     toast.info(
       !autoSaveEnabled
         ? t('editor.autoSaveEnabled') || 'Auto-save enabled'
-        : t('editor.autoSaveDisabled') || 'Auto-save disabled'
+        : t('editor.autoSaveDisabled') || 'Auto-save disabled',
     );
   };
 
@@ -118,6 +117,6 @@ export const useAutoSave = (
     saveNow,
     autoSaveStatus,
     hasUnsavedChanges,
-    lastSavedIndex
+    lastSavedIndex,
   };
 };

@@ -10,8 +10,8 @@ jest.mock('../config', () => ({
   isTest: false, // Set to false to test rate limiting
   security: {
     rateLimitRequests: 10,
-    rateLimitWindow: 60
-  }
+    rateLimitWindow: 60,
+  },
 }));
 
 // Mock logger with all required methods
@@ -24,7 +24,7 @@ jest.mock('../utils/logger', () => {
       info: jest.fn(),
       debug: jest.fn(),
       http: jest.fn(),
-    }
+    },
   };
 });
 
@@ -64,11 +64,7 @@ describe('Rate Limiting Middleware', () => {
     const middleware = rateLimit('default');
 
     // Call middleware
-    await middleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Check if next was called
     expect(nextFunction).toHaveBeenCalled();
@@ -82,22 +78,14 @@ describe('Rate Limiting Middleware', () => {
 
     // Call middleware multiple times to exceed rate limit
     for (let i = 0; i < 5; i++) {
-      await middleware(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
     }
 
     // Reset next function to check if it's called again
     nextFunction.mockReset();
 
     // Call middleware one more time
-    await middleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Check if response was set correctly
     expect(nextFunction).not.toHaveBeenCalled();
@@ -107,7 +95,7 @@ describe('Rate Limiting Middleware', () => {
         error: expect.objectContaining({
           message: 'Too many requests, please try again later',
         }),
-      })
+      }),
     );
     expect(mockResponse.set).toHaveBeenCalledWith('Retry-After', expect.any(String));
   });
@@ -124,11 +112,7 @@ describe('Rate Limiting Middleware', () => {
     const middleware = rateLimit('default');
 
     // Call middleware
-    await middleware(
-      requestWithoutUser as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    await middleware(requestWithoutUser as Request, mockResponse as Response, nextFunction);
 
     // Check if next was called
     expect(nextFunction).toHaveBeenCalled();
@@ -140,22 +124,14 @@ describe('Rate Limiting Middleware', () => {
 
     // Call auth middleware multiple times to exceed rate limit
     for (let i = 0; i < 5; i++) {
-      await authMiddleware(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      await authMiddleware(mockRequest as Request, mockResponse as Response, nextFunction);
     }
 
     // Reset next function to check if it's called again
     nextFunction.mockReset();
 
     // Call auth middleware one more time
-    await authMiddleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    await authMiddleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Check if auth middleware blocked the request
     expect(nextFunction).not.toHaveBeenCalled();
@@ -168,11 +144,7 @@ describe('Rate Limiting Middleware', () => {
     const defaultMiddleware = rateLimit('default');
 
     // Call default middleware
-    await defaultMiddleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    await defaultMiddleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Check if default middleware allowed the request
     expect(nextFunction).toHaveBeenCalled();

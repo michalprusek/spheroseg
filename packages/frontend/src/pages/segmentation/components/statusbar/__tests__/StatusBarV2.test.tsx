@@ -5,15 +5,11 @@ import { StatusBarV2 } from '../StatusBarV2';
 import { EditMode } from '@/pages/segmentation/hooks/segmentation';
 import '@testing-library/jest-dom';
 import { resetAllMocks } from '../../../../../../shared/test-utils/componentTestUtils';
-import { 
-  defaultStatusBarProps, 
-  renderStatusBar,
-  verifyStatusBarValues
-} from './statusBarTestUtils';
+import { defaultStatusBarProps, renderStatusBar, verifyStatusBarValues } from './statusBarTestUtils';
 
 // Mock dependencies
 vi.mock('@/contexts/LanguageContext', () => ({
-  useLanguage: () => ({ t: (key: string) => key })
+  useLanguage: () => ({ t: (key: string) => key }),
 }));
 
 describe('StatusBarV2', () => {
@@ -42,33 +38,17 @@ describe('StatusBarV2', () => {
   });
 
   it('does not display image resolution when dimensions are not provided', () => {
-    renderStatusBar(
-      <StatusBarV2 
-        {...defaultStatusBarProps} 
-        imageWidth={undefined} 
-        imageHeight={undefined} 
-      />
-    );
+    renderStatusBar(<StatusBarV2 {...defaultStatusBarProps} imageWidth={undefined} imageHeight={undefined} />);
     expect(screen.queryByText(/px/)).not.toBeInTheDocument();
   });
 
   it('displays CreatePolygon mode text when in creation mode', () => {
-    renderStatusBar(
-      <StatusBarV2 
-        {...defaultStatusBarProps} 
-        editMode={EditMode.CreatePolygon} 
-      />
-    );
+    renderStatusBar(<StatusBarV2 {...defaultStatusBarProps} editMode={EditMode.CreatePolygon} />);
     verifyStatusBarValues(screen, { mode: EditMode.CreatePolygon });
   });
 
   it('displays DeletePolygon mode text when in deletion mode', () => {
-    renderStatusBar(
-      <StatusBarV2 
-        {...defaultStatusBarProps} 
-        editMode={EditMode.DeletePolygon} 
-      />
-    );
+    renderStatusBar(<StatusBarV2 {...defaultStatusBarProps} editMode={EditMode.DeletePolygon} />);
     verifyStatusBarValues(screen, { mode: EditMode.DeletePolygon });
   });
 });

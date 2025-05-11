@@ -1,9 +1,9 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { UploadCloud, X, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
-import { cn } from "@/lib/utils";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EnhancedFileUploaderProps {
@@ -63,9 +63,9 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
       setErrorMessage(null);
 
       // Check for max files
-      if (multiple && (files.length + acceptedFiles.length) > maxFiles) {
-        const error = t('upload.tooManyFiles', { max: maxFiles }) || 
-          `Too many files. Maximum ${maxFiles} files allowed.`;
+      if (multiple && files.length + acceptedFiles.length > maxFiles) {
+        const error =
+          t('upload.tooManyFiles', { max: maxFiles }) || `Too many files. Maximum ${maxFiles} files allowed.`;
         setErrorMessage(error);
         if (onError) onError(error);
         return;
@@ -75,7 +75,7 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
       if (fileRejections.length > 0) {
         // Group rejections by error code
         const errorGroups: Record<string, string[]> = {};
-        fileRejections.forEach(rejection => {
+        fileRejections.forEach((rejection) => {
           const errorCode = rejection.errors[0].code;
           if (!errorGroups[errorCode]) {
             errorGroups[errorCode] = [];
@@ -86,15 +86,20 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
         // Create error messages based on error types
         const errors: string[] = [];
         if (errorGroups['file-too-large']) {
-          errors.push(t('upload.filesTooLarge', { 
-            count: errorGroups['file-too-large'].length,
-            max: (maxSize / (1024 * 1024)).toFixed(0)
-          }) || `${errorGroups['file-too-large'].length} file(s) exceed the ${(maxSize / (1024 * 1024)).toFixed(0)}MB size limit`);
+          errors.push(
+            t('upload.filesTooLarge', {
+              count: errorGroups['file-too-large'].length,
+              max: (maxSize / (1024 * 1024)).toFixed(0),
+            }) ||
+              `${errorGroups['file-too-large'].length} file(s) exceed the ${(maxSize / (1024 * 1024)).toFixed(0)}MB size limit`,
+          );
         }
         if (errorGroups['file-invalid-type']) {
-          errors.push(t('upload.unsupportedFileTypes', { 
-            count: errorGroups['file-invalid-type'].length 
-          }) || `${errorGroups['file-invalid-type'].length} file(s) have unsupported formats`);
+          errors.push(
+            t('upload.unsupportedFileTypes', {
+              count: errorGroups['file-invalid-type'].length,
+            }) || `${errorGroups['file-invalid-type'].length} file(s) have unsupported formats`,
+          );
         }
 
         const errorMessage = errors.join('. ');
@@ -106,20 +111,19 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
       }
 
       // If single file mode, replace current file
-      const newFiles = multiple 
-        ? [...files, ...acceptedFiles] 
-        : acceptedFiles;
-      
+      const newFiles = multiple ? [...files, ...acceptedFiles] : acceptedFiles;
+
       setFiles(newFiles);
       onDrop(newFiles);
     },
-    [disabled, multiple, maxFiles, files.length, onDrop, onError, maxSize, t]
+    [disabled, multiple, maxFiles, files.length, onDrop, onError, maxSize, t],
   );
 
   // Convert accept string to the format expected by react-dropzone v14+
-  const acceptProp = typeof accept === 'string' 
-    ? { [accept]: [] }  // Convert 'image/*' to { 'image/*': [] }
-    : accept;
+  const acceptProp =
+    typeof accept === 'string'
+      ? { [accept]: [] } // Convert 'image/*' to { 'image/*': [] }
+      : accept;
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: acceptProp,
@@ -171,7 +175,7 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
   // Render appropriate file preview based on file type
   const renderFilePreview = (file: File, index: number) => {
     const category = getFileCategory(file);
-    
+
     // Calculate file size in a readable format
     const formatFileSize = (bytes: number): string => {
       if (bytes < 1024) return `${bytes} B`;
@@ -182,9 +186,9 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
     // Base container classes based on preview type
     const containerClass = cn(
       'relative group',
-      previewType === 'grid' 
-        ? 'aspect-square rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800' 
-        : 'flex items-center p-2 rounded-md bg-gray-100 dark:bg-gray-800'
+      previewType === 'grid'
+        ? 'aspect-square rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800'
+        : 'flex items-center p-2 rounded-md bg-gray-100 dark:bg-gray-800',
     );
 
     // Image preview
@@ -196,9 +200,7 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
             src={previewUrl}
             alt={file.name}
             className={cn(
-              previewType === 'grid'
-                ? 'w-full h-full object-cover'
-                : 'w-12 h-12 object-cover rounded-md mr-3'
+              previewType === 'grid' ? 'w-full h-full object-cover' : 'w-12 h-12 object-cover rounded-md mr-3',
             )}
             onLoad={() => URL.revokeObjectURL(previewUrl)} // Clean up
           />
@@ -207,7 +209,7 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
         </div>
       );
     }
-    
+
     // Non-image file preview
     return (
       <div key={`${file.name}-${index}`} className={containerClass}>
@@ -215,7 +217,7 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
           className={cn(
             previewType === 'grid'
               ? 'w-full h-full flex flex-col items-center justify-center'
-              : 'w-12 h-12 flex items-center justify-center rounded-md mr-3 bg-gray-200 dark:bg-gray-700'
+              : 'w-12 h-12 flex items-center justify-center rounded-md mr-3 bg-gray-200 dark:bg-gray-700',
           )}
         >
           <ImageIcon className="w-8 h-8 text-gray-500" />
@@ -236,12 +238,8 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
     if (type === 'list') {
       return (
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-            {file.name}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {(file.size / 1024).toFixed(2)} kB
-          </p>
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{file.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{(file.size / 1024).toFixed(2)} kB</p>
         </div>
       );
     }
@@ -253,7 +251,7 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
     return (
       <button
         type="button"
-        onClick={(e) => { 
+        onClick={(e) => {
           e.stopPropagation();
           removeFile(index);
         }}
@@ -263,7 +261,7 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
         className={cn(
           'absolute top-1 right-1 bg-red-500 text-white rounded-full p-1',
           'opacity-0 group-hover:opacity-100 transition-opacity',
-          uploadState === 'uploading' ? 'cursor-not-allowed opacity-50' : ''
+          uploadState === 'uploading' ? 'cursor-not-allowed opacity-50' : '',
         )}
       >
         <X className="w-3 h-3" />
@@ -303,18 +301,10 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
           </div>
           {files.length > 0 && (
             <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onDrop(files)}
-              >
+              <Button variant="outline" size="sm" onClick={() => onDrop(files)}>
                 {retryLabel || t('upload.retry') || 'Retry'}
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={clearFiles}
-              >
+              <Button variant="ghost" size="sm" onClick={clearFiles}>
                 {cancelLabel || t('upload.cancel') || 'Cancel'}
               </Button>
             </div>
@@ -341,12 +331,12 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
     if (!showPreview || files.length === 0) return null;
 
     return (
-      <div className={cn(
-        'mt-4', 
-        previewType === 'grid' 
-          ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4' 
-          : 'space-y-2'
-      )}>
+      <div
+        className={cn(
+          'mt-4',
+          previewType === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4' : 'space-y-2',
+        )}
+      >
         {files.map((file, index) => renderFilePreview(file, index))}
       </div>
     );
@@ -354,15 +344,16 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
 
   // Determine CSS classes based on variant and state
   const getContainerClasses = () => {
-    const baseClasses = 'relative rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-offset-2';
-    
+    const baseClasses =
+      'relative rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-offset-2';
+
     // Add variant classes
     const variantClasses = {
-      'default': 'border-2 border-dashed border-gray-300 dark:border-gray-700',
-      'outline': 'border-2 border-gray-300 dark:border-gray-700',
-      'ghost': 'bg-transparent'
+      default: 'border-2 border-dashed border-gray-300 dark:border-gray-700',
+      outline: 'border-2 border-gray-300 dark:border-gray-700',
+      ghost: 'bg-transparent',
     }[variant];
-    
+
     // Add state classes
     let stateClasses = '';
     if (disabled) {
@@ -372,7 +363,7 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
     } else {
       stateClasses = 'hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10';
     }
-    
+
     return `${baseClasses} ${variantClasses} ${stateClasses}`;
   };
 
@@ -381,52 +372,47 @@ export const EnhancedFileUploader: React.FC<EnhancedFileUploaderProps> = ({
     if (dragActive || isDragActive) {
       return t('upload.dropFiles') || 'Drop files here...';
     }
-    
+
     if (disabled) {
       return t('upload.uploaderDisabled') || 'File upload disabled';
     }
-    
+
     if (multiple) {
       return t('upload.dragDropMultiple') || 'Drag and drop files here, or click to select files';
     }
-    
+
     return t('upload.dragDropSingle') || 'Drag and drop a file here, or click to select a file';
   };
 
   // Get restrictions text
   const getRestrictionsText = () => {
     const restrictions: string[] = [];
-    
+
     if (!multiple) {
       restrictions.push(t('upload.singleFileOnly') || 'Single file only');
     } else if (maxFiles) {
       restrictions.push(t('upload.maxFiles', { max: maxFiles }) || `Max ${maxFiles} files`);
     }
-    
+
     if (maxSize) {
-      restrictions.push(t('upload.maxSize', { max: (maxSize / (1024 * 1024)).toFixed(0) }) || 
-        `Max ${(maxSize / (1024 * 1024)).toFixed(0)} MB per file`);
+      restrictions.push(
+        t('upload.maxSize', { max: (maxSize / (1024 * 1024)).toFixed(0) }) ||
+          `Max ${(maxSize / (1024 * 1024)).toFixed(0)} MB per file`,
+      );
     }
-    
+
     return restrictions.join(' • ');
   };
 
   return (
-    <div className={cn("space-y-4", className)}>
-      <div
-        {...getRootProps()}
-        className={getContainerClasses()}
-      >
+    <div className={cn('space-y-4', className)}>
+      <div {...getRootProps()} className={getContainerClasses()}>
         <input {...getInputProps()} />
-        
+
         <div className="p-8 text-center">
           <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
-          <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-            {getDropzoneText()}
-          </p>
-          <p className="mt-1 text-xs text-gray-500">
-            {getRestrictionsText()}
-          </p>
+          <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">{getDropzoneText()}</p>
+          <p className="mt-1 text-xs text-gray-500">{getRestrictionsText()}</p>
         </div>
       </div>
 

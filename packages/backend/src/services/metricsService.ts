@@ -1,9 +1,9 @@
 /**
  * Consolidated Metrics Service
- * 
+ *
  * This service provides functions for calculating various metrics for polygons,
  * including area, perimeter, circularity, convex hull, etc.
- * 
+ *
  * It consolidates duplicate implementations from:
  * - src/services/metricsService.ts
  * - server/src/services/metricsService.ts
@@ -18,14 +18,14 @@ import { Point, Polygon } from '../types/geometry';
  */
 export const calculatePolygonArea = (points: Point[]): number => {
   if (points.length < 3) return 0;
-  
+
   let area = 0;
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
     area += points[i].x * points[j].y;
     area -= points[j].x * points[i].y;
   }
-  
+
   return Math.abs(area / 2);
 };
 
@@ -36,7 +36,7 @@ export const calculatePolygonArea = (points: Point[]): number => {
  */
 export const calculatePerimeter = (points: Point[]): number => {
   if (points.length < 2) return 0;
-  
+
   let perimeter = 0;
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
@@ -44,7 +44,7 @@ export const calculatePerimeter = (points: Point[]): number => {
     const dy = points[j].y - points[i].y;
     perimeter += Math.sqrt(dx * dx + dy * dy);
   }
-  
+
   return perimeter;
 };
 
@@ -55,24 +55,24 @@ export const calculatePerimeter = (points: Point[]): number => {
  */
 export const calculateBoundingBox = (points: Point[]): { x: number; y: number; width: number; height: number } => {
   if (points.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
-  
+
   let minX = points[0].x;
   let minY = points[0].y;
   let maxX = points[0].x;
   let maxY = points[0].y;
-  
+
   for (let i = 1; i < points.length; i++) {
     minX = Math.min(minX, points[i].x);
     minY = Math.min(minY, points[i].y);
     maxX = Math.max(maxX, points[i].x);
     maxY = Math.max(maxY, points[i].y);
   }
-  
+
   return {
     x: minX,
     y: minY,
     width: maxX - minX,
-    height: maxY - minY
+    height: maxY - minY,
   };
 };
 
@@ -83,7 +83,7 @@ export const calculateBoundingBox = (points: Point[]): { x: number; y: number; w
  */
 export const calculateConvexHull = (points: Point[]): Point[] => {
   if (points.length <= 3) return [...points];
-  
+
   // Find the point with the lowest y-coordinate (and leftmost if tied)
   let lowestPoint = points[0];
   for (let i = 1; i < points.length; i++) {
@@ -91,48 +91,45 @@ export const calculateConvexHull = (points: Point[]): Point[] => {
       lowestPoint = points[i];
     }
   }
-  
+
   // Sort points by polar angle with respect to the lowest point
   const sortedPoints = [...points].sort((a, b) => {
     if (a === lowestPoint) return -1;
     if (b === lowestPoint) return 1;
-    
+
     const angleA = Math.atan2(a.y - lowestPoint.y, a.x - lowestPoint.x);
     const angleB = Math.atan2(b.y - lowestPoint.y, b.x - lowestPoint.x);
-    
+
     if (angleA === angleB) {
       // If angles are the same, sort by distance from the lowest point
       const distA = Math.pow(a.x - lowestPoint.x, 2) + Math.pow(a.y - lowestPoint.y, 2);
       const distB = Math.pow(b.x - lowestPoint.x, 2) + Math.pow(b.y - lowestPoint.y, 2);
       return distA - distB;
     }
-    
+
     return angleA - angleB;
   });
-  
+
   // Remove duplicate points
   const uniquePoints: Point[] = [];
   for (let i = 0; i < sortedPoints.length; i++) {
-    if (i === 0 || sortedPoints[i].x !== sortedPoints[i-1].x || sortedPoints[i].y !== sortedPoints[i-1].y) {
+    if (i === 0 || sortedPoints[i].x !== sortedPoints[i - 1].x || sortedPoints[i].y !== sortedPoints[i - 1].y) {
       uniquePoints.push(sortedPoints[i]);
     }
   }
-  
+
   // Graham scan algorithm
   if (uniquePoints.length <= 3) return uniquePoints;
-  
+
   const hull: Point[] = [uniquePoints[0], uniquePoints[1]];
-  
+
   for (let i = 2; i < uniquePoints.length; i++) {
-    while (
-      hull.length >= 2 &&
-      !isLeftTurn(hull[hull.length - 2], hull[hull.length - 1], uniquePoints[i])
-    ) {
+    while (hull.length >= 2 && !isLeftTurn(hull[hull.length - 2], hull[hull.length - 1], uniquePoints[i])) {
       hull.pop();
     }
     hull.push(uniquePoints[i]);
   }
-  
+
   return hull;
 };
 
@@ -225,16 +222,16 @@ export const calculateSphericity = (area: number, perimeter: number): number => 
  */
 export const calculateMetrics = (
   polygon: Polygon | Point[],
-  holes: Polygon[] | Point[][] = []
+  holes: Polygon[] | Point[][] = [],
 ): Record<string, number> => {
   // Extract points from polygon
   const points = Array.isArray(polygon) ? polygon : polygon.points;
-  
+
   // Calculate basic metrics
   const area = calculatePolygonArea(points);
   const perimeter = calculatePerimeter(points);
   const convexHullArea = calculateConvexHullArea(points);
-  
+
   // Calculate derived metrics
   const circularity = calculateCircularity(area, perimeter);
   const equivalentDiameter = calculateEquivalentDiameter(area);
@@ -242,20 +239,20 @@ export const calculateMetrics = (
   const solidity = calculateSolidity(area, convexHullArea);
   const compactness = calculateCompactness(area, perimeter);
   const sphericity = calculateSphericity(area, perimeter);
-  
+
   // Calculate metrics for holes
   let holesArea = 0;
   let holesPerimeter = 0;
-  
+
   for (const hole of holes) {
     const holePoints = Array.isArray(hole) ? hole : hole.points;
     holesArea += calculatePolygonArea(holePoints);
     holesPerimeter += calculatePerimeter(holePoints);
   }
-  
+
   // Calculate total area (external - holes)
   const totalArea = area - holesArea;
-  
+
   return {
     Area: totalArea,
     Perimeter: perimeter + holesPerimeter,
@@ -267,7 +264,7 @@ export const calculateMetrics = (
     Compactness: compactness,
     Sphericity: sphericity,
     HolesArea: holesArea,
-    HolesCount: holes.length
+    HolesCount: holes.length,
   };
 };
 
@@ -283,5 +280,5 @@ export default {
   calculateSolidity,
   calculateCompactness,
   calculateSphericity,
-  calculateMetrics
+  calculateMetrics,
 };

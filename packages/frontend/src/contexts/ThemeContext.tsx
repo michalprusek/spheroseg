@@ -39,19 +39,17 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     localStorage.setItem('theme', newTheme);
     setThemeState(newTheme);
     applyTheme(newTheme);
-    
+
     // Removed Supabase update logic
     // TODO: Implement saving theme preference to our backend if needed
   };
 
   const applyTheme = (theme: Theme) => {
     const root = window.document.documentElement;
-    
+
     if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-      
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
       root.classList.remove('light', 'dark');
       root.classList.add(systemTheme);
 
@@ -60,7 +58,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } else {
       root.classList.remove('light', 'dark');
       root.classList.add(theme);
-      
+
       // Set data-theme attribute for components that use it
       root.setAttribute('data-theme', theme);
     }
@@ -72,7 +70,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       document.body.classList.add('dark');
       document.body.classList.remove('light');
     } else {
-      document.documentElement.style.backgroundColor = '#f9fafb'; // bg-gray-50 
+      document.documentElement.style.backgroundColor = '#f9fafb'; // bg-gray-50
       document.body.style.backgroundColor = '#f9fafb'; // bg-gray-50
       document.body.classList.add('light');
       document.body.classList.remove('dark');
@@ -82,17 +80,17 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Initial theme application and system theme listener
   useEffect(() => {
     if (!loaded) return;
-    
+
     applyTheme(theme);
 
     // Listen for system theme changes if using system theme
     if (theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      
+
       const handleChange = () => {
         applyTheme('system');
       };
-      
+
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     }
@@ -102,11 +100,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return null; // Keep this to prevent flash of unstyled content
   }
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => {

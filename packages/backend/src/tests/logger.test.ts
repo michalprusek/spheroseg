@@ -11,27 +11,27 @@ jest.mock('../utils/logger', () => {
       warn: 1,
       info: 2,
       http: 3,
-      debug: 4
+      debug: 4,
     },
     transports: [],
     add: jest.fn(),
     clear: jest.fn(),
     // Necessary to pass tests
-    format: { metadata: jest.fn() }
+    format: { metadata: jest.fn() },
   };
 
   // Stream for morgan middleware
   const stream = {
     write: (message: string) => {
       mockLogger.http(message.trim());
-    }
+    },
   };
 
   return {
     __esModule: true,
     default: mockLogger,
     stream: stream,
-    createLogger: jest.fn().mockReturnValue(mockLogger)
+    createLogger: jest.fn().mockReturnValue(mockLogger),
   };
 });
 

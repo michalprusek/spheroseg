@@ -1,10 +1,10 @@
-import React from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import ProjectThumbnail from "@/components/project/ProjectThumbnail";
-import ProjectActions from "@/components/project/ProjectActions";
-import ProjectMetadata from "@/components/project/ProjectMetadata";
+import React from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
+import ProjectThumbnail from '@/components/project/ProjectThumbnail';
+import ProjectActions from '@/components/project/ProjectActions';
+import ProjectMetadata from '@/components/project/ProjectMetadata';
 
 interface ProjectListItemProps {
   id: string;
@@ -27,7 +27,7 @@ const ProjectListItem = ({
   imageCount,
   onClick,
   projectName,
-  onDelete
+  onDelete,
 }: ProjectListItemProps) => {
   const handleCardClick = () => {
     if (onClick) {
@@ -54,11 +54,7 @@ const ProjectListItem = ({
         </div>
 
         <div className="flex items-center ml-4 space-x-2">
-          <ProjectActions
-            projectId={id}
-            projectName={projectName}
-            onDelete={onDelete}
-          />
+          <ProjectActions projectId={id} projectName={projectName} onDelete={onDelete} />
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <ArrowRight className="h-4 w-4" />
           </Button>

@@ -7,7 +7,7 @@ process.env.REACT_ROUTER_SKIP_WARNINGS = 'true';
 window.REACT_ROUTER_FUTURE_FLAGS = {
   v7_startTransition: true,
   v7_relativeSplatPath: true,
-  v7_normalizeFormMethod: true
+  v7_normalizeFormMethod: true,
 };
 
 /**
@@ -20,7 +20,7 @@ export const TestRouterWrapper: React.FC<{ children: React.ReactNode }> = ({ chi
     window.REACT_ROUTER_FUTURE_FLAGS = {
       v7_startTransition: true,
       v7_relativeSplatPath: true,
-      v7_normalizeFormMethod: true
+      v7_normalizeFormMethod: true,
     };
   }
 
@@ -36,7 +36,7 @@ export const createTestRouter = (routes: any[], initialEntries = ['/', '/about']
     window.REACT_ROUTER_FUTURE_FLAGS = {
       v7_startTransition: true,
       v7_relativeSplatPath: true,
-      v7_normalizeFormMethod: true
+      v7_normalizeFormMethod: true,
     };
   }
 
@@ -46,13 +46,15 @@ export const createTestRouter = (routes: any[], initialEntries = ['/', '/about']
 /**
  * Test router provider that sets the future flags
  */
-export const TestRouterProvider: React.FC<{ router: ReturnType<typeof createMemoryRouter> }> = ({ router }) => {
+export const TestRouterProvider: React.FC<{
+  router: ReturnType<typeof createMemoryRouter>;
+}> = ({ router }) => {
   // Ensure flags are set before rendering
   if (!window.REACT_ROUTER_FUTURE_FLAGS) {
     window.REACT_ROUTER_FUTURE_FLAGS = {
       v7_startTransition: true,
       v7_relativeSplatPath: true,
-      v7_normalizeFormMethod: true
+      v7_normalizeFormMethod: true,
     };
   }
 

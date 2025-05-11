@@ -1,49 +1,61 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from '@/contexts/LanguageContext';
-import ProjectHeader from "@/components/project/ProjectHeader";
-import ProjectToolbar from "@/components/project/ProjectToolbar";
-import EmptyState from "@/components/project/EmptyState";
-import EmptyProjectState from "@/components/EmptyProjectState";
-import ProjectImages from "@/components/project/ProjectImages";
-import ProjectUploaderSection from "@/components/project/ProjectUploaderSection";
-import { useProjectData } from "@/hooks/useProjectData";
-import { useImageFilter } from "@/hooks/useImageFilter";
-import { useProjectImageActions } from "@/components/project/ProjectImageActions";
-import { motion } from "framer-motion";
-import { toast } from "sonner"; // We'll use Sonner toast instead of shared utilities
-import apiClient from "@/lib/apiClient";
-import { ProjectImage } from "@/types";
-import axios from "axios";
-import { Socket } from 'socket.io-client';
-import socketClient from '@/socketClient'; // Import the centralized socket client
-import { useExportFunctions } from "@/pages/export/hooks/useExportFunctions";
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import ProjectHeader from '@/components/project/ProjectHeader';
+import ProjectToolbar from '@/components/project/ProjectToolbar';
+import EmptyState from '@/components/project/EmptyState';
+import EmptyProjectState from '@/components/EmptyProjectState';
+import ProjectImages from '@/components/project/ProjectImages';
+import ProjectUploaderSection from '@/components/project/ProjectUploaderSection';
+import { useProjectData } from '@/hooks/useProjectData';
+import { useImageFilter } from '@/hooks/useImageFilter';
+import { useProjectImageActions } from '@/components/project/ProjectImageActions';
+import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+import apiClient from '@/lib/apiClient';
+import { Project, ProjectImage, ImageStatus } from '@/types';
+import axios from 'axios';
+import socketClient from '@/socketClient';
+import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
+
+interface UseProjectDataReturn {
+  project: Project | null;
+  projectTitle: string;
+  images: ProjectImage[];
+  loading: boolean;
+  error: string | null;
+  refreshData: () => void;
+  updateImageStatus: (imageId: string, status: ImageStatus, resultPath?: string | null) => void;
+  setImages: React.Dispatch<React.SetStateAction<ProjectImage[]>>;
+}
 
 const ProjectDetail = () => {
-  // Get id parameter from URL - could be from /project/:id or /projects/:id
   const params = useParams<{ id: string }>();
   const id = params.id;
   const navigate = useNavigate();
 
-  // Log URL parameters for debugging purpose
   console.log('ProjectDetail: Received projectId from URL:', id);
-  const { user, token } = useAuth();
-  const { t } = useLanguage();
+  useAuth();
+
   const [showUploader, setShowUploader] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [segmentAfterUpload, setSegmentAfterUpload] = useState<boolean>(true);
   const [selectionMode, setSelectionMode] = useState<boolean>(false);
   const [selectedImages, setSelectedImages] = useState<Record<string, boolean>>({});
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const lastSelectedImageRef = useRef<string | null>(null);
-  const [socket, setSocket] = useState<Socket | null>(null);
 
-  // Fetch project data
-  const { projectTitle, images, loading, refreshData, updateImageStatus } = useProjectData(id);
+  const {
+    projectTitle,
+    images,
+    loading,
+    error: projectError,
+    refreshData,
+    updateImageStatus,
+    setImages: onImagesChange,
+  } = useProjectData(id) as UseProjectDataReturn;
 
-  // Setup WebSocket connection for real-time updates using the centralized socket client
   useEffect(() => {
     if (!id) return;
 
@@ -52,32 +64,30 @@ const ProjectDetail = () => {
     try {
       console.log('Setting up WebSocket connection for project updates');
 
-      // Clean the project ID to ensure it has the correct format for API calls
       const cleanProjectId = (rawId: string): string => {
         if (!rawId) return rawId;
 
-        // IMPORTANT: We need to KEEP the "project-" prefix for API calls
-        // The backend expects IDs in the format "project-XXXXXXXXX"
         if (rawId.startsWith('project-')) {
-          console.log(`Project ID already has correct prefix: ${rawId}`);
-          return rawId; // Keep the prefix for API calls
+          const cleanedId = rawId.substring(8);
+          console.log(`Removed 'project-' prefix: ${cleanedId}`);
+          return cleanedId;
         }
 
-        // If ID doesn't have the prefix, add it
-        const prefixedId = `project-${rawId}`;
-        console.log(`Added 'project-' prefix: ${prefixedId}`);
-        return prefixedId;
+        return rawId;
       };
 
       const cleanedId = cleanProjectId(id);
       console.log(`Using cleaned project ID: ${cleanedId} (original: ${id})`);
 
-      // Verify project exists before connecting to avoid wasteful connections
-      apiClient.get(`/projects/${cleanedId}`)
-        .then(response => {
+      // Okamžitě načteme data projektu při otevření stránky
+      refreshData();
+
+      apiClient
+        .get(`/api/projects/${cleanedId}`)
+        .then(() => {
           console.log(`Project ${cleanedId} verified as existing`);
         })
-        .catch(err => {
+        .catch((err) => {
           if (axios.isAxiosError(err) && err.response?.status === 404) {
             console.log(`Project ${cleanedId} not found, redirecting to dashboard`);
             navigate('/dashboard', { replace: true });
@@ -86,62 +96,64 @@ const ProjectDetail = () => {
           console.warn('Error verifying project:', err);
         });
 
-      // Get the socket from the centralized client
       const socket = socketClient.getSocket();
 
-      // Set up event listeners for segmentation updates
       const handleSegmentationUpdate = (data: any) => {
         if (!isComponentMounted) return;
 
         console.log('Received segmentation update:', data);
         if (data.imageId && data.status) {
-          // Update image status in UI immediately
-          updateImageStatus(data.imageId, data.status);
+          // Aktualizujeme stav obrázku včetně chybové zprávy, pokud existuje
+          updateImageStatus(data.imageId, data.status, data.resultPath, data.error);
 
-          // Show notification about segmentation completion
           if (data.status === 'completed') {
             toast.success(`Image segmentation complete for ${data.imageId.substring(0, 8)}...`);
-            // Refresh data to update the queue indicator
             refreshData();
           } else if (data.status === 'failed') {
-            toast.error(`Segmentation failed: ${data.error || 'Unknown error'}`);
-            // Refresh data to update the queue indicator
+            const errorMessage = data.error || 'Unknown error';
+            toast.error(`Segmentation failed: ${errorMessage}`);
+
+            // Aktualizujeme také stav fronty
+            const queueUpdateEvent = new CustomEvent('queue-status-update', {
+              detail: {
+                refresh: true,
+                projectId: id,
+                forceRefresh: true,
+              },
+            });
+            window.dispatchEvent(queueUpdateEvent);
+
             refreshData();
           }
         }
       };
 
-      // Set up project-specific room joining
       const handleConnect = () => {
         if (!isComponentMounted) return;
 
         try {
-          // Join project-specific room for targeted updates
+          // Join the project room in multiple formats to ensure compatibility
           socket.emit('join_project', { projectId: cleanedId });
-          console.log(`Joined WebSocket room for project ${cleanedId}`);
+          socket.emit('join-project', cleanedId);
+          socket.emit('join', `project-${cleanedId}`);
+          socket.emit('join', `project:${cleanedId}`);
+          console.log(`Joined WebSocket room for project ${cleanedId} in multiple formats`);
         } catch (joinErr) {
           console.error('Failed to join project room:', joinErr);
         }
       };
 
-      // Add event listeners
       socket.on('connect', handleConnect);
       socket.on('segmentation_update', handleSegmentationUpdate);
 
-      // Store the socket in state
-      setSocket(socket);
-
-      // Log connection status
       if (socket.connected) {
         console.log('WebSocket already connected:', socket.id);
-        // If already connected, manually execute join
         handleConnect();
       } else {
         console.log('WebSocket connecting...');
         socket.connect();
       }
 
-      // Save project ID for diagnostics
       try {
         localStorage.setItem('spheroseg_current_project', cleanedId);
       } catch (e) {
@@ -152,18 +164,15 @@ const ProjectDetail = () => {
         isComponentMounted = false;
 
         try {
-          // Leave project-specific room when unmounting
           socket.emit('leave_project', { projectId: cleanedId });
           console.log(`Left WebSocket room for project ${cleanedId}`);
         } catch (leaveErr) {
           console.error('Error leaving project room:', leaveErr);
         }
 
-        // Remove event listeners
         socket.off('connect', handleConnect);
         socket.off('segmentation_update', handleSegmentationUpdate);
 
-        // Note: We don't disconnect the socket here since it's managed by the centralized client
         console.log('Cleaned up WebSocket event listeners');
       };
     } catch (error) {
@@ -176,48 +185,123 @@ const ProjectDetail = () => {
     }
   }, [id, updateImageStatus, refreshData, navigate]);
 
-  // Filtering and sorting
-  const {
-    filteredImages,
-    searchTerm,
-    sortField,
-    sortDirection,
-    handleSearch,
-    handleSort
-  } = useImageFilter(images);
+  const { filteredImages, searchTerm, sortField, sortDirection, handleSearch, handleSort } = useImageFilter(images);
 
-  // Image operations
-  const {
-    handleDeleteImage,
-    handleOpenSegmentationEditor,
-    handleResegment,
-  } = useProjectImageActions({
+  const { handleDeleteImage, handleOpenSegmentationEditor, handleResegment } = useProjectImageActions({
     projectId: id,
-    onImagesChange: refreshData,
-    images
+    onImagesChange: onImagesChange,
+    images,
   });
+
+  useEffect(() => {
+    if (!id) return;
+
+    const handleImageDeleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        imageId: string;
+        projectId: string;
+        forceRefresh?: boolean;
+      }>;
+      const { imageId, projectId: eventProjectId, forceRefresh } = customEvent.detail;
+
+      if (eventProjectId === id || eventProjectId === id?.replace('project-', '')) {
+        console.log(`ProjectDetail: Received image-deleted event for image ${imageId}, forceRefresh: ${forceRefresh}`);
+
+        // Okamžitě aktualizujeme UI odebráním smazaného obrázku
+        setImages(prevImages => {
+          const updatedImages = prevImages.filter(img => img.id !== imageId);
+          console.log(`ProjectDetail: Filtered out deleted image. Before: ${prevImages.length}, After: ${updatedImages.length}`);
+          return updatedImages;
+        });
+
+        // Vždy aktualizujeme data projektu pro aktualizaci statistik
+        refreshData();
+
+        // Pokud přijde flag forceRefresh, načteme znovu veškerá data ze serveru
+        if (forceRefresh) {
+          console.log('ProjectDetail: Force refreshing project data due to forceRefresh flag');
+          setTimeout(() => refreshData(), 100); // Přidáme malé zpoždění pro sekundární refresh
+        }
+
+        // Pokud jsme v režimu výběru, odstraníme obrázek z výběru
+        if (selectionMode) {
+          setSelectedImages((prev) => {
+            const updated = { ...prev };
+            delete updated[imageId];
+            return updated;
+          });
+        }
+      }
+    };
+
+    // Posluchač pro aktualizaci stavu obrázku
+    const handleImageStatusUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        imageId: string;
+        status: ImageStatus;
+        forceQueueUpdate?: boolean;
+        error?: string;
+        resultPath?: string | null;
+      }>;
+      const { imageId, status, forceQueueUpdate, error, resultPath } = customEvent.detail;
+
+      console.log(`ProjectDetail: Received image-status-update event for image ${imageId} with status ${status}`);
+
+      // Aktualizujeme stav obrázku včetně chybové zprávy, pokud existuje
+      updateImageStatus(imageId, status, resultPath, error);
+
+      // Pro jakýkoliv status aktualizujeme ukazatel fronty
+      // Aktualizujeme stav fronty
+      const queueUpdateEvent = new CustomEvent('queue-status-update', {
+        detail: {
+          refresh: true,
+          projectId: id,
+          forceRefresh: true,
+          immediate: status === 'processing',
+        },
+      });
+      window.dispatchEvent(queueUpdateEvent);
+
+      // Pokud je status "failed", zobrazíme chybovou zprávu
+      if (status === 'failed' && error) {
+        toast.error(`Segmentation failed: ${error}`);
+      }
+
+      // Pokud je status "completed", zobrazíme úspěšnou zprávu
+      if (status === 'completed') {
+        toast.success(`Image segmentation completed for ${imageId.substring(0, 8)}...`);
+      }
+
+      // Pro všechny stavy okamžitě aktualizujeme data projektu
+      refreshData();
+    };
+
+    window.addEventListener('image-deleted', handleImageDeleted);
+    window.addEventListener('image-status-update', handleImageStatusUpdate);
+
+    return () => {
+      window.removeEventListener('image-deleted', handleImageDeleted);
+      window.removeEventListener('image-status-update', handleImageStatusUpdate);
+    };
+  }, [id, refreshData, selectionMode]);
 
   const toggleUploader = () => {
     setShowUploader(!showUploader);
   };
 
-  // Toggle selection mode
   const toggleSelectionMode = () => {
     if (selectionMode) {
-      // Reset selection when exiting selection mode
       setSelectedImages({});
       setSelectAll(false);
     }
     setSelectionMode(!selectionMode);
   };
 
-  // Toggle selection of a single image with support for Shift+click and Ctrl/Cmd+click
   const toggleImageSelection = (imageId: string, event?: React.MouseEvent) => {
-    // Handle Shift+click for range selection
     if (event?.shiftKey && lastSelectedImageRef.current) {
       const lastSelectedId = lastSelectedImageRef.current;
-      const currentIndex = filteredImages.findIndex(img => img.id === imageId);
-      const lastIndex = filteredImages.findIndex(img => img.id === lastSelectedId);
+      const currentIndex = filteredImages.findIndex((img) => img.id === imageId);
+      const lastIndex = filteredImages.findIndex((img) => img.id === lastSelectedId);
 
       if (currentIndex !== -1 && lastIndex !== -1) {
         const startIdx = Math.min(currentIndex, lastIndex);
@@ -225,7 +309,7 @@ const ProjectDetail = () => {
         const imagesToSelect = filteredImages.slice(startIdx, endIdx + 1);
 
         const newSelectedImages = { ...selectedImages };
-        imagesToSelect.forEach(img => {
+        imagesToSelect.forEach((img) => {
           newSelectedImages[img.id] = true;
         });
 
@@ -234,37 +318,31 @@ const ProjectDetail = () => {
       }
     }
 
-    // Handle Ctrl/Cmd+click for toggling single selection without affecting others
     if (event?.ctrlKey || event?.metaKey) {
-      setSelectedImages(prev => ({
+      setSelectedImages((prev) => ({
         ...prev,
-        [imageId]: !prev[imageId]
+        [imageId]: !prev[imageId],
       }));
     } else {
-      // Regular click - toggle single selection
-      setSelectedImages(prev => ({
+      setSelectedImages((prev) => ({
         ...prev,
-        [imageId]: !prev[imageId]
+        [imageId]: !prev[imageId],
       }));
-      // Store the last selected image ID for shift+click range selection
       lastSelectedImageRef.current = imageId;
     }
   };
 
-  // Toggle select all images
   const toggleSelectAll = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
 
-    // Update selected images based on selectAll state
     const newSelectedImages: Record<string, boolean> = {};
-    filteredImages.forEach(image => {
+    filteredImages.forEach((image) => {
       newSelectedImages[image.id] = newSelectAll;
     });
     setSelectedImages(newSelectedImages);
   };
 
-  // Handle batch operations on selected images
   const handleBatchResegment = () => {
     const selectedImageIds = Object.entries(selectedImages)
       .filter(([_, isSelected]) => isSelected)
@@ -277,23 +355,116 @@ const ProjectDetail = () => {
 
     toast.info(`Triggering re-segmentation for ${selectedImageIds.length} images...`);
 
-    // Call the batch segmentation endpoint
-    (async () => {
-      try {
-        await apiClient.post(`/images/segmentation/trigger-batch`, {
-          imageIds: selectedImageIds,
-          priority: 5, // High priority for manual re-segmentation
-          model_type: 'resunet' // Explicitly specify model
-        });
-        toast.success(`Re-segmentation triggered for ${selectedImageIds.length} images`);
-      } catch (error) {
-        console.error(error);
-        toast.error('Failed to trigger batch re-segmentation');
+    const updatedImages = images.map((img) => {
+      if (selectedImageIds.includes(img.id)) {
+        return { ...img, segmentationStatus: 'processing' as ImageStatus };
       }
+      return img;
+    });
+
+    onImagesChange(updatedImages);
+
+    (async () => {
+      // Rozdělení obrázků na menší skupiny (po 5) pro případ, že je omezení na backendu
+      const batchSize = 5;
+      const batches = [];
+
+      // Rozdělení ID na menší dávky
+      for (let i = 0; i < selectedImageIds.length; i += batchSize) {
+          batches.push(selectedImageIds.slice(i, i + batchSize));
+      }
+
+      console.log(`Rozdělení ${selectedImageIds.length} obrázků do ${batches.length} dávek po max ${batchSize}`);
+
+      // Zobrazíme informaci o zpracování
+      if (batches.length > 1) {
+        toast.info(`Spouštění segmentace pro ${selectedImageIds.length} obrázků v ${batches.length} dávkách...`);
+      }
+
+      // Postupné zpracování všech dávek
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let i = 0; i < batches.length; i++) {
+          const batch = batches[i];
+          console.log(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
+
+          // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+
+          try {
+              // Zkusit nejprve nový endpoint s validními parametry
+              const response = await apiClient.post(`/api/projects/${id}/segmentations/batch`, {
+                  imageIds: batch,
+                  priority: 5,
+                  model_type: 'resunet',
+                  // Přidáme další parametry pro validaci
+                  parameters: {
+                    threshold: 0.5,
+                    model: 'resunet'
+                  }
+              });
+              console.log(`Batch ${i+1} trigger response (new endpoint):`, response);
+              successCount += batch.length;
+
+              // Informujeme uživatele o průběhu
+              if (batches.length > 1) {
+                toast.success(`Dávka ${i+1}/${batches.length} úspěšně zařazena do fronty`);
+              }
+          } catch (newEndpointErr) {
+              console.warn(`Batch ${i+1}: New endpoint failed, trying legacy endpoint:`, newEndpointErr);
+
+              try {
+                  // Zkusit záložní endpoint s validními parametry
+                  const legacyResponse = await apiClient.post(`/api/segmentations/batch`, {
+                      imageIds: batch,
+                      priority: 5,
+                      model_type: 'resunet',
+                      // Přidáme další parametry pro validaci
+                      parameters: {
+                        threshold: 0.5,
+                        model: 'resunet'
+                      }
+                  });
+                  console.log(`Batch ${i+1} trigger response (legacy endpoint):`, legacyResponse);
+                  successCount += batch.length;
+
+                  // Informujeme uživatele o průběhu
+                  if (batches.length > 1) {
+                    toast.success(`Dávka ${i+1}/${batches.length} úspěšně zařazena do fronty (záložní endpoint)`);
+                  }
+              } catch (legacyErr) {
+                  console.error(`Batch ${i+1}: Both endpoints failed:`, legacyErr);
+                  failCount += batch.length;
+
+                  // Informujeme uživatele o chybě
+                  if (batches.length > 1) {
+                    toast.error(`Chyba při zpracování dávky ${i+1}/${batches.length}`);
+                  }
+              }
+          }
+      }
+
+      console.log(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
+
+      // Zobrazíme celkový výsledek
+      if (successCount > 0 && failCount > 0) {
+        toast.info(`Segmentace: ${successCount} obrázků úspěšně zařazeno do fronty, ${failCount} selhalo`);
+      } else if (successCount > 0) {
+        toast.success(`Segmentace: Všech ${successCount} obrázků úspěšně zařazeno do fronty`);
+      } else if (failCount > 0) {
+        toast.error(`Segmentace: Všech ${failCount} obrázků selhalo`);
+      }
+
+      // Aktualizujeme data projektu
+      setTimeout(() => {
+        refreshData();
+      }, 2000);
     })();
   };
 
-  // Handle batch delete
   const handleBatchDelete = () => {
     const selectedImageIds = Object.entries(selectedImages)
       .filter(([_, isSelected]) => isSelected)
@@ -304,57 +475,63 @@ const ProjectDetail = () => {
       return;
     }
 
-    if (window.confirm(`Are you sure you want to delete ${selectedImageIds.length} images? This action cannot be undone.`)) {
+    if (
+      window.confirm(`Are you sure you want to delete ${selectedImageIds.length} images? This action cannot be undone.`)
+    ) {
       toast.info(`Deleting ${selectedImageIds.length} images...`);
 
-      // Delete images one by one using the new API endpoint with project ID
+      const remainingImages = images.filter((img) => !selectedImageIds.includes(img.id));
+      onImagesChange(remainingImages);
+
       (async () => {
-        try {
-          const results = await Promise.allSettled(
-            selectedImageIds.map(imageId =>
-              apiClient.delete(`/projects/${id}/images/${imageId}`)
-            )
-          );
+        const results = await Promise.allSettled(
+          selectedImageIds.map(async (imageId) => {
+            try {
+              await apiClient.delete(`/api/projects/${id}/images/${imageId}`);
+              return { success: true, imageId };
+            } catch (newEndpointErr) {
+              console.warn(`Failed to delete with new endpoint: ${imageId}`, newEndpointErr);
 
-          const successCount = results.filter(r => r.status === 'fulfilled').length;
-          const failCount = results.filter(r => r.status === 'rejected').length;
+              try {
+                await apiClient.delete(`/api/images/${imageId}`);
+                return { success: true, imageId };
+              } catch (legacyErr) {
+                console.error(`Failed to delete with both endpoints: ${imageId}`, legacyErr);
+                return { success: false, imageId, error: legacyErr };
+              }
+            }
+          }),
+        );
 
-          if (successCount > 0) {
-            toast.success(`Successfully deleted ${successCount} images`);
-          }
+        const successCount = results.filter((r) => r.status === 'fulfilled' && (r.value as any).success).length;
+        const failCount = results.length - successCount;
 
-          if (failCount > 0) {
-            toast.error(`Failed to delete ${failCount} images`);
-          }
-
-          // Refresh data and reset selection
-          refreshData();
-          setSelectedImages({});
-          setSelectAll(false);
-        } catch (error) {
-          console.error(error);
-          toast.error('Error deleting images');
+        if (successCount > 0) {
+          toast.success(`Successfully deleted ${successCount} images`);
         }
+
+        if (failCount > 0) {
+          toast.error(`Failed to delete ${failCount} images`);
+          console.error(
+            'Failed deletions:',
+            results.filter((r) => r.status !== 'fulfilled' || !(r.value as any).success),
+          );
+        }
+
+        refreshData();
+        setSelectedImages({});
+        setSelectAll(false);
       })();
     }
   };
 
-  // Použijeme useExportFunctions pro export vybraných obrázků
-  // Předáváme všechny obrázky a filtrujeme je až při exportu
-  const {
-    handleExport: exportFunction,
-    isExporting
-  } = useExportFunctions(images, projectTitle);
+  const { handleExport: exportFunction } = useExportFunctions(images, projectTitle);
 
-  // Vytvoříme vlastní funkci pro export, která bude filtrovat obrázky podle aktuálního výběru
   const exportSelectedImages = useCallback(() => {
-    // Filtrujeme pouze vybrané obrázky
-    const selectedImagesToExport = images.filter(img => selectedImages[img.id]);
-    // Voláme exportFunction s filtrovanými obrázky
+    const selectedImagesToExport = images.filter((img) => selectedImages[img.id]);
     exportFunction(selectedImagesToExport);
   }, [images, selectedImages, exportFunction]);
 
-  // Handle batch export
   const handleBatchExport = () => {
     const selectedImageIds = Object.entries(selectedImages)
       .filter(([_, isSelected]) => isSelected)
@@ -365,76 +542,172 @@ const ProjectDetail = () => {
       return;
     }
 
-    // Použijeme funkci z useExportFunctions pro vytvoření ZIP souboru
-    toast.info(`Připravuji export ${selectedImageIds.length} obrázků...`);
+    toast.info(`Preparing export of ${selectedImageIds.length} images...`);
 
-    // Spustíme export, který vytvoří ZIP soubor s vybranými obrázky, segmentacemi a metrikami
     exportSelectedImages();
   };
 
-  // Handle completion of image upload
-  const handleUploadComplete = useCallback(async (projectId: string, uploadedImages: ProjectImage[] | ProjectImage) => {
-    console.log('Upload complete:', projectId);
-    refreshData(); // Refresh the image list immediately to show pending uploads
-    setShowUploader(false); // Close the uploader section
+  const handleUploadComplete = useCallback(
+    async (projectId: string, uploadedImages: ProjectImage[] | ProjectImage) => {
+      console.log('Upload complete:', projectId);
+      refreshData();
+      setShowUploader(false);
 
-    // Ensure uploadedImages is always an array
-    const imagesArray = Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages];
+      const imagesArray = Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages];
 
-    if (segmentAfterUpload && imagesArray.length > 0) {
-      // Filtrujeme obrázky, které mají platné ID
-      const validImages = imagesArray.filter(img => img && img.id);
-      const imageIds = validImages.map(img => img.id);
+      console.log('Handling upload complete with images:', imagesArray);
 
-      // Pokud nemáme žádné platné ID, zobrazíme chybu a skončíme
-      if (imageIds.length === 0) {
-        console.error('No valid image IDs found for segmentation');
-        toast.error('No valid images found for segmentation');
-        return;
-      }
+      const { isValidImageId } = await import('@/api/projectImages');
 
-      toast.info(`Triggering segmentation for ${imageIds.length} uploaded image(s)...`);
-
-      try {
-        // Call the new batch endpoint with model_type parameter
-        const response = await apiClient.post(`/images/segmentation/trigger-batch`, {
-          imageIds,
-          priority: 3, // Střední priorita pro nově nahrané obrázky
-          model_type: 'resunet' // Explicitně specifikujeme model
+      if (segmentAfterUpload && imagesArray.length > 0) {
+        imagesArray.forEach((img, index) => {
+          console.log(`Image ${index}:`, img);
+          if (!img || !img.id) {
+            console.warn(`Image ${index} has invalid ID:`, img);
+          }
         });
-        console.log('Batch trigger response:', response.data);
-        // Optionally report failures based on response.data.failed
-        if (response.data?.failed?.length > 0) {
-             response.data.failed.forEach((failure: { id: string; reason: string }) => {
-                 toast.error(`Failed to trigger segmentation for image ${failure.id}: ${failure.reason}`);
-             });
-        }
-        // Status updates will now come via WebSocket
-      } catch (error: unknown) {
-        console.error("Error triggering batch segmentation:", error);
-        let message = "Failed to trigger batch segmentation.";
-         if (axios.isAxiosError(error) && error.response) {
-            message = error.response.data?.message || message;
-         } else if (error instanceof Error) {
-           message = error.message;
-         }
-        toast.error(message);
-      }
-      // REMOVED: Promise.allSettled and individual triggers
-      // REMOVED: setTimeout for refresh
-    }
-  }, [segmentAfterUpload, refreshData, t]); // Keep dependencies
 
-  // Handle opening an image - now takes the image ID directly
+        const validImages = imagesArray.filter((img) => img && img.id && isValidImageId(img.id));
+        const imageIdsForSegmentation = validImages.map((img) => img.id);
+        const uiImageIdsToUpdate = validImages.map((img) => img.id);
+
+        console.log('Valid image IDs for segmentation API:', imageIdsForSegmentation);
+
+        if (imageIdsForSegmentation.length === 0) {
+          console.error('No valid image IDs found for segmentation');
+          toast.error('No images ready for server segmentation (missing IDs).');
+          return;
+        }
+
+        toast.info(`Triggering segmentation for ${imageIdsForSegmentation.length} uploaded image(s)...`);
+
+        uiImageIdsToUpdate.forEach((id) => {
+          updateImageStatus(id, 'processing');
+        });
+
+        let apiSuccess = false;
+
+        // Rozdělení obrázků na menší skupiny (po 5) pro případ, že je omezení na backendu
+        // Snížíme velikost dávky na 5, aby se snížila pravděpodobnost chyby
+        const batchSize = 5;
+        const batches = [];
+
+        // Rozdělení ID na menší dávky
+        for (let i = 0; i < imageIdsForSegmentation.length; i += batchSize) {
+            batches.push(imageIdsForSegmentation.slice(i, i + batchSize));
+        }
+
+        console.log(`Rozdělení ${imageIdsForSegmentation.length} obrázků do ${batches.length} dávek po max ${batchSize}`);
+
+        // Zobrazíme informaci o zpracování
+        if (batches.length > 1) {
+          toast.info(`Spouštění segmentace pro ${imageIdsForSegmentation.length} obrázků v ${batches.length} dávkách...`);
+        }
+
+        // Postupné zpracování všech dávek
+        let successCount = 0;
+        let failCount = 0;
+
+        for (let i = 0; i < batches.length; i++) {
+            const batch = batches[i];
+            console.log(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
+
+            // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
+            if (i > 0) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            try {
+                // Zkusit nejprve nový endpoint s validními parametry
+                const response = await apiClient.post(`/api/projects/${projectId}/segmentations/batch`, {
+                    imageIds: batch,
+                    priority: 3,
+                    model_type: 'resunet',
+                    // Přidáme další parametry pro validaci
+                    parameters: {
+                      threshold: 0.5,
+                      model: 'resunet'
+                    }
+                });
+                console.log(`Batch ${i+1} trigger response (new endpoint):`, response);
+                successCount += batch.length;
+                apiSuccess = true;
+
+                // Informujeme uživatele o průběhu
+                if (batches.length > 1) {
+                  toast.success(`Dávka ${i+1}/${batches.length} úspěšně zařazena do fronty`);
+                }
+            } catch (newEndpointErr) {
+                console.warn(`Batch ${i+1}: New endpoint failed, trying legacy endpoint:`, newEndpointErr);
+
+                try {
+                    // Zkusit záložní endpoint s validními parametry
+                    const legacyResponse = await apiClient.post(`/api/segmentations/batch`, {
+                        imageIds: batch,
+                        priority: 3,
+                        model_type: 'resunet',
+                        // Přidáme další parametry pro validaci
+                        parameters: {
+                          threshold: 0.5,
+                          model: 'resunet'
+                        }
+                    });
+                    console.log(`Batch ${i+1} trigger response (legacy endpoint):`, legacyResponse);
+                    successCount += batch.length;
+                    apiSuccess = true;
+
+                    // Informujeme uživatele o průběhu
+                    if (batches.length > 1) {
+                      toast.success(`Dávka ${i+1}/${batches.length} úspěšně zařazena do fronty (záložní endpoint)`);
+                    }
+                } catch (legacyErr) {
+                    console.error(`Batch ${i+1}: Both endpoints failed:`, legacyErr);
+                    failCount += batch.length;
+
+                    // Informujeme uživatele o chybě
+                    if (batches.length > 1) {
+                      toast.error(`Chyba při zpracování dávky ${i+1}/${batches.length}`);
+                    }
+                }
+            }
+        }
+
+        console.log(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
+
+        // Zobrazíme celkový výsledek
+        if (successCount > 0 && failCount > 0) {
+          toast.info(`Segmentace: ${successCount} obrázků úspěšně zařazeno do fronty, ${failCount} selhalo`);
+        } else if (successCount > 0) {
+          toast.success(`Segmentace: Všech ${successCount} obrázků úspěšně zařazeno do fronty`);
+        } else if (failCount > 0) {
+          toast.error(`Segmentace: Všech ${failCount} obrázků selhalo`);
+        }
+        apiSuccess = successCount > 0;
+
+        if (apiSuccess) {
+          toast.success(`Segmentation started for ${imageIdsForSegmentation.length} images`);
+        } else {
+          toast.warning(
+            `Segmentation queued locally for ${imageIdsForSegmentation.length} images. Server connection failed.`,
+          );
+        }
+
+        setTimeout(() => {
+          refreshData();
+        }, 2000);
+      }
+    },
+    [segmentAfterUpload, refreshData, images, apiClient, updateImageStatus, id],
+  );
+
   const handleOpenImage = (imageId: string) => {
     handleOpenSegmentationEditor(imageId);
   };
 
-  // Animation variants
   const pageVariants = {
     initial: { opacity: 0 },
     animate: { opacity: 1, transition: { duration: 0.3 } },
-    exit: { opacity: 0, transition: { duration: 0.2 } }
+    exit: { opacity: 0, transition: { duration: 0.2 } },
   };
 
   return (
@@ -445,11 +718,16 @@ const ProjectDetail = () => {
       exit="exit"
       variants={pageVariants}
     >
-      {/* Background elements */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
         <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-blue-200/30 dark:bg-blue-400/10 rounded-full filter blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-2s" }} />
-        <div className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-4s" }} />
+        <div
+          className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float"
+          style={{ animationDelay: '-2s' }}
+        />
+        <div
+          className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float"
+          style={{ animationDelay: '-4s' }}
+        />
       </div>
 
       <ProjectHeader
@@ -474,25 +752,21 @@ const ProjectDetail = () => {
                 onUploadComplete={(uploadedImages: ProjectImage[] | ProjectImage) => {
                   const imagesArray = Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages];
                   if (id) {
-                     handleUploadComplete(id, imagesArray);
+                    handleUploadComplete(id, imagesArray);
                   } else {
-                    console.error("Project ID is missing in onUploadComplete wrapper");
-                    toast.error("An error occurred during upload completion.");
+                    console.error('Project ID is missing in onUploadComplete wrapper');
+                    toast.error('An error occurred during upload completion.');
                   }
                 }}
                 segmentAfterUpload={segmentAfterUpload}
                 onSegmentAfterUploadChange={setSegmentAfterUpload}
               />
             ) : (
-                 <p>Error: Project ID is missing.</p>
+              <p>Error: Project ID is missing.</p>
             )}
           </motion.div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
             <ProjectToolbar
               searchTerm={searchTerm}
               onSearchChange={handleSearch}
@@ -504,7 +778,7 @@ const ProjectDetail = () => {
               setViewMode={setViewMode}
               selectionMode={selectionMode}
               onToggleSelectionMode={toggleSelectionMode}
-              showStatusSort={true} // Přidáno pro Image Gallery
+              showStatusSort={true}
             />
 
             {loading ? (
@@ -516,15 +790,13 @@ const ProjectDetail = () => {
               >
                 <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
               </motion.div>
-            ) : false ? (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
+            ) : projectError ? (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                 <div className="p-4 bg-red-50 border border-red-200 rounded-md mb-4">
-                  <h3 className="text-red-800 font-medium">{t('project.errorLoading')}</h3>
-                  <p className="text-red-600">Error loading project</p>
+                  <h3 className="text-red-800 font-medium">Error loading project</h3>
+                  <p className="text-red-600">
+                    {projectError || 'An unknown error occurred while loading the project.'}
+                  </p>
                 </div>
               </motion.div>
             ) : filteredImages.length === 0 && !searchTerm ? (
@@ -533,10 +805,7 @@ const ProjectDetail = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <EmptyProjectState
-                  projectId={id || ''}
-                  onUploadClick={toggleUploader}
-                />
+                <EmptyProjectState projectId={id || ''} onUploadClick={toggleUploader} />
               </motion.div>
             ) : filteredImages.length === 0 && searchTerm ? (
               <motion.div
@@ -544,10 +813,7 @@ const ProjectDetail = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <EmptyState
-                  hasSearchTerm={true}
-                  onUpload={toggleUploader}
-                />
+                <EmptyState hasSearchTerm={true} onUpload={toggleUploader} />
               </motion.div>
             ) : (
               <ProjectImages

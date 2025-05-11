@@ -44,13 +44,13 @@ describe('FileUploader Component', () => {
 
   it('renders with custom text props', () => {
     render(
-      <FileUploader 
-        onDrop={mockOnDrop} 
+      <FileUploader
+        onDrop={mockOnDrop}
         uploadText="Custom upload text"
         dragActiveText="Custom drag text"
         multiple={true}
         maxSize={10 * 1024 * 1024}
-      />
+      />,
     );
 
     expect(screen.getByText('Custom upload text')).toBeInTheDocument();
@@ -59,13 +59,7 @@ describe('FileUploader Component', () => {
   });
 
   it('shows uploading state with progress', () => {
-    render(
-      <FileUploader 
-        onDrop={mockOnDrop} 
-        uploadState="uploading"
-        uploadProgress={42}
-      />
-    );
+    render(<FileUploader onDrop={mockOnDrop} uploadState="uploading" uploadProgress={42} />);
 
     expect(screen.getByText('42% - Uploading...')).toBeInTheDocument();
     const progressBar = document.querySelector('.bg-blue-600');
@@ -73,32 +67,20 @@ describe('FileUploader Component', () => {
   });
 
   it('shows success state with message', () => {
-    render(
-      <FileUploader 
-        onDrop={mockOnDrop} 
-        uploadState="success"
-        successText="Files uploaded successfully!"
-      />
-    );
+    render(<FileUploader onDrop={mockOnDrop} uploadState="success" successText="Files uploaded successfully!" />);
 
     expect(screen.getByText('Files uploaded successfully!')).toBeInTheDocument();
   });
 
   it('shows error state with message', () => {
-    render(
-      <FileUploader 
-        onDrop={mockOnDrop} 
-        uploadState="error"
-        errorText="Failed to upload files!"
-      />
-    );
+    render(<FileUploader onDrop={mockOnDrop} uploadState="error" errorText="Failed to upload files!" />);
 
     expect(screen.getByText('Failed to upload files!')).toBeInTheDocument();
   });
 
   it('applies disabled state correctly', () => {
     render(<FileUploader onDrop={mockOnDrop} disabled={true} />);
-    
+
     // The dropzone area should have disabled styling
     const dropzone = screen.getByText('Drag and drop files here, or click to select files').closest('div');
     expect(dropzone?.parentElement).toHaveClass('opacity-50');
@@ -107,16 +89,16 @@ describe('FileUploader Component', () => {
 
   it('renders with different variants', () => {
     const { rerender } = render(<FileUploader onDrop={mockOnDrop} variant="default" />);
-    
+
     // Default variant should have dashed border
     let dropzone = screen.getByText('Drag and drop files here, or click to select files').closest('div');
     expect(dropzone?.parentElement).toHaveClass('border-dashed');
-    
+
     // Outline variant should have solid border
     rerender(<FileUploader onDrop={mockOnDrop} variant="outline" />);
     dropzone = screen.getByText('Drag and drop files here, or click to select files').closest('div');
     expect(dropzone?.parentElement).not.toHaveClass('border-dashed');
-    
+
     // Ghost variant should have transparent background
     rerender(<FileUploader onDrop={mockOnDrop} variant="ghost" />);
     dropzone = screen.getByText('Drag and drop files here, or click to select files').closest('div');

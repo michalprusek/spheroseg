@@ -128,7 +128,11 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useParams: () => ({ id: 'project-1', projectId: 'project-1', imageId: 'image-1' }),
+    useParams: () => ({
+      id: 'project-1',
+      projectId: 'project-1',
+      imageId: 'image-1',
+    }),
   };
 });
 

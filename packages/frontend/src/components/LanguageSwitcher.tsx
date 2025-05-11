@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-  DropdownMenuLabel
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Globe, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,7 @@ const languageNames: Record<string, string> = {
   de: 'Deutsch',
   es: 'Español',
   fr: 'Français',
-  zh: '中文'
+  zh: '中文',
 };
 
 // Define language flags (emoji)
@@ -29,7 +29,7 @@ const languageFlags: Record<string, string> = {
   de: '🇩🇪',
   es: '🇪🇸',
   fr: '🇫🇷',
-  zh: '🇨🇳'
+  zh: '🇨🇳',
 };
 
 // Type guard to check if a string is a valid Language
@@ -85,7 +85,8 @@ const LanguageSwitcher: React.FC = () => {
   };
 
   const handleUseBrowserLanguage = () => {
-    if (browserLanguage) { // browserLanguage is already Language | null
+    if (browserLanguage) {
+      // browserLanguage is already Language | null
       handleLanguageChange(browserLanguage);
     }
   };
@@ -98,21 +99,22 @@ const LanguageSwitcher: React.FC = () => {
             <Globe className="h-4 w-4" />
             <span className="hidden md:inline">{t('common.language')}</span>
             <span className="md:hidden">{languageFlags[language]}</span>
-            <Badge variant="outline" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+            <Badge
+              variant="outline"
+              className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+            >
               {language.toUpperCase()}
             </Badge>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-56"
-        >
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>{t('settings.selectLanguage')}</DropdownMenuLabel>
           <DropdownMenuSeparator />
 
           {browserLanguage && browserLanguage !== language && (
             <>
               <DropdownMenuItem
+                key="browser-language-item"
                 onSelect={(event) => {
                   console.log(`[LanguageSwitcher] onSelect triggered for browser language. Event:`, event);
                   handleUseBrowserLanguage();
@@ -120,11 +122,13 @@ const LanguageSwitcher: React.FC = () => {
                 className="flex items-center justify-between"
                 data-lang={browserLanguage}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
                   <span>{languageFlags[browserLanguage]}</span>
                   <span>{t('settings.useBrowserLanguage', {}, 'Use browser language')}</span>
                 </div>
-                <Badge variant="outline">{browserLanguage.toUpperCase()}</Badge>
+                <Badge variant="outline" style={{ pointerEvents: 'none' }}>
+                  {browserLanguage.toUpperCase()}
+                </Badge>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </>
@@ -140,11 +144,11 @@ const LanguageSwitcher: React.FC = () => {
               data-lang={lang}
               className="flex items-center justify-between"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
                 <span>{languageFlags[lang]}</span>
                 <span>{languageNames[lang]}</span>
               </div>
-              {language === lang && <Check className="h-4 w-4 text-primary" />}
+              {language === lang && <Check className="h-4 w-4 text-primary" style={{ pointerEvents: 'none' }} />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

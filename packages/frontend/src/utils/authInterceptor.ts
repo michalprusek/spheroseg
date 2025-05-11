@@ -6,12 +6,7 @@
  */
 
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import {
-  getAccessToken,
-  isAccessTokenExpired,
-  refreshAccessToken,
-  removeTokens
-} from '@/services/authService';
+import { getAccessToken, isAccessTokenExpired, refreshAccessToken, removeTokens } from '@/services/authService';
 import logger from '@/utils/logger';
 
 // Keep track of the refresh token promise to prevent multiple refresh calls
@@ -31,7 +26,7 @@ const failedQueue: {
  * @param error Error if token refresh failed
  */
 const processQueue = (error: Error | null, token: string | null = null): void => {
-  failedQueue.forEach(request => {
+  failedQueue.forEach((request) => {
     if (error) {
       request.reject(error);
     } else {
@@ -60,7 +55,7 @@ const processQueue = (error: Error | null, token: string | null = null): void =>
 export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
   // Request interceptor to add the authentication token
   httpClient.interceptors.request.use(
-    async config => {
+    async (config) => {
       // Comprehensive check for all auth-related endpoints
       // Include any endpoint that deals with authentication to prevent circular dependencies
       const isAuthEndpoint =
@@ -88,7 +83,7 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
           // Set a timeout for the refresh operation with a hard limit
           const refreshTimeoutPromise = new Promise<boolean>((resolve) => {
             setTimeout(() => {
-              logger.warn("[authInterceptor] Token refresh timed out");
+              logger.warn('[authInterceptor] Token refresh timed out');
               resolve(false);
             }, 2000); // Further reduced timeout to 2 seconds for faster response
           });
@@ -119,7 +114,7 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
           // Use a very short timeout for waiting on existing refresh
           const waitTimeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => {
-              logger.warn("[authInterceptor] Waiting for token refresh timed out");
+              logger.warn('[authInterceptor] Waiting for token refresh timed out');
               resolve();
             }, 1000); // Very short timeout for waiting on existing refresh
           });
@@ -143,16 +138,18 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
 
       return config;
     },
-    error => {
+    (error) => {
       return Promise.reject(error);
-    }
+    },
   );
 
   // Response interceptor to handle authentication errors
   httpClient.interceptors.response.use(
     (response: AxiosResponse) => response,
     async (error: AxiosError) => {
-      const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+      const originalRequest = error.config as AxiosRequestConfig & {
+        _retry?: boolean;
+      };
       if (!originalRequest) {
         return Promise.reject(error);
       }
@@ -182,7 +179,7 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
             // Wait for the refresh to complete with a timeout
             const timeoutPromise = new Promise<void>((resolve) => {
               setTimeout(() => {
-                logger.warn("[authInterceptor] Waiting for token refresh timed out in 401 handler");
+                logger.warn('[authInterceptor] Waiting for token refresh timed out in 401 handler');
                 resolve();
               }, 1000); // Further reduced to 1 second timeout for faster response
             });
@@ -194,7 +191,7 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
               }),
               timeoutPromise.then(() => {
                 return Promise.reject(new Error('Token refresh timeout'));
-              })
+              }),
             ]);
 
             return refreshPromiseWithTimeout;
@@ -211,7 +208,7 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
           // Set a hard timeout for the refresh operation
           const refreshTimeoutPromise = new Promise<boolean>((resolve) => {
             setTimeout(() => {
-              logger.warn("[authInterceptor] Token refresh timed out in 401 handler");
+              logger.warn('[authInterceptor] Token refresh timed out in 401 handler');
               resolve(false);
             }, 2000); // Reduced to 2 second timeout for faster response
           });
@@ -235,13 +232,16 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
             // Add a timeout for the retry request
             const controller = new AbortController();
             const timeoutId = setTimeout(() => {
-              logger.warn("[authInterceptor] Request retry timed out");
+              logger.warn('[authInterceptor] Request retry timed out');
               controller.abort();
             }, 3000);
 
             try {
               // Clone the original request and add the abort signal
-              const retryConfig = { ...originalRequest, signal: controller.signal };
+              const retryConfig = {
+                ...originalRequest,
+                signal: controller.signal,
+              };
               return await axios(retryConfig);
             } catch (retryError) {
               if (retryError.name === 'AbortError') {
@@ -276,7 +276,7 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 };
 

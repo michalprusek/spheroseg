@@ -4,11 +4,7 @@ import { Point, TransformState } from './types';
 /**
  * Convert image coordinates to screen coordinates
  */
-export const getScreenCoordinates = (
-  imageX: number,
-  imageY: number,
-  transform: TransformState
-): Point => {
+export const getScreenCoordinates = (imageX: number, imageY: number, transform: TransformState): Point => {
   return {
     x: imageX * transform.zoom + transform.translateX,
     y: imageY * transform.zoom + transform.translateY,
@@ -22,11 +18,11 @@ export const getCanvasCoordinates = (
   mouseX: number,
   mouseY: number,
   transform: TransformState,
-  canvasRef: RefObject<HTMLDivElement>
+  canvasRef: RefObject<HTMLDivElement>,
 ): { canvasX: number; canvasY: number; imageX: number; imageY: number } => {
   const canvasEl = canvasRef.current;
   if (!canvasEl) {
-    console.error("Canvas ref not available for coordinate calculation");
+    console.error('Canvas ref not available for coordinate calculation');
     return { canvasX: 0, canvasY: 0, imageX: 0, imageY: 0 }; // Should not happen ideally
   }
 
@@ -51,12 +47,9 @@ export const calculateCenteringTransform = (
   imageWidth: number,
   imageHeight: number,
   canvasWidth: number,
-  canvasHeight: number
+  canvasHeight: number,
 ): TransformState => {
-  const initialZoom = Math.min(
-    canvasWidth / imageWidth,
-    canvasHeight / imageHeight
-  );
+  const initialZoom = Math.min(canvasWidth / imageWidth, canvasHeight / imageHeight);
 
   const tx = canvasWidth / 2 - (imageWidth / 2) * initialZoom;
   const ty = canvasHeight / 2 - (imageHeight / 2) * initialZoom;
@@ -64,6 +57,6 @@ export const calculateCenteringTransform = (
   return {
     zoom: initialZoom,
     translateX: tx,
-    translateY: ty
+    translateY: ty,
   };
 };

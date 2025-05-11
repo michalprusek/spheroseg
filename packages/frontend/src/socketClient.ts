@@ -8,12 +8,12 @@ import { getToken } from './services/authService';
 
 // Configuration for socket connection
 const SOCKET_OPTIONS = {
-  reconnectionAttempts: 5, // Increase reconnection attempts for better reliability
+  reconnectionAttempts: 10, // Increased number of attempts
   reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  timeout: 20000, // Increase timeout for Docker environment
+  reconnectionDelayMax: 10000, // Increased max delay
+  timeout: 30000, // Significantly increased timeout to allow more time for connection
   autoConnect: false, // Don't connect until explicitly called
-  transports: ['polling'], // Use only polling since WebSocket is not supported in simple-server
+  transports: ['polling', 'websocket'], // Start with polling, then try websocket
   forceNew: true, // Force new connection to avoid stale connections
   withCredentials: true, // Send cookies in Docker environment to maintain auth state
   extraHeaders: {
@@ -44,24 +44,10 @@ export const getSocketUrl = (): string => {
   const currentUrl = window.location.href;
   const currentHost = window.location.hostname;
   const currentPort = window.location.port || '3000';
+  const currentProtocol = window.location.protocol;
 
-  // Handle different hostname scenarios
-  let host = currentHost;
-
-  // Replace 0.0.0.0 with localhost for WebSocket connections
-  if (currentHost === '0.0.0.0') {
-    host = 'localhost';
-  }
-
-  // Build the origin URL
-  const origin = `${window.location.protocol}//${host}:${currentPort}`;
-
-  if (DEBUG) {
-    console.log(`Original URL: ${currentUrl}`);
-    console.log(`Using Socket.IO URL: ${origin}`);
-  }
-
-  return origin;
+  // Return window.location.origin for consistency
+  return window.location.origin;
 };
 
 /**
@@ -91,11 +77,11 @@ export const connectSocket = (): Socket => {
   const authOptions = token ? { auth: { token } } : {};
 
   try {
-    // Odstraníme existující socket.io-client skript ze stránky, pokud existuje
-    // Toto pomůže zabránit konfliktům a chybám "message channel closed"
+    // Remove existing socket.io-client script from the page if it exists
+    // This helps prevent conflicts and "message channel closed" errors
     try {
       const existingScripts = document.querySelectorAll('script[src*="socket.io"]');
-      existingScripts.forEach(script => {
+      existingScripts.forEach((script) => {
         if (DEBUG) console.log('Removing existing socket.io script:', script);
         script.remove();
       });
@@ -132,49 +118,42 @@ export const connectSocket = (): Socket => {
         if (DEBUG) console.error('Error connecting socket:', connectError);
       }
     }, 300);
+
+    // Set up error handling for the socket
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error.message);
+
+      // Don't interrupt the user experience due to socket connection issues
+      // We'll try to reconnect in the background and let the app continue working
+
+      // If polling is failing, the server might be down or unreachable
+      // In this case, we'll just let the socket.io client handle reconnection
+      // and avoid showing errors to the user
+
+      // Log error but don't show it to the user directly to avoid confusion
+    });
+
+    // Add connect event handler for logging
+    socket.on('connect', () => {
+      console.log('Socket connected successfully with ID:', socket.id);
+    });
+
+    // Handle reconnect events
+    socket.io.on('reconnect', (attempt) => {
+      console.log(`Socket reconnected after ${attempt} attempts`);
+    });
+
+    // Handle disconnect events
+    socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+      // Don't interrupt the user experience - we'll try to reconnect automatically
+    });
+
+    return socket;
   } catch (error) {
     console.error('Error creating socket connection:', error);
-    // Return a dummy socket that won't cause errors when methods are called on it
-    return createDummySocket();
+    throw new Error('Socket connection failed: ' + error.message);
   }
-
-  // Debug logging
-  socket.on('connect', () => {
-    console.log('Socket connected', socket?.id);
-  });
-
-  socket.on('connect_error', (error) => {
-    if (DEBUG) console.warn('Socket connection error:', error.message);
-
-    // Don't try to reconnect automatically - the application will work without socket.io
-    if (DEBUG) console.log('Socket.IO connection failed, application will continue in offline mode');
-
-    // Clean up event listeners to prevent memory leaks
-    socket.removeAllListeners();
-    console.log('WebSocket: Cleaned up event listeners');
-
-    // Prevent excessive reconnection attempts
-    try {
-      socket?.disconnect();
-      console.log('Cleaned up WebSocket event listeners');
-    } catch (err) {
-      if (DEBUG) console.error('Error disconnecting socket:', err);
-    }
-
-    // Provide a fallback mechanism for components that depend on socket.io
-    // This will allow the application to work in offline mode
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('socket:offline', {
-        detail: { error: error.message }
-      }));
-    }
-  });
-
-  socket.on('disconnect', (reason) => {
-    console.log('Socket disconnected:', reason);
-  });
-
-  return socket;
 };
 
 /**
@@ -198,40 +177,9 @@ export const disconnectSocket = (): void => {
   }
 };
 
-/**
- * Creates a dummy socket that won't cause errors when methods are called on it
- * This is used as a fallback when socket connection fails
- * @returns A dummy socket object
- */
-const createDummySocket = (): Socket => {
-  // Create a mock event emitter that does nothing
-  const dummyEmitter: any = {
-    on: () => dummyEmitter,
-    off: () => dummyEmitter,
-    once: () => dummyEmitter,
-    emit: () => false,
-    listeners: () => [],
-    connect: () => {},
-    disconnect: () => {},
-    connected: false,
-    id: 'dummy-socket-id',
-  };
-
-  console.warn('Using dummy socket due to connection failure');
-
-  // Dispatch offline event
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('socket:offline', {
-      detail: { error: 'Failed to create socket connection' }
-    }));
-  }
-
-  return dummyEmitter as unknown as Socket;
-};
-
 export default {
   connectSocket,
   getSocket,
   disconnectSocket,
-  getSocketUrl
+  getSocketUrl,
 };

@@ -18,6 +18,7 @@ interface QueueStatus {
   runningTasks: string[];
   queuedTasks?: string[];
   processingImages: { id: string; name: string; projectId?: string }[];
+  queuedImages?: { id: string; name: string; projectId?: string }[];
 }
 
 interface QueueItemProps {
@@ -43,8 +44,10 @@ const QueueItem: React.FC<QueueItemProps> = ({ name, status }) => {
           {name}
         </span>
       </div>
-      <span className={`text-xs font-medium px-2 py-1 rounded-full bg-opacity-10
-        ${status === 'running' ? 'text-blue-500 bg-blue-100 dark:bg-blue-900 dark:bg-opacity-20' : 'text-gray-500 bg-gray-100 dark:bg-gray-700 dark:bg-opacity-50'}`}>
+      <span
+        className={`text-xs font-medium px-2 py-1 rounded-full bg-opacity-10
+        ${status === 'running' ? 'text-blue-500 bg-blue-100 dark:bg-blue-900 dark:bg-opacity-20' : 'text-gray-500 bg-gray-100 dark:bg-gray-700 dark:bg-opacity-50'}`}
+      >
         {status === 'running' ? 'Processing' : 'Queued'}
       </span>
     </div>
@@ -66,76 +69,128 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
   useEffect(() => {
     const fetchQueueStatus = async () => {
       try {
-        // Try fetching the project-specific status if projectId is provided
+        // Zkusíme získat status specifický pro projekt, pokud máme projectId
         if (projectId) {
           try {
-            console.log(`Fetching queue status for project ${projectId}...`);
-            try {
-              // Použijeme správný endpoint pro získání stavu fronty segmentace
-              const projectStatusResponse = await apiClient.get(`/queue-status/${projectId}`);
-              if (projectStatusResponse.data) {
-                setQueueStatus(projectStatusResponse.data);
-                return; // Exit early if we got project-specific data
-              }
-            } catch (projectError) {
-              console.warn(`Project queue status error: ${projectError.message || projectError}`);
-              // Use mock data for project
-              console.log(`Using mock data for project ${projectId}...`);
-              setQueueStatus({
-                queueLength: 1,
-                runningTasks: ['123e4567-e89b-12d3-a456-426614174000'],
-                queuedTasks: ['323e4567-e89b-12d3-a456-426614174002'],
-                processingImages: [
-                  { id: '123e4567-e89b-12d3-a456-426614174000', name: `Sample Image for Project ${projectId}`, projectId }
-                ]
-              });
-              return; // Exit early with mock data
+            // Zkusíme nejprve standardní endpoint pro projektovou frontu
+            const projectStatusResponse = await apiClient.get(`/api/queue-status/${projectId}`);
+            if (projectStatusResponse.data) {
+              const normalizedData = normalizeQueueStatusData(projectStatusResponse.data);
+              setQueueStatus(normalizedData);
+              return; // Končíme, pokud jsme získali data specifická pro projekt
             }
-          } catch (projectError) {
-            console.warn(`Project queue status error: ${projectError.message || projectError}`);
-            // Continue to fallback options
+          } catch (projectEndpointError) {
+            console.debug(`Primary endpoint failed: ${projectEndpointError.message}`);
+            // Zkusíme alternativní endpoint
+            try {
+              const altProjectResponse = await apiClient.get(`/api/segmentation/queue-status/${projectId}`);
+              if (altProjectResponse.data) {
+                const normalizedData = normalizeQueueStatusData(altProjectResponse.data);
+                setQueueStatus(normalizedData);
+                return;
+              }
+            } catch (altProjectError) {
+              console.debug(`Alternative project endpoint failed: ${altProjectError.message}`);
+              // Zkusíme fallback endpoint
+              try {
+                const fallbackResponse = await apiClient.get(`/api/segmentations/queue/status/${projectId}`);
+                if (fallbackResponse.data) {
+                  const normalizedData = normalizeQueueStatusData(fallbackResponse.data);
+                  setQueueStatus(normalizedData);
+                  return;
+                }
+              } catch (fallbackError) {
+                console.warn(`All project-specific queue status endpoints failed. Trying global endpoints.`);
+                // Pokračujeme ke globálním endpointům
+              }
+            }
           }
         }
 
-        // Try global status
+        // Zkusíme globální status jako fallback
         try {
-          console.log('Fetching global queue status...');
-          // Použijeme správný endpoint pro získání globálního stavu fronty segmentace
-          const globalStatusResponse = await apiClient.get('/queue-status');
+          // Endpoint 1: Standardní API endpoint
+          const globalStatusResponse = await apiClient.get('/api/queue-status');
           if (globalStatusResponse.data) {
-            setQueueStatus(globalStatusResponse.data);
+            const normalizedData = normalizeQueueStatusData(globalStatusResponse.data);
+            setQueueStatus(normalizedData);
             return;
           }
-        } catch (globalError) {
-          console.warn(`Global queue status error: ${globalError.message || globalError}`);
-          // Use mock data for global
-          console.log('Using mock data for global queue...');
-          setQueueStatus({
-            queueLength: 2,
-            runningTasks: ['123e4567-e89b-12d3-a456-426614174000', '223e4567-e89b-12d3-a456-426614174001'],
-            queuedTasks: ['323e4567-e89b-12d3-a456-426614174002', '423e4567-e89b-12d3-a456-426614174003'],
-            processingImages: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Sample Image 1', projectId: 'project-123' },
-              { id: '223e4567-e89b-12d3-a456-426614174001', name: 'Sample Image 2', projectId: 'project-456' }
-            ]
-          });
-          return; // Exit early with mock data
+        } catch (globalEndpointError) {
+          console.debug(`Primary global endpoint failed: ${globalEndpointError.message}`);
+
+          // Endpoint 2: Alternativní API endpoint
+          try {
+            const altGlobalResponse = await apiClient.get('/api/segmentation/queue');
+            if (altGlobalResponse.data) {
+              const normalizedData = normalizeQueueStatusData(altGlobalResponse.data);
+              setQueueStatus(normalizedData);
+              return;
+            }
+          } catch (altGlobalError) {
+            console.debug(`Alternative global endpoint failed: ${altGlobalError.message}`);
+
+            // Endpoint 3: Poslední pokus
+            try {
+              const fallbackGlobalResponse = await apiClient.get('/api/segmentations/queue/status');
+              if (fallbackGlobalResponse.data) {
+                const normalizedData = normalizeQueueStatusData(fallbackGlobalResponse.data);
+                setQueueStatus(normalizedData);
+                return;
+              }
+            } catch (fallbackGlobalError) {
+              console.warn(`All global queue status endpoints failed.`);
+              // Použijeme prázdný status fronty místo mockovaných dat
+              setQueueStatus({
+                queueLength: 0,
+                runningTasks: [],
+                queuedTasks: [],
+                pendingTasks: [],
+                processingImages: [],
+              });
+            }
+          }
         }
       } catch (error) {
-        console.error('Error in fetchQueueStatus:', error);
-        // Set empty queue on unexpected errors
+        console.error('Unexpected error in fetchQueueStatus:', error);
+        // Při neočekávaných chybách nastavíme prázdnou frontu
         setQueueStatus({
           queueLength: 0,
           runningTasks: [],
-          processingImages: []
+          queuedTasks: [],
+          processingImages: [],
         });
       }
     };
 
+    // Pomocná funkce pro normalizaci dat fronty
+    const normalizeQueueStatusData = (data: any) => {
+      // Získáme vlastní data z odpovědi (může být v data.data nebo přímo v data)
+      const responseData = data.data || data;
+
+      // Extrahujeme images data - pro počty z databáze
+      const imagesData = responseData.images || {};
+
+      return {
+        ...responseData,
+        // Zajistíme, že runningTasks je vždy pole
+        runningTasks: responseData.runningTasks || [],
+        // Zajistíme, že queuedTasks je vždy pole (kontrolujeme queuedTasks i pendingTasks)
+        queuedTasks: responseData.queuedTasks || responseData.pendingTasks || [],
+        // Zajistíme, že processingImages je vždy pole
+        processingImages: responseData.processingImages || [],
+        // Zajistíme, že queuedImages je vždy pole
+        queuedImages: responseData.queuedImages || [],
+        // Zajistíme, že máme queueLength
+        queueLength: responseData.queueLength || responseData.pendingTasks?.length || responseData.queuedTasks?.length || 0,
+        // Zachováme images data pro počty z databáze
+        images: imagesData,
+      };
+    };
+
     fetchQueueStatus();
-    // Poll every 15 seconds as fallback if WebSocket doesn't work
-    // Using a longer interval to reduce console errors in development
-    const interval = setInterval(fetchQueueStatus, 15000);
+    // Poll every 10 seconds as fallback if WebSocket doesn't work
+    const interval = setInterval(fetchQueueStatus, 10000);
 
     return () => clearInterval(interval);
   }, [projectId]); // Re-fetch when projectId changes
@@ -147,78 +202,163 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
 
     let isComponentMounted = true;
 
-    // Create a function to safely update queue status
+    // Vytvoření funkce pro bezpečnou aktualizaci stavu fronty při selhání WebSocketu
     const updateQueueStatus = async () => {
       if (!isComponentMounted) return;
 
       try {
-        // Try project-specific endpoint first if we have a projectId
+        // Pomocná funkce pro normalizaci dat
+        const normalizeQueueStatusData = (rawData: any) => {
+          // Získáme vlastní data z odpovědi (může být v data.data nebo přímo v data)
+          const responseData = rawData.data || rawData;
+
+          // Kontrola zda obsahuje runningTasks nebo aktivní úlohy
+          const running = responseData.runningTasks || responseData.activeTasks || [];
+
+          // Kontrola zda obsahuje queuedTasks, pendingTasks, nebo queuedImages
+          const queued = responseData.queuedTasks || responseData.pendingTasks || [];
+
+          // Spojíme všechny processingImages z různých zdrojů
+          const processingImages = responseData.processingImages || [];
+
+          // Pokud máme běžící úlohy, ale nemáme žádné processingImages, vytvoříme zástupné položky
+          const enhancedProcessingImages =
+            running.length > 0 && processingImages.length === 0
+              ? running.map((taskId: string) => ({
+                  id: taskId,
+                  name: `Processing ${taskId.substring(0, 8)}...`,
+                  projectId: (responseData.projectId || projectId || 'unknown'),
+                }))
+              : processingImages;
+
+          // Extrahujeme images data - pro počty z databáze
+          const imagesData = responseData.images || {};
+
+          return {
+            ...responseData,
+            runningTasks: running,
+            queuedTasks: queued,
+            processingImages: enhancedProcessingImages,
+            queueLength: responseData.queueLength || queued.length || 0,
+            activeTasksCount: responseData.activeTasksCount || running.length || 0,
+            timestamp: responseData.timestamp || new Date().toISOString(),
+            // Zachováme images data pro počty z databáze
+            images: imagesData,
+          };
+        };
+
+        // Zkusíme získat status specifický pro projekt, pokud máme projectId
         if (projectId) {
-          try {
-            console.log(`Fetching queue status for project ${projectId}...`);
+          // Pole endpointů k vyzkoušení
+          const endpoints = [
+            `/api/queue-status/${projectId}`,
+            `/api/segmentation/queue-status/${projectId}`,
+            `/api/segmentations/queue/status/${projectId}`
+          ];
+
+          let success = false;
+
+          // Vyzkoušíme všechny endpointy
+          for (const endpoint of endpoints) {
             try {
-              // Použijeme správný endpoint pro získání stavu fronty segmentace
-              const projectResponse = await apiClient.get(`/queue-status/${projectId}`);
-              if (isComponentMounted && projectResponse.data) {
-                setQueueStatus(projectResponse.data);
-                return;
+              console.log(`Fetching queue status from ${endpoint}...`);
+              const response = await apiClient.get(endpoint);
+
+              if (isComponentMounted && response.data) {
+                const normalizedData = normalizeQueueStatusData(response.data);
+                setQueueStatus(normalizedData);
+                success = true;
+                break; // Úspěch, ukončíme cyklus
               }
-            } catch (projectError) {
-              console.warn(`Project queue status error: ${projectError.message || projectError}`);
-              // Use mock data for project
-              if (isComponentMounted) {
-                console.log(`Using mock data for project ${projectId}...`);
-                setQueueStatus({
-                  queueLength: 1,
-                  runningTasks: ['123e4567-e89b-12d3-a456-426614174000'],
-                  queuedTasks: ['323e4567-e89b-12d3-a456-426614174002'],
-                  processingImages: [
-                    { id: '123e4567-e89b-12d3-a456-426614174000', name: `Sample Image for Project ${projectId}`, projectId }
-                  ]
-                });
-                return; // Exit early with mock data
-              }
+            } catch (error) {
+              console.debug(`Failed to fetch queue status from ${endpoint}: ${error}`);
+              // Pokračujeme k dalšímu endpointu
             }
-          } catch (projectError) {
-            console.warn(`Project queue status error: ${projectError.message || projectError}`);
-            // Continue to fallback options
+          }
+
+          // Pokud se nám nepodařilo získat data z žádného endpointu, zkusíme globální endpointy
+          if (!success) {
+            console.log(`Failed to fetch project-specific queue status, trying global endpoints...`);
+          } else {
+            return; // Podařilo se nám získat projektová data, končíme
           }
         }
 
-        // Try global queue status
-        try {
-          console.log('Fetching global queue status...');
-          // Použijeme správný endpoint pro získání globálního stavu fronty segmentace
-          const globalResponse = await apiClient.get('/queue-status');
-          if (isComponentMounted && globalResponse.data) {
-            setQueueStatus(globalResponse.data);
-            return;
-          }
-        } catch (globalError) {
-          console.warn(`Global queue status error: ${globalError.message || globalError}`);
-          // Use mock data for global
-          if (isComponentMounted) {
-            console.log('Using mock data for global queue...');
-            setQueueStatus({
-              queueLength: 2,
-              runningTasks: ['123e4567-e89b-12d3-a456-426614174000', '223e4567-e89b-12d3-a456-426614174001'],
-              queuedTasks: ['323e4567-e89b-12d3-a456-426614174002', '423e4567-e89b-12d3-a456-426614174003'],
-              processingImages: [
-                { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Sample Image 1', projectId: 'project-123' },
-                { id: '223e4567-e89b-12d3-a456-426614174001', name: 'Sample Image 2', projectId: 'project-456' }
-              ]
-            });
-            return; // Exit early with mock data
+        // Zkusíme globální endpointy
+        // Pole globálních endpointů k vyzkoušení
+        const globalEndpoints = [
+          '/api/queue-status',
+          '/api/segmentation/queue',
+          '/api/segmentations/queue/status'
+        ];
+
+        let globalSuccess = false;
+
+        // Vyzkoušíme všechny globální endpointy
+        for (const endpoint of globalEndpoints) {
+          try {
+            console.log(`Fetching global queue status from ${endpoint}...`);
+            const response = await apiClient.get(endpoint);
+
+            if (isComponentMounted && response.data) {
+              const normalizedData = normalizeQueueStatusData(response.data);
+
+              // Pokud jsme v projektovém pohledu, filtrujeme globální data
+              if (projectId) {
+                // Filtrování podle projectId
+                const filteredImages = normalizedData.processingImages.filter(
+                  (img: any) => img.projectId === projectId || img.project_id === projectId
+                );
+
+                const filteredRunning = filteredImages.map((img: any) => img.id);
+
+                // Odhadujeme queueLength pro projekt
+                const newQueueLength = normalizedData.queueLength > 0 ?
+                  Math.max(1, Math.floor(normalizedData.queueLength / 3)) : 0;
+
+                setQueueStatus({
+                  ...normalizedData,
+                  processingImages: filteredImages,
+                  runningTasks: filteredRunning,
+                  queueLength: newQueueLength,
+                });
+              } else {
+                // Pro globální pohled použijeme všechna data
+                setQueueStatus(normalizedData);
+              }
+
+              globalSuccess = true;
+              break; // Úspěch, ukončíme cyklus
+            }
+          } catch (error) {
+            console.debug(`Failed to fetch global queue status from ${endpoint}: ${error}`);
+            // Pokračujeme k dalšímu endpointu
           }
         }
+
+        // Pokud se nám nepodařilo získat žádná data, nastavíme prázdnou frontu
+        if (!globalSuccess && isComponentMounted) {
+          console.log('Failed to fetch any queue status data, setting empty queue');
+          setQueueStatus({
+            queueLength: 0,
+            runningTasks: [],
+            queuedTasks: [],
+            pendingTasks: [],
+            processingImages: [],
+            timestamp: new Date().toISOString(),
+          });
+        }
       } catch (error) {
-        console.error('Error in updateQueueStatus:', error);
-        // Set empty queue on unexpected errors
+        console.error('Unexpected error in updateQueueStatus:', error);
+        // Při neočekávaných chybách nastavíme prázdnou frontu
         if (isComponentMounted) {
           setQueueStatus({
             queueLength: 0,
             runningTasks: [],
-            processingImages: []
+            queuedTasks: [],
+            pendingTasks: [],
+            processingImages: [],
+            timestamp: new Date().toISOString(),
           });
         }
       }
@@ -258,7 +398,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         reconnection: true,
         reconnectionDelayMax: 2000, // Reduced max delay
         randomizationFactor: 0.1, // Minimal randomization factor
-        withCredentials: false // Don't send cookies in Docker environment
+        withCredentials: false, // Don't send cookies in Docker environment
       });
 
       // Listen for global socket offline event
@@ -294,33 +434,147 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         updateQueueStatus();
       });
 
-      // Queue update handler
-      newSocket.on('segmentation_queue_update', (data: QueueStatus) => {
+      // Queue update handler - upraveno pro podporu různých formátů ze socketu
+      newSocket.on('segmentation_queue_update', (data: any) => {
         if (!isComponentMounted) return;
 
         console.log('Received segmentation_queue_update:', data);
         if (data) {
-          // Zkontrolujeme, zda data obsahují všechny potřebné pole
-          const updatedData = {
-            ...data,
-            // Zajistíme, že runningTasks je vždy pole
-            runningTasks: data.runningTasks || [],
-            // Zajistíme, že queuedTasks je vždy pole
-            queuedTasks: data.queuedTasks || [],
-            // Zajistíme, že processingImages je vždy pole
-            processingImages: data.processingImages || []
+          // Pomocná funkce pro normalizaci dat z WebSocketu
+          const normalizeQueueStatusData = (rawData: any) => {
+            // Získáme vlastní data z odpovědi (může být v data.data nebo přímo v data)
+            const responseData = rawData.data || rawData;
+
+            // Kontrola zda obsahuje runningTasks nebo aktivní úlohy
+            const running = responseData.runningTasks || responseData.activeTasks || [];
+
+            // Kontrola zda obsahuje queuedTasks, pendingTasks, nebo queuedImages
+            const queued = responseData.queuedTasks || responseData.pendingTasks || [];
+
+            // Zachováme originální pendingTasks, pokud existují
+            const pendingTasks = responseData.pendingTasks || [];
+
+            // Spojíme všechny processingImages z různých zdrojů
+            const processingImages = responseData.processingImages || [];
+
+            // Získáme queuedImages, pokud existují
+            const queuedImages = responseData.queuedImages || [];
+
+            // Pokud máme běžící úlohy, ale nemáme žádné processingImages, vytvoříme zástupné položky
+            const enhancedProcessingImages =
+              running.length > 0 && processingImages.length === 0
+                ? running.map((taskId: string) => ({
+                    id: taskId,
+                    name: `Processing ${taskId.substring(0, 8)}...`,
+                    projectId: (responseData.projectId || projectId || 'unknown'),
+                  }))
+                : processingImages;
+
+            // Pokud máme čekající úlohy, ale nemáme žádné queuedImages, vytvoříme zástupné položky
+            const enhancedQueuedImages =
+              queued.length > 0 && queuedImages.length === 0
+                ? queued.map((taskId: string) => ({
+                    id: taskId,
+                    name: `Queued ${taskId.substring(0, 8)}...`,
+                    projectId: (responseData.projectId || projectId || 'unknown'),
+                  }))
+                : queuedImages;
+
+            // Extrahujeme images data - pro počty z databáze
+            const imagesData = responseData.images || {};
+
+            return {
+              ...responseData,
+              runningTasks: running,
+              queuedTasks: queued,
+              pendingTasks: pendingTasks, // Přidáme pendingTasks
+              processingImages: enhancedProcessingImages,
+              queuedImages: enhancedQueuedImages,
+              queueLength: responseData.queueLength || queued.length || 0,
+              activeTasksCount: responseData.activeTasksCount || running.length || 0,
+              timestamp: responseData.timestamp || new Date().toISOString(),
+              // Zachováme images data pro počty z databáze
+              images: imagesData,
+            };
           };
 
-          // Pokud máme běžící úkoly, ale nemáme processingImages, vytvoříme mock data
-          if (updatedData.runningTasks.length > 0 && (!updatedData.processingImages || updatedData.processingImages.length === 0)) {
-            updatedData.processingImages = updatedData.runningTasks.map(taskId => ({
-              id: taskId,
-              name: `Task ${taskId.substring(0, 6)}...`,
-              projectId: projectId || 'unknown'
-            }));
-          }
+          // Normalizujeme data
+          const updatedData = normalizeQueueStatusData(data);
 
-          setQueueStatus(updatedData);
+          // Pokud jsme v projektovém pohledu, filtrujeme data, aby zobrazovala pouze úlohy pro tento projekt
+          if (projectId) {
+            // 1. Filtrujeme obrázky podle projektu
+            const filteredImages = updatedData.processingImages.filter(
+              (img: any) => img.projectId === projectId || img.project_id === projectId
+            );
+
+            // 2. Aktualizujeme runningTasks, aby odpovídaly filtrovaným processingImages
+            const filteredRunning = filteredImages.map((img: any) => img.id);
+
+            // 3. Filtrujeme queuedTasks podle projektu, pokud je to možné
+            // Toto je best-effort přístup, protože většinou nemáme v queue info o projektu
+
+            // 4. Počítáme novou queueLength - používáme buď filtrované úlohy nebo odhadujeme
+            const newQueueLength = updatedData.queueLength > 0 ?
+              Math.max(1, Math.floor(updatedData.queueLength / 2)) : 0;
+
+            // Aktualizujeme data pro tento projekt
+            const projectFilteredData = {
+              ...updatedData,
+              processingImages: filteredImages,
+              runningTasks: filteredRunning,
+              queueLength: newQueueLength,
+              // Zachováme původní queuedTasks a pendingTasks, protože nemáme lepší informace
+              pendingTasks: updatedData.pendingTasks || [],
+            };
+
+            // 5. Pokud máme aktivní úlohy v queuedTasks, pokusíme se získat specifičtější data
+            if (updatedData.queuedTasks.length > 0) {
+              // Zkusíme všechny tři endpointy postupně
+              const endpoints = [
+                `/api/queue-status/${projectId}`,
+                `/api/segmentation/queue-status/${projectId}`,
+                `/api/segmentations/queue/status/${projectId}`
+              ];
+
+              // Funkce pro získání dat z konkrétního endpointu
+              const fetchFromEndpoint = async (endpoint: string) => {
+                try {
+                  const response = await apiClient.get(endpoint);
+                  if (response.data && isComponentMounted) {
+                    // Normalizujeme projektová data
+                    const projectData = normalizeQueueStatusData(response.data);
+                    // Aktualizujeme stav s projektovými daty
+                    setQueueStatus({
+                      ...projectFilteredData,
+                      queuedTasks: projectData.queuedTasks || [],
+                      pendingTasks: projectData.pendingTasks || [],
+                      queueLength: projectData.queueLength || projectData.queuedTasks?.length || projectData.pendingTasks?.length || 0,
+                    });
+                    return true;
+                  }
+                  return false;
+                } catch {
+                  return false;
+                }
+              };
+
+              // Postupně zkoušíme endpointy a končíme po prvním úspěšném
+              (async () => {
+                for (const endpoint of endpoints) {
+                  if (await fetchFromEndpoint(endpoint)) {
+                    break;
+                  }
+                }
+              })();
+            }
+
+            // Nastavíme filtrovaná data jako mezistav
+            setQueueStatus(projectFilteredData);
+          } else {
+            // Pro globální pohled použijeme všechna data
+            setQueueStatus(updatedData);
+          }
         }
       });
 
@@ -372,45 +626,104 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     queueLength: 0,
     runningTasks: [],
     queuedTasks: [],
-    processingImages: []
+    pendingTasks: [],
+    processingImages: [],
+    queuedImages: [],
   };
 
   // Pokud jsme v detailu projektu, filtrujeme úkoly podle projektu
   // Ale vždy zobrazíme ukazatel fronty, i když je prázdná
   let filteredQueueStatus = { ...displayQueueStatus };
 
-  if (projectId && displayQueueStatus.processingImages) {
+  if (projectId && displayQueueStatus) {
+    console.log('Filtering queue status for project:', projectId);
+    console.log('Original queue status:', {
+      processingImagesCount: displayQueueStatus.processingImages?.length || 0,
+      queuedImagesCount: displayQueueStatus.queuedImages?.length || 0,
+      queuedTasksCount: displayQueueStatus.queuedTasks?.length || 0,
+      pendingTasksCount: displayQueueStatus.pendingTasks?.length || 0,
+      runningTasksCount: displayQueueStatus.runningTasks?.length || 0,
+    });
+
     // Filtrujeme obrázky podle projektu
-    const projectImages = displayQueueStatus.processingImages.filter(img => img.projectId === projectId);
+    const projectImages = displayQueueStatus.processingImages && displayQueueStatus.processingImages.length > 0
+      ? displayQueueStatus.processingImages.filter((img) => img.projectId === projectId)
+      : [];
+
+    // Filtrujeme čekající obrázky podle projektu
+    const queuedProjectImages = displayQueueStatus.queuedImages && displayQueueStatus.queuedImages.length > 0
+      ? displayQueueStatus.queuedImages.filter((img) => img.projectId === projectId)
+      : [];
 
     // Vytváříme novou instanci queueStatus s filtrovanými daty
     filteredQueueStatus = {
       ...displayQueueStatus,
       processingImages: projectImages,
-      queuedTasks: displayQueueStatus.queuedTasks && displayQueueStatus.queuedTasks.length > 0 ?
-        displayQueueStatus.queuedTasks.filter(task => typeof task === 'string' && task.includes(projectId)) :
-        []
+      queuedImages: queuedProjectImages,
+      queuedTasks:
+        displayQueueStatus.queuedTasks && displayQueueStatus.queuedTasks.length > 0
+          ? displayQueueStatus.queuedTasks.filter((task) => typeof task === 'string' && task.includes(projectId))
+          : [],
+      pendingTasks:
+        displayQueueStatus.pendingTasks && displayQueueStatus.pendingTasks.length > 0
+          ? displayQueueStatus.pendingTasks.filter((task) => typeof task === 'string' && task.includes(projectId))
+          : [],
     };
+
+    console.log('Filtered queue status:', {
+      processingImagesCount: filteredQueueStatus.processingImages?.length || 0,
+      queuedImagesCount: filteredQueueStatus.queuedImages?.length || 0,
+      queuedTasksCount: filteredQueueStatus.queuedTasks?.length || 0,
+      pendingTasksCount: filteredQueueStatus.pendingTasks?.length || 0,
+      runningTasksCount: filteredQueueStatus.runningTasks?.length || 0,
+    });
   }
 
+  // Získáme skutečné počty z backendové databáze pro images
+  // Processing count from backend "images" data, pokud existuje
+  const processingImagesCount = filteredQueueStatus.images?.processing_count
+    ? parseInt(filteredQueueStatus.images.processing_count, 10) || 0
+    : 0;
+
+  // Pending count from backend "images" data, pokud existuje
+  const pendingImagesCount = filteredQueueStatus.images?.pending_count
+    ? parseInt(filteredQueueStatus.images.pending_count, 10) || 0
+    : 0;
+
+  // Queued count from filteredQueueStatus.queuedImages
+  const queuedImagesCount = filteredQueueStatus.queuedImages?.length || 0;
+
   // Calculate total tasks based on available data
-  // Pro běžící úkoly použijeme buď počet běžících úkolů nebo počet obrázků ve zpracování
+  // Pro běžící úkoly použijeme buď počet běžících úkolů, počet obrázků ve zpracování, nebo počet z backend images
   const runningTasksCount = Math.max(
     filteredQueueStatus.runningTasks?.length ?? 0,
-    filteredQueueStatus.processingImages?.length ?? 0
+    filteredQueueStatus.processingImages?.length ?? 0,
+    processingImagesCount || 0
   );
 
-  // Pro čekající úkoly použijeme buď počet čekajících úkolů nebo queueLength
+  // Pro čekající úkoly použijeme buď počet čekajících úkolů, pendingTasks, queueLength, počet z backend images, nebo počet čekajících obrázků
   const queuedTasksCount = Math.max(
     filteredQueueStatus.queuedTasks?.length ?? 0,
-    filteredQueueStatus.queueLength ?? 0
+    filteredQueueStatus.pendingTasks?.length ?? 0,
+    filteredQueueStatus.queueLength ?? 0,
+    pendingImagesCount || 0,
+    queuedImagesCount || 0
   );
+
+  console.log('Calculated task counts:', {
+    runningTasksCount,
+    queuedTasksCount,
+    queuedTasksLength: filteredQueueStatus.queuedTasks?.length ?? 0,
+    pendingTasksLength: filteredQueueStatus.pendingTasks?.length ?? 0,
+    queueLength: filteredQueueStatus.queueLength ?? 0,
+    pendingImagesCount,
+    queuedImagesCount,
+  });
 
   const totalTasks = runningTasksCount + queuedTasksCount;
 
   // Calculate progress safely - cap at 50% until we implement progress tracking within tasks
-  const progress = runningTasksCount > 0 ?
-    Math.min(50, Math.floor((runningTasksCount / totalTasks) * 100)) : 0;
+  const progress = runningTasksCount > 0 ? Math.min(50, Math.floor((runningTasksCount / totalTasks) * 100)) : 0;
 
   // Prepare data for display in the queue
   let runningItems;
@@ -426,19 +739,25 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     ));
   } else {
     // Pokud nemáme žádné běžící úkoly
-    runningItems = (
-      <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
-        No running tasks
-      </div>
-    );
+    runningItems = <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">No running tasks</div>;
   }
 
   // Prepare queued items
   let queuedItems;
-  if (Array.isArray(filteredQueueStatus.queuedTasks) && filteredQueueStatus.queuedTasks.length > 0) {
-    // Pokud máme seznam čekajících úkolů
+  if (Array.isArray(filteredQueueStatus.pendingTasks) && filteredQueueStatus.pendingTasks.length > 0) {
+    // Pokud máme seznam čekajících úkolů (pendingTasks)
+    queuedItems = filteredQueueStatus.pendingTasks.map((taskId) => (
+      <QueueItem key={taskId} name={`Task ${taskId.substring(0, 6)}...`} status="queued" />
+    ));
+  } else if (Array.isArray(filteredQueueStatus.queuedTasks) && filteredQueueStatus.queuedTasks.length > 0) {
+    // Alternativní název pro čekající úkoly (queuedTasks)
     queuedItems = filteredQueueStatus.queuedTasks.map((taskId) => (
       <QueueItem key={taskId} name={`Task ${taskId.substring(0, 6)}...`} status="queued" />
+    ));
+  } else if (Array.isArray(filteredQueueStatus.queuedImages) && filteredQueueStatus.queuedImages.length > 0) {
+    // Pokud máme seznam čekajících obrázků
+    queuedItems = filteredQueueStatus.queuedImages.map((item) => (
+      <QueueItem key={item.id || item.name} name={item.name} status="queued" />
     ));
   } else if (filteredQueueStatus.queueLength > 0) {
     // Pokud nemáme seznam, ale máme počet čekajících úkolů
@@ -447,11 +766,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     ));
   } else {
     // Pokud nemáme žádné čekající úkoly
-    queuedItems = (
-      <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
-        No queued tasks
-      </div>
-    );
+    queuedItems = <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">No queued tasks</div>;
   }
 
   return (
@@ -460,20 +775,16 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         <div className="text-sm text-gray-600 dark:text-gray-300">
           {runningTasksCount > 0 ? (
             <span>
-              {queuedTasksCount > 0 ?
-                `Segmentation: ${runningTasksCount} running, ${queuedTasksCount} queued` :
-                `Segmentation: ${runningTasksCount} running`
-              }
+              {queuedTasksCount > 0
+                ? `Segmentation: ${runningTasksCount} zpracovává se, ${queuedTasksCount} ve frontě`
+                : `Segmentation: ${runningTasksCount} zpracovává se`}
             </span>
           ) : queuedTasksCount > 0 ? (
             <span>
-              {queuedTasksCount === 1 ?
-                'Segmentation: 1 queued' :
-                `Segmentation: ${queuedTasksCount} queued`
-              }
+              {queuedTasksCount === 1 ? 'Segmentation: 1 ve frontě' : `Segmentation: ${queuedTasksCount} ve frontě`}
             </span>
           ) : (
-            <span>Segmentation: Ready</span>
+            <span>Segmentation: Připraveno</span>
           )}
         </div>
         <div className="w-32">
@@ -488,10 +799,15 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50 overflow-hidden">
           <div className="p-3 border-b border-gray-100 dark:border-gray-700">
-            <h3 className="font-medium text-sm">Segmentation Queue</h3>
+            <h3 className="font-medium text-sm">Segmentační fronta</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {`${totalTasks} tasks total (${runningTasksCount} processing, ${queuedTasksCount} queued)`}
+              {`${totalTasks} úloh celkem (${runningTasksCount} zpracovává se, ${queuedTasksCount} ve frontě)`}
             </p>
+            {filteredQueueStatus.pendingTasks?.length > 0 && (
+              <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
+                {`Čekající úlohy: ${filteredQueueStatus.pendingTasks.length}`}
+              </p>
+            )}
           </div>
 
           <div className="max-h-60 overflow-y-auto">

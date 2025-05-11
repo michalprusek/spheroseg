@@ -84,18 +84,14 @@ class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 
   componentDidUpdate(prevProps: ErrorBoundaryProps): void {
     // Reset the error state when props change if resetOnPropsChange is true
-    if (
-      this.state.hasError &&
-      this.props.resetOnPropsChange &&
-      prevProps !== this.props
-    ) {
+    if (this.state.hasError && this.props.resetOnPropsChange && prevProps !== this.props) {
       this.setState({
         hasError: false,
         error: null,
         errorInfo: null,
       });
     }
-  };
+  }
 
   render(): ReactNode {
     if (this.state.hasError) {
@@ -178,16 +174,19 @@ const ErrorBoundary: React.FC<ErrorBoundaryProps> = (props) => {
       // Simple fallback function that returns the key or a default value
       const fallbacks: Record<string, string> = {
         'errors.somethingWentWrong': 'Something went wrong',
-        'errors.componentError': 'An error occurred in this component. We\'ve been notified and will fix the issue as soon as possible.',
+        'errors.componentError':
+          "An error occurred in this component. We've been notified and will fix the issue as soon as possible.",
         'errors.tryAgain': 'Try Again',
-        'errors.goBack': 'Go Back'
+        'errors.goBack': 'Go Back',
       };
       return fallbacks[key] || key;
     };
   }
 
   // Create a custom fallback with translations if none is provided
-  const translatedFallback = props.fallback ? props.fallback : (
+  const translatedFallback = props.fallback ? (
+    props.fallback
+  ) : (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
       <div className="text-red-500 mb-4">
         <svg
@@ -205,12 +204,8 @@ const ErrorBoundary: React.FC<ErrorBoundaryProps> = (props) => {
           />
         </svg>
       </div>
-      <h2 className="text-2xl font-bold mb-2 dark:text-white">
-        {t('errors.somethingWentWrong')}
-      </h2>
-      <p className="text-gray-600 dark:text-gray-300 mb-6 text-center max-w-md">
-        {t('errors.componentError')}
-      </p>
+      <h2 className="text-2xl font-bold mb-2 dark:text-white">{t('errors.somethingWentWrong')}</h2>
+      <p className="text-gray-600 dark:text-gray-300 mb-6 text-center max-w-md">{t('errors.componentError')}</p>
 
       <div className="flex flex-col sm:flex-row gap-3">
         <Button variant="default" onClick={() => window.location.reload()}>

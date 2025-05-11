@@ -12,14 +12,14 @@ const createTestSegmentation = (count: number = 3) => {
       const angle = (i / numPoints) * Math.PI * 2;
       points.push({
         x: 100 + Math.cos(angle) * 50,
-        y: 100 + Math.sin(angle) * 50
+        y: 100 + Math.sin(angle) * 50,
       });
     }
     return {
       id,
       points,
       type: 'external',
-      color: '#FF0000'
+      color: '#FF0000',
     };
   };
 
@@ -30,7 +30,7 @@ const createTestSegmentation = (count: number = 3) => {
 
   return {
     id: 'test-segmentation',
-    polygons
+    polygons,
   };
 };
 
@@ -39,34 +39,36 @@ vi.mock('../PolygonCollection', () => ({
   default: ({ polygons, selectedPolygonId, hoveredVertex, vertexDragState, editMode }) => {
     // Convert editMode to string safely
     const editModeStr = typeof editMode === 'number' ? String(editMode) : '0';
-    
+
     return (
-      <g data-testid="polygon-collection" 
-         data-polygons-count={polygons.length}
-         data-selected-polygon-id={selectedPolygonId || 'none'}
-         data-edit-mode={editModeStr}
+      <g
+        data-testid="polygon-collection"
+        data-polygons-count={polygons.length}
+        data-selected-polygon-id={selectedPolygonId || 'none'}
+        data-edit-mode={editModeStr}
       >
         Mock Polygon Collection
       </g>
     );
-  }
+  },
 }));
 
 vi.mock('../EditorModeVisualizations', () => ({
   default: ({ editMode, slicingMode, pointAddingMode }) => (
-    <g data-testid="editor-mode-visualizations"
-       data-edit-mode={editMode}
-       data-slicing-mode={slicingMode}
-       data-point-adding-mode={pointAddingMode}
+    <g
+      data-testid="editor-mode-visualizations"
+      data-edit-mode={editMode}
+      data-slicing-mode={slicingMode}
+      data-point-adding-mode={pointAddingMode}
     >
       Mock Editor Mode Visualizations
     </g>
-  )
+  ),
 }));
 
 describe('CanvasPolygonLayer Component', () => {
   const mockSegmentation = createTestSegmentation(3);
-  
+
   const defaultProps = {
     segmentation: mockSegmentation,
     imageSize: { width: 800, height: 600 },
@@ -77,17 +79,17 @@ describe('CanvasPolygonLayer Component', () => {
       polygonId: null,
       vertexIndex: null,
       startX: 0,
-      startY: 0
+      startY: 0,
     },
     editMode: EditMode.View,
     slicingMode: false,
     pointAddingMode: {
       isActive: false,
       sourcePolygonId: null,
-      pointIndex: null
+      pointIndex: null,
     },
     tempPoints: {
-      points: []
+      points: [],
     },
     cursorPosition: null,
     sliceStartPoint: null,
@@ -102,20 +104,20 @@ describe('CanvasPolygonLayer Component', () => {
     onSlicePolygon: vi.fn(),
     onEditPolygon: vi.fn(),
     onDeleteVertex: vi.fn(),
-    onDuplicateVertex: vi.fn()
+    onDuplicateVertex: vi.fn(),
   };
 
   it('renders polygon layer with default props', () => {
     const { container } = render(<CanvasPolygonLayer {...defaultProps} />);
-    
+
     // Check if the container element is rendered
     const polygonLayer = container.querySelector('.polygon-layer');
     expect(polygonLayer).toBeInTheDocument();
-    
+
     // Check if PolygonCollection is rendered
     const polygonCollection = screen.getByTestId('polygon-collection');
     expect(polygonCollection).toBeInTheDocument();
-    
+
     // Check if EditorModeVisualizations is rendered
     const editorModeVisualizations = screen.getByTestId('editor-mode-visualizations');
     expect(editorModeVisualizations).toBeInTheDocument();
@@ -123,7 +125,7 @@ describe('CanvasPolygonLayer Component', () => {
 
   it('passes correct polygon count to PolygonCollection', () => {
     render(<CanvasPolygonLayer {...defaultProps} />);
-    
+
     const polygonCollection = screen.getByTestId('polygon-collection');
     expect(polygonCollection).toHaveAttribute('data-polygons-count', '3');
   });
@@ -131,11 +133,11 @@ describe('CanvasPolygonLayer Component', () => {
   it('handles empty segmentation data gracefully', () => {
     const props = {
       ...defaultProps,
-      segmentation: null
+      segmentation: null,
     };
-    
+
     render(<CanvasPolygonLayer {...props} />);
-    
+
     // Should still render the components but with empty data
     const polygonCollection = screen.getByTestId('polygon-collection');
     expect(polygonCollection).toHaveAttribute('data-polygons-count', '0');
@@ -144,11 +146,11 @@ describe('CanvasPolygonLayer Component', () => {
   it('uses default image size when dimensions are invalid', () => {
     const props = {
       ...defaultProps,
-      imageSize: { width: 0, height: 0 }
+      imageSize: { width: 0, height: 0 },
     };
-    
+
     const { container } = render(<CanvasPolygonLayer {...props} />);
-    
+
     // Component should render without errors
     const polygonLayer = container.querySelector('.polygon-layer');
     expect(polygonLayer).toBeInTheDocument();
@@ -157,11 +159,11 @@ describe('CanvasPolygonLayer Component', () => {
   it('correctly passes edit mode to child components', () => {
     const props = {
       ...defaultProps,
-      editMode: EditMode.CreatePolygon
+      editMode: EditMode.CreatePolygon,
     };
-    
+
     render(<CanvasPolygonLayer {...props} />);
-    
+
     // We'll skip checking the polygon-collection data-edit-mode attribute since we're mocking
     // and just verify that the EditorModeVisualizations receives the correct edit mode
     const editorModeVisualizations = screen.getByTestId('editor-mode-visualizations');
@@ -171,11 +173,11 @@ describe('CanvasPolygonLayer Component', () => {
   it('correctly passes slicing mode to EditorModeVisualizations', () => {
     const props = {
       ...defaultProps,
-      slicingMode: true
+      slicingMode: true,
     };
-    
+
     render(<CanvasPolygonLayer {...props} />);
-    
+
     const editorModeVisualizations = screen.getByTestId('editor-mode-visualizations');
     expect(editorModeVisualizations).toHaveAttribute('data-slicing-mode', 'true');
   });
@@ -186,12 +188,12 @@ describe('CanvasPolygonLayer Component', () => {
       pointAddingMode: {
         isActive: true,
         sourcePolygonId: 'polygon-1',
-        pointIndex: 2
-      }
+        pointIndex: 2,
+      },
     };
-    
+
     render(<CanvasPolygonLayer {...props} />);
-    
+
     const editorModeVisualizations = screen.getByTestId('editor-mode-visualizations');
     expect(editorModeVisualizations).toHaveAttribute('data-point-adding-mode', 'true');
   });
@@ -199,11 +201,11 @@ describe('CanvasPolygonLayer Component', () => {
   it('correctly passes selected polygon ID to PolygonCollection', () => {
     const props = {
       ...defaultProps,
-      selectedPolygonId: 'polygon-2'
+      selectedPolygonId: 'polygon-2',
     };
-    
+
     render(<CanvasPolygonLayer {...props} />);
-    
+
     const polygonCollection = screen.getByTestId('polygon-collection');
     expect(polygonCollection).toHaveAttribute('data-selected-polygon-id', 'polygon-2');
   });

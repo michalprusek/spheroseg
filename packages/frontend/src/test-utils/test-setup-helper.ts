@@ -11,7 +11,7 @@ import { setupAllContextMocks } from './contextMocks';
  */
 export const createLocalStorageMock = () => {
   let store: Record<string, string> = {};
-  
+
   const localStorageMock = {
     getItem: vi.fn((key: string) => store[key] || null),
     setItem: vi.fn((key: string, value: string) => {
@@ -26,12 +26,12 @@ export const createLocalStorageMock = () => {
     key: vi.fn((index: number) => Object.keys(store)[index] || null),
     length: 0, // This will be updated by the getter
   };
-  
+
   // Add getter for length property
   Object.defineProperty(localStorageMock, 'length', {
-    get: () => Object.keys(store).length
+    get: () => Object.keys(store).length,
   });
-  
+
   return localStorageMock;
 };
 
@@ -84,25 +84,25 @@ export const setupBrowserMocks = () => {
   // Mock localStorage
   const localStorageMock = createLocalStorageMock();
   Object.defineProperty(window, 'localStorage', { value: localStorageMock });
-  
+
   // Mock matchMedia
   window.matchMedia = createMatchMediaMock();
-  
+
   // Mock ResizeObserver
   global.ResizeObserver = createResizeObserverMock();
-  
+
   // Mock IntersectionObserver
   global.IntersectionObserver = createIntersectionObserverMock();
-  
+
   // Set React Router future flags
   window.REACT_ROUTER_FUTURE_FLAGS = {
     v7_startTransition: true,
     v7_relativeSplatPath: true,
     v7_normalizeFormMethod: true,
   };
-  
+
   // Mock fetch API
-  global.fetch = vi.fn().mockImplementation(() => 
+  global.fetch = vi.fn().mockImplementation(() =>
     Promise.resolve({
       ok: true,
       json: () => Promise.resolve({}),
@@ -113,9 +113,9 @@ export const setupBrowserMocks = () => {
       headers: new Headers(),
       status: 200,
       statusText: 'OK',
-    })
+    }),
   );
-  
+
   // Return all mocks for additional configuration
   return {
     localStorage: localStorageMock,
@@ -133,39 +133,43 @@ export const setupConsoleMocks = () => {
   // Save original methods
   const originalWarn = console.warn;
   const originalError = console.error;
-  
+
   // Patch console.warn
   console.warn = vi.fn((...args) => {
     // Filter React Router warnings
-    if (args[0] && typeof args[0] === 'string' && (
-      args[0].includes('React Router Future Flag Warning') ||
-      args[0].includes('ReactDOM.render is no longer supported') ||
-      args[0].includes('unmountComponentAtNode is deprecated')
-    )) {
+    if (
+      args[0] &&
+      typeof args[0] === 'string' &&
+      (args[0].includes('React Router Future Flag Warning') ||
+        args[0].includes('ReactDOM.render is no longer supported') ||
+        args[0].includes('unmountComponentAtNode is deprecated'))
+    ) {
       return; // Ignore these warnings
     }
     originalWarn.apply(console, args);
   });
-  
+
   // Patch console.error
   console.error = vi.fn((...args) => {
     // Filter certain errors
-    if (args[0] && typeof args[0] === 'string' && (
-      args[0].includes('Warning: An update to') || // React update warnings
-      args[0].includes('act(...)') || // Act warnings
-      args[0].includes('Error: Not implemented') // JSDOM not implemented errors
-    )) {
+    if (
+      args[0] &&
+      typeof args[0] === 'string' &&
+      (args[0].includes('Warning: An update to') || // React update warnings
+        args[0].includes('act(...)') || // Act warnings
+        args[0].includes('Error: Not implemented')) // JSDOM not implemented errors
+    ) {
       return; // Ignore these errors
     }
     originalError.apply(console, args);
   });
-  
+
   // Return original methods for cleanup
   return {
     restore: () => {
       console.warn = originalWarn;
       console.error = originalError;
-    }
+    },
   };
 };
 
@@ -175,16 +179,16 @@ export const setupConsoleMocks = () => {
 export const setupTest = () => {
   // Setup all browser mocks
   const browserMocks = setupBrowserMocks();
-  
+
   // Patch console methods
   const consoleMocks = setupConsoleMocks();
-  
+
   // Setup API client mock
   const apiClient = setupApiClientMock();
-  
+
   // Setup context mocks
   const contexts = setupAllContextMocks();
-  
+
   // Return all mocks for additional configuration or cleanup
   return {
     browserMocks,
@@ -194,6 +198,6 @@ export const setupTest = () => {
     cleanup: () => {
       consoleMocks.restore();
       vi.resetAllMocks();
-    }
+    },
   };
 };

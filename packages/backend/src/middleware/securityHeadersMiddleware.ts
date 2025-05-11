@@ -67,7 +67,8 @@ const defaultOptions: SecurityHeadersOptions = {
   referrerPolicy: true,
   referrerPolicyValue: 'strict-origin-when-cross-origin',
   permissionsPolicy: true,
-  permissionsPolicyValue: 'camera=(), microphone=(), geolocation=(), interest-cohort=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), document-domain=(), encrypted-media=(), fullscreen=(self), gamepad=(), gyroscope=(), layout-animations=(), magnetometer=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()',
+  permissionsPolicyValue:
+    'camera=(), microphone=(), geolocation=(), interest-cohort=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), document-domain=(), encrypted-media=(), fullscreen=(self), gamepad=(), gyroscope=(), layout-animations=(), magnetometer=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()',
   coep: false, // Can break some integrations
   coop: true,
   corp: true,
@@ -86,7 +87,7 @@ const defaultOptions: SecurityHeadersOptions = {
  */
 export const securityHeadersMiddleware = (options: SecurityHeadersOptions = {}) => {
   const opts = { ...defaultOptions, ...options };
-  
+
   return (req: Request, res: Response, next: NextFunction) => {
     // HTTP Strict Transport Security
     if (opts.hsts) {
@@ -99,54 +100,54 @@ export const securityHeadersMiddleware = (options: SecurityHeadersOptions = {}) 
       }
       res.setHeader('Strict-Transport-Security', hstsValue);
     }
-    
+
     // X-Frame-Options
     if (opts.xFrame) {
       res.setHeader('X-Frame-Options', opts.xFrameValue!);
     }
-    
+
     // X-Content-Type-Options
     if (opts.xContentType) {
       res.setHeader('X-Content-Type-Options', 'nosniff');
     }
-    
+
     // X-XSS-Protection
     if (opts.xXssProtection) {
       res.setHeader('X-XSS-Protection', '1; mode=block');
     }
-    
+
     // Referrer-Policy
     if (opts.referrerPolicy) {
       res.setHeader('Referrer-Policy', opts.referrerPolicyValue!);
     }
-    
+
     // Permissions-Policy
     if (opts.permissionsPolicy) {
       res.setHeader('Permissions-Policy', opts.permissionsPolicyValue!);
     }
-    
+
     // Cross-Origin-Embedder-Policy
     if (opts.coep) {
       res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     }
-    
+
     // Cross-Origin-Opener-Policy
     if (opts.coop) {
       res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     }
-    
+
     // Cross-Origin-Resource-Policy
     if (opts.corp) {
       res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
     }
-    
+
     // Cache-Control
     if (opts.cacheControl) {
       res.setHeader('Cache-Control', opts.cacheControlValue!);
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
     }
-    
+
     // Expect-CT
     if (opts.expectCt) {
       let expectCtValue = `max-age=${opts.expectCtMaxAge}`;
@@ -158,7 +159,7 @@ export const securityHeadersMiddleware = (options: SecurityHeadersOptions = {}) 
       }
       res.setHeader('Expect-CT', expectCtValue);
     }
-    
+
     next();
   };
 };
@@ -177,12 +178,12 @@ export const createSecurityHeadersMiddleware = (env: string) => {
         coop: false,
         corp: false,
       });
-    
+
     case 'production':
       return securityHeadersMiddleware({
         hsts: true,
         hstsMaxAge: 31536000, // 1 year
-        hstsIncludeSubdomains: true, 
+        hstsIncludeSubdomains: true,
         hstsPreload: true,
         xFrame: true,
         xFrameValue: 'DENY',
@@ -191,7 +192,8 @@ export const createSecurityHeadersMiddleware = (env: string) => {
         referrerPolicy: true,
         referrerPolicyValue: 'strict-origin-when-cross-origin',
         permissionsPolicy: true,
-        permissionsPolicyValue: 'camera=(), microphone=(), geolocation=(), interest-cohort=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), document-domain=(), encrypted-media=(), fullscreen=(self), gamepad=(), gyroscope=(), layout-animations=(), magnetometer=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()',
+        permissionsPolicyValue:
+          'camera=(), microphone=(), geolocation=(), interest-cohort=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), document-domain=(), encrypted-media=(), fullscreen=(self), gamepad=(), gyroscope=(), layout-animations=(), magnetometer=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()',
         coep: true,
         coop: true,
         corp: true,
@@ -201,7 +203,7 @@ export const createSecurityHeadersMiddleware = (env: string) => {
         expectCtMaxAge: 86400,
         expectCtReportUri: '/api/security/report/ct',
       });
-    
+
     default:
       return securityHeadersMiddleware();
   }

@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useProfile } from "@/contexts/ProfileContext";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useProfile } from '@/contexts/ProfileContext';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 import axios from 'axios';
@@ -17,19 +17,19 @@ import { showSuccess, showError, showInfo } from '@/utils/toastUtils';
 
 // Type for data coming from the backend (matches UserProfile in Settings.tsx)
 interface UserProfileData {
-    username: string | null;
-    full_name: string | null;
-    title: string | null;
-    organization: string | null;
-    bio: string | null;
-    location: string | null;
-    avatar_url: string | null;
-    // Add other fields if necessary
+  username: string | null;
+  full_name: string | null;
+  title: string | null;
+  organization: string | null;
+  bio: string | null;
+  location: string | null;
+  avatar_url: string | null;
+  // Add other fields if necessary
 }
 
 // Schema for the form validation
 const profileFormSchema = z.object({
-  username: z.string().min(2, "Username must be at least 2 characters.").max(50).optional(),
+  username: z.string().min(2, 'Username must be at least 2 characters.').max(50).optional(),
   full_name: z.string().max(100).optional(), // Add full_name
   title: z.string().max(100).optional(),
   organization: z.string().max(100).optional(),
@@ -87,9 +87,9 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
 
     // Prevent submitting empty data if nothing changed (though isDirty check helps)
     if (Object.keys(dataToSend).length === 0) {
-        showInfo(t('settings.noChanges'));
-        setIsLoading(false);
-        return;
+      showInfo(t('settings.noChanges'));
+      setIsLoading(false);
+      return;
     }
 
     try {
@@ -109,30 +109,33 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
       // Simulate a successful response
       const responseData = {
         ...updatedProfile,
-        message: 'Profile updated successfully'
+        message: 'Profile updated successfully',
       };
 
       console.log('Simulated profile update response:', responseData);
 
-      showSuccess(t('settings.updateSuccess') || "Profile updated successfully!");
+      showSuccess(t('settings.updateSuccess') || 'Profile updated successfully!');
       form.reset(data); // Reset form with new default values to clear dirty state
       // TODO: Optionally update AuthContext or trigger refetch in Settings page
     } catch (error: unknown) {
-      console.error("Error updating profile:", error);
-      let errorMessage = t('settings.updateError') || "Failed to update profile.";
+      console.error('Error updating profile:', error);
+      let errorMessage = t('settings.updateError') || 'Failed to update profile.';
       let statusCode: number | undefined;
 
       // Check if it's an AxiosError to access response details safely
       if (axios.isAxiosError(error) && error.response) {
-         errorMessage = error.response.data?.message || errorMessage;
-         statusCode = error.response.status;
+        errorMessage = error.response.data?.message || errorMessage;
+        statusCode = error.response.status;
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
 
       // Handle specific errors like username taken (409)
       if (statusCode === 409) {
-         form.setError("username", { type: "manual", message: t('settings.usernameTaken') });
+        form.setError('username', {
+          type: 'manual',
+          message: t('settings.usernameTaken'),
+        });
       } else {
         showError(errorMessage);
       }
@@ -147,11 +150,7 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
         <CardTitle>{t('profile.title')}</CardTitle>
         <CardDescription>{t('profile.description')}</CardDescription>
         <div className="mt-4 flex justify-center">
-          <AvatarUploader
-            currentAvatarUrl={avatarUrl}
-            onAvatarChange={handleAvatarChange}
-            size="lg"
-          />
+          <AvatarUploader currentAvatarUrl={avatarUrl} onAvatarChange={handleAvatarChange} size="lg" />
         </div>
       </CardHeader>
       <Form {...form}>
@@ -165,13 +164,13 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
                 <FormItem>
                   <FormLabel>{t('profile.username')}</FormLabel>
                   <FormControl>
-                    <Input placeholder={t('profile.usernamePlaceholder')} {...field} value={field.value ?? ''}/>
+                    <Input placeholder={t('profile.usernamePlaceholder')} {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-             {/* Full Name Field */}
+            {/* Full Name Field */}
             <FormField
               control={form.control}
               name="full_name"
@@ -186,7 +185,7 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
               )}
             />
             {/* Title Field */}
-             <FormField
+            <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
@@ -199,8 +198,8 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
                 </FormItem>
               )}
             />
-             {/* Organization Field */}
-             <FormField
+            {/* Organization Field */}
+            <FormField
               control={form.control}
               name="organization"
               render={({ field }) => (
@@ -213,8 +212,8 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
                 </FormItem>
               )}
             />
-             {/* Bio Field */}
-             <FormField
+            {/* Bio Field */}
+            <FormField
               control={form.control}
               name="bio"
               render={({ field }) => (
@@ -223,13 +222,13 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
                   <FormControl>
                     <Textarea placeholder={t('profile.bioPlaceholder')} {...field} value={field.value ?? ''} />
                   </FormControl>
-                   <FormDescription>{t('profile.bioDescription')}</FormDescription>
+                  <FormDescription>{t('profile.bioDescription')}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-             {/* Location Field */}
-             <FormField
+            {/* Location Field */}
+            <FormField
               control={form.control}
               name="location"
               render={({ field }) => (
@@ -246,7 +245,7 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
           <CardFooter className="border-t px-6 py-4">
             {/* Disable button if form is not dirty */}
             <Button type="submit" disabled={isLoading || !form.formState.isDirty}>
-              {isLoading ? (t('common.saving') + '...') : t('profile.saveButton')}
+              {isLoading ? t('common.saving') + '...' : t('profile.saveButton')}
             </Button>
           </CardFooter>
         </form>

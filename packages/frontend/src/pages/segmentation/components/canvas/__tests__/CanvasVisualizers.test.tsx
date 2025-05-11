@@ -2,10 +2,10 @@ import React from 'react';
 import TemporaryEditPath from '../TemporaryEditPath';
 import SlicingModeVisualizer from '../SlicingModeVisualizer';
 import PointAddingVisualizer from '../pointAddingVisualizer';
-import { 
+import {
   testTemporaryEditPath,
   testSlicingModeVisualizer,
-  testPointAddingVisualizer
+  testPointAddingVisualizer,
 } from '../../../../../../shared/test-utils/canvas-visualizer-utils';
 
 describe('Canvas Visualizer Components', () => {

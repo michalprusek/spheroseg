@@ -14,13 +14,13 @@ const router = express.Router();
  */
 router.post('/csp', standardLimiter, (req, res) => {
   const report = req.body['csp-report'] || req.body;
-  
+
   logger.warn('CSP Violation', {
     report,
     ip: req.ip,
     userAgent: req.headers['user-agent'],
   });
-  
+
   res.status(204).end();
 });
 
@@ -34,7 +34,7 @@ router.post('/ct', standardLimiter, (req, res) => {
     ip: req.ip,
     userAgent: req.headers['user-agent'],
   });
-  
+
   res.status(204).end();
 });
 
@@ -48,7 +48,7 @@ router.post('/hpkp', standardLimiter, (req, res) => {
     ip: req.ip,
     userAgent: req.headers['user-agent'],
   });
-  
+
   res.status(204).end();
 });
 
@@ -62,7 +62,7 @@ router.post('/xss', standardLimiter, (req, res) => {
     ip: req.ip,
     userAgent: req.headers['user-agent'],
   });
-  
+
   res.status(204).end();
 });
 
@@ -76,7 +76,7 @@ router.post('/nel', standardLimiter, (req, res) => {
     ip: req.ip,
     userAgent: req.headers['user-agent'],
   });
-  
+
   res.status(204).end();
 });
 

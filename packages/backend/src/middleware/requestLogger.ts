@@ -5,20 +5,20 @@ import { Express } from 'express';
  * Middleware to log incoming requests.
  */
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
-    const start = Date.now();
-    const { method, url, ip } = req;
+  const start = Date.now();
+  const { method, url, ip } = req;
 
-    // Log start of the request
-    console.log(`--> ${ip} ${method} ${url}`);
+  // Log start of the request
+  console.log(`--> ${ip} ${method} ${url}`);
 
-    // Log completion of the response
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        const { statusCode } = res;
-        console.log(`<-- ${ip} ${method} ${url} ${statusCode} ${duration}ms`);
-    });
+  // Log completion of the response
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const { statusCode } = res;
+    console.log(`<-- ${ip} ${method} ${url} ${statusCode} ${duration}ms`);
+  });
 
-    next();
+  next();
 };
 
 /**
@@ -26,5 +26,5 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
  * @param app Express application instance
  */
 export const setupRequestLogger = (app: Express) => {
-    app.use(requestLogger);
+  app.use(requestLogger);
 };

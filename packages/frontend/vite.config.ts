@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import staticAssetsPlugin from './vite-static-fix';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -10,8 +11,9 @@ export default defineConfig(({ mode }) => {
   // Determine API URL from environment or fallback to default
   const apiUrl = env.VITE_API_URL || 'http://localhost:5001';
   const apiBaseUrl = env.VITE_API_BASE_URL || '/api';
-  const apiAuthPrefix = env.VITE_API_AUTH_PREFIX || '/api/auth';
-  const apiUsersPrefix = env.VITE_API_USERS_PREFIX || '/api/users';
+  // Adjust prefixes based on environment variables
+  const apiAuthPrefix = env.VITE_API_AUTH_PREFIX ? `/api${env.VITE_API_AUTH_PREFIX}` : '/api/auth';
+  const apiUsersPrefix = env.VITE_API_USERS_PREFIX ? `/api${env.VITE_API_USERS_PREFIX}` : '/api/users';
 
   console.log(`Using API URL: ${apiUrl} for proxy configuration`);
   console.log(`API Base URL: ${apiBaseUrl}`);
@@ -19,7 +21,7 @@ export default defineConfig(({ mode }) => {
   console.log(`Users Prefix: ${apiUsersPrefix}`);
 
   return {
-    plugins: [react()] as PluginOption[],
+    plugins: [react(), staticAssetsPlugin()] as PluginOption[],
     optimizeDeps: {
       include: [
         'react',
@@ -59,16 +61,16 @@ export default defineConfig(({ mode }) => {
           target: apiUrl,
           changeOrigin: true,
           secure: false,
-          // Do not rewrite paths - keep /api prefix
+          // Keep /api prefix since backend expects it
           rewrite: (path) => path,
-          configure: (proxy, _options) => {
-            proxy.on('error', (err, _req, _res) => {
+          configure: (proxy) => {
+            proxy.on('error', (err) => {
               console.log('proxy error', err);
             });
-            proxy.on('proxyReq', (proxyReq, req, _res) => {
+            proxy.on('proxyReq', (_proxyReq, req) => {
               console.log('Sending Request:', req.method, req.url);
             });
-            proxy.on('proxyRes', (proxyRes, req, _res) => {
+            proxy.on('proxyRes', (proxyRes, req) => {
               console.log('Received Response:', proxyRes.statusCode, req.url);
             });
           },
@@ -78,15 +80,17 @@ export default defineConfig(({ mode }) => {
           target: apiUrl,
           changeOrigin: true,
           secure: false,
+          // Keep /api prefix since backend expects it
+          rewrite: (path) => path,
           // Higher priority for auth endpoints
-          configure: (proxy, _options) => {
-            proxy.on('error', (err, _req, _res) => {
+          configure: (proxy) => {
+            proxy.on('error', (err) => {
               console.log('Auth proxy error', err);
             });
-            proxy.on('proxyReq', (proxyReq, req, _res) => {
+            proxy.on('proxyReq', (_proxyReq, req) => {
               console.log('Auth Request:', req.method, req.url);
             });
-            proxy.on('proxyRes', (proxyRes, req, _res) => {
+            proxy.on('proxyRes', (proxyRes, req) => {
               console.log('Auth Response:', proxyRes.statusCode, req.url);
             });
           },
@@ -96,17 +100,23 @@ export default defineConfig(({ mode }) => {
           target: apiUrl,
           changeOrigin: true,
           secure: false,
+          // Keep /api prefix since backend expects it
+          rewrite: (path) => path,
         },
         // Handle specific auth endpoints with highest priority
         '/api/auth/login': {
           target: apiUrl,
           changeOrigin: true,
           secure: false,
+          // Keep /api prefix since backend expects it
+          rewrite: (path) => path,
         },
         '/api/auth/register': {
           target: apiUrl,
           changeOrigin: true,
           secure: false,
+          // Keep /api prefix since backend expects it
+          rewrite: (path) => path,
         },
         '/uploads': {
           target: apiUrl,

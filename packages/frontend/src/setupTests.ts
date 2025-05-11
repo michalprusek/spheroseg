@@ -10,32 +10,34 @@ import '@testing-library/jest-dom';
 // This ensures the same flags that are in index.html are applied during tests
 window.REACT_ROUTER_FUTURE_FLAGS = {
   v7_startTransition: true,
-  v7_relativeSplatPath: true, 
-  v7_normalizeFormMethod: true
+  v7_relativeSplatPath: true,
+  v7_normalizeFormMethod: true,
 };
 
 // Mock matchMedia if needed in tests
-window.matchMedia = window.matchMedia || function() {
-  return {
-    matches: false,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => false,
+window.matchMedia =
+  window.matchMedia ||
+  function () {
+    return {
+      matches: false,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    };
   };
-};
 
 // Polyfill/Mock for ResizeObserver, which is not available in jsdom
 // A simple mock implementation without relying on jest.fn()
 global.ResizeObserver = class ResizeObserver {
-    observe() {
-        // do nothing
-    }
-    unobserve() {
-        // do nothing
-    }
-    disconnect() {
-        // do nothing
-    }
-}; 
+  observe() {
+    // do nothing
+  }
+  unobserve() {
+    // do nothing
+  }
+  disconnect() {
+    // do nothing
+  }
+};

@@ -15,8 +15,12 @@ vi.mock('framer-motion', () => ({
 vi.mock('../ImageActions', () => ({
   default: ({ onDelete, onResegment }: { onDelete: () => void; onResegment: () => void }) => (
     <div data-testid="image-actions">
-      <button onClick={onDelete} data-testid="delete-button">Delete</button>
-      <button onClick={onResegment} data-testid="resegment-button">Resegment</button>
+      <button onClick={onDelete} data-testid="delete-button">
+        Delete
+      </button>
+      <button onClick={onResegment} data-testid="resegment-button">
+        Resegment
+      </button>
     </div>
   ),
 }));
@@ -123,14 +127,7 @@ describe('ImageCard Component', () => {
   it('renders in selection mode with checkbox', () => {
     const onToggleSelection = vi.fn();
 
-    render(
-      <ImageCard
-        {...mockProps}
-        selectionMode={true}
-        isSelected={false}
-        onToggleSelection={onToggleSelection}
-      />
-    );
+    render(<ImageCard {...mockProps} selectionMode={true} isSelected={false} onToggleSelection={onToggleSelection} />);
 
     // Check if the checkbox is rendered
     const checkbox = screen.getByRole('checkbox');
@@ -142,14 +139,7 @@ describe('ImageCard Component', () => {
   });
 
   it('shows selected state in selection mode', () => {
-    render(
-      <ImageCard
-        {...mockProps}
-        selectionMode={true}
-        isSelected={true}
-        onToggleSelection={vi.fn()}
-      />
-    );
+    render(<ImageCard {...mockProps} selectionMode={true} isSelected={true} onToggleSelection={vi.fn()} />);
 
     // Check if the checkbox is checked
     const checkbox = screen.getByRole('checkbox');
@@ -164,14 +154,7 @@ describe('ImageCard Component', () => {
   it('calls onToggleSelection when clicked in selection mode', () => {
     const onToggleSelection = vi.fn();
 
-    render(
-      <ImageCard
-        {...mockProps}
-        selectionMode={true}
-        isSelected={false}
-        onToggleSelection={onToggleSelection}
-      />
-    );
+    render(<ImageCard {...mockProps} selectionMode={true} isSelected={false} onToggleSelection={onToggleSelection} />);
 
     // Click on the card
     fireEvent.click(screen.getByText('test-image.jpg'));

@@ -1,6 +1,6 @@
 /**
  * SocketContext
- * 
+ *
  * Provides global Socket.IO connection management for the application
  */
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
@@ -32,29 +32,25 @@ interface SocketProviderProps {
 /**
  * Socket context provider component
  */
-export const SocketProvider: React.FC<SocketProviderProps> = ({ 
-  children, 
-  autoConnect = true 
-}) => {
+export const SocketProvider: React.FC<SocketProviderProps> = ({ children, autoConnect = true }) => {
   const { socket, isConnected, error, connect, disconnect } = useSocketConnection({
     autoConnect,
     reconnect: true,
   });
 
   // Memoize context value to prevent unnecessary re-renders
-  const value = useMemo(() => ({
-    socket,
-    isConnected,
-    error,
-    connect,
-    disconnect,
-  }), [socket, isConnected, error, connect, disconnect]);
-
-  return (
-    <SocketContext.Provider value={value}>
-      {children}
-    </SocketContext.Provider>
+  const value = useMemo(
+    () => ({
+      socket,
+      isConnected,
+      error,
+      connect,
+      disconnect,
+    }),
+    [socket, isConnected, error, connect, disconnect],
   );
+
+  return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 };
 
 /**
@@ -62,11 +58,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
  */
 export const useSocket = (): SocketContextType => {
   const context = useContext(SocketContext);
-  
+
   if (context === undefined) {
     throw new Error('useSocket must be used within a SocketProvider');
   }
-  
+
   return context;
 };
 

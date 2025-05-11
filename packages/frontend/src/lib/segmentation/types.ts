@@ -12,6 +12,7 @@ export interface Point {
 export interface Polygon {
   id: string;
   points: Point[];
+  holes?: Point[][];
   type: 'external' | 'internal';
   class?: string;
 }

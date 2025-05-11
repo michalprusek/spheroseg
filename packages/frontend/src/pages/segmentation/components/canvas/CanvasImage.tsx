@@ -11,7 +11,7 @@ interface CanvasImageProps {
 /**
  * Komponenta pro zobrazení podkladového obrázku na plátně
  */
-const CanvasImage = ({ src, alt = "Image to segment", loading = true }: CanvasImageProps): JSX.Element => {
+const CanvasImage = ({ src, alt = 'Image to segment', loading = true }: CanvasImageProps): JSX.Element => {
   // Process the URL to ensure it's correctly formatted
   const processedSrc = constructUrl(src);
 
@@ -23,7 +23,7 @@ const CanvasImage = ({ src, alt = "Image to segment", loading = true }: CanvasIm
       y={0}
       width="100%"
       height="100%"
-      style={{ imageRendering: "crisp-edges" }}
+      style={{ imageRendering: 'crisp-edges' }}
       data-testid="canvas-image"
     />
   );

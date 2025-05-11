@@ -38,17 +38,17 @@ const CanvasPolygonLayer = ({
   pointAddingTempPoints,
   selectedVertexIndex,
   selectedPolygonPoints,
-  sourcePolygonId
+  sourcePolygonId,
 }: Omit<PolygonLayerProps, 'hoveredPolygonId' | 'zoom' | 'offset' | 'canvasWidth' | 'canvasHeight'>) => {
   // Always render with reasonable dimensions, even if imageSize is not provided
   const effectiveImageSize = {
     width: imageSize.width > 0 ? imageSize.width : 800,
-    height: imageSize.height > 0 ? imageSize.height : 600
+    height: imageSize.height > 0 ? imageSize.height : 600,
   };
 
   // Ensure we have polygons to render, even if empty
   const polygonsToRender = segmentation?.polygons || [];
-  
+
   return (
     <g className="polygon-layer">
       {/* Filters might need to be defined once in the main SVG */}

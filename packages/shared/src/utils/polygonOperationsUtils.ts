@@ -1,7 +1,7 @@
 /**
  * Shared utility functions for polygon operations
  */
-import { Point, Polygon } from '@spheroseg/types';
+import { Point } from '@spheroseg/types';
 
 /**
  * Interface representing a bounding box
@@ -19,13 +19,13 @@ export interface BoundingBox {
 export interface WorkerRequest {
   id: string;
   operation: string;
-  data: any;
+  data: Record<string, unknown>;
 }
 
 export interface WorkerResponse {
   id: string;
   operation: string;
-  result: any;
+  result: unknown;
   error?: string;
 }
 

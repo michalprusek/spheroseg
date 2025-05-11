@@ -94,7 +94,7 @@ class PrometheusClient {
    */
   public registerHistogram(
     name: string,
-    options: promClient.HistogramConfiguration<string>
+    options: promClient.HistogramConfiguration<string>,
   ): promClient.Histogram<string> {
     if (this.metrics.has(name)) {
       return this.metrics.get(name) as promClient.Histogram<string>;
@@ -109,10 +109,7 @@ class PrometheusClient {
   /**
    * Register a counter metric
    */
-  public registerCounter(
-    name: string,
-    options: promClient.CounterConfiguration<string>
-  ): promClient.Counter<string> {
+  public registerCounter(name: string, options: promClient.CounterConfiguration<string>): promClient.Counter<string> {
     if (this.metrics.has(name)) {
       return this.metrics.get(name) as promClient.Counter<string>;
     }
@@ -126,10 +123,7 @@ class PrometheusClient {
   /**
    * Register a gauge metric
    */
-  public registerGauge(
-    name: string,
-    options: promClient.GaugeConfiguration<string>
-  ): promClient.Gauge<string> {
+  public registerGauge(name: string, options: promClient.GaugeConfiguration<string>): promClient.Gauge<string> {
     if (this.metrics.has(name)) {
       return this.metrics.get(name) as promClient.Gauge<string>;
     }
@@ -143,10 +137,7 @@ class PrometheusClient {
   /**
    * Register a summary metric
    */
-  public registerSummary(
-    name: string,
-    options: promClient.SummaryConfiguration<string>
-  ): promClient.Summary<string> {
+  public registerSummary(name: string, options: promClient.SummaryConfiguration<string>): promClient.Summary<string> {
     if (this.metrics.has(name)) {
       return this.metrics.get(name) as promClient.Summary<string>;
     }

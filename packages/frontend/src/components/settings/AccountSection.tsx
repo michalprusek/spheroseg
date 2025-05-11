@@ -1,9 +1,8 @@
-
-import React from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const AccountSection = () => {
@@ -35,7 +34,7 @@ const AccountSection = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-red-600">{t('settings.dangerZone')}</h3>
           <div className="p-4 border border-red-200 bg-red-50 rounded-md">
@@ -44,7 +43,7 @@ const AccountSection = () => {
             <Button variant="destructive">{t('common.deleteAccount')}</Button>
           </div>
         </div>
-        
+
         <div className="flex justify-end">
           <Button type="submit">{t('settings.saveChanges')}</Button>
         </div>

@@ -8,13 +8,13 @@ import {
   simplifyPolygons,
   AABB,
   separatePolygonsByType,
-  createPolygonProps
+  createPolygonProps,
 } from '../../../../../shared/utils/CanvasPolygonUtils';
 
 interface PolygonCollectionProps {
   polygons: Polygon[];
   selectedPolygonId: string | null;
-  hoveredVertex: { polygonId: string | null, vertexIndex: number | null };
+  hoveredVertex: { polygonId: string | null; vertexIndex: number | null };
   vertexDragState: VertexDragState;
   editMode: EditMode;
   onSelectPolygon?: (id: string) => void;
@@ -37,7 +37,7 @@ const PolygonCollection = ({
   onSlicePolygon,
   onEditPolygon,
   onDeleteVertex,
-  onDuplicateVertex
+  onDuplicateVertex,
 }: Omit<PolygonCollectionProps, 'zoom' | 'offset' | 'canvasWidth' | 'canvasHeight'>) => {
   // --- Move Hook calls before early return ---
   const isHoveredPolygonId = hoveredVertex.polygonId;
@@ -48,13 +48,13 @@ const PolygonCollection = ({
     // Use shared utilities for sorting and simplifying polygons
     const sortedPolygons = sortPolygons(polygons, selectedPolygonId);
     return simplifyPolygons(sortedPolygons, selectedPolygonId, 0.5);
-
   }, [polygons, selectedPolygonId]);
 
   // Use shared utility for separating polygons by type
-  const { externalPolygons, internalPolygons } = useMemo(() =>
-    separatePolygonsByType(visiblePolygons)
-  , [visiblePolygons]);
+  const { externalPolygons, internalPolygons } = useMemo(
+    () => separatePolygonsByType(visiblePolygons),
+    [visiblePolygons],
+  );
   // --- End moving Hook calls ---
 
   // Now perform the early return check
@@ -69,13 +69,13 @@ const PolygonCollection = ({
     onSlicePolygon,
     onEditPolygon,
     onDeleteVertex,
-    onDuplicateVertex
+    onDuplicateVertex,
   };
 
   return (
     <g>
       {/* Render external polygons first */}
-      {externalPolygons.map(polygon => (
+      {externalPolygons.map((polygon) => (
         <CanvasPolygon
           key={polygon.id}
           {...createPolygonProps(
@@ -85,13 +85,13 @@ const PolygonCollection = ({
             vertexDragState,
             editMode,
             handlers,
-            visiblePolygons
+            visiblePolygons,
           )}
         />
       ))}
 
       {/* Render internal polygons (holes) */}
-      {internalPolygons.map(polygon => (
+      {internalPolygons.map((polygon) => (
         <CanvasPolygon
           key={polygon.id}
           {...createPolygonProps(
@@ -101,7 +101,7 @@ const PolygonCollection = ({
             vertexDragState,
             editMode,
             handlers,
-            visiblePolygons
+            visiblePolygons,
           )}
         />
       ))}

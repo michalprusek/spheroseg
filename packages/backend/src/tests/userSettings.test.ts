@@ -2,7 +2,6 @@ import request from 'supertest';
 import express from 'express';
 import { jest } from '@jest/globals';
 import usersRouter from '../routes/users';
-import authMiddleware from '../middleware/authMiddleware';
 import bcrypt from 'bcryptjs';
 
 // Mock dependencies
@@ -15,11 +14,11 @@ jest.mock('../middleware/authMiddleware', () => {
 
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashed-password'),
-  compare: jest.fn().mockResolvedValue(true)
+  compare: jest.fn().mockResolvedValue(true),
 }));
 
 jest.mock('../db', () => ({
-  query: jest.fn().mockImplementation((query, params) => {
+  query: jest.fn().mockImplementation((query) => {
     if (query.includes('SELECT * FROM users WHERE id')) {
       return {
         rows: [
@@ -34,9 +33,9 @@ jest.mock('../db', () => ({
             bio: 'This is a test user bio.',
             location: 'Test Location',
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]
+            updated_at: new Date().toISOString(),
+          },
+        ],
       };
     }
     if (query.includes('UPDATE users SET')) {
@@ -53,13 +52,13 @@ jest.mock('../db', () => ({
             bio: 'This is an updated test user bio.',
             location: 'Updated Test Location',
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]
+            updated_at: new Date().toISOString(),
+          },
+        ],
       };
     }
     return { rows: [] };
-  })
+  }),
 }));
 
 describe('User Settings API', () => {
@@ -77,8 +76,7 @@ describe('User Settings API', () => {
 
   describe('GET /api/users/me', () => {
     it('should return the current user', async () => {
-      const response = await request(app)
-        .get('/api/users/me');
+      const response = await request(app).get('/api/users/me');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id', 'test-user-id');
@@ -91,16 +89,14 @@ describe('User Settings API', () => {
 
   describe('PATCH /api/users/me', () => {
     it('should update the current user profile', async () => {
-      const response = await request(app)
-        .patch('/api/users/me')
-        .send({
-          name: 'Updated Test User',
-          username: 'updatedtestuser',
-          title: 'Senior Researcher',
-          organization: 'Updated Test Organization',
-          bio: 'This is an updated test user bio.',
-          location: 'Updated Test Location'
-        });
+      const response = await request(app).patch('/api/users/me').send({
+        name: 'Updated Test User',
+        username: 'updatedtestuser',
+        title: 'Senior Researcher',
+        organization: 'Updated Test Organization',
+        bio: 'This is an updated test user bio.',
+        location: 'Updated Test Location',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id', 'test-user-id');
@@ -113,12 +109,10 @@ describe('User Settings API', () => {
     });
 
     it('should update the current user password', async () => {
-      const response = await request(app)
-        .patch('/api/users/me')
-        .send({
-          currentPassword: 'current-password',
-          newPassword: 'new-password'
-        });
+      const response = await request(app).patch('/api/users/me').send({
+        currentPassword: 'current-password',
+        newPassword: 'new-password',
+      });
 
       expect(response.status).toBe(200);
       expect(bcrypt.compare).toHaveBeenCalledWith('current-password', 'hashed-password');
@@ -129,12 +123,10 @@ describe('User Settings API', () => {
       // Mock bcrypt.compare to return false
       (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
 
-      const response = await request(app)
-        .patch('/api/users/me')
-        .send({
-          currentPassword: 'wrong-password',
-          newPassword: 'new-password'
-        });
+      const response = await request(app).patch('/api/users/me').send({
+        currentPassword: 'wrong-password',
+        newPassword: 'new-password',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('message', 'Current password is incorrect');
@@ -143,8 +135,7 @@ describe('User Settings API', () => {
 
   describe('DELETE /api/users/me', () => {
     it('should delete the current user', async () => {
-      const response = await request(app)
-        .delete('/api/users/me');
+      const response = await request(app).delete('/api/users/me');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message', 'User deleted successfully');

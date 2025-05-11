@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -17,11 +16,7 @@ interface ProjectImageExportProps {
   onClose: () => void;
 }
 
-const ProjectImageExport: React.FC<ProjectImageExportProps> = ({
-  segmentation,
-  imageName,
-  onClose
-}) => {
+const ProjectImageExport: React.FC<ProjectImageExportProps> = ({ segmentation, imageName, onClose }) => {
   const [activeTab, setActiveTab] = useState('metrics');
   const { t } = useLanguage();
 

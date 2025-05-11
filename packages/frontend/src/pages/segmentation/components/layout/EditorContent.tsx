@@ -8,11 +8,7 @@ interface EditorContentProps {
  * Komponenta obsahující hlavní obsah editoru
  */
 const EditorContent = ({ children }: EditorContentProps) => {
-  return (
-    <div className="flex-1 flex flex-col relative overflow-hidden p-4">
-      {children}
-    </div>
-  );
+  return <div className="flex-1 flex flex-col relative overflow-hidden p-4">{children}</div>;
 };
 
 export default EditorContent;

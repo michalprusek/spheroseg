@@ -10,8 +10,17 @@ jest.mock('../lib/urlUtils', () => ({
 }));
 
 // Mock the components that are not relevant for this test
-jest.mock('../components/Navbar', () => () => <div data-testid="navbar-mock" />);
-jest.mock('../components/Footer', () => () => <div data-testid="footer-mock" />);
+jest.mock('../components/Navbar', () => {
+  const NavbarMock = () => <div data-testid="navbar-mock" />;
+  NavbarMock.displayName = 'NavbarMock';
+  return NavbarMock;
+});
+
+jest.mock('../components/ThemedFooter', () => {
+  const ThemedFooterMock = () => <div data-testid="footer-mock" />;
+  ThemedFooterMock.displayName = 'ThemedFooterMock';
+  return ThemedFooterMock;
+});
 
 describe('Documentation Page', () => {
   beforeEach(() => {
@@ -25,7 +34,7 @@ describe('Documentation Page', () => {
         <LanguageProvider>
           <Documentation />
         </LanguageProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // Check if the page title is rendered
@@ -43,21 +52,21 @@ describe('Documentation Page', () => {
         <LanguageProvider>
           <Documentation />
         </LanguageProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     // Get the image element
     const image = screen.getByAltText(/documentation.introduction.imageAlt/i) as HTMLImageElement;
-    
+
     // Simulate an error loading the image
     fireImageErrorEvent(image);
-    
+
     // Check if the fallback image is used
     expect(image.src).toContain('19687f60-a78f-49e3-ada7-8dfc6a5fab4e.png');
-    
+
     // Simulate another error to test the second fallback
     fireImageErrorEvent(image);
-    
+
     // Check if the placeholder is used
     expect(image.src).toContain('/placeholder.png');
   });

@@ -13,7 +13,8 @@
     "paths": {
       "@/*": ["src/*"],
       "@spheroseg/types": ["../types/src"],
-      "@spheroseg/shared": ["../shared"]
+      "@spheroseg/shared": ["../shared"],
+      "@shared/*": ["../shared/src/*"]
     },
     "resolveJsonModule": true,
     "declaration": true,

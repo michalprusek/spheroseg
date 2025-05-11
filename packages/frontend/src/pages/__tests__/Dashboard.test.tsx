@@ -14,8 +14,8 @@ vi.mock('@/contexts/AuthContext', () => ({
     loading: false,
     signIn: vi.fn(),
     signUp: vi.fn(),
-    signOut: vi.fn()
-  })
+    signOut: vi.fn(),
+  }),
 }));
 
 // Mock LanguageContext
@@ -24,8 +24,8 @@ vi.mock('@/contexts/LanguageContext', () => ({
     t: (key: string) => key,
     language: 'en',
     setLanguage: vi.fn(),
-    availableLanguages: ['en', 'cs', 'de', 'fr', 'es', 'ru']
-  })
+    availableLanguages: ['en', 'cs', 'de', 'fr', 'es', 'ru'],
+  }),
 }));
 
 // Mock dependencies
@@ -131,9 +131,10 @@ describe('Dashboard Component', () => {
     const actual = await vi.importActual('react-router-dom');
     return {
       ...actual,
-      useNavigate: () => vi.fn().mockImplementation((path) => {
-        console.log(`Navigating to: ${path}`);
-      }),
+      useNavigate: () =>
+        vi.fn().mockImplementation((path) => {
+          console.log(`Navigating to: ${path}`);
+        }),
     };
   });
 
@@ -141,7 +142,7 @@ describe('Dashboard Component', () => {
     render(
       <TestWrapper>
         <Dashboard />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Check if main components are rendered
@@ -160,7 +161,7 @@ describe('Dashboard Component', () => {
     render(
       <TestWrapper>
         <Dashboard />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Check initial view mode
@@ -177,7 +178,7 @@ describe('Dashboard Component', () => {
     render(
       <TestWrapper>
         <Dashboard />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Check initial sort field and direction
@@ -203,7 +204,7 @@ describe('Dashboard Component', () => {
     render(
       <TestWrapper>
         <Dashboard />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Click open button for the first project
@@ -221,7 +222,7 @@ describe('Dashboard Component', () => {
     render(
       <TestWrapper>
         <Dashboard />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Click delete button for the first project
@@ -243,7 +244,7 @@ describe('Dashboard Component', () => {
     render(
       <TestWrapper>
         <Dashboard />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Click delete button for the first project

@@ -46,7 +46,10 @@ describe('Date Formatting Utilities', () => {
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
       // Test with English locale
-      const result = formatDistanceToNow(oneDayAgo, { locale: enUS, addSuffix: true });
+      const result = formatDistanceToNow(oneDayAgo, {
+        locale: enUS,
+        addSuffix: true,
+      });
       expect(result).toContain('day ago');
 
       // Create a date in the past (2 hours ago from now)
@@ -54,7 +57,10 @@ describe('Date Formatting Utilities', () => {
       twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
 
       // Test with English locale
-      const hoursResult = formatDistanceToNow(twoHoursAgo, { locale: enUS, addSuffix: true });
+      const hoursResult = formatDistanceToNow(twoHoursAgo, {
+        locale: enUS,
+        addSuffix: true,
+      });
       expect(hoursResult).toContain('hours ago');
 
       // Create a date in the future (1 day from now)
@@ -62,7 +68,10 @@ describe('Date Formatting Utilities', () => {
       oneDayFromNow.setDate(oneDayFromNow.getDate() + 1);
 
       // Test with English locale and future date
-      const futureResult = formatDistanceToNow(oneDayFromNow, { locale: enUS, addSuffix: true });
+      const futureResult = formatDistanceToNow(oneDayFromNow, {
+        locale: enUS,
+        addSuffix: true,
+      });
       expect(futureResult).toContain('in');
     });
 
@@ -72,7 +81,10 @@ describe('Date Formatting Utilities', () => {
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
       // Test with Czech locale
-      const czechResult = formatDistanceToNow(oneDayAgo, { locale: cs, addSuffix: true });
+      const czechResult = formatDistanceToNow(oneDayAgo, {
+        locale: cs,
+        addSuffix: true,
+      });
       expect(czechResult).toContain('před');
 
       // Create a date in the future (1 day from now)
@@ -80,7 +92,10 @@ describe('Date Formatting Utilities', () => {
       oneDayFromNow.setDate(oneDayFromNow.getDate() + 1);
 
       // Test with Czech locale and future date
-      const czechFutureResult = formatDistanceToNow(oneDayFromNow, { locale: cs, addSuffix: true });
+      const czechFutureResult = formatDistanceToNow(oneDayFromNow, {
+        locale: cs,
+        addSuffix: true,
+      });
       expect(czechFutureResult).toContain('za');
     });
   });

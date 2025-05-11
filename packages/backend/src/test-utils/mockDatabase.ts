@@ -1,6 +1,6 @@
 /**
  * Mock Database Utilities for Testing
- * 
+ *
  * This module provides utilities for mocking database operations in tests.
  * It includes:
  * - In-memory storage for tables
@@ -112,7 +112,7 @@ export class MockDatabase {
    * Clear all data but keep table structure
    */
   public clearData(): void {
-    Object.keys(this.tables).forEach(tableName => {
+    Object.keys(this.tables).forEach((tableName) => {
       this.tables[tableName] = [];
     });
     this.queryLog = [];
@@ -152,7 +152,7 @@ export class MockDatabase {
    */
   public createMockPool(): Pool {
     const self = this;
-    
+
     return {
       query: (text: QueryParams, values?: any[]): Promise<QueryResult> => {
         return self.query(text, values);
@@ -164,7 +164,7 @@ export class MockDatabase {
           },
           release: (): void => {
             // Do nothing
-          }
+          },
         };
         return Promise.resolve(client);
       },
@@ -174,7 +174,7 @@ export class MockDatabase {
       on: (event: string, listener: (...args: any[]) => void): Pool => {
         // Do nothing
         return this.createMockPool();
-      }
+      },
     };
   }
 
@@ -191,41 +191,41 @@ export class MockDatabase {
     values: any[];
   } {
     queryText = queryText.trim();
-    
+
     // Log the query for debugging/testing
     this.queryLog.push(queryText);
-    
+
     // Default return structure
     const result = {
       operation: 'UNKNOWN' as const,
       tableName: null,
       conditions: {},
       columns: [],
-      values: []
+      values: [],
     };
-    
+
     // Check for SELECT
     if (queryText.toUpperCase().startsWith('SELECT')) {
       result.operation = 'SELECT';
-      
+
       // Extract table name (very simplified)
       const fromMatch = queryText.match(/FROM\s+([^\s,;]+)/i);
       if (fromMatch) {
         result.tableName = fromMatch[1];
       }
-      
+
       // Extract WHERE conditions (very simplified)
       const whereMatch = queryText.match(/WHERE\s+(.+?)(?:ORDER BY|GROUP BY|LIMIT|$)/i);
       if (whereMatch) {
         const conditions = whereMatch[1];
-        
+
         // Parse basic key-value conditions
-        const conditionParts = conditions.split('AND').map(part => part.trim());
-        conditionParts.forEach(condition => {
+        const conditionParts = conditions.split('AND').map((part) => part.trim());
+        conditionParts.forEach((condition) => {
           const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/);
           if (match) {
             const [, column, operator, stringValue, numberValue, placeholder] = match;
-            
+
             // For placeholder values, we'll handle them separately
             if (!placeholder) {
               result.conditions[column] = stringValue || numberValue;
@@ -234,49 +234,49 @@ export class MockDatabase {
         });
       }
     }
-    
+
     // Check for INSERT
     else if (queryText.toUpperCase().startsWith('INSERT')) {
       result.operation = 'INSERT';
-      
+
       // Extract table name
       const tableMatch = queryText.match(/INTO\s+([^\s(]+)/i);
       if (tableMatch) {
         result.tableName = tableMatch[1];
       }
-      
+
       // Extract columns
       const columnsMatch = queryText.match(/\(([^)]+)\)\s+VALUES/i);
       if (columnsMatch) {
-        result.columns = columnsMatch[1].split(',').map(col => col.trim());
+        result.columns = columnsMatch[1].split(',').map((col) => col.trim());
       }
-      
+
       // Extract values placeholder
       const valuesMatch = queryText.match(/VALUES\s*\(([^)]+)\)/i);
       if (valuesMatch) {
-        result.values = valuesMatch[1].split(',').map(val => val.trim());
+        result.values = valuesMatch[1].split(',').map((val) => val.trim());
       }
     }
-    
+
     // Check for UPDATE
     else if (queryText.toUpperCase().startsWith('UPDATE')) {
       result.operation = 'UPDATE';
-      
+
       // Extract table name
       const tableMatch = queryText.match(/UPDATE\s+([^\s]+)/i);
       if (tableMatch) {
         result.tableName = tableMatch[1];
       }
-      
+
       // Extract SET values
       const setMatch = queryText.match(/SET\s+(.+?)(?:WHERE|$)/i);
       if (setMatch) {
-        const setParts = setMatch[1].split(',').map(part => part.trim());
-        setParts.forEach(part => {
+        const setParts = setMatch[1].split(',').map((part) => part.trim());
+        setParts.forEach((part) => {
           const match = part.match(/([^\s=]+)\s*=\s*(?:'([^']*)'|(\d+)|(\$\d+))/);
           if (match) {
             const [, column, stringValue, numberValue, placeholder] = match;
-            
+
             // For placeholder values, we'll handle them separately
             if (!placeholder) {
               result.columns.push(column);
@@ -285,19 +285,19 @@ export class MockDatabase {
           }
         });
       }
-      
+
       // Extract WHERE conditions
       const whereMatch = queryText.match(/WHERE\s+(.+)$/i);
       if (whereMatch) {
         const conditions = whereMatch[1];
-        
+
         // Parse basic key-value conditions
-        const conditionParts = conditions.split('AND').map(part => part.trim());
-        conditionParts.forEach(condition => {
+        const conditionParts = conditions.split('AND').map((part) => part.trim());
+        conditionParts.forEach((condition) => {
           const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/);
           if (match) {
             const [, column, operator, stringValue, numberValue, placeholder] = match;
-            
+
             // For placeholder values, we'll handle them separately
             if (!placeholder) {
               result.conditions[column] = stringValue || numberValue;
@@ -306,29 +306,29 @@ export class MockDatabase {
         });
       }
     }
-    
+
     // Check for DELETE
     else if (queryText.toUpperCase().startsWith('DELETE')) {
       result.operation = 'DELETE';
-      
+
       // Extract table name
       const tableMatch = queryText.match(/FROM\s+([^\s]+)/i);
       if (tableMatch) {
         result.tableName = tableMatch[1];
       }
-      
+
       // Extract WHERE conditions
       const whereMatch = queryText.match(/WHERE\s+(.+)$/i);
       if (whereMatch) {
         const conditions = whereMatch[1];
-        
+
         // Parse basic key-value conditions
-        const conditionParts = conditions.split('AND').map(part => part.trim());
-        conditionParts.forEach(condition => {
+        const conditionParts = conditions.split('AND').map((part) => part.trim());
+        conditionParts.forEach((condition) => {
           const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/);
           if (match) {
             const [, column, operator, stringValue, numberValue, placeholder] = match;
-            
+
             // For placeholder values, we'll handle them separately
             if (!placeholder) {
               result.conditions[column] = stringValue || numberValue;
@@ -337,7 +337,7 @@ export class MockDatabase {
         });
       }
     }
-    
+
     return result;
   }
 
@@ -349,24 +349,24 @@ export class MockDatabase {
    */
   public async query(text: QueryParams, values: any[] = []): Promise<QueryResult> {
     const queryText = typeof text === 'string' ? text : text.text;
-    
+
     // Check for error patterns
     for (const pattern of Object.keys(this.errorPatterns)) {
       if (queryText.includes(pattern)) {
         return Promise.reject(this.errorPatterns[pattern]);
       }
     }
-    
+
     // Check for response overrides
     for (const pattern of Object.keys(this.responseOverrides)) {
       if (queryText.includes(pattern)) {
         return Promise.resolve(this.responseOverrides[pattern]);
       }
     }
-    
+
     // Parse the query
     const parsedQuery = this.parseQuery(queryText);
-    
+
     // Apply parameterized values
     if (values.length > 0) {
       // Replace $1, $2, etc. with the actual values
@@ -374,24 +374,23 @@ export class MockDatabase {
         const whereMatch = queryText.match(/WHERE\s+(.+?)(?:ORDER BY|GROUP BY|LIMIT|$)/i);
         if (whereMatch) {
           const conditions = whereMatch[1];
-          
+
           // Extract conditions with placeholders
-          const conditionParts = conditions.split('AND').map(part => part.trim());
-          
+          const conditionParts = conditions.split('AND').map((part) => part.trim());
+
           conditionParts.forEach((condition, index) => {
             const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(\$\d+)/);
             if (match) {
               const [, column, operator, placeholder] = match;
               const paramIndex = parseInt(placeholder.substring(1)) - 1;
-              
+
               if (paramIndex >= 0 && paramIndex < values.length) {
                 parsedQuery.conditions[column] = values[paramIndex];
               }
             }
           });
         }
-      }
-      else if (parsedQuery.operation === 'INSERT') {
+      } else if (parsedQuery.operation === 'INSERT') {
         // Map placeholder values to columns
         parsedQuery.values.forEach((value, index) => {
           if (value.startsWith('$')) {
@@ -401,19 +400,18 @@ export class MockDatabase {
             }
           }
         });
-      }
-      else if (parsedQuery.operation === 'UPDATE') {
+      } else if (parsedQuery.operation === 'UPDATE') {
         // Handle SET values with placeholders
         const setMatch = queryText.match(/SET\s+(.+?)(?:WHERE|$)/i);
         if (setMatch) {
-          const setParts = setMatch[1].split(',').map(part => part.trim());
-          
+          const setParts = setMatch[1].split(',').map((part) => part.trim());
+
           setParts.forEach((part, index) => {
             const match = part.match(/([^\s=]+)\s*=\s*(\$\d+)/);
             if (match) {
               const [, column, placeholder] = match;
               const paramIndex = parseInt(placeholder.substring(1)) - 1;
-              
+
               if (paramIndex >= 0 && paramIndex < values.length) {
                 parsedQuery.columns.push(column);
                 parsedQuery.values.push(values[paramIndex]);
@@ -421,19 +419,19 @@ export class MockDatabase {
             }
           });
         }
-        
+
         // Handle WHERE conditions with placeholders
         const whereMatch = queryText.match(/WHERE\s+(.+)$/i);
         if (whereMatch) {
           const conditions = whereMatch[1];
-          
-          const conditionParts = conditions.split('AND').map(part => part.trim());
+
+          const conditionParts = conditions.split('AND').map((part) => part.trim());
           conditionParts.forEach((condition, index) => {
             const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(\$\d+)/);
             if (match) {
               const [, column, operator, placeholder] = match;
               const paramIndex = parseInt(placeholder.substring(1)) - 1;
-              
+
               if (paramIndex >= 0 && paramIndex < values.length) {
                 parsedQuery.conditions[column] = values[paramIndex];
               }
@@ -442,39 +440,39 @@ export class MockDatabase {
         }
       }
     }
-    
+
     // Execute the query based on the operation
-    let result: QueryResult = { rows: [], rowCount: 0 };
-    
+    const result: QueryResult = { rows: [], rowCount: 0 };
+
     // Handle SELECT queries
     if (parsedQuery.operation === 'SELECT') {
       if (parsedQuery.tableName && this.tables[parsedQuery.tableName]) {
         // Filter rows based on conditions
-        result.rows = this.tables[parsedQuery.tableName].filter(row => {
+        result.rows = this.tables[parsedQuery.tableName].filter((row) => {
           return Object.entries(parsedQuery.conditions).every(([column, value]) => {
             return row[column] === value;
           });
         });
-        
+
         result.rowCount = result.rows.length;
       }
     }
-    
+
     // Handle INSERT queries
     else if (parsedQuery.operation === 'INSERT') {
       if (parsedQuery.tableName && this.tables[parsedQuery.tableName]) {
         const newRow: Record<string, any> = {};
-        
+
         // Create the new row
         parsedQuery.columns.forEach((column, index) => {
           newRow[column] = parsedQuery.values[index];
         });
-        
+
         // Automatically add id if not provided
         if (!newRow.id) {
           newRow.id = uuidv4();
         }
-        
+
         // Add timestamps if not provided
         const now = new Date().toISOString();
         if (!newRow.created_at) {
@@ -483,62 +481,62 @@ export class MockDatabase {
         if (!newRow.updated_at) {
           newRow.updated_at = now;
         }
-        
+
         // Add the row to the table
         this.tables[parsedQuery.tableName].push(newRow);
-        
+
         // Return the inserted row
         result.rows = [newRow];
         result.rowCount = 1;
       }
     }
-    
+
     // Handle UPDATE queries
     else if (parsedQuery.operation === 'UPDATE') {
       if (parsedQuery.tableName && this.tables[parsedQuery.tableName]) {
         // Find rows to update
-        const rowsToUpdate = this.tables[parsedQuery.tableName].filter(row => {
+        const rowsToUpdate = this.tables[parsedQuery.tableName].filter((row) => {
           return Object.entries(parsedQuery.conditions).every(([column, value]) => {
             return row[column] === value;
           });
         });
-        
+
         // Update rows
-        rowsToUpdate.forEach(row => {
+        rowsToUpdate.forEach((row) => {
           parsedQuery.columns.forEach((column, index) => {
             row[column] = parsedQuery.values[index];
           });
-          
+
           // Update timestamp
           if (!parsedQuery.columns.includes('updated_at')) {
             row.updated_at = new Date().toISOString();
           }
         });
-        
+
         // Return the updated rows
         result.rows = rowsToUpdate;
         result.rowCount = rowsToUpdate.length;
       }
     }
-    
+
     // Handle DELETE queries
     else if (parsedQuery.operation === 'DELETE') {
       if (parsedQuery.tableName && this.tables[parsedQuery.tableName]) {
         // Find rows to delete
         const initialCount = this.tables[parsedQuery.tableName].length;
-        
+
         // Remove rows matching conditions
-        this.tables[parsedQuery.tableName] = this.tables[parsedQuery.tableName].filter(row => {
+        this.tables[parsedQuery.tableName] = this.tables[parsedQuery.tableName].filter((row) => {
           return !Object.entries(parsedQuery.conditions).every(([column, value]) => {
             return row[column] === value;
           });
         });
-        
+
         // Calculate number of deleted rows
         result.rowCount = initialCount - this.tables[parsedQuery.tableName].length;
       }
     }
-    
+
     return Promise.resolve(result);
   }
 }
@@ -549,7 +547,7 @@ export class MockDatabase {
  */
 export function createMockDatabase(): MockDatabase {
   const db = new MockDatabase();
-  
+
   // Create common tables
   db.createTable('users', []);
   db.createTable('projects', []);
@@ -557,7 +555,7 @@ export function createMockDatabase(): MockDatabase {
   db.createTable('segmentations', []);
   db.createTable('access_requests', []);
   db.createTable('project_shares', []);
-  
+
   return db;
 }
 
@@ -571,7 +569,7 @@ export function createDbHelpers(db: MockDatabase) {
     createUser: (userData: Partial<Record<string, any>> = {}): Record<string, any> => {
       const userId = userData.id || uuidv4();
       const now = new Date().toISOString();
-      
+
       const user = {
         id: userId,
         email: userData.email || `user${Math.floor(Math.random() * 10000)}@example.com`,
@@ -580,18 +578,18 @@ export function createDbHelpers(db: MockDatabase) {
         password: userData.password || 'hashed-password',
         created_at: userData.created_at || now,
         updated_at: userData.updated_at || now,
-        ...userData
+        ...userData,
       };
-      
+
       db.getTable('users').push(user);
       return user;
     },
-    
+
     // Project operations
     createProject: (projectData: Partial<Record<string, any>> = {}): Record<string, any> => {
       const projectId = projectData.id || uuidv4();
       const now = new Date().toISOString();
-      
+
       const project = {
         id: projectId,
         name: projectData.name || 'Test Project',
@@ -599,18 +597,18 @@ export function createDbHelpers(db: MockDatabase) {
         user_id: projectData.user_id || uuidv4(),
         created_at: projectData.created_at || now,
         updated_at: projectData.updated_at || now,
-        ...projectData
+        ...projectData,
       };
-      
+
       db.getTable('projects').push(project);
       return project;
     },
-    
+
     // Image operations
     createImage: (imageData: Partial<Record<string, any>> = {}): Record<string, any> => {
       const imageId = imageData.id || uuidv4();
       const now = new Date().toISOString();
-      
+
       const image = {
         id: imageId,
         name: imageData.name || 'test-image.jpg',
@@ -623,18 +621,18 @@ export function createDbHelpers(db: MockDatabase) {
         segmentationStatus: imageData.segmentationStatus || 'not_started',
         created_at: imageData.created_at || now,
         updated_at: imageData.updated_at || now,
-        ...imageData
+        ...imageData,
       };
-      
+
       db.getTable('images').push(image);
       return image;
     },
-    
+
     // Segmentation operations
     createSegmentation: (segmentationData: Partial<Record<string, any>> = {}): Record<string, any> => {
       const segmentationId = segmentationData.id || uuidv4();
       const now = new Date().toISOString();
-      
+
       const segmentation = {
         id: segmentationId,
         image_id: segmentationData.image_id || uuidv4(),
@@ -646,25 +644,25 @@ export function createDbHelpers(db: MockDatabase) {
               { x: 100, y: 100 },
               { x: 200, y: 100 },
               { x: 200, y: 200 },
-              { x: 100, y: 200 }
-            ]
-          }
+              { x: 100, y: 200 },
+            ],
+          },
         ],
         version: segmentationData.version || 1,
         created_at: segmentationData.created_at || now,
         updated_at: segmentationData.updated_at || now,
-        ...segmentationData
+        ...segmentationData,
       };
-      
+
       db.getTable('segmentations').push(segmentation);
       return segmentation;
     },
-    
+
     // Project share operations
     createProjectShare: (shareData: Partial<Record<string, any>> = {}): Record<string, any> => {
       const shareId = shareData.id || uuidv4();
       const now = new Date().toISOString();
-      
+
       const share = {
         id: shareId,
         project_id: shareData.project_id || uuidv4(),
@@ -672,18 +670,18 @@ export function createDbHelpers(db: MockDatabase) {
         permission: shareData.permission || 'view',
         created_at: shareData.created_at || now,
         updated_at: shareData.updated_at || now,
-        ...shareData
+        ...shareData,
       };
-      
+
       db.getTable('project_shares').push(share);
       return share;
     },
-    
+
     // Access request operations
     createAccessRequest: (requestData: Partial<Record<string, any>> = {}): Record<string, any> => {
       const requestId = requestData.id || uuidv4();
       const now = new Date().toISOString();
-      
+
       const request = {
         id: requestId,
         project_id: requestData.project_id || uuidv4(),
@@ -692,12 +690,12 @@ export function createDbHelpers(db: MockDatabase) {
         message: requestData.message || 'Please grant me access to this project',
         created_at: requestData.created_at || now,
         updated_at: requestData.updated_at || now,
-        ...requestData
+        ...requestData,
       };
-      
+
       db.getTable('access_requests').push(request);
       return request;
-    }
+    },
   };
 }
 

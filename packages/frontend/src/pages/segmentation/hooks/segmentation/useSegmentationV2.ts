@@ -4,29 +4,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { TFunction } from 'i18next';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
 import apiClient from '@/lib/apiClient';
+import { createLogger } from '@/lib/logger';
 
-import {
-  EditMode,
-  InteractionState,
-  Point,
-  SegmentationData,
-  TransformState,
-  ImageData
-} from './types';
+// Create a logger for this module
+const logger = createLogger('useSegmentationV2');
+
+import { EditMode, InteractionState, Point, SegmentationData, TransformState, ImageData } from './types';
 import { MIN_ZOOM, MAX_ZOOM } from './constants';
-import {
-  fetchImageData,
-  fetchSegmentationData,
-  createEmptySegmentation,
-  saveSegmentationData
-} from './api';
-import {
-  handleMouseDown,
-  handleMouseMove,
-  handleMouseUp,
-  handleWheel,
-  handleDeletePolygon
-} from './interactions';
+import { fetchImageData, fetchSegmentationData, createEmptySegmentation, saveSegmentationData } from './api';
+import { handleMouseDown, handleMouseMove, handleMouseUp, handleWheel, handleDeletePolygon } from './interactions';
 import { calculateCenteringTransform, getCanvasCoordinates } from './coordinates';
 import { useSegmentationCache } from './useSegmentationCache';
 // Import other utilities but not slicePolygon (now handled by useSlicing)
@@ -38,9 +24,8 @@ export const useSegmentationV2 = (
   projectId: string,
   initialImageId: string | null,
   canvasRef: RefObject<HTMLDivElement>,
-  t: TFunction
+  t: TFunction,
 ) => {
-
   // State for image data and loading
   const [imageData, setImageData] = useState<ImageData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -56,87 +41,88 @@ export const useSegmentationV2 = (
     undo,
     redo,
     canUndo,
-    canRedo
+    canRedo,
   } = useUndoRedo<SegmentationData | null>(null);
 
   // Use segmentation cache
-  const {
-    getFromCache,
-    addToCache,
-    removeFromCache,
-    getCacheStats
-  } = useSegmentationCache();
+  const { getFromCache, addToCache, removeFromCache, getCacheStats } = useSegmentationCache();
 
   // State for editor
   const [editMode, setEditModeInternal] = useState<EditMode>(EditMode.View);
   const [selectedPolygonId, setSelectedPolygonId] = useState<string | null>(null);
-  const [hoveredVertex, setHoveredVertex] = useState<{ polygonId: string; vertexIndex: number } | null>(null);
+  const [hoveredVertex, setHoveredVertex] = useState<{
+    polygonId: string;
+    vertexIndex: number;
+  } | null>(null);
   const [tempPoints, setTempPoints] = useState<Point[]>([]);
   const [lastAutoAddedPoint, setLastAutoAddedPoint] = useState<Point | null>(null);
 
   // Wrapper for setEditMode that resets state when mode changes
-  const setEditMode = useCallback((newMode: EditMode) => {
-    console.log(`[useSegmentationV2] Changing edit mode from ${EditMode[editMode]} to ${EditMode[newMode]}`);
+  const setEditMode = useCallback(
+    (newMode: EditMode) => {
+      console.log(`[useSegmentationV2] Changing edit mode from ${EditMode[editMode]} to ${EditMode[newMode]}`);
 
-    // Reset state when changing modes
-    if (newMode !== editMode) {
-      // Reset temp points
-      setTempPoints([]);
+      // Reset state when changing modes
+      if (newMode !== editMode) {
+        // Reset temp points
+        setTempPoints([]);
 
-      // Reset interaction state
-      setInteractionState({
-        isDraggingVertex: false,
-        isPanning: false,
-        panStart: null,
-        draggedVertexInfo: null,
-        sliceStartPoint: null,
-        addPointStartVertex: null,
-        addPointEndVertex: null,
-        isAddingPoints: false
-      });
+        // Reset interaction state
+        setInteractionState({
+          isDraggingVertex: false,
+          isPanning: false,
+          panStart: null,
+          draggedVertexInfo: null,
+          sliceStartPoint: null,
+          addPointStartVertex: null,
+          addPointEndVertex: null,
+          isAddingPoints: false,
+        });
 
-      // Handle mode-specific transitions
-      if (newMode === EditMode.View) {
-        // Always clear selection when going to View mode
-        setSelectedPolygonId(null);
-      } else if (newMode === EditMode.CreatePolygon) {
-        // Always clear selection when creating a new polygon
-        setSelectedPolygonId(null);
-      } else if (newMode === EditMode.Slice) {
-        // Keep selection if we have one, as we need a polygon to slice
-        // But don't auto-select a polygon - user should explicitly select what to slice
-        // No toast notification - user will figure it out
-      } else if (newMode === EditMode.AddPoints) {
-        // In Add Points mode, we don't require a polygon to be selected
-        // User will click directly on a vertex to start adding points
-      } else if (newMode === EditMode.EditVertices) {
-        // Keep selection if we have one, as we need a polygon to edit
-        // But don't auto-select a polygon - user should explicitly select what to edit
-        // No toast notification - user will figure it out
-      } else if (newMode === EditMode.DeletePolygon) {
-        // Keep selection if we have one, but don't require it
-        // User will click on the polygon they want to delete
+        // Handle mode-specific transitions
+        if (newMode === EditMode.View) {
+          // Always clear selection when going to View mode
+          setSelectedPolygonId(null);
+        } else if (newMode === EditMode.CreatePolygon) {
+          // Always clear selection when creating a new polygon
+          setSelectedPolygonId(null);
+        } else if (newMode === EditMode.Slice) {
+          // Keep selection if we have one, as we need a polygon to slice
+          // But don't auto-select a polygon - user should explicitly select what to slice
+          // No toast notification - user will figure it out
+        } else if (newMode === EditMode.AddPoints) {
+          // In Add Points mode, we don't require a polygon to be selected
+          // User will click directly on a vertex to start adding points
+        } else if (newMode === EditMode.EditVertices) {
+          // Keep selection if we have one, as we need a polygon to edit
+          // But don't auto-select a polygon - user should explicitly select what to edit
+          // No toast notification - user will figure it out
+        } else if (newMode === EditMode.DeletePolygon) {
+          // Keep selection if we have one, but don't require it
+          // User will click on the polygon they want to delete
+        }
+
+        // Reset hovered vertex
+        setHoveredVertex(null);
+
+        // Reset last auto-added point
+        setLastAutoAddedPoint(null);
       }
 
-      // Reset hovered vertex
-      setHoveredVertex(null);
+      // Set the new mode
+      setEditModeInternal(newMode);
 
-      // Reset last auto-added point
-      setLastAutoAddedPoint(null);
-    }
-
-    // Set the new mode
-    setEditModeInternal(newMode);
-
-    // Log the mode change for debugging
-    console.log(`[useSegmentationV2] Edit mode changed to ${EditMode[newMode]}`);
-  }, [editMode]);
+      // Log the mode change for debugging
+      console.log(`[useSegmentationV2] Edit mode changed to ${EditMode[newMode]}`);
+    },
+    [editMode],
+  );
 
   // State for transform (pan/zoom)
   const [transform, setTransform] = useState<TransformState>({
     zoom: 1,
     translateX: 0,
-    translateY: 0
+    translateY: 0,
   });
 
   // State for interaction
@@ -149,7 +135,7 @@ export const useSegmentationV2 = (
     // Add point mode states
     addPointStartVertex: null,
     addPointEndVertex: null,
-    isAddingPoints: false
+    isAddingPoints: false,
   });
 
   // State for keyboard modifiers
@@ -265,7 +251,9 @@ export const useSegmentationV2 = (
 
         // Handle ID mismatch between requested and actual image
         if (imageIdRef.current !== fetchedImageData.id) {
-          console.log(`[useSegmentationV2] Found different image ID: ${fetchedImageData.id} (requested: ${imageIdRef.current})`);
+          console.log(
+            `[useSegmentationV2] Found different image ID: ${fetchedImageData.id} (requested: ${imageIdRef.current})`,
+          );
           // Store the actual ID for segmentation fetching
           fetchedImageData.actualId = fetchedImageData.id;
         }
@@ -313,15 +301,15 @@ export const useSegmentationV2 = (
           });
 
           // Race the fetch against the timeout
-          const fetchedSegmentation = await Promise.race([
+          const fetchedSegmentation = (await Promise.race([
             fetchSegmentationPromise,
-            timeoutPromise
-          ]) as SegmentationData;
+            timeoutPromise,
+          ])) as SegmentationData;
 
           // Check if component is still mounted before updating state
           if (!isMounted) return;
 
-          console.log("[useSegmentationV2] Received segmentation data:", fetchedSegmentation);
+          console.log('[useSegmentationV2] Received segmentation data:', fetchedSegmentation);
 
           // Add to cache
           addToCache(segmentationId, fetchedSegmentation);
@@ -333,7 +321,14 @@ export const useSegmentationV2 = (
           // Check if component is still mounted before updating state
           if (!isMounted) return;
 
-          console.error("[useSegmentationV2] Error fetching segmentation data:", segError);
+          console.error('[useSegmentationV2] Error fetching segmentation data:', segError);
+
+          // Log detailed error information
+          logger.error(`Error fetching segmentation data for imageId=${segmentationId}`, {
+            error: segError,
+            projectId,
+            imageId: segmentationId,
+          });
 
           // Create empty segmentation data and reset history
           const emptySegmentation = createEmptySegmentation(segmentationId);
@@ -354,7 +349,7 @@ export const useSegmentationV2 = (
             fetchedImageData.width,
             fetchedImageData.height,
             canvasWidth,
-            canvasHeight
+            canvasHeight,
           );
 
           setTransform(newTransform);
@@ -365,38 +360,26 @@ export const useSegmentationV2 = (
         // Check if component is still mounted before updating state
         if (!isMounted) return;
 
-        console.error("[useSegmentationV2] Error fetching data:", error);
+        console.error('[useSegmentationV2] Error fetching data:', error);
 
         // Check if this is a cancellation error (which we can ignore)
-        const isCancelled = error.name === 'AbortError' ||
-                           (error.message && error.message.includes('cancel'));
+        const isCancelled = error.name === 'AbortError' || (error.message && error.message.includes('cancel'));
 
         if (!isCancelled) {
-          setError("Failed to load image data");
+          setError('Failed to load image data');
 
-          // Create empty image and segmentation data to avoid UI errors
-          const emptyImageData = {
-            id: imageIdRef.current || 'unknown',
-            name: 'Not Found',
-            width: 800,
-            height: 600,
-            src: '/placeholder.svg',
-            project_id: projectId || 'unknown',
-            user_id: 'unknown',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            storage_path: '',
-            thumbnail_path: '',
-            status: 'error'
-          };
+          // Nepokračovat, pokud data nelze načíst
+          // Místo vytváření prázdného obrázku oznámit chybu
+          toast.error('Nepodařilo se načíst data obrázku. Zkuste to znovu nebo kontaktujte správce systému.');
 
-          setImageData(emptyImageData);
+          // Nastavit loading na false, ale nechat imageData jako null
+          setImageData(null);
 
           // Create empty segmentation
           const emptySegmentation = createEmptySegmentation(imageIdRef.current || 'unknown');
           setSegmentationDataWithHistory(emptySegmentation, true);
         } else {
-          console.log("[useSegmentationV2] Request was cancelled, ignoring error");
+          console.log('[useSegmentationV2] Request was cancelled, ignoring error');
         }
 
         setIsLoading(false);
@@ -479,13 +462,29 @@ export const useSegmentationV2 = (
     redo,
     undo,
     setIsShiftPressed,
-    setLastAutoAddedPoint
+    setLastAutoAddedPoint,
   ]);
 
   // Function to handle mouse down
-  const onMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    handleMouseDown(
-      e,
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      handleMouseDown(
+        e,
+        editMode,
+        interactionState,
+        segmentationData,
+        selectedPolygonId,
+        tempPoints,
+        transform,
+        canvasRef,
+        setSelectedPolygonId,
+        setEditMode,
+        setTempPoints,
+        setInteractionState,
+        setSegmentationDataWithHistory,
+      );
+    },
+    [
       editMode,
       interactionState,
       segmentationData,
@@ -497,33 +496,40 @@ export const useSegmentationV2 = (
       setEditMode,
       setTempPoints,
       setInteractionState,
-      setSegmentationDataWithHistory
-    );
-  }, [
-    editMode,
-    interactionState,
-    segmentationData,
-    selectedPolygonId,
-    tempPoints,
-    transform,
-    canvasRef,
-    setSelectedPolygonId,
-    setEditMode,
-    setTempPoints,
-    setInteractionState,
-    setSegmentationDataWithHistory
-  ]);
+      setSegmentationDataWithHistory,
+    ],
+  );
 
   // Function to handle mouse move
-  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Pokud táhneme vertex, použijeme updateSegmentationWithoutHistory, 
-    // aby se pohyb neuložil do historie a undo/redo bral celý tah jako jednu akci
-    const updateFn = interactionState.isDraggingVertex
-      ? updateSegmentationWithoutHistory
-      : setSegmentationDataWithHistory;
-    
-    handleMouseMove(
-      e,
+  const onMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      // If we're dragging a vertex, use updateSegmentationWithoutHistory
+      // to avoid adding each movement to history - we want the entire drag to be a single undo/redo action
+      const updateFn = interactionState.isDraggingVertex
+        ? updateSegmentationWithoutHistory  // During drag - don't add to history
+        : setSegmentationDataWithHistory;   // Normal case - add to history
+
+      // Call the main mouse move handler with all dependencies
+      handleMouseMove(
+        e,
+        editMode,
+        interactionState,
+        segmentationData,
+        selectedPolygonId,
+        tempPoints,
+        transform,
+        canvasRef,
+        isShiftPressed,
+        lastAutoAddedPoint,
+        setHoveredVertex,
+        setTempPoints,
+        setLastAutoAddedPoint,
+        setTransform,
+        setInteractionState,
+        updateFn,
+      );
+    },
+    [
       editMode,
       interactionState,
       segmentationData,
@@ -538,79 +544,90 @@ export const useSegmentationV2 = (
       setLastAutoAddedPoint,
       setTransform,
       setInteractionState,
-      updateFn
-    );
-  }, [
-    editMode,
-    interactionState,
-    segmentationData,
-    selectedPolygonId,
-    tempPoints,
-    transform,
-    canvasRef,
-    isShiftPressed,
-    lastAutoAddedPoint,
-    setHoveredVertex,
-    setTempPoints,
-    setLastAutoAddedPoint,
-    setTransform,
-    setInteractionState,
-    setSegmentationDataWithHistory,
-    updateSegmentationWithoutHistory
-  ]);
+      setSegmentationDataWithHistory,
+      updateSegmentationWithoutHistory,
+    ],
+  );
 
   // Function to handle mouse up - includes adding to history after vertex dragging
-  const onMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Pokud jsme táhli vertex, musíme po dokončení tahu přidat stav do historie pro undo/redo
-    const wasDraggingVertex = interactionState.isDraggingVertex;
-    
-    handleMouseUp(
-      e,
-      interactionState,
-      setInteractionState,
-      segmentationData,
-      setSegmentationDataWithHistory
-    );
-    
-    // Po dokončení tahu vertexu přidáme explicitně stav do historie
-    // tím zajistíme, že celý tah bude považován za jednu akci pro undo/redo
-    if (wasDraggingVertex && segmentationData) {
-      setSegmentationDataWithHistory({...segmentationData}, false);
-    }
-  }, [interactionState, segmentationData, setInteractionState, setSegmentationDataWithHistory]);
+  const onMouseUp = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      // If we were dragging a vertex, we need to add the state to history for undo/redo
+      const wasDraggingVertex = interactionState.isDraggingVertex;
+      const vertexInfo = interactionState.draggedVertexInfo; // Capture the vertex info before resetting
+      const originalPosition = interactionState.originalVertexPosition; // Capture the original position before resetting
+
+      // First reset the drag state to stop the dragging
+      handleMouseUp(e, interactionState, setInteractionState, segmentationData, setSegmentationDataWithHistory);
+
+      // After completing vertex drag, explicitly add state to history
+      // This ensures the entire drag operation is treated as a single action for undo/redo
+      if (wasDraggingVertex && segmentationData && originalPosition && vertexInfo) {
+        // Get the final position to check if it actually changed
+        const polygon = segmentationData.polygons.find(p => p.id === vertexInfo.polygonId);
+        if (polygon && vertexInfo.vertexIndex < polygon.points.length) {
+          const finalPosition = polygon.points[vertexInfo.vertexIndex];
+
+          // Only add to history if the position actually changed
+          const hasChanged =
+            Math.abs(originalPosition.x - finalPosition.x) > 0.001 ||
+            Math.abs(originalPosition.y - finalPosition.y) > 0.001;
+
+          if (hasChanged) {
+            console.log(`[useSegmentationV2] Vertex drag completed, adding to history. Original: (${originalPosition.x},${originalPosition.y}), Final: (${finalPosition.x},${finalPosition.y})`);
+
+            // Capture the final state in the history with proper history management
+            setSegmentationDataWithHistory({ ...segmentationData }, false);
+          } else {
+            console.log('[useSegmentationV2] Vertex position didn\'t change significantly, skipping history update');
+          }
+        } else {
+          console.log('[useSegmentationV2] Could not find polygon or vertex index is invalid');
+        }
+      }
+
+      // Finally, fully clear the drag state including originalVertexPosition
+      setInteractionState(prevState => ({
+        ...prevState,
+        draggedVertexInfo: null,
+        originalVertexPosition: null,
+      }));
+    },
+    [interactionState, segmentationData, setInteractionState, setSegmentationDataWithHistory],
+  );
 
   // Function to handle wheel events for zooming
-  const handleWheelEvent = useCallback((e: WheelEvent) => {
-    handleWheel(
-      e,
-      transform,
-      canvasRef,
-      setTransform
-    );
-  }, [transform, canvasRef, setTransform]);
+  const handleWheelEvent = useCallback(
+    (e: WheelEvent) => {
+      handleWheel(e, transform, canvasRef, setTransform);
+    },
+    [transform, canvasRef, setTransform],
+  );
 
   // Set up wheel event listener for zooming with debounce for performance
   useEffect(() => {
     // Throttle function to limit how often we process wheel events
     let lastWheelTimestamp = 0;
     const throttleDelay = 10; // 10ms throttling for smoother performance
-    
+
     const wheelEventHandler = (e: WheelEvent) => {
       const now = performance.now();
-      
+
       // Throttle events for smoother performance, especially on trackpads
       if (now - lastWheelTimestamp < throttleDelay) {
         e.preventDefault();
         return;
       }
-      
+
       lastWheelTimestamp = now;
       handleWheelEvent(e);
     };
 
     const canvasElement = canvasRef.current;
     if (canvasElement) {
-      canvasElement.addEventListener('wheel', wheelEventHandler, { passive: false });
+      canvasElement.addEventListener('wheel', wheelEventHandler, {
+        passive: false,
+      });
     }
 
     return () => {
@@ -627,22 +644,22 @@ export const useSegmentationV2 = (
   // Function to handle resegmentation
   const handleResegment = useCallback(async () => {
     if (!segmentationData || !imageData || !imageIdRef.current) {
-      console.error("Cannot resegment: No segmentation data or image data");
+      console.error('Cannot resegment: No segmentation data or image data');
       toast.error(t('segmentation.resegmentError') || 'Failed to resegment image');
       return;
     }
 
     try {
       setIsResegmenting(true);
-      console.log("[useSegmentationV2] Requesting resegmentation for image:", imageIdRef.current);
+      console.log('[useSegmentationV2] Requesting resegmentation for image:', imageIdRef.current);
 
       toast.info('Spouštím opětovnou segmentaci pomocí neuronové sítě ResUNet...');
 
       // Použijeme stejný endpoint a parametry jako v ImageCard
-      await apiClient.post(`/images/segmentation/trigger-batch`, {
+      await apiClient.post(`/api/segmentations/batch`, {
         imageIds: [imageIdRef.current],
         priority: 5, // Vysoká priorita pro re-trigger
-        model_type: 'resunet' // Explicitně specifikujeme model
+        model_type: 'resunet', // Explicitně specifikujeme model
       });
 
       toast.success('Úloha opětovné segmentace pomocí neuronové sítě byla úspěšně zařazena.');
@@ -657,24 +674,28 @@ export const useSegmentationV2 = (
 
       const pollForUpdates = async () => {
         if (attempts >= MAX_POLLING_ATTEMPTS) {
-          console.log("[useSegmentationV2] Max polling attempts reached");
+          console.log('[useSegmentationV2] Max polling attempts reached');
           setIsResegmenting(false);
-          toast.error(t('segmentationPage.resegmentationTimeout') || 'Resegmentation timed out. Please check the queue status.');
+          toast.error(
+            t('segmentationPage.resegmentationTimeout') || 'Resegmentation timed out. Please check the queue status.',
+          );
           return;
         }
 
         attempts++;
-        console.log(`[useSegmentationV2] Polling for updated segmentation (attempt ${attempts}/${MAX_POLLING_ATTEMPTS})`);
+        console.log(
+          `[useSegmentationV2] Polling for updated segmentation (attempt ${attempts}/${MAX_POLLING_ATTEMPTS})`,
+        );
 
         try {
           // Nejprve zkontrolujeme stav obrázku
-          const segmentationResponse = await apiClient.get(`/images/${imageIdRef.current}/segmentation`);
+          const segmentationResponse = await apiClient.get(`/api/images/${imageIdRef.current}/segmentation`);
           const segmentationStatus = segmentationResponse.data?.status;
 
           console.log(`[useSegmentationV2] Current segmentation status: ${segmentationStatus}`);
 
           if (segmentationStatus === 'completed') {
-            console.log("[useSegmentationV2] Image segmentation completed, fetching updated data");
+            console.log('[useSegmentationV2] Image segmentation completed, fetching updated data');
 
             // Načteme aktualizovaná segmentační data
             const refreshedSegmentation = segmentationResponse.data;
@@ -686,7 +707,7 @@ export const useSegmentationV2 = (
             toast.success(t('segmentationPage.resegmentationCompleted') || 'Resegmentation completed successfully.');
             return;
           } else if (segmentationStatus === 'failed') {
-            console.log("[useSegmentationV2] Image segmentation failed");
+            console.log('[useSegmentationV2] Image segmentation failed');
             setIsResegmenting(false);
             toast.error(t('segmentationPage.resegmentationFailed') || 'Resegmentation failed.');
             return;
@@ -695,17 +716,18 @@ export const useSegmentationV2 = (
           // Pokud segmentace stále probíhá, pokračujeme v pollování
           setTimeout(pollForUpdates, POLLING_INTERVAL_MS);
         } catch (error) {
-          console.error("[useSegmentationV2] Error polling for updated segmentation:", error);
-          // Pokračujeme v pollování i při chybě
-          setTimeout(pollForUpdates, POLLING_INTERVAL_MS);
+          console.error('[useSegmentationV2] Error polling for updated segmentation:', error);
+          // Při chybě ukončíme polling a resetujeme stav
+          console.log('[useSegmentationV2] Resetting resegmenting state due to error');
+          setIsResegmenting(false);
+          toast.error(t('segmentation.resegmentError') || 'Failed to check segmentation status');
         }
       };
 
       // Start polling after a short delay
       setTimeout(pollForUpdates, POLLING_INTERVAL_MS);
-
     } catch (error) {
-      console.error("[useSegmentationV2] Error requesting resegmentation:", error);
+      console.error('[useSegmentationV2] Error requesting resegmentation:', error);
       toast.error(t('segmentation.resegmentError') || 'Failed to resegment image');
       setIsResegmenting(false);
     }
@@ -715,7 +737,7 @@ export const useSegmentationV2 = (
     t,
     // imageIdRef.current is excluded as it's a ref
     setSegmentationDataWithHistory,
-    setIsResegmenting
+    setIsResegmenting,
   ]);
 
   // Function to save segmentation data
@@ -735,43 +757,39 @@ export const useSegmentationV2 = (
       await saveSegmentationData(projectId, imageIdRef.current, imageData.actualId, segmentationData);
 
       toast.success(t('segmentation.saveSuccess') || 'Segmentation saved successfully');
-      console.log("[useSegmentationV2] Save successful.");
+      console.log('[useSegmentationV2] Save successful.');
 
       // Update the current segmentation data without resetting history
       // This preserves the current zoom and translation
       try {
         const refreshedSegmentation = await fetchSegmentationData(saveId);
-        console.log("Refreshed segmentation data after save:", refreshedSegmentation);
+        console.log('Refreshed segmentation data after save:', refreshedSegmentation);
 
         // Update the segmentation data but preserve history
         // This ensures we don't lose the current view state
         if (refreshedSegmentation) {
           // Only update the polygons, not the entire segmentation data
-          setSegmentationDataWithHistory({
-            ...segmentationData,
-            polygons: refreshedSegmentation.polygons,
-            // Keep other properties from the current segmentation data
-            updated_at: refreshedSegmentation.updated_at
-          }, false); // Don't reset history
+          setSegmentationDataWithHistory(
+            {
+              ...segmentationData,
+              polygons: refreshedSegmentation.polygons,
+              // Keep other properties from the current segmentation data
+              updated_at: refreshedSegmentation.updated_at,
+            },
+            false,
+          ); // Don't reset history
         }
       } catch (refreshError) {
-        console.error("Error refreshing segmentation data after save:", refreshError);
+        console.error('Error refreshing segmentation data after save:', refreshError);
       }
 
       setIsLoading(false);
     } catch (error) {
-      console.error("Error saving segmentation data:", error);
+      console.error('Error saving segmentation data:', error);
       toast.error(t('segmentation.saveError') || 'Failed to save segmentation');
       setIsLoading(false);
     }
-  }, [
-    segmentationData,
-    imageData,
-    projectId,
-    t,
-    setSegmentationDataWithHistory,
-    setIsLoading
-  ]);
+  }, [segmentationData, imageData, projectId, t, setSegmentationDataWithHistory, setIsLoading]);
 
   // Return all the necessary state and functions
   return {
@@ -814,6 +832,6 @@ export const useSegmentationV2 = (
 
     // Canvas coordinates helper - directly use the imported function
     getCanvasCoordinates: (mouseX: number, mouseY: number) =>
-      getCanvasCoordinates(mouseX, mouseY, transform, canvasRef)
+      getCanvasCoordinates(mouseX, mouseY, transform, canvasRef),
   };
 };

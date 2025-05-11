@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 // Schema for updating user profile directly (not through body)
-export const updateUserProfileSchema = z.object({
+export const updateUserProfileSchema = z
+  .object({
     // User fields (optional)
     email: z.string().email('Invalid email format').optional(),
     name: z.string().min(1, 'Name cannot be empty').optional(),
@@ -23,26 +24,32 @@ export const updateUserProfileSchema = z.object({
     orcid: z.string().optional(), // Additional field
     research_interests: z.string().optional(), // Additional field
     theme_preference: z.enum(['light', 'dark', 'system']).optional(), // Theme preference
-    notification_preferences: z.object({
+    notification_preferences: z
+      .object({
         email_notifications: z.boolean().optional(),
         project_updates: z.boolean().optional(),
-        system_announcements: z.boolean().optional()
-    }).optional()
-}).refine(data => Object.keys(data).length > 0, {
+        system_announcements: z.boolean().optional(),
+      })
+      .optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field must be provided for update',
-});
+  });
 
 export const updateLanguageSchema = z.object({
-     body: z.object({
-         language: z.string({
-             required_error: 'Language is required',
-         }).max(10, 'Language code too long'),
-     }),
+  body: z.object({
+    language: z
+      .string({
+        required_error: 'Language is required',
+      })
+      .max(10, 'Language code too long'),
+  }),
 });
 
 export const changeRoleSchema = z.object({
-  role: z.enum(['admin', 'annotator', 'user'], { // Assuming these are the valid roles
+  role: z.enum(['admin', 'annotator', 'user'], {
+    // Assuming these are the valid roles
     required_error: 'Role is required',
     invalid_type_error: 'Invalid role specified',
   }),
-}); 
+});

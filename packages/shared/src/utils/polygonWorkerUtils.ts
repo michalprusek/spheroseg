@@ -22,13 +22,13 @@ export const executePolygonWorkerOperation = async <T>(
 ): Promise<T> => {
   try {
     if (!polygonWorker.isReady) {
-      console.warn(`Polygon worker not ready, returning ${defaultValue} for ${operationName}`);
+      // Worker not ready, return default value
       return defaultValue;
     }
-    
+
     return await operation(points);
   } catch (error) {
-    console.error(`Error in ${operationName}:`, error);
+    // Error handled by returning default value
     return defaultValue;
   }
 };

@@ -12,25 +12,19 @@ const AboutPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <Container className="py-12">
         <h1 className="text-4xl font-bold mb-8">{t('about.title')}</h1>
-        
+
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">{t('about.mission.title')}</h2>
-          <p className="text-lg mb-4">
-            {t('about.mission.description')}
-          </p>
-          <p className="text-lg">
-            {t('about.mission.vision')}
-          </p>
+          <p className="text-lg mb-4">{t('about.mission.description')}</p>
+          <p className="text-lg">{t('about.mission.vision')}</p>
         </section>
-        
+
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">{t('about.technology.title')}</h2>
-          <p className="text-lg mb-4">
-            {t('about.technology.description')}
-          </p>
+          <p className="text-lg mb-4">{t('about.technology.description')}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
             <div className="p-6 border rounded-lg">
               <h3 className="text-xl font-medium mb-2">{t('about.technology.feature1.title')}</h3>
@@ -46,12 +40,10 @@ const AboutPage: React.FC = () => {
             </div>
           </div>
         </section>
-        
+
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">{t('about.team.title')}</h2>
-          <p className="text-lg mb-8">
-            {t('about.team.description')}
-          </p>
+          <p className="text-lg mb-8">{t('about.team.description')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4"></div>
@@ -70,12 +62,10 @@ const AboutPage: React.FC = () => {
             </div>
           </div>
         </section>
-        
+
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">{t('about.contact.title')}</h2>
-          <p className="text-lg mb-6">
-            {t('about.contact.description')}
-          </p>
+          <p className="text-lg mb-6">{t('about.contact.description')}</p>
           <div className="flex flex-col md:flex-row gap-4">
             <Button asChild variant="outline" className="flex items-center gap-2">
               <a href="mailto:contact@spheroseg.com">
@@ -98,13 +88,11 @@ const AboutPage: React.FC = () => {
           </div>
         </section>
       </Container>
-      
+
       <footer className="bg-muted py-8">
         <Container>
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-muted-foreground mb-4 md:mb-0">
-              © 2023 Spheroid Segmentation Platform
-            </p>
+            <p className="text-muted-foreground mb-4 md:mb-0">© 2023 Spheroid Segmentation Platform</p>
             <div className="flex gap-6">
               <Link to="/privacy" className="text-muted-foreground hover:text-foreground">
                 {t('common.privacyPolicy')}

@@ -96,19 +96,56 @@ export const useSocketConnection = (options: SocketOptions = {}) => {
   useEffect(() => {
     let mounted = true;
     let connectTimer: NodeJS.Timeout | null = null;
+    let reconnectTimer: NodeJS.Timeout | null = null;
 
-    // Připojení po malém zpoždění pro lepší stabilitu
+    // Connect after a small delay for better stability
     if (isAuthenticated && autoConnect) {
       connectTimer = setTimeout(() => {
         if (mounted) {
           try {
             connect();
+            console.log('Socket connection initiated');
           } catch (err) {
             console.error('Failed to connect socket:', err);
+
+            // Try to reconnect after a delay
+            if (reconnect && mounted) {
+              reconnectTimer = setTimeout(() => {
+                console.log('Attempting to reconnect after initial connection failure...');
+                if (mounted) {
+                  try {
+                    connect();
+                  } catch (reconnectErr) {
+                    console.error('Failed to reconnect socket:', reconnectErr);
+                  }
+                }
+              }, 2000);
+            }
           }
         }
-      }, 500);
+      }, 300); // Reduced delay for faster connection
     }
+
+    // Set up a more aggressive heartbeat to check connection status
+    const heartbeatInterval = setInterval(() => {
+      if (mounted && socket) {
+        if (!isConnected && reconnect) {
+          console.log('Heartbeat detected disconnected socket, attempting to reconnect...');
+          try {
+            socket.connect();
+          } catch (err) {
+            console.error('Heartbeat reconnection failed:', err);
+          }
+        } else if (isConnected) {
+          // Send a ping to keep the connection alive and verify it's working
+          try {
+            socket.emit('ping', { timestamp: Date.now() });
+          } catch (err) {
+            console.error('Error sending ping:', err);
+          }
+        }
+      }
+    }, 5000); // Check every 5 seconds for more responsive reconnection
 
     // Clean up on unmount
     return () => {
@@ -116,21 +153,25 @@ export const useSocketConnection = (options: SocketOptions = {}) => {
       if (connectTimer) {
         clearTimeout(connectTimer);
       }
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+      clearInterval(heartbeatInterval);
 
       try {
         disconnect();
       } catch (err) {
-        // Ignoruj chyby při odpojování na unmount
+        // Ignore errors when disconnecting on unmount
       }
     };
-  }, [isAuthenticated, autoConnect, connect, disconnect]);
+  }, [isAuthenticated, autoConnect, connect, disconnect, socket, isConnected, reconnect]);
 
   return {
     socket,
     isConnected,
     error,
     connect,
-    disconnect
+    disconnect,
   };
 };
 

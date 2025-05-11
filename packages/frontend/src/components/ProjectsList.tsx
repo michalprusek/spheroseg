@@ -1,25 +1,27 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ProjectCard from "@/components/project/ProjectCard";
-import ProjectListItem from "@/components/ProjectListItem";
-import NewProjectListItem from "@/components/NewProjectListItem";
+import ProjectCard from '@/components/project/ProjectCard';
+import ProjectListItem from '@/components/ProjectListItem';
+import NewProjectListItem from '@/components/NewProjectListItem';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Project } from "@/types";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import ProjectDialogForm from "@/components/project/ProjectDialogForm";
-import NewProjectCardUI from "@/components/project/NewProjectCardUI";
-import { formatDistanceToNow } from "date-fns";
-import { cs, enUS } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
+import { Project } from '@/types';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import ProjectDialogForm from '@/components/project/ProjectDialogForm';
+import NewProjectCardUI from '@/components/project/NewProjectCardUI';
+import { formatDistanceToNow } from 'date-fns';
+import { cs, enUS } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
 
 export interface ProjectsListProps {
-  projects: Array<Project & {
-    is_owner?: boolean;
-    permission?: string;
-    owner_name?: string;
-    owner_email?: string;
-  }>;
-  viewMode: "grid" | "list";
+  projects: Array<
+    Project & {
+      is_owner?: boolean;
+      permission?: string;
+      owner_name?: string;
+      owner_email?: string;
+    }
+  >;
+  viewMode: 'grid' | 'list';
   onDeleteProject: (projectId: string, projectName: string) => void;
   onOpenProject?: (projectId: string) => void;
   loading: boolean;
@@ -32,7 +34,7 @@ const ProjectsList = ({
   onDeleteProject,
   onOpenProject,
   loading,
-  showCreateCard = false
+  showCreateCard = false,
 }: ProjectsListProps) => {
   const { t, language } = useLanguage();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
@@ -80,7 +82,7 @@ const ProjectsList = ({
     );
   }
 
-  if (viewMode === "list") {
+  if (viewMode === 'list') {
     const projectItems = projects.map((project) => (
       <ProjectListItem
         key={project.id}
@@ -101,11 +103,16 @@ const ProjectsList = ({
             : project.description || ''
         }
         thumbnailUrl={project.thumbnail_url}
-        date={formatDistanceToNow(new Date(project.updated_at), { addSuffix: true, locale: dateLocale })}
+        date={formatDistanceToNow(new Date(project.updated_at), {
+          addSuffix: true,
+          locale: dateLocale,
+        })}
         imageCount={project.image_count ?? 0}
         onClick={() => navigate(`/project/${project.id}`)}
         projectName={project.title}
-        onDelete={project.is_owner !== false && project.id ? () => onDeleteProject(project.id, project.title) : undefined}
+        onDelete={
+          project.is_owner !== false && project.id ? () => onDeleteProject(project.id, project.title) : undefined
+        }
       />
     ));
 
@@ -133,9 +140,10 @@ const ProjectsList = ({
       project={{
         id: project.id,
         title: project.title,
-        description: !project.is_owner && project.owner_name
-          ? `${t('shared.sharedBy') || 'Shared by'}: ${project.owner_name}`
-          : project.description || '',
+        description:
+          !project.is_owner && project.owner_name
+            ? `${t('shared.sharedBy') || 'Shared by'}: ${project.owner_name}`
+            : project.description || '',
         thumbnail_url: project.thumbnail_url,
         created_at: project.created_at,
         updated_at: project.updated_at,
@@ -143,12 +151,14 @@ const ProjectsList = ({
         is_owner: project.is_owner,
         permission: project.permission,
         owner_name: project.owner_name,
-        owner_email: project.owner_email
+        owner_email: project.owner_email,
       }}
-      onProjectDeleted={project.is_owner !== false && project.id ?
-        // Ensure we pass both projectId and projectName
-        () => onDeleteProject(project.id, project.title)
-        : undefined}
+      onProjectDeleted={
+        project.is_owner !== false && project.id
+          ? // Ensure we pass both projectId and projectName
+            () => onDeleteProject(project.id, project.title)
+          : undefined
+      }
       onProjectDuplicated={(newProject) => {
         console.log(`ProjectsList: Project duplicated:`, newProject);
         // Trigger a project list refresh by dispatching a custom event

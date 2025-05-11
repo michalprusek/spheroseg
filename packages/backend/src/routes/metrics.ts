@@ -10,36 +10,36 @@ const router = express.Router();
 router.post('/frontend', async (req: Request, res: Response) => {
   try {
     const metrics = req.body;
-    
+
     if (!Array.isArray(metrics)) {
       return res.status(400).json({ error: 'Invalid metrics format' });
     }
-    
+
     // Process each metric
     metrics.forEach((metric) => {
       switch (metric.type) {
         case 'web_vital':
           processWebVital(metric);
           break;
-          
+
         case 'component_render':
           processComponentRender(metric);
           break;
-          
+
         case 'page_load':
           processPageLoad(metric);
           break;
-          
+
         case 'api_request':
           processApiRequest(metric);
           break;
-          
+
         default:
           // Ignore unknown metric types
           break;
       }
     });
-    
+
     // Return success
     res.status(200).json({ success: true });
   } catch (error) {
@@ -53,24 +53,24 @@ router.post('/frontend', async (req: Request, res: Response) => {
  */
 function processWebVital(metric: any) {
   const { name, value } = metric;
-  
+
   switch (name) {
     case 'CLS':
       client.observe('web_vitals_cls', value);
       break;
-      
+
     case 'FCP':
       client.observe('web_vitals_fcp', value);
       break;
-      
+
     case 'LCP':
       client.observe('web_vitals_lcp', value);
       break;
-      
+
     case 'FID':
       client.observe('web_vitals_fid', value);
       break;
-      
+
     case 'TTFB':
       client.observe('web_vitals_ttfb', value);
       break;
@@ -82,7 +82,7 @@ function processWebVital(metric: any) {
  */
 function processComponentRender(metric: any) {
   const { component, value, count } = metric;
-  
+
   client.observe('frontend_component_render_time', value, { component });
   client.inc('frontend_component_render_count', count, { component });
 }
@@ -92,7 +92,7 @@ function processComponentRender(metric: any) {
  */
 function processPageLoad(metric: any) {
   const { page, value, count } = metric;
-  
+
   client.observe('frontend_page_load_time', value, { page });
   client.inc('frontend_page_load_count', count, { page });
 }
@@ -102,7 +102,7 @@ function processPageLoad(metric: any) {
  */
 function processApiRequest(metric: any) {
   const { endpoint, value, count, successRate } = metric;
-  
+
   client.observe('frontend_api_request_duration', value, { endpoint });
   client.inc('frontend_api_request_count', count, { endpoint });
   client.set('frontend_api_success_rate', successRate, { endpoint });

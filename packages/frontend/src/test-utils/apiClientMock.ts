@@ -126,21 +126,19 @@ export const createApiClientMock = () => {
 
   // Helper function to set up success responses
   const mockSuccess = (method: keyof typeof mockApi, path: string, data: any) => {
-    mockApi[method].mockImplementationOnce(() => 
-      Promise.resolve({ data, status: 200, statusText: 'OK' })
-    );
+    mockApi[method].mockImplementationOnce(() => Promise.resolve({ data, status: 200, statusText: 'OK' }));
   };
 
   // Helper function to set up error responses
   const mockError = (method: keyof typeof mockApi, path: string, status = 400, data = mockResponses.error) => {
-    mockApi[method].mockImplementationOnce(() => 
+    mockApi[method].mockImplementationOnce(() =>
       Promise.reject({
         response: {
           data,
           status,
           statusText: 'Error',
         },
-      })
+      }),
     );
   };
 
@@ -189,9 +187,9 @@ export const createApiClientMock = () => {
     // Mock segmentation update
     mockSuccess('put', '/images/:id/segmentation', mockResponses.segmentation);
     // Mock segmentation request
-    mockSuccess('post', '/images/:id/segmentation', { 
-      status: 'pending', 
-      message: 'Segmentation request submitted' 
+    mockSuccess('post', '/images/:id/segmentation', {
+      status: 'pending',
+      message: 'Segmentation request submitted',
     });
   };
 
@@ -222,15 +220,15 @@ export const createApiClientMock = () => {
  */
 export const setupApiClientMock = () => {
   const { mockApi, mockAll } = createApiClientMock();
-  
+
   // Mock the API client module
   vi.mock('@/lib/apiClient', () => ({
-    default: mockApi
+    default: mockApi,
   }));
 
   // Setup default mocks for common endpoints
   mockAll();
-  
+
   return mockApi;
 };
 
@@ -248,7 +246,7 @@ export const createMockBlob = (data: string | object, type = 'application/json')
 export const mockFileUpload = (api: any, response: any) => {
   // Mock the form data append
   const formDataAppendMock = vi.fn();
-  
+
   // Mock FormData
   global.FormData = vi.fn().mockImplementation(() => ({
     append: formDataAppendMock,
@@ -262,9 +260,9 @@ export const mockFileUpload = (api: any, response: any) => {
     keys: vi.fn(),
     values: vi.fn(),
   }));
-  
+
   // Mock the post response for file upload
   api.post.mockResolvedValueOnce({ data: response });
-  
+
   return formDataAppendMock;
 };

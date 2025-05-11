@@ -11,9 +11,9 @@ import '@testing-library/jest-dom';
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: null,
-    loading: false
+    loading: false,
   }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
 }));
 
 // Mock the LanguageContext
@@ -25,7 +25,9 @@ vi.mock('@/contexts/LanguageContext', () => {
     ...actualModule,
     useLanguage: () => ({
       language: currentLanguage,
-      setLanguage: (lang: string) => { currentLanguage = lang; },
+      setLanguage: (lang: string) => {
+        currentLanguage = lang;
+      },
       t: (key: string) => {
         // Simple translation mapping for testing
         const translations: Record<string, Record<string, string>> = {
@@ -102,7 +104,8 @@ vi.mock('@/contexts/LanguageContext', () => {
             'navbar.requestAccess': 'Request Access',
 
             // Footer translations
-            'footer.description': 'SpheroSeg is an advanced platform for spheroid segmentation and analysis in biomedical research.',
+            'footer.description':
+              'SpheroSeg is an advanced platform for spheroid segmentation and analysis in biomedical research.',
             'footer.contactLabel': 'Contact:',
             'footer.developerLabel': 'Developer:',
             'footer.facultyLabel': 'Institution:',
@@ -127,7 +130,8 @@ vi.mock('@/contexts/LanguageContext', () => {
             'termsPage.limitations.title': 'Limitations',
             'termsPage.revisions.title': 'Revisions and Errata',
             'termsPage.governingLaw.title': 'Governing Law',
-            'termsPage.acceptance.paragraph1': 'By accessing or using SpheroSeg, you agree to be bound by these Terms of Service...',
+            'termsPage.acceptance.paragraph1':
+              'By accessing or using SpheroSeg, you agree to be bound by these Terms of Service...',
           },
           cs: {
             // Common translations
@@ -156,7 +160,8 @@ vi.mock('@/contexts/LanguageContext', () => {
             'termsPage.limitations.title': 'Omezení',
             'termsPage.revisions.title': 'Revize a chyby',
             'termsPage.governingLaw.title': 'Rozhodné právo',
-            'termsPage.acceptance.paragraph1': 'Přístupem nebo používáním SpheroSeg souhlasíte s těmito Podmínkami služby...',
+            'termsPage.acceptance.paragraph1':
+              'Přístupem nebo používáním SpheroSeg souhlasíte s těmito Podmínkami služby...',
           },
           de: {
             // Common translations
@@ -185,7 +190,8 @@ vi.mock('@/contexts/LanguageContext', () => {
             'termsPage.limitations.title': 'Einschränkungen',
             'termsPage.revisions.title': 'Überarbeitungen und Fehler',
             'termsPage.governingLaw.title': 'Geltendes Recht',
-            'termsPage.acceptance.paragraph1': 'Durch den Zugriff auf oder die Nutzung von SpheroSeg stimmen Sie diesen Nutzungsbedingungen zu...',
+            'termsPage.acceptance.paragraph1':
+              'Durch den Zugriff auf oder die Nutzung von SpheroSeg stimmen Sie diesen Nutzungsbedingungen zu...',
           },
           es: {
             // Common translations
@@ -214,13 +220,14 @@ vi.mock('@/contexts/LanguageContext', () => {
             'termsPage.limitations.title': 'Limitaciones',
             'termsPage.revisions.title': 'Revisiones y Erratas',
             'termsPage.governingLaw.title': 'Ley Aplicable',
-            'termsPage.acceptance.paragraph1': 'Al acceder o utilizar SpheroSeg, aceptas estar sujeto a estos Términos de Servicio...',
+            'termsPage.acceptance.paragraph1':
+              'Al acceder o utilizar SpheroSeg, aceptas estar sujeto a estos Términos de Servicio...',
           },
           fr: {
             // Common translations
             'common.appName': 'Segmentation de Sphéroïdes',
             'common.appNameShort': 'SpheroSeg',
-            'common.backToHome': 'Retour à l\'Accueil',
+            'common.backToHome': "Retour à l'Accueil",
             'common.privacyPolicyLink': 'Politique de Confidentialité',
 
             // Navbar translations
@@ -230,20 +237,21 @@ vi.mock('@/contexts/LanguageContext', () => {
             'navbar.terms': 'Conditions',
             'navbar.privacy': 'Confidentialité',
             'navbar.login': 'Se connecter',
-            'navbar.requestAccess': 'Demander l\'accès',
+            'navbar.requestAccess': "Demander l'accès",
 
             // Footer translations
             'footer.copyrightNotice': '© 2023 Plateforme de Segmentation de Sphéroïdes',
 
             // Terms page translations
-            'termsPage.title': 'Conditions d\'Utilisation',
+            'termsPage.title': "Conditions d'Utilisation",
             'termsPage.acceptance.title': 'Acceptation des Conditions',
-            'termsPage.useLicense.title': 'Licence d\'Utilisation',
+            'termsPage.useLicense.title': "Licence d'Utilisation",
             'termsPage.dataUsage.title': 'Utilisation des Données',
             'termsPage.limitations.title': 'Limitations',
             'termsPage.revisions.title': 'Révisions et Erreurs',
             'termsPage.governingLaw.title': 'Loi Applicable',
-            'termsPage.acceptance.paragraph1': 'En accédant ou en utilisant SpheroSeg, vous acceptez d\'être lié par ces Conditions d\'Utilisation...',
+            'termsPage.acceptance.paragraph1':
+              "En accédant ou en utilisant SpheroSeg, vous acceptez d'être lié par ces Conditions d'Utilisation...",
           },
           zh: {
             // Common translations
@@ -273,14 +281,14 @@ vi.mock('@/contexts/LanguageContext', () => {
             'termsPage.revisions.title': '修订和错误',
             'termsPage.governingLaw.title': '适用法律',
             'termsPage.acceptance.paragraph1': '通过访问或使用SpheroSeg，您同意受这些服务条款的约束...',
-          }
+          },
         };
 
         return translations[currentLanguage]?.[key] || key;
       },
-      availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh']
+      availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
     }),
-    LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+    LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
 });
 
@@ -298,7 +306,7 @@ describe('TermsOfService Page', () => {
             <TermsOfService />
           </LanguageProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 
@@ -322,13 +330,13 @@ describe('TermsOfService Page', () => {
     const navLinks = screen.getAllByRole('link');
 
     // Check if there's a Home link
-    expect(navLinks.some(link => link.textContent?.match(/Home/i))).toBeTruthy();
+    expect(navLinks.some((link) => link.textContent?.match(/Home/i))).toBeTruthy();
 
     // Check if there's a Documentation link
-    expect(navLinks.some(link => link.textContent?.match(/Documentation/i))).toBeTruthy();
+    expect(navLinks.some((link) => link.textContent?.match(/Documentation/i))).toBeTruthy();
 
     // Check if there's a Sign In link
-    expect(navLinks.some(link => link.textContent?.match(/Sign In/i))).toBeTruthy();
+    expect(navLinks.some((link) => link.textContent?.match(/Sign In/i))).toBeTruthy();
   });
 
   it('renders the footer', () => {
@@ -340,7 +348,7 @@ describe('TermsOfService Page', () => {
 
     // Check for Privacy Policy link in the footer
     const links = screen.getAllByRole('link');
-    expect(links.some(link => link.textContent?.match(/Privacy Policy/i))).toBeTruthy();
+    expect(links.some((link) => link.textContent?.match(/Privacy Policy/i))).toBeTruthy();
   });
 
   // Test translations for different languages

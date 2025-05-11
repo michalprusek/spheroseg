@@ -11,19 +11,18 @@ interface MetricsChartCardProps {
 /**
  * Reusable card component for metrics visualizations
  */
-const MetricsChartCard: React.FC<MetricsChartCardProps> = ({
-  title,
-  children,
-  className = '',
-  height = 400
-}) => {
+const MetricsChartCard: React.FC<MetricsChartCardProps> = ({ title, children, className = '', height = 400 }) => {
   return (
     <Card className={className}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div style={{ height: typeof height === 'number' ? `${height}px` : height }}>
+        <div
+          style={{
+            height: typeof height === 'number' ? `${height}px` : height,
+          }}
+        >
           {children}
         </div>
       </CardContent>

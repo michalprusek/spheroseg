@@ -9,7 +9,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 vi.mock('file-saver', () => ({
   default: {
     saveAs: vi.fn(),
-  }
+  },
 }));
 
 vi.mock('xlsx', () => ({
@@ -27,7 +27,7 @@ global.fetch = vi.fn().mockImplementation(() =>
   Promise.resolve({
     ok: true,
     blob: () => Promise.resolve(new Blob(['mock-image-data'], { type: 'image/jpeg' })),
-  })
+  }),
 );
 
 // Mock canvas
@@ -59,7 +59,7 @@ vi.mock('sonner', () => ({
     info: vi.fn(),
     success: vi.fn(),
     error: vi.fn(),
-  }
+  },
 }));
 
 // Mock language context
@@ -67,7 +67,7 @@ vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({
     t: (key: string) => key,
     language: 'en',
-  })
+  }),
 }));
 
 // Sample data
@@ -214,7 +214,7 @@ describe('useExportFunctions', () => {
   it.skip('should handle errors during export gracefully', async () => {
     // Mock fetch to fail
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(() =>
-      Promise.reject(new Error('Network error'))
+      Promise.reject(new Error('Network error')),
     );
 
     const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));

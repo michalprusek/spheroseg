@@ -1,7 +1,61 @@
 import { Pool, PoolConfig, PoolClient } from 'pg';
 import config from '../config';
 import logger from '../utils/logger';
-import NodeCache from 'node-cache';
+
+// Simple in-memory cache implementation
+class SimpleCache {
+  private cache: Map<string, { value: any; expiry: number }> = new Map();
+  private defaultTtl: number;
+  private checkPeriod: number;
+  private checkInterval: NodeJS.Timeout | null = null;
+
+  constructor(options: { stdTTL: number; checkperiod: number }) {
+    this.defaultTtl = options.stdTTL;
+    this.checkPeriod = options.checkperiod;
+
+    // Set up periodic cleanup
+    this.checkInterval = setInterval(() => this.cleanup(), this.checkPeriod * 1000);
+  }
+
+  get<T>(key: string): T | undefined {
+    const item = this.cache.get(key);
+    if (!item) return undefined;
+
+    // Check if expired
+    if (item.expiry < Date.now()) {
+      this.cache.delete(key);
+      return undefined;
+    }
+
+    return item.value as T;
+  }
+
+  set(key: string, value: any, ttl?: number): void {
+    const expiry = Date.now() + (ttl || this.defaultTtl) * 1000;
+    this.cache.set(key, { value, expiry });
+  }
+
+  del(keys: string | string[]): void {
+    if (typeof keys === 'string') {
+      this.cache.delete(keys);
+    } else {
+      keys.forEach((key) => this.cache.delete(key));
+    }
+  }
+
+  keys(): string[] {
+    return Array.from(this.cache.keys());
+  }
+
+  private cleanup(): void {
+    const now = Date.now();
+    for (const [key, item] of this.cache.entries()) {
+      if (item.expiry < now) {
+        this.cache.delete(key);
+      }
+    }
+  }
+}
 
 // Cache configuration
 // Standard TTL: 5 minutes for schema checks, 30 seconds for data
@@ -9,46 +63,34 @@ const DEFAULT_SCHEMA_TTL = 300; // 5 minutes
 const DEFAULT_DATA_TTL = 30; // 30 seconds
 
 // Create cache instances
-const schemaCache = new NodeCache({
+const schemaCache = new SimpleCache({
   stdTTL: DEFAULT_SCHEMA_TTL,
   checkperiod: 120,
-  useClones: false
 });
 
-export const queryCache = new NodeCache({
+export const queryCache = new SimpleCache({
   stdTTL: DEFAULT_DATA_TTL,
   checkperiod: 60,
-  useClones: false
 });
 
 // Database pool configuration with optimized settings
 function createDbConfig(): PoolConfig {
-  let dbConfig: PoolConfig;
+  // Use individual connection parameters
+  const dbConfig: PoolConfig = {
+    host: config.db.host,
+    port: config.db.port,
+    database: config.db.database,
+    user: config.db.user,
+    password: config.db.password,
+    ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined,
+  };
 
-  if (config.db.connectionString) {
-    // Use connection string if provided
-    dbConfig = {
-      connectionString: config.db.connectionString,
-      ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined
-    };
-    logger.info('Database configuration using connection string');
-  } else {
-    // Use individual connection parameters
-    dbConfig = {
-      host: config.db.host,
-      port: config.db.port,
-      database: config.db.database,
-      user: config.db.user,
-      password: config.db.password,
-      ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined
-    };
-    logger.info('Database configuration using individual parameters', {
-      host: config.db.host,
-      port: config.db.port,
-      database: config.db.database,
-      user: config.db.user
-    });
-  }
+  logger.info('Database configuration using individual parameters', {
+    host: config.db.host,
+    port: config.db.port,
+    database: config.db.database,
+    user: config.db.user,
+  });
 
   // Optimized pool configuration
   return {
@@ -57,7 +99,7 @@ function createDbConfig(): PoolConfig {
     max: 20, // Maximum 20 clients (adjust based on expected concurrent connections)
     idleTimeoutMillis: 30000, // How long a client can remain idle before being closed (30 seconds)
     connectionTimeoutMillis: 5000, // How long to wait for a connection (5 seconds)
-    allowExitOnIdle: false // Don't allow the pool to exit if idle
+    allowExitOnIdle: false, // Don't allow the pool to exit if idle
   };
 }
 
@@ -65,12 +107,46 @@ function createDbConfig(): PoolConfig {
 const pool = new Pool(createDbConfig());
 
 // Set up event listeners
-pool.on('connect', () => {
+pool.on('connect', (client) => {
   logger.info('Connected to PostgreSQL database');
+
+  // Set statement timeout on each new connection
+  client.query('SET statement_timeout = 30000'); // 30 seconds
 });
 
-pool.on('error', (err) => {
-  logger.error('Unexpected error on idle client', { error: err });
+// Define a type for PostgreSQL errors
+interface PostgresError extends Error {
+  code?: string;
+  detail?: string;
+  severity?: string;
+  schema?: string;
+  table?: string;
+  constraint?: string;
+  file?: string;
+  line?: string;
+  routine?: string;
+}
+
+pool.on('error', (err: PostgresError, client) => {
+  logger.error('Unexpected error on idle client', {
+    error: err.message,
+    stack: err.stack,
+    // Only include these properties if they exist
+    ...(err.code && { code: err.code }),
+    ...(err.detail && { detail: err.detail }),
+  });
+
+  // Try to release the client to prevent connection leaks
+  try {
+    if (client) {
+      client.release(true); // Force release with error
+    }
+  } catch (releaseError) {
+    logger.error('Error releasing client after pool error', {
+      error: releaseError,
+    });
+  }
+
   // Don't exit process, log and continue
   // process.exit(-1);
 });
@@ -78,28 +154,31 @@ pool.on('error', (err) => {
 // Cache for table existence checks
 export const checkTableExists = async (tableName: string): Promise<boolean> => {
   const cacheKey = `table_exists:${tableName}`;
-  
+
   // Check cache first
   const cached = schemaCache.get<boolean>(cacheKey);
   if (cached !== undefined) {
     return cached;
   }
-  
+
   try {
-    const result = await pool.query(`
+    const result = await pool.query(
+      `
       SELECT EXISTS (
         SELECT 1
         FROM information_schema.tables
         WHERE table_schema = 'public'
         AND table_name = $1
       )
-    `, [tableName]);
-    
+    `,
+      [tableName],
+    );
+
     const exists = result.rows[0].exists;
-    
+
     // Store in cache
     schemaCache.set(cacheKey, exists);
-    
+
     return exists;
   } catch (error) {
     logger.error(`Error checking if table ${tableName} exists`, { error });
@@ -110,15 +189,16 @@ export const checkTableExists = async (tableName: string): Promise<boolean> => {
 // Cache for column existence checks
 export const checkColumnExists = async (tableName: string, columnName: string): Promise<boolean> => {
   const cacheKey = `column_exists:${tableName}:${columnName}`;
-  
+
   // Check cache first
   const cached = schemaCache.get<boolean>(cacheKey);
   if (cached !== undefined) {
     return cached;
   }
-  
+
   try {
-    const result = await pool.query(`
+    const result = await pool.query(
+      `
       SELECT EXISTS (
         SELECT 1
         FROM information_schema.columns
@@ -126,13 +206,15 @@ export const checkColumnExists = async (tableName: string, columnName: string): 
         AND table_name = $1
         AND column_name = $2
       )
-    `, [tableName, columnName]);
-    
+    `,
+      [tableName, columnName],
+    );
+
     const exists = result.rows[0].exists;
-    
+
     // Store in cache
     schemaCache.set(cacheKey, exists);
-    
+
     return exists;
   } catch (error) {
     logger.error(`Error checking if column ${columnName} exists in table ${tableName}`, { error });
@@ -141,27 +223,30 @@ export const checkColumnExists = async (tableName: string, columnName: string): 
 };
 
 // Function to check multiple columns at once (more efficient)
-export const checkColumnsExist = async (tableName: string, columnNames: string[]): Promise<{[key: string]: boolean}> => {
-  const results: {[key: string]: boolean} = {};
+export const checkColumnsExist = async (
+  tableName: string,
+  columnNames: string[],
+): Promise<{ [key: string]: boolean }> => {
+  const results: { [key: string]: boolean } = {};
   const uncachedColumns: string[] = [];
-  
+
   // First check cache for each column
   for (const columnName of columnNames) {
     const cacheKey = `column_exists:${tableName}:${columnName}`;
     const cached = schemaCache.get<boolean>(cacheKey);
-    
+
     if (cached !== undefined) {
       results[columnName] = cached;
     } else {
       uncachedColumns.push(columnName);
     }
   }
-  
+
   // If all columns were in cache, return results
   if (uncachedColumns.length === 0) {
     return results;
   }
-  
+
   // Otherwise, query for uncached columns
   try {
     // One query for all uncached columns
@@ -175,30 +260,33 @@ export const checkColumnsExist = async (tableName: string, columnNames: string[]
       ) as exists
       FROM unnest($2::text[]) as column_name
     `;
-    
+
     const result = await pool.query(query, [tableName, uncachedColumns]);
-    
+
     // Process results and update cache
     for (const row of result.rows) {
       const columnName = row.column_name;
       const exists = row.exists;
-      
+
       results[columnName] = exists;
-      
+
       // Cache the result
       const cacheKey = `column_exists:${tableName}:${columnName}`;
       schemaCache.set(cacheKey, exists);
     }
-    
+
     return results;
   } catch (error) {
-    logger.error(`Error checking columns in table ${tableName}`, { error, columns: columnNames });
-    
+    logger.error(`Error checking columns in table ${tableName}`, {
+      error,
+      columns: columnNames,
+    });
+
     // Return false for all uncached columns
     for (const columnName of uncachedColumns) {
       results[columnName] = false;
     }
-    
+
     return results;
   }
 };
@@ -206,7 +294,7 @@ export const checkColumnsExist = async (tableName: string, columnNames: string[]
 // Transaction helper with automatic rollback on error
 export const withTransaction = async <T>(callback: (client: PoolClient) => Promise<T>): Promise<T> => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
     const result = await callback(client);
@@ -222,20 +310,20 @@ export const withTransaction = async <T>(callback: (client: PoolClient) => Promi
 
 // Cached query function
 export const cachedQuery = async (
-  queryText: string, 
-  params: any[] = [], 
-  options: { 
-    ttl?: number, 
-    cacheKey?: string,
-    bypassCache?: boolean
-  } = {}
+  queryText: string,
+  params: any[] = [],
+  options: {
+    ttl?: number;
+    cacheKey?: string;
+    bypassCache?: boolean;
+  } = {},
 ) => {
   const { ttl = DEFAULT_DATA_TTL, bypassCache = false } = options;
-  
+
   // Generate cache key if not provided
-  const cacheKey = options.cacheKey || 
-    `query:${queryText}:${params.map(p => p?.toString?.() || JSON.stringify(p)).join(':')}`;
-  
+  const cacheKey =
+    options.cacheKey || `query:${queryText}:${params.map((p) => p?.toString?.() || JSON.stringify(p)).join(':')}`;
+
   // Check cache unless bypass is requested
   if (!bypassCache) {
     const cached = queryCache.get(cacheKey);
@@ -244,14 +332,14 @@ export const cachedQuery = async (
       return cached;
     }
   }
-  
+
   // Execute query
   try {
     const result = await pool.query(queryText, params);
-    
+
     // Cache the result
     queryCache.set(cacheKey, result, ttl);
-    
+
     return result;
   } catch (error) {
     logger.error('Error executing cached query', { error, queryText, params });
@@ -262,8 +350,8 @@ export const cachedQuery = async (
 // Function to clear specific cache entries based on a pattern
 export const clearCacheByPattern = (pattern: string) => {
   const keys = queryCache.keys();
-  const keysToDelete = keys.filter(key => key.includes(pattern));
-  
+  const keysToDelete = keys.filter((key: string) => key.includes(pattern));
+
   if (keysToDelete.length > 0) {
     queryCache.del(keysToDelete);
     logger.debug(`Cleared ${keysToDelete.length} cache entries with pattern: ${pattern}`);
@@ -271,47 +359,48 @@ export const clearCacheByPattern = (pattern: string) => {
 };
 
 // Automatically invalidate cache after write operations
-export const invalidatingQuery = async (
-  queryText: string, 
-  params: any[] = [], 
-  invalidationPatterns: string[] = []
-) => {
+export const invalidatingQuery = async (queryText: string, params: any[] = [], invalidationPatterns: string[] = []) => {
   const result = await pool.query(queryText, params);
-  
+
   // If this is a write operation (INSERT, UPDATE, DELETE), invalidate related cache
-  if (queryText.trim().toUpperCase().match(/^(INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TRUNCATE|GRANT|REVOKE)/)) {
+  if (
+    queryText
+      .trim()
+      .toUpperCase()
+      .match(/^(INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TRUNCATE|GRANT|REVOKE)/)
+  ) {
     // Clear cache based on passed invalidation patterns
     for (const pattern of invalidationPatterns) {
       clearCacheByPattern(pattern);
     }
-    
+
     // Also attempt to determine affected tables and clear those caches
     const tables = extractTablesFromQuery(queryText);
     for (const table of tables) {
       clearCacheByPattern(`query:.*${table}.*`);
     }
   }
-  
+
   return result;
 };
 
 // Helper to extract table names from query
 function extractTablesFromQuery(queryText: string): string[] {
   const tables: string[] = [];
-  
+
   // Extract tables mentioned after FROM and JOIN
   const fromRegex = /\bFROM\s+([a-zA-Z0-9_]+)/gi;
   const joinRegex = /\bJOIN\s+([a-zA-Z0-9_]+)/gi;
-  
+
   let match;
-  while (match = fromRegex.exec(queryText)) {
+  while ((match = fromRegex.exec(queryText))) {
     tables.push(match[1].toLowerCase());
   }
-  
-  while (match = joinRegex.exec(queryText)) {
+
+  while ((match = joinRegex.exec(queryText))) {
     tables.push(match[1].toLowerCase());
   }
-  
+
   return [...new Set(tables)]; // Remove duplicates
 }
 
@@ -319,26 +408,26 @@ function extractTablesFromQuery(queryText: string): string[] {
 export const initializeSchemaCache = async () => {
   try {
     logger.info('Initializing schema cache...');
-    
+
     // Cache common tables
     const commonTables = ['projects', 'images', 'project_shares', 'users', 'segmentation_results'];
     for (const table of commonTables) {
       await checkTableExists(table);
     }
-    
+
     // Cache common columns
     const columnsToCheck = {
       projects: ['id', 'title', 'description', 'user_id', 'created_at', 'updated_at'],
       images: ['id', 'project_id', 'name', 'thumbnail_path', 'created_at', 'updated_at'],
     };
-    
+
     for (const [table, columns] of Object.entries(columnsToCheck)) {
       // Only check columns if table exists
       if (await checkTableExists(table)) {
         await checkColumnsExist(table, columns);
       }
     }
-    
+
     logger.info('Schema cache initialized');
   } catch (error) {
     logger.error('Error initializing schema cache', { error });

@@ -1,17 +1,10 @@
-
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Bell,
-  Settings as SettingsIcon,
-  User as UserIcon,
-  LogOut,
-  X
-} from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Settings as SettingsIcon, User as UserIcon, LogOut, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MobileMenuProps {
   isMenuOpen: boolean;
@@ -28,7 +21,7 @@ const MobileMenu = ({ isMenuOpen, setIsMenuOpen, hasNotifications }: MobileMenuP
     try {
       await signOut();
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error('Error signing out:', error);
     }
   };
 
@@ -58,7 +51,7 @@ const MobileMenu = ({ isMenuOpen, setIsMenuOpen, hasNotifications }: MobileMenuP
             className="flex items-center w-full px-4 py-3 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
             onClick={() => {
               setIsMenuOpen(false);
-              navigate("/profile");
+              navigate('/profile');
             }}
           >
             <UserIcon className="h-5 w-5 mr-3 text-gray-500" />
@@ -68,7 +61,7 @@ const MobileMenu = ({ isMenuOpen, setIsMenuOpen, hasNotifications }: MobileMenuP
             className="flex items-center w-full px-4 py-3 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
             onClick={() => {
               setIsMenuOpen(false);
-              navigate("/settings");
+              navigate('/settings');
             }}
           >
             <SettingsIcon className="h-5 w-5 mr-3 text-gray-500" />
@@ -78,14 +71,12 @@ const MobileMenu = ({ isMenuOpen, setIsMenuOpen, hasNotifications }: MobileMenuP
             className="flex items-center w-full px-4 py-3 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
             onClick={() => {
               setIsMenuOpen(false);
-              navigate("/settings?tab=notifications");
+              navigate('/settings?tab=notifications');
             }}
           >
             <Bell className="h-5 w-5 mr-3 text-gray-500" />
             <span>{t('common.notifications')}</span>
-            {hasNotifications && (
-              <span className="ml-2 h-2 w-2 rounded-full bg-red-500"></span>
-            )}
+            {hasNotifications && <span className="ml-2 h-2 w-2 rounded-full bg-red-500"></span>}
           </button>
           <div className="border-t my-2 dark:border-gray-700"></div>
           <button

@@ -6,7 +6,7 @@ import {
   acceptProjectInvitation,
   getSharedProjects,
   getProjectShares,
-  checkProjectAccess
+  checkProjectAccess,
 } from '@/controllers/projectShareController';
 import { createLogger } from '@/utils/logger';
 

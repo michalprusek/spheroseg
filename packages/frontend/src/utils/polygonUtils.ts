@@ -85,8 +85,7 @@ export const isPointInPolygon = (x: number, y: number, points: Point[]): boolean
     const xj = points[j].x;
     const yj = points[j].y;
 
-    const intersect = ((yi > y) !== (yj > y)) &&
-                      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
     if (intersect) inside = !inside;
   }
   return inside;
@@ -143,7 +142,7 @@ export const perpendicularDistance = (point: Point, lineStart: Point, lineEnd: P
   // Calculate the closest point on the line
   const closestPoint = {
     x: lineStart.x + t * dx,
-    y: lineStart.y + t * dy
+    y: lineStart.y + t * dy,
   };
 
   // Return the distance to the closest point
@@ -158,12 +157,7 @@ export const perpendicularDistance = (point: Point, lineStart: Point, lineEnd: P
  * @param p4 End point of the second line segment
  * @returns Intersection point or null if the lines don't intersect
  */
-export const calculateIntersection = (
-  p1: Point,
-  p2: Point,
-  p3: Point,
-  p4: Point
-): Point | null => {
+export const calculateIntersection = (p1: Point, p2: Point, p3: Point, p4: Point): Point | null => {
   // Calculate the determinant
   const d = (p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x);
 
@@ -178,7 +172,7 @@ export const calculateIntersection = (
   if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
     return {
       x: p1.x + t * (p2.x - p1.x),
-      y: p1.y + t * (p2.y - p1.y)
+      y: p1.y + t * (p2.y - p1.y),
     };
   }
 
@@ -195,15 +189,13 @@ export const calculateIntersection = (
 export const calculateLinePolygonIntersections = (
   lineStart: Point,
   lineEnd: Point,
-  polygon: Point[]
+  polygon: Point[],
 ): Intersection[] => {
   const intersections: Intersection[] = [];
 
   for (let i = 0; i < polygon.length; i++) {
     const j = (i + 1) % polygon.length;
-    const intersection = calculateIntersection(
-      lineStart, lineEnd, polygon[i], polygon[j]
-    );
+    const intersection = calculateIntersection(lineStart, lineEnd, polygon[i], polygon[j]);
 
     if (intersection) {
       // Calculate the distance from the line start to the intersection
@@ -211,9 +203,8 @@ export const calculateLinePolygonIntersections = (
 
       // Add a small epsilon to avoid duplicate points
       const epsilon = 0.0001;
-      const isDuplicate = intersections.some(p =>
-        Math.abs(p.x - intersection.x) < epsilon &&
-        Math.abs(p.y - intersection.y) < epsilon
+      const isDuplicate = intersections.some(
+        (p) => Math.abs(p.x - intersection.x) < epsilon && Math.abs(p.y - intersection.y) < epsilon,
       );
 
       if (!isDuplicate) {
@@ -221,7 +212,7 @@ export const calculateLinePolygonIntersections = (
           x: intersection.x,
           y: intersection.y,
           edgeIndex: i,
-          distance: dist
+          distance: dist,
         });
       }
     }
@@ -286,8 +277,8 @@ export const calculateCentroid = (points: Point[]): Point => {
   }
 
   area /= 2;
-  cx /= (6 * area);
-  cy /= (6 * area);
+  cx /= 6 * area;
+  cy /= 6 * area;
 
   return { x: Math.abs(cx), y: Math.abs(cy) };
 };
@@ -318,7 +309,7 @@ export const calculateBoundingBox = (points: Point[]): BoundingBox => {
     x: minX,
     y: minY,
     width: maxX - minX,
-    height: maxY - minY
+    height: maxY - minY,
   };
 };
 
@@ -333,8 +324,7 @@ export const calculateConvexHull = (points: Point[]): Point[] => {
   // Find the point with the lowest y-coordinate (and leftmost if tied)
   let lowestPoint = points[0];
   for (let i = 1; i < points.length; i++) {
-    if (points[i].y < lowestPoint.y ||
-        (points[i].y === lowestPoint.y && points[i].x < lowestPoint.x)) {
+    if (points[i].y < lowestPoint.y || (points[i].y === lowestPoint.y && points[i].x < lowestPoint.x)) {
       lowestPoint = points[i];
     }
   }
@@ -360,9 +350,7 @@ export const calculateConvexHull = (points: Point[]): Point[] => {
   // Remove duplicates
   const uniquePoints: Point[] = [];
   for (let i = 0; i < sortedPoints.length; i++) {
-    if (i === 0 ||
-        sortedPoints[i].x !== sortedPoints[i-1].x ||
-        sortedPoints[i].y !== sortedPoints[i-1].y) {
+    if (i === 0 || sortedPoints[i].x !== sortedPoints[i - 1].x || sortedPoints[i].y !== sortedPoints[i - 1].y) {
       uniquePoints.push(sortedPoints[i]);
     }
   }
@@ -511,9 +499,10 @@ export const simplifyClosedPolygon = (points: Point[], epsilon: number): Point[]
   const simplified = simplifyPolygon(reordered, epsilon);
 
   // Ensure the polygon is closed
-  if (simplified.length > 0 &&
-      (simplified[0].x !== simplified[simplified.length - 1].x ||
-       simplified[0].y !== simplified[simplified.length - 1].y)) {
+  if (
+    simplified.length > 0 &&
+    (simplified[0].x !== simplified[simplified.length - 1].x || simplified[0].y !== simplified[simplified.length - 1].y)
+  ) {
     simplified.push({ ...simplified[0] });
   }
 
@@ -530,14 +519,12 @@ export const simplifyClosedPolygon = (points: Point[], epsilon: number): Point[]
 export const slicePolygon = (
   polygon: Polygon,
   sliceStart: Point,
-  sliceEnd: Point
+  sliceEnd: Point,
 ): { success: boolean; polygons: Polygon[] } => {
   const polygonPoints = polygon.points;
 
   // Find intersections between the slice line and the polygon
-  const intersections = calculateLinePolygonIntersections(
-    sliceStart, sliceEnd, polygonPoints
-  );
+  const intersections = calculateLinePolygonIntersections(sliceStart, sliceEnd, polygonPoints);
 
   // We need exactly 2 intersections to slice the polygon
   if (intersections.length !== 2) {
@@ -579,13 +566,13 @@ export const slicePolygon = (
     const newPolygon1 = {
       id: uuidv4(),
       points: polygon1Points,
-      type: polygon.type || 'external'
+      type: polygon.type || 'external',
     };
 
     const newPolygon2 = {
       id: uuidv4(),
       points: polygon2Points,
-      type: polygon.type || 'external'
+      type: polygon.type || 'external',
     };
 
     return { success: true, polygons: [newPolygon1, newPolygon2] };
@@ -601,14 +588,11 @@ export const slicePolygon = (
  * @param type Type of polygon (external or internal)
  * @returns New polygon object
  */
-export const createPolygon = (
-  points: Point[],
-  type: 'external' | 'internal' = 'external'
-): Polygon => {
+export const createPolygon = (points: Point[], type: 'external' | 'internal' = 'external'): Polygon => {
   return {
     id: uuidv4(),
     points: [...points],
-    type
+    type,
   };
 };
 
@@ -698,7 +682,7 @@ export const calculateFeretDiameter = (points: Point[]): { max: number; min: num
   return {
     max: maxDiameter,
     min: minDiameter,
-    angle: maxAngle
+    angle: maxAngle,
   };
 };
 
@@ -708,10 +692,7 @@ export const calculateFeretDiameter = (points: Point[]): { max: number; min: num
  * @param holes Array of internal polygons (holes)
  * @returns Object with calculated metrics
  */
-export const calculateMetrics = (
-  polygon: Polygon,
-  holes: Polygon[] = []
-): PolygonMetrics => {
+export const calculateMetrics = (polygon: Polygon, holes: Polygon[] = []): PolygonMetrics => {
   try {
     // Calculate area of the external polygon
     const externalArea = calculatePolygonArea(polygon.points);
@@ -778,7 +759,7 @@ export const calculateMetrics = (
       compactness,
       sphericity,
       feretDiameter,
-      centroid
+      centroid,
     };
   } catch (error) {
     logger.error('Error calculating metrics:', { error });
@@ -797,9 +778,9 @@ export const calculateMetrics = (
       feretDiameter: {
         max: 0,
         min: 0,
-        angle: 0
+        angle: 0,
       },
-      centroid: { x: 0, y: 0 }
+      centroid: { x: 0, y: 0 },
     };
   }
 };
@@ -826,5 +807,5 @@ export default {
   createPolygon,
   doPolygonsIntersect,
   calculateFeretDiameter,
-  calculateMetrics
+  calculateMetrics,
 };

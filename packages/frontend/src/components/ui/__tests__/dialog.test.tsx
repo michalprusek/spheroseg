@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose
+  DialogClose,
 } from '../dialog';
 import '@testing-library/jest-dom';
 
@@ -24,12 +24,12 @@ vi.mock('@radix-ui/react-dialog', () => {
           setIsOpen(open);
         }
       }, [open]);
-      
+
       const handleOpenChange = (newOpen) => {
         setIsOpen(newOpen);
         onOpenChange?.(newOpen);
       };
-      
+
       return (
         <div data-testid="dialog-root" data-state={isOpen ? 'open' : 'closed'}>
           {typeof children === 'function' ? children({ open: isOpen }) : children}
@@ -44,24 +44,12 @@ vi.mock('@radix-ui/react-dialog', () => {
     ),
     Portal: ({ children }) => <div data-testid="dialog-portal">{children}</div>,
     Overlay: React.forwardRef(({ children, className, ...props }, ref) => (
-      <div
-        ref={ref}
-        data-testid="dialog-overlay"
-        className={className}
-        {...props}
-      >
+      <div ref={ref} data-testid="dialog-overlay" className={className} {...props}>
         {children}
       </div>
     )),
     Content: React.forwardRef(({ children, className, ...props }, ref) => (
-      <div
-        ref={ref}
-        data-testid="dialog-content"
-        role="dialog"
-        aria-modal="true"
-        className={className}
-        {...props}
-      >
+      <div ref={ref} data-testid="dialog-content" role="dialog" aria-modal="true" className={className} {...props}>
         {children}
       </div>
     )),
@@ -86,7 +74,7 @@ vi.mock('@radix-ui/react-dialog', () => {
 // Create a simple dialog test component
 const TestDialog = ({ initialOpen = false }) => {
   const [open, setOpen] = React.useState(initialOpen);
-  
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>Open Dialog</DialogTrigger>
@@ -113,25 +101,25 @@ describe('Dialog Component', () => {
 
   it('renders dialog trigger correctly', () => {
     render(<TestDialog />);
-    
+
     expect(screen.getByTestId('dialog-trigger')).toBeInTheDocument();
     expect(screen.getByText('Open Dialog')).toBeInTheDocument();
   });
 
   it('opens dialog when trigger is clicked', async () => {
     render(<TestDialog />);
-    
+
     // Initially dialog content shouldn't be visible
     expect(screen.queryByTestId('dialog-content')).not.toBeInTheDocument();
-    
+
     // Click the trigger
     fireEvent.click(screen.getByText('Open Dialog'));
-    
+
     // Now dialog content should be visible
     await waitFor(() => {
       expect(screen.getByTestId('dialog-content')).toBeInTheDocument();
     });
-    
+
     // Check for dialog components
     expect(screen.getByTestId('dialog-title')).toBeInTheDocument();
     expect(screen.getByTestId('dialog-description')).toBeInTheDocument();
@@ -142,13 +130,13 @@ describe('Dialog Component', () => {
 
   it('closes dialog when close button is clicked', async () => {
     render(<TestDialog initialOpen={true} />);
-    
+
     // Initially dialog content should be visible
     expect(screen.getByTestId('dialog-content')).toBeInTheDocument();
-    
+
     // Click the close button
     fireEvent.click(screen.getByTestId('dialog-close'));
-    
+
     // Dialog content should be removed
     await waitFor(() => {
       expect(screen.queryByTestId('dialog-content')).not.toBeInTheDocument();
@@ -157,30 +145,30 @@ describe('Dialog Component', () => {
 
   it('renders dialog components with correct classes', () => {
     render(<TestDialog initialOpen={true} />);
-    
+
     // Check for correct classes on components
     expect(screen.getByTestId('dialog-overlay')).toHaveClass('fixed');
     expect(screen.getByTestId('dialog-overlay')).toHaveClass('inset-0');
     expect(screen.getByTestId('dialog-overlay')).toHaveClass('z-50');
-    
+
     expect(screen.getByTestId('dialog-content')).toHaveClass('fixed');
     expect(screen.getByTestId('dialog-content')).toHaveClass('z-50');
-    
+
     expect(screen.getByTestId('dialog-title')).toHaveClass('text-lg');
     expect(screen.getByTestId('dialog-title')).toHaveClass('font-semibold');
-    
+
     expect(screen.getByTestId('dialog-description')).toHaveClass('text-sm');
     expect(screen.getByTestId('dialog-description')).toHaveClass('text-muted-foreground');
   });
 
   it('renders with DialogHeader and DialogFooter', () => {
     render(<TestDialog initialOpen={true} />);
-    
+
     // Find header and footer by their content since they're div elements without test ids
     const header = screen.getByText('Dialog Title').closest('div');
     expect(header).toHaveClass('flex');
     expect(header).toHaveClass('flex-col');
-    
+
     const footer = screen.getByText('Save').closest('div');
     expect(footer).toHaveClass('flex');
     expect(footer).toHaveClass('flex-col-reverse');
@@ -201,9 +189,9 @@ describe('Dialog Component', () => {
         </DialogContent>
       </Dialog>
     );
-    
+
     render(<CustomDialog />);
-    
+
     expect(screen.getByTestId('dialog-content')).toHaveClass('custom-content-class');
     expect(screen.getByText('Custom Title').closest('div')).toHaveClass('custom-header-class');
     expect(screen.getByTestId('dialog-title')).toHaveClass('custom-title-class');

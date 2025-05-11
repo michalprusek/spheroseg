@@ -1,8 +1,5 @@
 // Import utility functions from polygon operations
 import {
-  BoundingBox,
-  WorkerRequest,
-  WorkerResponse,
   calculateBoundingBox,
   isPointInPolygon,
   calculateIntersection,
@@ -18,7 +15,6 @@ import {
 
 // Import utility functions from polygon slicing
 import {
-  Polygon,
   getPointSideOfLine,
   calculateLineIntersection,
   distanceToLineSegment,
@@ -28,9 +24,6 @@ import {
 // Import the slicePolygon functions separately
 import { slicePolygon as slicePolygonPoints } from './polygonOperationsUtils';
 import { slicePolygon as slicePolygonObject } from './polygonSlicingUtils';
-
-// Import worker utilities
-import * as polygonWorkerUtils from './polygonWorkerUtils';
 
 // Re-export types
 export type { BoundingBox, WorkerRequest, WorkerResponse } from './polygonOperationsUtils';

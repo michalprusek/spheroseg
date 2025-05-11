@@ -137,7 +137,10 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useParams: vi.fn(() => ({ projectId: 'test-project-id', imageId: 'test-image-id-2' })),
+    useParams: vi.fn(() => ({
+      projectId: 'test-project-id',
+      imageId: 'test-image-id-2',
+    })),
     useNavigate: vi.fn(() => mockNavigate),
   };
 });
@@ -148,15 +151,15 @@ vi.mock('sonner', () => ({
     success: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
-    warning: vi.fn()
-  }
+    warning: vi.fn(),
+  },
 }));
 
 // Mock CanvasV2 component
 vi.mock('../components/canvas/CanvasV2', () => ({
   default: vi.fn(({ onWheel, onMouseDown, onMouseUp, onMouseMove }) => (
-    <div 
-      data-testid="mock-canvas" 
+    <div
+      data-testid="mock-canvas"
       onWheel={onWheel}
       onMouseDown={onMouseDown}
       onMouseUp={onMouseUp}
@@ -169,27 +172,36 @@ vi.mock('../components/canvas/CanvasV2', () => ({
 
 // Mock ToolbarV2 component
 vi.mock('../components/toolbar/ToolbarV2', () => {
-  const MockToolbar = vi.fn(({
-    onZoomIn,
-    onZoomOut,
-    onSave,
-    onUndo,
-    onRedo,
-    onResetView,
-    onResegment,
-    setEditMode
-  }) => (
-    <div data-testid="mock-toolbar">
-      <button data-testid="zoom-in-btn" onClick={onZoomIn}>Zoom In</button>
-      <button data-testid="zoom-out-btn" onClick={onZoomOut}>Zoom Out</button>
-      <button data-testid="save-btn" onClick={onSave}>Save</button>
-      <button data-testid="undo-btn" onClick={onUndo}>Undo</button>
-      <button data-testid="redo-btn" onClick={onRedo}>Redo</button>
-      <button data-testid="reset-view-btn" onClick={onResetView}>Reset View</button>
-      <button data-testid="resegment-btn" onClick={onResegment}>Resegment</button>
-      <button data-testid="edit-mode-btn" onClick={() => setEditMode('CreatePolygon')}>Create Polygon</button>
-    </div>
-  ));
+  const MockToolbar = vi.fn(
+    ({ onZoomIn, onZoomOut, onSave, onUndo, onRedo, onResetView, onResegment, setEditMode }) => (
+      <div data-testid="mock-toolbar">
+        <button data-testid="zoom-in-btn" onClick={onZoomIn}>
+          Zoom In
+        </button>
+        <button data-testid="zoom-out-btn" onClick={onZoomOut}>
+          Zoom Out
+        </button>
+        <button data-testid="save-btn" onClick={onSave}>
+          Save
+        </button>
+        <button data-testid="undo-btn" onClick={onUndo}>
+          Undo
+        </button>
+        <button data-testid="redo-btn" onClick={onRedo}>
+          Redo
+        </button>
+        <button data-testid="reset-view-btn" onClick={onResetView}>
+          Reset View
+        </button>
+        <button data-testid="resegment-btn" onClick={onResegment}>
+          Resegment
+        </button>
+        <button data-testid="edit-mode-btn" onClick={() => setEditMode('CreatePolygon')}>
+          Create Polygon
+        </button>
+      </div>
+    ),
+  );
   return { ToolbarV2: MockToolbar };
 });
 
@@ -207,7 +219,9 @@ vi.mock('../components/keyboard/KeyboardShortcutsHelp', () => ({
   default: vi.fn(({ onClose }) => (
     <div data-testid="mock-keyboard-shortcuts">
       Keyboard Shortcuts Help
-      <button onClick={onClose} data-testid="close-shortcuts-btn">Close</button>
+      <button onClick={onClose} data-testid="close-shortcuts-btn">
+        Close
+      </button>
     </div>
   )),
 }));
@@ -228,18 +242,18 @@ describe('SegmentationPage Component', () => {
     return render(
       <MemoryRouterWrapper initialEntries={['/projects/test-project-id/segmentation/test-image-id-2']}>
         <SegmentationPage />
-      </MemoryRouterWrapper>
+      </MemoryRouterWrapper>,
     );
   };
 
   it('renders the segmentation page correctly', () => {
     renderComponent();
-    
+
     // Check if the toolbar and canvas are rendered
     expect(screen.getByTestId('mock-toolbar')).toBeInTheDocument();
     expect(screen.getByTestId('mock-canvas')).toBeInTheDocument();
     expect(screen.getByTestId('mock-statusbar')).toBeInTheDocument();
-    
+
     // Check project navigation controls
     expect(screen.getByText(/Back to Project/i)).toBeInTheDocument();
   });
@@ -251,28 +265,28 @@ describe('SegmentationPage Component', () => {
       ...originalUseSegmentationV2(),
       isLoading: true,
     });
-    
+
     renderComponent();
-    
+
     // Check if the loading spinner is shown (div with animate-spin class)
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   it('shows keyboard shortcuts when the keyboard button is clicked', async () => {
     renderComponent();
-    
+
     // Find and click the keyboard shortcuts button
     const keyboardButton = screen.getByLabelText(/Toggle Keyboard Shortcuts/i);
     fireEvent.click(keyboardButton);
-    
+
     // Check if the keyboard shortcuts help is displayed
     await waitFor(() => {
       expect(screen.getByTestId('mock-keyboard-shortcuts')).toBeInTheDocument();
     });
-    
+
     // Click the close button
     fireEvent.click(screen.getByTestId('close-shortcuts-btn'));
-    
+
     // Check if the keyboard shortcuts help is closed
     await waitFor(() => {
       expect(screen.queryByTestId('mock-keyboard-shortcuts')).not.toBeInTheDocument();
@@ -287,9 +301,9 @@ describe('SegmentationPage Component', () => {
       imageData: null,
       error: 'Image not found',
     });
-    
+
     renderComponent();
-    
+
     // Check if the error message is displayed
     expect(screen.getByText(/Image Not Found/i)).toBeInTheDocument();
     expect(screen.getByText(/Return to Project/i)).toBeInTheDocument();
@@ -298,11 +312,11 @@ describe('SegmentationPage Component', () => {
 
   it('displays image name and navigation controls', () => {
     renderComponent();
-    
+
     // Check if the image name and navigation info is displayed
     expect(screen.getByText(/image2.jpg/i)).toBeInTheDocument();
     expect(screen.getByText(/2 \/ 3/i)).toBeInTheDocument();
-    
+
     // Check if navigation buttons are present
     expect(screen.getByLabelText(/Previous Image/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Next Image/i)).toBeInTheDocument();
@@ -310,7 +324,7 @@ describe('SegmentationPage Component', () => {
 
   it('handles toolbar actions correctly', () => {
     renderComponent();
-    
+
     // Get all toolbar buttons
     const zoomInBtn = screen.getByTestId('zoom-in-btn');
     const zoomOutBtn = screen.getByTestId('zoom-out-btn');
@@ -320,7 +334,7 @@ describe('SegmentationPage Component', () => {
     const resetViewBtn = screen.getByTestId('reset-view-btn');
     const resegmentBtn = screen.getByTestId('resegment-btn');
     const editModeBtn = screen.getByTestId('edit-mode-btn');
-    
+
     // Test clicking each button
     fireEvent.click(zoomInBtn);
     fireEvent.click(zoomOutBtn);
@@ -330,13 +344,13 @@ describe('SegmentationPage Component', () => {
     fireEvent.click(resetViewBtn);
     fireEvent.click(resegmentBtn);
     fireEvent.click(editModeBtn);
-    
+
     // Get module and check mock functions were called
     const segmentationModule = require('../hooks/segmentation');
-    
+
     // Verify that setTransform was called for zoom in/out
     expect(segmentationModule.useSegmentationV2().setTransform).toHaveBeenCalled();
-    
+
     // Verify other actions
     expect(segmentationModule.useSegmentationV2().handleSave).toHaveBeenCalled();
     expect(segmentationModule.useSegmentationV2().undo).toHaveBeenCalled();
@@ -347,42 +361,46 @@ describe('SegmentationPage Component', () => {
 
   it('handles navigation between images', () => {
     renderComponent();
-    
+
     // Test next image button
     const nextButton = screen.getByLabelText(/Next Image/i);
     fireEvent.click(nextButton);
-    
+
     // Check navigate was called with correct args
-    expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/\/projects\/test-project-id\/segmentation\/test-image-id-3\?t=/));
-    
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringMatching(/\/projects\/test-project-id\/segmentation\/test-image-id-3\?t=/),
+    );
+
     // Test previous image button
     const prevButton = screen.getByLabelText(/Previous Image/i);
     fireEvent.click(prevButton);
-    
+
     // Check navigate was called with correct args
-    expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/\/projects\/test-project-id\/segmentation\/test-image-id-1\?t=/));
-    
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringMatching(/\/projects\/test-project-id\/segmentation\/test-image-id-1\?t=/),
+    );
+
     // Test back to project button
     const backButton = screen.getByText(/Back to Project/i);
     fireEvent.click(backButton);
-    
+
     // Check navigate was called with correct project path
     expect(mockNavigate).toHaveBeenCalledWith('/project/test-project-id');
   });
 
   it('handles canvas events correctly', () => {
     renderComponent();
-    
+
     const canvas = screen.getByTestId('mock-canvas');
-    
+
     // Test mouse events
     fireEvent.mouseDown(canvas);
     fireEvent.mouseMove(canvas);
     fireEvent.mouseUp(canvas);
-    
+
     // Test wheel event
     fireEvent.wheel(canvas, { deltaY: -100 });
-    
+
     // Check event handlers were called
     const segmentationModule = require('../hooks/segmentation');
     expect(segmentationModule.useSegmentationV2().onMouseDown).toHaveBeenCalled();
@@ -397,34 +415,34 @@ describe('SegmentationPage Component', () => {
       images: [],
       loading: true,
     });
-    
+
     renderComponent();
-    
+
     // Check if the loading spinner is shown
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
-  
+
   it('disables navigation buttons appropriately', () => {
     // Mock test-image-id-1 as current (first image)
-    vi.mocked(useParams).mockReturnValueOnce({ 
-      projectId: 'test-project-id', 
-      imageId: 'test-image-id-1' 
+    vi.mocked(useParams).mockReturnValueOnce({
+      projectId: 'test-project-id',
+      imageId: 'test-image-id-1',
     });
-    
+
     renderComponent();
-    
+
     // Previous button should be disabled for first image
     expect(screen.getByLabelText(/Previous Image/i)).toBeDisabled();
     expect(screen.getByLabelText(/Next Image/i)).not.toBeDisabled();
-    
+
     // Mock test-image-id-3 as current (last image)
-    vi.mocked(useParams).mockReturnValueOnce({ 
-      projectId: 'test-project-id', 
-      imageId: 'test-image-id-3' 
+    vi.mocked(useParams).mockReturnValueOnce({
+      projectId: 'test-project-id',
+      imageId: 'test-image-id-3',
     });
-    
+
     renderComponent();
-    
+
     // Next button should be disabled for last image
     expect(screen.getByLabelText(/Previous Image/i)).not.toBeDisabled();
     expect(screen.getByLabelText(/Next Image/i)).toBeDisabled();
@@ -437,7 +455,7 @@ describe('SegmentationPage Component', () => {
       images: [],
       loading: false,
     });
-    
+
     // Mock segmentation hook with error
     const originalUseSegmentationV2 = vi.mocked(require('../hooks/segmentation').useSegmentationV2);
     originalUseSegmentationV2.mockReturnValueOnce({
@@ -445,9 +463,9 @@ describe('SegmentationPage Component', () => {
       imageData: null,
       error: 'No images found in this project',
     });
-    
+
     renderComponent();
-    
+
     // Check if error message is displayed
     expect(screen.getByText(/Image Not Found/i)).toBeInTheDocument();
     expect(screen.getByText('No images found in this project')).toBeInTheDocument();
@@ -455,19 +473,21 @@ describe('SegmentationPage Component', () => {
 
   it('handles keyboard shortcuts through useSegmentationKeyboard hook', () => {
     renderComponent();
-    
+
     // Verify that useSegmentationKeyboard was called with all the necessary handlers
     const useSegmentationKeyboard = vi.mocked(require('../hooks/useSegmentationKeyboard').useSegmentationKeyboard);
-    
-    expect(useSegmentationKeyboard).toHaveBeenCalledWith(expect.objectContaining({
-      onUndo: expect.any(Function),
-      onRedo: expect.any(Function),
-      onSave: expect.any(Function),
-      onDelete: expect.any(Function),
-      onZoomIn: expect.any(Function),
-      onZoomOut: expect.any(Function),
-      onResetView: expect.any(Function)
-    }));
+
+    expect(useSegmentationKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        onUndo: expect.any(Function),
+        onRedo: expect.any(Function),
+        onSave: expect.any(Function),
+        onDelete: expect.any(Function),
+        onZoomIn: expect.any(Function),
+        onZoomOut: expect.any(Function),
+        onResetView: expect.any(Function),
+      }),
+    );
   });
 
   it('handles deletion of selected polygon', () => {
@@ -475,19 +495,20 @@ describe('SegmentationPage Component', () => {
     const originalUseSegmentationV2 = vi.mocked(require('../hooks/segmentation').useSegmentationV2);
     originalUseSegmentationV2.mockReturnValueOnce({
       ...originalUseSegmentationV2(),
-      selectedPolygonId: 'polygon-1'
+      selectedPolygonId: 'polygon-1',
     });
-    
+
     // Get the hooks to test them directly
     renderComponent();
-    
+
     // Get useSegmentationKeyboard call and extract the onDelete handler
-    const useSegmentationKeyboardCalls = vi.mocked(require('../hooks/useSegmentationKeyboard').useSegmentationKeyboard).mock.calls;
+    const useSegmentationKeyboardCalls = vi.mocked(require('../hooks/useSegmentationKeyboard').useSegmentationKeyboard)
+      .mock.calls;
     const { onDelete } = useSegmentationKeyboardCalls[0][0];
-    
+
     // Call the onDelete handler
     onDelete();
-    
+
     // Verify handleDeletePolygon was called
     const segmentationModule = require('../hooks/segmentation');
     expect(segmentationModule.useSegmentationV2().handleDeletePolygon).toHaveBeenCalled();

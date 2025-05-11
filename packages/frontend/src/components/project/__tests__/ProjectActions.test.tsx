@@ -7,26 +7,30 @@ import { BrowserRouter } from 'react-router-dom';
 vi.mock('../ProjectActions', () => ({
   default: () => (
     <div data-testid="project-actions">
-      <button title="projectActions.duplicateTooltip" data-testid="duplicate-button">Duplicate</button>
-      <button title="projectActions.deleteTooltip" data-testid="delete-button">Delete</button>
+      <button title="projectActions.duplicateTooltip" data-testid="duplicate-button">
+        Duplicate
+      </button>
+      <button title="projectActions.deleteTooltip" data-testid="delete-button">
+        Delete
+      </button>
     </div>
-  )
+  ),
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'test-user-id', email: 'test@example.com' },
-    loading: false
+    loading: false,
   }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
-    t: (key: string) => key
+    t: (key: string) => key,
   }),
-  LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+  LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 describe('ProjectActions', () => {
@@ -34,10 +38,14 @@ describe('ProjectActions', () => {
     return render(
       <BrowserRouter>
         <div data-testid="project-actions">
-          <button title="projectActions.duplicateTooltip" data-testid="duplicate-button">Duplicate</button>
-          <button title="projectActions.deleteTooltip" data-testid="delete-button">Delete</button>
+          <button title="projectActions.duplicateTooltip" data-testid="duplicate-button">
+            Duplicate
+          </button>
+          <button title="projectActions.deleteTooltip" data-testid="delete-button">
+            Delete
+          </button>
         </div>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

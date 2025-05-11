@@ -64,14 +64,16 @@ export const StatusBarV2: React.FC<StatusBarV2Props> = ({
         {/* Image Resolution */}
         {imageWidth && imageHeight && (
           <div>
-            <span className="font-medium text-foreground">{t('segmentation.resolution') || 'Resolution'}:</span> {imageWidth} × {imageHeight} px
+            <span className="font-medium text-foreground">{t('segmentation.resolution') || 'Resolution'}:</span>{' '}
+            {imageWidth} × {imageHeight} px
           </div>
         )}
 
         {/* Cursor Position */}
         {imageCoords && (
           <div>
-            <span className="font-medium text-foreground">{t('segmentation.position') || 'Position'}:</span> X: {Math.round(imageCoords.x)}, Y: {Math.round(imageCoords.y)}
+            <span className="font-medium text-foreground">{t('segmentation.position') || 'Position'}:</span> X:{' '}
+            {Math.round(imageCoords.x)}, Y: {Math.round(imageCoords.y)}
           </div>
         )}
 
@@ -84,12 +86,14 @@ export const StatusBarV2: React.FC<StatusBarV2Props> = ({
       <div className="flex items-center space-x-4">
         {/* Selected Polygon */}
         <div>
-          <span className="font-medium text-foreground">{t('segmentation.selected') || 'Selected'}:</span> {selectedPolygonId ? `#${selectedPolygonId.substring(0, 8)}` : t('segmentation.none') || 'None'}
+          <span className="font-medium text-foreground">{t('segmentation.selected') || 'Selected'}:</span>{' '}
+          {selectedPolygonId ? `#${selectedPolygonId.substring(0, 8)}` : t('segmentation.none') || 'None'}
         </div>
 
         {/* Polygon Count */}
         <div>
-          <span className="font-medium text-foreground">{t('segmentation.polygons') || 'Polygons'}:</span> {polygonCount}
+          <span className="font-medium text-foreground">{t('segmentation.polygons') || 'Polygons'}:</span>{' '}
+          {polygonCount}
         </div>
 
         {/* Vertex Count */}

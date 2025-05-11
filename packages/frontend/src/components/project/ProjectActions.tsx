@@ -61,7 +61,7 @@ export function ProjectActions({
   onDelete,
   onShare,
   onExport,
-  onDuplicate
+  onDuplicate,
 }: ProjectActionsProps) {
   const { t } = useLanguage();
 

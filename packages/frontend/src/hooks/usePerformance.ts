@@ -19,14 +19,9 @@ export const usePerformance = (
     measureUnmount?: boolean;
     /** Whether to log performance measurements */
     logMeasurements?: boolean;
-  } = {}
+  } = {},
 ) => {
-  const {
-    measureMount = true,
-    measureRender = true,
-    measureUnmount = true,
-    logMeasurements = true,
-  } = options;
+  const { measureMount = true, measureRender = true, measureUnmount = true, logMeasurements = true } = options;
 
   const renderCount = useRef(0);
   const mountTimeRef = useRef<number | null>(null);
@@ -47,11 +42,7 @@ export const usePerformance = (
     // Mark the end of the render and measure render time
     if (measureRender) {
       markPerformance(`${renderMarkId}-end`);
-      const renderTime = measurePerformance(
-        `${renderMarkId}-duration`,
-        `${renderMarkId}-start`,
-        `${renderMarkId}-end`
-      );
+      const renderTime = measurePerformance(`${renderMarkId}-duration`, `${renderMarkId}-start`, `${renderMarkId}-end`);
 
       if (logMeasurements && renderTime !== null) {
         logger.debug(`${componentName} render time`, {
@@ -94,15 +85,22 @@ export const usePerformance = (
             logger.info(`${componentName} unmounted`, {
               component: componentName,
               unmountTime,
-              totalMountedTime: mountTimeRef.current
-                ? performance.now() - renderStartTimeRef.current
-                : null,
+              totalMountedTime: mountTimeRef.current ? performance.now() - renderStartTimeRef.current : null,
             });
           }
         }, 0);
       }
     };
-  }, [componentName, logMeasurements, measureMount, measureRender, measureUnmount, mountMarkId, renderMarkId, unmountMarkId]);
+  }, [
+    componentName,
+    logMeasurements,
+    measureMount,
+    measureRender,
+    measureUnmount,
+    mountMarkId,
+    renderMarkId,
+    unmountMarkId,
+  ]);
 
   // Return functions to manually measure performance
   return {
@@ -120,11 +118,7 @@ export const usePerformance = (
      * @returns Duration in milliseconds
      */
     measure: (name: string, startMark: string, endMark: string) =>
-      measurePerformance(
-        `${componentName}-${name}`,
-        `${componentName}-${startMark}`,
-        `${componentName}-${endMark}`
-      ),
+      measurePerformance(`${componentName}-${name}`, `${componentName}-${startMark}`, `${componentName}-${endMark}`),
 
     /**
      * Start measuring an operation

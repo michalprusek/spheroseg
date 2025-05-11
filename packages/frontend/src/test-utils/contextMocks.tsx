@@ -9,9 +9,7 @@ import { vi } from 'vitest';
  * Mock for the AuthContext with configurable user state
  */
 export const createAuthContextMock = (authenticated = true) => {
-  const user = authenticated
-    ? { id: 'test-user-id', email: 'test@example.com', name: 'Test User' }
-    : null;
+  const user = authenticated ? { id: 'test-user-id', email: 'test@example.com', name: 'Test User' } : null;
 
   const mockAuthContext = {
     user,

@@ -10,9 +10,9 @@ import UserProfileSection from '@/components/settings/UserProfileSection';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import DashboardHeader from '@/components/DashboardHeader';
 import apiClient from '@/lib/apiClient';
@@ -54,7 +54,7 @@ const Settings = () => {
         console.log('Making API request to /users/me');
 
         // Fetch profile using apiClient with explicit error handling
-        const response = await apiClient.get<UserProfile>('/users/me');
+        const response = await apiClient.get<UserProfile>('/api/users/me');
 
         console.log('Profile fetch successful:', response.status);
         setProfile(response.data);
@@ -70,7 +70,9 @@ const Settings = () => {
           console.error('Error response headers:', error.response.headers);
 
           // Show more specific error message
-          toast.error(`Error fetching profile: ${error.response.status} - ${error.response.data?.message || 'Unknown error'}`);
+          toast.error(
+            `Error fetching profile: ${error.response.status} - ${error.response.data?.message || 'Unknown error'}`,
+          );
         } else if (error.request) {
           // The request was made but no response was received
           console.error('Error request:', error.request);
@@ -99,12 +101,7 @@ const Settings = () => {
       <DashboardHeader />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex items-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mr-4"
-            onClick={() => navigate('/dashboard')}
-          >
+          <Button variant="ghost" size="sm" className="mr-4" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('common.back')}
           </Button>
@@ -113,7 +110,7 @@ const Settings = () => {
 
         {loading && (
           <div className="flex justify-center items-center h-64">
-             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         )}
 
@@ -130,7 +127,7 @@ const Settings = () => {
               {user && profile ? (
                 <UserProfileSection userId={user.id} profile={profile} />
               ) : (
-                 !profile && <div>{t('settings.profileLoadError')}</div>
+                !profile && <div>{t('settings.profileLoadError')}</div>
               )}
             </TabsContent>
 

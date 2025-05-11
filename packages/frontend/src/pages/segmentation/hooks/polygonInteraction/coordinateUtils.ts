@@ -19,7 +19,7 @@ export function getCanvasCoordinates(
   clientY: number,
   rect: { left: number; top: number },
   zoom: number,
-  offset: { x: number; y: number }
+  offset: { x: number; y: number },
 ) {
   const canvasX = clientX - rect.left;
   const canvasY = clientY - rect.top;

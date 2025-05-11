@@ -18,22 +18,22 @@ vi.mock('react-i18next', () => ({
         'project.uploadImages': 'Upload Images',
         'project.loading': 'Loading project...',
         'project.error': 'Error loading project',
-        'common.back': 'Back'
+        'common.back': 'Back',
       };
       return translations[key] || key;
     },
     i18n: {
       changeLanguage: vi.fn(),
-      language: 'en'
-    }
-  })
+      language: 'en',
+    },
+  }),
 }));
 
 // Mock dependencies
 vi.mock('@/lib/apiClient', () => ({
   default: {
-    get: vi.fn()
-  }
+    get: vi.fn(),
+  },
 }));
 
 // Mock react-router-dom hooks
@@ -42,7 +42,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useParams: () => ({ projectId: 'test-project-id' }),
-    useNavigate: () => vi.fn()
+    useNavigate: () => vi.fn(),
   };
 });
 
@@ -57,13 +57,13 @@ describe('ProjectDetailsPage Component', () => {
             title: 'Test Project',
             description: 'Test Description',
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
+            updated_at: new Date().toISOString(),
+          },
         });
       }
       if (url.includes('/projects/test-project-id/images')) {
         return Promise.resolve({
-          data: []
+          data: [],
         });
       }
       return Promise.resolve({ data: {} });
@@ -86,7 +86,7 @@ describe('ProjectDetailsPage Component', () => {
             </LanguageProvider>
           </ProfileProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

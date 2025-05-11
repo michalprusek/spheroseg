@@ -15,20 +15,20 @@ jest.mock('../config', () => ({
   default: {
     auth: {
       jwtSecret: 'test-secret-key',
-      tokenSecurityMode: 'standard'
+      tokenSecurityMode: 'standard',
     },
     server: {
       port: 3000,
-      origin: '*'
+      origin: '*',
     },
     db: {
       host: 'localhost',
       port: 5432,
       database: 'test_db',
       user: 'test_user',
-      password: 'test_password'
-    }
-  }
+      password: 'test_password',
+    },
+  },
 }));
 
 // Mock Database Pool
@@ -36,9 +36,9 @@ jest.mock('../db', () => ({
   __esModule: true,
   default: {
     query: jest.fn().mockImplementation(() => Promise.resolve({ rows: [] })),
-    end: jest.fn().mockImplementation(() => Promise.resolve())
+    end: jest.fn().mockImplementation(() => Promise.resolve()),
   },
-  query: jest.fn().mockImplementation(() => Promise.resolve({ rows: [] }))
+  query: jest.fn().mockImplementation(() => Promise.resolve({ rows: [] })),
 }));
 
 // Mock JWT
@@ -46,10 +46,13 @@ jest.mock('jsonwebtoken', () => ({
   sign: jest.fn().mockReturnValue('mock-token'),
   verify: jest.fn().mockImplementation((token) => {
     if (token === 'mock-valid-token') {
-      return { id: '00000000-0000-0000-0000-000000000000', email: 'test@example.com' };
+      return {
+        id: '00000000-0000-0000-0000-000000000000',
+        email: 'test@example.com',
+      };
     }
     throw new Error('Invalid token');
-  })
+  }),
 }));
 
 // Mock the server app
@@ -65,7 +68,7 @@ mockApp.use((req, res, next) => {
     if (token === 'mock-valid-token') {
       (req as any).user = {
         userId: '00000000-0000-0000-0000-000000000000',
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
     }
   }
@@ -104,14 +107,17 @@ const authMiddleware = (req: express.Request, res: express.Response, next: expre
 
 // User routes
 mockApp.get('/api/users/profile', authMiddleware, (req, res) => {
-  res.status(200).json({ id: '00000000-0000-0000-0000-000000000000', email: 'test@example.com' });
+  res.status(200).json({
+    id: '00000000-0000-0000-0000-000000000000',
+    email: 'test@example.com',
+  });
 });
 
 mockApp.get('/api/users/me/statistics', authMiddleware, (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     projects: 5,
     images: 10,
-    segmentations: 8 
+    segmentations: 8,
   });
 });
 
@@ -189,7 +195,7 @@ const app = mockApp;
 const mockUser = {
   id: '00000000-0000-0000-0000-000000000000',
   email: 'test@example.com',
-  username: 'testuser'
+  username: 'testuser',
 };
 
 // Generate a valid JWT token for testing
@@ -216,9 +222,7 @@ afterAll(async () => {
 describe('Authentication Endpoints', () => {
   describe('POST /api/auth/login', () => {
     it('should return 400 for invalid input', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({ email: 'invalid-email', password: '123' });
+      const response = await request(app).post('/api/auth/login').send({ email: 'invalid-email', password: '123' });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('errors');
@@ -230,13 +234,11 @@ describe('Authentication Endpoints', () => {
 
   describe('POST /api/auth/register', () => {
     it('should return 400 for invalid input', async () => {
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send({
-          email: 'invalid-email',
-          password: '123',
-          username: 'test'
-        });
+      const response = await request(app).post('/api/auth/register').send({
+        email: 'invalid-email',
+        password: '123',
+        username: 'test',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('errors');
@@ -250,16 +252,13 @@ describe('Protected Endpoints', () => {
   // Test middleware authentication
   describe('Authentication Middleware', () => {
     it('should return 401 when no token is provided', async () => {
-      const response = await request(app)
-        .get('/api/users/profile');
+      const response = await request(app).get('/api/users/profile');
 
       expect(response.status).toBe(401);
     });
 
     it('should return 401 when invalid token is provided', async () => {
-      const response = await request(app)
-        .get('/api/users/profile')
-        .set('Authorization', 'Bearer invalid-token');
+      const response = await request(app).get('/api/users/profile').set('Authorization', 'Bearer invalid-token');
 
       expect(response.status).toBe(401);
     });
@@ -269,9 +268,7 @@ describe('Protected Endpoints', () => {
 
       // This test will still fail if the endpoint requires database access
       // But it tests that the auth middleware accepts the token
-      const response = await request(app)
-        .get('/api/users/profile')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await request(app).get('/api/users/profile').set('Authorization', `Bearer ${token}`);
 
       // We expect either 200 (success) or 404/500 (database error)
       // But not 401 (unauthorized)
@@ -285,16 +282,13 @@ describe('Project Endpoints', () => {
 
   describe('GET /api/projects', () => {
     it('should require authentication', async () => {
-      const response = await request(app)
-        .get('/api/projects');
+      const response = await request(app).get('/api/projects');
 
       expect(response.status).toBe(401);
     });
 
     it('should return projects with valid token', async () => {
-      const response = await request(app)
-        .get('/api/projects')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await request(app).get('/api/projects').set('Authorization', `Bearer ${token}`);
 
       // Since we're not mocking the database, we can't guarantee success
       // But we can check that authentication worked
@@ -304,9 +298,7 @@ describe('Project Endpoints', () => {
 
   describe('POST /api/projects', () => {
     it('should require authentication', async () => {
-      const response = await request(app)
-        .post('/api/projects')
-        .send({ name: 'Test Project' });
+      const response = await request(app).post('/api/projects').send({ name: 'Test Project' });
 
       expect(response.status).toBe(401);
     });
@@ -329,8 +321,7 @@ describe('Image Endpoints', () => {
 
   describe('GET /api/projects/:projectId/images', () => {
     it('should require authentication', async () => {
-      const response = await request(app)
-        .get(`/api/projects/${projectId}/images`);
+      const response = await request(app).get(`/api/projects/${projectId}/images`);
 
       expect(response.status).toBe(401);
     });
@@ -359,8 +350,7 @@ describe('Image Endpoints', () => {
     const imageId = '00000000-0000-0000-0000-000000000001'; // Mock image ID
 
     it('should require authentication', async () => {
-      const response = await request(app)
-        .get(`/api/projects/${projectId}/images/${imageId}`);
+      const response = await request(app).get(`/api/projects/${projectId}/images/${imageId}`);
 
       expect(response.status).toBe(401);
     });
@@ -379,8 +369,7 @@ describe('Image Endpoints', () => {
     const imageId = '00000000-0000-0000-0000-000000000001'; // Mock image ID
 
     it('should require authentication', async () => {
-      const response = await request(app)
-        .delete(`/api/projects/${projectId}/images/${imageId}`);
+      const response = await request(app).delete(`/api/projects/${projectId}/images/${imageId}`);
 
       expect(response.status).toBe(401);
     });
@@ -403,9 +392,7 @@ describe('Segmentation Endpoints', () => {
 
   describe('POST /api/segmentation/trigger', () => {
     it('should require authentication', async () => {
-      const response = await request(app)
-        .post('/api/segmentation/trigger')
-        .send({ imageId });
+      const response = await request(app).post('/api/segmentation/trigger').send({ imageId });
 
       expect(response.status).toBe(401);
     });
@@ -423,9 +410,7 @@ describe('Segmentation Endpoints', () => {
 
   describe('POST /api/segmentation/batch-trigger', () => {
     it('should require authentication', async () => {
-      const response = await request(app)
-        .post('/api/segmentation/batch-trigger')
-        .send({ projectId });
+      const response = await request(app).post('/api/segmentation/batch-trigger').send({ projectId });
 
       expect(response.status).toBe(401);
     });
@@ -443,16 +428,13 @@ describe('Segmentation Endpoints', () => {
 
   describe('GET /api/segmentation/status', () => {
     it('should require authentication', async () => {
-      const response = await request(app)
-        .get('/api/segmentation/status');
+      const response = await request(app).get('/api/segmentation/status');
 
       expect(response.status).toBe(401);
     });
 
     it('should return queue status with valid token', async () => {
-      const response = await request(app)
-        .get('/api/segmentation/status')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await request(app).get('/api/segmentation/status').set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('queueLength');
@@ -498,16 +480,13 @@ describe('User Endpoints', () => {
 
   describe('GET /api/users/profile', () => {
     it('should require authentication', async () => {
-      const response = await request(app)
-        .get('/api/users/profile');
+      const response = await request(app).get('/api/users/profile');
 
       expect(response.status).toBe(401);
     });
 
     it('should return user profile with valid token', async () => {
-      const response = await request(app)
-        .get('/api/users/profile')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await request(app).get('/api/users/profile').set('Authorization', `Bearer ${token}`);
 
       // Since we're not mocking the database, we can't guarantee success
       // But we can check that authentication worked
@@ -517,16 +496,13 @@ describe('User Endpoints', () => {
 
   describe('GET /api/users/me/statistics', () => {
     it('should require authentication', async () => {
-      const response = await request(app)
-        .get('/api/users/me/statistics');
+      const response = await request(app).get('/api/users/me/statistics');
 
       expect(response.status).toBe(401);
     });
 
     it('should return user statistics with valid token', async () => {
-      const response = await request(app)
-        .get('/api/users/me/statistics')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await request(app).get('/api/users/me/statistics').set('Authorization', `Bearer ${token}`);
 
       // Since we're not mocking the database, we can't guarantee success
       // But we can check that authentication worked
@@ -536,9 +512,7 @@ describe('User Endpoints', () => {
 
   describe('PUT /api/users/profile', () => {
     it('should require authentication', async () => {
-      const response = await request(app)
-        .put('/api/users/profile')
-        .send({ username: 'newusername' });
+      const response = await request(app).put('/api/users/profile').send({ username: 'newusername' });
 
       expect(response.status).toBe(401);
     });
@@ -558,8 +532,7 @@ describe('User Endpoints', () => {
 describe('Status Endpoint', () => {
   describe('GET /api/status', () => {
     it('should return server status', async () => {
-      const response = await request(app)
-        .get('/api/status');
+      const response = await request(app).get('/api/status');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('status');

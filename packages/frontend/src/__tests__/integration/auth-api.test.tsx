@@ -9,20 +9,20 @@ const mockUser = {
   email: 'test@example.com',
   name: 'Test User',
   role: 'user',
-  createdAt: '2023-05-15T10:00:00Z'
+  createdAt: '2023-05-15T10:00:00Z',
 };
 
 const mockLoginResponse = {
   user: mockUser,
   token: 'mock-jwt-token',
   refreshToken: 'mock-refresh-token',
-  expiresIn: 3600
+  expiresIn: 3600,
 };
 
 const mockRegisterData = {
   email: 'new@example.com',
   password: 'Password123!',
-  name: 'New User'
+  name: 'New User',
 };
 
 describe('Auth API Integration Tests', () => {
@@ -46,13 +46,13 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               login: {
                 data: mockLoginResponse,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let response;
@@ -72,17 +72,19 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               login: {
                 error: new Error('Invalid email or password'),
-                status: 401
-              }
+                status: 401,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
-        await expect(result.current.login('wrong@example.com', 'wrongpassword')).rejects.toThrow('Invalid email or password');
+        await expect(result.current.login('wrong@example.com', 'wrongpassword')).rejects.toThrow(
+          'Invalid email or password',
+        );
       });
 
       expect(localStorage.getItem('authToken')).toBeNull();
@@ -96,13 +98,13 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               login: {
                 error: new Error('Internal server error'),
-                status: 500
-              }
+                status: 500,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -118,7 +120,7 @@ describe('Auth API Integration Tests', () => {
         email: mockRegisterData.email,
         name: mockRegisterData.name,
         role: 'user',
-        createdAt: '2023-06-20T12:00:00Z'
+        createdAt: '2023-06-20T12:00:00Z',
       };
 
       const { result } = renderHook(() => useAuthApi(), {
@@ -127,13 +129,13 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               register: {
                 data: { user: mockNewUser },
-                status: 201
-              }
+                status: 201,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let response;
@@ -153,17 +155,22 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               register: {
                 error: new Error('Email already in use'),
-                status: 409
-              }
+                status: 409,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
-        await expect(result.current.register({ ...mockRegisterData, email: 'existing@example.com' })).rejects.toThrow('Email already in use');
+        await expect(
+          result.current.register({
+            ...mockRegisterData,
+            email: 'existing@example.com',
+          }),
+        ).rejects.toThrow('Email already in use');
       });
     });
 
@@ -174,17 +181,19 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               register: {
                 error: new Error('Password must be at least 8 characters'),
-                status: 400
-              }
+                status: 400,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
-        await expect(result.current.register({ ...mockRegisterData, password: '123' })).rejects.toThrow('Password must be at least 8 characters');
+        await expect(result.current.register({ ...mockRegisterData, password: '123' })).rejects.toThrow(
+          'Password must be at least 8 characters',
+        );
       });
     });
   });
@@ -194,7 +203,7 @@ describe('Auth API Integration Tests', () => {
       const newTokenResponse = {
         token: 'new-jwt-token',
         refreshToken: 'new-refresh-token',
-        expiresIn: 3600
+        expiresIn: 3600,
       };
 
       // Set up initial tokens
@@ -207,13 +216,13 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               refreshToken: {
                 data: newTokenResponse,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let response;
@@ -235,13 +244,13 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               refreshToken: {
                 error: new Error('Invalid refresh token'),
-                status: 401
-              }
+                status: 401,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -266,13 +275,13 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               logout: {
                 data: { success: true },
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -294,13 +303,13 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               logout: {
                 error: new Error('Network error'),
-                status: 500
-              }
+                status: 500,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -324,13 +333,13 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               getCurrentUser: {
                 data: { user: mockUser },
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let user;
@@ -349,13 +358,13 @@ describe('Auth API Integration Tests', () => {
             mockResponses={{
               getCurrentUser: {
                 error: new Error('Unauthorized'),
-                status: 401
-              }
+                status: 401,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {

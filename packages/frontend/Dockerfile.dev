@@ -1,0 +1,44 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Add build dependencies
+RUN apk add --no-cache python3 make g++
+
+# Expose port 3000
+EXPOSE 3000
+
+# Set up environment for development
+ENV NODE_ENV=development
+
+# Create Tailwind and PostCSS config files
+RUN echo 'module.exports = { plugins: { tailwindcss: {}, autoprefixer: {}, } }' > /app/postcss.config.cjs && \
+    echo '/** @type {import("tailwindcss").Config} */ \n\
+module.exports = { \n\
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"], \n\
+  theme: { extend: {} }, \n\
+  plugins: [], \n\
+}' > /app/tailwind.config.cjs
+
+# Set up environment variables
+ENV VITE_ASSETS_URL=http://assets
+
+# Set default command to run the app
+CMD ["sh", "-c", "echo 'Setting up application...' && \
+     mkdir -p node_modules/@spheroseg && \
+     rm -rf node_modules/@spheroseg/shared node_modules/@spheroseg/types && \
+     ln -sf /app/shared node_modules/@spheroseg/shared && \
+     ln -sf /app/types node_modules/@spheroseg/types && \
+     echo 'Setting up environment variables...' && \
+     echo 'VITE_API_URL=http://backend:5001' > .env.local && \
+     echo 'VITE_API_BASE_URL=' >> .env.local && \
+     echo 'VITE_API_AUTH_PREFIX=/auth' >> .env.local && \
+     echo 'VITE_API_USERS_PREFIX=/users' >> .env.local && \
+     echo 'VITE_API_PROXY_ENABLED=true' >> .env.local && \
+     echo 'VITE_DOCKER_ENV=true' >> .env.local && \
+     echo 'VITE_ASSETS_URL=http://assets:80' >> .env.local && \
+     rm -f postcss.config.js && \
+     echo 'Installing dependencies...' && \
+     npm install --legacy-peer-deps && \
+     echo 'Starting Vite development server...' && \
+     npm run dev -- --host 0.0.0.0"]

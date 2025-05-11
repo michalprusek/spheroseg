@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 // Use types from @/types
 import { Project } from '@/types';
@@ -30,152 +30,155 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
   const [error, setError] = useState<string | null>(null);
 
   // Updated fetchProjects to handle pagination and total count
-  const fetchProjects = useCallback(async (limit: number = 10, offset: number = 0) => {
-    if (!user?.id) {
-      setError("User not authenticated.");
-      setLoading(false);
-      return;
-    }
+  const fetchProjects = useCallback(
+    async (limit: number = 10, offset: number = 0) => {
+      if (!user?.id) {
+        setError('User not authenticated.');
+        setLoading(false);
+        return;
+      }
 
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
 
-    try {
-      console.log(`Fetching projects for user ${user.id}, limit: ${limit}, offset: ${offset}`);
-
-      // Create the API request with a timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.warn("Projects API request timed out, aborting");
-        controller.abort('timeout');
-      }, 30000); // 30 second timeout - gives server more time to respond
-      
       try {
-        // Make API request with abort signal and increased timeout
-        const response = await apiClient.get<ProjectsApiResponse>('/projects', {
-          params: { limit, offset },
-          signal: controller.signal,
-          timeout: 30000,
-          // Force refresh for every request to ensure we have the latest data
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'If-None-Match': Math.random().toString()
-          }
-        });
-        
-        // Clear the timeout since we got a response
-        clearTimeout(timeoutId);
-        
-        // Log the full response for debugging
-        console.log('Projects API response:', response.data);
+        console.log(`Fetching projects for user ${user.id}, limit: ${limit}, offset: ${offset}`);
 
-        // Handle different response formats flexibly
-        let fetchedProjects: Project[] = [];
-        let total = 0;
+        // Create the API request with a timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.warn('Projects API request timed out, aborting');
+          controller.abort('timeout');
+        }, 30000); // 30 second timeout - gives server more time to respond
 
-        if (response.data) {
-          // Check if the response has the expected structure
-          if (response.data.projects && Array.isArray(response.data.projects)) {
-            fetchedProjects = response.data.projects;
-            total = response.data.total || 0;
-          }
-          // Fallback: if response is an array, assume it's the projects array
-          else if (Array.isArray(response.data)) {
-            fetchedProjects = response.data;
-            total = response.data.length;
-          }
-          // Fallback: if response is an object with results property (alternative API format)
-          else if (response.data.results && Array.isArray(response.data.results)) {
-            fetchedProjects = response.data.results;
-            total = response.data.count || response.data.results.length;
-          }
-        }
-
-        // Process the projects regardless of source format
-        if (fetchedProjects.length > 0) {
-          // Process thumbnails intelligently
-          const processedProjects = fetchedProjects.map(proj => {
-            // Handle both object formats and perform null checks
-            const project = { ...proj };
-
-            // Handle name/title mapping - frontend expects title but backend uses name
-            if (project.name && !project.title) {
-              project.title = project.name;
-            } else if (project.title && !project.name) {
-              project.name = project.title;
-            }
-
-            // Handle thumbnail URLs properly
-            if (project.thumbnail_url) {
-              // If it's already a full URL, don't modify
-              if (project.thumbnail_url.startsWith('http')) {
-                // No changes needed
-              }
-              // If it's a relative path, make it absolute
-              else {
-                project.thumbnail_url = `${window.location.origin}/${project.thumbnail_url.replace(/^\/+/, '')}`;
-              }
-            } else if (project.thumbnailUrl) {
-              // Handle alternative property name
-              project.thumbnail_url = project.thumbnailUrl;
-              delete project.thumbnailUrl;
-            }
-
-            // Ensure required properties exist
-            project.image_count = project.image_count ?? 0;
-            project.description = project.description ?? '';
-
-            return project;
+        try {
+          // Make API request with abort signal and increased timeout
+          const response = await apiClient.get<ProjectsApiResponse>('/api/projects', {
+            params: { limit, offset },
+            signal: controller.signal,
+            timeout: 30000,
+            // Force refresh for every request to ensure we have the latest data
+            headers: {
+              'Cache-Control': 'no-cache',
+              Pragma: 'no-cache',
+              'If-None-Match': Math.random().toString(),
+            },
           });
 
-          console.log('Processed projects:', processedProjects);
-          setProjects(processedProjects);
-        } else {
-          console.warn("No projects found in response:", response.data);
-          setProjects([]);
+          // Clear the timeout since we got a response
+          clearTimeout(timeoutId);
+
+          // Log the full response for debugging
+          console.log('Projects API response:', response.data);
+
+          // Handle different response formats flexibly
+          let fetchedProjects: Project[] = [];
+          let total = 0;
+
+          if (response.data) {
+            // Check if the response has the expected structure
+            if (response.data.projects && Array.isArray(response.data.projects)) {
+              fetchedProjects = response.data.projects;
+              total = response.data.total || 0;
+            }
+            // Fallback: if response is an array, assume it's the projects array
+            else if (Array.isArray(response.data)) {
+              fetchedProjects = response.data;
+              total = response.data.length;
+            }
+            // Fallback: if response is an object with results property (alternative API format)
+            else if (response.data.results && Array.isArray(response.data.results)) {
+              fetchedProjects = response.data.results;
+              total = response.data.count || response.data.results.length;
+            }
+          }
+
+          // Process the projects regardless of source format
+          if (fetchedProjects.length > 0) {
+            // Process thumbnails intelligently
+            const processedProjects = fetchedProjects.map((proj) => {
+              // Handle both object formats and perform null checks
+              const project = { ...proj };
+
+              // Handle name/title mapping - frontend expects title but backend uses name
+              if (project.name && !project.title) {
+                project.title = project.name;
+              } else if (project.title && !project.name) {
+                project.name = project.title;
+              }
+
+              // Handle thumbnail URLs properly
+              if (project.thumbnail_url) {
+                // If it's already a full URL, don't modify
+                if (project.thumbnail_url.startsWith('http')) {
+                  // No changes needed
+                }
+                // If it's a relative path, make it absolute
+                else {
+                  project.thumbnail_url = `${window.location.origin}/${project.thumbnail_url.replace(/^\/+/, '')}`;
+                }
+              } else if (project.thumbnailUrl) {
+                // Handle alternative property name
+                project.thumbnail_url = project.thumbnailUrl;
+                delete project.thumbnailUrl;
+              }
+
+              // Ensure required properties exist
+              project.image_count = project.image_count ?? 0;
+              project.description = project.description ?? '';
+
+              return project;
+            });
+
+            console.log('Processed projects:', processedProjects);
+            setProjects(processedProjects);
+          } else {
+            console.warn('No projects found in response:', response.data);
+            setProjects([]);
+          }
+
+          setTotalProjects(total);
+        } catch (error) {
+          // Re-throw the error to be handled by the outer try/catch
+          throw error;
+        } finally {
+          // Always clear the timeout to prevent memory leaks
+          clearTimeout(timeoutId);
+        }
+      } catch (err: unknown) {
+        let message = 'Failed to fetch projects';
+
+        if (axios.isAxiosError(err)) {
+          if (err.name === 'AbortError' || err.message.includes('aborted')) {
+            message = 'Request timed out. Please try again later.';
+          } else {
+            message = err.response?.data?.message || message;
+          }
+
+          // Show more detailed error info in console for debugging
+          console.error('Error details:', {
+            status: err.response?.status,
+            statusText: err.response?.statusText,
+            data: err.response?.data,
+            message: err.message,
+          });
+        } else if (err instanceof Error) {
+          message = err.message;
         }
 
-        setTotalProjects(total);
-      } catch (error) {
-        // Re-throw the error to be handled by the outer try/catch
-        throw error;
+        console.error('Error fetching projects:', err);
+        setError(message);
+        toast.error(message);
+
+        // Don't use fallback data anymore - show the error state instead
+        setProjects([]);
+        setTotalProjects(0);
       } finally {
-        // Always clear the timeout to prevent memory leaks
-        clearTimeout(timeoutId);
+        setLoading(false);
       }
-    } catch (err: unknown) {
-      let message = 'Failed to fetch projects';
-      
-      if (axios.isAxiosError(err)) {
-        if (err.name === 'AbortError' || err.message.includes('aborted')) {
-          message = 'Request timed out. Please try again later.';
-        } else {
-          message = err.response?.data?.message || message;
-        }
-        
-        // Show more detailed error info in console for debugging
-        console.error("Error details:", {
-          status: err.response?.status,
-          statusText: err.response?.statusText,
-          data: err.response?.data,
-          message: err.message
-        });
-      } else if (err instanceof Error) {
-        message = err.message;
-      }
-      
-      console.error("Error fetching projects:", err);
-      setError(message);
-      toast.error(message);
-      
-      // Don't use fallback data anymore - show the error state instead
-      setProjects([]);
-      setTotalProjects(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
+    },
+    [user?.id],
+  );
 
   // Remove fetchTotalProjects function
   // const fetchTotalProjects = useCallback(async () => { ... }, [user?.id]);

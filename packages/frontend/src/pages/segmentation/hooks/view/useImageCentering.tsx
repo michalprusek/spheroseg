@@ -10,7 +10,7 @@ export const useImageCentering = (
   setZoom: (zoom: number) => void,
   setOffset: (offset: { x: number; y: number }) => void,
   MIN_ZOOM: number,
-  MAX_ZOOM: number
+  MAX_ZOOM: number,
 ) => {
   // Center the image in the canvas with size adjustment
   const centerImage = useCallback(() => {
@@ -50,8 +50,8 @@ export const useImageCentering = (
       // This places the image exactly in the center of the canvas
       // For CSS transform: translate(${offset.x * zoom}px, ${offset.y * zoom}px) scale(${zoom})
       // We need to calculate offset in image coordinates
-      const centerOffsetX = (containerWidth / 2 / newZoom) - (img.width / 2);
-      const centerOffsetY = (containerHeight / 2 / newZoom) - (img.height / 2);
+      const centerOffsetX = containerWidth / 2 / newZoom - img.width / 2;
+      const centerOffsetY = containerHeight / 2 / newZoom - img.height / 2;
 
       // Alternative calculation for verification
       const altCenterOffsetX = (containerWidth - img.width * newZoom) / (2 * newZoom);
@@ -65,7 +65,7 @@ export const useImageCentering = (
         centerOffset: { x: centerOffsetX, y: centerOffsetY },
         altCenterOffset: { x: altCenterOffsetX, y: altCenterOffsetY },
         imageCenter: { x: img.width / 2, y: img.height / 2 },
-        containerCenter: { x: containerWidth / 2, y: containerHeight / 2 }
+        containerCenter: { x: containerWidth / 2, y: containerHeight / 2 },
       });
 
       // Verify the centering calculation
@@ -79,12 +79,15 @@ export const useImageCentering = (
       const imageCenterOnScreenY = (imageCenterY + centerOffsetY) * newZoom;
 
       console.log('[CENTER IMAGE] Verification:', {
-        imageCenterOnScreen: { x: imageCenterOnScreenX, y: imageCenterOnScreenY },
+        imageCenterOnScreen: {
+          x: imageCenterOnScreenX,
+          y: imageCenterOnScreenY,
+        },
         screenCenter: { x: screenCenterX, y: screenCenterY },
         difference: {
           x: Math.abs(imageCenterOnScreenX - screenCenterX),
-          y: Math.abs(imageCenterOnScreenY - screenCenterY)
-        }
+          y: Math.abs(imageCenterOnScreenY - screenCenterY),
+        },
       });
 
       setZoom(newZoom);

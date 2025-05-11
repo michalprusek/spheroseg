@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import Features from "@/components/Features";
-import About from "@/components/About";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useEffect } from 'react';
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/Hero';
+import Features from '@/components/Features';
+import About from '@/components/About';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Index = () => {
-  const { t } = useLanguage();
+  useLanguage();
 
   useEffect(() => {
     const observerOptions = {
       threshold: 0.1,
-      rootMargin: "0px 0px -100px 0px"
+      rootMargin: '0px 0px -100px 0px',
     };
 
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add('active');
         }
@@ -23,12 +23,12 @@ const Index = () => {
     }, observerOptions);
 
     const animatedElements = document.querySelectorAll('.animate-on-scroll');
-    animatedElements.forEach(element => {
+    animatedElements.forEach((element) => {
       observer.observe(element);
     });
 
     return () => {
-      animatedElements.forEach(element => {
+      animatedElements.forEach((element) => {
         observer.unobserve(element);
       });
     };
@@ -41,6 +41,7 @@ const Index = () => {
         <Hero />
         <Features />
         <About />
+        {/* <ImageTest /> */}
       </main>
     </div>
   );

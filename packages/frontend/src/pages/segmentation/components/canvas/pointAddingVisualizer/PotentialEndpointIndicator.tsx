@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Point } from '@/lib/segmentation';
 import { getPointRadius, getStrokeWidth, getColors } from './visualizationUtils';
@@ -7,9 +6,9 @@ interface PotentialEndpointIndicatorProps {
   selectedVertexIndex: number | null;
   polygonPoints: Point[] | null;
   hoveredSegment: {
-    polygonId: string | null,
-    segmentIndex: number | null,
-    projectedPoint: Point | null
+    polygonId: string | null;
+    segmentIndex: number | null;
+    projectedPoint: Point | null;
   };
   zoom: number;
 }
@@ -17,11 +16,11 @@ interface PotentialEndpointIndicatorProps {
 /**
  * Komponenta pro zobrazení potenciálních koncových bodů
  */
-const PotentialEndpointIndicator = ({ 
-  selectedVertexIndex, 
-  polygonPoints, 
-  hoveredSegment, 
-  zoom 
+const PotentialEndpointIndicator = ({
+  selectedVertexIndex,
+  polygonPoints,
+  hoveredSegment,
+  zoom,
 }: PotentialEndpointIndicatorProps) => {
   if (selectedVertexIndex === null || !polygonPoints) {
     return null;
@@ -36,14 +35,14 @@ const PotentialEndpointIndicator = ({
       {polygonPoints.map((point, index) => {
         // Nezobrazujeme počáteční bod znovu
         if (index === selectedVertexIndex) return null;
-        
+
         // Zvýraznění bodu pod kurzorem
         const isHovered = hoveredSegment.segmentIndex === index;
-        
+
         // Použijeme různé styly podle toho, zda je bod pod kurzorem nebo ne
         const fillColor = isHovered ? colors.hoverPoint.fill : colors.potentialEndpoint.fill;
         const strokeColor = isHovered ? colors.hoverPoint.stroke : colors.potentialEndpoint.stroke;
-        
+
         return (
           <g key={`potential-endpoint-${index}`}>
             {/* Pulzující efekt pro bod pod kurzorem */}
@@ -57,7 +56,7 @@ const PotentialEndpointIndicator = ({
                 style={{ pointerEvents: 'none' }}
               />
             )}
-            
+
             {/* Samotný bod */}
             <circle
               cx={point.x}

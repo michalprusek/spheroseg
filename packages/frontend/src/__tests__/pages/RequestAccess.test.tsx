@@ -10,15 +10,15 @@ import { TestRouterWrapper } from '@/test-utils/react-router-wrapper';
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
-    error: vi.fn()
-  }
+    error: vi.fn(),
+  },
 }));
 
 // Mock the API client
 vi.mock('@/lib/apiClient', () => ({
   default: {
-    post: vi.fn()
-  }
+    post: vi.fn(),
+  },
 }));
 
 // Create a mock RequestAccess component for testing
@@ -33,7 +33,8 @@ const MockRequestAccess = ({ language = 'en', onSubmit = vi.fn() }) => {
   const translations: Record<string, Record<string, string>> = {
     en: {
       title: 'Request Access to Spheroid Segmentation Platform',
-      subtitle: 'Fill out the form below to request access to our platform. We will review your request and get back to you soon.',
+      subtitle:
+        'Fill out the form below to request access to our platform. We will review your request and get back to you soon.',
       emailLabel: 'Your Email Address',
       nameLabel: 'Your Name',
       organizationLabel: 'Institution/Company',
@@ -47,23 +48,23 @@ const MockRequestAccess = ({ language = 'en', onSubmit = vi.fn() }) => {
       signIn: 'Sign In',
       successTitle: 'Request Received',
       successMessage: 'Thank you for your interest in the Spheroid Segmentation Platform.',
-      successDetails: 'We will review your request and contact you soon.'
+      successDetails: 'We will review your request and contact you soon.',
     },
     cs: {
       title: 'Požádat o přístup k platformě',
       subtitle: 'Vyplňte formulář níže pro žádost o přístup k naší platformě.',
-      submitButton: 'Odeslat žádost'
+      submitButton: 'Odeslat žádost',
     },
     de: {
       title: 'Zugang zur Spheroid-Segmentierungsplattform beantragen',
       subtitle: 'Füllen Sie das Formular aus, um Zugang zu unserer Plattform zu beantragen.',
-      submitButton: 'Anfrage senden'
+      submitButton: 'Anfrage senden',
     },
     zh: {
       title: '请求访问类器官分割平台',
       subtitle: '填写下面的表格申请访问我们的平台。',
-      submitButton: '提交请求'
-    }
+      submitButton: '提交请求',
+    },
   };
 
   const t = translations[language] || translations.en;
@@ -106,24 +107,12 @@ const MockRequestAccess = ({ language = 'en', onSubmit = vi.fn() }) => {
         <form onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email">{t.emailLabel} *</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
 
           <div>
             <label htmlFor="name">{t.nameLabel} *</label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+            <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
 
           <div>
@@ -138,24 +127,21 @@ const MockRequestAccess = ({ language = 'en', onSubmit = vi.fn() }) => {
 
           <div>
             <label htmlFor="reason">{t.reasonLabel} *</label>
-            <textarea
-              id="reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              required
-              rows={4}
-            />
+            <textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} required rows={4} />
           </div>
 
           <p>
-            {t.termsAgreement} <a href="/terms-of-service">{t.termsOfService}</a> {t.and} <a href="/privacy-policy">{t.privacyPolicy}</a>
+            {t.termsAgreement} <a href="/terms-of-service">{t.termsOfService}</a> {t.and}{' '}
+            <a href="/privacy-policy">{t.privacyPolicy}</a>
           </p>
 
           <button type="submit">{t.submitButton}</button>
         </form>
 
         <div>
-          <p>{t.alreadyHaveAccount} <a href="/sign-in">{t.signIn}</a></p>
+          <p>
+            {t.alreadyHaveAccount} <a href="/sign-in">{t.signIn}</a>
+          </p>
         </div>
       </div>
     </div>
@@ -164,14 +150,16 @@ const MockRequestAccess = ({ language = 'en', onSubmit = vi.fn() }) => {
 
 // Mock the RequestAccess component
 vi.mock('@/pages/RequestAccess', () => ({
-  default: ({ language }: any) => <MockRequestAccess language={language} onSubmit={apiClient.post} />
+  default: ({ language }: any) => <MockRequestAccess language={language} onSubmit={apiClient.post} />,
 }));
 
 describe('RequestAccess Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset the mock implementation for apiClient
-    (apiClient.post as jest.Mock).mockResolvedValue({ data: { message: 'Access request submitted successfully.' } });
+    (apiClient.post as jest.Mock).mockResolvedValue({
+      data: { message: 'Access request submitted successfully.' },
+    });
   });
 
   const renderRequestAccess = (language = 'en') => {
@@ -181,7 +169,7 @@ describe('RequestAccess Page', () => {
     return render(
       <TestRouterWrapper>
         <MockRequestAccess language={language} onSubmit={apiClient.post} />
-      </TestRouterWrapper>
+      </TestRouterWrapper>,
     );
   };
 
@@ -190,7 +178,11 @@ describe('RequestAccess Page', () => {
 
     // Check for page title and subtitle
     expect(screen.getByText('Request Access to Spheroid Segmentation Platform')).toBeInTheDocument();
-    expect(screen.getByText('Fill out the form below to request access to our platform. We will review your request and get back to you soon.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Fill out the form below to request access to our platform. We will review your request and get back to you soon.',
+      ),
+    ).toBeInTheDocument();
 
     // Check for form fields
     expect(screen.getByLabelText(/Your Email Address/i)).toBeInTheDocument();
@@ -217,7 +209,9 @@ describe('RequestAccess Page', () => {
 
       return (
         <div>
-          <button onClick={validateForm} data-testid="validate-button">Validate</button>
+          <button onClick={validateForm} data-testid="validate-button">
+            Validate
+          </button>
         </div>
       );
     };
@@ -244,19 +238,21 @@ describe('RequestAccess Page', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText(/Your Email Address/i), {
-      target: { value: 'researcher@university.edu' }
+      target: { value: 'researcher@university.edu' },
     });
 
     fireEvent.change(screen.getByLabelText(/Your Name/i), {
-      target: { value: 'Dr. Jane Smith' }
+      target: { value: 'Dr. Jane Smith' },
     });
 
     fireEvent.change(screen.getByLabelText(/Institution\/Company/i), {
-      target: { value: 'University Research Lab' }
+      target: { value: 'University Research Lab' },
     });
 
     fireEvent.change(screen.getByLabelText(/Reason for Access/i), {
-      target: { value: 'I need to analyze spheroid images for my cancer research project.' }
+      target: {
+        value: 'I need to analyze spheroid images for my cancer research project.',
+      },
     });
 
     // Submit the form
@@ -281,15 +277,17 @@ describe('RequestAccess Page', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText(/Your Email Address/i), {
-      target: { value: 'researcher@university.edu' }
+      target: { value: 'researcher@university.edu' },
     });
 
     fireEvent.change(screen.getByLabelText(/Your Name/i), {
-      target: { value: 'Dr. Jane Smith' }
+      target: { value: 'Dr. Jane Smith' },
     });
 
     fireEvent.change(screen.getByLabelText(/Reason for Access/i), {
-      target: { value: 'I need to analyze spheroid images for my cancer research project.' }
+      target: {
+        value: 'I need to analyze spheroid images for my cancer research project.',
+      },
     });
 
     // Submit the form

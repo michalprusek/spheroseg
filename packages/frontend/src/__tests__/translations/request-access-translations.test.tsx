@@ -11,7 +11,9 @@ import zh from '@/translations/zh';
 describe('Request Access Translation Keys', () => {
   it('should have all required request access translation keys in English', () => {
     expect(en.requestAccess.title).toBe('Request Access to Spheroid Segmentation Platform');
-    expect(en.requestAccess.description).toBe('Fill out the form below to request access to our platform. We will review your request and get back to you soon.');
+    expect(en.requestAccess.description).toBe(
+      'Fill out the form below to request access to our platform. We will review your request and get back to you soon.',
+    );
     expect(en.requestAccess.emailLabel).toBe('Your Email Address');
     expect(en.requestAccess.nameLabel).toBe('Your Name');
     expect(en.requestAccess.institutionLabel).toBe('Institution/Company');
@@ -24,7 +26,9 @@ describe('Request Access Translation Keys', () => {
 
   it('should have all required request access translation keys in Czech', () => {
     expect(cs.requestAccess.title).toBe('Požádat o přístup k platformě pro segmentaci sféroidů');
-    expect(cs.requestAccess.description).toBe('Vyplňte následující formulář pro žádost o přístup k naší platformě. Posoudíme vaši žádost a brzy vás kontaktujeme.');
+    expect(cs.requestAccess.description).toBe(
+      'Vyplňte následující formulář pro žádost o přístup k naší platformě. Posoudíme vaši žádost a brzy vás kontaktujeme.',
+    );
     expect(cs.requestAccess.emailLabel).toBe('Vaše e-mailová adresa');
     expect(cs.requestAccess.nameLabel).toBe('Vaše jméno');
     expect(cs.requestAccess.institutionLabel).toBe('Instituce/Společnost');
@@ -43,7 +47,9 @@ describe('Request Access Translation Keys', () => {
     expect(de.requestAccess.submitRequest).toBe('Anfrage senden');
     expect(de.requestAccess.requestReceived).toBe('Anfrage erhalten');
     expect(de.requestAccess.thankYou).toBe('Vielen Dank für Ihr Interesse');
-    expect(de.requestAccess.weWillContact).toBe('Wir werden Ihre Anfrage prüfen und uns bald mit Ihnen in Verbindung setzen');
+    expect(de.requestAccess.weWillContact).toBe(
+      'Wir werden Ihre Anfrage prüfen und uns bald mit Ihnen in Verbindung setzen',
+    );
   });
 
   it('should have all required request access translation keys in Spanish', () => {

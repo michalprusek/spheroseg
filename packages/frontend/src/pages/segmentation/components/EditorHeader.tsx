@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 import { Loader2, ChevronLeft, Save, Download, RefreshCcw, Image as ImageIcon, ChevronRight } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import ProjectImageExport from './project/ProjectImageExport';
 import { useSegmentationContext } from '../contexts/SegmentationContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface EditorHeaderProps {
   projectId: string;
@@ -35,7 +35,7 @@ const EditorHeader = ({
   onNavigate,
   onSave,
   onResegmentCurrentImage,
-  onExportMask
+  onExportMask,
 }: EditorHeaderProps) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -99,7 +99,9 @@ const EditorHeader = ({
               </TooltipTrigger>
               <TooltipContent>
                 <p>{loading ? t('editor.loadingImage') : imageName}</p>
-                <p>{t('editor.image')} {currentImageIndex + 1} / {totalImages}</p>
+                <p>
+                  {t('editor.image')} {currentImageIndex + 1} / {totalImages}
+                </p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -143,8 +145,8 @@ const EditorHeader = ({
             <TooltipContent>
               <p>
                 {isSegmenting
-                  ? (t('editor.resegmentingButtonTooltip') || 'Segmentation in progress...')
-                  : (t('editor.resegmentButtonTooltip') || 'Resegment Current Image')}
+                  ? t('editor.resegmentingButtonTooltip') || 'Segmentation in progress...'
+                  : t('editor.resegmentButtonTooltip') || 'Resegment Current Image'}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -190,11 +192,7 @@ const EditorHeader = ({
                 aria-label={t('editor.saveButton')}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {saving ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 {t('editor.saveButton')}
               </Button>
             </TooltipTrigger>
@@ -205,12 +203,7 @@ const EditorHeader = ({
         </div>
       </motion.header>
 
-      {showExport && (
-        <ProjectImageExport
-          segmentation={segmentation}
-          onClose={() => setShowExport(false)}
-        />
-      )}
+      {showExport && <ProjectImageExport segmentation={segmentation} onClose={() => setShowExport(false)} />}
     </TooltipProvider>
   );
 };

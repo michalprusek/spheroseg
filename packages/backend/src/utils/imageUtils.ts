@@ -1,14 +1,15 @@
 /**
  * Utility functions for handling image paths and formatting
- * 
+ *
  * This is a re-export of shared image utilities to maintain backward compatibility.
  * For new code, please import directly from @shared/utils/imageUtils
- * 
+ *
  * @deprecated For new code, use @shared/utils/imageUtils instead
  */
 
 import sharedImageUtils from '@shared/utils/imageUtils';
 import imageUtils from './imageUtils.unified';
+import * as fs from 'fs';
 
 // Export all from the unified implementation
 export * from './imageUtils.unified';
@@ -50,7 +51,6 @@ export const formatImagePaths = (image: ImageData, origin: string): ImageData =>
  * @deprecated Use the fileExists function from imageUtils.unified.ts instead
  */
 export const verifyImageFiles = (image: ImageData, uploadDir: string): ImageData => {
-  const fs = require('fs');
   const result = { ...image };
 
   // Check if the main image file exists
@@ -76,8 +76,8 @@ export const verifyImageFiles = (image: ImageData, uploadDir: string): ImageData
 export default {
   ...imageUtils,
   ...sharedImageUtils,
-  
+
   // Include legacy functions in the default export
   formatImagePaths,
-  verifyImageFiles
+  verifyImageFiles,
 };

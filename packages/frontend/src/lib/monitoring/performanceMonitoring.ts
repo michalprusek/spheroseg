@@ -89,7 +89,10 @@ export class FrontendPerformanceMonitoring extends PerformanceMonitoring {
               });
             }
           });
-          lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+          lcpObserver.observe({
+            type: 'largest-contentful-paint',
+            buffered: true,
+          });
 
           // First Input Delay
           const fidObserver = new PerformanceObserver((list) => {
@@ -127,7 +130,7 @@ export class FrontendPerformanceMonitoring extends PerformanceMonitoring {
 
     try {
       const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      
+
       if (navigationEntry) {
         const metric: PageLoadMetric = {
           type: MetricType.PAGE_LOAD,
@@ -182,7 +185,7 @@ export class FrontendPerformanceMonitoring extends PerformanceMonitoring {
     method: string,
     duration: number,
     status: number,
-    error?: string
+    error?: string,
   ): void {
     if (!this.options.enabled) return;
 
@@ -300,7 +303,7 @@ export class FrontendPerformanceMonitoring extends PerformanceMonitoring {
  * Create a frontend performance monitoring instance
  */
 export function createPerformanceMonitoring(
-  options: Partial<PerformanceMonitoringOptions> = {}
+  options: Partial<PerformanceMonitoringOptions> = {},
 ): FrontendPerformanceMonitoring {
   return FrontendPerformanceMonitoring.getInstance(options);
 }

@@ -1,6 +1,6 @@
 /**
  * Test Utilities
- * 
+ *
  * This module exports helpers and utilities for testing the backend.
  * It includes mock implementations for database, filesystem, and authentication.
  */
@@ -24,7 +24,7 @@ const createUserFixture = (overrides = {}) => ({
   email: 'test@example.com',
   name: 'Test User',
   role: 'user',
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -49,10 +49,12 @@ export const createTestRequest = (app: Express) => {
  */
 export const mockAuthenticatedUser = (user = createUserFixture()) => {
   // Mock the auth middleware
-  jest.mock('../middleware/authMiddleware', () => jest.fn((req, res, next) => {
-    req.user = { userId: user.id, email: user.email };
-    next();
-  }));
+  jest.mock('../middleware/authMiddleware', () =>
+    jest.fn((req, res, next) => {
+      req.user = { userId: user.id, email: user.email };
+      next();
+    }),
+  );
 
   return user;
 };
@@ -103,27 +105,27 @@ export function setupCompleteTestEnvironment() {
   const { createMockDatabase, mockDbModule } = require('./mockDatabase');
   const { createMockFileSystem, mockFsModule, setupTestFiles } = require('./mockFileSystem');
   const { createMockAuthWithTestData, mockJwtModule, mockBcryptModule } = require('./mockAuth');
-  
+
   // Setup database mock
   const mockDb = createMockDatabase();
   mockDbModule(mockDb);
-  
+
   // Setup filesystem mock
   const mockFs = createMockFileSystem();
   mockFsModule(mockFs);
   setupTestFiles(mockFs);
-  
+
   // Setup auth mock
   const mockAuth = createMockAuthWithTestData();
   mockJwtModule();
   mockBcryptModule();
-  
+
   return {
     db: mockDb,
     fs: mockFs,
     auth: mockAuth,
     app: createTestApp(),
     request: createTestRequest,
-    createTestRequest
+    createTestRequest,
   };
 }

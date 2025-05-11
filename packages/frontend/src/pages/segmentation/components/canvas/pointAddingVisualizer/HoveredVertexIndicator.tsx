@@ -1,13 +1,12 @@
-
 import React from 'react';
 import { Point } from '@/lib/segmentation';
 import { getPointRadius, getStrokeWidth, getColors } from './visualizationUtils';
 
 interface HoveredVertexIndicatorProps {
   hoveredSegment: {
-    polygonId: string | null,
-    segmentIndex: number | null,
-    projectedPoint: Point | null
+    polygonId: string | null;
+    segmentIndex: number | null;
+    projectedPoint: Point | null;
   };
   zoom: number;
 }
@@ -36,7 +35,7 @@ const HoveredVertexIndicator = ({ hoveredSegment, zoom }: HoveredVertexIndicator
         className="animate-pulse"
         style={{ pointerEvents: 'none' }}
       />
-      
+
       {/* Samotný bod */}
       <circle
         cx={point.x}

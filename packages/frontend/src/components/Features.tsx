@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Sparkles, Microscope, Share2, LineChart, Upload, Brain } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import React, { useEffect, useRef, useState } from 'react';
+import { Sparkles, Microscope, Share2, LineChart, Upload, Brain } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Import translation files directly
 import enTranslations from '@/translations/en';
@@ -18,13 +18,11 @@ interface FeatureCardProps {
 }
 
 const FeatureCard = ({ icon, title, description, delay }: FeatureCardProps) => (
-  <div 
+  <div
     className="glass-morphism p-6 rounded-xl transition-all duration-300 hover:shadow-glass-lg"
     style={{ transitionDelay: `${delay}ms` }}
   >
-    <div className="w-14 h-14 mb-6 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-      {icon}
-    </div>
+    <div className="w-14 h-14 mb-6 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">{icon}</div>
     <h3 className="text-xl font-semibold mb-2">{title}</h3>
     <p className="text-gray-600">{description}</p>
   </div>
@@ -38,14 +36,14 @@ const Features = () => {
   // Force component to re-render when language changes
   useEffect(() => {
     console.log(`Language in Features component changed to: ${language}`);
-    setForceUpdate(prev => prev + 1);
+    setForceUpdate((prev) => prev + 1);
   }, [language]);
 
   // Get translations directly from the translation files
   const getTranslation = (key: string) => {
     // Split the key into parts (e.g., 'features.title' -> ['features', 'title'])
     const parts = key.split('.');
-    
+
     // Select the appropriate translation file based on the current language
     let translations;
     switch (language) {
@@ -67,7 +65,7 @@ const Features = () => {
       default:
         translations = enTranslations;
     }
-    
+
     // Navigate through the translation object to find the value
     let value = translations;
     for (const part of parts) {
@@ -89,20 +87,20 @@ const Features = () => {
         return key; // Key not found
       }
     }
-    
+
     return typeof value === 'string' ? value : key;
   };
-  
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add("active");
+            entry.target.classList.add('active');
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     if (featuresRef.current) {
@@ -129,58 +127,56 @@ const Features = () => {
       icon: <Microscope size={28} />,
       title: getTranslation('features.cards.segmentation.title'),
       description: getTranslation('features.cards.segmentation.description'),
-      delay: 100
+      delay: 100,
     },
     {
       icon: <Brain size={28} />,
       title: getTranslation('features.cards.aiAnalysis.title'),
       description: getTranslation('features.cards.aiAnalysis.description'),
-      delay: 200
+      delay: 200,
     },
     {
       icon: <Upload size={28} />,
       title: getTranslation('features.cards.uploads.title'),
       description: getTranslation('features.cards.uploads.description'),
-      delay: 300
+      delay: 300,
     },
     {
       icon: <LineChart size={28} />,
       title: getTranslation('features.cards.insights.title'),
       description: getTranslation('features.cards.insights.description'),
-      delay: 400
+      delay: 400,
     },
     {
       icon: <Share2 size={28} />,
       title: getTranslation('features.cards.collaboration.title'),
       description: getTranslation('features.cards.collaboration.description'),
-      delay: 500
+      delay: 500,
     },
     {
       icon: <Sparkles size={28} />,
       title: getTranslation('features.cards.pipeline.title'),
       description: getTranslation('features.cards.pipeline.description'),
-      delay: 600
-    }
+      delay: 600,
+    },
   ];
 
   return (
     <section id="features" className="py-20 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-background to-transparent -z-10"></div>
-      
+
       <div ref={featuresRef} className="container mx-auto px-4 staggered-fade-in">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-block bg-blue-100 px-4 py-2 rounded-full mb-4">
             <span className="text-sm font-medium text-blue-700">{getTranslation('features.tag')}</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-6">{getTranslation('features.title')}</h2>
-          <p className="text-lg text-gray-600">
-            {getTranslation('features.subtitle')}
-          </p>
+          <p className="text-lg text-gray-600">{getTranslation('features.subtitle')}</p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <FeatureCard 
+            <FeatureCard
               key={index}
               icon={feature.icon}
               title={feature.title}

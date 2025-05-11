@@ -1,4 +1,51 @@
 services:
+  # Frontend development service with hot reload (commented out in favor of the static version)
+  # frontend-dev:
+  #   image: node:18-alpine
+  #   container_name: spheroseg-frontend-dev
+  #   restart: always
+  #   depends_on:
+  #     - backend
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     # Use backend service name for container-to-container communication
+  #     - VITE_API_URL=http://backend:5001
+  #     - VITE_API_BASE_URL=
+  #     - PORT=3000
+  #     - VITE_NODE_ENV=development
+  #     - HOST=0.0.0.0
+  #     # Add standardized API path environment variables
+  #     - VITE_API_AUTH_PREFIX=/auth
+  #     - VITE_API_USERS_PREFIX=/users
+  #     - VITE_API_PROXY_ENABLED=true
+  #     - VITE_DOCKER_ENV=true
+  #   volumes:
+  #     - ./packages/frontend:/app
+  #     - ./packages/shared:/app/shared
+  #     - ./packages/types:/app/types
+  #     - frontend_uploads:/app/public/uploads
+  #   networks:
+  #     - spheroseg-network
+  #   working_dir: /app
+  #   command: >
+  #     sh -c "
+  #       echo 'Starting frontend development server with hot reload...' &&
+  #       echo 'VITE_API_URL=http://backend:5001' > .env.local &&
+  #       echo 'VITE_API_BASE_URL=' >> .env.local &&
+  #       echo 'VITE_API_AUTH_PREFIX=/auth' >> .env.local &&
+  #       echo 'VITE_API_USERS_PREFIX=/users' >> .env.local &&
+  #       echo 'VITE_API_PROXY_ENABLED=true' >> .env.local &&
+  #       echo 'VITE_DOCKER_ENV=true' >> .env.local &&
+  #       mkdir -p node_modules/@spheroseg &&
+  #       rm -rf node_modules/@spheroseg/shared node_modules/@spheroseg/types &&
+  #       ln -sf /app/shared node_modules/@spheroseg/shared &&
+  #       ln -sf /app/types node_modules/@spheroseg/types &&
+  #       npm install -g vite &&
+  #       npm install --legacy-peer-deps &&
+  #       npm run dev
+  #     "
+
   # Database
   db:
     image: postgres:14-alpine
@@ -10,6 +57,7 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./packages/backend/src/db:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     networks:
@@ -22,7 +70,7 @@ services:
 
   # Backend API using TypeScript server
   backend:
-    image: node:18-alpine
+    image: python:3.9-slim
     container_name: spheroseg-backend
     restart: always
     depends_on:
@@ -43,19 +91,36 @@ services:
       - DB_NAME=spheroseg
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+      - USE_MOCK_USER=true
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./packages/backend:/app
       - uploads_data:/app/uploads
       - ./packages/ml:/app/ML
-      - ./scripts/init-db-docker.js:/app/init-db-docker.js
+      - backend_node_modules:/app/node_modules
     networks:
       - spheroseg-network
     working_dir: /app
     command: >
-      sh -c "
+      bash -c "
         mkdir -p /app/uploads &&
-        echo 'Starting server...' &&
-        node src/simple-server.js
+        echo 'Starting server with hot reload...' &&
+        apt-get update && apt-get install -y curl gnupg make g++ libpixman-1-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev &&
+        # Install OpenCV system dependencies
+        apt-get install -y libgl1-mesa-glx libglib2.0-0 libsm6 libxrender1 libxext6 &&
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &&
+        apt-get install -y nodejs &&
+        # Install Python dependencies for ML
+        pip install --no-cache-dir torch torchvision numpy scikit-image opencv-python pillow tqdm &&
+        # Install Node.js dependencies
+        npm install --legacy-peer-deps --force &&
+        npm install -g nodemon ts-node &&
+        echo 'Initializing database schema...' &&
+        node -r ts-node/register src/db/initDb.ts &&
+        echo 'Creating test user...' &&
+        node src/scripts/create-test-user.js &&
+        echo 'Starting development server with hot reload using nodemon...' &&
+        nodemon --watch src --ext js,ts,json --exec 'node -r ts-node/register src/server.ts' --verbose
       "
 
   # ML Service
@@ -72,24 +137,64 @@ services:
       - PYTHONUNBUFFERED=1
       - MODEL_PATH=/ML/checkpoint_epoch_9.pth.tar
       - DEBUG=true
+      - ML_SERVICE_URL=http://ml:5002
+    ports:
+      - "5002:5002"
     networks:
       - spheroseg-network
 
-  # Frontend with fixed configuration
+  # Frontend with fixed configuration (commented out in favor of the static version)
+  # frontend:
+  #   build:
+  #     context: ./packages/frontend
+  #     dockerfile: Dockerfile.dev
+  #   container_name: spheroseg-frontend
+  #   restart: always
+  #   depends_on:
+  #     - backend
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     # Use backend service name for container-to-container communication
+  #     - VITE_API_URL=http://backend:5001
+  #     - VITE_API_BASE_URL=
+  #     - PORT=3000
+  #     - VITE_NODE_ENV=development
+  #     - HOST=0.0.0.0
+  #     # Add standardized API path environment variables
+  #     - VITE_API_AUTH_PREFIX=/auth
+  #     - VITE_API_USERS_PREFIX=/users
+  #     - VITE_API_PROXY_ENABLED=true
+  #     - VITE_DOCKER_ENV=true
+  #   volumes:
+  #     - ./packages/frontend:/app
+  #     - ./packages/shared:/app/shared
+  #     - ./packages/types:/app/types
+  #     - frontend_uploads:/app/public/uploads
+  #     - frontend_node_modules:/app/node_modules
+  #   networks:
+  #     - spheroseg-network
+  #   healthcheck:
+  #     test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
+
+  # Frontend development service with hot reload
   frontend:
-    build:
-      context: ./packages/frontend
-      dockerfile: Dockerfile.dev
-    container_name: spheroseg-frontend
+    image: node:18-alpine
+    container_name: spheroseg-frontend-dev
     restart: always
     depends_on:
       - backend
+      - assets
     ports:
       - "3000:3000"
     environment:
       # Use backend service name for container-to-container communication
       - VITE_API_URL=http://backend:5001
-      - VITE_API_BASE_URL=
+      - VITE_API_BASE_URL=/api
       - PORT=3000
       - VITE_NODE_ENV=development
       - HOST=0.0.0.0
@@ -98,46 +203,44 @@ services:
       - VITE_API_USERS_PREFIX=/users
       - VITE_API_PROXY_ENABLED=true
       - VITE_DOCKER_ENV=true
+      - VITE_ASSETS_URL=http://assets
     volumes:
       - ./packages/frontend:/app
-      - frontend_uploads:/app/public/uploads
-      - /app/node_modules
+      - ./packages/shared:/app/shared
+      - ./packages/types:/app/types
+      - frontend_node_modules:/app/node_modules
     networks:
       - spheroseg-network
+    working_dir: /app
     command: >
       sh -c "
-        echo 'Starting frontend with API URL: http://backend:5001' &&
+        echo 'Starting frontend development server with hot reload...' &&
         echo 'VITE_API_URL=http://backend:5001' > .env.local &&
-        echo 'VITE_API_BASE_URL=' >> .env.local &&
+        echo 'VITE_API_BASE_URL=/api' >> .env.local &&
         echo 'VITE_API_AUTH_PREFIX=/auth' >> .env.local &&
         echo 'VITE_API_USERS_PREFIX=/users' >> .env.local &&
         echo 'VITE_API_PROXY_ENABLED=true' >> .env.local &&
         echo 'VITE_DOCKER_ENV=true' >> .env.local &&
-        npm run dev -- --host 0.0.0.0 --port 3000
+        echo 'VITE_ASSETS_URL=http://assets' >> .env.local &&
+        mkdir -p node_modules/@spheroseg &&
+        rm -rf node_modules/@spheroseg/shared node_modules/@spheroseg/types &&
+        ln -sf /app/shared node_modules/@spheroseg/shared &&
+        ln -sf /app/types node_modules/@spheroseg/types &&
+        npm install --legacy-peer-deps &&
+        npm run dev
       "
 
-  # File sync service to copy uploads to frontend
-  file-sync:
-    image: alpine:latest
-    container_name: spheroseg-file-sync
+  # Static assets server
+  assets:
+    image: nginx:alpine
+    container_name: spheroseg-assets
     restart: always
+    ports:
+      - "3001:80"
     volumes:
-      - uploads_data:/source:ro
-      - frontend_uploads:/destination
-    command: >
-      sh -c "
-        apk add --no-cache inotify-tools rsync;
-        mkdir -p /destination;
-        while true; do
-          rsync -av --delete /source/ /destination/;
-          sleep 10;
-        done
-      "
+      - ./packages/frontend-static:/usr/share/nginx/html
     networks:
       - spheroseg-network
-    depends_on:
-      - backend
-      - frontend
 
   # Database management UI
   adminer:
@@ -155,6 +258,8 @@ volumes:
   postgres_data:
   uploads_data:
   frontend_uploads:
+  frontend_node_modules:
+  backend_node_modules:
 
 networks:
   spheroseg-network:

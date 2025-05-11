@@ -1,0 +1,47 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Instalace vývojových závislostí
+RUN apk add --no-cache python3 make g++
+
+# Kopírování projektových souborů
+COPY package.json package-lock.json ./
+COPY tsconfig.json tsconfig.node.json ./
+COPY postcss.config.cjs ./
+COPY tailwind.config.cjs ./
+COPY vite.config.ts ./
+COPY index.html ./
+
+# Instalace závislostí
+RUN npm install --legacy-peer-deps
+
+# Kopírování zdrojových souborů
+COPY src/ ./src/
+COPY public/ ./public/
+
+# Příprava adresářů pro sdílené balíčky
+RUN mkdir -p node_modules/@spheroseg
+
+# Příprava symbolických odkazů pro sdílené balíčky
+RUN mkdir -p /app/shared /app/types
+COPY shared/ /app/shared/
+COPY types/ /app/types/
+
+# Vytvoření symbolických odkazů
+RUN ln -sf /app/shared node_modules/@spheroseg/shared && \
+    ln -sf /app/types node_modules/@spheroseg/types
+
+# Vytvoření .env.local souboru s proměnnými
+RUN echo "VITE_API_URL=http://localhost:5001" > .env.local && \
+    echo "VITE_API_BASE_URL=" >> .env.local && \
+    echo "VITE_API_AUTH_PREFIX=/auth" >> .env.local && \
+    echo "VITE_API_USERS_PREFIX=/users" >> .env.local && \
+    echo "VITE_API_PROXY_ENABLED=true" >> .env.local && \
+    echo "VITE_DOCKER_ENV=true" >> .env.local
+
+# Expozice portu
+EXPOSE 3000
+
+# Spuštění vývojového serveru
+CMD ["npm", "run", "dev"]

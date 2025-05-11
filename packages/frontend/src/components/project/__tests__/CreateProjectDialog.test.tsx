@@ -18,22 +18,22 @@ vi.mock('react-i18next', () => ({
         'project.create': 'Create Project',
         'project.titleRequired': 'Project name is required',
         'common.cancel': 'Close',
-        'common.loading': 'Loading...'
+        'common.loading': 'Loading...',
       };
       return translations[key] || key;
     },
     i18n: {
       changeLanguage: vi.fn(),
-      language: 'en'
-    }
-  })
+      language: 'en',
+    },
+  }),
 }));
 
 // Mock dependencies
 vi.mock('@/lib/apiClient', () => ({
   default: {
-    post: vi.fn()
-  }
+    post: vi.fn(),
+  },
 }));
 
 describe('CreateProjectDialog Component', () => {
@@ -46,8 +46,8 @@ describe('CreateProjectDialog Component', () => {
       data: {
         id: 'test-project-id',
         title: 'Test Project',
-        description: 'Test Description'
-      }
+        description: 'Test Description',
+      },
     });
   });
 
@@ -60,15 +60,10 @@ describe('CreateProjectDialog Component', () => {
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>
-            <CreateProjectDialog
-              open={true}
-              onClose={mockOnClose}
-              onProjectCreated={mockOnProjectCreated}
-              {...props}
-            />
+            <CreateProjectDialog open={true} onClose={mockOnClose} onProjectCreated={mockOnProjectCreated} {...props} />
           </LanguageProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

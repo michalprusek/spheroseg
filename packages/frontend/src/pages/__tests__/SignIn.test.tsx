@@ -13,8 +13,8 @@ const mockToastError = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
     error: mockToastError,
-    success: vi.fn()
-  }
+    success: vi.fn(),
+  },
 }));
 
 // Create a standalone SignIn component for testing
@@ -83,9 +83,7 @@ const MockSignIn = ({ isLoggedIn = false }) => {
           <label htmlFor="remember">Remember me</label>
         </div>
 
-        <button type="submit">
-          {isLoading ? 'Signing in' : 'Sign in'}
-        </button>
+        <button type="submit">{isLoading ? 'Signing in' : 'Sign in'}</button>
       </form>
 
       <div>
@@ -141,11 +139,11 @@ describe('SignIn Component', () => {
 
     // Fill in the form using fireEvent directly for this test
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     // Submit the form
@@ -170,19 +168,22 @@ describe('SignIn Component', () => {
 
   it('shows loading state during sign in', async () => {
     // Mock signIn to return a promise that doesn't resolve immediately
-    mockSignIn.mockImplementation(() => new Promise(resolve => {
-      setTimeout(resolve, 100);
-    }));
+    mockSignIn.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(resolve, 100);
+        }),
+    );
 
     renderComponent();
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     // Submit the form
@@ -202,11 +203,11 @@ describe('SignIn Component', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     // Submit the form

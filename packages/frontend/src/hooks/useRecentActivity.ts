@@ -23,25 +23,25 @@ interface UseRecentActivityOptions {
    * @default 10
    */
   limit?: number;
-  
+
   /**
    * Whether to show toast notifications for errors
    * @default true
    */
   showToasts?: boolean;
-  
+
   /**
    * Whether to use cached data if available
    * @default true
    */
   useCache?: boolean;
-  
+
   /**
    * Cache expiration time in milliseconds
    * @default 5 minutes (300000 ms)
    */
   cacheExpiration?: number;
-  
+
   /**
    * Whether to automatically fetch data on mount
    * @default true
@@ -54,22 +54,22 @@ interface UseRecentActivityReturn {
    * List of recent activities
    */
   activities: ActivityItem[];
-  
+
   /**
    * Whether data is being loaded
    */
   loading: boolean;
-  
+
   /**
    * Error message if fetch failed
    */
   error: string | null;
-  
+
   /**
    * Fetch recent activities
    */
   fetchActivities: () => Promise<void>;
-  
+
   /**
    * Clear cached activities
    */
@@ -82,13 +82,13 @@ const ACTIVITY_CACHE_TIMESTAMP_KEY = 'spheroseg_recent_activities_timestamp';
 
 /**
  * Hook for fetching recent user activities
- * 
+ *
  * @example
  * ```tsx
  * const { activities, loading, error, fetchActivities } = useRecentActivity({
  *   limit: 5
  * });
- * 
+ *
  * return (
  *   <div>
  *     <h2>Recent Activity</h2>
@@ -114,19 +114,19 @@ const ACTIVITY_CACHE_TIMESTAMP_KEY = 'spheroseg_recent_activities_timestamp';
 export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRecentActivityReturn => {
   const { t } = useLanguage();
   const { user } = useAuth();
-  
-  const { 
-    limit = 10, 
-    showToasts = true, 
+
+  const {
+    limit = 10,
+    showToasts = true,
     useCache = true,
     cacheExpiration = 5 * 60 * 1000, // 5 minutes
-    autoFetch = true
+    autoFetch = true,
   } = options;
-  
+
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Function to save activities to cache
   const saveToCache = useCallback((data: ActivityItem[]) => {
     try {
@@ -137,26 +137,32 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
       logger.warn('Failed to save activities to cache', { error: err });
     }
   }, []);
-  
+
   // Function to load activities from cache
-  const loadFromCache = useCallback((): { data: ActivityItem[] | null, timestamp: number } => {
+  const loadFromCache = useCallback((): {
+    data: ActivityItem[] | null;
+    timestamp: number;
+  } => {
     try {
       const cachedData = localStorage.getItem(ACTIVITY_CACHE_KEY);
       const cachedTimestamp = localStorage.getItem(ACTIVITY_CACHE_TIMESTAMP_KEY);
-      
+
       if (cachedData && cachedTimestamp) {
         const timestamp = parseInt(cachedTimestamp, 10);
         const data = JSON.parse(cachedData) as ActivityItem[];
-        logger.debug('Loaded activities from cache', { count: data.length, timestamp });
+        logger.debug('Loaded activities from cache', {
+          count: data.length,
+          timestamp,
+        });
         return { data, timestamp };
       }
     } catch (err) {
       logger.warn('Failed to load activities from cache', { error: err });
     }
-    
+
     return { data: null, timestamp: 0 };
   }, []);
-  
+
   // Function to clear cache
   const clearCache = useCallback(() => {
     try {
@@ -167,52 +173,54 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
       logger.warn('Failed to clear activities cache', { error: err });
     }
   }, []);
-  
+
   // Function to fetch activities from API
   const fetchActivities = useCallback(async (): Promise<void> => {
     if (!user?.id) {
       logger.warn('Cannot fetch activities: user not logged in');
       return;
     }
-    
+
     // Check cache first if enabled
     if (useCache) {
       const { data: cachedData, timestamp } = loadFromCache();
       const cacheAge = Date.now() - timestamp;
-      
+
       if (cachedData && cacheAge < cacheExpiration) {
-        logger.info('Using cached activities', { 
-          count: cachedData.length, 
+        logger.info('Using cached activities', {
+          count: cachedData.length,
           cacheAge: `${Math.round(cacheAge / 1000)}s`,
-          cacheExpiration: `${Math.round(cacheExpiration / 1000)}s`
+          cacheExpiration: `${Math.round(cacheExpiration / 1000)}s`,
         });
         setActivities(cachedData);
         return;
       }
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       logger.info('Fetching recent activities', { limit });
-      
+
       // Try to fetch from /users/me/statistics first (detailed endpoint)
       try {
-        const response = await apiClient.get('/users/me/statistics');
+        const response = await apiClient.get('/api/users/me/statistics');
         const data = response.data;
-        
+
         if (data.recentActivity && Array.isArray(data.recentActivity)) {
           const activities = data.recentActivity.slice(0, limit);
-          logger.info('Fetched activities from statistics endpoint', { count: activities.length });
-          
+          logger.info('Fetched activities from statistics endpoint', {
+            count: activities.length,
+          });
+
           setActivities(activities);
-          
+
           // Save to cache if enabled
           if (useCache) {
             saveToCache(activities);
           }
-          
+
           return;
         } else {
           logger.warn('Statistics endpoint returned no activities, falling back to stats endpoint');
@@ -220,17 +228,19 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
       } catch (statErr) {
         logger.warn('Statistics endpoint not available, falling back to stats endpoint', { error: statErr });
       }
-      
+
       // Fall back to /users/me/stats (basic endpoint)
-      const fallbackResponse = await apiClient.get('/users/me/stats');
+      const fallbackResponse = await apiClient.get('/api/users/me/stats');
       const fallbackData = fallbackResponse.data;
-      
+
       if (fallbackData.recentActivity && Array.isArray(fallbackData.recentActivity)) {
         const activities = fallbackData.recentActivity.slice(0, limit);
-        logger.info('Fetched activities from stats endpoint', { count: activities.length });
-        
+        logger.info('Fetched activities from stats endpoint', {
+          count: activities.length,
+        });
+
         setActivities(activities);
-        
+
         // Save to cache if enabled
         if (useCache) {
           saveToCache(activities);
@@ -241,26 +251,28 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
       }
     } catch (err) {
       logger.error('Failed to fetch activities', { error: err });
-      
+
       let errorMessage = t('profile.fetchError') || 'Failed to load recent activities';
-      
+
       if (axios.isAxiosError(err) && err.response) {
         errorMessage = err.response.data?.message || errorMessage;
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
-      
+
       if (showToasts) {
         toast.error(errorMessage);
       }
-      
+
       // Try to use cached data even if it's expired
       if (useCache) {
         const { data: cachedData } = loadFromCache();
         if (cachedData) {
-          logger.info('Using expired cached activities due to fetch error', { count: cachedData.length });
+          logger.info('Using expired cached activities due to fetch error', {
+            count: cachedData.length,
+          });
           setActivities(cachedData);
         }
       }
@@ -268,19 +280,19 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
       setLoading(false);
     }
   }, [user?.id, limit, showToasts, useCache, cacheExpiration, t, loadFromCache, saveToCache]);
-  
+
   // Fetch activities on mount if autoFetch is enabled
   useEffect(() => {
     if (autoFetch) {
       fetchActivities();
     }
   }, [autoFetch, fetchActivities]);
-  
+
   return {
     activities,
     loading,
     error,
     fetchActivities,
-    clearCache
+    clearCache,
   };
 };

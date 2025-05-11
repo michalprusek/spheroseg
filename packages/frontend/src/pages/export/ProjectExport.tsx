@@ -37,16 +37,12 @@ const ProjectExport = () => {
     setIncludeSegmentation,
     setIncludeImages,
     setAnnotationFormat,
-    setMetricsFormat
+    setMetricsFormat,
   } = useExportFunctions(images, projectTitle);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <ProjectHeader
-        projectTitle={projectTitle}
-        imagesCount={images.length}
-        loading={loading}
-      />
+      <ProjectHeader projectTitle={projectTitle} imagesCount={images.length} loading={loading} />
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
@@ -64,7 +60,7 @@ const ProjectExport = () => {
             disabled={getSelectedCount() === 0 || isExporting}
             onClick={() => {
               // Filtrujeme pouze vybrané obrázky
-              const selectedImagesToExport = images.filter(img => selectedImages[img.id]);
+              const selectedImagesToExport = images.filter((img) => selectedImages[img.id]);
               // Voláme handleExport s filtrovanými obrázky
               handleExport(selectedImagesToExport);
             }}

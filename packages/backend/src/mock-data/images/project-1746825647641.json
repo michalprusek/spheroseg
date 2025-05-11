@@ -1,0 +1,15 @@
+[
+  {
+    "id": "47a19298-2617-4b73-823e-116daa3982f7",
+    "project_id": "project-1746825647641",
+    "name": "Uploaded Image 1 2025-05-09",
+    "url": "/uploads/project-1746825647641/47a19298-2617-4b73-823e-116daa3982f7.png",
+    "thumbnail_url": "/uploads/project-1746825647641/47a19298-2617-4b73-823e-116daa3982f7-thumb.png",
+    "created_at": "2025-05-09T21:26:45.410Z",
+    "updated_at": "2025-05-09T21:26:45.410Z",
+    "width": 800,
+    "height": 600,
+    "segmentationStatus": "pending",
+    "segmentationResultPath": null
+  }
+]

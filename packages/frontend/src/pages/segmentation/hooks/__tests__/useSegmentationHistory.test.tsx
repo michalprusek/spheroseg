@@ -1,6 +1,6 @@
 /**
  * Tests for useSegmentationHistory hook
- * 
+ *
  * Tests the history management for segmentation data, including:
  * - Version tracking
  * - Undo/redo functionality
@@ -21,21 +21,21 @@ vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
-    info: vi.fn()
-  }
+    info: vi.fn(),
+  },
 }));
 
 // Mock the useLanguage hook
 vi.mock('@/contexts/LanguageContext', () => ({
-  useLanguage: () => ({ 
+  useLanguage: () => ({
     t: (key: string) => {
       const translations: { [key: string]: string } = {
         'segmentation.undoWhileDraggingError': 'Cannot undo while dragging a point',
-        'segmentation.undoRestored': 'Undo: Restored to previous state'
+        'segmentation.undoRestored': 'Undo: Restored to previous state',
       };
       return translations[key] || key;
-    }
-  })
+    },
+  }),
 }));
 
 describe('useSegmentationHistory', () => {
@@ -62,21 +62,19 @@ describe('useSegmentationHistory', () => {
           { x: 10, y: 10 },
           { x: 20, y: 10 },
           { x: 20, y: 20 },
-          { x: 10, y: 20 }
-        ]
-      }
+          { x: 10, y: 20 },
+        ],
+      },
     ],
     imageWidth: 100,
-    imageHeight: 100
+    imageHeight: 100,
   });
 
   it('should initialize history with initial segmentation', () => {
     const initialSegmentation = createSampleSegmentation();
     const setSegmentation = vi.fn();
 
-    const { result } = renderHook(() => 
-      useSegmentationHistory(initialSegmentation, setSegmentation)
-    );
+    const { result } = renderHook(() => useSegmentationHistory(initialSegmentation, setSegmentation));
 
     // History should be initialized with the initial segmentation
     expect(result.current.history.length).toBe(1);
@@ -89,7 +87,7 @@ describe('useSegmentationHistory', () => {
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // Create a modified segmentation with updated polygon points
@@ -102,10 +100,10 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 30, y: 10 }, // Changed from 20 to 30
             { x: 30, y: 20 }, // Changed from 20 to 30
-            { x: 10, y: 20 }
-          ]
-        }
-      ]
+            { x: 10, y: 20 },
+          ],
+        },
+      ],
     };
 
     // Update the segmentation
@@ -127,7 +125,7 @@ describe('useSegmentationHistory', () => {
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // Create a clone of the same segmentation (should be viewed as identical)
@@ -152,7 +150,7 @@ describe('useSegmentationHistory', () => {
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // Add a second state
@@ -165,10 +163,10 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 30, y: 10 },
             { x: 30, y: 30 },
-            { x: 10, y: 30 }
-          ]
-        }
-      ]
+            { x: 10, y: 30 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: modifiedSegmentation });
@@ -193,11 +191,11 @@ describe('useSegmentationHistory', () => {
               { x: 10, y: 10 },
               { x: 20, y: 10 },
               { x: 20, y: 20 },
-              { x: 10, y: 20 }
-            ])
-          })
-        ])
-      })
+              { x: 10, y: 20 },
+            ]),
+          }),
+        ]),
+      }),
     );
 
     // Toast should be shown
@@ -210,7 +208,7 @@ describe('useSegmentationHistory', () => {
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // Add a second state
@@ -223,10 +221,10 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 30, y: 10 },
             { x: 30, y: 30 },
-            { x: 10, y: 30 }
-          ]
-        }
-      ]
+            { x: 10, y: 30 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: modifiedSegmentation });
@@ -259,15 +257,15 @@ describe('useSegmentationHistory', () => {
               { x: 10, y: 10 },
               { x: 30, y: 10 },
               { x: 30, y: 30 },
-              { x: 10, y: 30 }
-            ])
-          })
-        ])
-      })
+              { x: 10, y: 30 },
+            ]),
+          }),
+        ]),
+      }),
     );
 
     // Toast should be shown
-    expect(toast.info).toHaveBeenCalledWith("Redo: Obnoveno do následujícího stavu");
+    expect(toast.info).toHaveBeenCalledWith('Redo: Obnoveno do následujícího stavu');
   });
 
   it('should properly track vertex dragging', () => {
@@ -276,7 +274,7 @@ describe('useSegmentationHistory', () => {
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // Start dragging a vertex
@@ -294,10 +292,10 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 25, y: 10 }, // Changed from 20 to 25 during drag
             { x: 20, y: 20 },
-            { x: 10, y: 20 }
-          ]
-        }
-      ]
+            { x: 10, y: 20 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: dragUpdatedSegmentation });
@@ -325,9 +323,7 @@ describe('useSegmentationHistory', () => {
     const initialSegmentation = createSampleSegmentation('1');
     const setSegmentation = vi.fn();
 
-    const { result } = renderHook(() => 
-      useSegmentationHistory(initialSegmentation, setSegmentation)
-    );
+    const { result } = renderHook(() => useSegmentationHistory(initialSegmentation, setSegmentation));
 
     // Start dragging
     act(() => {
@@ -352,7 +348,7 @@ describe('useSegmentationHistory', () => {
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // Create a snapshot of initial state
@@ -374,10 +370,10 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 40, y: 10 },
             { x: 40, y: 40 },
-            { x: 10, y: 40 }
-          ]
-        }
-      ]
+            { x: 10, y: 40 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: modifiedSegmentation });
@@ -413,11 +409,11 @@ describe('useSegmentationHistory', () => {
               { x: 10, y: 10 },
               { x: 20, y: 10 },
               { x: 20, y: 20 },
-              { x: 10, y: 20 }
-            ])
-          })
-        ])
-      })
+              { x: 10, y: 20 },
+            ]),
+          }),
+        ]),
+      }),
     );
 
     // Success toast should be shown
@@ -430,7 +426,7 @@ describe('useSegmentationHistory', () => {
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // Add multiple states
@@ -443,14 +439,16 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 30, y: 10 },
             { x: 30, y: 30 },
-            { x: 10, y: 30 }
-          ]
-        }
-      ]
+            { x: 10, y: 30 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: modifiedSegmentation1 });
-    act(() => { vi.advanceTimersByTime(400); });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     const modifiedSegmentation2 = {
       ...modifiedSegmentation1,
@@ -461,14 +459,16 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 40, y: 10 },
             { x: 40, y: 40 },
-            { x: 10, y: 40 }
-          ]
-        }
-      ]
+            { x: 10, y: 40 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: modifiedSegmentation2 });
-    act(() => { vi.advanceTimersByTime(400); });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     // History should have 3 items now
     expect(result.current.history.length).toBe(3);
@@ -491,7 +491,7 @@ describe('useSegmentationHistory', () => {
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // Add state 2
@@ -504,14 +504,16 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 30, y: 10 },
             { x: 30, y: 30 },
-            { x: 10, y: 30 }
-          ]
-        }
-      ]
+            { x: 10, y: 30 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: modifiedSegmentation1 });
-    act(() => { vi.advanceTimersByTime(400); });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     // Add state 3
     const modifiedSegmentation2 = {
@@ -523,14 +525,16 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 40, y: 10 },
             { x: 40, y: 40 },
-            { x: 10, y: 40 }
-          ]
-        }
-      ]
+            { x: 10, y: 40 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: modifiedSegmentation2 });
-    act(() => { vi.advanceTimersByTime(400); });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     // Undo to state 2
     act(() => {
@@ -547,14 +551,16 @@ describe('useSegmentationHistory', () => {
             { x: 10, y: 10 },
             { x: 35, y: 15 }, // Different from original state 3
             { x: 35, y: 35 },
-            { x: 10, y: 35 }
-          ]
-        }
-      ]
+            { x: 10, y: 35 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: alternateSegmentation });
-    act(() => { vi.advanceTimersByTime(400); });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     // History should have 3 items (original + state2 + alternate state3)
     expect(result.current.history.length).toBe(3);
@@ -572,7 +578,7 @@ describe('useSegmentationHistory', () => {
     // Initialize with null segmentation
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: null } }
+      { initialProps: { segmentation: null } },
     );
 
     // History should be empty
@@ -606,7 +612,7 @@ describe('useSegmentationHistory', () => {
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // Add 20 states to history
@@ -620,14 +626,16 @@ describe('useSegmentationHistory', () => {
               { x: 10, y: 10 },
               { x: 20 + i, y: 10 }, // Gradually increasing X
               { x: 20 + i, y: 20 + i }, // Gradually increasing X and Y
-              { x: 10, y: 20 + i } // Gradually increasing Y
-            ]
-          }
-        ]
+              { x: 10, y: 20 + i }, // Gradually increasing Y
+            ],
+          },
+        ],
       };
 
       rerender({ segmentation: modifiedSegmentation });
-      act(() => { vi.advanceTimersByTime(400); });
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
     }
 
     // History should have 21 items (initial + 20 states)
@@ -636,13 +644,13 @@ describe('useSegmentationHistory', () => {
 
     // Test performance of multiple undo operations
     const startTime = performance.now();
-    
+
     for (let i = 0; i < 10; i++) {
       act(() => {
         result.current.handleUndo();
       });
     }
-    
+
     const endTime = performance.now();
     const duration = endTime - startTime;
 
@@ -668,8 +676,8 @@ describe('useSegmentationHistory integration', () => {
             { x: 10, y: 10 },
             { x: 100, y: 10 },
             { x: 100, y: 100 },
-            { x: 10, y: 100 }
-          ]
+            { x: 10, y: 100 },
+          ],
         },
         {
           id: 'poly-2',
@@ -678,19 +686,19 @@ describe('useSegmentationHistory integration', () => {
             { x: 200, y: 200 },
             { x: 300, y: 200 },
             { x: 300, y: 300 },
-            { x: 200, y: 300 }
-          ]
-        }
+            { x: 200, y: 300 },
+          ],
+        },
       ],
       imageWidth: 500,
-      imageHeight: 500
+      imageHeight: 500,
     };
 
     const setSegmentation = vi.fn();
 
     const { result, rerender } = renderHook(
       ({ segmentation }) => useSegmentationHistory(segmentation, setSegmentation),
-      { initialProps: { segmentation: initialSegmentation } }
+      { initialProps: { segmentation: initialSegmentation } },
     );
 
     // 1. Start dragging vertices on first polygon
@@ -708,15 +716,17 @@ describe('useSegmentationHistory integration', () => {
             { x: 10, y: 10 },
             { x: 120, y: 15 }, // Changed
             { x: 100, y: 100 },
-            { x: 10, y: 100 }
-          ]
+            { x: 10, y: 100 },
+          ],
         },
-        ...initialSegmentation.polygons.slice(1)
-      ]
+        ...initialSegmentation.polygons.slice(1),
+      ],
     };
 
     rerender({ segmentation: draggedSegmentation });
-    act(() => { vi.advanceTimersByTime(400); });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     // 3. End dragging
     act(() => {
@@ -726,11 +736,13 @@ describe('useSegmentationHistory integration', () => {
     // 4. Delete the second polygon
     const deletedPolygonSegmentation = {
       ...draggedSegmentation,
-      polygons: [draggedSegmentation.polygons[0]] // Keep only first polygon
+      polygons: [draggedSegmentation.polygons[0]], // Keep only first polygon
     };
 
     rerender({ segmentation: deletedPolygonSegmentation });
-    act(() => { vi.advanceTimersByTime(400); });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     // 5. Add a new polygon
     const addedPolygonSegmentation = {
@@ -744,14 +756,16 @@ describe('useSegmentationHistory integration', () => {
             { x: 350, y: 350 },
             { x: 400, y: 350 },
             { x: 400, y: 400 },
-            { x: 350, y: 400 }
-          ]
-        }
-      ]
+            { x: 350, y: 400 },
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: addedPolygonSegmentation });
-    act(() => { vi.advanceTimersByTime(400); });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     // History should now have 3 items (initial + after drag + after delete + after add)
     expect(result.current.history.length).toBe(4);
@@ -768,9 +782,9 @@ describe('useSegmentationHistory integration', () => {
       expect.objectContaining({
         polygons: expect.arrayContaining([
           expect.objectContaining({ id: 'poly-1' }),
-          expect.objectContaining({ id: 'poly-2' })
-        ])
-      })
+          expect.objectContaining({ id: 'poly-2' }),
+        ]),
+      }),
     );
 
     // 7. Create snapshot at this point
@@ -789,8 +803,8 @@ describe('useSegmentationHistory integration', () => {
             { x: 5, y: 5 }, // Changed
             { x: 120, y: 15 },
             { x: 120, y: 120 }, // Changed
-            { x: 5, y: 120 } // Changed
-          ]
+            { x: 5, y: 120 }, // Changed
+          ],
         },
         {
           ...draggedSegmentation.polygons[1],
@@ -798,14 +812,16 @@ describe('useSegmentationHistory integration', () => {
             { x: 200, y: 200 },
             { x: 320, y: 200 }, // Changed
             { x: 320, y: 320 }, // Changed
-            { x: 200, y: 320 } // Changed
-          ]
-        }
-      ]
+            { x: 200, y: 320 }, // Changed
+          ],
+        },
+      ],
     };
 
     rerender({ segmentation: finalSegmentation });
-    act(() => { vi.advanceTimersByTime(400); });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     // 9. Now restore the snapshot
     setSegmentation.mockReset();
@@ -823,12 +839,12 @@ describe('useSegmentationHistory integration', () => {
               { x: 10, y: 10 },
               { x: 120, y: 15 }, // From the drag state
               { x: 100, y: 100 },
-              { x: 10, y: 100 }
-            ])
+              { x: 10, y: 100 },
+            ]),
           }),
-          expect.objectContaining({ id: 'poly-2' })
-        ])
-      })
+          expect.objectContaining({ id: 'poly-2' }),
+        ]),
+      }),
     );
   });
 });

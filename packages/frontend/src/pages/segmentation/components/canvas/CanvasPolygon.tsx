@@ -10,7 +10,7 @@ import {
   getPolygonFillColor,
   getPolygonStrokeWidth,
   findRelatedHoles,
-  renderPolygonVertices
+  renderPolygonVertices,
 } from '../../../../../shared/utils/CanvasPolygonUtils';
 
 // Constants remain the same for now, but remove zoom-dependent ones if unused
@@ -25,7 +25,7 @@ interface CanvasPolygonProps {
   polygon: Polygon;
   isSelected: boolean;
   isHovered: boolean;
-  hoveredVertex: { polygonId: string | null, vertexIndex: number | null };
+  hoveredVertex: { polygonId: string | null; vertexIndex: number | null };
   vertexDragState: VertexDragState;
   // zoom: number; // Removed
   // offset: { x: number; y: number }; // Removed
@@ -59,7 +59,7 @@ const CanvasPolygon = ({
   onEditPolygon,
   onDeleteVertex,
   onDuplicateVertex,
-  relatedPolygons = []
+  relatedPolygons = [],
 }: Omit<CanvasPolygonProps, 'zoom' | 'offset'>) => {
   const { id, points, type = 'external', parentId, color: polygonColor } = polygon;
 
@@ -87,14 +87,14 @@ const CanvasPolygon = ({
   // Convert IMAGE points array to SVG points string format "x1,y1 x2,y2 ..."
   const pointsString = useMemo(() => {
     if (!pointsToRender || pointsToRender.length === 0) return '';
-    return pointsToRender.map(p => `${p.x},${p.y}`).join(' ');
+    return pointsToRender.map((p) => `${p.x},${p.y}`).join(' ');
   }, [pointsToRender]);
 
   // Create SVG path for polygon with holes using IMAGE coordinates
   const svgPath = useMemo(() => {
     if (type === 'internal') return '';
     const mainPathPoints = pointsToRender; // Use raw image points
-    const holePathsPoints = holes.map(h => h.points); // Use raw image points
+    const holePathsPoints = holes.map((h) => h.points); // Use raw image points
 
     return createSvgPath(mainPathPoints, holePathsPoints);
   }, [pointsToRender, holes, type]);
@@ -156,12 +156,12 @@ const CanvasPolygon = ({
             vectorEffect="non-scaling-stroke" // This should handle stroke scaling
             shapeRendering="geometricPrecision"
             onClick={handleClick}
-            style={{ pointerEvents: 'visiblePainted'}}
+            style={{ pointerEvents: 'visiblePainted' }}
           />
         )}
 
         {/* Render Vertices using IMAGE coordinates */}
-        {shouldRenderVertices && (
+        {shouldRenderVertices &&
           pointsToRender.map((point, index) => (
             <CanvasVertex
               key={`${id}-vertex-${index}`}
@@ -181,8 +181,7 @@ const CanvasPolygon = ({
               onDeleteVertex={onDeleteVertex}
               onDuplicateVertex={onDuplicateVertex}
             />
-          ))
-        )}
+          ))}
       </g>
     </PolygonContextMenu>
   );

@@ -15,13 +15,13 @@ const MockImageUploaderDropzone = () => {
 
 // Mock the actual component
 vi.mock('@/components/ImageUploaderDropzone', () => ({
-  default: () => <MockImageUploaderDropzone />
+  default: () => <MockImageUploaderDropzone />,
 }));
 
 describe('ImageUploaderDropzone Component', () => {
   it('renders the component correctly', () => {
     render(<MockImageUploaderDropzone />);
-    
+
     // Check if the dropzone area is rendered
     expect(screen.getByText(/Drag & drop images here/i)).toBeInTheDocument();
     expect(screen.getByText(/Image files only/i)).toBeInTheDocument();

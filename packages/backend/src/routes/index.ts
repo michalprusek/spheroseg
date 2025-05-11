@@ -13,6 +13,9 @@ import segmentationRoutes from './segmentation';
 import statusRoute from './status';
 import projectDuplicationRoutes from './projectDuplicationRoutes';
 import testRoute from './test';
+import logsRoutes from './logs';
+import performanceRoutes from './performance';
+import userStatsRoutes from './userStats';
 
 // Create main router
 const router: Router = express.Router();
@@ -20,19 +23,22 @@ const router: Router = express.Router();
 // Register routes
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
+router.use('/users', userStatsRoutes);
 router.use('/projects', projectRoutes);
 router.use('/images', imageRoutes);
 router.use('/segmentation', segmentationRoutes);
 router.use('/status', statusRoute);
 router.use('/duplication', projectDuplicationRoutes);
 router.use('/test', testRoute);
+router.use('/logs', logsRoutes);
+router.use('/metrics/performance', performanceRoutes);
 
 // Add a default route for root
 router.get('/', (req, res) => {
   res.status(200).json({
     name: 'SpheroSeg API',
     version: process.env.npm_package_version || '1.0.0',
-    status: 'operational'
+    status: 'operational',
   });
 });
 

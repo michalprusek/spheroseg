@@ -9,7 +9,7 @@ import { ProfileProvider } from '@/contexts/ProfileContext';
 window.REACT_ROUTER_FUTURE_FLAGS = {
   v7_startTransition: true,
   v7_relativeSplatPath: true,
-  v7_normalizeFormMethod: true
+  v7_normalizeFormMethod: true,
 };
 
 /**
@@ -21,9 +21,7 @@ export const AllProvidersWrapper: React.FC<{ children: React.ReactNode }> = ({ c
       <LanguageProvider>
         <ThemeProvider>
           <AuthProvider>
-            <ProfileProvider>
-              {children}
-            </ProfileProvider>
+            <ProfileProvider>{children}</ProfileProvider>
           </AuthProvider>
         </ThemeProvider>
       </LanguageProvider>
@@ -34,23 +32,17 @@ export const AllProvidersWrapper: React.FC<{ children: React.ReactNode }> = ({ c
 /**
  * A test wrapper with Memory Router (for tests that need URL control)
  */
-export const MemoryRouterWrapper: React.FC<{ 
+export const MemoryRouterWrapper: React.FC<{
   children: React.ReactNode;
   initialEntries?: string[];
   initialIndex?: number;
-}> = ({ 
-  children, 
-  initialEntries = ['/'], 
-  initialIndex = 0 
-}) => {
+}> = ({ children, initialEntries = ['/'], initialIndex = 0 }) => {
   return (
     <MemoryRouter initialEntries={initialEntries} initialIndex={initialIndex}>
       <LanguageProvider>
         <ThemeProvider>
           <AuthProvider>
-            <ProfileProvider>
-              {children}
-            </ProfileProvider>
+            <ProfileProvider>{children}</ProfileProvider>
           </AuthProvider>
         </ThemeProvider>
       </LanguageProvider>

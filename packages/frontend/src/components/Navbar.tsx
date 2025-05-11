@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Menu, X, Microscope } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import LanguageSwitcher from "./LanguageSwitcher";
-import ThemeToggle from "./ThemeToggle";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Menu, X, Microscope } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
   const { t } = useLanguage();
@@ -20,9 +20,9 @@ const Navbar = () => {
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -33,16 +33,11 @@ const Navbar = () => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
-        isScrolled
-          ? "py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm"
-          : "py-5 bg-transparent"
+        isScrolled ? 'py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm' : 'py-5 bg-transparent'
       }`}
     >
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-        <Link
-          to="/"
-          className="flex items-center gap-2 transition-opacity hover:opacity-80"
-        >
+        <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
           <div className="w-10 h-10 flex items-center justify-center">
             <img src="/favicon.svg" alt="SpheroSeg Logo" className="w-10 h-10" />
           </div>
@@ -89,7 +84,7 @@ const Navbar = () => {
           <div className="ml-2">
             <LanguageSwitcher />
           </div>
-          
+
           {/* Theme Toggle */}
           <div className="ml-1">
             <ThemeToggle variant="simple" />
@@ -160,7 +155,7 @@ const Navbar = () => {
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{t('common.language')}</p>
               <LanguageSwitcher />
             </div>
-            
+
             {/* Theme Selector for Mobile */}
             <div className="mt-2">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{t('settings.theme')}</p>

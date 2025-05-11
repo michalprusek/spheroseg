@@ -82,7 +82,7 @@ describe('apiClient', () => {
   beforeEach(() => {
     // Reset localStorage mock
     localStorageMock = {};
-    
+
     Object.defineProperty(window, 'localStorage', {
       value: {
         getItem: vi.fn((key) => localStorageMock[key] || null),
@@ -132,16 +132,16 @@ describe('apiClient', () => {
         method: 'get',
         url: '/test',
       } as any;
-      
+
       // Add token to localStorage
       localStorageMock['authToken'] = 'test-token';
-      
+
       // Get the request interceptor
       const { onFulfilled } = (apiClient as any)._requestInterceptor;
-      
+
       // Execute the interceptor
       const result = onFulfilled(mockConfig);
-      
+
       // Verify
       expect(result.headers.Authorization).toBe('Bearer test-token');
       expect(result.headers['X-Request-ID']).toBeDefined();
@@ -155,13 +155,13 @@ describe('apiClient', () => {
         method: 'get',
         url: '/test',
       } as any;
-      
+
       // Get the request interceptor
       const { onFulfilled } = (apiClient as any)._requestInterceptor;
-      
+
       // Execute the interceptor
       const result = onFulfilled(mockConfig);
-      
+
       // Verify
       expect(result.headers.Authorization).toBeUndefined();
       expect(result.headers['X-Request-ID']).toBeDefined();
@@ -174,13 +174,13 @@ describe('apiClient', () => {
         method: 'get',
         url: '/test',
       } as any;
-      
+
       // Get the request interceptor
       const { onFulfilled } = (apiClient as any)._requestInterceptor;
-      
+
       // Execute the interceptor
       const result = onFulfilled(mockConfig);
-      
+
       // Verify
       expect(result.headers['X-Request-ID']).toBeDefined();
       expect(typeof result.headers['X-Request-ID']).toBe('string');
@@ -191,20 +191,20 @@ describe('apiClient', () => {
       // Setup
       const originalNodeEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
-      
+
       const mockConfig: InternalAxiosRequestConfig = {
         headers: {},
         method: 'get',
         url: '/test',
         params: { id: '123' },
       } as any;
-      
+
       // Get the request interceptor
       const { onFulfilled } = (apiClient as any)._requestInterceptor;
-      
+
       // Execute the interceptor
       onFulfilled(mockConfig);
-      
+
       // Verify
       expect(logger.debug).toHaveBeenCalled();
       expect(logger.debug).toHaveBeenCalledWith(
@@ -213,9 +213,9 @@ describe('apiClient', () => {
           method: 'GET',
           url: '/test',
           params: { id: '123' },
-        })
+        }),
       );
-      
+
       // Restore environment
       process.env.NODE_ENV = originalNodeEnv;
     });
@@ -223,10 +223,10 @@ describe('apiClient', () => {
     it('should handle request setup errors', () => {
       // Setup
       const mockError = new Error('Request setup error');
-      
+
       // Get the request interceptor
       const { onRejected } = (apiClient as any)._requestInterceptor;
-      
+
       // Execute the interceptor
       let caughtError;
       try {
@@ -234,7 +234,7 @@ describe('apiClient', () => {
       } catch (error) {
         caughtError = error;
       }
-      
+
       // Verify
       expect(handleError).toHaveBeenCalledWith(mockError, {
         context: 'API Request Setup',
@@ -245,7 +245,7 @@ describe('apiClient', () => {
         },
         showToast: false,
       });
-      
+
       expect(caughtError).toBe(mockError);
     });
   });
@@ -264,13 +264,13 @@ describe('apiClient', () => {
           url: '/test',
         } as any,
       } as any;
-      
+
       // Get the response interceptor
       const { onFulfilled } = (apiClient as any)._responseInterceptor;
-      
+
       // Execute the interceptor
       const result = onFulfilled(mockResponse);
-      
+
       // Verify
       expect(result).toBe(mockResponse);
     });
@@ -279,7 +279,7 @@ describe('apiClient', () => {
       // Setup
       const originalNodeEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
-      
+
       const mockResponse: AxiosResponse = {
         status: 200,
         statusText: 'OK',
@@ -291,13 +291,13 @@ describe('apiClient', () => {
           url: '/test',
         } as any,
       } as any;
-      
+
       // Get the response interceptor
       const { onFulfilled } = (apiClient as any)._responseInterceptor;
-      
+
       // Execute the interceptor
       onFulfilled(mockResponse);
-      
+
       // Verify
       expect(logger.debug).toHaveBeenCalled();
       expect(logger.debug).toHaveBeenCalledWith(
@@ -307,9 +307,9 @@ describe('apiClient', () => {
           status: 200,
           method: 'GET',
           url: '/test',
-        })
+        }),
       );
-      
+
       // Restore environment
       process.env.NODE_ENV = originalNodeEnv;
     });
@@ -331,10 +331,10 @@ describe('apiClient', () => {
           data: { message: 'Unauthorized' },
         },
       } as any;
-      
+
       // Get the response interceptor
       const { onRejected } = (apiClient as any)._responseInterceptor;
-      
+
       // Execute the interceptor
       try {
         await onRejected(mockAxiosError);
@@ -343,7 +343,7 @@ describe('apiClient', () => {
         // Expected to throw
         expect(error).toBe(mockAxiosError);
       }
-      
+
       // Verify
       expect(localStorage.removeItem).toHaveBeenCalledWith('authToken');
       expect(handleError).toHaveBeenCalledWith(mockAxiosError, {
@@ -355,10 +355,10 @@ describe('apiClient', () => {
         },
         showToast: true,
       });
-      
+
       // Fast-forward timers
       vi.advanceTimersByTime(2000);
-      
+
       // Verify redirect
       expect(window.location.href).toBe('/sign-in');
     });
@@ -380,10 +380,10 @@ describe('apiClient', () => {
           data: { message: 'Forbidden' },
         },
       } as any;
-      
+
       // Get the response interceptor
       const { onRejected } = (apiClient as any)._responseInterceptor;
-      
+
       // Execute the interceptor
       try {
         await onRejected(mockAxiosError);
@@ -392,7 +392,7 @@ describe('apiClient', () => {
         // Expected to throw
         expect(error).toBe(mockAxiosError);
       }
-      
+
       // Verify
       expect(handleError).toHaveBeenCalledWith(mockAxiosError, {
         context: 'API GET /test',
@@ -422,10 +422,10 @@ describe('apiClient', () => {
           data: { message: 'Not Found' },
         },
       } as any;
-      
+
       // Get the response interceptor
       const { onRejected } = (apiClient as any)._responseInterceptor;
-      
+
       // Execute the interceptor
       try {
         await onRejected(mockAxiosError);
@@ -434,7 +434,7 @@ describe('apiClient', () => {
         // Expected to throw
         expect(error).toBe(mockAxiosError);
       }
-      
+
       // Verify
       expect(handleError).toHaveBeenCalledWith(mockAxiosError, {
         context: 'API GET /test',
@@ -464,10 +464,10 @@ describe('apiClient', () => {
           data: { message: 'Internal Server Error' },
         },
       } as any;
-      
+
       // Get the response interceptor
       const { onRejected } = (apiClient as any)._responseInterceptor;
-      
+
       // Execute the interceptor
       try {
         await onRejected(mockAxiosError);
@@ -476,7 +476,7 @@ describe('apiClient', () => {
         // Expected to throw
         expect(error).toBe(mockAxiosError);
       }
-      
+
       // Verify
       expect(handleError).toHaveBeenCalledWith(mockAxiosError, {
         context: 'API GET /test',
@@ -502,10 +502,10 @@ describe('apiClient', () => {
         } as any,
         response: undefined,
       } as any;
-      
+
       // Get the response interceptor
       const { onRejected } = (apiClient as any)._responseInterceptor;
-      
+
       // Execute the interceptor
       try {
         await onRejected(mockAxiosError);
@@ -514,7 +514,7 @@ describe('apiClient', () => {
         // Expected to throw
         expect(error).toBe(mockAxiosError);
       }
-      
+
       // Verify
       expect(handleError).toHaveBeenCalledWith(mockAxiosError, {
         context: 'API GET /test',
@@ -544,10 +544,10 @@ describe('apiClient', () => {
           data: { message: 'Bad Request' },
         },
       } as any;
-      
+
       // Get the response interceptor
       const { onRejected } = (apiClient as any)._responseInterceptor;
-      
+
       // Execute the interceptor
       try {
         await onRejected(mockAxiosError);
@@ -556,7 +556,7 @@ describe('apiClient', () => {
         // Expected to throw
         expect(error).toBe(mockAxiosError);
       }
-      
+
       // Verify
       expect(handleError).toHaveBeenCalledWith(mockAxiosError, {
         context: 'API GET /test',

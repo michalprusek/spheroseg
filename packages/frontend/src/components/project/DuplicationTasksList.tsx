@@ -21,24 +21,24 @@ const DuplicationTasksList: React.FC<DuplicationTasksListProps> = ({
   refreshInterval = 10000, // Default to 10 seconds
   maxTasks = 5,
   showActiveOnly = false,
-  showTabs = true
+  showTabs = true,
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  
+
   const [tasks, setTasks] = useState<DuplicationTask[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(showActiveOnly ? 'active' : 'all');
-  
+
   // Fetch tasks from the API
   const fetchTasks = async () => {
     try {
       setError(null);
-      
-      const response = await apiClient.get('/duplication');
+
+      const response = await apiClient.get('/api/duplication');
       const data = response.data.tasks || [];
-      
+
       setTasks(data);
       setLoading(false);
     } catch (err) {
@@ -47,13 +47,13 @@ const DuplicationTasksList: React.FC<DuplicationTasksListProps> = ({
       setLoading(false);
     }
   };
-  
+
   // Cancel a duplication task
   const cancelTask = async (taskId: string) => {
     try {
-      await apiClient.delete(`/duplication/${taskId}`);
+      await apiClient.delete(`/api/duplication/${taskId}`);
       toast.success(t('projects.duplicationCancelled') || 'Duplication cancelled');
-      
+
       // Refresh the tasks list
       fetchTasks();
     } catch (err) {
@@ -61,36 +61,36 @@ const DuplicationTasksList: React.FC<DuplicationTasksListProps> = ({
       toast.error(t('projects.duplicationCancellationFailed') || 'Failed to cancel duplication');
     }
   };
-  
+
   // Navigate to a project
   const viewProject = (projectId: string) => {
     navigate(`/projects/${projectId}`);
   };
-  
+
   // Initial fetch and setup interval
   useEffect(() => {
     fetchTasks();
-    
+
     // Set up a refresh interval
     const interval = setInterval(fetchTasks, refreshInterval);
-    
+
     // Clean up interval on unmount
     return () => clearInterval(interval);
   }, [refreshInterval]);
-  
+
   // Filter tasks based on the active tab
-  const filteredTasks = tasks.filter(task => {
-    if (activeTab === 'active') {
-      return task.status === 'pending' || task.status === 'processing';
-    }
-    return true;
-  }).slice(0, maxTasks);
-  
+  const filteredTasks = tasks
+    .filter((task) => {
+      if (activeTab === 'active') {
+        return task.status === 'pending' || task.status === 'processing';
+      }
+      return true;
+    })
+    .slice(0, maxTasks);
+
   // Count active tasks
-  const activeTasks = tasks.filter(
-    task => task.status === 'pending' || task.status === 'processing'
-  ).length;
-  
+  const activeTasks = tasks.filter((task) => task.status === 'pending' || task.status === 'processing').length;
+
   // Show loading state
   if (loading && tasks.length === 0) {
     return (
@@ -100,35 +100,30 @@ const DuplicationTasksList: React.FC<DuplicationTasksListProps> = ({
       </div>
     );
   }
-  
+
   // Show error state
   if (error && tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-4 text-red-500">
         <p>{error}</p>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={fetchTasks} 
-          className="mt-2"
-        >
+        <Button variant="outline" size="sm" onClick={fetchTasks} className="mt-2">
           {t('common.retry') || 'Retry'}
         </Button>
       </div>
     );
   }
-  
+
   // Show empty state
   if (filteredTasks.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">
-        {activeTab === 'active' ? 
-          (t('projects.noActiveDuplications') || 'No active duplications') : 
-          (t('projects.noDuplications') || 'No duplication tasks found')}
+        {activeTab === 'active'
+          ? t('projects.noActiveDuplications') || 'No active duplications'
+          : t('projects.noDuplications') || 'No duplication tasks found'}
       </div>
     );
   }
-  
+
   // Render tasks list with optional tabs
   return (
     <div className="w-full">
@@ -144,9 +139,9 @@ const DuplicationTasksList: React.FC<DuplicationTasksListProps> = ({
           </TabsList>
         </Tabs>
       )}
-      
+
       <div className="space-y-3">
-        {filteredTasks.map(task => (
+        {filteredTasks.map((task) => (
           <DuplicationProgress
             key={task.id}
             task={task}

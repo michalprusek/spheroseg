@@ -43,7 +43,7 @@ global.Image = MockImage as any;
 describe('maskToPolygons', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
     mockContext.drawImage.mockReset();
     mockContext.getImageData.mockReset();
@@ -85,9 +85,9 @@ describe('maskToPolygons', () => {
     const polygon = result.polygons?.[0];
     expect(polygon).toBeDefined();
     expect(polygon?.points.length).toBeGreaterThanOrEqual(4); // At least 4 points for a square
-    
+
     // Check that the polygon points are around our square
-    polygon?.points.forEach(point => {
+    polygon?.points.forEach((point) => {
       // Points should be near the square boundaries
       expect(point.x).toBeGreaterThanOrEqual(39);
       expect(point.x).toBeLessThanOrEqual(61);
@@ -163,34 +163,31 @@ describe('maskToPolygons', () => {
 
     // Check that the polygons have different colors
     expect(result.polygons?.[0].color).not.toBe(result.polygons?.[1].color);
-    
+
     // Check that the polygons are in the correct positions
     const polygon1 = result.polygons?.[0];
     const polygon2 = result.polygons?.[1];
-    
+
     // One polygon should be near the top-left square
-    const isPolygon1TopLeft = polygon1?.points.every(point => 
-      point.x >= 9 && point.x <= 21 && point.y >= 9 && point.y <= 21
+    const isPolygon1TopLeft = polygon1?.points.every(
+      (point) => point.x >= 9 && point.x <= 21 && point.y >= 9 && point.y <= 21,
     );
-    
-    const isPolygon2TopLeft = polygon2?.points.every(point => 
-      point.x >= 9 && point.x <= 21 && point.y >= 9 && point.y <= 21
+
+    const isPolygon2TopLeft = polygon2?.points.every(
+      (point) => point.x >= 9 && point.x <= 21 && point.y >= 9 && point.y <= 21,
     );
-    
+
     // One polygon should be near the bottom-right square
-    const isPolygon1BottomRight = polygon1?.points.every(point => 
-      point.x >= 69 && point.x <= 81 && point.y >= 69 && point.y <= 81
+    const isPolygon1BottomRight = polygon1?.points.every(
+      (point) => point.x >= 69 && point.x <= 81 && point.y >= 69 && point.y <= 81,
     );
-    
-    const isPolygon2BottomRight = polygon2?.points.every(point => 
-      point.x >= 69 && point.x <= 81 && point.y >= 69 && point.y <= 81
+
+    const isPolygon2BottomRight = polygon2?.points.every(
+      (point) => point.x >= 69 && point.x <= 81 && point.y >= 69 && point.y <= 81,
     );
-    
+
     // Either polygon1 is top-left and polygon2 is bottom-right, or vice versa
-    expect(
-      (isPolygon1TopLeft && isPolygon2BottomRight) || 
-      (isPolygon2TopLeft && isPolygon1BottomRight)
-    ).toBe(true);
+    expect((isPolygon1TopLeft && isPolygon2BottomRight) || (isPolygon2TopLeft && isPolygon1BottomRight)).toBe(true);
   });
 
   it('should handle errors when loading the mask', async () => {

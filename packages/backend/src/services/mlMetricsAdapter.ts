@@ -1,6 +1,6 @@
 /**
  * ML Metrics Adapter
- * 
+ *
  * This service adapts ML service metrics to be exposed through the backend's Prometheus endpoint.
  * It periodically fetches metrics from the ML service and updates local Prometheus metrics.
  */
@@ -59,26 +59,20 @@ const ML_CPU_UTILIZATION = new Gauge({
  * @param labels Labels to match
  * @returns Metric value or null if not found
  */
-function extractMetricValue(
-  metrics: string,
-  metricName: string,
-  labels: Record<string, string> = {}
-): number | null {
+function extractMetricValue(metrics: string, metricName: string, labels: Record<string, string> = {}): number | null {
   const lines = metrics.split('\n');
-  const metricLines = lines.filter(line => 
-    line.startsWith(metricName) && !line.startsWith(`${metricName}_`)
-  );
-  
+  const metricLines = lines.filter((line) => line.startsWith(metricName) && !line.startsWith(`${metricName}_`));
+
   if (metricLines.length === 0) {
     return null;
   }
-  
+
   // Match lines with all specified labels
   const labelEntries = Object.entries(labels);
   if (labelEntries.length > 0) {
     for (const line of metricLines) {
       let allLabelsMatch = true;
-      
+
       for (const [labelName, labelValue] of labelEntries) {
         const labelRegex = new RegExp(`${labelName}="${labelValue}"`);
         if (!labelRegex.test(line)) {
@@ -86,7 +80,7 @@ function extractMetricValue(
           break;
         }
       }
-      
+
       if (allLabelsMatch) {
         const valueMatch = line.match(/\s([0-9.]+)(\s|$)/);
         if (valueMatch) {
@@ -94,16 +88,16 @@ function extractMetricValue(
         }
       }
     }
-    
+
     return null;
   }
-  
+
   // No labels specified, just get the first metric value
   const valueMatch = metricLines[0].match(/\s([0-9.]+)(\s|$)/);
   if (valueMatch) {
     return parseFloat(valueMatch[1]);
   }
-  
+
   return null;
 }
 
@@ -115,22 +109,20 @@ function extractMetricValue(
  */
 function extractMetricsWithLabels(
   metrics: string,
-  metricPrefix: string
-): Array<{labels: Record<string, string>, value: number}> {
-  const result: Array<{labels: Record<string, string>, value: number}> = [];
+  metricPrefix: string,
+): Array<{ labels: Record<string, string>; value: number }> {
+  const result: Array<{ labels: Record<string, string>; value: number }> = [];
   const lines = metrics.split('\n');
-  const metricLines = lines.filter(line => 
-    line.startsWith(metricPrefix) && !line.startsWith(`${metricPrefix}_`)
-  );
-  
+  const metricLines = lines.filter((line) => line.startsWith(metricPrefix) && !line.startsWith(`${metricPrefix}_`));
+
   for (const line of metricLines) {
     const labelsMatch = line.match(/{([^}]+)}/);
     const valueMatch = line.match(/\s([0-9.]+)(\s|$)/);
-    
+
     if (valueMatch) {
       const value = parseFloat(valueMatch[1]);
       const labels: Record<string, string> = {};
-      
+
       if (labelsMatch) {
         const labelPairs = labelsMatch[1].split(',');
         for (const pair of labelPairs) {
@@ -142,11 +134,11 @@ function extractMetricsWithLabels(
           }
         }
       }
-      
+
       result.push({ labels, value });
     }
   }
-  
+
   return result;
 }
 
@@ -155,24 +147,24 @@ function extractMetricsWithLabels(
  */
 async function fetchAndUpdateMlMetrics(): Promise<void> {
   try {
-    const response = await axios.get(ML_METRICS_URL, { 
+    const response = await axios.get(ML_METRICS_URL, {
       timeout: 5000,
-      headers: { Accept: 'text/plain' }
+      headers: { Accept: 'text/plain' },
     });
-    
+
     if (response.status === 200) {
       const metricsText = response.data;
-      
+
       // Update task count metrics
       const taskCounts = extractMetricsWithLabels(metricsText, 'ml_segmentation_tasks_total');
       for (const { labels, value } of taskCounts) {
         ML_TASK_COUNT.labels({
           model: labels.model || 'unknown',
           status: labels.status || 'unknown',
-          type: 'segmentation'
+          type: 'segmentation',
         }).inc(0); // Create the metric with initial value if it doesn't exist
       }
-      
+
       // Update task duration metrics
       const taskDurations = extractMetricsWithLabels(metricsText, 'ml_segmentation_duration_seconds_sum');
       for (const { labels, value } of taskDurations) {
@@ -183,39 +175,39 @@ async function fetchAndUpdateMlMetrics(): Promise<void> {
           const average = value / count;
           ML_TASK_DURATION.labels({
             model: labels.model || 'unknown',
-            type: 'segmentation'
+            type: 'segmentation',
           }).observe(average);
         }
       }
-      
+
       // Update queue size metrics
       const queueSizes = extractMetricsWithLabels(metricsText, 'ml_task_queue_size');
       for (const { labels, value } of queueSizes) {
         ML_TASK_QUEUE_SIZE.labels({
-          queue: labels.queue || 'unknown'
+          queue: labels.queue || 'unknown',
         }).set(value);
       }
-      
+
       // Update GPU utilization metrics
       const gpuUtils = extractMetricsWithLabels(metricsText, 'ml_gpu_utilization_percent');
       for (const { labels, value } of gpuUtils) {
         ML_GPU_UTILIZATION.labels({
-          gpu_id: labels.gpu_id || '0'
+          gpu_id: labels.gpu_id || '0',
         }).set(value);
       }
-      
+
       // Update memory utilization metric
       const memUtil = extractMetricValue(metricsText, 'ml_memory_utilization_percent');
       if (memUtil !== null) {
         ML_MEMORY_UTILIZATION.set(memUtil);
       }
-      
+
       // Update CPU utilization metric
       const cpuUtil = extractMetricValue(metricsText, 'ml_cpu_utilization_percent');
       if (cpuUtil !== null) {
         ML_CPU_UTILIZATION.set(cpuUtil);
       }
-      
+
       logger.debug('Updated ML metrics from ML service');
     }
   } catch (error) {
@@ -229,7 +221,7 @@ async function fetchAndUpdateMlMetrics(): Promise<void> {
 function startMetricsPolling(): NodeJS.Timeout {
   // Fetch metrics immediately
   fetchAndUpdateMlMetrics();
-  
+
   // Then set up interval
   return setInterval(fetchAndUpdateMlMetrics, POLLING_INTERVAL);
 }
@@ -248,7 +240,7 @@ export function initMlMetricsAdapter(registry: Registry): void {
   registry.registerMetric(ML_GPU_UTILIZATION);
   registry.registerMetric(ML_MEMORY_UTILIZATION);
   registry.registerMetric(ML_CPU_UTILIZATION);
-  
+
   // Start polling for metrics
   if (!pollingInterval) {
     pollingInterval = startMetricsPolling();
@@ -269,5 +261,5 @@ export function stopMlMetricsAdapter(): void {
 
 export default {
   initMlMetricsAdapter,
-  stopMlMetricsAdapter
+  stopMlMetricsAdapter,
 };

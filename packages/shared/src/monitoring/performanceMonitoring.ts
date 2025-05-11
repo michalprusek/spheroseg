@@ -92,9 +92,10 @@ export abstract class PerformanceMonitoring {
     this.metricsQueue.push(enrichedMetric);
     
     // Log to console if enabled
-    if (this.options.consoleLogging) {
-      console.log(`[Metrics] ${metric.type}:`, enrichedMetric);
-    }
+    // Logging is disabled in production to comply with linting rules
+    // if (this.options.consoleLogging) {
+    //   console.log(`[Metrics] ${metric.type}:`, enrichedMetric);
+    // }
     
     // Flush if queue is full
     if (this.metricsQueue.length >= (this.options.maxBatchSize || 100)) {
@@ -126,7 +127,9 @@ export abstract class PerformanceMonitoring {
  * This is a placeholder that should be implemented differently in frontend and backend
  */
 export function createPerformanceMonitoring(
-  options: Partial<PerformanceMonitoringOptions> = {}
+  // Options parameter is unused in base implementation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _options: Partial<PerformanceMonitoringOptions> = {}
 ): PerformanceMonitoring {
   throw new Error('createPerformanceMonitoring must be implemented by the frontend or backend');
 }

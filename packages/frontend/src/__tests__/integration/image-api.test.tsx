@@ -17,7 +17,7 @@ const mockImages = [
     fileSize: 250000,
     mimeType: 'image/jpeg',
     createdAt: '2023-06-01T12:00:00Z',
-    updatedAt: '2023-06-01T12:10:00Z'
+    updatedAt: '2023-06-01T12:10:00Z',
   },
   {
     id: 'image-2',
@@ -30,8 +30,8 @@ const mockImages = [
     fileSize: 400000,
     mimeType: 'image/jpeg',
     createdAt: '2023-06-02T12:00:00Z',
-    updatedAt: '2023-06-02T12:00:00Z'
-  }
+    updatedAt: '2023-06-02T12:00:00Z',
+  },
 ];
 
 // Mock file for upload tests
@@ -69,13 +69,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               getProjectImages: {
                 data: mockImages,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let images;
@@ -93,13 +93,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               getProjectImages: {
                 error: new Error('Project not found'),
-                status: 404
-              }
+                status: 404,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -114,13 +114,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               getProjectImages: {
                 error: new Error('Unauthorized access'),
-                status: 403
-              }
+                status: 403,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -143,7 +143,7 @@ describe('Image API Integration Tests', () => {
         fileSize: 350000,
         mimeType: 'image/jpeg',
         createdAt: '2023-06-10T12:00:00Z',
-        updatedAt: '2023-06-10T12:00:00Z'
+        updatedAt: '2023-06-10T12:00:00Z',
       };
 
       const { result } = renderHook(() => useImageApi(), {
@@ -152,13 +152,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               uploadImage: {
                 data: uploadedImage,
-                status: 201
-              }
+                status: 201,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let response;
@@ -172,7 +172,9 @@ describe('Image API Integration Tests', () => {
     it('should handle invalid file type error', async () => {
       // Create a text file instead of an image
       const blob = new Blob(['text content'], { type: 'text/plain' });
-      const invalidFile = new File([blob], 'not-an-image.txt', { type: 'text/plain' });
+      const invalidFile = new File([blob], 'not-an-image.txt', {
+        type: 'text/plain',
+      });
 
       const { result } = renderHook(() => useImageApi(), {
         wrapper: ({ children }) => (
@@ -180,13 +182,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               uploadImage: {
                 error: new Error('Invalid file type. Only images are allowed.'),
-                status: 400
-              }
+                status: 400,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -196,20 +198,20 @@ describe('Image API Integration Tests', () => {
 
     it('should handle file size limit exceeded', async () => {
       const mockFile = createMockFile();
-      
+
       const { result } = renderHook(() => useImageApi(), {
         wrapper: ({ children }) => (
           <MockApiClientProvider
             mockResponses={{
               uploadImage: {
                 error: new Error('File size exceeds the limit of 10MB'),
-                status: 400
-              }
+                status: 400,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -230,7 +232,7 @@ describe('Image API Integration Tests', () => {
         fileSize: 350000,
         mimeType: 'image/jpeg',
         createdAt: '2023-06-10T12:00:00Z',
-        updatedAt: '2023-06-10T12:00:00Z'
+        updatedAt: '2023-06-10T12:00:00Z',
       };
 
       const progressCallback = vi.fn();
@@ -246,14 +248,14 @@ describe('Image API Integration Tests', () => {
                 progressEvents: [
                   { loaded: 100000, total: 350000 }, // ~28%
                   { loaded: 200000, total: 350000 }, // ~57%
-                  { loaded: 350000, total: 350000 }  // 100%
-                ]
-              }
+                  { loaded: 350000, total: 350000 }, // 100%
+                ],
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let response;
@@ -277,13 +279,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               deleteImage: {
                 data: { success: true },
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let response;
@@ -301,13 +303,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               deleteImage: {
                 error: new Error('Image not found'),
-                status: 404
-              }
+                status: 404,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -322,17 +324,19 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               deleteImage: {
                 error: new Error('Unauthorized to delete this image'),
-                status: 403
-              }
+                status: 403,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
-        await expect(result.current.deleteImage('project-1', 'image-1')).rejects.toThrow('Unauthorized to delete this image');
+        await expect(result.current.deleteImage('project-1', 'image-1')).rejects.toThrow(
+          'Unauthorized to delete this image',
+        );
       });
     });
   });
@@ -342,10 +346,10 @@ describe('Image API Integration Tests', () => {
       const imageDetails = {
         ...mockImages[0],
         metadata: {
-          location: { lat: 40.7128, lng: -74.0060 },
+          location: { lat: 40.7128, lng: -74.006 },
           captureDate: '2023-05-30T10:15:00Z',
-          camera: 'iPhone 13 Pro'
-        }
+          camera: 'iPhone 13 Pro',
+        },
       };
 
       const { result } = renderHook(() => useImageApi(), {
@@ -354,13 +358,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               getImageDetails: {
                 data: imageDetails,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let details;
@@ -378,13 +382,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               getImageDetails: {
                 error: new Error('Image not found'),
-                status: 404
-              }
+                status: 404,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -398,7 +402,7 @@ describe('Image API Integration Tests', () => {
       const updatedImage = {
         ...mockImages[1],
         status: ImageStatus.PROCESSED,
-        updatedAt: '2023-06-10T15:30:00Z'
+        updatedAt: '2023-06-10T15:30:00Z',
       };
 
       const { result } = renderHook(() => useImageApi(), {
@@ -407,13 +411,13 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               updateImageStatus: {
                 data: updatedImage,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let image;
@@ -431,18 +435,20 @@ describe('Image API Integration Tests', () => {
             mockResponses={{
               updateImageStatus: {
                 error: new Error('Invalid status value'),
-                status: 400
-              }
+                status: 400,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
         // @ts-ignore - Intentionally passing invalid status
-        await expect(result.current.updateImageStatus('project-1', 'image-1', 'invalid_status')).rejects.toThrow('Invalid status value');
+        await expect(result.current.updateImageStatus('project-1', 'image-1', 'invalid_status')).rejects.toThrow(
+          'Invalid status value',
+        );
       });
     });
   });

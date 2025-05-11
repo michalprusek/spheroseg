@@ -15,10 +15,8 @@ mockGet.mockImplementation((url) => {
         queueLength: 1,
         runningTasks: ['task-1'],
         queuedTasks: ['task-2'],
-        processingImages: [
-          { id: 'task-1', name: 'Image 1', projectId: 'project-123' }
-        ]
-      }
+        processingImages: [{ id: 'task-1', name: 'Image 1', projectId: 'project-123' }],
+      },
     });
   } else if (url.includes('/queue-status')) {
     return Promise.resolve({
@@ -28,9 +26,9 @@ mockGet.mockImplementation((url) => {
         queuedTasks: ['task-2', 'task-4'],
         processingImages: [
           { id: 'task-1', name: 'Image 1', projectId: 'project-123' },
-          { id: 'task-3', name: 'Image 3', projectId: 'project-456' }
-        ]
-      }
+          { id: 'task-3', name: 'Image 3', projectId: 'project-456' },
+        ],
+      },
     });
   }
   return Promise.reject(new Error('Not found'));
@@ -52,10 +50,8 @@ const resetMocks = () => {
           queueLength: 1,
           runningTasks: ['task-1'],
           queuedTasks: ['task-2'],
-          processingImages: [
-            { id: 'task-1', name: 'Image 1', projectId: 'project-123' }
-          ]
-        }
+          processingImages: [{ id: 'task-1', name: 'Image 1', projectId: 'project-123' }],
+        },
       });
     } else if (url.includes('/queue-status')) {
       return Promise.resolve({
@@ -65,9 +61,9 @@ const resetMocks = () => {
           queuedTasks: ['task-2', 'task-4'],
           processingImages: [
             { id: 'task-1', name: 'Image 1', projectId: 'project-123' },
-            { id: 'task-3', name: 'Image 3', projectId: 'project-456' }
-          ]
-        }
+            { id: 'task-3', name: 'Image 3', projectId: 'project-456' },
+          ],
+        },
       });
     }
     return Promise.reject(new Error('Not found'));
@@ -81,7 +77,7 @@ const apiClient = {
   put: mockPut,
   delete: mockDelete,
   patch: mockPatch,
-  resetMocks
+  resetMocks,
 };
 
 export default apiClient;

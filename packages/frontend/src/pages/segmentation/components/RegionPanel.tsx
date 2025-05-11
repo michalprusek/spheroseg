@@ -1,16 +1,7 @@
 import React, { useState } from 'react';
-import {
-  ChevronDown,
-  ChevronUp,
-  List,
-  MoreHorizontal
-} from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp, List, MoreHorizontal } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
 import { SegmentationResult } from '@/lib/segmentation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
@@ -22,12 +13,7 @@ interface RegionPanelProps {
   onSelectPolygon: (id: string | null) => void;
 }
 
-const RegionPanel = ({
-  loading,
-  segmentation,
-  selectedPolygonId,
-  onSelectPolygon
-}: RegionPanelProps) => {
+const RegionPanel = ({ loading, segmentation, selectedPolygonId, onSelectPolygon }: RegionPanelProps) => {
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false); // Změněno na false, aby byl panel defaultně sbalený
 

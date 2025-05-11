@@ -1,5 +1,6 @@
-import type { SegmentationResult, Point, Polygon } from "@/lib/segmentation";
+import type { SegmentationResult, Point } from '@/lib/segmentation';
 import { EditMode } from './hooks/segmentation';
+import { ImageStatus } from '@/types';
 
 export interface ProjectImage {
   id: string;
@@ -7,7 +8,7 @@ export interface ProjectImage {
   url: string;
   createdAt: Date;
   updatedAt: Date;
-  segmentationStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  segmentationStatus: ImageStatus;
   segmentationResult?: SegmentationResult;
 }
 
@@ -41,7 +42,7 @@ export interface EditorState {
   offset: { x: number; y: number };
   history: SegmentationResult[];
   historyIndex: number;
-  hoveredVertex: { polygonId: string | null, vertexIndex: number | null };
+  hoveredVertex: { polygonId: string | null; vertexIndex: number | null };
   isDragging: boolean;
   isMovingVertex: boolean;
   editMode: boolean;
@@ -70,7 +71,7 @@ export interface PolygonLayerProps {
   segmentation: SegmentationResult | null;
   imageSize: { width: number; height: number };
   selectedPolygonId: string | null;
-  hoveredVertex: { polygonId: string | null, vertexIndex: number | null };
+  hoveredVertex: { polygonId: string | null; vertexIndex: number | null };
   vertexDragState: VertexDragState;
   editMode: EditMode;
   slicingMode: boolean;
@@ -82,7 +83,11 @@ export interface PolygonLayerProps {
   tempPoints: TempPointsState;
   cursorPosition: Point | null;
   sliceStartPoint: Point | null;
-  hoveredSegment: { polygonId: string; segmentIndex: number; projectedPoint: Point | null } | null;
+  hoveredSegment: {
+    polygonId: string;
+    segmentIndex: number;
+    projectedPoint: Point | null;
+  } | null;
   isShiftPressed: boolean;
   pointAddingTempPoints: Point[];
   selectedVertexIndex: number | null;

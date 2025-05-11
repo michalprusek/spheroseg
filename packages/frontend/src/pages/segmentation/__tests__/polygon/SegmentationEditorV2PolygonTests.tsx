@@ -7,7 +7,7 @@ import { MemoryRouterWrapper } from '@/test-utils/test-wrapper';
 
 // Mock config
 vi.mock('@/config', () => ({
-  API_BASE_URL: 'http://test-api'
+  API_BASE_URL: 'http://test-api',
 }));
 
 // Mock useSegmentationV2 hook with detailed polygon interaction state
@@ -63,7 +63,7 @@ vi.mock('../../hooks/segmentation', () => {
       sliceStartPoint: null,
       addPointStartVertex: null,
       addPointEndVertex: null,
-      isAddingPoints: false
+      isAddingPoints: false,
     },
     isLoading: false,
     isSaving: false,
@@ -98,7 +98,7 @@ vi.mock('../../hooks/segmentation', () => {
       MergePolygons: 'MergePolygons',
     },
     // Export the mock state so we can modify it during tests
-    _mockSegmentationState: mockState
+    _mockSegmentationState: mockState,
   };
 });
 
@@ -131,7 +131,7 @@ vi.mock('../../hooks/useSlicing', () => {
             color: '#FF0000',
             label: 'Cell 1 (Part 2)',
           },
-        ]
+        ],
       };
     }
     return { success: false };
@@ -156,63 +156,77 @@ vi.mock('react-router-dom', async () => {
 
 // Mock CanvasV2 component with detailed polygon visualization
 vi.mock('../../components/canvas/CanvasV2', () => ({
-  default: vi.fn(({ 
-    imageData, 
-    segmentationData, 
-    transform, 
-    editMode, 
-    selectedPolygonId, 
-    hoveredVertex, 
-    tempPoints, 
-    onMouseDown, 
-    onMouseMove, 
-    onMouseUp, 
-    canvasRef 
-  }) => (
-    <div 
-      data-testid="mock-canvas"
-      ref={canvasRef}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-    >
-      <div data-testid="canvas-state">
-        <div>Edit Mode: {editMode}</div>
-        <div>Selected Polygon: {selectedPolygonId || 'none'}</div>
-        <div>Hovered Vertex: {hoveredVertex ? `${hoveredVertex.polygonId}:${hoveredVertex.vertexIndex}` : 'none'}</div>
-        <div>Polygons: {segmentationData?.polygons?.length || 0}</div>
-        <div>Temp Points: {tempPoints?.length || 0}</div>
-      </div>
-      <div data-testid="polygons-list">
-        {segmentationData?.polygons?.map(polygon => (
-          <div key={polygon.id} data-testid={`polygon-${polygon.id}`}>
-            {polygon.id}: {polygon.points.length} vertices
+  default: vi.fn(
+    ({
+      imageData,
+      segmentationData,
+      transform,
+      editMode,
+      selectedPolygonId,
+      hoveredVertex,
+      tempPoints,
+      onMouseDown,
+      onMouseMove,
+      onMouseUp,
+      canvasRef,
+    }) => (
+      <div
+        data-testid="mock-canvas"
+        ref={canvasRef}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+      >
+        <div data-testid="canvas-state">
+          <div>Edit Mode: {editMode}</div>
+          <div>Selected Polygon: {selectedPolygonId || 'none'}</div>
+          <div>
+            Hovered Vertex: {hoveredVertex ? `${hoveredVertex.polygonId}:${hoveredVertex.vertexIndex}` : 'none'}
           </div>
-        ))}
+          <div>Polygons: {segmentationData?.polygons?.length || 0}</div>
+          <div>Temp Points: {tempPoints?.length || 0}</div>
+        </div>
+        <div data-testid="polygons-list">
+          {segmentationData?.polygons?.map((polygon) => (
+            <div key={polygon.id} data-testid={`polygon-${polygon.id}`}>
+              {polygon.id}: {polygon.points.length} vertices
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  )),
+    ),
+  ),
 }));
 
 // Mock ToolbarV2 component with detailed mode controls
 vi.mock('../../components/toolbar/ToolbarV2', () => ({
-  ToolbarV2: vi.fn(({ 
-    editMode,
-    setEditMode,
-    onSave,
-    onUndo,
-    onRedo
-  }) => (
+  ToolbarV2: vi.fn(({ editMode, setEditMode, onSave, onUndo, onRedo }) => (
     <div data-testid="mock-toolbar">
       <div>Current Mode: {editMode}</div>
-      <button data-testid="view-mode-btn" onClick={() => setEditMode('View')}>View</button>
-      <button data-testid="edit-vertices-mode-btn" onClick={() => setEditMode('EditVertices')}>Edit Vertices</button>
-      <button data-testid="add-polygon-mode-btn" onClick={() => setEditMode('AddPolygon')}>Add Polygon</button>
-      <button data-testid="delete-polygon-mode-btn" onClick={() => setEditMode('DeletePolygon')}>Delete Polygon</button>
-      <button data-testid="slice-polygon-mode-btn" onClick={() => setEditMode('SlicePolygon')}>Slice Polygon</button>
-      <button data-testid="save-btn" onClick={onSave}>Save</button>
-      <button data-testid="undo-btn" onClick={onUndo}>Undo</button>
-      <button data-testid="redo-btn" onClick={onRedo}>Redo</button>
+      <button data-testid="view-mode-btn" onClick={() => setEditMode('View')}>
+        View
+      </button>
+      <button data-testid="edit-vertices-mode-btn" onClick={() => setEditMode('EditVertices')}>
+        Edit Vertices
+      </button>
+      <button data-testid="add-polygon-mode-btn" onClick={() => setEditMode('AddPolygon')}>
+        Add Polygon
+      </button>
+      <button data-testid="delete-polygon-mode-btn" onClick={() => setEditMode('DeletePolygon')}>
+        Delete Polygon
+      </button>
+      <button data-testid="slice-polygon-mode-btn" onClick={() => setEditMode('SlicePolygon')}>
+        Slice Polygon
+      </button>
+      <button data-testid="save-btn" onClick={onSave}>
+        Save
+      </button>
+      <button data-testid="undo-btn" onClick={onUndo}>
+        Undo
+      </button>
+      <button data-testid="redo-btn" onClick={onRedo}>
+        Redo
+      </button>
     </div>
   )),
 }));
@@ -239,7 +253,7 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
   beforeEach(() => {
     // Setup all context mocks
     setupAllContextMocks();
-    
+
     // Reset mocks
     vi.clearAllMocks();
   });
@@ -251,38 +265,38 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
   const renderComponent = () => {
     return render(
       <MemoryRouterWrapper>
-        <SegmentationEditorV2 
-          projectId="test-project-id" 
-          imageId="test-image-id" 
-        />
-      </MemoryRouterWrapper>
+        <SegmentationEditorV2 projectId="test-project-id" imageId="test-image-id" />
+      </MemoryRouterWrapper>,
     );
   };
 
   // Test selecting a polygon
   it('should handle polygon selection', () => {
     renderComponent();
-    
+
     // Get the mock state
     const { _mockSegmentationState } = require('../../hooks/segmentation');
-    
+
     // Simulate a mouse event on the canvas that should select polygon-1
     const mockEvent = {
       clientX: 150,
       clientY: 150,
       preventDefault: vi.fn(),
     };
-    
+
     // Mock the getCanvasCoordinates function to return a point inside polygon-1
-    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({ x: 150, y: 150 });
-    
+    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({
+      x: 150,
+      y: 150,
+    });
+
     // Get the canvas
     const canvas = screen.getByTestId('mock-canvas');
-    
+
     // Simulate clicking the canvas
     fireEvent.mouseDown(canvas, mockEvent);
-    
-    // The mock doesn't actually implement polygon selection logic, 
+
+    // The mock doesn't actually implement polygon selection logic,
     // but we can verify onMouseDown was called with the expected event
     expect(_mockSegmentationState.onMouseDown).toHaveBeenCalled();
   });
@@ -290,59 +304,62 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
   // Test editing vertices in a polygon
   it('should enter edit vertices mode and handle vertex operations', () => {
     renderComponent();
-    
+
     // Get the mock state
     const { _mockSegmentationState } = require('../../hooks/segmentation');
-    
+
     // First select a polygon
     _mockSegmentationState.selectedPolygonId = 'polygon-1';
-    
+
     // Switch to edit vertices mode
     const editVerticesBtn = screen.getByTestId('edit-vertices-mode-btn');
     fireEvent.click(editVerticesBtn);
-    
+
     // Verify edit mode is set
     expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('EditVertices');
-    
+
     // Simulate hovering over a vertex
-    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({ x: 100, y: 100 });
-    
+    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({
+      x: 100,
+      y: 100,
+    });
+
     const canvas = screen.getByTestId('mock-canvas');
-    
+
     // Simulate mouse move over a vertex
     fireEvent.mouseMove(canvas, {
       clientX: 100,
       clientY: 100,
       preventDefault: vi.fn(),
     });
-    
+
     // Verify onMouseMove was called
     expect(_mockSegmentationState.onMouseMove).toHaveBeenCalled();
-    
+
     // Simulate dragging a vertex
     fireEvent.mouseDown(canvas, {
       clientX: 100,
       clientY: 100,
       preventDefault: vi.fn(),
     });
-    
+
     // Verify onMouseDown was called
     expect(_mockSegmentationState.onMouseDown).toHaveBeenCalled();
-    
+
     // Simulate dragging to a new position
     fireEvent.mouseMove(canvas, {
       clientX: 120,
       clientY: 120,
       preventDefault: vi.fn(),
     });
-    
+
     // Simulate releasing the mouse
     fireEvent.mouseUp(canvas, {
       clientX: 120,
       clientY: 120,
       preventDefault: vi.fn(),
     });
-    
+
     // Verify onMouseUp was called
     expect(_mockSegmentationState.onMouseUp).toHaveBeenCalled();
   });
@@ -350,20 +367,20 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
   // Test adding a new polygon
   it('should enter add polygon mode and create a new polygon', () => {
     renderComponent();
-    
+
     // Get the mock state
     const { _mockSegmentationState } = require('../../hooks/segmentation');
-    
+
     // Switch to add polygon mode
     const addPolygonBtn = screen.getByTestId('add-polygon-mode-btn');
     fireEvent.click(addPolygonBtn);
-    
+
     // Verify edit mode is set
     expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('AddPolygon');
-    
+
     // Get the canvas
     const canvas = screen.getByTestId('mock-canvas');
-    
+
     // Simulate adding points to the polygon
     const points = [
       { clientX: 500, clientY: 100 },
@@ -371,30 +388,30 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
       { clientX: 600, clientY: 200 },
       { clientX: 500, clientY: 200 },
     ];
-    
+
     // Click to add each point
     for (const point of points) {
-      _mockSegmentationState.getCanvasCoordinates.mockReturnValue({ 
-        x: point.clientX, 
-        y: point.clientY 
+      _mockSegmentationState.getCanvasCoordinates.mockReturnValue({
+        x: point.clientX,
+        y: point.clientY,
       });
-      
+
       fireEvent.mouseDown(canvas, {
         ...point,
         preventDefault: vi.fn(),
       });
     }
-    
+
     // Verify onMouseDown was called for each point
     expect(_mockSegmentationState.onMouseDown).toHaveBeenCalledTimes(points.length);
-    
+
     // Double-click to finish the polygon
     fireEvent.mouseDown(canvas, {
       clientX: 500,
       clientY: 100,
       preventDefault: vi.fn(),
     });
-    
+
     // In a real scenario, this would add the polygon to segmentationData
     // We can verify that onMouseDown was called the expected number of times
     expect(_mockSegmentationState.onMouseDown).toHaveBeenCalledTimes(points.length + 1);
@@ -403,29 +420,32 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
   // Test deleting a polygon
   it('should enter delete polygon mode and delete a polygon', () => {
     renderComponent();
-    
+
     // Get the mock state
     const { _mockSegmentationState } = require('../../hooks/segmentation');
-    
+
     // Switch to delete polygon mode
     const deletePolygonBtn = screen.getByTestId('delete-polygon-mode-btn');
     fireEvent.click(deletePolygonBtn);
-    
+
     // Verify edit mode is set
     expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('DeletePolygon');
-    
+
     // Get the canvas
     const canvas = screen.getByTestId('mock-canvas');
-    
+
     // Simulate clicking on a polygon to delete it
-    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({ x: 150, y: 150 });
-    
+    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({
+      x: 150,
+      y: 150,
+    });
+
     fireEvent.mouseDown(canvas, {
       clientX: 150,
       clientY: 150,
       preventDefault: vi.fn(),
     });
-    
+
     // Verify onMouseDown was called
     expect(_mockSegmentationState.onMouseDown).toHaveBeenCalled();
   });
@@ -433,87 +453,96 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
   // Test slicing a polygon
   it('should enter slice polygon mode and slice a polygon', () => {
     renderComponent();
-    
+
     // Get the mock states
     const { _mockSegmentationState } = require('../../hooks/segmentation');
     const { _mockHandleSliceAction } = require('../../hooks/useSlicing');
-    
+
     // Select a polygon first
     _mockSegmentationState.selectedPolygonId = 'polygon-1';
-    
+
     // Switch to slice polygon mode
     const slicePolygonBtn = screen.getByTestId('slice-polygon-mode-btn');
     fireEvent.click(slicePolygonBtn);
-    
+
     // Verify edit mode is set
     expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('SlicePolygon');
-    
+
     // Get the canvas
     const canvas = screen.getByTestId('mock-canvas');
-    
+
     // Simulate adding the first slice point
-    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({ x: 100, y: 150 });
-    
+    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({
+      x: 100,
+      y: 150,
+    });
+
     fireEvent.mouseDown(canvas, {
       clientX: 100,
       clientY: 150,
       preventDefault: vi.fn(),
     });
-    
+
     // Add a mock temp point to simulate the first slice point
     _mockSegmentationState.tempPoints = [{ x: 100, y: 150 }];
-    
+
     // Simulate adding the second slice point
-    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({ x: 200, y: 150 });
-    
+    _mockSegmentationState.getCanvasCoordinates.mockReturnValue({
+      x: 200,
+      y: 150,
+    });
+
     fireEvent.mouseDown(canvas, {
       clientX: 200,
       clientY: 150,
       preventDefault: vi.fn(),
     });
-    
+
     // Add a second mock temp point to simulate the complete slice
-    _mockSegmentationState.tempPoints = [{ x: 100, y: 150 }, { x: 200, y: 150 }];
-    
+    _mockSegmentationState.tempPoints = [
+      { x: 100, y: 150 },
+      { x: 200, y: 150 },
+    ];
+
     // Simulate the slicing action
     const sliceResult = _mockHandleSliceAction(
       _mockSegmentationState.tempPoints,
       _mockSegmentationState.segmentationData,
-      _mockSegmentationState.selectedPolygonId
+      _mockSegmentationState.selectedPolygonId,
     );
-    
+
     // Verify the slice was attempted
     expect(_mockHandleSliceAction).toHaveBeenCalled();
-    
+
     // Check that our mock slice operation returned success
     expect(sliceResult.success).toBe(true);
     expect(sliceResult.newPolygons.length).toBe(2);
-    
+
     // In a real scenario, this would update the segmentation data with the new polygons
   });
 
   // Test undo and redo operations
   it('should handle undo and redo operations', () => {
     renderComponent();
-    
+
     // Get the mock state
     const { _mockSegmentationState } = require('../../hooks/segmentation');
-    
+
     // Configure the mock to have undo/redo available
     _mockSegmentationState.canUndo = true;
     _mockSegmentationState.canRedo = true;
-    
+
     // Click the undo button
     const undoBtn = screen.getByTestId('undo-btn');
     fireEvent.click(undoBtn);
-    
+
     // Verify undo was called
     expect(_mockSegmentationState.undo).toHaveBeenCalled();
-    
+
     // Click the redo button
     const redoBtn = screen.getByTestId('redo-btn');
     fireEvent.click(redoBtn);
-    
+
     // Verify redo was called
     expect(_mockSegmentationState.redo).toHaveBeenCalled();
   });
@@ -521,14 +550,14 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
   // Test saving segmentation
   it('should save the segmentation data', () => {
     renderComponent();
-    
+
     // Get the mock state
     const { _mockSegmentationState } = require('../../hooks/segmentation');
-    
+
     // Click the save button
     const saveBtn = screen.getByTestId('save-btn');
     fireEvent.click(saveBtn);
-    
+
     // Verify handleSave was called
     expect(_mockSegmentationState.handleSave).toHaveBeenCalled();
   });
@@ -536,26 +565,29 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
   // Test mouse move events and hover effects
   it('should handle mouse move events and hovering over elements', () => {
     renderComponent();
-    
+
     // Get the mock state
     const { _mockSegmentationState } = require('../../hooks/segmentation');
-    
+
     // Get the canvas
     const canvas = screen.getByTestId('mock-canvas');
-    
+
     // Simulate mouse movement over the canvas
     fireEvent.mouseMove(canvas, {
       clientX: 150,
       clientY: 150,
       preventDefault: vi.fn(),
     });
-    
+
     // Verify onMouseMove was called
     expect(_mockSegmentationState.onMouseMove).toHaveBeenCalled();
-    
+
     // Simulate hovering over a vertex
-    _mockSegmentationState.hoveredVertex = { polygonId: 'polygon-1', vertexIndex: 0 };
-    
+    _mockSegmentationState.hoveredVertex = {
+      polygonId: 'polygon-1',
+      vertexIndex: 0,
+    };
+
     // Verify the hover state is reflected in the UI
     // (In a real test, we would check if the vertex is highlighted)
   });
@@ -563,23 +595,23 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
   // Test interaction states (dragging, panning)
   it('should handle interaction states like dragging and panning', () => {
     renderComponent();
-    
+
     // Get the mock state
     const { _mockSegmentationState } = require('../../hooks/segmentation');
-    
+
     // Get the canvas
     const canvas = screen.getByTestId('mock-canvas');
-    
+
     // Set up for a panning interaction
     _mockSegmentationState.editMode = 'View';
-    
+
     // Start a panning operation
     fireEvent.mouseDown(canvas, {
       clientX: 400,
       clientY: 300,
       preventDefault: vi.fn(),
     });
-    
+
     // Simulate panning
     _mockSegmentationState.interactionState = {
       isPanning: true,
@@ -589,29 +621,29 @@ describe('SegmentationEditorV2 Polygon Interactions', () => {
       sliceStartPoint: null,
       addPointStartVertex: null,
       addPointEndVertex: null,
-      isAddingPoints: false
+      isAddingPoints: false,
     };
-    
+
     // Move the mouse to pan
     fireEvent.mouseMove(canvas, {
       clientX: 450,
       clientY: 320,
       preventDefault: vi.fn(),
     });
-    
+
     // Verify onMouseMove was called
     expect(_mockSegmentationState.onMouseMove).toHaveBeenCalled();
-    
+
     // End the panning operation
     fireEvent.mouseUp(canvas, {
       clientX: 450,
       clientY: 320,
       preventDefault: vi.fn(),
     });
-    
+
     // Verify onMouseUp was called
     expect(_mockSegmentationState.onMouseUp).toHaveBeenCalled();
-    
+
     // In a real scenario, this would update the transform with the new pan position
   });
 });

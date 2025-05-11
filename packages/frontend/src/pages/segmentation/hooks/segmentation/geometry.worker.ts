@@ -6,13 +6,13 @@ import {
   calculatePolygonAreaAsync,
   calculatePolygonPerimeterAsync,
   calculateBoundingBoxAsync,
-  executePolygonWorkerOperation
+  executePolygonWorkerOperation,
 } from '@/shared/utils/polygonWorkerUtils';
 import {
   slicePolygon as slicePolygonShared,
   distanceToLineSegment,
   getPointSideOfLine,
-  createPolygon
+  createPolygon,
 } from '@/shared/utils/polygonSlicingUtils';
 
 const logger = createLogger('segmentation:geometry.worker');
@@ -24,7 +24,7 @@ export const isPointInPolygonAsync = async (
   x: number,
   y: number,
   points: Point[],
-  polygonWorker: ReturnType<typeof usePolygonWorker>
+  polygonWorker: ReturnType<typeof usePolygonWorker>,
 ): Promise<boolean> => {
   try {
     if (!polygonWorker.isReady) {
@@ -50,7 +50,7 @@ export const isPointInPolygonSync = (x: number, y: number, points: Point[]): boo
     const xj = points[j].x;
     const yj = points[j].y;
 
-    const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
     if (intersect) inside = !inside;
   }
   return inside;
@@ -70,7 +70,7 @@ export const slicePolygonAsync = async (
   polygon: Polygon,
   sliceStart: Point,
   sliceEnd: Point,
-  polygonWorker: ReturnType<typeof usePolygonWorker>
+  polygonWorker: ReturnType<typeof usePolygonWorker>,
 ): Promise<{ success: boolean; polygons: Polygon[] }> => {
   try {
     if (!polygonWorker.isReady) {
@@ -85,10 +85,10 @@ export const slicePolygonAsync = async (
     }
 
     // Create new polygon objects from the result
-    const newPolygons = result.map(points => ({
+    const newPolygons = result.map((points) => ({
       id: uuidv4(),
       points,
-      type: polygon.type || 'external'
+      type: polygon.type || 'external',
     }));
 
     return { success: true, polygons: newPolygons };
@@ -104,7 +104,7 @@ export const slicePolygonAsync = async (
 export const slicePolygonSync = (
   polygon: Polygon,
   sliceStart: Point,
-  sliceEnd: Point
+  sliceEnd: Point,
 ): { success: boolean; polygons: Polygon[] } => {
   const result = slicePolygonShared(polygon, sliceStart, sliceEnd);
 
@@ -127,11 +127,11 @@ export const createPolygonFn = (points: Point[], type: 'external' | 'internal' =
  */
 export const updateSegmentationWithPolygons = (
   segmentationData: SegmentationData,
-  polygons: Polygon[]
+  polygons: Polygon[],
 ): SegmentationData => {
   return {
     ...segmentationData,
-    polygons
+    polygons,
   };
 };
 
@@ -141,20 +141,16 @@ export const updateSegmentationWithPolygons = (
 export const simplifyPolygonAsync = async (
   points: Point[],
   epsilon: number,
-  polygonWorker: ReturnType<typeof usePolygonWorker>
+  polygonWorker: ReturnType<typeof usePolygonWorker>,
 ): Promise<Point[]> => {
   return executePolygonWorkerOperation(
     points,
     polygonWorker,
     (pts) => polygonWorker.simplifyPolygon(pts, epsilon),
     'simplifyPolygonAsync',
-    points
+    points,
   );
 };
 
 // Export shared utility functions
-export {
-  calculatePolygonAreaAsync,
-  calculatePolygonPerimeterAsync,
-  calculateBoundingBoxAsync
-};
+export { calculatePolygonAreaAsync, calculatePolygonPerimeterAsync, calculateBoundingBoxAsync };

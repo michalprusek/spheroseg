@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { PlusCircle } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+} from '@/components/ui/dialog';
+import { PlusCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { v4 as uuidv4 } from 'uuid';
 
 interface NewProjectProps {
@@ -22,8 +22,8 @@ interface NewProjectProps {
 }
 
 const NewProject = ({ onProjectCreated }: NewProjectProps) => {
-  const [projectName, setProjectName] = useState("");
-  const [projectDescription, setProjectDescription] = useState("");
+  const [projectName, setProjectName] = useState('');
+  const [projectDescription, setProjectDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
@@ -53,8 +53,8 @@ const NewProject = ({ onProjectCreated }: NewProjectProps) => {
 
     try {
       // Replace with API call to your backend
-      console.log("Creating new project:", projectData);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+      console.log('Creating new project:', projectData);
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
 
       // Mock created project ID for potential callback use
       const mockProjectId = uuidv4();
@@ -67,7 +67,7 @@ const NewProject = ({ onProjectCreated }: NewProjectProps) => {
         onProjectCreated(mockProjectId); // Pass mock ID
       }
     } catch (error: unknown) {
-      console.error("Error creating project:", error);
+      console.error('Error creating project:', error);
       toast.error(t('newProject.createError'));
     } finally {
       setIsCreating(false);
@@ -85,9 +85,7 @@ const NewProject = ({ onProjectCreated }: NewProjectProps) => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t('projects.createProject')}</DialogTitle>
-          <DialogDescription>
-            {t('projects.createProjectDesc')}
-          </DialogDescription>
+          <DialogDescription>{t('projects.createProjectDesc')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleCreateProject}>
           <div className="grid gap-4 py-4">

@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { UploadCloud, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 interface FileUploaderProps {
   accept?: string | Record<string, string[]>;
@@ -51,9 +51,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
       // Handle file rejections (file type, size, etc.)
       if (fileRejections.length > 0) {
-        const errors = fileRejections.map(
-          (rejection) => `${rejection.file.name}: ${rejection.errors[0].message}`
-        );
+        const errors = fileRejections.map((rejection) => `${rejection.file.name}: ${rejection.errors[0].message}`);
         if (onError) {
           onError(errors.join(', '));
         }
@@ -63,13 +61,14 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       setFiles(acceptedFiles);
       onDrop(acceptedFiles);
     },
-    [disabled, onDrop, onError]
+    [disabled, onDrop, onError],
   );
 
   // Convert accept string to the format expected by react-dropzone v14+
-  const acceptProp = typeof accept === 'string' 
-    ? { [accept]: [] }  // Convert 'image/*' to { 'image/*': [] }
-    : accept;
+  const acceptProp =
+    typeof accept === 'string'
+      ? { [accept]: [] } // Convert 'image/*' to { 'image/*': [] }
+      : accept;
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: acceptProp,
@@ -100,9 +99,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
-            {uploadProgress.toFixed(0)}% - Uploading...
-          </p>
+          <p className="text-sm text-gray-500 mt-1">{uploadProgress.toFixed(0)}% - Uploading...</p>
         </div>
       );
     }
@@ -133,7 +130,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     if (!showPreview || files.length === 0) return null;
 
     return (
-      <div className={`mt-4 ${previewType === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4' : 'space-y-2'}`}>
+      <div
+        className={`mt-4 ${previewType === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4' : 'space-y-2'}`}
+      >
         {files.map((file, index) => (
           <div
             key={`${file.name}-${index}`}
@@ -148,9 +147,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                 src={URL.createObjectURL(file)}
                 alt={file.name}
                 className={`${
-                  previewType === 'grid'
-                    ? 'w-full h-full object-cover'
-                    : 'w-12 h-12 object-cover rounded-md mr-3'
+                  previewType === 'grid' ? 'w-full h-full object-cover' : 'w-12 h-12 object-cover rounded-md mr-3'
                 }`}
               />
             ) : (
@@ -169,12 +166,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
             {previewType === 'list' && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                  {file.name}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {(file.size / 1024).toFixed(2)} kB
-                </p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{file.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{(file.size / 1024).toFixed(2)} kB</p>
               </div>
             )}
 
@@ -197,7 +190,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   // Determine CSS classes based on variant and state
   const getContainerClasses = () => {
     let baseClasses = 'relative rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-offset-2';
-    
+
     // Add variant classes
     if (variant === 'default') {
       baseClasses += ' border-2 border-dashed border-gray-300 dark:border-gray-700';
@@ -206,7 +199,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     } else {
       baseClasses += ' bg-transparent';
     }
-    
+
     // Add state classes
     if (disabled || state === 'disabled') {
       baseClasses += ' opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800';
@@ -215,18 +208,15 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     } else {
       baseClasses += ' hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10';
     }
-    
+
     return baseClasses;
   };
 
   return (
-    <div className={cn("space-y-4", className)}>
-      <div
-        {...getRootProps()}
-        className={getContainerClasses()}
-      >
+    <div className={cn('space-y-4', className)}>
+      <div {...getRootProps()} className={getContainerClasses()}>
         <input {...getInputProps()} />
-        
+
         <div className="p-8 text-center">
           <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
           <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">

@@ -1,9 +1,8 @@
-
-import React from "react";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import React from 'react';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const NotificationSection = () => {
@@ -42,7 +41,7 @@ const NotificationSection = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="space-y-4">
           <h3 className="text-lg font-medium">{t('settings.inAppNotifications')}</h3>
           <div className="space-y-3">
@@ -62,7 +61,7 @@ const NotificationSection = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="flex justify-end">
           <Button type="submit">{t('settings.savePreferences')}</Button>
         </div>

@@ -19,22 +19,16 @@ export function performanceMonitoringMiddleware() {
     res.end = function (this: Response, ...args: any[]) {
       // Calculate duration
       const duration = Date.now() - startTime;
-      
+
       // Get route path (use route pattern if available, otherwise use path)
       const route = req.route?.path || req.path;
-      
+
       // Get user ID if available
       const userId = (req.user as any)?.id;
-      
+
       // Record metric
-      performanceMonitoring.recordApiResponseTimeMetric(
-        route,
-        req.method,
-        res.statusCode,
-        duration,
-        userId
-      );
-      
+      performanceMonitoring.recordApiResponseTimeMetric(route, req.method, res.statusCode, duration, userId);
+
       // Call original end method
       return originalEnd.apply(this, args);
     };

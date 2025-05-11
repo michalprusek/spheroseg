@@ -3,12 +3,12 @@ import { screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 import EditorToolbar from '../EditorToolbar';
-import { 
-  resetAllMocks, 
+import {
+  resetAllMocks,
   testButtonClick,
   renderEditorComponent,
   defaultEditorToolbarProps,
-  verifyModeButtonState
+  verifyModeButtonState,
 } from '../../../../../shared/test-utils/componentTestUtils';
 
 // Import shared mock setup
@@ -19,11 +19,9 @@ setupEditorMocks();
 
 describe('EditorToolbar Component', () => {
   const renderComponent = (props = {}) => {
-    return renderEditorComponent(
-      <EditorToolbar {...defaultEditorToolbarProps} {...props} />
-    );
+    return renderEditorComponent(<EditorToolbar {...defaultEditorToolbarProps} {...props} />);
   };
-  
+
   beforeEach(() => {
     resetAllMocks();
   });
@@ -47,11 +45,11 @@ describe('EditorToolbar Component', () => {
     const mockOnZoomIn = vi.fn();
     const mockOnZoomOut = vi.fn();
     const mockOnResetView = vi.fn();
-    
+
     renderComponent({
       onZoomIn: mockOnZoomIn,
       onZoomOut: mockOnZoomOut,
-      onResetView: mockOnResetView
+      onResetView: mockOnResetView,
     });
 
     const zoomInButton = screen.getByTestId('zoom-in-button');
@@ -72,7 +70,7 @@ describe('EditorToolbar Component', () => {
     renderComponent({
       editMode: true,
       slicingMode: false,
-      pointAddingMode: false
+      pointAddingMode: false,
     });
 
     const editModeButton = screen.getByTestId('edit-mode-button');
@@ -87,7 +85,7 @@ describe('EditorToolbar Component', () => {
   it('disables undo/redo buttons based on history state', () => {
     renderComponent({
       canUndo: false,
-      canRedo: false
+      canRedo: false,
     });
 
     const undoButton = screen.getByTestId('undo-button');
@@ -101,11 +99,11 @@ describe('EditorToolbar Component', () => {
     const mockToggleEditMode = vi.fn();
     const mockToggleSlicingMode = vi.fn();
     const mockTogglePointAddingMode = vi.fn();
-    
+
     renderComponent({
       onToggleEditMode: mockToggleEditMode,
       onToggleSlicingMode: mockToggleSlicingMode,
-      onTogglePointAddingMode: mockTogglePointAddingMode
+      onTogglePointAddingMode: mockTogglePointAddingMode,
     });
 
     const editModeButton = screen.getByTestId('edit-mode-button');

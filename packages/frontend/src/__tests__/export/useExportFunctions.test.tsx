@@ -1,7 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
-import { saveAs } from 'file-saver';
-import { utils, writeFile } from 'xlsx';
+// These imports are mocked below
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -26,7 +25,7 @@ global.fetch = vi.fn().mockImplementation(() =>
   Promise.resolve({
     ok: true,
     blob: () => Promise.resolve(new Blob(['mock-image-data'], { type: 'image/jpeg' })),
-  })
+  }),
 );
 
 // Mock canvas
@@ -58,7 +57,7 @@ vi.mock('sonner', () => ({
     info: vi.fn(),
     success: vi.fn(),
     error: vi.fn(),
-  }
+  },
 }));
 
 // Mock language context
@@ -67,7 +66,7 @@ vi.mock('@/contexts/LanguageContext', () => ({
     t: (key: string) => key,
     language: 'en',
   }),
-  LanguageProvider: ({ children }) => <>{children}</>
+  LanguageProvider: ({ children }: React.PropsWithChildren<unknown>) => <>{children}</>,
 }));
 
 // Sample data
@@ -112,7 +111,7 @@ const mockImages = [
 ];
 
 // Create a wrapper component with LanguageProvider
-const wrapper = ({ children }) => {
+const wrapper: React.FC<React.PropsWithChildren<unknown>> = ({ children }) => {
   return <LanguageProvider>{children}</LanguageProvider>;
 };
 
@@ -218,9 +217,7 @@ describe('useExportFunctions', () => {
 
   it.skip('should handle errors during export gracefully', async () => {
     // Mock fetch to fail
-    (global.fetch).mockImplementationOnce(() =>
-      Promise.reject(new Error('Network error'))
-    );
+    global.fetch.mockImplementationOnce(() => Promise.reject(new Error('Network error')));
 
     const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 

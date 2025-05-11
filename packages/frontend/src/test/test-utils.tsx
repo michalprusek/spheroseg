@@ -21,11 +21,11 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'queries'> {
 /**
  * Custom render function that wraps component with necessary providers
  * Use this instead of the regular render from @testing-library/react
- * 
+ *
  * @example
  * // With all providers
  * const { container } = customRender(<MyComponent />, { withRouter: true, withTheme: true });
- * 
+ *
  * // With specific route
  * const { container } = customRender(<MyComponent />, { withRouter: true, route: '/dashboard' });
  */
@@ -47,7 +47,7 @@ export function customRender(
       },
     }),
     ...renderOptions
-  }: CustomRenderOptions = {}
+  }: CustomRenderOptions = {},
 ) {
   // Setup the URL if using router
   if (withRouter) {
@@ -95,7 +95,7 @@ export function customRender(
  * Wait for a specific amount of time (useful for animations, transitions)
  * @param ms Milliseconds to wait
  */
-export const waitMs = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+export const waitMs = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Create a mock for the IntersectionObserver
@@ -146,8 +146,8 @@ export const createMock = <T extends object>(overrides: Partial<T> = {}): T => {
 /**
  * Simple method to mock a promise that resolves after a delay
  */
-export const delayedPromise = <T>(data: T, ms = 10) => 
-  new Promise<T>(resolve => setTimeout(() => resolve(data), ms));
+export const delayedPromise = <T,>(data: T, ms = 10) =>
+  new Promise<T>((resolve) => setTimeout(() => resolve(data), ms));
 
 export * from '@testing-library/react';
 export { userEvent };

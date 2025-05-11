@@ -109,201 +109,261 @@ export const useProjectDelete = (options: UseProjectDeleteOptions = {}): UseProj
     showConfirmation = true,
     confirmationMessage,
     timeout = 10000,
-    invalidateQueries = true
+    invalidateQueries = true,
   } = options;
 
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [deletedProjectId, setDeletedProjectId] = useState<string | null>(null);
 
-  const deleteProject = useCallback(async (projectId: string, projectName?: string): Promise<string | null> => {
-    if (!projectId) {
-      const errorMsg = t('projects.missingId') || 'Cannot delete project: missing project identifier';
-      logger.error(errorMsg);
-      if (showToasts) {
-        toast.error(errorMsg);
+  const deleteProject = useCallback(
+    async (projectId: string, projectName?: string): Promise<string | null> => {
+      if (!projectId) {
+        const errorMsg = t('projects.missingId') || 'Cannot delete project: missing project identifier';
+        logger.error(errorMsg);
+        if (showToasts) {
+          toast.error(errorMsg);
+        }
+        setError(errorMsg);
+        return null;
       }
-      setError(errorMsg);
-      return null;
-    }
 
-    if (isDeleting) {
-      logger.warn('Attempted to delete a project while another deletion is in progress');
-      return null;
-    }
-
-    // Confirmation dialog is now handled by DeleteProjectDialog component
-    // This block was intentionally removed to prevent double confirmation dialogs
-
-    setIsDeleting(true);
-    setError(null);
-
-    try {
-      logger.info('Deleting project', { projectId, projectName });
-
-      // Create a loading toast with ID for later dismissal
-      let toastId;
-      if (showToasts) {
-        toastId = toast.loading(t('projects.deleting') || 'Deleting project...');
+      if (isDeleting) {
+        logger.warn('Attempted to delete a project while another deletion is in progress');
+        return null;
       }
+
+      // Confirmation dialog is now handled by DeleteProjectDialog component
+      // This block was intentionally removed to prevent double confirmation dialogs
+
+      setIsDeleting(true);
+      setError(null);
 
       try {
-        // Make the API request with explicit timeout
-        // Server responds with 204 No Content on successful deletion
-        const response = await apiClient.delete(`/projects/${projectId}`, {
-          timeout: timeout,
-          validateStatus: (status) => {
-            // Consider both 200 and 204 as valid responses for deletion
-            return (status >= 200 && status < 300) || status === 204;
-          }
-        });
+        logger.info('Deleting project', { projectId, projectName });
 
-        // Log the response status for debugging
-        logger.info('Project deletion API response', {
-          projectId,
-          status: response.status,
-          statusText: response.statusText
-        });
-
-        logger.info('Project deleted successfully', { projectId, projectName });
-
-        // Dismiss the loading toast if it exists
-        if (showToasts && toastId) {
-          toast.dismiss(toastId);
-          toast.success(t('projects.deleteSuccess') || 'Project deleted successfully');
+        // Create a loading toast with ID for later dismissal
+        let toastId;
+        if (showToasts) {
+          toastId = toast.loading(t('projects.deleting') || 'Deleting project...');
         }
-      } catch (err) {
-        // Dismiss the loading toast before showing error
-        if (showToasts && toastId) {
-          toast.dismiss(toastId);
-        }
-        // Re-throw the error to be caught by the outer catch block
-        throw err;
-      }
 
-      // Invalidate relevant queries if enabled
-      if (invalidateQueries) {
         try {
-          // Forcefully invalidate ALL queries to ensure fresh data everywhere
-          await Promise.all([
-            // Project-specific queries
-            queryClient.invalidateQueries({ queryKey: ['project', projectId], exact: true }),
-            queryClient.invalidateQueries({ queryKey: ['queue-status', projectId], exact: true }),
-            queryClient.invalidateQueries({ queryKey: ['project-images', projectId], exact: true }),
-
-            // General project lists that would contain this project
-            queryClient.invalidateQueries({ queryKey: ['projects'] }),
-            queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }),
-            queryClient.invalidateQueries({ queryKey: ['user-projects'] }),
-
-            // Related resource queries
-            queryClient.invalidateQueries({ queryKey: ['images'] }),
-            queryClient.invalidateQueries({ queryKey: ['queue'] })
-          ]);
-
-          logger.info('Successfully invalidated queries after project deletion', { projectId });
-        } catch (error) {
-          // Non-fatal error - log but continue
-          logger.warn('Error invalidating queries after project deletion', {
-            error,
-            projectId,
-            message: error instanceof Error ? error.message : 'Unknown error'
+          // Make the API request with explicit timeout
+          // Server responds with 204 No Content on successful deletion
+          const response = await apiClient.delete(`/api/projects/${projectId}`, {
+            timeout: timeout,
+            validateStatus: (status) => {
+              // Consider both 200 and 204 as valid responses for deletion
+              return (status >= 200 && status < 300) || status === 204;
+            },
           });
-        }
-      }
 
-      // Trigger a custom event for components that might be listening
-      window.dispatchEvent(new CustomEvent('project-deleted', { detail: { projectId, projectName } }));
+          // Log the response status for debugging
+          logger.info('Project deletion API response', {
+            projectId,
+            status: response.status,
+            statusText: response.statusText,
+          });
 
-      setDeletedProjectId(projectId);
+          logger.info('Project deleted successfully', {
+            projectId,
+            projectName,
+          });
 
-      if (onSuccess) {
-        onSuccess(projectId);
-      }
-
-      // Navigate to dashboard if enabled
-      if (navigateToDashboard) {
-        console.log("Project deletion successful, navigating to dashboard");
-
-        // Cancel any pending requests to prevent stale data access
-        queryClient.cancelQueries();
-
-        // Clear cache and ensure we have fresh data after navigation
-        queryClient.clear();
-
-        // Immediate navigation with replace: true to prevent browser history issues
-        navigate('/dashboard', { replace: true });
-      }
-
-      return projectId;
-    } catch (err) {
-      let message = t('projects.deleteFailed') || 'Failed to delete project';
-      let shouldRefresh = false;
-
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 404) {
-          message = t('projects.notFound') || `Project "${projectName || 'Untitled'}" not found. It may have been deleted already.`;
-          shouldRefresh = true;
-
-          // Invalidate queries even for 404 to ensure UI is in sync
-          if (invalidateQueries) {
-            // Invalidate all queries to ensure UI is in sync
-            await queryClient.invalidateQueries({ queryKey: ['project', projectId], exact: true });
-            await queryClient.invalidateQueries({ queryKey: ['queue-status', projectId], exact: true });
-            await queryClient.invalidateQueries({ queryKey: ['project-images', projectId], exact: true });
-
-            // Also clear broader queries
-            await queryClient.invalidateQueries({ queryKey: ['projects'] });
-            await queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] });
-            await queryClient.invalidateQueries({ queryKey: ['user-projects'] });
-            await queryClient.invalidateQueries({ queryKey: ['images'] });
-            await queryClient.invalidateQueries({ queryKey: ['queue'] });
+          // Dismiss the loading toast if it exists
+          if (showToasts && toastId) {
+            toast.dismiss(toastId);
+            toast.success(t('projects.deleteSuccess') || 'Project deleted successfully');
           }
-
-          if (showToasts) {
-            toast.info(message);
+        } catch (err) {
+          // Dismiss the loading toast before showing error
+          if (showToasts && toastId) {
+            toast.dismiss(toastId);
           }
-        } else if (err.response?.status === 401) {
-          message = t('common.unauthorized') || 'You are not authorized to delete this project.';
-        } else if (err.response?.status === 403) {
-          message = t('common.forbidden') || 'You do not have permission to delete this project.';
-        } else {
-          message = err.response?.data?.message || message;
+          // Re-throw the error to be caught by the outer catch block
+          throw err;
         }
-      } else if (err instanceof Error) {
-        message = err.message;
+
+        // Invalidate relevant queries if enabled
+        if (invalidateQueries) {
+          try {
+            // Forcefully invalidate ALL queries to ensure fresh data everywhere
+            await Promise.all([
+              // Project-specific queries
+              queryClient.invalidateQueries({
+                queryKey: ['project', projectId],
+                exact: true,
+              }),
+              queryClient.invalidateQueries({
+                queryKey: ['queue-status', projectId],
+                exact: true,
+              }),
+              queryClient.invalidateQueries({
+                queryKey: ['project-images', projectId],
+                exact: true,
+              }),
+
+              // General project lists that would contain this project
+              queryClient.invalidateQueries({ queryKey: ['projects'] }),
+              queryClient.invalidateQueries({
+                queryKey: ['dashboard-projects'],
+              }),
+              queryClient.invalidateQueries({ queryKey: ['user-projects'] }),
+
+              // Related resource queries
+              queryClient.invalidateQueries({ queryKey: ['images'] }),
+              queryClient.invalidateQueries({ queryKey: ['queue'] }),
+
+              // Invalidate statistics queries to ensure immediate update
+              queryClient.invalidateQueries({ queryKey: ['userStatistics'] }),
+            ]);
+
+            logger.info('Successfully invalidated queries after project deletion', { projectId });
+          } catch (error) {
+            // Non-fatal error - log but continue
+            logger.warn('Error invalidating queries after project deletion', {
+              error,
+              projectId,
+              message: error instanceof Error ? error.message : 'Unknown error',
+            });
+          }
+        }
+
+        // Trigger a custom event for components that might be listening
+        window.dispatchEvent(
+          new CustomEvent('project-deleted', {
+            detail: {
+              projectId,
+              projectName,
+              updateStatistics: true // Flag indicating statistics should be updated
+            },
+          }),
+        );
+
+        // Also dispatch a specific event for statistics updates
+        window.dispatchEvent(
+          new CustomEvent('statistics-update-needed', {
+            detail: {
+              source: 'project-deletion',
+              projectId
+            },
+          }),
+        );
+
+        setDeletedProjectId(projectId);
+
+        if (onSuccess) {
+          onSuccess(projectId);
+        }
+
+        // Navigate to dashboard if enabled
+        if (navigateToDashboard) {
+          console.log('Project deletion successful, navigating to dashboard');
+
+          // Cancel any pending requests to prevent stale data access
+          queryClient.cancelQueries();
+
+          // Clear cache and ensure we have fresh data after navigation
+          queryClient.clear();
+
+          // Immediate navigation with replace: true to prevent browser history issues
+          navigate('/dashboard', { replace: true });
+        }
+
+        return projectId;
+      } catch (err) {
+        let message = t('projects.deleteFailed') || 'Failed to delete project';
+        let shouldRefresh = false;
+
+        if (axios.isAxiosError(err)) {
+          if (err.response?.status === 404) {
+            message =
+              t('projects.notFound') ||
+              `Project "${projectName || 'Untitled'}" not found. It may have been deleted already.`;
+            shouldRefresh = true;
+
+            // Invalidate queries even for 404 to ensure UI is in sync
+            if (invalidateQueries) {
+              // Invalidate all queries to ensure UI is in sync
+              await queryClient.invalidateQueries({
+                queryKey: ['project', projectId],
+                exact: true,
+              });
+              await queryClient.invalidateQueries({
+                queryKey: ['queue-status', projectId],
+                exact: true,
+              });
+              await queryClient.invalidateQueries({
+                queryKey: ['project-images', projectId],
+                exact: true,
+              });
+
+              // Also clear broader queries
+              await queryClient.invalidateQueries({ queryKey: ['projects'] });
+              await queryClient.invalidateQueries({
+                queryKey: ['dashboard-projects'],
+              });
+              await queryClient.invalidateQueries({
+                queryKey: ['user-projects'],
+              });
+              await queryClient.invalidateQueries({ queryKey: ['images'] });
+              await queryClient.invalidateQueries({ queryKey: ['queue'] });
+
+              // Invalidate statistics queries to ensure immediate update
+              await queryClient.invalidateQueries({ queryKey: ['userStatistics'] });
+            }
+
+            if (showToasts) {
+              toast.info(message);
+            }
+          } else if (err.response?.status === 401) {
+            message = t('common.unauthorized') || 'You are not authorized to delete this project.';
+          } else if (err.response?.status === 403) {
+            message = t('common.forbidden') || 'You do not have permission to delete this project.';
+          } else {
+            message = err.response?.data?.message || message;
+          }
+        } else if (err instanceof Error) {
+          message = err.message;
+        }
+
+        logger.error('Failed to delete project', {
+          projectId,
+          projectName,
+          error: err,
+        });
+
+        setError(message);
+
+        if (showToasts && !shouldRefresh) {
+          toast.error(message);
+        }
+
+        return null;
+      } finally {
+        setIsDeleting(false);
       }
-
-      logger.error('Failed to delete project', { projectId, projectName, error: err });
-
-      setError(message);
-
-      if (showToasts && !shouldRefresh) {
-        toast.error(message);
-      }
-
-      return null;
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [
-    isDeleting,
-    onSuccess,
-    showToasts,
-    navigateToDashboard,
-    showConfirmation,
-    confirmationMessage,
-    timeout,
-    invalidateQueries,
-    t,
-    navigate,
-    queryClient
-  ]);
+    },
+    [
+      isDeleting,
+      onSuccess,
+      showToasts,
+      navigateToDashboard,
+      showConfirmation,
+      confirmationMessage,
+      timeout,
+      invalidateQueries,
+      t,
+      navigate,
+      queryClient,
+    ],
+  );
 
   return {
     deleteProject,
     isDeleting,
     error,
-    deletedProjectId
+    deletedProjectId,
   };
 };

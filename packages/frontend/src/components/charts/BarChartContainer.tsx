@@ -1,22 +1,16 @@
 import React from 'react';
-import { 
-  ChartContainer, 
-  ChartTooltip, 
+import {
+  ChartContainer,
+  ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
-  ChartLegendContent
+  ChartLegendContent,
 } from '@/components/ui/chart';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 interface ChartConfig {
-  [key: string]: { 
-    label: string; 
+  [key: string]: {
+    label: string;
     color: string;
   };
 }
@@ -34,11 +28,7 @@ interface BarChartContainerProps {
 /**
  * Reusable bar chart container component
  */
-const BarChartContainer: React.FC<BarChartContainerProps> = ({
-  data,
-  config,
-  bars
-}) => {
+const BarChartContainer: React.FC<BarChartContainerProps> = ({ data, config, bars }) => {
   return (
     <ChartContainer config={config}>
       <BarChart data={data}>
@@ -48,11 +38,11 @@ const BarChartContainer: React.FC<BarChartContainerProps> = ({
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
         {bars.map((bar, index) => (
-          <Bar 
-            key={`bar-${index}`} 
-            dataKey={bar.dataKey} 
-            name={bar.name} 
-            fill={bar.color || config[bar.dataKey]?.color || '#888'} 
+          <Bar
+            key={`bar-${index}`}
+            dataKey={bar.dataKey}
+            name={bar.name}
+            fill={bar.color || config[bar.dataKey]?.color || '#888'}
           />
         ))}
       </BarChart>

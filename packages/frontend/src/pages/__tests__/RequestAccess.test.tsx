@@ -13,8 +13,8 @@ const mockToastSuccess = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
     error: mockToastError,
-    success: mockToastSuccess
-  }
+    success: mockToastSuccess,
+  },
 }));
 
 // Create a standalone RequestAccess component for testing
@@ -119,14 +119,10 @@ const MockRequestAccess = ({ isLoggedIn = false }) => {
             onChange={(e) => setTermsAccepted(e.target.checked)}
             aria-label="Accept terms and conditions"
           />
-          <label htmlFor="terms">
-            I accept the Terms of Service and Privacy Policy
-          </label>
+          <label htmlFor="terms">I accept the Terms of Service and Privacy Policy</label>
         </div>
 
-        <button type="submit">
-          {isLoading ? 'Submitting...' : 'Submit Request'}
-        </button>
+        <button type="submit">{isLoading ? 'Submitting...' : 'Submit Request'}</button>
       </form>
 
       <div>
@@ -146,7 +142,7 @@ describe('RequestAccess Component', () => {
     return render(
       <BrowserRouter>
         <MockRequestAccess isLoggedIn={isLoggedIn} />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 
@@ -198,15 +194,15 @@ describe('RequestAccess Component', () => {
 
     // Fill in the required fields
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Full Name'), {
-      target: { value: 'Test User' }
+      target: { value: 'Test User' },
     });
 
     fireEvent.change(screen.getByLabelText('Reason for access'), {
-      target: { value: 'Testing the application' }
+      target: { value: 'Testing the application' },
     });
 
     // Submit the form without accepting terms
@@ -224,19 +220,19 @@ describe('RequestAccess Component', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Full Name'), {
-      target: { value: 'Test User' }
+      target: { value: 'Test User' },
     });
 
     fireEvent.change(screen.getByLabelText('Organization'), {
-      target: { value: 'Test Organization' }
+      target: { value: 'Test Organization' },
     });
 
     fireEvent.change(screen.getByLabelText('Reason for access'), {
-      target: { value: 'Testing the application' }
+      target: { value: 'Testing the application' },
     });
 
     // Accept terms
@@ -250,7 +246,7 @@ describe('RequestAccess Component', () => {
       email: 'test@example.com',
       name: 'Test User',
       organization: 'Test Organization',
-      reason: 'Testing the application'
+      reason: 'Testing the application',
     });
 
     // Check if toast.success was called
@@ -261,23 +257,26 @@ describe('RequestAccess Component', () => {
 
   it('shows loading state during submission', async () => {
     // Mock requestAccess to return a promise that doesn't resolve immediately
-    mockRequestAccess.mockImplementation(() => new Promise(resolve => {
-      setTimeout(resolve, 100);
-    }));
+    mockRequestAccess.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(resolve, 100);
+        }),
+    );
 
     renderComponent();
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Full Name'), {
-      target: { value: 'Test User' }
+      target: { value: 'Test User' },
     });
 
     fireEvent.change(screen.getByLabelText('Reason for access'), {
-      target: { value: 'Testing the application' }
+      target: { value: 'Testing the application' },
     });
 
     // Accept terms
@@ -300,15 +299,15 @@ describe('RequestAccess Component', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Full Name'), {
-      target: { value: 'Test User' }
+      target: { value: 'Test User' },
     });
 
     fireEvent.change(screen.getByLabelText('Reason for access'), {
-      target: { value: 'Testing the application' }
+      target: { value: 'Testing the application' },
     });
 
     // Accept terms

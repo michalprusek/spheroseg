@@ -1,13 +1,13 @@
 import express, { Response, Router, NextFunction } from 'express';
 import pool from '../db';
-import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
+import devAuthMiddleware, { AuthenticatedRequest } from '../middleware/devAuthMiddleware';
 import { validate } from '../middleware/validationMiddleware';
 import {
-    listProjectsSchema,
-    createProjectSchema,
-    projectIdSchema,
-    deleteProjectSchema,
-    duplicateProjectSchema
+  listProjectsSchema,
+  createProjectSchema,
+  projectIdSchema,
+  deleteProjectSchema,
+  duplicateProjectSchema,
 } from '../validators/projectValidators';
 import logger from '../utils/logger';
 
@@ -15,21 +15,34 @@ const router: Router = express.Router();
 
 // GET /api/projects - List projects for the current user
 // @ts-ignore
-router.get('/', authMiddleware, validate(listProjectsSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get(
+  '/',
+  devAuthMiddleware,
+  validate(listProjectsSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
-    const { limit = 10, offset = 0, includeShared = true } = req.query as unknown as { 
-        limit: number; 
-        offset: number;
-        includeShared: boolean;
+    const {
+      limit = 10,
+      offset = 0,
+      includeShared = true,
+    } = req.query as unknown as {
+      limit: number;
+      offset: number;
+      includeShared: boolean;
     };
 
     if (!userId) return res.status(401).json({ message: 'Authentication error' });
 
     try {
-        logger.info('Processing projects list request', { userId, limit, offset, includeShared });
+      logger.info('Processing projects list request', {
+        userId,
+        limit,
+        offset,
+        includeShared,
+      });
 
-        // First check if the projects table exists
-        const projectsTableCheck = await pool.query(`
+      // First check if the projects table exists
+      const projectsTableCheck = await pool.query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -37,56 +50,55 @@ router.get('/', authMiddleware, validate(listProjectsSchema), async (req: Authen
                 AND table_name = 'projects'
             )
         `);
-        
-        const projectsTableExists = projectsTableCheck.rows[0].exists;
-        if (!projectsTableExists) {
-            logger.warn('Projects table does not exist in database');
-            return res.status(200).json({
-                projects: [],
-                total: 0
-            });
-        }
 
-        // Import and use projectService
-        const projectService = await import('../services/projectService');
-        
-        // Get projects using the service
-        const result = await projectService.getUserProjects(
-            pool,
-            userId,
-            limit,
-            offset,
-            includeShared
-        );
-
-        logger.info('Projects fetched successfully', { 
-            count: result.projects.length, 
-            total: result.total 
+      const projectsTableExists = projectsTableCheck.rows[0].exists;
+      if (!projectsTableExists) {
+        logger.warn('Projects table does not exist in database');
+        return res.status(200).json({
+          projects: [],
+          total: 0,
         });
+      }
 
-        res.status(200).json({
-            projects: result.projects,
-            total: result.total
-        });
+      // Import and use projectService
+      const projectService = await import('../services/projectService');
+
+      // Get projects using the service
+      const result = await projectService.getUserProjects(pool, userId, limit, offset, includeShared);
+
+      logger.info('Projects fetched successfully', {
+        count: result.projects.length,
+        total: result.total,
+      });
+
+      res.status(200).json({
+        projects: result.projects,
+        total: result.total,
+      });
     } catch (error) {
-        logger.error('Error fetching projects', { error });
-        next(error);
+      logger.error('Error fetching projects', { error });
+      next(error);
     }
-});
+  },
+);
 
 // POST /api/projects - Create a new project
 // @ts-ignore
-router.post('/', authMiddleware, validate(createProjectSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.post(
+  '/',
+  devAuthMiddleware,
+  validate(createProjectSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { title, description } = req.body;
 
     if (!userId) return res.status(401).json({ message: 'Authentication error' });
 
     try {
-        logger.info('Processing create project request', { userId, title });
+      logger.info('Processing create project request', { userId, title });
 
-        // First check if the projects table exists
-        const projectsTableCheck = await pool.query(`
+      // First check if the projects table exists
+      const projectsTableCheck = await pool.query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -94,22 +106,23 @@ router.post('/', authMiddleware, validate(createProjectSchema), async (req: Auth
                 AND table_name = 'projects'
             )
         `);
-        
-        const projectsTableExists = projectsTableCheck.rows[0].exists;
-        if (!projectsTableExists) {
-            logger.warn('Projects table does not exist in database');
-            return res.status(500).json({ 
-                message: 'Database schema error - projects table missing',
-                error: 'SCHEMA_ERROR'
-            });
-        }
 
-        // Check required columns exist in projects table
-        const requiredColumns = ['user_id', 'title', 'description'];
-        const missingColumns = [];
+      const projectsTableExists = projectsTableCheck.rows[0].exists;
+      if (!projectsTableExists) {
+        logger.warn('Projects table does not exist in database');
+        return res.status(500).json({
+          message: 'Database schema error - projects table missing',
+          error: 'SCHEMA_ERROR',
+        });
+      }
 
-        for (const column of requiredColumns) {
-            const columnCheck = await pool.query(`
+      // Check required columns exist in projects table
+      const requiredColumns = ['user_id', 'title', 'description'];
+      const missingColumns = [];
+
+      for (const column of requiredColumns) {
+        const columnCheck = await pool.query(
+          `
                 SELECT EXISTS (
                     SELECT 1
                     FROM information_schema.columns
@@ -117,76 +130,103 @@ router.post('/', authMiddleware, validate(createProjectSchema), async (req: Auth
                     AND table_name = 'projects'
                     AND column_name = $1
                 )
-            `, [column]);
-            
-            if (!columnCheck.rows[0].exists) {
-                missingColumns.push(column);
-            }
-        }
+            `,
+          [column],
+        );
 
-        if (missingColumns.length > 0) {
-            logger.warn('Missing required columns in projects table', { missingColumns });
-            return res.status(500).json({ 
-                message: `Database schema error - missing columns: ${missingColumns.join(', ')}`,
-                error: 'SCHEMA_ERROR'
-            });
+        if (!columnCheck.rows[0].exists) {
+          missingColumns.push(column);
         }
+      }
 
-        // Import and use projectService
-        const projectService = await import('../services/projectService');
-        
-        // Extract optional fields from request body
-        const { tags, public: isPublic } = req.body;
-        
-        logger.debug('Creating new project using service', { title, userId, tags, isPublic });
-        const newProject = await projectService.createProject(pool, {
-            title,
-            description,
-            userId,
-            tags,
-            public: isPublic
+      if (missingColumns.length > 0) {
+        logger.warn('Missing required columns in projects table', {
+          missingColumns,
         });
-        
-        logger.info('Project created successfully', { 
-            projectId: newProject.id 
+        return res.status(500).json({
+          message: `Database schema error - missing columns: ${missingColumns.join(', ')}`,
+          error: 'SCHEMA_ERROR',
         });
-        
-        res.status(201).json(newProject);
+      }
+
+      // Import and use projectService
+      const projectService = await import('../services/projectService');
+
+      // Extract optional fields from request body
+      const { tags, public: isPublic } = req.body;
+
+      // Log the raw request body for debugging
+      logger.debug('Raw project creation request body', {
+        body: req.body,
+        title,
+        description,
+        userId,
+      });
+
+      logger.debug('Creating new project using service', {
+        title,
+        userId,
+        tags,
+        isPublic,
+      });
+      const newProject = await projectService.createProject(pool, {
+        title,
+        description,
+        userId,
+        tags,
+        public: isPublic,
+      });
+
+      logger.info('Project created successfully', {
+        projectId: newProject.id,
+        title: newProject.title,
+        description: newProject.description,
+      });
+
+      // Log the full project object for debugging
+      logger.debug('Created project details', { project: newProject });
+
+      res.status(201).json(newProject);
     } catch (error) {
-        logger.error('Error creating project', { error, title, userId });
-        next(error);
+      logger.error('Error creating project', { error, title, userId });
+      next(error);
     }
-});
+  },
+);
 
 // GET /api/projects/:id - Get a specific project by ID, or return a project template for "new"
 // @ts-ignore
-router.get('/:id', authMiddleware, validate(projectIdSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get(
+  '/:id',
+  devAuthMiddleware,
+  validate(projectIdSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { id: projectId } = req.params;
 
     if (!userId) return res.status(401).json({ message: 'Authentication error' });
 
     try {
-        logger.info('Processing get project request', { userId, projectId });
+      logger.info('Processing get project request', { userId, projectId });
 
-        // Special case for "new" to return an empty project template
-        if (projectId === 'new') {
-            logger.debug('Returning new project template');
-            // Return a template for a new project
-            return res.status(200).json({
-                id: 'new',
-                title: '',
-                description: '',
-                user_id: userId,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                image_count: 0,
-                thumbnail_url: null
-            });
-        }
+      // Special case for "new" to return an empty project template
+      if (projectId === 'new') {
+        logger.debug('Returning new project template');
+        // Return a template for a new project
+        return res.status(200).json({
+          id: 'new',
+          title: '',
+          description: '',
+          user_id: userId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          image_count: 0,
+          thumbnail_url: null,
+        });
+      }
 
-        // First check if the projects table exists
-        const projectsTableCheck = await pool.query(`
+      // First check if the projects table exists
+      const projectsTableCheck = await pool.query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -194,53 +234,61 @@ router.get('/:id', authMiddleware, validate(projectIdSchema), async (req: Authen
                 AND table_name = 'projects'
             )
         `);
-        
-        const projectsTableExists = projectsTableCheck.rows[0].exists;
-        if (!projectsTableExists) {
-            logger.warn('Projects table does not exist in database');
-            return res.status(404).json({ 
-                message: 'Project not found - projects table missing',
-                error: 'NOT_FOUND'
-            });
-        }
-        
-        // Import and use projectService
-        const projectService = await import('../services/projectService');
-        
-        // Get project using the service
-        const project = await projectService.getProjectById(pool, projectId, userId);
-        
-        if (!project) {
-            logger.info('Project not found or access denied', { projectId, userId });
-            return res.status(404).json({ message: 'Project not found or access denied' });
-        }
-        
-        logger.info('Project fetched successfully', { 
-            projectId, 
-            title: project.title,
-            isOwner: project.is_owner
+
+      const projectsTableExists = projectsTableCheck.rows[0].exists;
+      if (!projectsTableExists) {
+        logger.warn('Projects table does not exist in database');
+        return res.status(404).json({
+          message: 'Project not found - projects table missing',
+          error: 'NOT_FOUND',
         });
-        
-        return res.status(200).json(project);
+      }
+
+      // Import and use projectService
+      const projectService = await import('../services/projectService');
+
+      // Get project using the service
+      const project = await projectService.getProjectById(pool, projectId, userId);
+
+      if (!project) {
+        logger.info('Project not found or access denied', {
+          projectId,
+          userId,
+        });
+        return res.status(404).json({ message: 'Project not found or access denied' });
+      }
+
+      logger.info('Project fetched successfully', {
+        projectId,
+        title: project.title,
+        isOwner: project.is_owner,
+      });
+
+      return res.status(200).json(project);
     } catch (error) {
-        logger.error('Error fetching project', { error, projectId, userId });
-        next(error);
+      logger.error('Error fetching project', { error, projectId, userId });
+      next(error);
     }
-});
+  },
+);
 
 // DELETE /api/projects/:id - Delete a project by ID
 // @ts-ignore
-router.delete('/:id', authMiddleware, validate(deleteProjectSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.delete(
+  '/:id',
+  devAuthMiddleware,
+  validate(deleteProjectSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { id: projectId } = req.params;
 
     if (!userId) return res.status(401).json({ message: 'Authentication error' });
 
     try {
-        logger.info('Processing delete project request', { userId, projectId });
+      logger.info('Processing delete project request', { userId, projectId });
 
-        // First check if the projects table exists
-        const projectsTableCheck = await pool.query(`
+      // First check if the projects table exists
+      const projectsTableCheck = await pool.query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -248,43 +296,48 @@ router.delete('/:id', authMiddleware, validate(deleteProjectSchema), async (req:
                 AND table_name = 'projects'
             )
         `);
-        
-        const projectsTableExists = projectsTableCheck.rows[0].exists;
-        if (!projectsTableExists) {
-            logger.warn('Projects table does not exist in database');
-            return res.status(404).json({ 
-                message: 'Project not found - projects table missing',
-                error: 'NOT_FOUND'
-            });
-        }
 
-        // Import and use projectService
-        const projectService = await import('../services/projectService');
-        
-        // Delete the project using the service
-        await projectService.deleteProject(pool, projectId, userId);
-        
-        logger.info('Project deleted successfully', { projectId });
-        
-        // Return 204 No Content on successful deletion
-        res.status(204).send();
+      const projectsTableExists = projectsTableCheck.rows[0].exists;
+      if (!projectsTableExists) {
+        logger.warn('Projects table does not exist in database');
+        return res.status(404).json({
+          message: 'Project not found - projects table missing',
+          error: 'NOT_FOUND',
+        });
+      }
+
+      // Import and use projectService
+      const projectService = await import('../services/projectService');
+
+      // Delete the project using the service
+      await projectService.deleteProject(pool, projectId, userId);
+
+      logger.info('Project deleted successfully', { projectId });
+
+      // Return 204 No Content on successful deletion
+      res.status(204).send();
     } catch (error) {
-        logger.error('Error deleting project', { error, projectId, userId });
-        
-        // Handle API errors with appropriate status codes
-        if (error instanceof Error && 'statusCode' in error && typeof error.statusCode === 'number') {
-            return res.status(error.statusCode).json({ 
-                message: error.message 
-            });
-        }
-        
-        next(error);
+      logger.error('Error deleting project', { error, projectId, userId });
+
+      // Handle API errors with appropriate status codes
+      if (error instanceof Error && 'statusCode' in error && typeof error.statusCode === 'number') {
+        return res.status(error.statusCode).json({
+          message: error.message,
+        });
+      }
+
+      next(error);
     }
-});
+  },
+);
 
 // POST /api/projects/:id/duplicate - Duplicate a project
 // @ts-ignore
-router.post('/:id/duplicate', authMiddleware, validate(duplicateProjectSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.post(
+  '/:id/duplicate',
+  devAuthMiddleware,
+  validate(duplicateProjectSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { id: originalProjectId } = req.params;
     const { newTitle, copyFiles = true, copySegmentations = false, resetStatus = true, async = false } = req.body;
@@ -292,10 +345,15 @@ router.post('/:id/duplicate', authMiddleware, validate(duplicateProjectSchema), 
     if (!userId) return res.status(401).json({ message: 'Authentication error' });
 
     try {
-        logger.info('Processing duplicate project request', { userId, originalProjectId, newTitle, async });
+      logger.info('Processing duplicate project request', {
+        userId,
+        originalProjectId,
+        newTitle,
+        async,
+      });
 
-        // First check if the projects table exists
-        const projectsTableCheck = await pool.query(`
+      // First check if the projects table exists
+      const projectsTableCheck = await pool.query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -303,31 +361,34 @@ router.post('/:id/duplicate', authMiddleware, validate(duplicateProjectSchema), 
                 AND table_name = 'projects'
             )
         `);
-        
-        const projectsTableExists = projectsTableCheck.rows[0].exists;
-        if (!projectsTableExists) {
-            logger.warn('Projects table does not exist in database');
-            return res.status(404).json({ 
-                message: 'Project not found - projects table missing',
-                error: 'NOT_FOUND'
-            });
-        }
 
-        // Verify the source project exists and belongs to the user
-        const projectCheck = await pool.query(
-            'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
-            [originalProjectId, userId]
-        );
+      const projectsTableExists = projectsTableCheck.rows[0].exists;
+      if (!projectsTableExists) {
+        logger.warn('Projects table does not exist in database');
+        return res.status(404).json({
+          message: 'Project not found - projects table missing',
+          error: 'NOT_FOUND',
+        });
+      }
 
-        if (projectCheck.rows.length === 0) {
-            logger.info('Source project not found or access denied', { originalProjectId, userId });
-            return res.status(404).json({ message: 'Source project not found or access denied' });
-        }
+      // Verify the source project exists and belongs to the user
+      const projectCheck = await pool.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
+        originalProjectId,
+        userId,
+      ]);
 
-        // If async is true and duplication tasks table exists, process asynchronously
-        if (async) {
-            // Check if the duplication tasks table exists
-            const tasksTableCheck = await pool.query(`
+      if (projectCheck.rows.length === 0) {
+        logger.info('Source project not found or access denied', {
+          originalProjectId,
+          userId,
+        });
+        return res.status(404).json({ message: 'Source project not found or access denied' });
+      }
+
+      // If async is true and duplication tasks table exists, process asynchronously
+      if (async) {
+        // Check if the duplication tasks table exists
+        const tasksTableCheck = await pool.query(`
                 SELECT EXISTS (
                     SELECT 1
                     FROM information_schema.tables
@@ -335,111 +396,118 @@ router.post('/:id/duplicate', authMiddleware, validate(duplicateProjectSchema), 
                     AND table_name = 'project_duplication_tasks'
                 )
             `);
-            
-            const tasksTableExists = tasksTableCheck.rows[0].exists;
-            if (tasksTableExists) {
-                try {
-                    // Import the duplication queue service
-                    const projectDuplicationQueueService = await import('../services/projectDuplicationQueueService');
-                    
-                    // Trigger an asynchronous duplication
-                    const taskId = await projectDuplicationQueueService.default.triggerProjectDuplication(
-                        pool,
-                        originalProjectId,
-                        userId,
-                        {
-                            newTitle,
-                            copyFiles,
-                            copySegmentations,
-                            resetStatus,
-                            baseDir: process.cwd()
-                        }
-                    );
-                    
-                    logger.info('Project duplication task created successfully', { 
-                        originalProjectId,
-                        taskId,
-                        userId,
-                        options: { newTitle, copyFiles, copySegmentations, resetStatus }
-                    });
-                    
-                    // Return the task ID and status
-                    return res.status(202).json({
-                        taskId,
-                        status: 'pending',
-                        originalProjectId,
-                        message: 'Project duplication started. Monitor progress using the duplication task API.'
-                    });
-                } catch (queueError) {
-                    logger.error('Error using duplication queue service', { queueError, originalProjectId });
-                    // Fall through to synchronous duplication if queue service fails
-                }
-            }
-        }
 
-        // Synchronous duplication (fallback or intentional)
-        try {
-            logger.debug('Loading project duplication service for synchronous duplication', { originalProjectId, newTitle });
-            
-            // Import the project duplication service
-            const projectDuplicationService = await import('../services/projectDuplicationService');
+        const tasksTableExists = tasksTableCheck.rows[0].exists;
+        if (tasksTableExists) {
+          try {
+            // Import the duplication queue service
+            const projectDuplicationQueueService = await import('../services/projectDuplicationQueueService');
 
-            // Duplicate the project using the centralized service
-            const newProject = await projectDuplicationService.duplicateProject(
-                pool,
-                originalProjectId,
-                userId,
-                {
-                    newTitle,
-                    copyFiles,
-                    copySegmentations,
-                    resetStatus,
-                    baseDir: process.cwd() // Use current working directory as base
-                }
+            // Trigger an asynchronous duplication
+            const taskId = await projectDuplicationQueueService.default.triggerProjectDuplication(
+              pool,
+              originalProjectId,
+              userId,
+              {
+                newTitle,
+                copyFiles,
+                copySegmentations,
+                resetStatus,
+                baseDir: process.cwd(),
+              },
             );
 
-            logger.info('Project duplicated successfully (synchronous)', { 
-                originalProjectId,
-                newProjectId: newProject.id,
-                newTitle 
+            logger.info('Project duplication task created successfully', {
+              originalProjectId,
+              taskId,
+              userId,
+              options: { newTitle, copyFiles, copySegmentations, resetStatus },
             });
 
-            return res.status(201).json(newProject); // Return the newly created project info
-        } catch (serviceError) {
-            logger.error('Project duplication service error', { 
-                error: serviceError, 
-                originalProjectId,
-                newTitle 
+            // Return the task ID and status
+            return res.status(202).json({
+              taskId,
+              status: 'pending',
+              originalProjectId,
+              message: 'Project duplication started. Monitor progress using the duplication task API.',
             });
-            
-            // If service module doesn't exist, fallback to a basic project duplication
-            if (serviceError && typeof serviceError === 'object' && 'code' in serviceError && serviceError.code === 'MODULE_NOT_FOUND') {
-                logger.warn('Duplication service not found, using fallback method');
-                
-                // Basic duplicate without files - just create new project with same title
-                const newProjectResult = await pool.query(
-                    'INSERT INTO projects (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
-                    [userId, newTitle || `Copy of ${projectCheck.rows[0].title}`, projectCheck.rows[0].description]
-                );
-                
-                logger.info('Project duplicated using fallback method', { 
-                    newProjectId: newProjectResult.rows[0].id
-                });
-                
-                return res.status(201).json(newProjectResult.rows[0]);
-            }
-            
-            throw serviceError; // Re-throw if it's not a module-not-found error
+          } catch (queueError) {
+            logger.error('Error using duplication queue service', {
+              queueError,
+              originalProjectId,
+            });
+            // Fall through to synchronous duplication if queue service fails
+          }
         }
-    } catch (error) {
-        logger.error('Error duplicating project', { 
-            error, 
-            originalProjectId, 
-            userId,
-            newTitle 
+      }
+
+      // Synchronous duplication (fallback or intentional)
+      try {
+        logger.debug('Loading project duplication service for synchronous duplication', {
+          originalProjectId,
+          newTitle,
         });
-        next(error);
+
+        // Import the project duplication service
+        const projectDuplicationService = await import('../services/projectDuplicationService');
+
+        // Duplicate the project using the centralized service
+        const newProject = await projectDuplicationService.duplicateProject(pool, originalProjectId, userId, {
+          newTitle,
+          copyFiles,
+          copySegmentations,
+          resetStatus,
+          baseDir: process.cwd(), // Use current working directory as base
+        });
+
+        logger.info('Project duplicated successfully (synchronous)', {
+          originalProjectId,
+          newProjectId: newProject.id,
+          newTitle,
+        });
+
+        return res.status(201).json(newProject); // Return the newly created project info
+      } catch (serviceError) {
+        logger.error('Project duplication service error', {
+          error: serviceError,
+          originalProjectId,
+          newTitle,
+        });
+
+        // If service module doesn't exist, fallback to a basic project duplication
+        if (
+          serviceError &&
+          typeof serviceError === 'object' &&
+          'code' in serviceError &&
+          serviceError.code === 'MODULE_NOT_FOUND'
+        ) {
+          logger.warn('Duplication service not found, using fallback method');
+
+          // Basic duplicate without files - just create new project with same title
+          const newProjectResult = await pool.query(
+            'INSERT INTO projects (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
+            [userId, newTitle || `Copy of ${projectCheck.rows[0].title}`, projectCheck.rows[0].description],
+          );
+
+          logger.info('Project duplicated using fallback method', {
+            newProjectId: newProjectResult.rows[0].id,
+          });
+
+          return res.status(201).json(newProjectResult.rows[0]);
+        }
+
+        throw serviceError; // Re-throw if it's not a module-not-found error
+      }
+    } catch (error) {
+      logger.error('Error duplicating project', {
+        error,
+        originalProjectId,
+        userId,
+        newTitle,
+      });
+      next(error);
     }
-});
+  },
+);
 
 export default router;

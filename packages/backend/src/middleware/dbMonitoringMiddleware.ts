@@ -1,6 +1,6 @@
 /**
  * Database Monitoring Middleware
- * 
+ *
  * Express middleware that exposes database metrics endpoints
  * for monitoring and diagnostics purposes.
  */
@@ -13,7 +13,7 @@ import dbMonitoring from '../db/monitoring';
  */
 function generateMetricsDashboard(req: Request): string {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
-  
+
   return `
 <!DOCTYPE html>
 <html>
@@ -320,19 +320,19 @@ export function dbMetricsData(_req: Request, res: Response) {
   const poolStats = {
     total: pool.totalCount || 0,
     idle: pool.idleCount || 0,
-    waiting: pool.waitingCount || 0
+    waiting: pool.waitingCount || 0,
   };
-  
+
   // Get top slow queries
   const slowQueries = dbMonitoring.getTopSlowQueries(10);
-  
+
   // Get query frequency stats
   const queryFrequency = dbMonitoring.getQueryFrequencyStats();
-  
+
   res.json({
     poolStats,
     slowQueries,
-    queryFrequency
+    queryFrequency,
   });
 }
 
@@ -351,19 +351,19 @@ export function dbMonitoringMiddleware(req: Request, res: Response, next: NextFu
   if (req.path === '/api/db-metrics') {
     return dbMetricsEndpoint(req, res);
   }
-  
+
   if (req.path === '/api/db-metrics/dashboard') {
     return dbMetricsDashboard(req, res);
   }
-  
+
   if (req.path === '/api/db-metrics/data') {
     return dbMetricsData(req, res);
   }
-  
+
   if (req.path === '/api/db-metrics/reset' && req.method === 'POST') {
     return resetDbMetrics(req, res);
   }
-  
+
   next();
 }
 

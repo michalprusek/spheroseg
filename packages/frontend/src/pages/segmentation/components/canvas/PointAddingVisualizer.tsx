@@ -16,9 +16,9 @@ const DASH_ARRAY = '4, 4'; // Fixed dash array for line to cursor
 
 interface PointAddingVisualizerProps {
   hoveredSegment: {
-    polygonId: string | null,
-    segmentIndex: number | null,
-    projectedPoint: Point | null // Expect image coordinates
+    polygonId: string | null;
+    segmentIndex: number | null;
+    projectedPoint: Point | null; // Expect image coordinates
   };
   // zoom: number; // Removed
   // offset: { x: number; y: number }; // Removed
@@ -41,7 +41,7 @@ const PointAddingVisualizer = ({
   selectedVertexIndex,
   sourcePolygonId,
   polygonPoints,
-  cursorPosition
+  cursorPosition,
 }: Omit<PointAddingVisualizerProps, 'zoom' | 'offset'>) => {
   // Remove coordinate transformation logic
   // const { getScreenCoordinates } = useCoordinateTransform(zoom, offset);
@@ -104,7 +104,7 @@ const PointAddingVisualizer = ({
           style={{ pointerEvents: 'none' }}
         />
       )}
-      
+
       {/* Highlight potential end points (other polygon vertices) */}
       {polygonPoints && selectedVertexIndex !== null && (
         <>
@@ -117,8 +117,8 @@ const PointAddingVisualizer = ({
                 cx={point.x} // Use image coordinate
                 cy={point.y} // Use image coordinate
                 r={pointRadius * (isHovered ? POTENTIAL_ENDPOINT_RADIUS_MULTIPLIER : 1)} // Fixed base + multiplier
-                fill={isHovered ? "#FFC107" : "#FFEB3B80"}
-                stroke={isHovered ? "#FFA000" : "#FFC107"}
+                fill={isHovered ? '#FFC107' : '#FFEB3B80'}
+                stroke={isHovered ? '#FFA000' : '#FFC107'}
                 strokeWidth={strokeWidth * (isHovered ? 1.2 : 1)} // Relative stroke width
                 vectorEffect="non-scaling-stroke"
                 style={{ pointerEvents: 'none' }}
@@ -127,7 +127,7 @@ const PointAddingVisualizer = ({
           })}
         </>
       )}
-      
+
       {/* Temporary points and lines */}
       {tempPoints.length > 0 && (
         <>
@@ -144,15 +144,15 @@ const PointAddingVisualizer = ({
               style={{ pointerEvents: 'none' }}
             />
           )}
-          
+
           {/* Lines between temp points */}
           {tempPoints.map((point, i) => {
             if (i === 0) return null;
             return (
               <line
                 key={`temp-line-${i}`}
-                x1={tempPoints[i-1].x} // Use image coordinate
-                y1={tempPoints[i-1].y} // Use image coordinate
+                x1={tempPoints[i - 1].x} // Use image coordinate
+                y1={tempPoints[i - 1].y} // Use image coordinate
                 x2={point.x} // Use image coordinate
                 y2={point.y} // Use image coordinate
                 stroke="#3498db"
@@ -162,7 +162,7 @@ const PointAddingVisualizer = ({
               />
             );
           })}
-          
+
           {/* Temporary points */}
           {tempPoints.map((point, i) => (
             <circle
@@ -177,21 +177,37 @@ const PointAddingVisualizer = ({
               style={{ pointerEvents: 'none' }}
             />
           ))}
-          
+
           {/* Line from last temp point to cursor or potential end point */}
           {tempPoints.length > 0 && (
             <line
               x1={tempPoints[tempPoints.length - 1].x} // Use image coordinate
               y1={tempPoints[tempPoints.length - 1].y} // Use image coordinate
-              x2={hoveredSegment.segmentIndex !== null && hoveredSegment.segmentIndex !== selectedVertexIndex && projectedPoint 
-                ? projectedPoint.x // Use image coordinate
-                : (cursorPosition ? cursorPosition.x : tempPoints[tempPoints.length - 1].x)} // Use image coordinate
-              y2={hoveredSegment.segmentIndex !== null && hoveredSegment.segmentIndex !== selectedVertexIndex && projectedPoint 
-                ? projectedPoint.y // Use image coordinate
-                : (cursorPosition ? cursorPosition.y : tempPoints[tempPoints.length - 1].y)} // Use image coordinate
-              stroke={hoveredSegment.segmentIndex !== null && hoveredSegment.segmentIndex !== selectedVertexIndex ? "#4CAF50" : "#3498db"}
+              x2={
+                hoveredSegment.segmentIndex !== null &&
+                hoveredSegment.segmentIndex !== selectedVertexIndex &&
+                projectedPoint
+                  ? projectedPoint.x // Use image coordinate
+                  : cursorPosition
+                    ? cursorPosition.x
+                    : tempPoints[tempPoints.length - 1].x
+              } // Use image coordinate
+              y2={
+                hoveredSegment.segmentIndex !== null &&
+                hoveredSegment.segmentIndex !== selectedVertexIndex &&
+                projectedPoint
+                  ? projectedPoint.y // Use image coordinate
+                  : cursorPosition
+                    ? cursorPosition.y
+                    : tempPoints[tempPoints.length - 1].y
+              } // Use image coordinate
+              stroke={
+                hoveredSegment.segmentIndex !== null && hoveredSegment.segmentIndex !== selectedVertexIndex
+                  ? '#4CAF50'
+                  : '#3498db'
+              }
               strokeWidth={strokeWidth} // Use fixed width
-              strokeDasharray={hoveredSegment.segmentIndex === null ? DASH_ARRAY : ""} // Use fixed dash array
+              strokeDasharray={hoveredSegment.segmentIndex === null ? DASH_ARRAY : ''} // Use fixed dash array
               vectorEffect="non-scaling-stroke"
               style={{ pointerEvents: 'none' }}
             />
@@ -200,32 +216,32 @@ const PointAddingVisualizer = ({
       )}
 
       {/* Highlighted segment under cursor - pass transformer */}
-      <HighlightedSegment 
-        hoveredSegment={hoveredSegment} 
+      <HighlightedSegment
+        hoveredSegment={hoveredSegment}
         polygonPoints={polygonPoints}
-        // zoom={zoom} 
+        // zoom={zoom}
         // offset={offset}
       />
 
       {/* Temporary points and lines between them - pass transformed points */}
-      <TempPointsPath 
-        selectedVertexIndex={selectedVertexIndex} 
+      <TempPointsPath
+        selectedVertexIndex={selectedVertexIndex}
         polygonPoints={polygonPoints}
         tempPoints={tempPoints}
-        // zoom={zoom} 
+        // zoom={zoom}
       />
 
       {/* Line from last point to cursor/projection - pass transformed points */}
-      <CursorLineConnector 
+      <CursorLineConnector
         tempPoints={tempPoints}
         hoveredSegment={{
           ...hoveredSegment,
-          projectedPoint: projectedPoint
-        }} 
-        selectedVertexIndex={selectedVertexIndex} 
+          projectedPoint: projectedPoint,
+        }}
+        selectedVertexIndex={selectedVertexIndex}
         cursorPosition={cursorPosition}
         polygonPoints={polygonPoints}
-        // zoom={zoom} 
+        // zoom={zoom}
       />
     </g>
   );

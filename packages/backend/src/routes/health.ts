@@ -10,12 +10,10 @@ router.get('/', async (req: Request, res: Response) => {
   try {
     // Check database connection
     const dbConnected = await checkDbConnection();
-    
+
     // Check ML service if required
-    const mlServiceStatus = config.segmentation.checkpointExists 
-      ? "configured" 
-      : "missing_checkpoint";
-    
+    const mlServiceStatus = config.segmentation.checkpointExists ? 'configured' : 'missing_checkpoint';
+
     // Send health status
     res.status(200).json({
       status: 'healthy',
@@ -24,18 +22,18 @@ router.get('/', async (req: Request, res: Response) => {
       components: {
         api: 'healthy',
         database: dbConnected ? 'connected' : 'disconnected',
-        mlService: mlServiceStatus
+        mlService: mlServiceStatus,
       },
-      environment: config.env
+      environment: config.env,
     });
-    
+
     logger.debug('Health check succeeded', {
       database: dbConnected,
-      mlService: mlServiceStatus
+      mlService: mlServiceStatus,
     });
   } catch (error) {
     logger.error('Health check failed', { error });
-    
+
     // Even on error, return 200 with degraded status
     // This allows load balancers to still route traffic
     res.status(200).json({
@@ -45,9 +43,9 @@ router.get('/', async (req: Request, res: Response) => {
       components: {
         api: 'healthy',
         database: 'disconnected',
-        mlService: 'unknown'
+        mlService: 'unknown',
       },
-      environment: config.env
+      environment: config.env,
     });
   }
 });

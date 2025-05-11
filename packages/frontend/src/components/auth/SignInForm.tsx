@@ -29,20 +29,12 @@ const SignInForm: React.FC = () => {
   );
 
   return (
-    <AuthFormLayout
-      title={t('auth.signInTitle')}
-      description={t('auth.signInDescription')}
-      footer={footer}
-    >
+    <AuthFormLayout title={t('auth.signInTitle')} description={t('auth.signInDescription')} footer={footer}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <EmailField form={form} />
           <PasswordField form={form} />
-          <SubmitButton
-            isLoading={isLoading}
-            text={t('auth.signIn')}
-            loadingText={t('common.loading')}
-          />
+          <SubmitButton isLoading={isLoading} text={t('auth.signIn')} loadingText={t('common.loading')} />
         </form>
       </Form>
     </AuthFormLayout>

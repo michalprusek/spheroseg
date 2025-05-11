@@ -37,12 +37,12 @@ vi.mock('@/contexts/LanguageContext', () => ({
         'segmentation.autoSave.saving': 'Saving...',
         'segmentation.autoSave.success': 'Saved',
         'segmentation.autoSave.error': 'Error',
-        'segmentation.unsavedChanges': 'Unsaved changes'
+        'segmentation.unsavedChanges': 'Unsaved changes',
       };
       return translations[key] || key;
     },
     language: 'en',
-    changeLanguage: vi.fn()
+    changeLanguage: vi.fn(),
   }),
 }));
 
@@ -76,7 +76,7 @@ describe('Segmentation Translation Keys', () => {
         <LanguageProvider>
           <TestTranslationComponent />
         </LanguageProvider>
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     // Check that all keys render with their expected values

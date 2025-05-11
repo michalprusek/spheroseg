@@ -1,20 +1,19 @@
-
-import React from "react";
-import { Grid2X2, List as ListIcon } from "lucide-react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import React from 'react';
+import { Grid2X2, List as ListIcon } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface ProjectViewOptionsProps {
-  viewMode: "grid" | "list";
-  setViewMode: (mode: "grid" | "list") => void;
+  viewMode: 'grid' | 'list';
+  setViewMode: (mode: 'grid' | 'list') => void;
 }
 
 const ProjectViewOptions = ({ viewMode, setViewMode }: ProjectViewOptionsProps) => {
   return (
-    <ToggleGroup 
-      type="single" 
-      value={viewMode} 
+    <ToggleGroup
+      type="single"
+      value={viewMode}
       onValueChange={(value) => {
-        if (value) setViewMode(value as "grid" | "list");
+        if (value) setViewMode(value as 'grid' | 'list');
       }}
       className="flex items-center h-9"
     >

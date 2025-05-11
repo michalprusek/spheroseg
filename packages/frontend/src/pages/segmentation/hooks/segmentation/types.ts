@@ -70,6 +70,7 @@ export interface ImageData {
   created_at?: string;
   updated_at?: string;
   actualId?: string; // Added for handling ID mismatches
+  alternativeUrls?: string[]; // Alternative URLs to try if the main URL fails
 }
 
 // Interface for the intersection point in slicing

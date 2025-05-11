@@ -48,7 +48,7 @@ const runPerformanceTest = async (
   method: 'get' | 'post' | 'put' | 'delete',
   endpoint: string,
   token?: string,
-  body?: any
+  body?: any,
 ) => {
   const responseTimes: number[] = [];
 
@@ -85,12 +85,10 @@ describe('API Performance Tests', () => {
     // Create test user
     testUser = await createTestUser();
     // Get auth token
-    const response = await request(app)
-      .post('/api/auth/login')
-      .send({
-        email: testUser.email,
-        password: 'testpassword'
-      });
+    const response = await request(app).post('/api/auth/login').send({
+      email: testUser.email,
+      password: 'testpassword',
+    });
     authToken = response.body.token;
 
     // Create test project
@@ -113,11 +111,9 @@ describe('API Performance Tests', () => {
       const startTime = Date.now();
 
       // Make 10 concurrent requests
-      const requests = Array(10).fill(0).map(() =>
-        request(app)
-          .get('/api/projects')
-          .set('Authorization', `Bearer ${authToken}`)
-      );
+      const requests = Array(10)
+        .fill(0)
+        .map(() => request(app).get('/api/projects').set('Authorization', `Bearer ${authToken}`));
 
       await Promise.all(requests);
 
@@ -133,9 +129,7 @@ describe('API Performance Tests', () => {
     it('should handle project listing efficiently', async () => {
       const startTime = Date.now();
 
-      await request(app)
-        .get('/api/projects')
-        .set('Authorization', `Bearer ${authToken}`);
+      await request(app).get('/api/projects').set('Authorization', `Bearer ${authToken}`);
 
       const endTime = Date.now();
       const duration = endTime - startTime;
@@ -147,9 +141,7 @@ describe('API Performance Tests', () => {
     it('should handle project detail retrieval efficiently', async () => {
       const startTime = Date.now();
 
-      await request(app)
-        .get(`/api/projects/${projectId}`)
-        .set('Authorization', `Bearer ${authToken}`);
+      await request(app).get(`/api/projects/${projectId}`).set('Authorization', `Bearer ${authToken}`);
 
       const endTime = Date.now();
       const duration = endTime - startTime;
@@ -243,7 +235,7 @@ describe('API Performance Tests', () => {
     it('should have acceptable performance for login', async () => {
       const stats = await runPerformanceTest('post', '/api/auth/login', undefined, {
         email: testUser.email,
-        password: 'testpassword'
+        password: 'testpassword',
       });
 
       console.log('POST /api/auth/login performance stats:', stats);

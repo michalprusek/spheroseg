@@ -1,1 +1,17 @@
-<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg"><rect width="800" height="600" fill="#f0f0f0"/><rect x="100" y="100" width="600" height="400" fill="white" stroke="#ccc" stroke-width="2"/><text x="400" y="300" font-family="Arial" font-size="30" text-anchor="middle" fill="#666">Placeholder Image</text></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800px" height="600px" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Image Placeholder</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#F1F5F8" x="0" y="0" width="800" height="600"></rect>
+        <g transform="translate(350.000000, 250.000000)" fill="#D1D5DB">
+            <path d="M50,0 C77.6142375,0 100,22.3857625 100,50 C100,77.6142375 77.6142375,100 50,100 C22.3857625,100 0,77.6142375 0,50 C0,22.3857625 22.3857625,0 50,0 Z M50,10 C27.90861,10 10,27.90861 10,50 C10,72.09139 27.90861,90 50,90 C72.09139,90 90,72.09139 90,50 C90,27.90861 72.09139,10 50,10 Z"></path>
+            <path d="M50,30 C61.0457,30 70,38.9543 70,50 C70,61.0457 61.0457,70 50,70 C38.9543,70 30,61.0457 30,50 C30,38.9543 38.9543,30 50,30 Z"></path>
+        </g>
+        <text font-family="Arial" font-size="24" font-weight="normal" fill="#999999" text-anchor="middle">
+            <tspan x="400" y="400">Image Not Available</tspan>
+        </text>
+        <text font-family="Arial" font-size="16" font-weight="normal" fill="#999999" text-anchor="middle">
+            <tspan x="400" y="430">Check Docker configuration and file paths</tspan>
+        </text>
+    </g>
+</svg>

@@ -1,6 +1,6 @@
 /**
  * Swagger Middleware Tests
- * 
+ *
  * This file contains tests for the Swagger middleware.
  */
 
@@ -12,7 +12,7 @@ jest.mock('../../utils/logger', () => ({
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
-  debug: jest.fn()
+  debug: jest.fn(),
 }));
 
 // Mock config to avoid directory creation issues
@@ -25,8 +25,8 @@ jest.mock('../../config', () => ({
     port: 3000,
     host: 'localhost',
     corsOrigins: ['http://localhost:3000'],
-    publicUrl: 'http://localhost:3000'
-  }
+    publicUrl: 'http://localhost:3000',
+  },
 }));
 
 import { applySwagger } from '../swaggerMiddleware';
@@ -38,13 +38,13 @@ describe('Swagger Middleware', () => {
   beforeEach(() => {
     // Get the mocked logger
     logger = require('../../utils/logger');
-    
+
     // Create a new Express app for each test
     app = express();
-    
+
     // Apply Swagger middleware
     applySwagger(app);
-    
+
     // Add a simple route for testing
     app.get('/test', (req, res) => {
       res.status(200).json({ message: 'Test successful' });
@@ -56,9 +56,8 @@ describe('Swagger Middleware', () => {
   });
 
   it('should not interfere with regular routes', async () => {
-    const response = await request(app)
-      .get('/test');
-    
+    const response = await request(app).get('/test');
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('message', 'Test successful');
   });

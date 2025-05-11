@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 
 interface EditModeSwitcherProps {
@@ -22,11 +21,7 @@ interface EditModeSwitcherProps {
 /**
  * Hook pro správu přepínání mezi různými editačními režimy
  */
-export const useEditModeSwitcher = ({
-  editModeCore,
-  slicingMode,
-  pointAddingMode
-}: EditModeSwitcherProps) => {
+export const useEditModeSwitcher = ({ editModeCore, slicingMode, pointAddingMode }: EditModeSwitcherProps) => {
   // Zajištění, že je aktivní vždy jen jeden režim
   const toggleEditMode = useCallback(() => {
     if (editModeCore.editMode) {
@@ -75,6 +70,6 @@ export const useEditModeSwitcher = ({
     toggleEditMode,
     toggleSlicingMode,
     togglePointAddingMode,
-    exitAllEditModes
+    exitAllEditModes,
   };
 };

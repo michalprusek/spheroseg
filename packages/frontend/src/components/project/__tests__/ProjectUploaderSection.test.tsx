@@ -16,30 +16,30 @@ const MockProjectUploaderSection = () => {
 
 // Mock the actual component
 vi.mock('@/components/project/ProjectUploaderSection', () => ({
-  default: () => <MockProjectUploaderSection />
+  default: () => <MockProjectUploaderSection />,
 }));
 
 describe('ProjectUploaderSection Component', () => {
   it('renders the component correctly', () => {
     render(<MockProjectUploaderSection />);
-    
+
     // Check if the title is rendered
     expect(screen.getByText('Upload Images')).toBeInTheDocument();
-    
+
     // Check if the cancel button is rendered
     expect(screen.getByTestId('mock-cancel-button')).toBeInTheDocument();
   });
 
   it('has upload complete button', () => {
     render(<MockProjectUploaderSection />);
-    
+
     // Check if the upload complete button is rendered
     expect(screen.getByTestId('mock-upload-complete-button')).toBeInTheDocument();
   });
 
   it('has segment after upload checkbox', () => {
     render(<MockProjectUploaderSection />);
-    
+
     // Check if the segment after upload checkbox is rendered
     expect(screen.getByTestId('segment-after-upload-checkbox')).toBeInTheDocument();
   });

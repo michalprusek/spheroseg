@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 
 /**
@@ -7,26 +6,32 @@ import { useCallback } from 'react';
 export const usePolygonEditModeActions = (
   setSelectedPolygonId: (id: string | null) => void,
   togglePointAddingMode: () => void,
-  toggleSlicingMode: () => void
+  toggleSlicingMode: () => void,
 ) => {
   /**
    * Handler pro zahájení režimu krájení polygonu
    */
-  const handleSlicePolygon = useCallback((polygonId: string) => {
-    setSelectedPolygonId(polygonId);
-    toggleSlicingMode();
-  }, [setSelectedPolygonId, toggleSlicingMode]);
+  const handleSlicePolygon = useCallback(
+    (polygonId: string) => {
+      setSelectedPolygonId(polygonId);
+      toggleSlicingMode();
+    },
+    [setSelectedPolygonId, toggleSlicingMode],
+  );
 
   /**
    * Handler pro zahájení editace polygonu
    */
-  const handleEditPolygon = useCallback((polygonId: string) => {
-    setSelectedPolygonId(polygonId);
-    togglePointAddingMode();
-  }, [setSelectedPolygonId, togglePointAddingMode]);
+  const handleEditPolygon = useCallback(
+    (polygonId: string) => {
+      setSelectedPolygonId(polygonId);
+      togglePointAddingMode();
+    },
+    [setSelectedPolygonId, togglePointAddingMode],
+  );
 
   return {
     handleSlicePolygon,
-    handleEditPolygon
+    handleEditPolygon,
   };
 };

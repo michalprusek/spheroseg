@@ -21,13 +21,9 @@ const EmptyProjectState: React.FC<EmptyProjectStateProps> = ({ projectId, onUplo
     <div className="flex flex-col items-center justify-center p-8 my-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
       <Image className="w-16 h-16 text-gray-400 mb-4" />
 
-      <h3 className="text-xl font-medium text-gray-700 dark:text-gray-200 mb-2">
-        {t('project.noImages.title', 'No Images Yet')}
-      </h3>
+      <h3 className="text-xl font-medium text-gray-700 dark:text-gray-200 mb-2">{t('project.noImages.title')}</h3>
 
-      <p className="text-gray-500 dark:text-gray-400 text-center mb-6 max-w-md">
-        {t('project.noImages.description', 'This project doesn\'t have any images yet. Upload images to get started with segmentation.')}
-      </p>
+      <p className="text-gray-500 dark:text-gray-400 text-center mb-6 max-w-md">{t('project.noImages.description')}</p>
 
       <div className="flex flex-col sm:flex-row gap-4">
         {onUploadClick ? (
@@ -36,7 +32,7 @@ const EmptyProjectState: React.FC<EmptyProjectStateProps> = ({ projectId, onUplo
             className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             <Upload className="mr-2" />
-            {t('project.noImages.uploadButton', 'Upload Images')}
+            {t('project.noImages.uploadButton')}
           </button>
         ) : (
           <Link
@@ -44,7 +40,7 @@ const EmptyProjectState: React.FC<EmptyProjectStateProps> = ({ projectId, onUplo
             className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             <Upload className="mr-2" />
-            {t('project.noImages.uploadButton', 'Upload Images')}
+            {t('project.noImages.uploadButton')}
           </Link>
         )}
       </div>

@@ -44,7 +44,7 @@ const renderNavbar = () => {
   return render(
     <BrowserRouter>
       <Navbar />
-    </BrowserRouter>
+    </BrowserRouter>,
   );
 };
 

@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import '@testing-library/jest-dom';
-import { 
-  MockHookUser, 
-  mockSegmentationEditorImplementation 
+import {
+  MockHookUser,
+  mockSegmentationEditorImplementation,
 } from '../../../../../shared/test-utils/segmentation-editor-test-utils';
 
 // Create a mock file for the hook
@@ -16,7 +16,7 @@ vi.mock('../useSegmentationEditor.ts', () => ({
     CREATE_POLYGON: 'CREATE_POLYGON',
     SLICE: 'SLICE',
     ADD_POINTS: 'ADD_POINTS',
-  }
+  },
 }));
 
 describe('useSegmentationEditor Hook', () => {

@@ -7,7 +7,7 @@ import { createRandomPolygons, createMockImageData } from '../../../../../../__t
 describe('CanvasV2 Performance Tests', () => {
   // Create mock image data
   const mockImageData = createMockImageData();
-  
+
   it('should render empty canvas efficiently', async () => {
     // Test with empty canvas
     const result = await testRenderPerformance(
@@ -23,11 +23,11 @@ describe('CanvasV2 Performance Tests', () => {
         onScaleChange={() => {}}
         onPanChange={() => {}}
       />,
-      { 
+      {
         iterations: 50,
         maxRenderTime: 20, // Allow slightly longer render time than 16.67ms
-        verbose: true
-      }
+        verbose: true,
+      },
     );
 
     expect(result.passes).toBe(true);
@@ -36,7 +36,7 @@ describe('CanvasV2 Performance Tests', () => {
   it('should render with few polygons efficiently', async () => {
     // Test with 10 polygons
     const fewPolygons = createRandomPolygons(10);
-    
+
     const result = await testRenderPerformance(
       <CanvasV2
         imageData={mockImageData}
@@ -50,11 +50,11 @@ describe('CanvasV2 Performance Tests', () => {
         onScaleChange={() => {}}
         onPanChange={() => {}}
       />,
-      { 
+      {
         iterations: 50,
         maxRenderTime: 25, // Allow more time for rendering polygons
-        verbose: true
-      }
+        verbose: true,
+      },
     );
 
     expect(result.passes).toBe(true);
@@ -63,7 +63,7 @@ describe('CanvasV2 Performance Tests', () => {
   it('should manage moderate polygon count with acceptable performance', async () => {
     // Test with 50 polygons
     const moderatePolygons = createRandomPolygons(50);
-    
+
     const result = await testRenderPerformance(
       <CanvasV2
         imageData={mockImageData}
@@ -77,11 +77,11 @@ describe('CanvasV2 Performance Tests', () => {
         onScaleChange={() => {}}
         onPanChange={() => {}}
       />,
-      { 
+      {
         iterations: 30, // Reduce iterations for heavier test
         maxRenderTime: 30, // More lenient for moderate load
-        verbose: true
-      }
+        verbose: true,
+      },
     );
 
     expect(result.passes).toBe(true);
@@ -90,7 +90,7 @@ describe('CanvasV2 Performance Tests', () => {
   it('should handle high polygon count (stress test)', async () => {
     // Test with 200 polygons - this is a stress test
     const manyPolygons = createRandomPolygons(200);
-    
+
     const result = await testRenderPerformance(
       <CanvasV2
         imageData={mockImageData}
@@ -104,11 +104,11 @@ describe('CanvasV2 Performance Tests', () => {
         onScaleChange={() => {}}
         onPanChange={() => {}}
       />,
-      { 
+      {
         iterations: 20, // Reduce iterations for heavy test
         maxRenderTime: 50, // Much more lenient for stress test
-        verbose: true
-      }
+        verbose: true,
+      },
     );
 
     // This is informational, we don't necessarily expect it to pass
@@ -120,7 +120,7 @@ describe('CanvasV2 Performance Tests', () => {
   it('should render efficiently in different edit modes', async () => {
     // Test with 20 polygons in different edit modes
     const polygons = createRandomPolygons(20);
-    
+
     // Test VIEW mode
     const viewModeResult = await testRenderPerformance(
       <CanvasV2
@@ -135,7 +135,7 @@ describe('CanvasV2 Performance Tests', () => {
         onScaleChange={() => {}}
         onPanChange={() => {}}
       />,
-      { iterations: 30, verbose: true }
+      { iterations: 30, verbose: true },
     );
 
     // Test EDIT mode
@@ -152,7 +152,7 @@ describe('CanvasV2 Performance Tests', () => {
         onScaleChange={() => {}}
         onPanChange={() => {}}
       />,
-      { iterations: 30, verbose: true }
+      { iterations: 30, verbose: true },
     );
 
     // Test CREATE mode
@@ -169,7 +169,7 @@ describe('CanvasV2 Performance Tests', () => {
         onScaleChange={() => {}}
         onPanChange={() => {}}
       />,
-      { iterations: 30, verbose: true }
+      { iterations: 30, verbose: true },
     );
 
     // We expect EDIT mode to be slightly slower than VIEW mode due to

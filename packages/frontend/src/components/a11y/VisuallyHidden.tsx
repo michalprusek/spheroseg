@@ -11,18 +11,9 @@ interface VisuallyHiddenProps {
  * Component for content that should be visible only to screen readers
  * Visually hidden but accessible to screen readers
  */
-const VisuallyHidden: React.FC<VisuallyHiddenProps> = ({
-  children,
-  as: Component = 'span',
-  className,
-  ...props
-}) => {
+const VisuallyHidden: React.FC<VisuallyHiddenProps> = ({ children, as: Component = 'span', className, ...props }) => {
   return (
-    <Component
-      className={`sr-only ${className || ''}`}
-      style={srOnlyStyle}
-      {...props}
-    >
+    <Component className={`sr-only ${className || ''}`} style={srOnlyStyle} {...props}>
       {children}
     </Component>
   );

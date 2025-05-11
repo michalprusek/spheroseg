@@ -20,9 +20,24 @@ vi.mock('@/hooks/useProjectData', () => ({
   useProjectData: vi.fn(() => ({
     projectTitle: 'Test Project',
     images: [
-      { id: 'img1', name: 'image1.jpg', url: 'http://example.com/image1.jpg', thumbnailUrl: 'http://example.com/thumb1.jpg' },
-      { id: 'img2', name: 'image2.jpg', url: 'http://example.com/image2.jpg', thumbnailUrl: 'http://example.com/thumb2.jpg' },
-      { id: 'img3', name: 'image3.jpg', url: 'http://example.com/image3.jpg', thumbnailUrl: 'http://example.com/thumb3.jpg' },
+      {
+        id: 'img1',
+        name: 'image1.jpg',
+        url: 'http://example.com/image1.jpg',
+        thumbnailUrl: 'http://example.com/thumb1.jpg',
+      },
+      {
+        id: 'img2',
+        name: 'image2.jpg',
+        url: 'http://example.com/image2.jpg',
+        thumbnailUrl: 'http://example.com/thumb2.jpg',
+      },
+      {
+        id: 'img3',
+        name: 'image3.jpg',
+        url: 'http://example.com/image3.jpg',
+        thumbnailUrl: 'http://example.com/thumb3.jpg',
+      },
     ],
     loading: false,
   })),
@@ -87,54 +102,64 @@ describe('ProjectExport Component', () => {
     return render(
       <MemoryRouterWrapper initialEntries={['/projects/test-project-id/export']}>
         <ProjectExport />
-      </MemoryRouterWrapper>
+      </MemoryRouterWrapper>,
     );
   };
 
   it('renders the project export page correctly', () => {
     renderComponent();
-    
+
     // Check if the project header is displayed with correct data
     expect(screen.getByTestId('mock-project-header')).toBeInTheDocument();
     expect(screen.getByText('Test Project')).toBeInTheDocument();
     expect(screen.getByText('Images: 3')).toBeInTheDocument();
-    
+
     // Check if the export options and image selection cards are displayed
     expect(screen.getByTestId('mock-export-options')).toBeInTheDocument();
     expect(screen.getByTestId('mock-image-selection')).toBeInTheDocument();
-    
+
     // Check if the export button is displayed with correct count
     expect(screen.getByText(/Exportovat 2 obrázků/i)).toBeInTheDocument();
-    
+
     // Check if the back button is displayed
     expect(screen.getByText(/Zpět na projekt/i)).toBeInTheDocument();
   });
 
   it('handles clicking the export button', () => {
     renderComponent();
-    
+
     // Get the handleExport mock function
     const { handleExport } = require('../hooks/useExportFunctions').useExportFunctions();
-    
+
     // Click the export button
     fireEvent.click(screen.getByText(/Exportovat 2 obrázků/i));
-    
+
     // Check if handleExport was called with the selected images
     expect(handleExport).toHaveBeenCalledWith([
-      { id: 'img1', name: 'image1.jpg', url: 'http://example.com/image1.jpg', thumbnailUrl: 'http://example.com/thumb1.jpg' },
-      { id: 'img3', name: 'image3.jpg', url: 'http://example.com/image3.jpg', thumbnailUrl: 'http://example.com/thumb3.jpg' },
+      {
+        id: 'img1',
+        name: 'image1.jpg',
+        url: 'http://example.com/image1.jpg',
+        thumbnailUrl: 'http://example.com/thumb1.jpg',
+      },
+      {
+        id: 'img3',
+        name: 'image3.jpg',
+        url: 'http://example.com/image3.jpg',
+        thumbnailUrl: 'http://example.com/thumb3.jpg',
+      },
     ]);
   });
 
   it('handles clicking the back button', () => {
     renderComponent();
-    
+
     // Get the navigate mock function
     const navigate = require('react-router-dom').useNavigate();
-    
+
     // Click the back button
     fireEvent.click(screen.getByText(/Zpět na projekt/i));
-    
+
     // Check if navigate was called with the correct route
     expect(navigate).toHaveBeenCalledWith('/project/test-project-id');
   });
@@ -145,9 +170,9 @@ describe('ProjectExport Component', () => {
       ...require('../hooks/useExportFunctions').useExportFunctions(),
       getSelectedCount: vi.fn(() => 0),
     });
-    
+
     renderComponent();
-    
+
     // Check if the export button is disabled
     expect(screen.getByText(/Exportovat 0 obrázků/i)).toBeDisabled();
   });
@@ -158,9 +183,9 @@ describe('ProjectExport Component', () => {
       ...require('../hooks/useExportFunctions').useExportFunctions(),
       isExporting: true,
     });
-    
+
     renderComponent();
-    
+
     // Check if the export button shows the loading indicator
     expect(screen.getByText('⏳').className).toContain('animate-spin');
     expect(screen.getByText(/Exportovat 2 obrázků/i)).toBeDisabled();
@@ -172,9 +197,9 @@ describe('ProjectExport Component', () => {
       ...require('@/hooks/useProjectData').useProjectData(),
       loading: true,
     });
-    
+
     renderComponent();
-    
+
     // Check if the loading indicator is displayed in the header
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });

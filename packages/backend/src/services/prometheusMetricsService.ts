@@ -17,19 +17,19 @@ class MetricsClient {
    */
   private getSummary(name: string, help: string, labelNames: string[] = []): Summary<string> {
     const key = `${name}:${labelNames.join(',')}`;
-    
+
     if (!this.summaries.has(key)) {
       const summary = new Summary({
         name,
         help,
         labelNames,
         percentiles: [0.5, 0.9, 0.99],
-        registers: [register]
+        registers: [register],
       });
-      
+
       this.summaries.set(key, summary);
     }
-    
+
     return this.summaries.get(key)!;
   }
 
@@ -38,18 +38,18 @@ class MetricsClient {
    */
   private getCounter(name: string, help: string, labelNames: string[] = []): Counter<string> {
     const key = `${name}:${labelNames.join(',')}`;
-    
+
     if (!this.counters.has(key)) {
       const counter = new Counter({
         name,
         help,
         labelNames,
-        registers: [register]
+        registers: [register],
       });
-      
+
       this.counters.set(key, counter);
     }
-    
+
     return this.counters.get(key)!;
   }
 
@@ -58,18 +58,18 @@ class MetricsClient {
    */
   private getGauge(name: string, help: string, labelNames: string[] = []): Gauge<string> {
     const key = `${name}:${labelNames.join(',')}`;
-    
+
     if (!this.gauges.has(key)) {
       const gauge = new Gauge({
         name,
         help,
         labelNames,
-        registers: [register]
+        registers: [register],
       });
-      
+
       this.gauges.set(key, gauge);
     }
-    
+
     return this.gauges.get(key)!;
   }
 
@@ -80,7 +80,7 @@ class MetricsClient {
     const help = `${name} summary`;
     const labelNames = Object.keys(labels);
     const summary = this.getSummary(name, help, labelNames);
-    
+
     summary.observe(labels, value);
   }
 
@@ -91,7 +91,7 @@ class MetricsClient {
     const help = `${name} counter`;
     const labelNames = Object.keys(labels);
     const counter = this.getCounter(name, help, labelNames);
-    
+
     counter.inc(labels, value);
   }
 
@@ -102,7 +102,7 @@ class MetricsClient {
     const help = `${name} gauge`;
     const labelNames = Object.keys(labels);
     const gauge = this.getGauge(name, help, labelNames);
-    
+
     gauge.set(labels, value);
   }
 }
@@ -116,7 +116,7 @@ const webVitalsMetrics = [
   { name: 'web_vitals_fcp', help: 'First Contentful Paint' },
   { name: 'web_vitals_lcp', help: 'Largest Contentful Paint' },
   { name: 'web_vitals_fid', help: 'First Input Delay' },
-  { name: 'web_vitals_ttfb', help: 'Time to First Byte' }
+  { name: 'web_vitals_ttfb', help: 'Time to First Byte' },
 ];
 
 webVitalsMetrics.forEach(({ name, help }) => {
@@ -124,15 +124,27 @@ webVitalsMetrics.forEach(({ name, help }) => {
     name,
     help,
     percentiles: [0.5, 0.9, 0.99],
-    registers: [register]
+    registers: [register],
   });
 });
 
 // Initialize frontend performance metrics
 const frontendMetrics = [
-  { name: 'frontend_component_render_time', help: 'Component render time in milliseconds', labelNames: ['component'] },
-  { name: 'frontend_page_load_time', help: 'Page load time in milliseconds', labelNames: ['page'] },
-  { name: 'frontend_api_request_duration', help: 'API request duration in milliseconds', labelNames: ['endpoint'] }
+  {
+    name: 'frontend_component_render_time',
+    help: 'Component render time in milliseconds',
+    labelNames: ['component'],
+  },
+  {
+    name: 'frontend_page_load_time',
+    help: 'Page load time in milliseconds',
+    labelNames: ['page'],
+  },
+  {
+    name: 'frontend_api_request_duration',
+    help: 'API request duration in milliseconds',
+    labelNames: ['endpoint'],
+  },
 ];
 
 frontendMetrics.forEach(({ name, help, labelNames }) => {
@@ -141,15 +153,27 @@ frontendMetrics.forEach(({ name, help, labelNames }) => {
     help,
     labelNames,
     percentiles: [0.5, 0.9, 0.99],
-    registers: [register]
+    registers: [register],
   });
 });
 
 // Initialize counter metrics
 const counterMetrics = [
-  { name: 'frontend_component_render_count', help: 'Component render count', labelNames: ['component'] },
-  { name: 'frontend_page_load_count', help: 'Page load count', labelNames: ['page'] },
-  { name: 'frontend_api_request_count', help: 'API request count', labelNames: ['endpoint'] }
+  {
+    name: 'frontend_component_render_count',
+    help: 'Component render count',
+    labelNames: ['component'],
+  },
+  {
+    name: 'frontend_page_load_count',
+    help: 'Page load count',
+    labelNames: ['page'],
+  },
+  {
+    name: 'frontend_api_request_count',
+    help: 'API request count',
+    labelNames: ['endpoint'],
+  },
 ];
 
 counterMetrics.forEach(({ name, help, labelNames }) => {
@@ -157,13 +181,17 @@ counterMetrics.forEach(({ name, help, labelNames }) => {
     name,
     help,
     labelNames,
-    registers: [register]
+    registers: [register],
   });
 });
 
 // Initialize gauge metrics
 const gaugeMetrics = [
-  { name: 'frontend_api_success_rate', help: 'API request success rate', labelNames: ['endpoint'] }
+  {
+    name: 'frontend_api_success_rate',
+    help: 'API request success rate',
+    labelNames: ['endpoint'],
+  },
 ];
 
 gaugeMetrics.forEach(({ name, help, labelNames }) => {
@@ -171,7 +199,7 @@ gaugeMetrics.forEach(({ name, help, labelNames }) => {
     name,
     help,
     labelNames,
-    registers: [register]
+    registers: [register],
   });
 });
 

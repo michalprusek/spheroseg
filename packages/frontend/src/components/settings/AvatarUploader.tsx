@@ -1,7 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Camera, Loader2, UserIcon, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -15,11 +22,7 @@ interface AvatarUploaderProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const AvatarUploader: React.FC<AvatarUploaderProps> = ({
-  currentAvatarUrl,
-  onAvatarChange,
-  size = 'md'
-}) => {
+const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAvatarChange, size = 'md' }) => {
   const { t } = useLanguage();
   const { updateAvatar } = useProfile();
   const [isUploading, setIsUploading] = useState(false);
@@ -34,7 +37,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     sm: 'h-16 w-16',
     md: 'h-24 w-24',
     lg: 'h-32 w-32',
-    xl: 'h-40 w-40'
+    xl: 'h-40 w-40',
   };
 
   // Handle file selection
@@ -92,28 +95,31 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   const uploadAvatar = async (dataUrl: string) => {
     setIsUploading(true);
 
-    await tryCatch(async () => {
-      // Implement a client-side simulation of avatar upload
-      console.log('Simulating avatar upload to localStorage');
+    await tryCatch(
+      async () => {
+        // Implement a client-side simulation of avatar upload
+        console.log('Simulating avatar upload to localStorage');
 
-      // Generate a unique avatar URL
-      const timestamp = new Date().getTime();
-      const avatarUrl = `/uploads/avatars/avatar-${timestamp}.jpg`;
+        // Generate a unique avatar URL
+        const timestamp = new Date().getTime();
+        const avatarUrl = `/uploads/avatars/avatar-${timestamp}.jpg`;
 
-      // Store the data URL in localStorage
-      localStorage.setItem('userAvatar', dataUrl);
-      localStorage.setItem('userAvatarUrl', avatarUrl);
+        // Store the data URL in localStorage
+        localStorage.setItem('userAvatar', dataUrl);
+        localStorage.setItem('userAvatarUrl', avatarUrl);
 
-      // Update profile context
-      updateAvatar(avatarUrl);
+        // Update profile context
+        updateAvatar(avatarUrl);
 
-      console.log('Avatar stored in localStorage and profile context updated');
+        console.log('Avatar stored in localStorage and profile context updated');
 
-      // Call the callback with the new avatar URL
-      onAvatarChange(dataUrl);
+        // Call the callback with the new avatar URL
+        onAvatarChange(dataUrl);
 
-      showSuccess(t('profile.avatarUpdated') || 'Profile picture updated');
-    }, t('profile.avatarUploadError') || 'Failed to upload profile picture');
+        showSuccess(t('profile.avatarUpdated') || 'Profile picture updated');
+      },
+      t('profile.avatarUploadError') || 'Failed to upload profile picture',
+    );
 
     setIsUploading(false);
   };
@@ -122,27 +128,30 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   const handleRemoveAvatar = async () => {
     setIsUploading(true);
 
-    await tryCatch(async () => {
-      // Implement a client-side simulation of avatar removal
-      console.log('Simulating avatar removal from localStorage');
+    await tryCatch(
+      async () => {
+        // Implement a client-side simulation of avatar removal
+        console.log('Simulating avatar removal from localStorage');
 
-      // Remove the avatar from localStorage
-      localStorage.removeItem('userAvatar');
-      localStorage.removeItem('userAvatarUrl');
+        // Remove the avatar from localStorage
+        localStorage.removeItem('userAvatar');
+        localStorage.removeItem('userAvatarUrl');
 
-      // Update profile context
-      updateAvatar('');
+        // Update profile context
+        updateAvatar('');
 
-      console.log('Avatar removed from localStorage and profile context updated');
+        console.log('Avatar removed from localStorage and profile context updated');
 
-      // Call the callback with null or a default avatar URL
-      onAvatarChange('');
+        // Call the callback with null or a default avatar URL
+        onAvatarChange('');
 
-      // Clear preview
-      setPreviewUrl(null);
+        // Clear preview
+        setPreviewUrl(null);
 
-      showSuccess(t('profile.avatarRemoved') || 'Profile picture removed');
-    }, t('profile.avatarRemoveError') || 'Failed to remove profile picture');
+        showSuccess(t('profile.avatarRemoved') || 'Profile picture removed');
+      },
+      t('profile.avatarRemoveError') || 'Failed to remove profile picture',
+    );
 
     setIsUploading(false);
   };
@@ -171,9 +180,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   return (
     <div className="flex flex-col items-center space-y-4">
       <div className="relative">
-        <Avatar
-          className={`${sizeClasses[size]} border-2 border-gray-200 dark:border-gray-700`}
-        >
+        <Avatar className={`${sizeClasses[size]} border-2 border-gray-200 dark:border-gray-700`}>
           {displayUrl ? (
             <AvatarImage src={displayUrl} alt="Profile" />
           ) : (
@@ -192,11 +199,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
         >
-          {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Camera className="h-4 w-4" />
-          )}
+          {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
         </Button>
 
         {/* Remove button (only show if there's an avatar) */}
@@ -215,13 +218,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       </div>
 
       {/* Hidden file input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        className="hidden"
-      />
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
 
       <p className="text-xs text-muted-foreground">
         {t('profile.avatarHelp') || 'Click the camera icon to upload a profile picture'}
@@ -231,9 +228,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       <Dialog open={isCropperOpen} onOpenChange={setIsCropperOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {t('profile.cropAvatar') || 'Crop Profile Picture'}
-            </DialogTitle>
+            <DialogTitle>{t('profile.cropAvatar') || 'Crop Profile Picture'}</DialogTitle>
             <DialogDescription>
               {t('profile.cropAvatarDescription') || 'Adjust the cropping area to set your profile picture.'}
             </DialogDescription>
@@ -254,10 +249,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsCropperOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setIsCropperOpen(false)}>
               {t('common.cancel')}
             </Button>
           </DialogFooter>

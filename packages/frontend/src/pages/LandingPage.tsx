@@ -36,9 +36,7 @@ const LandingPage: React.FC = () => {
                 </Button>
               </Link>
               <Link to="/signup">
-                <Button size="sm">
-                  {t('auth.signUp')}
-                </Button>
+                <Button size="sm">{t('auth.signUp')}</Button>
               </Link>
             </div>
           </div>
@@ -53,9 +51,7 @@ const LandingPage: React.FC = () => {
               <h1 className="text-4xl md:text-5xl font-bold mb-6 dark:text-white dark:drop-shadow-sm">
                 {t('landing.hero.title')}
               </h1>
-              <p className="text-xl text-muted-foreground dark:text-gray-300 mb-8">
-                {t('landing.hero.subtitle')}
-              </p>
+              <p className="text-xl text-muted-foreground dark:text-gray-300 mb-8">{t('landing.hero.subtitle')}</p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link to="/signup">
                   <Button size="lg" className="w-full sm:w-auto">
@@ -85,9 +81,7 @@ const LandingPage: React.FC = () => {
         <Container>
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">{t('landing.features.title')}</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              {t('landing.features.subtitle')}
-            </p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{t('landing.features.subtitle')}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-background p-8 rounded-lg">
@@ -95,9 +89,7 @@ const LandingPage: React.FC = () => {
                 <Layers className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-semibold mb-3">{t('landing.features.feature1.title')}</h3>
-              <p className="text-muted-foreground">
-                {t('landing.features.feature1.description')}
-              </p>
+              <p className="text-muted-foreground">{t('landing.features.feature1.description')}</p>
               <ul className="mt-4 space-y-2">
                 <li className="flex items-center">
                   <Check className="h-4 w-4 text-primary mr-2" />
@@ -114,9 +106,7 @@ const LandingPage: React.FC = () => {
                 <BarChart className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-semibold mb-3">{t('landing.features.feature2.title')}</h3>
-              <p className="text-muted-foreground">
-                {t('landing.features.feature2.description')}
-              </p>
+              <p className="text-muted-foreground">{t('landing.features.feature2.description')}</p>
               <ul className="mt-4 space-y-2">
                 <li className="flex items-center">
                   <Check className="h-4 w-4 text-primary mr-2" />
@@ -133,9 +123,7 @@ const LandingPage: React.FC = () => {
                 <Users className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-semibold mb-3">{t('landing.features.feature3.title')}</h3>
-              <p className="text-muted-foreground">
-                {t('landing.features.feature3.description')}
-              </p>
+              <p className="text-muted-foreground">{t('landing.features.feature3.description')}</p>
               <ul className="mt-4 space-y-2">
                 <li className="flex items-center">
                   <Check className="h-4 w-4 text-primary mr-2" />
@@ -156,9 +144,7 @@ const LandingPage: React.FC = () => {
         <Container>
           <div className="bg-primary text-primary-foreground p-8 md:p-12 rounded-lg text-center">
             <h2 className="text-3xl font-bold mb-4">{t('landing.cta.title')}</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-              {t('landing.cta.description')}
-            </p>
+            <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">{t('landing.cta.description')}</p>
             <Link to="/signup">
               <Button size="lg" variant="secondary">
                 {t('landing.cta.button')}
@@ -174,9 +160,7 @@ const LandingPage: React.FC = () => {
         <Container>
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
-              <p className="text-sm text-muted-foreground">
-                © 2023 Spheroid Segmentation Platform
-              </p>
+              <p className="text-sm text-muted-foreground">© 2023 Spheroid Segmentation Platform</p>
             </div>
             <div className="flex gap-8">
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground">

@@ -1,12 +1,5 @@
-import React, { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   ArrowUpRight,
@@ -19,7 +12,7 @@ import {
   Clock,
   ChevronRight,
   FileText,
-  Calendar
+  Calendar,
 } from 'lucide-react';
 import { useUserStatistics } from '@/hooks/useUserStatistics';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -54,7 +47,7 @@ const StatCard: React.FC<StatCardProps> = ({
   trend,
   onClick,
   isLoading = false,
-  className = "",
+  className = '',
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -67,14 +60,8 @@ const StatCard: React.FC<StatCardProps> = ({
       onClick={onClick}
     >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        {icon && (
-          <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center">
-            {icon}
-          </div>
-        )}
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        {icon && <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center">{icon}</div>}
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -82,11 +69,7 @@ const StatCard: React.FC<StatCardProps> = ({
         ) : (
           <div className="text-2xl font-bold animate-fade-in">{value}</div>
         )}
-        {description && (
-          <p className="text-xs text-muted-foreground mt-1">
-            {description}
-          </p>
-        )}
+        {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
         {trend && !isLoading && (
           <div className="flex items-center mt-2">
             {trend.isPositive ? (
@@ -122,18 +105,18 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
   projectId,
   projectName,
   imageId,
-  imageName
+  imageName,
 }) => {
   const { t } = useLanguage();
   const date = new Date(timestamp);
   const formattedDate = date.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
   const formattedTime = date.toLocaleTimeString(undefined, {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
 
   // Select icon based on activity type
@@ -154,16 +137,14 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
     <div className="flex items-start space-x-3 py-2 border-b last:border-b-0">
       <div className="mt-0.5">{getIcon()}</div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium">
-          {t(`statsOverview.activityTypes.${type}`) || description}
-        </p>
+        <p className="text-sm font-medium">{t(`statsOverview.activityTypes.${type}`) || description}</p>
         <p className="text-xs text-muted-foreground truncate">
           {projectName && (
-            <Link to={`/project/${projectId}`} className="hover:underline">{projectName}</Link>
+            <Link to={`/project/${projectId}`} className="hover:underline">
+              {projectName}
+            </Link>
           )}
-          {imageName && (
-            <span> - {imageName}</span>
-          )}
+          {imageName && <span> - {imageName}</span>}
         </p>
         <div className="flex items-center mt-1">
           <Clock className="w-3 h-3 text-muted-foreground mr-1" />
@@ -184,24 +165,19 @@ interface ComparisonChartProps {
   isLoading?: boolean;
 }
 
-const ComparisonChart: React.FC<ComparisonChartProps> = ({
-  title,
-  currentValue,
-  previousValue,
-  isLoading = false
-}) => {
+const ComparisonChart: React.FC<ComparisonChartProps> = ({ title, currentValue, previousValue, isLoading = false }) => {
   const { t } = useLanguage();
   const maxValue = Math.max(currentValue, previousValue, 1);
 
   // Animation delay for progressive reveal
   const currentBarStyle = {
     width: `${(currentValue / maxValue) * 100}%`,
-    transitionDelay: '0.2s'
+    transitionDelay: '0.2s',
   };
 
   const previousBarStyle = {
     width: `${(previousValue / maxValue) * 100}%`,
-    transitionDelay: '0.4s'
+    transitionDelay: '0.4s',
   };
 
   return (
@@ -278,12 +254,64 @@ const StatsOverview: React.FC = () => {
     statistics: stats,
     loading: isLoading,
     error,
-    fetchStatistics
+    fetchStatistics,
+    clearCache
   } = useUserStatistics({
     showToasts: true,
     useCache: true,
-    autoFetch: true
+    autoFetch: true,
   });
+
+  // Listen for statistics update events
+  useEffect(() => {
+    const handleStatisticsUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('Statistics update needed event received', customEvent.detail);
+
+      // Clear cache and fetch fresh statistics
+      clearCache();
+      fetchStatistics();
+    };
+
+    const handleProjectDeleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        projectId: string;
+        projectName?: string;
+        updateStatistics?: boolean;
+      }>;
+
+      if (customEvent.detail.updateStatistics) {
+        console.log('Project deleted, updating statistics', customEvent.detail);
+        clearCache();
+        fetchStatistics();
+      }
+    };
+
+    const handleImageDeleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        imageId: string;
+        projectId: string;
+        forceRefresh?: boolean;
+      }>;
+
+      console.log('Image deleted, updating statistics', customEvent.detail);
+      // Always refresh statistics when an image is deleted
+      clearCache();
+      fetchStatistics();
+    };
+
+    // Register event listeners
+    window.addEventListener('statistics-update-needed', handleStatisticsUpdate);
+    window.addEventListener('project-deleted', handleProjectDeleted);
+    window.addEventListener('image-deleted', handleImageDeleted);
+
+    // Clean up event listeners on unmount
+    return () => {
+      window.removeEventListener('statistics-update-needed', handleStatisticsUpdate);
+      window.removeEventListener('project-deleted', handleProjectDeleted);
+      window.removeEventListener('image-deleted', handleImageDeleted);
+    };
+  }, [fetchStatistics, clearCache]);
 
   const calculatePercentChange = (current: number, previous: number): number => {
     if (previous === 0) return current > 0 ? 100 : 0;
@@ -305,54 +333,66 @@ const StatsOverview: React.FC = () => {
       {/* Main stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title={t('statsOverview.totalProjects') || "Total Projects"}
+          title={t('statsOverview.totalProjects') || 'Total Projects'}
           value={isLoading ? '' : formatNumber(stats?.totalProjects || 0)}
           icon={<Folder className="h-4 w-4" />}
-          trend={stats?.comparisons ? {
-            value: calculatePercentChange(
-              stats.comparisons.projectsThisMonth,
-              stats.comparisons.projectsLastMonth
-            ),
-            isPositive: stats.comparisons.projectsChange >= 0,
-            label: t('statsOverview.vsLastMonth') || 'vs. last month'
-          } : undefined}
+          trend={
+            stats?.comparisons
+              ? {
+                  value: calculatePercentChange(
+                    stats.comparisons.projectsThisMonth,
+                    stats.comparisons.projectsLastMonth,
+                  ),
+                  isPositive: stats.comparisons.projectsChange >= 0,
+                  label: t('statsOverview.vsLastMonth') || 'vs. last month',
+                }
+              : undefined
+          }
           isLoading={isLoading}
           onClick={toggleExtendedView}
         />
 
         <StatCard
-          title={t('statsOverview.totalImages') || "Total Images"}
+          title={t('statsOverview.totalImages') || 'Total Images'}
           value={isLoading ? '' : formatNumber(stats?.totalImages || 0)}
           icon={<ImageIcon className="h-4 w-4" />}
-          trend={stats?.comparisons ? {
-            value: calculatePercentChange(
-              stats.comparisons.imagesThisMonth,
-              stats.comparisons.imagesLastMonth
-            ),
-            isPositive: stats.comparisons.imagesChange >= 0,
-            label: t('statsOverview.vsLastMonth') || 'vs. last month'
-          } : undefined}
+          trend={
+            stats?.comparisons
+              ? {
+                  value: calculatePercentChange(stats.comparisons.imagesThisMonth, stats.comparisons.imagesLastMonth),
+                  isPositive: stats.comparisons.imagesChange >= 0,
+                  label: t('statsOverview.vsLastMonth') || 'vs. last month',
+                }
+              : undefined
+          }
           isLoading={isLoading}
           onClick={toggleExtendedView}
         />
 
         <StatCard
-          title={t('statsOverview.completedSegmentations') || "Completed Segmentations"}
+          title={t('statsOverview.completedSegmentations') || 'Completed Segmentations'}
           value={isLoading ? '' : formatNumber(stats?.completedSegmentations || 0)}
           icon={<BarChart3 className="h-4 w-4" />}
-          description={stats && !isLoading
-            ? `${stats.totalImages > 0
-                ? Math.round((stats.completedSegmentations / stats.totalImages) * 100)
-                : 0}% ${t('statsOverview.completion') || 'completion rate'}`
-            : undefined}
+          description={
+            stats && !isLoading
+              ? `${
+                  stats.totalImages > 0 ? Math.round((stats.completedSegmentations / stats.totalImages) * 100) : 0
+                }% ${t('statsOverview.completion') || 'completion rate'}`
+              : undefined
+          }
           isLoading={isLoading}
           onClick={toggleExtendedView}
         />
 
         <StatCard
-          title={t('statsOverview.storageUsed') || "Storage Used"}
-          value={isLoading ? '' : `${(stats?.storageUsedMB || 0).toFixed(1)} MB`}
+          title={t('statsOverview.storageUsed') || 'Storage Used'}
+          value={isLoading ? '' : `${(stats?.storageUsedMB || 0.01).toFixed(1)} MB`}
           icon={<HardDrive className="h-4 w-4" />}
+          description={
+            stats?.totalImages
+              ? `${stats.totalImages} ${stats.totalImages === 1 ? 'image' : 'images'}`
+              : undefined
+          }
           isLoading={isLoading}
           onClick={toggleExtendedView}
         />
@@ -364,7 +404,7 @@ const StatsOverview: React.FC = () => {
           {/* Left panel: Activity Timeline */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-lg">{t('statsOverview.activityTitle') || "Recent Activity"}</CardTitle>
+              <CardTitle className="text-lg">{t('statsOverview.activityTitle') || 'Recent Activity'}</CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -385,19 +425,21 @@ const StatsOverview: React.FC = () => {
                     <ActivityItem
                       key={index}
                       type={activity.type}
-                      description={activity.description}
+                      description={activity.item_name || activity.description || ''}
                       timestamp={activity.timestamp}
-                      projectId={activity.project_id}
-                      projectName={activity.project_name}
-                      imageId={activity.image_id}
-                      imageName={activity.image_name}
+                      projectId={activity.project_id || activity.item_id}
+                      projectName={activity.project_name || activity.item_name}
+                      imageId={activity.image_id || (activity.type === 'image_uploaded' ? activity.item_id : undefined)}
+                      imageName={
+                        activity.image_name || (activity.type === 'image_uploaded' ? activity.item_name : undefined)
+                      }
                     />
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Calendar className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                  <p>{t('statsOverview.noActivity') || "No recent activity"}</p>
+                  <p>{t('statsOverview.noActivity') || 'No recent activity'}</p>
                 </div>
               )}
             </CardContent>
@@ -406,18 +448,18 @@ const StatsOverview: React.FC = () => {
           {/* Right panel: Comparison charts */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{t('statsOverview.thisMonth') || "This Month"}</CardTitle>
+              <CardTitle className="text-lg">{t('statsOverview.thisMonth') || 'This Month'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <ComparisonChart
-                title={t('statsOverview.projectsCreated') || "Projects Created"}
+                title={t('statsOverview.projectsCreated') || 'Projects Created'}
                 currentValue={stats?.comparisons?.projectsThisMonth || 0}
                 previousValue={stats?.comparisons?.projectsLastMonth || 0}
                 isLoading={isLoading}
               />
 
               <ComparisonChart
-                title={t('statsOverview.imagesUploaded') || "Images Uploaded"}
+                title={t('statsOverview.imagesUploaded') || 'Images Uploaded'}
                 currentValue={stats?.comparisons?.imagesThisMonth || 0}
                 previousValue={stats?.comparisons?.imagesLastMonth || 0}
                 isLoading={isLoading}
@@ -425,7 +467,7 @@ const StatsOverview: React.FC = () => {
 
               {/* Completion rate */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">{t('statsOverview.completion') || "Completion Rate"}</h4>
+                <h4 className="text-sm font-medium">{t('statsOverview.completion') || 'Completion Rate'}</h4>
                 {isLoading ? (
                   <Skeleton className="h-4 w-full" />
                 ) : (
@@ -447,13 +489,8 @@ const StatsOverview: React.FC = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={toggleExtendedView}
-              >
-                {t('statsOverview.title') || "Dashboard Overview"}
+              <Button variant="outline" size="sm" className="w-full" onClick={toggleExtendedView}>
+                {t('statsOverview.title') || 'Dashboard Overview'}
               </Button>
             </CardFooter>
           </Card>

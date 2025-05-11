@@ -75,7 +75,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       // Retry loading with cache-busting if we haven't reached max retries
       if (retryCount < maxRetries) {
         logger.info(`Retrying image load (${retryCount + 1}/${maxRetries}): ${src}`);
-        setRetryCount(prev => prev + 1);
+        setRetryCount((prev) => prev + 1);
         img.src = addCacheBuster(constructUrl(src));
       } else {
         setImgSrc(fallbackSrc);
@@ -98,9 +98,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
 
   return (
     <div className={cn('relative overflow-hidden', containerClassName)}>
-      {isLoading && showSkeleton && (
-        <Skeleton className="absolute inset-0 z-10 bg-muted/80" />
-      )}
+      {isLoading && showSkeleton && <Skeleton className="absolute inset-0 z-10 bg-muted/80" />}
       <img
         src={imgSrc}
         alt={alt}
@@ -108,7 +106,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           'w-full h-full object-cover transition-opacity duration-300',
           isLoading ? 'opacity-60 blur-sm' : 'opacity-100 blur-0',
           hasError ? 'grayscale' : '',
-          className
+          className,
         )}
         {...props}
       />

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useImageCentering } from './view/useImageCentering';
 import { useOffsetConstraints } from './view/useOffsetConstraints';
@@ -11,53 +10,56 @@ export const useSegmentationView = (canvasContainerRef: React.RefObject<HTMLDivE
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement | null>(null);
-  
+
   // Omezení zoomu na 40-600%
   const MIN_ZOOM = 0.4; // 40%
   const MAX_ZOOM = 6.0; // 600%
-  
+
   // Hooks pro jednotlivé funkcionality
   const { constrainOffset } = useOffsetConstraints(canvasContainerRef, imageRef);
-  
+
   const { centerImage } = useImageCentering(
-    canvasContainerRef, 
-    imageSrc, 
-    imageRef, 
-    setZoom, 
-    setOffset, 
-    MIN_ZOOM, 
-    MAX_ZOOM
+    canvasContainerRef,
+    imageSrc,
+    imageRef,
+    setZoom,
+    setOffset,
+    MIN_ZOOM,
+    MAX_ZOOM,
   );
-  
+
   // Consolidated zoom handlers (both button clicks and wheel)
   const { handleZoomIn, handleZoomOut } = useZoomHandlers(
-    zoom, 
-    offset, 
-    canvasContainerRef, 
-    imageRef, 
-    setZoom, 
-    setOffset, 
-    constrainOffset, 
-    MIN_ZOOM, 
-    MAX_ZOOM
+    zoom,
+    offset,
+    canvasContainerRef,
+    imageRef,
+    setZoom,
+    setOffset,
+    constrainOffset,
+    MIN_ZOOM,
+    MAX_ZOOM,
   );
-  
+
   // Efekt pro inicializaci při načtení
   useEffect(() => {
     if (canvasContainerRef.current && imageSrc) {
       centerImage();
     }
   }, [centerImage, imageSrc]);
-  
+
   // Přepsaní metody setOffset, aby zajistila, že obrázek nevyjede z plátna
-  const safeSetOffset = useCallback((newOffset: { x: number; y: number }) => {
-    setOffset(constrainOffset(newOffset, zoom));
-  }, [zoom, constrainOffset]);
-  
+  const safeSetOffset = useCallback(
+    (newOffset: { x: number; y: number }) => {
+      setOffset(constrainOffset(newOffset, zoom));
+    },
+    [zoom, constrainOffset],
+  );
+
   const handleResetView = useCallback(() => {
     centerImage();
   }, [centerImage]);
-  
+
   return {
     zoom,
     offset,
@@ -65,6 +67,6 @@ export const useSegmentationView = (canvasContainerRef: React.RefObject<HTMLDivE
     handleZoomIn,
     handleZoomOut,
     handleResetView,
-    centerImage
+    centerImage,
   };
 };

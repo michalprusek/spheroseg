@@ -4,24 +4,56 @@
 import { z } from 'zod';
 
 /**
+ * Schema for listing projects
+ */
+export const listProjectsSchema = z.object({
+  query: z.object({
+    limit: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : 10)),
+    offset: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : 0)),
+    includeShared: z
+      .string()
+      .optional()
+      .transform((val) => val === 'true'),
+  }),
+});
+
+/**
+ * Schema for project ID parameter
+ */
+export const projectIdSchema = z.object({
+  params: z.object({
+    id: z.string().min(1),
+  }),
+});
+
+/**
  * Schema for project creation
  */
 export const createProjectSchema = z.object({
   body: z.object({
-    title: z.string()
-      .min(3, 'Title must be at least 3 characters long')
+    title: z
+      .string()
+      .min(1, 'Title must not be empty') // Changed from 3 to 1 to allow shorter titles
       .max(100, 'Title must be at most 100 characters long')
       .trim()
-      .refine(val => val.length > 0, 'Title cannot be empty after trimming'),
-    description: z.string()
+      .refine((val) => val.length > 0, 'Title cannot be empty after trimming'),
+    description: z
+      .string()
       .max(1000, 'Description must be at most 1000 characters long')
       .optional()
-      .transform(val => val && val.trim() ? val.trim() : null),
-    tags: z.array(z.string().max(50, 'Each tag must be at most 50 characters'))
+      .transform((val) => (val && val.trim() ? val.trim() : null)),
+    tags: z
+      .array(z.string().max(50, 'Each tag must be at most 50 characters'))
       .max(10, 'Maximum 10 tags allowed')
       .optional(),
     public: z.boolean().optional().default(false),
-  })
+  }),
 });
 
 /**
@@ -29,18 +61,17 @@ export const createProjectSchema = z.object({
  */
 export const updateProjectSchema = z.object({
   params: z.object({
-    id: z.string().uuid('Invalid project ID')
+    id: z.string().uuid('Invalid project ID'),
   }),
   body: z.object({
-    title: z.string()
+    title: z
+      .string()
       .min(3, 'Title must be at least 3 characters long')
       .max(100, 'Title must be at most 100 characters long')
       .optional(),
-    description: z.string()
-      .max(1000, 'Description must be at most 1000 characters long')
-      .optional(),
+    description: z.string().max(1000, 'Description must be at most 1000 characters long').optional(),
     thumbnail_url: z.string().optional(),
-  })
+  }),
 });
 
 /**
@@ -48,8 +79,8 @@ export const updateProjectSchema = z.object({
  */
 export const deleteProjectSchema = z.object({
   params: z.object({
-    id: z.string().uuid('Invalid project ID')
-  })
+    id: z.string().uuid('Invalid project ID'),
+  }),
 });
 
 /**
@@ -57,10 +88,11 @@ export const deleteProjectSchema = z.object({
  */
 export const duplicateProjectSchema = z.object({
   params: z.object({
-    id: z.string().uuid('Invalid project ID')
+    id: z.string().uuid('Invalid project ID'),
   }),
   body: z.object({
-    newTitle: z.string()
+    newTitle: z
+      .string()
       .min(3, 'Title must be at least 3 characters long')
       .max(100, 'Title must be at most 100 characters long')
       .optional(),
@@ -68,7 +100,7 @@ export const duplicateProjectSchema = z.object({
     copySegmentations: z.boolean().optional().default(false),
     resetStatus: z.boolean().optional().default(true),
     async: z.boolean().optional().default(false),
-  })
+  }),
 });
 
 /**
@@ -76,21 +108,31 @@ export const duplicateProjectSchema = z.object({
  */
 export const getProjectImagesSchema = z.object({
   params: z.object({
-    id: z.string().uuid('Invalid project ID')
+    id: z.string().uuid('Invalid project ID'),
   }),
-  query: z.object({
-    page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1),
-    pageSize: z.string().optional().transform(val => val ? parseInt(val, 10) : 20),
-    status: z.string().optional(),
-    sortBy: z.string().optional(),
-    sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
-  }).optional(),
+  query: z
+    .object({
+      page: z
+        .string()
+        .optional()
+        .transform((val) => (val ? parseInt(val, 10) : 1)),
+      pageSize: z
+        .string()
+        .optional()
+        .transform((val) => (val ? parseInt(val, 10) : 20)),
+      status: z.string().optional(),
+      sortBy: z.string().optional(),
+      sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+    })
+    .optional(),
 });
 
 export default {
+  listProjectsSchema,
   createProjectSchema,
   updateProjectSchema,
   deleteProjectSchema,
   duplicateProjectSchema,
-  getProjectImagesSchema
+  getProjectImagesSchema,
+  projectIdSchema,
 };

@@ -144,16 +144,35 @@ def main():
 
     try:
         # Detect available device (CUDA, MPS, CPU)
-        if torch.cuda.is_available():
-            device = torch.device("cuda")
-            print(f"Using CUDA device: {torch.cuda.get_device_name(0)}")
-        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-            # MPS (Metal Performance Shaders) for macOS
-            device = torch.device("mps")
-            print("Using MPS (Metal Performance Shaders) device")
-        else:
+        # Check for device preference in environment variables
+        device_preference = os.environ.get('DEVICE_PREFERENCE', 'best')
+        print(f"Device preference: {device_preference}")
+
+        # Podle požadavku: nejdřív CUDA, pak MPS, pak CPU
+        if device_preference == 'best':
+            # Automaticky vybrat nejlepší dostupné zařízení
+            if torch.cuda.is_available():
+                device = torch.device("cuda")
+                print(f"Using CUDA device (best available): {torch.cuda.get_device_name(0)}")
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                device = torch.device("mps")
+                print("Using MPS device (best available)")
+            else:
+                device = torch.device("cpu")
+                print("Using CPU device (best available)")
+        elif device_preference == 'cpu':
             device = torch.device("cpu")
-            print("Using CPU device")
+            print("Using CPU device (forced by preference)")
+        elif device_preference == 'cuda' and torch.cuda.is_available():
+            device = torch.device("cuda")
+            print(f"Using CUDA device (by preference): {torch.cuda.get_device_name(0)}")
+        elif device_preference == 'mps' and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            device = torch.device("mps")
+            print("Using MPS device (by preference)")
+        else:
+            # Fallback na CPU, pokud požadované zařízení není dostupné
+            device = torch.device("cpu")
+            print(f"Requested device '{device_preference}' not available, falling back to CPU")
 
         # Fix path issues with duplicated 'uploads' prefix
         image_path = args.image_path
@@ -326,25 +345,88 @@ def main():
         print(f"Result data saved to: {args.output_path}")
 
         return 0
+    except torch.cuda.OutOfMemoryError as cuda_error:
+        error_message = f"CUDA out of memory error: {cuda_error}. Try using CPU device instead."
+        print(error_message, file=sys.stderr)
+
+        # Save detailed error information to the output JSON
+        error_data = {
+            'image_path': args.image_path,
+            'output_path': args.output_path,
+            'status': 'failed',
+            'error': str(cuda_error),
+            'error_type': 'cuda_out_of_memory',
+            'recommendation': 'Set DEVICE_PREFERENCE=cpu in environment variables',
+            'success': False
+        }
+
+        try:
+            with open(args.output_path, 'w') as f:
+                json.dump(error_data, f)
+        except Exception as write_error:
+            print(f"Failed to write error data to {args.output_path}: {write_error}", file=sys.stderr)
+
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        return 3  # Special return code for CUDA errors
+
+    except (torch.cuda.CudaError, RuntimeError) as device_error:
+        # Check if this is a CUDA-related error
+        error_str = str(device_error)
+        if 'CUDA' in error_str or 'cuda' in error_str:
+            error_message = f"CUDA error: {device_error}. Try using CPU device instead."
+            error_type = 'cuda_error'
+            recommendation = 'Set DEVICE_PREFERENCE=cpu in environment variables'
+        else:
+            error_message = f"Runtime error: {device_error}"
+            error_type = 'runtime_error'
+            recommendation = 'Check input data and model compatibility'
+
+        print(error_message, file=sys.stderr)
+
+        # Save detailed error information to the output JSON
+        error_data = {
+            'image_path': args.image_path,
+            'output_path': args.output_path,
+            'status': 'failed',
+            'error': str(device_error),
+            'error_type': error_type,
+            'recommendation': recommendation,
+            'success': False
+        }
+
+        try:
+            with open(args.output_path, 'w') as f:
+                json.dump(error_data, f)
+        except Exception as write_error:
+            print(f"Failed to write error data to {args.output_path}: {write_error}", file=sys.stderr)
+
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        return 4  # Special return code for device errors
+
     except Exception as e:
         error_message = f"Segmentation failed for {args.image_path}. Error: {e}"
-        print(error_message)
+        print(error_message, file=sys.stderr)
+
         # Save error information to the output JSON if possible
         error_data = {
             'image_path': args.image_path,
             'output_path': args.output_path,
             'status': 'failed',
             'error': str(e),
+            'error_type': 'general_error',
             'success': False
         }
+
         try:
             with open(args.output_path, 'w') as f:
                 json.dump(error_data, f)
         except Exception as write_error:
-            print(f"Failed to write error data to {args.output_path}: {write_error}")
+            print(f"Failed to write error data to {args.output_path}: {write_error}", file=sys.stderr)
 
         import traceback
-        traceback.print_exc()
+        traceback.print_exc(file=sys.stderr)
         return 2  # Return error code
 
 

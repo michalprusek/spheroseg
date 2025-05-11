@@ -39,7 +39,9 @@ const ImageUploaderDropzone: React.FC<ImageUploaderDropzoneProps> = ({
   return (
     <div
       className={`p-6 border-2 border-dashed rounded-lg text-center cursor-pointer ${
-        isDragActive ? 'border-primary bg-primary/10' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+        isDragActive
+          ? 'border-primary bg-primary/10'
+          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
       } ${className} transition-all duration-200 hover:shadow-md`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
@@ -59,15 +61,9 @@ const ImageUploaderDropzone: React.FC<ImageUploaderDropzoneProps> = ({
         data-testid="file-input"
       />
       <div className="flex flex-col items-center justify-center">
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          {t('uploader.dragDrop')}
-        </p>
-        <p className="text-xs text-gray-500 dark:text-gray-500">
-          {t('uploader.imageOnly')}
-        </p>
-        <p className="mt-2 text-xs text-blue-500 dark:text-blue-400">
-          {t('uploader.clickToSelect')}
-        </p>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('uploader.dragDrop')}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500">{t('uploader.imageOnly')}</p>
+        <p className="mt-2 text-xs text-blue-500 dark:text-blue-400">{t('uploader.clickToSelect')}</p>
       </div>
     </div>
   );

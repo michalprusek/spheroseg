@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Point } from '@/lib/segmentation';
 import HoveredVertexIndicator from './HoveredVertexIndicator';
@@ -9,9 +8,9 @@ import CursorLineConnector from './CursorLineConnector';
 
 interface PointAddingVisualizerProps {
   hoveredSegment: {
-    polygonId: string | null,
-    segmentIndex: number | null,
-    projectedPoint: Point | null
+    polygonId: string | null;
+    segmentIndex: number | null;
+    projectedPoint: Point | null;
   };
   zoom: number;
   tempPoints: Point[];
@@ -31,7 +30,7 @@ const PointAddingVisualizer = ({
   selectedVertexIndex,
   sourcePolygonId,
   polygonPoints,
-  cursorPosition
+  cursorPosition,
 }: PointAddingVisualizerProps) => {
   // Kontrola, zda máme všechny potřebné údaje
   const hasSelectedVertex = selectedVertexIndex !== null;
@@ -41,10 +40,7 @@ const PointAddingVisualizer = ({
     // První fáze - uživatel ještě nevybral počáteční bod
     return (
       <g>
-        <HoveredVertexIndicator 
-          hoveredSegment={hoveredSegment} 
-          zoom={zoom} 
-        />
+        <HoveredVertexIndicator hoveredSegment={hoveredSegment} zoom={zoom} />
       </g>
     );
   }
@@ -53,36 +49,32 @@ const PointAddingVisualizer = ({
   return (
     <g>
       {/* Zvýraznění počátečního bodu */}
-      <StartPointIndicator 
-        selectedVertexIndex={selectedVertexIndex} 
-        polygonPoints={polygonPoints} 
-        zoom={zoom} 
-      />
-      
+      <StartPointIndicator selectedVertexIndex={selectedVertexIndex} polygonPoints={polygonPoints} zoom={zoom} />
+
       {/* Zvýraznění potenciálních koncových bodů */}
-      <PotentialEndpointIndicator 
-        selectedVertexIndex={selectedVertexIndex} 
-        polygonPoints={polygonPoints} 
-        hoveredSegment={hoveredSegment} 
-        zoom={zoom} 
-      />
-      
-      {/* Dočasné body a spojnice mezi nimi */}
-      <TempPointsPath 
-        selectedVertexIndex={selectedVertexIndex} 
-        polygonPoints={polygonPoints} 
-        tempPoints={tempPoints} 
-        zoom={zoom} 
-      />
-      
-      {/* Spojnice od posledního bodu ke kurzoru nebo potenciálnímu koncovému bodu */}
-      <CursorLineConnector 
-        tempPoints={tempPoints} 
-        hoveredSegment={hoveredSegment} 
-        selectedVertexIndex={selectedVertexIndex} 
-        cursorPosition={cursorPosition} 
+      <PotentialEndpointIndicator
+        selectedVertexIndex={selectedVertexIndex}
         polygonPoints={polygonPoints}
-        zoom={zoom} 
+        hoveredSegment={hoveredSegment}
+        zoom={zoom}
+      />
+
+      {/* Dočasné body a spojnice mezi nimi */}
+      <TempPointsPath
+        selectedVertexIndex={selectedVertexIndex}
+        polygonPoints={polygonPoints}
+        tempPoints={tempPoints}
+        zoom={zoom}
+      />
+
+      {/* Spojnice od posledního bodu ke kurzoru nebo potenciálnímu koncovému bodu */}
+      <CursorLineConnector
+        tempPoints={tempPoints}
+        hoveredSegment={hoveredSegment}
+        selectedVertexIndex={selectedVertexIndex}
+        cursorPosition={cursorPosition}
+        polygonPoints={polygonPoints}
+        zoom={zoom}
       />
     </g>
   );

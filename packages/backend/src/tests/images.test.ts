@@ -27,11 +27,11 @@ jest.mock('multer', () => {
           destination: '/tmp',
           filename: 'test-image-123456.jpg',
           path: '/tmp/test-image-123456.jpg',
-          size: 12345
-        }
+          size: 12345,
+        },
       ];
       next();
-    }
+    },
   });
   multerMock.diskStorage = () => ({});
   return multerMock;
@@ -54,13 +54,13 @@ jest.mock('../db', () => ({
             thumbnail_path: params[4],
             width: params[5],
             height: params[6],
-            metadata: params[7]
-          }
-        ]
+            metadata: params[7],
+          },
+        ],
       };
     }
     return { rows: [] };
-  })
+  }),
 }));
 
 // Mock fs functions
@@ -68,8 +68,8 @@ jest.mock('fs', () => ({
   existsSync: jest.fn().mockReturnValue(true),
   mkdirSync: jest.fn(),
   promises: {
-    mkdir: jest.fn().mockResolvedValue(undefined)
-  }
+    mkdir: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 
 describe('Images API Routes', () => {
@@ -133,13 +133,12 @@ describe('Images API Routes', () => {
             metadata: null,
             status: 'completed',
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]
+            updated_at: new Date().toISOString(),
+          },
+        ],
       }));
 
-      const response = await request(app)
-        .get('/api/projects/test-project-id/images');
+      const response = await request(app).get('/api/projects/test-project-id/images');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);

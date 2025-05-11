@@ -6,7 +6,7 @@ import {
   isBoxVisible,
   PolygonBoundingBoxCache,
   polygonBoundingBoxCache,
-  BoundingBox
+  BoundingBox,
 } from '@/shared/utils/polygonOperationsUtils';
 
 const logger = createLogger('segmentation:polygonVisibility');
@@ -17,35 +17,35 @@ const logger = createLogger('segmentation:polygonVisibility');
 export const calculateViewportBounds = (
   canvasWidth: number,
   canvasHeight: number,
-  transform: TransformState
+  transform: TransformState,
 ): BoundingBox => {
   // Convert viewport corners to canvas coordinates
   const topLeft = {
     x: -transform.translateX / transform.zoom,
-    y: -transform.translateY / transform.zoom
+    y: -transform.translateY / transform.zoom,
   };
 
   const bottomRight = {
     x: (canvasWidth - transform.translateX) / transform.zoom,
-    y: (canvasHeight - transform.translateY) / transform.zoom
+    y: (canvasHeight - transform.translateY) / transform.zoom,
   };
 
   return {
     minX: topLeft.x,
     minY: topLeft.y,
     maxX: bottomRight.x,
-    maxY: bottomRight.y
+    maxY: bottomRight.y,
   };
 };
 
 /**
  * Filter polygons to only include those visible in the viewport
  */
-export const filterVisiblePolygons = <T extends { points: Point[], id: string }>(
+export const filterVisiblePolygons = <T extends { points: Point[]; id: string }>(
   polygons: T[],
   canvasWidth: number,
   canvasHeight: number,
-  transform: TransformState
+  transform: TransformState,
 ): T[] => {
   // If there are few polygons, don't bother filtering
   if (polygons.length < 50) {
@@ -56,23 +56,20 @@ export const filterVisiblePolygons = <T extends { points: Point[], id: string }>
   const startTime = performance.now();
 
   // Calculate bounding boxes for all polygons (could be cached)
-  const visiblePolygons = polygons.filter(polygon => {
+  const visiblePolygons = polygons.filter((polygon) => {
     const box = calculateBoundingBox(polygon.points);
     return isBoxVisible(box, viewport);
   });
 
   const endTime = performance.now();
-  logger.debug(`Filtered ${polygons.length} polygons to ${visiblePolygons.length} visible (${(endTime - startTime).toFixed(2)}ms)`);
+  logger.debug(
+    `Filtered ${polygons.length} polygons to ${visiblePolygons.length} visible (${(endTime - startTime).toFixed(2)}ms)`,
+  );
 
   return visiblePolygons;
 };
 
 // Export other utility functions from our shared module
-export {
-  calculateBoundingBox,
-  isBoxVisible,
-  PolygonBoundingBoxCache,
-  polygonBoundingBoxCache
-};
+export { calculateBoundingBox, isBoxVisible, PolygonBoundingBoxCache, polygonBoundingBoxCache };
 
 export default filterVisiblePolygons;

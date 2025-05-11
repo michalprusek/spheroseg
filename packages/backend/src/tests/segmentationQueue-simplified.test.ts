@@ -1,6 +1,6 @@
 /**
  * Simplified Segmentation Queue Tests
- * 
+ *
  * Tests for the segmentation queue without dependencies
  */
 
@@ -11,12 +11,12 @@ class MockSegmentationQueue extends EventEmitter {
   private queue: any[] = [];
   private runningTasks: any[] = [];
   private maxConcurrent: number;
-  
+
   constructor(maxConcurrent = 2) {
     super();
     this.maxConcurrent = maxConcurrent;
   }
-  
+
   public addTask(imageId: string, imagePath: string, options = {}, priority = 5) {
     const task = {
       id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
@@ -25,11 +25,11 @@ class MockSegmentationQueue extends EventEmitter {
       options,
       priority,
       status: 'queued',
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
-    
+
     this.emit('task:added', task);
-    
+
     // If we're under the concurrent limit, start processing immediately
     if (this.runningTasks.length < this.maxConcurrent) {
       this.runningTasks.push(task);
@@ -39,20 +39,20 @@ class MockSegmentationQueue extends EventEmitter {
       this.queue.push(task);
       this.queue.sort((a, b) => b.priority - a.priority);
     }
-    
+
     // Emit status update
     this.emit('queue:updated', this.getStatus());
-    
+
     return task.id;
   }
-  
+
   public getStatus() {
     return {
       queueLength: this.queue.length,
       processing: this.runningTasks.length,
       maxConcurrent: this.maxConcurrent,
-      runningTasks: this.runningTasks.map(t => t.imageId),
-      queuedTasks: this.queue.map(t => t.imageId)
+      runningTasks: this.runningTasks.map((t) => t.imageId),
+      queuedTasks: this.queue.map((t) => t.imageId),
     };
   }
 }
@@ -107,7 +107,7 @@ describe('SegmentationQueue', () => {
     // First fill up the running tasks
     queue.addTask('image-1', '/path/to/image1.jpg');
     queue.addTask('image-2', '/path/to/image2.jpg');
-    
+
     // Add 3 tasks with different priorities
     queue.addTask('image-low', '/path/to/image-low.jpg', {}, 1);
     queue.addTask('image-high', '/path/to/image-high.jpg', {}, 10);

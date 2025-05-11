@@ -34,7 +34,7 @@ describe('Localization Files', () => {
     const missingKeys = checkKeysExist(en, zh);
     expect(missingKeys).toEqual([]);
   });
-  
+
   // Add a passing test to ensure the test file itself is executed
   it('should properly import translation files', () => {
     expect(en).toBeDefined();

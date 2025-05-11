@@ -11,7 +11,7 @@ enum EditMode {
   AddPoints = 2,
   Slice = 3,
   CreatePolygon = 4,
-  DeletePolygon = 5
+  DeletePolygon = 5,
 }
 
 // Mock the CanvasVertex component
@@ -27,24 +27,28 @@ vi.mock('../CanvasVertex', () => ({
       onMouseDown={onMouseDown}
       onContextMenu={onContextMenu}
     />
-  )
+  ),
 }));
 
 // Mock the PolygonContextMenu component
 vi.mock('../context-menu/PolygonContextMenu', () => ({
-  default: ({ isOpen, position, onClose, onDelete, onSlice, onEdit }: any) => (
+  default: ({ isOpen, position, onClose, onDelete, onSlice, onEdit }: any) =>
     isOpen ? (
-      <div
-        data-testid="polygon-context-menu"
-        style={{ left: position.x, top: position.y }}
-      >
-        <button data-testid="delete-button" onClick={onDelete}>Delete</button>
-        <button data-testid="slice-button" onClick={onSlice}>Slice</button>
-        <button data-testid="edit-button" onClick={onEdit}>Edit</button>
-        <button data-testid="close-button" onClick={onClose}>Close</button>
+      <div data-testid="polygon-context-menu" style={{ left: position.x, top: position.y }}>
+        <button data-testid="delete-button" onClick={onDelete}>
+          Delete
+        </button>
+        <button data-testid="slice-button" onClick={onSlice}>
+          Slice
+        </button>
+        <button data-testid="edit-button" onClick={onEdit}>
+          Edit
+        </button>
+        <button data-testid="close-button" onClick={onClose}>
+          Close
+        </button>
       </div>
-    ) : null
-  )
+    ) : null,
 }));
 
 describe('CanvasPolygon Component', () => {
@@ -54,9 +58,9 @@ describe('CanvasPolygon Component', () => {
       { x: 10, y: 10 },
       { x: 100, y: 10 },
       { x: 100, y: 100 },
-      { x: 10, y: 100 }
+      { x: 10, y: 100 },
     ],
-    type: 'external' as const
+    type: 'external' as const,
   };
 
   const defaultProps = {
@@ -71,7 +75,7 @@ describe('CanvasPolygon Component', () => {
     onSlicePolygon: vi.fn(),
     onEditPolygon: vi.fn(),
     onDeleteVertex: vi.fn(),
-    onDuplicateVertex: vi.fn()
+    onDuplicateVertex: vi.fn(),
   };
 
   it('renders a polygon with the correct points', () => {
@@ -88,7 +92,7 @@ describe('CanvasPolygon Component', () => {
   it('renders with correct polygon points', () => {
     const props = {
       ...defaultProps,
-      isSelected: true
+      isSelected: true,
     };
 
     const { container } = render(<CanvasPolygon {...props} />);
@@ -110,7 +114,7 @@ describe('CanvasPolygon Component', () => {
   it('applies different stroke width when selected', () => {
     const props = {
       ...defaultProps,
-      isSelected: true
+      isSelected: true,
     };
 
     const { container } = render(<CanvasPolygon {...props} />);
@@ -122,7 +126,7 @@ describe('CanvasPolygon Component', () => {
   it('applies fill color when hovered', () => {
     const props = {
       ...defaultProps,
-      isHovered: true
+      isHovered: true,
     };
 
     const { container } = render(<CanvasPolygon {...props} />);
@@ -136,8 +140,8 @@ describe('CanvasPolygon Component', () => {
       ...defaultProps,
       polygon: {
         ...mockPolygon,
-        type: 'internal' as const
-      }
+        type: 'internal' as const,
+      },
     };
 
     const { container } = render(<CanvasPolygon {...props} />);
@@ -150,7 +154,7 @@ describe('CanvasPolygon Component', () => {
     const onSelectPolygon = vi.fn();
     const props = {
       ...defaultProps,
-      onSelectPolygon
+      onSelectPolygon,
     };
 
     const { container } = render(<CanvasPolygon {...props} />);

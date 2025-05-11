@@ -9,7 +9,7 @@ enum EditMode {
   EditVertices = 2,
   DeletePolygon = 3,
   Slice = 4,
-  AddPoints = 5
+  AddPoints = 5,
 }
 
 describe('useSegmentationV2', () => {

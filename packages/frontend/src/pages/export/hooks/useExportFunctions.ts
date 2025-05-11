@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { utils, writeFile } from 'xlsx';
@@ -16,7 +15,7 @@ function s2ab(s: string): ArrayBuffer {
   const buf = new ArrayBuffer(s.length);
   const view = new Uint8Array(buf);
   for (let i = 0; i < s.length; i++) {
-    view[i] = s.charCodeAt(i) & 0xFF;
+    view[i] = s.charCodeAt(i) & 0xff;
   }
   return buf;
 }
@@ -31,31 +30,37 @@ function generateXlsxBinary(workbook: any): string {
     const originalWriteFile = writeFile;
 
     // Dočasně nahradíme writeFile naší funkcí
-    const tempWriteFile = function(wb: any, filename: string, opts: any) {
+    const tempWriteFile = function (wb: any, filename: string, opts: any) {
       // Použijeme utils.sheet_to_csv pro získání dat ve formátu CSV
       const result = [];
 
       // Projdeme všechny listy
-      wb.SheetNames.forEach(function(sheetName: string) {
+      wb.SheetNames.forEach(function (sheetName: string) {
         const csv = utils.sheet_to_csv(wb.Sheets[sheetName]);
         result.push(csv);
       });
 
       // Spojíme všechny listy do jednoho stringu
-      output = result.join("\n");
+      output = result.join('\n');
 
       // Vrátíme něco, aby funkce byla spokojená
       return true;
     };
 
     // Nahradíme globální writeFile naší dočasnou funkcí
-    (window as any).XLSX = { ...(window as any).XLSX, writeFile: tempWriteFile };
+    (window as any).XLSX = {
+      ...(window as any).XLSX,
+      writeFile: tempWriteFile,
+    };
 
     // Zavoláme writeFile, která nyní použije naši dočasnou funkci
     writeFile(workbook, 'temp.xlsx', { bookType: 'xlsx', type: 'binary' });
 
     // Obnovíme původní writeFile
-    (window as any).XLSX = { ...(window as any).XLSX, writeFile: originalWriteFile };
+    (window as any).XLSX = {
+      ...(window as any).XLSX,
+      writeFile: originalWriteFile,
+    };
 
     // Pokud nemáme žádný výstup, použijeme alternativní metodu
     if (!output) {
@@ -79,7 +84,7 @@ function generateXlsxBinary(workbook: any): string {
     // Vytvoříme jednoduchý binární string
     let binary = '';
     for (let i = 0; i < output.length; i++) {
-      binary += String.fromCharCode(output.charCodeAt(i) & 0xFF);
+      binary += String.fromCharCode(output.charCodeAt(i) & 0xff);
     }
 
     return binary;
@@ -105,36 +110,42 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
   useEffect(() => {
     if (images.length > 0) {
       // Použijeme funkci pro nastavení stavu, která bere předchozí stav
-      setSelectedImages(prevSelected => {
+      setSelectedImages((prevSelected) => {
         // Pokud už máme nějaké vybrané obrázky, nebudeme je přepisovat
         if (Object.keys(prevSelected).length > 0) {
           return prevSelected;
         }
 
         // Jinak vytvoříme nový objekt s vybranými obrázky
-        const initialSelection = images.reduce((acc, img) => {
-          acc[img.id] = true;
-          return acc;
-        }, {} as Record<string, boolean>);
+        const initialSelection = images.reduce(
+          (acc, img) => {
+            acc[img.id] = true;
+            return acc;
+          },
+          {} as Record<string, boolean>,
+        );
         return initialSelection;
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSelectAll = () => {
-    const allSelected = images.every(img => selectedImages[img.id]);
-    const newSelection = images.reduce((acc, img) => {
-      acc[img.id] = !allSelected;
-      return acc;
-    }, {} as Record<string, boolean>);
+    const allSelected = images.every((img) => selectedImages[img.id]);
+    const newSelection = images.reduce(
+      (acc, img) => {
+        acc[img.id] = !allSelected;
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    );
     setSelectedImages(newSelection);
   };
 
   const handleSelectImage = (imageId: string) => {
-    setSelectedImages(prev => ({
+    setSelectedImages((prev) => ({
       ...prev,
-      [imageId]: !prev[imageId]
+      [imageId]: !prev[imageId],
     }));
   };
 
@@ -185,7 +196,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         sphericity: 0.75 + Math.random() * 0.25,
         feretDiameterMax: maxDiameter * 1.2 * (0.2 + Math.random() * 0.8),
         feretDiameterMin: maxDiameter * 0.8 * (0.2 + Math.random() * 0.8),
-        aspectRatio: 1.5 + Math.random() * 0.5
+        aspectRatio: 1.5 + Math.random() * 0.5,
       };
     };
 
@@ -196,7 +207,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         const normalizedPolygon: Polygon = {
           id: polygon.id || `polygon-${index}`,
           points: [],
-          type: polygon.type || 'external'
+          type: polygon.type || 'external',
         };
 
         // Handle different point formats
@@ -211,7 +222,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             if (typeof point === 'object' && point !== null) {
               return {
                 x: typeof point.x === 'number' ? point.x : 0,
-                y: typeof point.y === 'number' ? point.y : 0
+                y: typeof point.y === 'number' ? point.y : 0,
               };
             }
 
@@ -236,7 +247,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             if (typeof vertex === 'object' && vertex !== null) {
               return {
                 x: typeof vertex.x === 'number' ? vertex.x : 0,
-                y: typeof vertex.y === 'number' ? vertex.y : 0
+                y: typeof vertex.y === 'number' ? vertex.y : 0,
               };
             }
             console.warn(`Invalid vertex format at index ${pointIndex}`);
@@ -256,8 +267,8 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       console.log(`Normalized ${normalizedPolygons.length} polygons`);
 
       // Filter external polygons
-      const externalPolygons = normalizedPolygons.filter(p =>
-        p.type === 'external' || p.type === undefined || p.type === null
+      const externalPolygons = normalizedPolygons.filter(
+        (p) => p.type === 'external' || p.type === undefined || p.type === null,
       );
 
       // If no explicit external polygons, treat all as external
@@ -269,9 +280,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       return polygonsToProcess.map((polygon, index) => {
         try {
           // Find holes for this polygon (only if we have explicit external/internal types)
-          const holes = externalPolygons.length > 0
-            ? normalizedPolygons.filter(p => p.type === 'internal')
-            : [];
+          const holes = externalPolygons.length > 0 ? normalizedPolygons.filter((p) => p.type === 'internal') : [];
 
           // Skip polygons with too few points
           if (polygon.points.length < 3) {
@@ -294,7 +303,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             sphericity: metrics.Sphericity,
             feretDiameterMax: metrics.FeretDiameterMax,
             feretDiameterMin: metrics.FeretDiameterMin,
-            aspectRatio: metrics.FeretAspectRatio
+            aspectRatio: metrics.FeretAspectRatio,
           };
         } catch (error) {
           console.error(`Error calculating metrics for polygon ${index}:`, error);
@@ -313,18 +322,21 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
     try {
       // Filter selected images
-      const imagesToExport = images.filter(img => selectedImages[img.id]);
+      const imagesToExport = images.filter((img) => selectedImages[img.id]);
 
       // Log the number of selected images
       console.log(`Selected ${imagesToExport.length} images for export`);
 
       // Log all selected images for debugging
-      console.log('Selected images for export:', imagesToExport.map(img => ({
-        id: img.id,
-        name: img.name,
-        hasSegmentationResult: !!img.segmentationResult,
-        status: img.segmentationStatus
-      })));
+      console.log(
+        'Selected images for export:',
+        imagesToExport.map((img) => ({
+          id: img.id,
+          name: img.name,
+          hasSegmentationResult: !!img.segmentationResult,
+          status: img.segmentationStatus,
+        })),
+      );
 
       // Collect all metrics from all selected images
       const allMetrics: Metric[] = [];
@@ -367,7 +379,11 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             // Direct polygons array
             polygons = segmentationData.polygons;
             console.log(`Image ${image.id} has direct polygons array with ${polygons.length} polygons`);
-          } else if (segmentationData && segmentationData.result_data && Array.isArray(segmentationData.result_data.polygons)) {
+          } else if (
+            segmentationData &&
+            segmentationData.result_data &&
+            Array.isArray(segmentationData.result_data.polygons)
+          ) {
             // Nested in result_data
             polygons = segmentationData.result_data.polygons;
             console.log(`Image ${image.id} has polygons in result_data with ${polygons.length} polygons`);
@@ -384,9 +400,11 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               if (Array.isArray(segmentationData[key])) {
                 const possiblePolygons = segmentationData[key];
                 // Check if this array contains objects with points
-                if (possiblePolygons.length > 0 &&
-                    typeof possiblePolygons[0] === 'object' &&
-                    Array.isArray(possiblePolygons[0].points)) {
+                if (
+                  possiblePolygons.length > 0 &&
+                  typeof possiblePolygons[0] === 'object' &&
+                  Array.isArray(possiblePolygons[0].points)
+                ) {
                   polygons = possiblePolygons;
                   console.log(`Image ${image.id} has polygons in property "${key}" with ${polygons.length} polygons`);
                   break;
@@ -397,11 +415,15 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                   if (Array.isArray(segmentationData[key][subKey])) {
                     const possiblePolygons = segmentationData[key][subKey];
                     // Check if this array contains objects with points
-                    if (possiblePolygons.length > 0 &&
-                        typeof possiblePolygons[0] === 'object' &&
-                        Array.isArray(possiblePolygons[0].points)) {
+                    if (
+                      possiblePolygons.length > 0 &&
+                      typeof possiblePolygons[0] === 'object' &&
+                      Array.isArray(possiblePolygons[0].points)
+                    ) {
                       polygons = possiblePolygons;
-                      console.log(`Image ${image.id} has polygons in property "${key}.${subKey}" with ${polygons.length} polygons`);
+                      console.log(
+                        `Image ${image.id} has polygons in property "${key}.${subKey}" with ${polygons.length} polygons`,
+                      );
                       break;
                     }
                   }
@@ -449,7 +471,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                 console.warn(`Point ${pointIndex} in polygon ${index} has invalid coordinates, using defaults`);
                 return {
                   x: typeof point.x === 'number' ? point.x : 0,
-                  y: typeof point.y === 'number' ? point.y : 0
+                  y: typeof point.y === 'number' ? point.y : 0,
                 };
               }
 
@@ -464,7 +486,9 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
         // Log polygon information for debugging
         console.log(`Image ${image.id} has ${polygons.length} polygons after processing`);
-        console.log(`External polygons: ${polygons.filter(p => p.type === 'external' || p.type === undefined || p.type === null).length}`);
+        console.log(
+          `External polygons: ${polygons.filter((p) => p.type === 'external' || p.type === undefined || p.type === null).length}`,
+        );
 
         // Calculate metrics with image dimensions
         const imageMetrics = calculateObjectMetrics(polygons, image.width, image.height);
@@ -479,13 +503,13 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               'Object ID': metric.objectId,
               'Area (px²)': metric.area.toFixed(2),
               'Perimeter (px)': metric.perimeter.toFixed(2),
-              'Circularity': metric.circularity.toFixed(4),
+              Circularity: metric.circularity.toFixed(4),
               'Equivalent Diameter (px)': metric.equivalentDiameter.toFixed(2),
               'Aspect Ratio': metric.aspectRatio.toFixed(2),
-              'Compactness': metric.compactness.toFixed(4),
-              'Convexity': metric.convexity.toFixed(4),
-              'Solidity': metric.solidity.toFixed(4),
-              'Sphericity': metric.sphericity.toFixed(4),
+              Compactness: metric.compactness.toFixed(4),
+              Convexity: metric.convexity.toFixed(4),
+              Solidity: metric.solidity.toFixed(4),
+              Sphericity: metric.sphericity.toFixed(4),
               'Feret Diameter Max (px)': metric.feretDiameterMax.toFixed(2),
               'Feret Diameter Min (px)': metric.feretDiameterMin.toFixed(2),
               'Created At': image.createdAt ? format(image.createdAt, 'yyyy-MM-dd HH:mm:ss') : 'N/A',
@@ -516,13 +540,13 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               'Object ID': i + 1,
               'Area (px²)': (maxArea * (0.2 + Math.random() * 0.8)).toFixed(2),
               'Perimeter (px)': (maxPerimeter * (0.2 + Math.random() * 0.8)).toFixed(2),
-              'Circularity': (0.8 + Math.random() * 0.2).toFixed(4),
+              Circularity: (0.8 + Math.random() * 0.2).toFixed(4),
               'Equivalent Diameter (px)': (maxDiameter * (0.2 + Math.random() * 0.8)).toFixed(2),
               'Aspect Ratio': (1.5 + Math.random() * 0.5).toFixed(2),
-              'Compactness': (0.7 + Math.random() * 0.3).toFixed(4),
-              'Convexity': (0.9 + Math.random() * 0.1).toFixed(4),
-              'Solidity': (0.85 + Math.random() * 0.15).toFixed(4),
-              'Sphericity': (0.75 + Math.random() * 0.25).toFixed(4),
+              Compactness: (0.7 + Math.random() * 0.3).toFixed(4),
+              Convexity: (0.9 + Math.random() * 0.1).toFixed(4),
+              Solidity: (0.85 + Math.random() * 0.15).toFixed(4),
+              Sphericity: (0.75 + Math.random() * 0.25).toFixed(4),
               'Feret Diameter Max (px)': (maxDiameter * 1.2 * (0.2 + Math.random() * 0.8)).toFixed(2),
               'Feret Diameter Min (px)': (maxDiameter * 0.8 * (0.2 + Math.random() * 0.8)).toFixed(2),
               'Created At': image.createdAt ? format(image.createdAt, 'yyyy-MM-dd HH:mm:ss') : 'N/A',
@@ -537,13 +561,16 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           console.error('No data available for export. Make sure images have segmentation results with polygons.');
 
           // Log more detailed information about the selected images
-          console.error('Selected images:', imagesToExport.map(img => ({
-            id: img.id,
-            name: img.name,
-            hasSegmentationResult: !!img.segmentationResult,
-            segmentationResultType: img.segmentationResult ? typeof img.segmentationResult : 'undefined',
-            segmentationStatus: img.segmentationStatus
-          })));
+          console.error(
+            'Selected images:',
+            imagesToExport.map((img) => ({
+              id: img.id,
+              name: img.name,
+              hasSegmentationResult: !!img.segmentationResult,
+              segmentationResultType: img.segmentationResult ? typeof img.segmentationResult : 'undefined',
+              segmentationStatus: img.segmentationStatus,
+            })),
+          );
 
           setIsExporting(false);
           return;
@@ -576,7 +603,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           { wch: 12 }, // Sphericity
           { wch: 20 }, // Feret Diameter Max
           { wch: 20 }, // Feret Diameter Min
-          { wch: 20 }  // Created At
+          { wch: 20 }, // Created At
         ];
 
         worksheet['!cols'] = colWidths;
@@ -597,8 +624,8 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         let csvContent = headers.join(',') + '\n';
 
         // Add each row
-        worksheetRows.forEach(row => {
-          const rowValues = headers.map(header => {
+        worksheetRows.forEach((row) => {
+          const rowValues = headers.map((header) => {
             // Escape commas and quotes in values
             const value = String(row[header]).replace(/"/g, '""');
             return `"${value}"`;
@@ -607,7 +634,9 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         });
 
         // Create a blob and download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([csvContent], {
+          type: 'text/csv;charset=utf-8;',
+        });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -627,7 +656,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         console.error('Error details:', {
           name: error.name,
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
         });
       }
     } finally {
@@ -640,7 +669,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
     // Používáme dvě kategorie: "cell" pro externí polygony a "hole" pro interní polygony (díry)
     const categories = [
       { id: 1, name: 'cell', supercategory: 'cell' },
-      { id: 2, name: 'hole', supercategory: 'cell' }
+      { id: 2, name: 'hole', supercategory: 'cell' },
     ];
     const annotations: any[] = [];
     const cocoImages: any[] = [];
@@ -654,7 +683,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         file_name: image.name,
         width: image.width || 800,
         height: image.height || 600,
-        date_captured: image.createdAt ? new Date(image.createdAt).toISOString() : new Date().toISOString()
+        date_captured: image.createdAt ? new Date(image.createdAt).toISOString() : new Date().toISOString(),
       });
 
       // Pokud nemáme segmentační data, použijeme fallback
@@ -669,7 +698,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             image.segmentationResult = {
               path: image.segmentationResultPath,
               polygons: [],
-              status: 'completed'
+              status: 'completed',
             };
           } catch (e) {
             console.error(`Failed to use segmentationResultPath for image ${image.id}:`, e);
@@ -684,14 +713,13 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             id: `dummy-${image.id}`,
             status: 'completed',
             polygons: [],
-            timestamp: new Date()
+            timestamp: new Date(),
           };
         }
       }
 
       // Pouze logujeme status, ale nefiltrujeme podle něj
       console.log(`Image ${image.id} (${image.name}) status: ${image.segmentationStatus}`);
-
 
       console.log(`Processing image ${image.id} (${image.name}) for COCO export`);
 
@@ -737,7 +765,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           keys: typeof segData === 'object' && segData !== null ? Object.keys(segData) : [],
           hasPolygons: segData && segData.polygons ? 'Yes' : 'No',
           hasResultData: segData && segData.result_data ? 'Yes' : 'No',
-          hasResultDataPolygons: segData && segData.result_data && segData.result_data.polygons ? 'Yes' : 'No'
+          hasResultDataPolygons: segData && segData.result_data && segData.result_data.polygons ? 'Yes' : 'No',
         });
 
         // Try different paths to find polygons
@@ -751,7 +779,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               keys: Object.keys(polygons[0]),
               hasPoints: polygons[0].points ? `Yes (${polygons[0].points.length})` : 'No',
               hasVertices: polygons[0].vertices ? `Yes (${polygons[0].vertices.length})` : 'No',
-              type: polygons[0].type || 'undefined'
+              type: polygons[0].type || 'undefined',
             });
           }
         } else if (segData && segData.polygons && Array.isArray(segData.polygons)) {
@@ -764,10 +792,15 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               keys: Object.keys(polygons[0]),
               hasPoints: polygons[0].points ? `Yes (${polygons[0].points.length})` : 'No',
               hasVertices: polygons[0].vertices ? `Yes (${polygons[0].vertices.length})` : 'No',
-              type: polygons[0].type || 'undefined'
+              type: polygons[0].type || 'undefined',
             });
           }
-        } else if (segData && segData.result_data && segData.result_data.polygons && Array.isArray(segData.result_data.polygons)) {
+        } else if (
+          segData &&
+          segData.result_data &&
+          segData.result_data.polygons &&
+          Array.isArray(segData.result_data.polygons)
+        ) {
           polygons = segData.result_data.polygons;
           console.log(`Found nested polygons array with ${polygons.length} items`);
 
@@ -777,7 +810,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               keys: Object.keys(polygons[0]),
               hasPoints: polygons[0].points ? `Yes (${polygons[0].points.length})` : 'No',
               hasVertices: polygons[0].vertices ? `Yes (${polygons[0].vertices.length})` : 'No',
-              type: polygons[0].type || 'undefined'
+              type: polygons[0].type || 'undefined',
             });
           }
         } else {
@@ -789,7 +822,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               console.log(`Checking property "${key}" for polygons:`, {
                 type: typeof segData[key],
                 isArray: Array.isArray(segData[key]),
-                length: Array.isArray(segData[key]) ? segData[key].length : 'N/A'
+                length: Array.isArray(segData[key]) ? segData[key].length : 'N/A',
               });
 
               if (Array.isArray(segData[key])) {
@@ -799,11 +832,13 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                     type: typeof possiblePolygons[0],
                     keys: typeof possiblePolygons[0] === 'object' ? Object.keys(possiblePolygons[0]) : [],
                     hasPoints: possiblePolygons[0] && possiblePolygons[0].points ? 'Yes' : 'No',
-                    hasVertices: possiblePolygons[0] && possiblePolygons[0].vertices ? 'Yes' : 'No'
+                    hasVertices: possiblePolygons[0] && possiblePolygons[0].vertices ? 'Yes' : 'No',
                   });
 
-                  if (typeof possiblePolygons[0] === 'object' &&
-                      (Array.isArray(possiblePolygons[0].points) || possiblePolygons[0].vertices)) {
+                  if (
+                    typeof possiblePolygons[0] === 'object' &&
+                    (Array.isArray(possiblePolygons[0].points) || possiblePolygons[0].vertices)
+                  ) {
                     polygons = possiblePolygons;
                     console.log(`Found polygons in property "${key}" with ${polygons.length} items`);
                     found = true;
@@ -818,13 +853,15 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                   if (Array.isArray(segData[key][subKey])) {
                     console.log(`Checking nested property "${key}.${subKey}" for polygons:`, {
                       length: segData[key][subKey].length,
-                      firstItemType: segData[key][subKey].length > 0 ? typeof segData[key][subKey][0] : 'N/A'
+                      firstItemType: segData[key][subKey].length > 0 ? typeof segData[key][subKey][0] : 'N/A',
                     });
 
                     const possiblePolygons = segData[key][subKey];
-                    if (possiblePolygons.length > 0 &&
-                        typeof possiblePolygons[0] === 'object' &&
-                        (Array.isArray(possiblePolygons[0].points) || possiblePolygons[0].vertices)) {
+                    if (
+                      possiblePolygons.length > 0 &&
+                      typeof possiblePolygons[0] === 'object' &&
+                      (Array.isArray(possiblePolygons[0].points) || possiblePolygons[0].vertices)
+                    ) {
                       polygons = possiblePolygons;
                       console.log(`Found polygons in nested property "${key}.${subKey}" with ${polygons.length} items`);
                       found = true;
@@ -840,7 +877,10 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           if (!found) {
             console.error(`Could not find polygons in segmentation data for ${image.name}`);
             // Vypíšeme celá data pro diagnostiku
-            console.error(`Full segmentation data for ${image.name}:`, JSON.stringify(segData).substring(0, 1000) + '...');
+            console.error(
+              `Full segmentation data for ${image.name}:`,
+              JSON.stringify(segData).substring(0, 1000) + '...',
+            );
             return;
           }
         }
@@ -852,10 +892,16 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           // Logování původní struktury polygonu
           console.log(`Original polygon ${index} structure:`, {
             keys: Object.keys(polygon),
-            hasPoints: polygon.points ? `Yes (${Array.isArray(polygon.points) ? polygon.points.length : 'not array'})` : 'No',
-            hasVertices: polygon.vertices ? `Yes (${Array.isArray(polygon.vertices) ? polygon.vertices.length : 'not array'})` : 'No',
-            hasContour: polygon.contour ? `Yes (${Array.isArray(polygon.contour) ? polygon.contour.length : 'not array'})` : 'No',
-            type: polygon.type || 'undefined'
+            hasPoints: polygon.points
+              ? `Yes (${Array.isArray(polygon.points) ? polygon.points.length : 'not array'})`
+              : 'No',
+            hasVertices: polygon.vertices
+              ? `Yes (${Array.isArray(polygon.vertices) ? polygon.vertices.length : 'not array'})`
+              : 'No',
+            hasContour: polygon.contour
+              ? `Yes (${Array.isArray(polygon.contour) ? polygon.contour.length : 'not array'})`
+              : 'No',
+            type: polygon.type || 'undefined',
           });
 
           // Vytvoříme nový objekt pro normalizovaný polygon
@@ -883,8 +929,11 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             console.log(`Normalizing ${normalizedPolygon.points.length} points for polygon ${index}`);
 
             // Pokud je první prvek pole také pole, může jít o GeoJSON formát [[[x,y], [x,y], ...]]
-            if (normalizedPolygon.points.length > 0 && Array.isArray(normalizedPolygon.points[0]) &&
-                Array.isArray(normalizedPolygon.points[0][0])) {
+            if (
+              normalizedPolygon.points.length > 0 &&
+              Array.isArray(normalizedPolygon.points[0]) &&
+              Array.isArray(normalizedPolygon.points[0][0])
+            ) {
               console.log(`Detected nested array structure, flattening first level`);
               normalizedPolygon.points = normalizedPolygon.points[0];
             }
@@ -896,7 +945,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                   type: typeof point,
                   isArray: Array.isArray(point),
                   keys: typeof point === 'object' && point !== null && !Array.isArray(point) ? Object.keys(point) : [],
-                  value: point
+                  value: point,
                 });
               }
 
@@ -908,22 +957,24 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                 if (typeof point.x !== 'undefined' && typeof point.y !== 'undefined') {
                   return {
                     x: Number(point.x),
-                    y: Number(point.y)
+                    y: Number(point.y),
                   };
                 }
                 // Pokud má bod vlastnosti lat,lng nebo latitude,longitude
-                else if ((typeof point.lat !== 'undefined' && typeof point.lng !== 'undefined') ||
-                         (typeof point.latitude !== 'undefined' && typeof point.longitude !== 'undefined')) {
+                else if (
+                  (typeof point.lat !== 'undefined' && typeof point.lng !== 'undefined') ||
+                  (typeof point.latitude !== 'undefined' && typeof point.longitude !== 'undefined')
+                ) {
                   return {
                     x: Number(point.lng || point.longitude),
-                    y: Number(point.lat || point.latitude)
+                    y: Number(point.lat || point.latitude),
                   };
                 }
                 // Pokud má bod vlastnosti lon,lat
                 else if (typeof point.lon !== 'undefined' && typeof point.lat !== 'undefined') {
                   return {
                     x: Number(point.lon),
-                    y: Number(point.lat)
+                    y: Number(point.lat),
                   };
                 }
               }
@@ -975,29 +1026,29 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             { x: 10, y: 10 },
             { x: width - 10, y: 10 },
             { x: width - 10, y: height - 10 },
-            { x: 10, y: height - 10 }
-          ]
+            { x: 10, y: height - 10 },
+          ],
         };
 
         // Kruhový polygon uprostřed
         const centerX = width / 2;
         const centerY = height / 2;
         const radius = Math.min(width, height) / 4;
-        const circlePoints: {x: number, y: number}[] = [];
+        const circlePoints: { x: number; y: number }[] = [];
 
         // Vytvoříme kruh pomocí 16 bodů
         for (let i = 0; i < 16; i++) {
           const angle = (i / 16) * Math.PI * 2;
           circlePoints.push({
             x: centerX + Math.cos(angle) * radius,
-            y: centerY + Math.sin(angle) * radius
+            y: centerY + Math.sin(angle) * radius,
           });
         }
 
         const circlePolygon: Polygon = {
           id: `dummy-circle-${image.id}`,
           type: 'external',
-          points: circlePoints
+          points: circlePoints,
         };
 
         // Přidáme oba polygony
@@ -1008,7 +1059,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       }
 
       // Process external polygons or all polygons if no type is specified
-      const externalPolygons = polygons.filter(p => p.type === 'external' || p.type === undefined || p.type === null);
+      const externalPolygons = polygons.filter((p) => p.type === 'external' || p.type === undefined || p.type === null);
       console.log(`Found ${externalPolygons.length} external polygons for image ${image.id}`);
 
       // Pokud nemáme žádné explicitně externí polygony, použijeme všechny
@@ -1022,17 +1073,19 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         }
 
         // Convert points to COCO format [x1, y1, x2, y2, ...]
-        const segmentation = [polygon.points.flatMap(p => [p.x, p.y])];
+        const segmentation = [polygon.points.flatMap((p) => [p.x, p.y])];
 
         // Pro CVAT export nebudeme přidávat díry do segmentace externích polygonů
         // CVAT interpretuje více segmentací jako samostatné polygony, ne jako díry
         // Místo toho budeme počítat s dírami pouze při výpočtu metriky plochy
-        const holes = polygons.filter(p => p.type === 'internal');
-        console.log(`Found ${holes.length} internal polygons (holes) for image ${image.id} - not adding to segmentation for CVAT compatibility`);
+        const holes = polygons.filter((p) => p.type === 'internal');
+        console.log(
+          `Found ${holes.length} internal polygons (holes) for image ${image.id} - not adding to segmentation for CVAT compatibility`,
+        );
 
         // Calculate bounding box [x, y, width, height]
-        const xs = polygon.points.map(p => p.x);
-        const ys = polygon.points.map(p => p.y);
+        const xs = polygon.points.map((p) => p.x);
+        const ys = polygon.points.map((p) => p.y);
         const minX = Math.min(...xs);
         const minY = Math.min(...ys);
         const width = Math.max(...xs) - minX;
@@ -1048,26 +1101,30 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           segmentation,
           area: metrics.Area,
           bbox: [minX, minY, width, height],
-          iscrowd: 0
+          iscrowd: 0,
         });
       });
 
       // Exportujeme interní polygony (díry) jako samostatné anotace s kategorií "hole"
-      const internalPolygons = polygons.filter(p => p.type === 'internal');
-      console.log(`Processing ${internalPolygons.length} internal polygons (holes) as separate annotations for image ${image.id}`);
+      const internalPolygons = polygons.filter((p) => p.type === 'internal');
+      console.log(
+        `Processing ${internalPolygons.length} internal polygons (holes) as separate annotations for image ${image.id}`,
+      );
 
       internalPolygons.forEach((polygon, polygonIndex) => {
         if (!Array.isArray(polygon.points) || polygon.points.length < 3) {
-          console.warn(`Skipping internal polygon ${polygonIndex} with insufficient points: ${polygon.points?.length || 0}`);
+          console.warn(
+            `Skipping internal polygon ${polygonIndex} with insufficient points: ${polygon.points?.length || 0}`,
+          );
           return;
         }
 
         // Convert points to COCO format [x1, y1, x2, y2, ...]
-        const segmentation = [polygon.points.flatMap(p => [p.x, p.y])];
+        const segmentation = [polygon.points.flatMap((p) => [p.x, p.y])];
 
         // Calculate bounding box [x, y, width, height]
-        const xs = polygon.points.map(p => p.x);
-        const ys = polygon.points.map(p => p.y);
+        const xs = polygon.points.map((p) => p.x);
+        const ys = polygon.points.map((p) => p.y);
         const minX = Math.min(...xs);
         const minY = Math.min(...ys);
         const width = Math.max(...xs) - minX;
@@ -1083,7 +1140,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           segmentation,
           area: metrics.Area,
           bbox: [minX, minY, width, height],
-          iscrowd: 0
+          iscrowd: 0,
         });
       });
     });
@@ -1091,16 +1148,16 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
     return {
       info: {
         description: `${projectTitle} export`,
-        url: "",
-        version: "1.0",
+        url: '',
+        version: '1.0',
         year: new Date().getFullYear(),
-        contributor: "SpheroidSegmentation",
-        date_created: new Date().toISOString()
+        contributor: 'SpheroidSegmentation',
+        date_created: new Date().toISOString(),
       },
-      licenses: [{ id: 1, name: "Unknown", url: "" }],
+      licenses: [{ id: 1, name: 'Unknown', url: '' }],
       images: cocoImages,
       annotations,
-      categories
+      categories,
     };
   };
 
@@ -1114,9 +1171,10 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       // Extract polygons
       let polygons: Polygon[] = [];
       try {
-        const segData = typeof image.segmentationResult === 'string'
-          ? JSON.parse(image.segmentationResult)
-          : image.segmentationResult;
+        const segData =
+          typeof image.segmentationResult === 'string'
+            ? JSON.parse(image.segmentationResult)
+            : image.segmentationResult;
 
         if (Array.isArray(segData)) {
           polygons = segData;
@@ -1131,7 +1189,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       }
 
       // Process external polygons
-      const externalPolygons = polygons.filter(p => p.type === 'external' || p.type === undefined || p.type === null);
+      const externalPolygons = polygons.filter((p) => p.type === 'external' || p.type === undefined || p.type === null);
 
       // Skip if no polygons
       if (externalPolygons.length === 0) return;
@@ -1142,12 +1200,12 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       // Create YOLO format lines
       const lines: string[] = [];
 
-      externalPolygons.forEach(polygon => {
+      externalPolygons.forEach((polygon) => {
         if (!Array.isArray(polygon.points) || polygon.points.length < 3) return;
 
         // Calculate bounding box
-        const xs = polygon.points.map(p => p.x);
-        const ys = polygon.points.map(p => p.y);
+        const xs = polygon.points.map((p) => p.x);
+        const ys = polygon.points.map((p) => p.y);
         const minX = Math.min(...xs);
         const minY = Math.min(...ys);
         const maxX = Math.max(...xs);
@@ -1200,7 +1258,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
           try {
             // Použijeme stejný přístup jako v segmentačním editoru - přímé volání API
-            const segmentationResponse = await apiClient.get(`/images/${img.id}/segmentation`);
+            const segmentationResponse = await apiClient.get(`/api/images/${img.id}/segmentation`);
             const fetchedSegmentation = segmentationResponse.data;
 
             console.log(`Fetched segmentation data for image ${img.id}:`, fetchedSegmentation);
@@ -1208,7 +1266,9 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             // Zpracujeme data stejným způsobem jako v segmentačním editoru
             if (fetchedSegmentation && fetchedSegmentation.result_data && fetchedSegmentation.result_data.polygons) {
               // Pokud máme data ve formátu { result_data: { polygons: [...] } }
-              console.log(`Found ${fetchedSegmentation.result_data.polygons.length} polygons in result_data for image ${img.id}`);
+              console.log(
+                `Found ${fetchedSegmentation.result_data.polygons.length} polygons in result_data for image ${img.id}`,
+              );
               fetchedSegmentation.polygons = fetchedSegmentation.result_data.polygons;
             } else if (fetchedSegmentation && Array.isArray(fetchedSegmentation.polygons)) {
               // Pokud máme data ve formátu { polygons: [...] }
@@ -1223,7 +1283,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             // Nastavíme segmentační data
             return {
               ...img,
-              segmentationResult: fetchedSegmentation
+              segmentationResult: fetchedSegmentation,
             };
           } catch (e) {
             console.error(`Failed to fetch segmentation data for image ${img.id}:`, e);
@@ -1235,7 +1295,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
         // Pokud už máme segmentační data, vrátíme původní obrázek
         return img;
-      })
+      }),
     );
 
     // Použijeme obrázky s načtenými segmentačními daty
@@ -1244,7 +1304,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
     // Add metadata JSON
     if (includeMetadata) {
-      const metadata = imagesToExport.map(img => ({
+      const metadata = imagesToExport.map((img) => ({
         id: img.id,
         name: img.name,
         url: img.url,
@@ -1252,15 +1312,15 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         updatedAt: typeof img.updatedAt === 'string' ? img.updatedAt : img.updatedAt.toISOString(),
         status: img.segmentationStatus,
         width: img.width,
-        height: img.height
+        height: img.height,
       }));
 
-      zip.file("metadata.json", JSON.stringify(metadata, null, 2));
+      zip.file('metadata.json', JSON.stringify(metadata, null, 2));
     }
 
     // Add original images
     if (includeImages) {
-      const imagesFolder = zip.folder("images");
+      const imagesFolder = zip.folder('images');
 
       // Show progress toast
       toast.info(`Stahování ${imagesToExport.length} obrázků...`);
@@ -1273,9 +1333,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       for (const image of imagesToExport) {
         try {
           // Get image URL - use full URL if available, otherwise construct from relative path
-          const imageUrl = image.url.startsWith('http')
-            ? image.url
-            : `${window.location.origin}${image.url}`;
+          const imageUrl = image.url.startsWith('http') ? image.url : `${window.location.origin}${image.url}`;
 
           // Try to get the full resolution image first
           const fullResUrl = imageUrl.replace('/thumbnails/', '/images/');
@@ -1311,7 +1369,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
     // Add segmentation data in selected format
     if (includeSegmentation) {
-      const segmentationFolder = zip.folder("segmentations");
+      const segmentationFolder = zip.folder('segmentations');
       console.log(`Exporting segmentations in ${annotationFormat} format`);
 
       if (annotationFormat === 'COCO') {
@@ -1320,7 +1378,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
           // Použijeme všechny obrázky, i když nemají segmentační data
           // Segmentační data se načtou v createExportZip
-          const validImages = imagesToExport.map(img => {
+          const validImages = imagesToExport.map((img) => {
             if (!img.segmentationResult) {
               console.log(`Image ${img.id} (${img.name}) has no direct segmentationResult, using fallback`);
 
@@ -1334,8 +1392,8 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                     segmentationResult: {
                       path: img.segmentationResultPath,
                       polygons: [],
-                      status: 'completed'
-                    }
+                      status: 'completed',
+                    },
                   };
                 } catch (e) {
                   console.error(`Failed to use segmentationResultPath for image ${img.id}:`, e);
@@ -1352,8 +1410,8 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                     id: `dummy-${img.id}`,
                     status: 'completed',
                     polygons: [],
-                    timestamp: new Date()
-                  }
+                    timestamp: new Date(),
+                  },
                 };
               }
             }
@@ -1387,15 +1445,17 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                 segmentation: [[]],
                 area: 0,
                 bbox: [0, 0, 0, 0],
-                iscrowd: 0
+                iscrowd: 0,
               });
             });
 
             console.log(`Created ${cocoData.images.length} empty annotations as fallback`);
-            toast.warning('V exportovaných datech nebyly nalezeny žádné anotace. Byly vytvořeny prázdné anotace pro každý obrázek.');
+            toast.warning(
+              'V exportovaných datech nebyly nalezeny žádné anotace. Byly vytvořeny prázdné anotace pro každý obrázek.',
+            );
           }
 
-          segmentationFolder.file("annotations.json", JSON.stringify(cocoData, null, 2));
+          segmentationFolder.file('annotations.json', JSON.stringify(cocoData, null, 2));
           console.log(`COCO annotations.json added to ZIP with ${cocoData.annotations.length} annotations`);
         } catch (error) {
           console.error(`Error exporting COCO format:`, error);
@@ -1409,11 +1469,11 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           console.log(`YOLO data generated with ${fileCount} label files`);
 
           // Create labels.txt file
-          segmentationFolder.file("labels.txt", "0 cell");
+          segmentationFolder.file('labels.txt', '0 cell');
           console.log(`YOLO labels.txt added to ZIP`);
 
           // Create labels folder
-          const labelsFolder = segmentationFolder.folder("labels");
+          const labelsFolder = segmentationFolder.folder('labels');
 
           // Add each label file
           for (const [filename, content] of Object.entries(yoloData)) {
@@ -1474,12 +1534,14 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           console.log(`Exported ${successCount} polygon files with ${errorCount} errors`);
         } catch (error) {
           console.error(`Error exporting POLYGONS format:`, error);
-          toast.error(`Chyba při exportu POLYGONS formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+          toast.error(
+            `Chyba při exportu POLYGONS formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`,
+          );
         }
       } else if (annotationFormat === 'MASK') {
         try {
           console.log(`Creating binary masks for ${imagesToExport.length} images`);
-          const masksFolder = segmentationFolder.folder("masks");
+          const masksFolder = segmentationFolder.folder('masks');
           let successCount = 0;
           let errorCount = 0;
 
@@ -1516,7 +1578,11 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               } else if (segData.polygons && Array.isArray(segData.polygons)) {
                 polygons = segData.polygons;
                 console.log(`Found polygons array with ${polygons.length} items`);
-              } else if (segData.result_data && segData.result_data.polygons && Array.isArray(segData.result_data.polygons)) {
+              } else if (
+                segData.result_data &&
+                segData.result_data.polygons &&
+                Array.isArray(segData.result_data.polygons)
+              ) {
                 polygons = segData.result_data.polygons;
                 console.log(`Found nested polygons array with ${polygons.length} items`);
               } else {
@@ -1526,9 +1592,11 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                   for (const key in segData) {
                     if (Array.isArray(segData[key])) {
                       const possiblePolygons = segData[key];
-                      if (possiblePolygons.length > 0 &&
-                          typeof possiblePolygons[0] === 'object' &&
-                          (Array.isArray(possiblePolygons[0].points) || possiblePolygons[0].vertices)) {
+                      if (
+                        possiblePolygons.length > 0 &&
+                        typeof possiblePolygons[0] === 'object' &&
+                        (Array.isArray(possiblePolygons[0].points) || possiblePolygons[0].vertices)
+                      ) {
                         polygons = possiblePolygons;
                         console.log(`Found polygons in property "${key}" with ${polygons.length} items`);
                         found = true;
@@ -1559,7 +1627,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                     } else if (typeof point === 'object' && point !== null) {
                       return {
                         x: typeof point.x === 'number' ? point.x : 0,
-                        y: typeof point.y === 'number' ? point.y : 0
+                        y: typeof point.y === 'number' ? point.y : 0,
                       };
                     }
                     return { x: 0, y: 0 };
@@ -1599,8 +1667,8 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               ctx.fillStyle = 'white';
 
               // Process external polygons
-              const externalPolygons = polygons.filter(p =>
-                p.type === 'external' || p.type === undefined || p.type === null
+              const externalPolygons = polygons.filter(
+                (p) => p.type === 'external' || p.type === undefined || p.type === null,
               );
 
               // If no explicit external polygons, treat all as external
@@ -1609,7 +1677,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
               // Draw each polygon
               let validPolygonCount = 0;
-              polygonsToProcess.forEach(polygon => {
+              polygonsToProcess.forEach((polygon) => {
                 if (!Array.isArray(polygon.points) || polygon.points.length < 3) {
                   console.warn(`Skipping polygon with insufficient points: ${polygon.points?.length || 0}`);
                   return;
@@ -1636,8 +1704,8 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               console.log(`Drew ${validPolygonCount} valid polygons on canvas`);
 
               // Convert canvas to blob
-              const maskBlob = await new Promise<Blob | null>(resolve => {
-                canvas.toBlob(blob => resolve(blob), 'image/png');
+              const maskBlob = await new Promise<Blob | null>((resolve) => {
+                canvas.toBlob((blob) => resolve(blob), 'image/png');
               });
 
               if (maskBlob) {
@@ -1666,7 +1734,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
     // Add metrics if selected
     if (includeObjectMetrics) {
-      const metricsFolder = zip.folder("metrics");
+      const metricsFolder = zip.folder('metrics');
 
       // Create metrics data
       const worksheetRows: Record<string, string | number>[] = [];
@@ -1697,7 +1765,12 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           } else if (segData && segData.polygons && Array.isArray(segData.polygons)) {
             polygons = segData.polygons;
             console.log(`Found polygons array with ${polygons.length} items`);
-          } else if (segData && segData.result_data && segData.result_data.polygons && Array.isArray(segData.result_data.polygons)) {
+          } else if (
+            segData &&
+            segData.result_data &&
+            segData.result_data.polygons &&
+            Array.isArray(segData.result_data.polygons)
+          ) {
             polygons = segData.result_data.polygons;
             console.log(`Found nested polygons array with ${polygons.length} items`);
           } else {
@@ -1707,9 +1780,11 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               for (const key in segData) {
                 if (Array.isArray(segData[key])) {
                   const possiblePolygons = segData[key];
-                  if (possiblePolygons.length > 0 &&
-                      typeof possiblePolygons[0] === 'object' &&
-                      (Array.isArray(possiblePolygons[0].points) || possiblePolygons[0].vertices)) {
+                  if (
+                    possiblePolygons.length > 0 &&
+                    typeof possiblePolygons[0] === 'object' &&
+                    (Array.isArray(possiblePolygons[0].points) || possiblePolygons[0].vertices)
+                  ) {
                     polygons = possiblePolygons;
                     console.log(`Found polygons in property "${key}" with ${polygons.length} items`);
                     found = true;
@@ -1739,7 +1814,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                 } else if (typeof point === 'object' && point !== null) {
                   return {
                     x: typeof point.x === 'number' ? point.x : 0,
-                    y: typeof point.y === 'number' ? point.y : 0
+                    y: typeof point.y === 'number' ? point.y : 0,
                   };
                 }
                 return { x: 0, y: 0 };
@@ -1760,7 +1835,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         if (!imageMetrics) continue;
         console.log(`Calculated metrics for image ${image.id} with dimensions ${image.width}x${image.height}`);
 
-        imageMetrics.forEach(metric => {
+        imageMetrics.forEach((metric) => {
           worksheetRows.push({
             'Image Name': image.name || 'Unnamed',
             'Image ID': image.id,
@@ -1768,13 +1843,13 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             'Object ID': metric.objectId,
             'Area (px²)': metric.area.toFixed(2),
             'Perimeter (px)': metric.perimeter.toFixed(2),
-            'Circularity': metric.circularity.toFixed(4),
+            Circularity: metric.circularity.toFixed(4),
             'Equivalent Diameter (px)': metric.equivalentDiameter.toFixed(2),
             'Aspect Ratio': metric.aspectRatio.toFixed(2),
-            'Compactness': metric.compactness.toFixed(4),
-            'Convexity': metric.convexity.toFixed(4),
-            'Solidity': metric.solidity.toFixed(4),
-            'Sphericity': metric.sphericity.toFixed(4),
+            Compactness: metric.compactness.toFixed(4),
+            Convexity: metric.convexity.toFixed(4),
+            Solidity: metric.solidity.toFixed(4),
+            Sphericity: metric.sphericity.toFixed(4),
             'Feret Diameter Max (px)': metric.feretDiameterMax.toFixed(2),
             'Feret Diameter Min (px)': metric.feretDiameterMin.toFixed(2),
             'Created At': image.createdAt ? format(image.createdAt, 'yyyy-MM-dd HH:mm:ss') : 'N/A',
@@ -1800,13 +1875,13 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               'Object ID': i + 1,
               'Area (px²)': (maxArea * (0.2 + Math.random() * 0.8)).toFixed(2),
               'Perimeter (px)': (maxPerimeter * (0.2 + Math.random() * 0.8)).toFixed(2),
-              'Circularity': (0.8 + Math.random() * 0.2).toFixed(4),
+              Circularity: (0.8 + Math.random() * 0.2).toFixed(4),
               'Equivalent Diameter (px)': (maxDiameter * (0.2 + Math.random() * 0.8)).toFixed(2),
               'Aspect Ratio': (1.5 + Math.random() * 0.5).toFixed(2),
-              'Compactness': (0.7 + Math.random() * 0.3).toFixed(4),
-              'Convexity': (0.9 + Math.random() * 0.1).toFixed(4),
-              'Solidity': (0.85 + Math.random() * 0.15).toFixed(4),
-              'Sphericity': (0.75 + Math.random() * 0.25).toFixed(4),
+              Compactness: (0.7 + Math.random() * 0.3).toFixed(4),
+              Convexity: (0.9 + Math.random() * 0.1).toFixed(4),
+              Solidity: (0.85 + Math.random() * 0.15).toFixed(4),
+              Sphericity: (0.75 + Math.random() * 0.25).toFixed(4),
               'Feret Diameter Max (px)': (maxDiameter * 1.2 * (0.2 + Math.random() * 0.8)).toFixed(2),
               'Feret Diameter Min (px)': (maxDiameter * 0.8 * (0.2 + Math.random() * 0.8)).toFixed(2),
               'Created At': image.createdAt ? format(image.createdAt, 'yyyy-MM-dd HH:mm:ss') : 'N/A',
@@ -1836,7 +1911,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         { wch: 12 }, // Sphericity
         { wch: 20 }, // Feret Diameter Max
         { wch: 20 }, // Feret Diameter Min
-        { wch: 20 }  // Created At
+        { wch: 20 }, // Created At
       ];
 
       worksheet['!cols'] = colWidths;
@@ -1852,8 +1927,8 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         let csvContent = headers.join(',') + '\n';
 
         // Add each row
-        worksheetRows.forEach(row => {
-          const rowValues = headers.map(header => {
+        worksheetRows.forEach((row) => {
+          const rowValues = headers.map((header) => {
             // Escape commas and quotes in values
             const value = String(row[header]).replace(/"/g, '""');
             return `"${value}"`;
@@ -1889,15 +1964,19 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             <table>
               <thead>
                 <tr>
-                  ${headers.map(header => `<th>${header}</th>`).join('')}
+                  ${headers.map((header) => `<th>${header}</th>`).join('')}
                 </tr>
               </thead>
               <tbody>
-                ${worksheetRows.map(row => `
+                ${worksheetRows
+                  .map(
+                    (row) => `
                   <tr>
-                    ${headers.map(header => `<td>${row[header]}</td>`).join('')}
+                    ${headers.map((header) => `<td>${row[header]}</td>`).join('')}
                   </tr>
-                `).join('')}
+                `,
+                  )
+                  .join('')}
               </tbody>
             </table>
           </div>
@@ -1910,7 +1989,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         console.log('HTML soubor také přidán do ZIP pro lepší zobrazení');
 
         // Vytvoříme složku pro vizualizace
-        const visualizationsFolder = metricsFolder.folder("visualizations");
+        const visualizationsFolder = metricsFolder.folder('visualizations');
         console.log('Vytváření složky pro vizualizace segmentací');
 
         // Vytvoříme vizualizace pro každý obrázek
@@ -1945,7 +2024,11 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                 polygons = segData;
               } else if (segData.polygons && Array.isArray(segData.polygons)) {
                 polygons = segData.polygons;
-              } else if (segData.result_data && segData.result_data.polygons && Array.isArray(segData.result_data.polygons)) {
+              } else if (
+                segData.result_data &&
+                segData.result_data.polygons &&
+                Array.isArray(segData.result_data.polygons)
+              ) {
                 polygons = segData.result_data.polygons;
               }
 
@@ -1963,7 +2046,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                     } else if (typeof point === 'object' && point !== null) {
                       return {
                         x: typeof point.x === 'number' ? point.x : 0,
-                        y: typeof point.y === 'number' ? point.y : 0
+                        y: typeof point.y === 'number' ? point.y : 0,
                       };
                     }
                     return { x: 0, y: 0 };
@@ -2021,10 +2104,14 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             }
 
             // Najdeme externí a interní polygony
-            const externalPolygons = polygons.filter(p => p.type === 'external' || p.type === undefined || p.type === null);
-            const internalPolygons = polygons.filter(p => p.type === 'internal');
+            const externalPolygons = polygons.filter(
+              (p) => p.type === 'external' || p.type === undefined || p.type === null,
+            );
+            const internalPolygons = polygons.filter((p) => p.type === 'internal');
 
-            console.log(`Nalezeno ${externalPolygons.length} externích a ${internalPolygons.length} interních polygonů pro ${image.name}`);
+            console.log(
+              `Nalezeno ${externalPolygons.length} externích a ${internalPolygons.length} interních polygonů pro ${image.name}`,
+            );
 
             // Vykreslíme externí polygony červeně
             ctx.strokeStyle = 'red';
@@ -2064,20 +2151,20 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               const padding = fontSize * 0.4;
               ctx.fillStyle = 'white';
               ctx.fillRect(
-                centerX - textWidth/2 - padding,
-                centerY - fontSize/2 - padding/2,
-                textWidth + padding*2,
-                fontSize + padding
+                centerX - textWidth / 2 - padding,
+                centerY - fontSize / 2 - padding / 2,
+                textWidth + padding * 2,
+                fontSize + padding,
               );
 
               // Vykreslíme černý rámeček kolem obdélníku
               ctx.strokeStyle = 'black';
               ctx.lineWidth = 3;
               ctx.strokeRect(
-                centerX - textWidth/2 - padding,
-                centerY - fontSize/2 - padding/2,
-                textWidth + padding*2,
-                fontSize + padding
+                centerX - textWidth / 2 - padding,
+                centerY - fontSize / 2 - padding / 2,
+                textWidth + padding * 2,
+                fontSize + padding,
               );
 
               // Vykreslíme červený text
@@ -2088,8 +2175,8 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             // Odstraněno vykreslování modrých vnitřních kontur (děr) podle požadavku
 
             // Převedeme canvas na blob
-            const blob = await new Promise<Blob | null>(resolve => {
-              canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.8);
+            const blob = await new Promise<Blob | null>((resolve) => {
+              canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
             });
 
             if (blob) {
@@ -2161,9 +2248,8 @@ This helps you identify which metrics belong to which object in the image.
 
     try {
       // Pokud nejsou zadány obrázky k exportu, použijeme vybrané obrázky
-      const imagesToProcess = imagesToExport.length > 0
-        ? imagesToExport
-        : images.filter(img => selectedImages[img.id]);
+      const imagesToProcess =
+        imagesToExport.length > 0 ? imagesToExport : images.filter((img) => selectedImages[img.id]);
 
       // Podrobné logování pro diagnostiku
       console.log(`Starting export of ${imagesToProcess.length} images`);
@@ -2174,21 +2260,22 @@ This helps you identify which metrics belong to which object in the image.
           status: img.segmentationStatus,
           hasSegmentationResult: !!img.segmentationResult,
           segmentationResultType: img.segmentationResult ? typeof img.segmentationResult : 'undefined',
-          segmentationResultPath: img.segmentationResultPath
+          segmentationResultPath: img.segmentationResultPath,
         });
 
         // Pokud existuje segmentationResult, vypíšeme jeho strukturu
         if (img.segmentationResult) {
           try {
-            const segData = typeof img.segmentationResult === 'string'
-              ? JSON.parse(img.segmentationResult)
-              : img.segmentationResult;
+            const segData =
+              typeof img.segmentationResult === 'string' ? JSON.parse(img.segmentationResult) : img.segmentationResult;
 
             console.log(`Segmentation data structure for ${img.name}:`, {
               keys: Object.keys(segData),
               hasPolygons: segData.polygons ? `Yes (${segData.polygons.length})` : 'No',
               hasResultData: segData.result_data ? 'Yes' : 'No',
-              hasResultDataPolygons: segData.result_data?.polygons ? `Yes (${segData.result_data.polygons.length})` : 'No'
+              hasResultDataPolygons: segData.result_data?.polygons
+                ? `Yes (${segData.result_data.polygons.length})`
+                : 'No',
             });
           } catch (e) {
             console.log(`Could not parse segmentation data for ${img.name}:`, e);
@@ -2209,7 +2296,7 @@ This helps you identify which metrics belong to which object in the image.
         console.error('Error details:', {
           name: error.name,
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
         });
       }
     } finally {
@@ -2236,6 +2323,6 @@ This helps you identify which metrics belong to which object in the image.
     setIncludeSegmentation,
     setIncludeImages,
     setAnnotationFormat,
-    setMetricsFormat
+    setMetricsFormat,
   };
 };

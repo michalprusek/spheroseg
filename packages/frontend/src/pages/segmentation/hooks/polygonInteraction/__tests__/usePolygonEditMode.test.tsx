@@ -12,8 +12,8 @@ vi.mock('../editMode/useSlicingMode', () => ({
     toggleSlicingMode: vi.fn(),
     handleSlicingClick: vi.fn(),
     updateCursorPosition: vi.fn(),
-    setSlicingMode: vi.fn()
-  })
+    setSlicingMode: vi.fn(),
+  }),
 }));
 
 vi.mock('../editMode/usePointAddingMode', () => ({
@@ -27,8 +27,8 @@ vi.mock('../editMode/usePointAddingMode', () => ({
     togglePointAddingMode: vi.fn(),
     handlePointAddingClick: vi.fn(),
     updatePointAddingPosition: vi.fn(),
-    setPointAddingMode: vi.fn()
-  })
+    setPointAddingMode: vi.fn(),
+  }),
 }));
 
 vi.mock('../editMode/useEditModeSwitcher', () => ({
@@ -78,22 +78,22 @@ vi.mock('../editMode/useEditModeSwitcher', () => ({
       toggleEditMode,
       toggleSlicingMode,
       togglePointAddingMode,
-      exitAllEditModes
+      exitAllEditModes,
     };
-  }
+  },
 }));
 
 vi.mock('../editMode/useAutoPointAdding', () => ({
   useAutoPointAdding: () => ({
-    resetLastAutoAddedPoint: vi.fn()
-  })
+    resetLastAutoAddedPoint: vi.fn(),
+  }),
 }));
 
 vi.mock('../editMode/useEditModeClickHandlers', () => ({
   useEditModeClickHandlers: () => ({
     handleEditModeClick: vi.fn(),
-    handleEditMouseMove: vi.fn()
-  })
+    handleEditMouseMove: vi.fn(),
+  }),
 }));
 
 vi.mock('../../../../../shared/utils/editModeManager', () => ({
@@ -104,9 +104,9 @@ vi.mock('../../../../../shared/utils/editModeManager', () => ({
     isShiftPressed: false,
     toggleEditMode: vi.fn(),
     setEditMode: vi.fn(),
-    addPointToTemp: vi.fn()
+    addPointToTemp: vi.fn(),
   }),
-  createEditModeParams: vi.fn((params) => params)
+  createEditModeParams: vi.fn((params) => params),
 }));
 
 // Create a test segmentation for testing
@@ -117,7 +117,7 @@ const createTestSegmentation = (count: number = 3): SegmentationResult => {
       const angle = (i / numPoints) * Math.PI * 2;
       points.push({
         x: 100 + Math.cos(angle) * 50,
-        y: 100 + Math.sin(angle) * 50
+        y: 100 + Math.sin(angle) * 50,
       });
     }
     return {
@@ -125,7 +125,7 @@ const createTestSegmentation = (count: number = 3): SegmentationResult => {
       points,
       label: 'test',
       color: '#FF0000',
-      metadata: {}
+      metadata: {},
     };
   };
 
@@ -138,7 +138,7 @@ const createTestSegmentation = (count: number = 3): SegmentationResult => {
     polygons,
     image: { width: 500, height: 500 },
     contours: [],
-    metadata: {}
+    metadata: {},
   };
 };
 
@@ -148,7 +148,7 @@ describe('usePolygonEditMode Hook', () => {
   let selectedPolygonId: string | null;
   let zoom: number;
   let offset: { x: number; y: number };
-  
+
   beforeEach(() => {
     mockSegmentation = createTestSegmentation(3);
     mockSetSegmentation = vi.fn();
@@ -157,14 +157,13 @@ describe('usePolygonEditMode Hook', () => {
     offset = { x: 0, y: 0 };
     vi.clearAllMocks();
   });
-  
-  const renderPolygonEditModeHook = () => renderHook(() => 
-    usePolygonEditMode(mockSegmentation, mockSetSegmentation, selectedPolygonId, zoom, offset)
-  );
+
+  const renderPolygonEditModeHook = () =>
+    renderHook(() => usePolygonEditMode(mockSegmentation, mockSetSegmentation, selectedPolygonId, zoom, offset));
 
   it('should initialize with default values', () => {
     const { result } = renderPolygonEditModeHook();
-    
+
     // Check if the hook returns the expected properties
     expect(result.current).toHaveProperty('editMode');
     expect(result.current).toHaveProperty('tempPoints');
@@ -181,7 +180,7 @@ describe('usePolygonEditMode Hook', () => {
     expect(result.current).toHaveProperty('exitAllEditModes');
     expect(result.current).toHaveProperty('handleEditModeClick');
     expect(result.current).toHaveProperty('handleEditMouseMove');
-    
+
     // Check initial values
     expect(result.current.editMode).toBe(false);
     expect(result.current.slicingMode).toBe(false);
@@ -189,72 +188,72 @@ describe('usePolygonEditMode Hook', () => {
     expect(result.current.isShiftPressed).toBe(false);
     expect(result.current.sliceStartPoint).toBe(null);
   });
-  
+
   it('should handle toggling edit mode', () => {
     const { result } = renderPolygonEditModeHook();
-    
+
     act(() => {
       result.current.toggleEditMode();
     });
-    
+
     expect(result.current.toggleEditMode).toHaveBeenCalled();
   });
-  
+
   it('should handle toggling slicing mode', () => {
     const { result } = renderPolygonEditModeHook();
-    
+
     act(() => {
       result.current.toggleSlicingMode();
     });
-    
+
     expect(result.current.toggleSlicingMode).toHaveBeenCalled();
   });
-  
+
   it('should handle toggling point adding mode', () => {
     const { result } = renderPolygonEditModeHook();
-    
+
     act(() => {
       result.current.togglePointAddingMode();
     });
-    
+
     expect(result.current.togglePointAddingMode).toHaveBeenCalled();
   });
-  
+
   it('should handle exiting all edit modes', () => {
     const { result } = renderPolygonEditModeHook();
-    
+
     act(() => {
       result.current.exitAllEditModes();
     });
-    
+
     expect(result.current.exitAllEditModes).toHaveBeenCalled();
   });
-  
+
   it('should handle click events in edit mode', () => {
     const { result } = renderPolygonEditModeHook();
-    
+
     act(() => {
       result.current.handleEditModeClick(150, 150);
     });
-    
+
     expect(result.current.handleEditModeClick).toHaveBeenCalledWith(150, 150);
   });
-  
+
   it('should handle mouse move events in edit mode', () => {
     const { result } = renderPolygonEditModeHook();
-    
+
     act(() => {
       result.current.handleEditMouseMove(200, 200);
     });
-    
+
     expect(result.current.handleEditMouseMove).toHaveBeenCalledWith(200, 200);
   });
 
   it('should work with null segmentation', () => {
     mockSegmentation = null as unknown as SegmentationResult;
-    
+
     const { result } = renderPolygonEditModeHook();
-    
+
     // Should not throw errors even with null segmentation
     expect(() => {
       act(() => {
@@ -270,9 +269,9 @@ describe('usePolygonEditMode Hook', () => {
 
   it('should work with null selectedPolygonId', () => {
     selectedPolygonId = null;
-    
+
     const { result } = renderPolygonEditModeHook();
-    
+
     // Should not throw errors even with null selectedPolygonId
     expect(() => {
       act(() => {
@@ -285,18 +284,18 @@ describe('usePolygonEditMode Hook', () => {
       });
     }).not.toThrow();
   });
-  
+
   it('should work with different zoom and offset values', () => {
     zoom = 2;
     offset = { x: 50, y: 50 };
-    
+
     const { result } = renderPolygonEditModeHook();
-    
+
     // Should initialize properly with different zoom and offset
     expect(result.current).toHaveProperty('editMode');
     expect(result.current).toHaveProperty('tempPoints');
     expect(result.current).toHaveProperty('cursorPosition');
-    
+
     // Should not throw errors with different zoom and offset
     expect(() => {
       act(() => {
@@ -308,7 +307,7 @@ describe('usePolygonEditMode Hook', () => {
 
   it('should handle cursor position correctly', () => {
     const { result } = renderPolygonEditModeHook();
-    
+
     // Initial cursor position should be from editModeCore or slicingMode
     expect(result.current.cursorPosition).toEqual({ x: 100, y: 100 });
   });

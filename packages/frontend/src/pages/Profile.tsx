@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from "react";
-import DashboardHeader from "@/components/DashboardHeader";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Link } from "react-router-dom";
-import { Clock, Edit, ExternalLink, FileText, Github, Mail, MapPin, User, Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useProfile } from "@/contexts/ProfileContext";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Breadcrumb, BreadcrumbItem } from "@/components/ui/breadcrumb";
+import React, { useEffect, useState } from 'react';
+import DashboardHeader from '@/components/DashboardHeader';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Link } from 'react-router-dom';
+import { Clock, Edit, ExternalLink, FileText, Github, Mail, MapPin, User, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useProfile } from '@/contexts/ProfileContext';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb';
 import { showSuccess, showError } from '@/utils/toastUtils';
 import { tryCatch } from '@/utils/errorUtils';
-import apiClient from "@/lib/apiClient";
+import apiClient from '@/lib/apiClient';
 import { useUserStatistics } from '@/hooks/useUserStatistics';
 import { useRecentActivity, ActivityItem } from '@/hooks/useRecentActivity';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface UserProfile {
   user_id: string;
@@ -57,12 +58,13 @@ interface MockImage {
 const Profile = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const [profileStats, setProfileStats] = useState<ProfileStats>({
     totalProjects: 0,
     totalImages: 0,
     completedSegmentations: 0,
     storageUsed: '0 MB',
-    recentActivity: []
+    recentActivity: [],
   });
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
   const [recentImages, setRecentImages] = useState<any[]>([]);
@@ -72,26 +74,38 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
+  // Force refresh statistics when profile page is loaded
+  useEffect(() => {
+    // Invalidate statistics cache to force a refresh
+    queryClient.invalidateQueries(['userStatistics']);
+
+    // Also invalidate activities cache
+    queryClient.invalidateQueries(['userActivities']);
+
+    // Log that we're refreshing data
+    console.log('Profile page loaded - refreshing statistics and activities data');
+  }, [queryClient]);
+
   // Use the new hooks for statistics and activities
   const {
     statistics,
     loading: statsLoading,
-    error: statsError
+    error: statsError,
   } = useUserStatistics({
     showToasts: false,
     useCache: true,
-    autoFetch: true
+    autoFetch: true,
   });
 
   const {
     activities,
     loading: activitiesLoading,
-    error: activitiesError
+    error: activitiesError,
   } = useRecentActivity({
     limit: 10,
     showToasts: false,
     useCache: true,
-    autoFetch: true
+    autoFetch: true,
   });
 
   // Load profile data from context
@@ -116,17 +130,17 @@ const Profile = () => {
 
       if (storedAvatar && storedAvatar.startsWith('data:image')) {
         // If we have a data URL in localStorage, use it directly
-        console.log("Using avatar from localStorage (data URL)");
+        console.log('Using avatar from localStorage (data URL)');
         setAvatarUrl(storedAvatar);
       } else if (contextAvatar) {
         // If context has an avatar URL (could be a path), check if it's a full URL or path
         if (contextAvatar.startsWith('data:image')) {
           // It's already a data URL
-          console.log("Using avatar from context (data URL)");
+          console.log('Using avatar from context (data URL)');
           setAvatarUrl(contextAvatar);
         } else if (contextAvatar.startsWith('http')) {
           // It's a full URL
-          console.log("Using avatar from context (full URL)");
+          console.log('Using avatar from context (full URL)');
           setAvatarUrl(contextAvatar);
         } else {
           // It's likely a path, construct a full URL
@@ -135,12 +149,12 @@ const Profile = () => {
           const fullAvatarUrl = contextAvatar.startsWith('/')
             ? `${baseUrl}${contextAvatar}`
             : `${baseUrl}/${contextAvatar}`;
-          console.log("Using constructed avatar URL:", fullAvatarUrl);
+          console.log('Using constructed avatar URL:', fullAvatarUrl);
           setAvatarUrl(fullAvatarUrl);
         }
       } else {
         // No avatar available
-        console.log("No avatar available");
+        console.log('No avatar available');
         setAvatarUrl(null);
       }
 
@@ -149,18 +163,18 @@ const Profile = () => {
         const cachedStats = localStorage.getItem('userStatistics');
         if (cachedStats) {
           const parsedStats = JSON.parse(cachedStats);
-          console.log("Loaded cached statistics", parsedStats);
+          console.log('Loaded cached statistics', parsedStats);
 
           setProfileStats({
             totalProjects: parsedStats.totalProjects || 0,
             totalImages: parsedStats.totalImages || 0,
             completedSegmentations: parsedStats.completedSegmentations || 0,
             storageUsed: `${parsedStats.storageUsedMB || 0} MB`,
-            recentActivity: []
+            recentActivity: [],
           });
         }
       } catch (error) {
-        console.error("Error loading cached statistics:", error);
+        console.error('Error loading cached statistics:', error);
       }
 
       setLoading(false);
@@ -173,7 +187,7 @@ const Profile = () => {
         }
         setLoading(true);
         try {
-          const response = await apiClient.get<UserProfile>('/users/me');
+          const response = await apiClient.get<UserProfile>('/api/users/me');
           setProfileData(response.data);
 
           // Process avatar URL from API response
@@ -189,9 +203,7 @@ const Profile = () => {
             } else {
               // Path format - construct full URL
               const baseUrl = window.location.origin;
-              const fullAvatarUrl = apiAvatar.startsWith('/')
-                ? `${baseUrl}${apiAvatar}`
-                : `${baseUrl}/${apiAvatar}`;
+              const fullAvatarUrl = apiAvatar.startsWith('/') ? `${baseUrl}${apiAvatar}` : `${baseUrl}/${apiAvatar}`;
               setAvatarUrl(fullAvatarUrl);
 
               // Store in localStorage for persistence
@@ -204,10 +216,10 @@ const Profile = () => {
 
           // Fetch real statistics from API
           try {
-            console.log("Fetching user statistics from API...");
-            const statsResponse = await apiClient.get('/users/me/statistics');
+            console.log('Fetching user statistics from API...');
+            const statsResponse = await apiClient.get('/api/users/me/statistics');
             const stats = statsResponse.data;
-            console.log("Received statistics:", stats);
+            console.log('Received statistics:', stats);
 
             // Store in profileStats object for primary access
             setProfileStats({
@@ -215,31 +227,34 @@ const Profile = () => {
               totalImages: stats.totalImages || 0,
               completedSegmentations: stats.completedSegmentations || 0,
               storageUsed: `${stats.storageUsedMB || 0} MB`,
-              recentActivity: []
+              recentActivity: [],
             });
 
             // Store statistics in localStorage for offline/fallback access
-            localStorage.setItem('userStatistics', JSON.stringify({
-              totalProjects: stats.totalProjects || 0,
-              totalImages: stats.totalImages || 0,
-              completedSegmentations: stats.completedSegmentations || 0,
-              storageUsedMB: stats.storageUsedMB || 0, // Keep original key for backwards compatibility
-              lastUpdated: new Date().toISOString()
-            }));
+            localStorage.setItem(
+              'userStatistics',
+              JSON.stringify({
+                totalProjects: stats.totalProjects || 0,
+                totalImages: stats.totalImages || 0,
+                completedSegmentations: stats.completedSegmentations || 0,
+                storageUsedMB: stats.storageUsedMB || 0, // Keep original key for backwards compatibility
+                lastUpdated: new Date().toISOString(),
+              }),
+            );
 
             // Fetch recent activity
             if (stats.recentActivity && stats.recentActivity.length > 0) {
-              const formattedActivity = stats.recentActivity.map(item => ({
+              const formattedActivity = stats.recentActivity.map((item) => ({
                 type: item.type,
                 description: item.description,
                 timestamp: new Date(item.timestamp),
                 projectId: item.project_id || item.projectId,
                 projectName: item.project_name || item.projectName,
                 imageId: item.image_id || item.imageId,
-                imageName: item.image_name || item.imageName
+                imageName: item.image_name || item.imageName,
               }));
               setRecentActivity(formattedActivity);
-              console.log("Set recent activity:", formattedActivity);
+              console.log('Set recent activity:', formattedActivity);
             } else {
               setRecentActivity([]);
             }
@@ -247,7 +262,7 @@ const Profile = () => {
             // Set recent projects if available
             if (stats.recentProjects && stats.recentProjects.length > 0) {
               setRecentProjects(stats.recentProjects);
-              console.log("Set recent projects:", stats.recentProjects);
+              console.log('Set recent projects:', stats.recentProjects);
             } else {
               setRecentProjects([]);
             }
@@ -255,18 +270,18 @@ const Profile = () => {
             // Set recent images if available
             if (stats.recentImages && stats.recentImages.length > 0) {
               setRecentImages(stats.recentImages);
-              console.log("Set recent images:", stats.recentImages);
+              console.log('Set recent images:', stats.recentImages);
             } else {
               setRecentImages([]);
             }
 
             // Set comparison data if available
             if (stats.comparisons) {
-              console.log("Setting comparison data:", stats.comparisons);
+              console.log('Setting comparison data:', stats.comparisons);
               // You can add UI elements to display this data
             }
           } catch (statsError) {
-            console.error("Failed to fetch user statistics:", statsError);
+            console.error('Failed to fetch user statistics:', statsError);
 
             // Try to load statistics from localStorage as a fallback
             const cachedStats = localStorage.getItem('userStatistics');
@@ -279,7 +294,7 @@ const Profile = () => {
 
                 // Use cached data if it's less than 24 hours old
                 if (cacheAgeHours < 24) {
-                  console.log("Using cached statistics", parsedStats);
+                  console.log('Using cached statistics', parsedStats);
 
                   setProfileStats({
                     totalProjects: parsedStats.totalProjects || 0,
@@ -291,7 +306,7 @@ const Profile = () => {
                   return;
                 }
               } catch (cacheError) {
-                console.error("Error parsing cached statistics:", cacheError);
+                console.error('Error parsing cached statistics:', cacheError);
               }
             }
 
@@ -304,7 +319,7 @@ const Profile = () => {
             // Default values were already set in profileStats state initialization
           }
         } catch (error) {
-          console.error("Failed to fetch profile data:", error);
+          console.error('Failed to fetch profile data:', error);
           showError(t('profile.fetchError'));
         } finally {
           setLoading(false);
@@ -318,12 +333,12 @@ const Profile = () => {
   // Sync statistics from the hook to local state
   useEffect(() => {
     if (statistics && !statsLoading) {
-      setProfileStats(prev => ({
+      setProfileStats((prev) => ({
         ...prev,
         totalProjects: statistics.totalProjects || 0,
         totalImages: statistics.totalImages || 0,
         completedSegmentations: statistics.completedSegmentations || 0,
-        storageUsed: `${statistics.storageUsedMB || 0} MB`
+        storageUsed: `${statistics.storageUsedMB || 0} MB`,
       }));
 
       // Also sync any recent data from the statistics hook
@@ -350,8 +365,14 @@ const Profile = () => {
         {/* Background elements */}
         <div className="absolute inset-0 -z-10 pointer-events-none">
           <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-blue-200/30 dark:bg-blue-400/10 rounded-full filter blur-3xl animate-float" />
-          <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-2s" }} />
-          <div className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-4s" }} />
+          <div
+            className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float"
+            style={{ animationDelay: '-2s' }}
+          />
+          <div
+            className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float"
+            style={{ animationDelay: '-4s' }}
+          />
         </div>
         <Loader2 className="h-16 w-16 animate-spin text-blue-500 dark:text-blue-400" />
       </div>
@@ -364,12 +385,16 @@ const Profile = () => {
         {/* Background elements */}
         <div className="absolute inset-0 -z-10 pointer-events-none">
           <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-blue-200/30 dark:bg-blue-400/10 rounded-full filter blur-3xl animate-float" />
-          <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-2s" }} />
-          <div className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-4s" }} />
+          <div
+            className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float"
+            style={{ animationDelay: '-2s' }}
+          />
+          <div
+            className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float"
+            style={{ animationDelay: '-4s' }}
+          />
         </div>
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          {t('common.pleaseLogin')}
-        </div>
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">{t('common.pleaseLogin')}</div>
       </div>
     );
   }
@@ -380,8 +405,14 @@ const Profile = () => {
         {/* Background elements */}
         <div className="absolute inset-0 -z-10 pointer-events-none">
           <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-blue-200/30 dark:bg-blue-400/10 rounded-full filter blur-3xl animate-float" />
-          <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-2s" }} />
-          <div className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-4s" }} />
+          <div
+            className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float"
+            style={{ animationDelay: '-2s' }}
+          />
+          <div
+            className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float"
+            style={{ animationDelay: '-4s' }}
+          />
         </div>
         <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md text-red-500 dark:text-red-400">
           {t('profile.fetchError')}
@@ -400,8 +431,14 @@ const Profile = () => {
       {/* Background elements */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
         <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-blue-200/30 dark:bg-blue-400/10 rounded-full filter blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-2s" }} />
-        <div className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float" style={{ animationDelay: "-4s" }} />
+        <div
+          className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl animate-float"
+          style={{ animationDelay: '-2s' }}
+        />
+        <div
+          className="absolute top-2/3 left-1/3 w-40 h-40 bg-blue-400/20 dark:bg-blue-600/10 rounded-full filter blur-3xl animate-float"
+          style={{ animationDelay: '-4s' }}
+        />
       </div>
 
       <DashboardHeader />
@@ -412,10 +449,10 @@ const Profile = () => {
             <CardContent className="p-6 text-center">
               <div className="relative w-24 h-24 mx-auto mb-4">
                 <Avatar className="w-24 h-24 border-2 border-white dark:border-gray-800 shadow-md">
-                  {(avatarUrl || profileData.avatar_url) ? (
+                  {avatarUrl || profileData.avatar_url ? (
                     <AvatarImage
                       src={avatarUrl || profileData.avatar_url || undefined}
-                      alt={profileData.full_name || profileData.username || "User Avatar"}
+                      alt={profileData.full_name || profileData.username || 'User Avatar'}
                       className="object-cover"
                     />
                   ) : null}
@@ -424,7 +461,9 @@ const Profile = () => {
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <h2 className="text-xl font-semibold mb-1">{profileData.full_name || profileData.username || user.email?.split('@')[0]}</h2>
+              <h2 className="text-xl font-semibold mb-1">
+                {profileData.full_name || profileData.username || user.email?.split('@')[0]}
+              </h2>
               <p className="text-muted-foreground mb-1">{profileData.title || '-'}</p>
               <p className="text-muted-foreground mb-4 text-sm">{profileData.organization || '-'}</p>
               <Link to="/settings#user-profile">
@@ -446,7 +485,9 @@ const Profile = () => {
               </div>
               <div className="flex items-center">
                 <Clock className="mr-3 h-4 w-4 text-muted-foreground" />
-                <span>{t('profile.joined')} {formattedJoinedDate}</span>
+                <span>
+                  {t('profile.joined')} {formattedJoinedDate}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -455,9 +496,7 @@ const Profile = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold mb-4">{t('profile.aboutMe')}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {profileData.bio || t('profile.noBio')}
-                </p>
+                <p className="text-muted-foreground text-sm">{profileData.bio || t('profile.noBio')}</p>
               </CardContent>
             </Card>
 
@@ -507,7 +546,8 @@ const Profile = () => {
                             {activity.description || t('profile.activityDescription')}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(activity.timestamp).toLocaleDateString()} {new Date(activity.timestamp).toLocaleTimeString()}
+                            {new Date(activity.timestamp).toLocaleDateString()}{' '}
+                            {new Date(activity.timestamp).toLocaleTimeString()}
                           </p>
                           {activity.project_name && (
                             <Link

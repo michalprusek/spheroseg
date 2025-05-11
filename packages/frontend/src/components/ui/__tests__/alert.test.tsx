@@ -9,35 +9,31 @@ describe('Alert Component', () => {
       <Alert>
         <AlertTitle>Alert Title</AlertTitle>
         <AlertDescription>Alert Description</AlertDescription>
-      </Alert>
+      </Alert>,
     );
-    
+
     const alert = container.firstChild as HTMLElement;
     expect(alert).toBeInTheDocument();
     expect(alert).toHaveAttribute('role', 'alert');
     expect(alert).toHaveClass('bg-background');
     expect(alert).toHaveClass('text-foreground');
-    
+
     // Check title and description
     expect(alert.querySelector('h5')).toHaveTextContent('Alert Title');
     expect(alert.querySelector('div')).toHaveTextContent('Alert Description');
   });
 
   it('applies custom className', () => {
-    const { container } = render(
-      <Alert className="custom-class">Alert Content</Alert>
-    );
-    
+    const { container } = render(<Alert className="custom-class">Alert Content</Alert>);
+
     const alert = container.firstChild as HTMLElement;
     expect(alert).toHaveClass('custom-class');
     expect(alert).toHaveClass('bg-background'); // Still has default classes
   });
 
   it('renders with destructive variant', () => {
-    const { container } = render(
-      <Alert variant="destructive">Destructive Alert</Alert>
-    );
-    
+    const { container } = render(<Alert variant="destructive">Destructive Alert</Alert>);
+
     const alert = container.firstChild as HTMLElement;
     expect(alert).toHaveClass('border-destructive/50');
     expect(alert).toHaveClass('text-destructive');
@@ -45,10 +41,8 @@ describe('Alert Component', () => {
   });
 
   it('renders AlertTitle with custom className', () => {
-    const { getByText } = render(
-      <AlertTitle className="custom-title-class">Custom Title</AlertTitle>
-    );
-    
+    const { getByText } = render(<AlertTitle className="custom-title-class">Custom Title</AlertTitle>);
+
     const title = getByText('Custom Title');
     expect(title).toHaveClass('custom-title-class');
     expect(title).toHaveClass('mb-1');
@@ -56,10 +50,8 @@ describe('Alert Component', () => {
   });
 
   it('renders AlertDescription with custom className', () => {
-    const { getByText } = render(
-      <AlertDescription className="custom-desc-class">Custom Description</AlertDescription>
-    );
-    
+    const { getByText } = render(<AlertDescription className="custom-desc-class">Custom Description</AlertDescription>);
+
     const description = getByText('Custom Description');
     expect(description).toHaveClass('custom-desc-class');
     expect(description).toHaveClass('text-sm');
@@ -69,9 +61,9 @@ describe('Alert Component', () => {
     const { container } = render(
       <Alert data-testid="alert-test" aria-label="Important Alert">
         Alert Content
-      </Alert>
+      </Alert>,
     );
-    
+
     const alert = container.firstChild as HTMLElement;
     expect(alert).toHaveAttribute('data-testid', 'alert-test');
     expect(alert).toHaveAttribute('aria-label', 'Important Alert');

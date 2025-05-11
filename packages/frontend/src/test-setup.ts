@@ -2,7 +2,7 @@
 window.REACT_ROUTER_FUTURE_FLAGS = {
   v7_startTransition: true,
   v7_relativeSplatPath: true,
-  v7_normalizeFormMethod: true
+  v7_normalizeFormMethod: true,
 };
 
 // Patch console.warn to filter out React Router future flags warnings

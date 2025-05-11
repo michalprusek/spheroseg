@@ -15,10 +15,10 @@ export function usePerformanceMonitoring(componentName: string) {
   useEffect(() => {
     const renderTime = performance.now() - renderStartTime.current;
     monitoring.recordComponentRenderMetric(componentName, renderTime);
-    
+
     // Reset for next render
     renderStartTime.current = performance.now();
-    
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [componentName]);
 
@@ -40,7 +40,7 @@ export function usePerformanceMonitoring(componentName: string) {
   const endInteraction = (action: string, target: string) => {
     const key = `${action}:${target}`;
     const startTime = interactionStartTimes.current[key];
-    
+
     if (startTime) {
       const duration = performance.now() - startTime;
       monitoring.recordUserInteractionMetric(action, target, duration);
@@ -56,13 +56,7 @@ export function usePerformanceMonitoring(componentName: string) {
    * @param status HTTP status code
    * @param error Optional error message
    */
-  const trackApiRequest = (
-    endpoint: string,
-    method: string,
-    duration: number,
-    status: number,
-    error?: string
-  ) => {
+  const trackApiRequest = (endpoint: string, method: string, duration: number, status: number, error?: string) => {
     monitoring.recordApiRequestMetric(endpoint, method, duration, status, error);
   };
 
@@ -75,11 +69,11 @@ export function usePerformanceMonitoring(componentName: string) {
       const startTime = performance.now();
       const url = typeof input === 'string' ? input : input.url;
       const method = init?.method || 'GET';
-      
+
       try {
         const response = await fetch(input, init);
         const duration = performance.now() - startTime;
-        
+
         trackApiRequest(url, method, duration, response.status);
         return response;
       } catch (error) {

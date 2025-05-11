@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/contexts/AuthContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Project } from "@/types";
+import { Project } from '@/types';
 import apiClient from '@/lib/apiClient';
 import { AxiosError } from 'axios';
 
@@ -29,10 +29,10 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({ selectedProjectId, on
       }
       setLoading(true);
       try {
-        const response = await apiClient.get<ProjectsApiResponse>('/projects');
+        const response = await apiClient.get<ProjectsApiResponse>('/api/projects');
         setProjects(response.data.projects || []);
       } catch (error) {
-        console.error("Error fetching projects:", error);
+        console.error('Error fetching projects:', error);
         toast.error('Failed to load projects for selector.');
       } finally {
         setLoading(false);
@@ -43,17 +43,13 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({ selectedProjectId, on
   }, [user?.id]);
 
   const handleValueChange = (value: string) => {
-    onProjectChange(value === "all" ? null : value);
+    onProjectChange(value === 'all' ? null : value);
   };
 
   return (
-    <Select
-      value={selectedProjectId ?? "all"}
-      onValueChange={handleValueChange}
-      disabled={loading}
-    >
+    <Select value={selectedProjectId ?? 'all'} onValueChange={handleValueChange} disabled={loading}>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder={loading ? "Loading..." : "Select Project"} />
+        <SelectValue placeholder={loading ? 'Loading...' : 'Select Project'} />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All Projects</SelectItem>

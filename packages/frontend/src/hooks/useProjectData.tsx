@@ -1,43 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import type { Project, Image, ProjectImage, ImageStatus } from "@/types";
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import type { Project, Image, ProjectImage, ImageStatus } from '@/types';
 import apiClient from '@/lib/apiClient';
 import axios, { AxiosError } from 'axios';
-import { Socket } from "socket.io-client";
-import { constructUrl } from '@/lib/urlUtils';
+import { Socket } from 'socket.io-client';
 import socketClient from '@/socketClient';
 import config from '@/config';
+import { getProjectImages, mapApiImageToProjectImage } from '@/api/projectImages';
 
-// TEMPORARY: Keep local map function until export is confirmed/moved
-// TODO: Refactor mapApiImageToProjectImage to a shared utility
-const mapApiImageToProjectImage = (apiImage: Image): ProjectImage => {
-  // Construct URLs using the imported helper
-  const imageUrl = constructUrl(apiImage.storage_path);
-  const thumbnailUrl = constructUrl(apiImage.thumbnail_path);
-
-  return {
-    id: apiImage.id,
-    project_id: apiImage.project_id,
-    name: apiImage.name,
-    url: imageUrl,
-    thumbnail_url: thumbnailUrl,
-    createdAt: new Date(apiImage.created_at),
-    updatedAt: new Date(apiImage.updated_at),
-    width: apiImage.width,
-    height: apiImage.height,
-    segmentationStatus: apiImage.status,
-    segmentationResultPath: constructUrl(apiImage.segmentation_result?.path),
-  };
-};
+// The mapApiImageToProjectImage function is now imported from @/api/projectImages
 
 // Define the shape of the data received via WebSocket
 interface SegmentationUpdateData {
-    imageId: string;
-    status: ImageStatus;
-    resultPath?: string | null; // Expect client-relative path from the service
-    error?: string;
+  imageId: string;
+  status: ImageStatus;
+  resultPath?: string | null; // Expect client-relative path from the service
+  error?: string;
 }
 
 export const useProjectData = (projectId: string | undefined) => {
@@ -57,26 +37,22 @@ export const useProjectData = (projectId: string | undefined) => {
 
     console.log(`Cleaning project ID: ${id}`);
 
-    // IMPORTANT: We need to KEEP the "project-" prefix for API calls
-    // The backend expects IDs in the format "project-XXXXXXXXX"
+    // Remove "project-" prefix if it exists
     if (id.startsWith('project-')) {
-      console.log(`Project ID already has correct prefix: ${id}`);
-      return id; // Keep the prefix for API calls
+      const cleanedId = id.substring(8);
+      console.log(`Removed 'project-' prefix: ${cleanedId}`);
+      return cleanedId;
     }
 
-    // If ID doesn't have the prefix, add it
-    const prefixedId = `project-${id}`;
-    console.log(`Added 'project-' prefix: ${prefixedId}`);
-    return prefixedId;
+    // Return the ID as is if it doesn't have the prefix
+    return id;
   }, []);
-
-
 
   const fetchProjectData = useCallback(async () => {
     if (!projectId || !user?.id) {
-        setError("Project ID or user information is missing.");
-        setLoading(false);
-        return;
+      setError('Project ID or user information is missing.');
+      setLoading(false);
+      return;
     }
 
     // Clean the projectId to ensure we use just the UUID
@@ -90,141 +66,135 @@ export const useProjectData = (projectId: string | undefined) => {
     try {
       // First, attempt to check if this is a valid project
       console.log(`Starting API call to fetch project with ID: ${cleanedProjectId}`);
-      const projectResponse = await apiClient.get<Project>(`/projects/${cleanedProjectId}`);
-      console.log(`Successfully retrieved project data from API`, projectResponse.data);
+
+      // Try different API endpoints for project data
+      let projectResponse;
+
+      // Define all possible endpoints to try
+      const projectEndpoints = [`/projects/${cleanedProjectId}`, `/api/projects/${cleanedProjectId}`];
+
+      // If the ID has a prefix, also try without it
+      if (cleanedProjectId.startsWith('project-')) {
+        const idWithoutPrefix = cleanedProjectId.substring(8);
+        projectEndpoints.push(`/projects/${idWithoutPrefix}`);
+        projectEndpoints.push(`/api/projects/${idWithoutPrefix}`);
+      }
+
+      // Try each endpoint until one works
+      let lastProjectError;
+      for (const endpoint of projectEndpoints) {
+        try {
+          console.log(`Trying to fetch project data from endpoint: ${endpoint}`);
+          projectResponse = await apiClient.get<Project>(endpoint);
+          console.log(`Successfully retrieved project data from API endpoint ${endpoint}`, projectResponse.data);
+          break; // Exit the loop if successful
+        } catch (endpointError) {
+          lastProjectError = endpointError;
+          if (axios.isAxiosError(endpointError) && endpointError.response?.status === 404) {
+            console.log(`Endpoint ${endpoint} returned 404, trying next endpoint`);
+            continue;
+          } else {
+            console.error(`Error fetching project data from ${endpoint}:`, endpointError);
+            continue;
+          }
+        }
+      }
+
+      // If all endpoints failed, throw the last error
+      if (!projectResponse) {
+        console.error('All project data endpoints failed');
+        throw lastProjectError;
+      }
+
+      // Set project data in state
       setProject(projectResponse.data);
 
       try {
         // Add a separate try-catch for images to handle 404 gracefully
         console.log(`Fetching images for project: ${cleanedProjectId}`);
 
-        // Try to fetch images using the project ID without prefix first
-        let imagesResponse;
-        try {
-          // First try with the original project ID format (with prefix)
-          imagesResponse = await apiClient.get<Image[]>(`/projects/${cleanedProjectId}/images`);
-          console.log(`Successfully fetched images using ID with prefix: ${cleanedProjectId}`);
-        } catch (prefixError) {
-          if (axios.isAxiosError(prefixError) && prefixError.response?.status === 404) {
-            console.log(`Failed to fetch images with prefix, trying without prefix`);
+        // Use our new API module to get project images
+        const projectImages = await getProjectImages(cleanedProjectId);
 
-            // If the ID starts with "project-", try without the prefix
-            if (cleanedProjectId.startsWith('project-')) {
-              const idWithoutPrefix = cleanedProjectId.substring(8);
-              try {
-                imagesResponse = await apiClient.get<Image[]>(`/projects/${idWithoutPrefix}/images`);
-                console.log(`Successfully fetched images using ID without prefix: ${idWithoutPrefix}`);
-              } catch (noPrefixError) {
-                // Re-throw the original error if both attempts fail
-                throw prefixError;
-              }
-            } else {
-              // If there's no prefix, just re-throw the original error
-              throw prefixError;
-            }
-          } else {
-            // For non-404 errors, re-throw
-            throw prefixError;
-          }
-        }
-        console.log(`Retrieved ${imagesResponse.data.length} images for project`);
+        if (projectImages.length === 0) {
+          console.log('Project has no images');
+          setImages([]);
 
-        // Use the mapping function to transform API images to UI format
-        const uiImages = imagesResponse.data.map(image => {
-          const mappedImage = mapApiImageToProjectImage(image);
-          console.log(`Mapped image ${image.id} with URL: ${mappedImage.url} and thumbnail: ${mappedImage.thumbnail_url}`);
-          return mappedImage;
-        });
-
-        setImages(uiImages);
-        console.log(`Successfully set ${uiImages.length} images in state`);
-      } catch (imageErr) {
-        console.warn("Could not fetch project images:", imageErr);
-
-        // Don't navigate away if we just can't get images
-        if (axios.isAxiosError(imageErr)) {
-          console.log(`Image fetch error - Status: ${imageErr.response?.status}, Message: ${imageErr.response?.data?.message || imageErr.message}`);
-
-          if (imageErr.response?.status === 404) {
-            console.log("Project exists but has no images endpoint or no images");
-            setImages([]);
-            // Show a toast notification to inform the user
-            toast.info("This project doesn't have any images yet. You can upload images using the 'Upload' button.", {
-              duration: 5000,
-              id: `no-images-${cleanedProjectId}`
-            });
-          } else {
-            console.error(`Non-404 error fetching images: ${imageErr.response?.status} - ${imageErr.message}`);
-            // For other errors, re-throw to be caught by the outer catch
-            throw imageErr;
-          }
+          // Don't show a toast for no images - the UI will show an empty state
+          // This avoids duplicate messages
         } else {
-          console.error(`Unknown error type fetching images:`, imageErr);
-          throw imageErr;
+          console.log(`Retrieved ${projectImages.length} images for project`);
+          setImages(projectImages);
+          console.log(`Successfully set ${projectImages.length} images in state`);
         }
-      }
+      } catch (imageErr) {
+        console.warn('Could not fetch project images:', imageErr);
 
+        // Set empty images array
+        setImages([]);
+
+        toast.error('Could not load project images. Please try again later.', {
+          duration: 5000,
+          id: 'image-fetch-error-notice',
+        });
+      }
     } catch (err: unknown) {
-      console.error("Error fetching project data:", err);
+      console.error('Error fetching project data:', err);
       setProject(null);
       setImages([]);
 
       // Store the original URL for debug info
-      const requestUrl = axios.isAxiosError(err)
-        ? err.config?.url || 'unknown URL'
-        : 'unknown URL';
+      const requestUrl = axios.isAxiosError(err) ? err.config?.url || 'unknown URL' : 'unknown URL';
 
       console.error(`Failed request to: ${requestUrl} for project ID: ${cleanedProjectId}`);
 
       let errorMessage = 'Failed to load project data';
-       if (axios.isAxiosError(err) && err.response) {
-            const status = err.response.status;
-            const responseData = err.response.data;
+      if (axios.isAxiosError(err) && err.response) {
+        const status = err.response.status;
+        const responseData = err.response.data;
 
-            console.error(`API error: ${status} - ${JSON.stringify(responseData)}`);
-            errorMessage = responseData?.message || errorMessage;
+        console.error(`API error: ${status} - ${JSON.stringify(responseData)}`);
+        errorMessage = responseData?.message || errorMessage;
 
-            if (status === 404 || status === 403) {
-                errorMessage = "Project not found or access denied.";
-                console.log(`Permission error (${status}): ${errorMessage}`);
+        if (status === 404 || status === 403) {
+          errorMessage = 'Project not found or access denied.';
+          console.log(`Permission error (${status}): ${errorMessage}`);
 
-                // Check if the project ID is a timestamp and it's in the future
-                if (/^\d+$/.test(cleanedProjectId)) {
-                    const idAsNumber = parseInt(cleanedProjectId, 10);
-                    const now = Date.now();
-                    if (idAsNumber > now) {
-                        errorMessage = "Invalid project ID (future timestamp detected).";
-                        console.warn(`Project ID appears to be a future timestamp: ${cleanedProjectId}`);
-                    }
-                }
-
-                toast.error(errorMessage, {
-                    duration: 5000,
-                    id: `project-error-${cleanedProjectId}`
-                });
-
-                // Store the failed ID in local storage to help with debugging
-                try {
-                  localStorage.setItem('spheroseg_last_failed_id', projectId || '');
-                  localStorage.setItem('spheroseg_last_failed_time', new Date().toISOString());
-                } catch (e) {
-                  // Ignore storage errors
-                }
-
-                // Navigate after a short delay to allow the user to see the error message
-                if (status === 404) {
-                  console.log(`Project not found (${cleanedProjectId}), redirecting to dashboard in 2 seconds`);
-                  setTimeout(() => {
-                    // Use navigation with replace: true to prevent browser history issues
-                    navigate('/dashboard', { replace: true });
-                  }, 2000);
-                }
-                return;
+          // Check if the project ID is a timestamp and it's in the future
+          if (/^\d+$/.test(cleanedProjectId)) {
+            const idAsNumber = parseInt(cleanedProjectId, 10);
+            const now = Date.now();
+            if (idAsNumber > now) {
+              errorMessage = 'Invalid project ID (future timestamp detected).';
+              console.warn(`Project ID appears to be a future timestamp: ${cleanedProjectId}`);
             }
-        } else if (err instanceof Error) {
-            console.error(`Non-Axios error: ${err.name} - ${err.message}`);
-            errorMessage = err.message;
+          }
+
+          toast.error(errorMessage, {
+            duration: 5000,
+            id: `project-error-${cleanedProjectId}`,
+          });
+
+          // Store the failed ID in local storage to help with debugging
+          try {
+            localStorage.setItem('spheroseg_last_failed_id', projectId || '');
+            localStorage.setItem('spheroseg_last_failed_time', new Date().toISOString());
+          } catch (e) {
+            // Ignore storage errors
+          }
+
+          // DISABLED: Navigation on 404 to prevent logout
+          if (status === 404) {
+            console.log(`Project not found (${cleanedProjectId}), but staying on page to prevent logout`);
+            // Don't navigate away, just show the error message
+            // This prevents the user from being logged out
+          }
+          return;
         }
+      } else if (err instanceof Error) {
+        console.error(`Non-Axios error: ${err.name} - ${err.message}`);
+        errorMessage = err.message;
+      }
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -237,28 +207,190 @@ export const useProjectData = (projectId: string | undefined) => {
     if (projectId) {
       fetchProjectData();
     } else {
-      console.log("useProjectData: No project ID provided, skipping data fetch");
+      console.log('useProjectData: No project ID provided, skipping data fetch');
       setLoading(false);
     }
   }, [fetchProjectData, projectId]);
 
-  // WebSocket connection and event handling
+  // Function to handle image status updates (defined before the effect that uses it)
+  const updateImageStatus = useCallback(
+    (imageId: string, status: ImageStatus, resultPath?: string | null, error?: string) => {
+      setImages((prevImages) => {
+        const updatedImages = prevImages.map((image) => {
+          if (image.id === imageId) {
+            const updatedImage = {
+              ...image,
+              segmentationStatus: status,
+            };
+
+            // Update segmentation result path if provided
+            if (resultPath) {
+              updatedImage.segmentationResultPath = resultPath;
+            }
+
+            // Update error message if provided and status is failed
+            if (status === 'failed' && error) {
+              updatedImage.error = error;
+            }
+
+            return updatedImage;
+          }
+          return image;
+        });
+
+        // After updating images in memory, save to localStorage
+        try {
+          const projectIdToUse = project?.id || projectId;
+          if (projectIdToUse) {
+            import('@/api/projectImages').then(({ storeUploadedImages }) => {
+              storeUploadedImages(projectIdToUse, updatedImages);
+            });
+          }
+        } catch (storageError) {
+          console.error('Failed to save updated images to localStorage:', storageError);
+        }
+
+        return updatedImages;
+      });
+    },
+    [project?.id, projectId],
+  );
+
+  const refreshData = useCallback(() => {
+    console.log('Manually refreshing project data');
+    fetchProjectData();
+    
+    // When refreshing data, also check for any ongoing segmentations
+    if (projectId) {
+      const cleanedProjectId = cleanProjectId(projectId);
+      
+      // Try different API endpoints to get current segmentation status
+      const endpoints = [
+        `/api/queue-status/${cleanedProjectId}`,
+        `/api/segmentation/queue-status/${cleanedProjectId}`,
+        `/api/segmentations/queue/status/${cleanedProjectId}`
+      ];
+      
+      // Try each endpoint until one works
+      (async () => {
+        for (const endpoint of endpoints) {
+          try {
+            console.log(`Checking segmentation status from ${endpoint}`);
+            const response = await apiClient.get(endpoint);
+            
+            if (response.data) {
+              console.log('Got segmentation status data:', response.data);
+              // If we have images with processing status, update local state
+              const images = response.data.images || {};
+              if (images.processing_count > 0) {
+                // Fetch the specific list of images from the API again
+                await fetchProjectData();
+              }
+              break;
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch from ${endpoint}:`, error);
+            // Continue to the next endpoint
+          }
+        }
+      })();
+    }
+  }, [fetchProjectData, projectId, cleanProjectId]);
+
+  // Listen for image-deleted events
   useEffect(() => {
     if (!projectId) {
-        console.log("WebSocket: Skipping connection (no project ID).");
-        return;
+      return;
     }
 
     // Clean the projectId to ensure we use just the UUID
     const cleanedProjectId = cleanProjectId(projectId);
 
+    // Define the handler for image-deleted events
+    const handleImageDeleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        imageId: string;
+        projectId: string;
+      }>;
+      const { imageId, projectId: eventProjectId } = customEvent.detail;
+
+      // Only handle events for this project
+      if (eventProjectId === cleanedProjectId) {
+        console.log(`Received image-deleted event for image ${imageId} in project ${eventProjectId}`);
+
+        // Update the images state
+        setImages((prevImages) => prevImages.filter((img) => img.id !== imageId));
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('image-deleted', handleImageDeleted);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('image-deleted', handleImageDeleted);
+    };
+  }, [projectId, cleanProjectId]);
+  
+  // Second event listener for image-status-update
+  useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+    
+    // Define the handler for image-status-update events
+    const handleImageStatusUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        imageId: string;
+        status: ImageStatus;
+        forceQueueUpdate?: boolean;
+        error?: string;
+        resultPath?: string | null;
+      }>;
+      const { imageId, status, error, resultPath } = customEvent.detail;
+
+      console.log(`Received image-status-update event for image ${imageId} with status ${status}`);
+      
+      // Update the image status directly
+      updateImageStatus(imageId, status, resultPath, error);
+
+      // For any status change, refresh data to make sure we have the latest from the server
+      refreshData();
+    };
+    
+    // Add event listener
+    window.addEventListener('image-status-update', handleImageStatusUpdate);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('image-status-update', handleImageStatusUpdate);
+    };
+  }, [projectId, updateImageStatus, refreshData]);
+
+  // WebSocket connection and event handling
+  useEffect(() => {
+    if (!projectId) {
+      console.log('WebSocket: Skipping connection (no project ID).');
+      return;
+    }
+
+    // Clean the projectId to ensure we use just the UUID
+    const cleanedProjectId = cleanProjectId(projectId);
+
+    console.log(`WebSocket: WebSocket connections disabled to prevent API spam`);
+
+    // DISABLED: WebSocket connections to prevent API spam
+    return;
+
+    // The code below is disabled to prevent WebSocket connection attempts
+    /*
     console.log(`WebSocket: Setting up connection for project ${cleanedProjectId} (original: ${projectId})`);
 
     let isComponentMounted = true;
 
     try {
       // Verify the project exists before attempting to setup WebSocket
-      apiClient.get(`/projects/${cleanedProjectId}`)
+      apiClient.get(`/api/projects/${cleanedProjectId}`)
         .then(() => {
           console.log(`WebSocket: Project ${cleanedProjectId} verified as existing, proceeding with socket setup`);
         })
@@ -419,34 +551,17 @@ export const useProjectData = (projectId: string | undefined) => {
           isComponentMounted = false;
       };
     }
-  }, [projectId, fetchProjectData, cleanProjectId]);
-
-  const refreshData = useCallback(() => {
-      fetchProjectData();
-  }, [fetchProjectData]);
-
-  // Funkce pro okamžitou aktualizaci statusu obrázku bez nutnosti znovu načítat všechna data
-  const updateImageStatus = useCallback((imageId: string, status: ImageStatus) => {
-    setImages(prevImages =>
-      prevImages.map(image => {
-        if (image.id === imageId) {
-          return {
-            ...image,
-            segmentationStatus: status
-          };
-        }
-        return image;
-      })
-    );
-  }, []);
+    */
+  }, [projectId, cleanProjectId]);
 
   return {
     project,
-    projectTitle: project?.title || "",
+    projectTitle: project?.title || '',
     images,
     loading,
     error,
     refreshData,
-    updateImageStatus
+    updateImageStatus,
+    setImages,
   };
 };

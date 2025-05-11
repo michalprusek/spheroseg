@@ -6,7 +6,7 @@ import config from '../config';
 
 /**
  * Create a rate limiter based on the specified type
- * 
+ *
  * @param type The type of rate limit to apply ('default', 'auth', or 'sensitive')
  * @returns A middleware function that applies rate limiting
  */
@@ -36,7 +36,7 @@ export function rateLimit(type: 'default' | 'auth' | 'sensitive' = 'default') {
     resetKey: async (key: string) => {
       store.delete(key);
       return true;
-    }
+    },
   };
 
   let options: any = {
@@ -49,7 +49,7 @@ export function rateLimit(type: 'default' | 'auth' | 'sensitive' = 'default') {
     legacyHeaders: false,
     skipFailedRequests: false,
     skip: (_req: Request, _res: Response) => false,
-    requestWasSuccessful: (_req: Request, _res: Response) => true
+    requestWasSuccessful: (_req: Request, _res: Response) => true,
   };
 
   // Configure options based on type
@@ -59,22 +59,22 @@ export function rateLimit(type: 'default' | 'auth' | 'sensitive' = 'default') {
         ...options,
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 5, // 5 auth attempts in tests
-        message: { 
+        message: {
           error: {
             message: 'Too many requests, please try again later',
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         },
         handler: (req: Request, res: Response, _next: NextFunction, options: any) => {
-          logger.warn('Auth rate limit exceeded', { 
-            ip: req.ip, 
+          logger.warn('Auth rate limit exceeded', {
+            ip: req.ip,
             path: req.path,
             method: req.method,
-            userId: (req as any).user?.userId 
+            userId: (req as any).user?.userId,
           });
           res.status(429).json(options.message);
           res.set('Retry-After', '900'); // 15 minutes in seconds
-        }
+        },
       };
       break;
     case 'sensitive':
@@ -82,22 +82,22 @@ export function rateLimit(type: 'default' | 'auth' | 'sensitive' = 'default') {
         ...options,
         windowMs: 60 * 60 * 1000, // 1 hour
         max: 2, // 2 sensitive operations in tests
-        message: { 
+        message: {
           error: {
             message: 'Too many sensitive operations, please try again later',
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         },
         handler: (req: Request, res: Response, _next: NextFunction, options: any) => {
-          logger.warn('Sensitive operation rate limit exceeded', { 
-            ip: req.ip, 
+          logger.warn('Sensitive operation rate limit exceeded', {
+            ip: req.ip,
             path: req.path,
             method: req.method,
-            userId: (req as any).user?.userId 
+            userId: (req as any).user?.userId,
           });
           res.status(429).json(options.message);
           res.set('Retry-After', '3600'); // 1 hour in seconds
-        }
+        },
       };
       break;
     default: // 'default'
@@ -105,22 +105,22 @@ export function rateLimit(type: 'default' | 'auth' | 'sensitive' = 'default') {
         ...options,
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 10, // 10 requests in tests
-        message: { 
+        message: {
           error: {
             message: 'Too many requests, please try again later',
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         },
         handler: (req: Request, res: Response, _next: NextFunction, options: any) => {
-          logger.warn('Rate limit exceeded', { 
-            ip: req.ip, 
+          logger.warn('Rate limit exceeded', {
+            ip: req.ip,
             path: req.path,
             method: req.method,
-            userId: (req as any).user?.userId 
+            userId: (req as any).user?.userId,
           });
           res.status(429).json(options.message);
           res.set('Retry-After', '900'); // 15 minutes in seconds
-        }
+        },
       };
       break;
   }
@@ -128,10 +128,10 @@ export function rateLimit(type: 'default' | 'auth' | 'sensitive' = 'default') {
   // Manual middleware implementation for tests
   return async (req: Request, res: Response, next: NextFunction) => {
     const key = options.keyGenerator(req);
-    
+
     try {
       const hits = await cache.increment(key);
-      
+
       if (hits <= options.max) {
         next();
       } else {
@@ -151,13 +151,13 @@ const standardLimiter = expressRateLimit({
   legacyHeaders: false,
   message: { message: 'Too many requests, please try again later' },
   handler: (req: Request, res: Response, next: NextFunction, options: any) => {
-    logger.warn('Rate limit exceeded', { 
-      ip: req.ip, 
+    logger.warn('Rate limit exceeded', {
+      ip: req.ip,
       path: req.path,
-      method: req.method 
+      method: req.method,
     });
     res.status(options.statusCode).send(options.message);
-  }
+  },
 });
 
 // Stricter rate limiting for authentication endpoints
@@ -166,18 +166,20 @@ const authLimiter = expressRateLimit({
   max: 10, // 10 auth attempts per 15 minutes
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Too many authentication attempts, please try again later' },
+  message: {
+    message: 'Too many authentication attempts, please try again later',
+  },
   handler: (req: Request, res: Response, next: NextFunction, options: any) => {
-    logger.warn('Auth rate limit exceeded', { 
-      ip: req.ip, 
+    logger.warn('Auth rate limit exceeded', {
+      ip: req.ip,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     res.status(options.statusCode).send(options.message);
-  }
+  },
 });
 
-// Very strict rate limiting for sensitive operations 
+// Very strict rate limiting for sensitive operations
 const sensitiveOperationsLimiter = expressRateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 5, // 5 requests per hour
@@ -185,14 +187,14 @@ const sensitiveOperationsLimiter = expressRateLimit({
   legacyHeaders: false,
   message: { message: 'Too many sensitive operations, please try again later' },
   handler: (req: Request, res: Response, next: NextFunction, options: any) => {
-    logger.warn('Sensitive operation rate limit exceeded', { 
-      ip: req.ip, 
+    logger.warn('Sensitive operation rate limit exceeded', {
+      ip: req.ip,
       path: req.path,
       method: req.method,
-      userId: (req as any).user?.userId 
+      userId: (req as any).user?.userId,
     });
     res.status(options.statusCode).send(options.message);
-  }
+  },
 });
 
 export { standardLimiter, authLimiter, sensitiveOperationsLimiter };

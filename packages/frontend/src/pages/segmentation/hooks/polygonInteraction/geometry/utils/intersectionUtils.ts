@@ -1,4 +1,3 @@
-
 import { Point } from '@/lib/segmentation';
 
 export interface Intersection {
@@ -14,14 +13,13 @@ export const intersectionUtils = {
   /**
    * Calculate intersections between a line and polygon segments
    */
-  calculateIntersections: (
-    polygonPoints: Point[],
-    line: [Point, Point]
-  ): Intersection[] => {
+  calculateIntersections: (polygonPoints: Point[], line: [Point, Point]): Intersection[] => {
     const intersections: Intersection[] = [];
     const [p1, p2] = line;
 
-    console.log(`[INTERSECTION] Calculating intersections for line from (${p1.x.toFixed(2)}, ${p1.y.toFixed(2)}) to (${p2.x.toFixed(2)}, ${p2.y.toFixed(2)})`);
+    console.log(
+      `[INTERSECTION] Calculating intersections for line from (${p1.x.toFixed(2)}, ${p1.y.toFixed(2)}) to (${p2.x.toFixed(2)}, ${p2.y.toFixed(2)})`,
+    );
     console.log(`[INTERSECTION] Polygon has ${polygonPoints.length} points`);
 
     // Check each polygon segment for intersections with the slice line
@@ -47,16 +45,17 @@ export const intersectionUtils = {
       if (t >= 0 && t <= 1 && s >= 0 && s <= 1) {
         const point = {
           x: p1.x + t * (p2.x - p1.x),
-          y: p1.y + t * (p2.y - p1.y)
+          y: p1.y + t * (p2.y - p1.y),
         };
 
-        console.log(`[INTERSECTION] Potential intersection at segment ${i}-${j}: (${point.x.toFixed(2)}, ${point.y.toFixed(2)}), t=${t.toFixed(4)}, s=${s.toFixed(4)}`);
+        console.log(
+          `[INTERSECTION] Potential intersection at segment ${i}-${j}: (${point.x.toFixed(2)}, ${point.y.toFixed(2)}), t=${t.toFixed(4)}, s=${s.toFixed(4)}`,
+        );
 
         // Special case: intersection is at a polygon vertex
-        const isVertex = (
+        const isVertex =
           (Math.abs(point.x - p3.x) < 0.0001 && Math.abs(point.y - p3.y) < 0.0001) ||
-          (Math.abs(point.x - p4.x) < 0.0001 && Math.abs(point.y - p4.y) < 0.0001)
-        );
+          (Math.abs(point.x - p4.x) < 0.0001 && Math.abs(point.y - p4.y) < 0.0001);
 
         // Ignore intersections that are exactly at vertices
         if (!isVertex) {
@@ -64,7 +63,7 @@ export const intersectionUtils = {
           intersections.push({
             point,
             segmentIndex: i,
-            t: s // parametric value along polygon segment
+            t: s, // parametric value along polygon segment
           });
         } else {
           console.log(`[INTERSECTION] Ignoring vertex intersection at (${point.x.toFixed(2)}, ${point.y.toFixed(2)})`);
@@ -86,5 +85,5 @@ export const intersectionUtils = {
       area -= points[j].x * points[i].y;
     }
     return Math.abs(area) / 2;
-  }
+  },
 };

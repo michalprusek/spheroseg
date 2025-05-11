@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -8,15 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Share2, UserPlus, X, Eye, Edit, Trash } from 'lucide-react';
@@ -26,14 +18,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import apiClient from '@/lib/apiClient';
 
 interface ShareDialogProps {
@@ -86,7 +71,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
   // Funkce pro získání seznamu uživatelů se kterými je projekt sdílen
   const fetchSharedUsers = async () => {
     if (!isOwner) return;
-    
+
     setIsLoadingShares(true);
     try {
       const response = await apiClient.get(`/api/project-shares/${projectId}`);
@@ -109,7 +94,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
       fetchSharedUsers(); // Po úspěšném sdílení znovu načteme seznam sdílených uživatelů
     } catch (error: any) {
       console.error('Error sharing project:', error);
-      
+
       // Zpracování různých typů chyb
       if (error.response?.status === 409) {
         toast.error('Projekt je již sdílen s tímto uživatelem');
@@ -155,9 +140,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
       <DialogContent className="sm:max-w-md md:max-w-lg">
         <DialogHeader>
           <DialogTitle>Sdílet projekt "{projectName}"</DialogTitle>
-          <DialogDescription>
-            Pozvěte ostatní uživatele ke spolupráci na tomto projektu.
-          </DialogDescription>
+          <DialogDescription>Pozvěte ostatní uživatele ke spolupráci na tomto projektu.</DialogDescription>
         </DialogHeader>
 
         {isOwner ? (
@@ -173,19 +156,14 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                         <FormControl>
                           <div className="relative">
                             <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Email uživatele"
-                              className="pl-8"
-                              {...field}
-                              disabled={isLoading}
-                            />
+                            <Input placeholder="Email uživatele" className="pl-8" {...field} disabled={isLoading} />
                           </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <Button type="submit" disabled={isLoading}>
                     {isLoading ? (
                       <>
@@ -232,9 +210,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                           </FormLabel>
                         </FormItem>
                       </RadioGroup>
-                      <FormDescription>
-                        Vyberte úroveň přístupu pro tohoto uživatele
-                      </FormDescription>
+                      <FormDescription>Vyberte úroveň přístupu pro tohoto uživatele</FormDescription>
                     </FormItem>
                   )}
                 />
@@ -245,7 +221,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
 
             <div>
               <h3 className="text-sm font-medium mb-2">Sdíleno s</h3>
-              
+
               {isLoadingShares ? (
                 <div className="flex justify-center py-4">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -308,17 +284,11 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
             </div>
           </div>
         ) : (
-          <p className="text-center py-4">
-            Nemáte oprávnění ke sdílení tohoto projektu.
-          </p>
+          <p className="text-center py-4">Nemáte oprávnění ke sdílení tohoto projektu.</p>
         )}
 
         <DialogFooter className="sm:justify-end">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setIsOpen(false)}
-          >
+          <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
             <X className="mr-2 h-4 w-4" />
             Zavřít
           </Button>

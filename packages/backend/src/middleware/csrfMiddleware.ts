@@ -75,10 +75,10 @@ const generateToken = (): string => {
  */
 export const csrfMiddleware = (options: CSRFOptions = {}) => {
   const opts = { ...defaultOptions, ...options };
-  
+
   // In-memory token store if Redis is not provided
   const tokenStore: Record<string, { token: string; expires: number }> = {};
-  
+
   return async (req: Request, res: Response, next: NextFunction) => {
     // Skip CSRF check for ignored methods
     if (opts.ignoreMethods!.includes(req.method)) {
@@ -87,43 +87,41 @@ export const csrfMiddleware = (options: CSRFOptions = {}) => {
         const token = generateToken();
         const userId = (req as any).user?.id || 'anonymous';
         const key = `${opts.keyPrefix}${userId}`;
-        
+
         // Store token
         if (opts.redis) {
           await opts.redis.set(key, token, 'EX', opts.tokenExpiry!);
         } else {
           tokenStore[key] = {
             token,
-            expires: Date.now() + (opts.tokenExpiry! * 1000),
+            expires: Date.now() + opts.tokenExpiry! * 1000,
           };
         }
-        
+
         // Set CSRF cookie
         res.cookie(opts.cookie!, token, opts.cookieOptions);
-        
+
         // Make token available to templates
         res.locals.csrfToken = token;
       }
-      
+
       return next();
     }
-    
+
     // Get token from request header or body
-    const token = req.headers[opts.header!.toLowerCase()] as string || 
-                  req.body._csrf || 
-                  req.query._csrf as string;
-    
+    const token = (req.headers[opts.header!.toLowerCase()] as string) || req.body._csrf || (req.query._csrf as string);
+
     if (!token) {
       return res.status(403).json({
         error: 'CSRF token missing',
       });
     }
-    
+
     try {
       const userId = (req as any).user?.id || 'anonymous';
       const key = `${opts.keyPrefix}${userId}`;
       let storedToken: string | null = null;
-      
+
       // Get stored token
       if (opts.redis) {
         storedToken = await opts.redis.get(key);
@@ -133,44 +131,44 @@ export const csrfMiddleware = (options: CSRFOptions = {}) => {
           storedToken = stored.token;
         }
       }
-      
+
       // If using double submit cookie pattern, also check the cookie
       if (opts.useDoubleSubmit) {
         const cookieToken = req.cookies[opts.cookie!];
-        
+
         if (!cookieToken || cookieToken !== token) {
           return res.status(403).json({
             error: 'CSRF token invalid',
           });
         }
       }
-      
+
       // Verify token
       if (!storedToken || storedToken !== token) {
         return res.status(403).json({
           error: 'CSRF token invalid',
         });
       }
-      
+
       // Generate a new token for the next request
       const newToken = generateToken();
-      
+
       // Store new token
       if (opts.redis) {
         await opts.redis.set(key, newToken, 'EX', opts.tokenExpiry!);
       } else {
         tokenStore[key] = {
           token: newToken,
-          expires: Date.now() + (opts.tokenExpiry! * 1000),
+          expires: Date.now() + opts.tokenExpiry! * 1000,
         };
       }
-      
+
       // Set new CSRF cookie
       res.cookie(opts.cookie!, newToken, opts.cookieOptions);
-      
+
       // Make token available to templates
       res.locals.csrfToken = newToken;
-      
+
       next();
     } catch (error) {
       console.error('CSRF error:', error);
@@ -195,7 +193,7 @@ export const createCSRFMiddleware = (env: string) => {
           sameSite: 'lax',
         },
       });
-    
+
     case 'production':
       return csrfMiddleware({
         cookieOptions: {
@@ -208,7 +206,7 @@ export const createCSRFMiddleware = (env: string) => {
         tokenExpiry: 12 * 60 * 60, // 12 hours
         useDoubleSubmit: true,
       });
-    
+
     default:
       return csrfMiddleware();
   }

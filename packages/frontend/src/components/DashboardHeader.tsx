@@ -1,9 +1,9 @@
-import React from "react";
-import { useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import Logo from "@/components/header/Logo";
-import UserProfileDropdown from "@/components/header/UserProfileDropdown";
+import React from 'react';
+import { useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import Logo from '@/components/header/Logo';
+import UserProfileDropdown from '@/components/header/UserProfileDropdown';
 
 const DashboardHeader = () => {
   const { user } = useAuth();

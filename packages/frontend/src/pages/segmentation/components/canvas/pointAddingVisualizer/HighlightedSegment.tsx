@@ -5,21 +5,16 @@ import { useCoordinateTransform } from '@/pages/segmentation/hooks/polygonIntera
 
 interface HighlightedSegmentProps {
   hoveredSegment: {
-    polygonId: string | null,
-    segmentIndex: number | null,
-    projectedPoint: Point | null
+    polygonId: string | null;
+    segmentIndex: number | null;
+    projectedPoint: Point | null;
   };
   polygonPoints: Point[] | null;
   zoom: number;
   offset: { x: number; y: number };
 }
 
-const HighlightedSegment = ({
-  hoveredSegment,
-  polygonPoints,
-  zoom,
-  offset
-}: HighlightedSegmentProps) => {
+const HighlightedSegment = ({ hoveredSegment, polygonPoints, zoom, offset }: HighlightedSegmentProps) => {
   const { getScreenCoordinates } = useCoordinateTransform(zoom, offset);
 
   if (hoveredSegment.segmentIndex === null || !polygonPoints) return null;
@@ -70,4 +65,4 @@ const HighlightedSegment = ({
   );
 };
 
-export default HighlightedSegment; 
+export default HighlightedSegment;

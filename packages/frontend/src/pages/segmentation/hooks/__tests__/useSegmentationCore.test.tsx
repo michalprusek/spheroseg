@@ -75,8 +75,18 @@ const mockSegmentationWithContours = {
   status: 'completed',
   result_data: {
     contours: [
-      [[10, 10], [100, 10], [100, 100], [10, 100]], // External contour
-      [[30, 30], [70, 30], [70, 70], [30, 70]], // Internal contour (hole)
+      [
+        [10, 10],
+        [100, 10],
+        [100, 100],
+        [10, 100],
+      ], // External contour
+      [
+        [30, 30],
+        [70, 30],
+        [70, 70],
+        [30, 70],
+      ], // Internal contour (hole)
     ],
     hierarchy: [
       [1, -1, -1, -1], // Next, Previous, First_Child, Parent
@@ -173,7 +183,7 @@ describe('useSegmentationCore', () => {
     expect(result.current.imageName).toBe('test-image.jpg');
     expect(result.current.imageSrc).toBe('https://example.com/uploads/test-image.jpg');
     expect(result.current.segmentationResultPath).toBe('https://example.com/results/test-image.json');
-    
+
     // Verify segmentation data was processed
     expect(result.current.segmentation).not.toBeNull();
     expect(result.current.segmentation?.polygons.length).toBe(2);
@@ -203,12 +213,12 @@ describe('useSegmentationCore', () => {
 
     // Verify contour processing
     expect(result.current.segmentation?.polygons.length).toBe(2);
-    
+
     // First polygon (external)
     expect(result.current.segmentation?.polygons[0].type).toBe('external');
     expect(result.current.segmentation?.polygons[0].color).toBe('red');
     expect(result.current.segmentation?.polygons[0].points.length).toBe(4);
-    
+
     // Second polygon (internal)
     expect(result.current.segmentation?.polygons[1].type).toBe('internal');
     expect(result.current.segmentation?.polygons[1].color).toBe('blue');
@@ -264,7 +274,7 @@ describe('useSegmentationCore', () => {
 
     // Verify empty segmentation data
     expect(result.current.segmentation?.polygons.length).toBe(0);
-    
+
     // Verify warning toast
     expect(toast.warning).toHaveBeenCalled();
   });
@@ -291,7 +301,7 @@ describe('useSegmentationCore', () => {
 
     // Verify empty segmentation data
     expect(result.current.segmentation?.polygons.length).toBe(0);
-    
+
     // Verify info toast
     expect(toast.info).toHaveBeenCalled();
   });
@@ -299,7 +309,7 @@ describe('useSegmentationCore', () => {
   it('should handle API errors gracefully', async () => {
     const navigate = vi.fn();
     require('react-router-dom').useNavigate.mockReturnValue(navigate);
-    
+
     const apiClient = require('@/lib/apiClient').default;
     apiClient.get.mockImplementation((url) => {
       if (url === `/projects/project-123`) {
@@ -337,11 +347,10 @@ describe('useSegmentationCore', () => {
     });
 
     // Verify API call
-    expect(apiClient.put).toHaveBeenCalledWith(
-      '/projects/project-123/images/image-123/segmentation',
-      { segmentation_data: result.current.segmentation }
-    );
-    
+    expect(apiClient.put).toHaveBeenCalledWith('/projects/project-123/images/image-123/segmentation', {
+      segmentation_data: result.current.segmentation,
+    });
+
     // Verify success toast
     expect(toast.success).toHaveBeenCalled();
   });
@@ -369,17 +378,14 @@ describe('useSegmentationCore', () => {
   it('should navigate between images', async () => {
     const navigate = vi.fn();
     require('react-router-dom').useNavigate.mockReturnValue(navigate);
-    
+
     const apiClient = require('@/lib/apiClient').default;
     apiClient.get.mockImplementation((url) => {
       if (url === `/projects/project-123`) {
         return Promise.resolve({ data: mockProject });
       } else if (url === `/projects/project-123/images`) {
-        return Promise.resolve({ 
-          data: [
-            mockApiImage,
-            { ...mockApiImage, id: 'image-456', name: 'second-image.jpg' }
-          ] 
+        return Promise.resolve({
+          data: [mockApiImage, { ...mockApiImage, id: 'image-456', name: 'second-image.jpg' }],
         });
       } else if (url === `/images/image-123/segmentation`) {
         return Promise.resolve({ data: mockSegmentationWithContours });
@@ -423,18 +429,15 @@ describe('useSegmentationCore', () => {
     });
 
     // Verify API call
-    expect(apiClient.post).toHaveBeenCalledWith(
-      '/segmentation/trigger-batch',
-      {
-        imageIds: ['image-123'],
-        priority: 10,
-        model_type: 'resunet'
-      }
-    );
-    
+    expect(apiClient.post).toHaveBeenCalledWith('/segmentation/trigger-batch', {
+      imageIds: ['image-123'],
+      priority: 10,
+      model_type: 'resunet',
+    });
+
     // Verify success toast
     expect(toast.success).toHaveBeenCalled();
-    
+
     // Advance timers to test polling
     apiClient.get.mockImplementation((url) => {
       if (url === `/images/image-123`) {
@@ -442,14 +445,14 @@ describe('useSegmentationCore', () => {
       }
       return Promise.reject(new Error(`Unexpected URL: ${url}`));
     });
-    
+
     await act(async () => {
       vi.advanceTimersByTime(5000); // Advance past first polling interval
     });
-    
+
     // Verify status check
     expect(apiClient.get).toHaveBeenCalledWith('/images/image-123');
-    
+
     // Clean up
     vi.useRealTimers();
   });

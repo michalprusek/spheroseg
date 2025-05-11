@@ -1,12 +1,12 @@
 /**
  * Consolidated Image Loader Utility
- * 
+ *
  * This utility provides a unified interface for loading images from various sources:
  * - Direct file loading
  * - URL loading with cache busting
  * - API-based loading
  * - Docker container path resolution
- * 
+ *
  * It replaces the following files:
  * - frontend/src/pages/segmentation/utils/directImageLoader.ts
  * - frontend/src/pages/segmentation/utils/dockerImageLoader.ts
@@ -43,7 +43,7 @@ const DEFAULT_OPTIONS: ImageLoaderOptions = {
   maxRetries: 2,
   retryDelay: 1000,
   timeout: 30000,
-  showToasts: false
+  showToasts: false,
 };
 
 /**
@@ -64,8 +64,8 @@ export const checkImageExists = async (url: string): Promise<boolean> => {
       cache: 'no-cache',
       headers: {
         'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
+        Pragma: 'no-cache',
+      },
     });
     return response.ok;
   } catch (error) {
@@ -79,17 +79,17 @@ export const checkImageExists = async (url: string): Promise<boolean> => {
  */
 export const loadImageFromUrl = (url: string, options: ImageLoaderOptions = {}): Promise<HTMLImageElement> => {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  
+
   return new Promise((resolve, reject) => {
     const img = new Image();
-    
+
     if (opts.crossOrigin) {
       img.crossOrigin = opts.crossOrigin;
     }
-    
+
     img.onload = () => resolve(img);
     img.onerror = (error) => reject(error);
-    
+
     // Add cache-busting if enabled
     img.src = opts.cacheBuster ? addCacheBuster(url) : url;
   });
@@ -101,7 +101,7 @@ export const loadImageFromUrl = (url: string, options: ImageLoaderOptions = {}):
 export const loadImageFromFile = (file: File): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    
+
     reader.onload = (event) => {
       if (event.target?.result) {
         const img = new Image();
@@ -112,7 +112,7 @@ export const loadImageFromFile = (file: File): Promise<HTMLImageElement> => {
         reject(new Error('Failed to read file'));
       }
     };
-    
+
     reader.onerror = (error) => reject(error);
     reader.readAsDataURL(file);
   });
@@ -132,28 +132,31 @@ export const loadImage = (source: string | File, options: ImageLoaderOptions = {
 /**
  * Get dimensions of an image from its URL
  */
-export const getImageDimensions = async (url: string, options: ImageLoaderOptions = {}): Promise<{ width: number; height: number } | null> => {
+export const getImageDimensions = async (
+  url: string,
+  options: ImageLoaderOptions = {},
+): Promise<{ width: number; height: number } | null> => {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  
+
   return new Promise((resolve) => {
     const img = new Image();
-    
+
     if (opts.crossOrigin) {
       img.crossOrigin = opts.crossOrigin;
     }
-    
+
     img.onload = () => {
       resolve({
         width: img.naturalWidth,
-        height: img.naturalHeight
+        height: img.naturalHeight,
       });
     };
-    
+
     img.onerror = () => {
       logger.error(`Failed to load image from ${url}`);
       resolve(null);
     };
-    
+
     // Add cache-busting if enabled
     img.src = opts.cacheBuster ? addCacheBuster(url) : url;
   });
@@ -162,48 +165,37 @@ export const getImageDimensions = async (url: string, options: ImageLoaderOption
 /**
  * Generate possible URLs for an image based on project and image IDs
  */
-export const generatePossibleImageUrls = (
-  originalUrl: string,
-  projectId?: string,
-  imageId?: string
-): string[] => {
+export const generatePossibleImageUrls = (originalUrl: string, projectId?: string, imageId?: string): string[] => {
   // Extract filename from URL
   const urlParts = originalUrl.split('/');
   const filename = urlParts[urlParts.length - 1];
-  
+
   // Extract base URL and path without origin
   const urlObj = new URL(originalUrl, window.location.origin);
   const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
   const urlWithoutOrigin = originalUrl.replace(baseUrl, '');
-  
+
   // Generate possible URLs
   const urls = [
     originalUrl, // Original URL
-    
+
     // Try with different origins
     `${baseUrl}${urlWithoutOrigin}`,
-    
+
     // Try with /uploads prefix
     `/uploads/${filename}`,
-    
+
     // Try with different extensions if no extension in original
-    ...(!filename.includes('.') ? [
-      `${originalUrl}.png`,
-      `${originalUrl}.jpg`,
-      `${originalUrl}.jpeg`
-    ] : []),
-    
+    ...(!filename.includes('.') ? [`${originalUrl}.png`, `${originalUrl}.jpg`, `${originalUrl}.jpeg`] : []),
+
     // Try with direct path
-    `/api${urlWithoutOrigin}`
+    `/api${urlWithoutOrigin}`,
   ];
-  
+
   // Add project-specific paths if projectId is provided
   if (projectId) {
-    urls.push(
-      `/uploads/${projectId}/${filename}`,
-      `/api/uploads/${projectId}/${filename}`
-    );
-    
+    urls.push(`/uploads/${projectId}/${filename}`, `/api/uploads/${projectId}/${filename}`);
+
     // Add image-specific paths if imageId is provided
     if (imageId) {
       urls.push(
@@ -211,11 +203,11 @@ export const generatePossibleImageUrls = (
         `/uploads/${projectId}/${imageId}.png`,
         `/uploads/${projectId}/${imageId}.jpg`,
         `/api/uploads/${projectId}/${imageId}`,
-        `/api/uploads/${projectId}/${imageId}.png`
+        `/api/uploads/${projectId}/${imageId}.png`,
       );
     }
   }
-  
+
   // Filter out duplicates
   return [...new Set(urls)];
 };
@@ -225,35 +217,35 @@ export const generatePossibleImageUrls = (
  */
 export const tryMultipleImageUrls = async (
   urls: string[],
-  options: ImageLoaderOptions = {}
+  options: ImageLoaderOptions = {},
 ): Promise<ImageLoadResult | null> => {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  
+
   logger.debug(`Trying to load image from ${urls.length} URLs:`, urls);
-  
+
   if (opts.showToasts) {
     toast.info(`Trying to load image from ${urls.length} possible locations...`);
   }
-  
+
   for (const url of urls) {
     try {
       // First check if the image exists
       const exists = await checkImageExists(url);
-      
+
       if (exists) {
         // Then try to load it to get dimensions
         const dimensions = await getImageDimensions(url, opts);
-        
+
         if (dimensions) {
           logger.info(`Successfully loaded image from ${url} with dimensions ${dimensions.width}x${dimensions.height}`);
-          
+
           if (opts.showToasts) {
             toast.success(`Image loaded successfully: ${dimensions.width}x${dimensions.height}`);
           }
-          
+
           return {
             url,
-            ...dimensions
+            ...dimensions,
           };
         }
       }
@@ -261,11 +253,11 @@ export const tryMultipleImageUrls = async (
       logger.error(`Error trying to load image from ${url}:`, error);
     }
   }
-  
+
   if (opts.showToasts) {
     toast.error('Failed to load image from any URL');
   }
-  
+
   logger.error('Failed to load image from any URL');
   return null;
 };
@@ -276,33 +268,33 @@ export const tryMultipleImageUrls = async (
 export const loadImageFromApi = async (
   projectId: string,
   imageId: string,
-  options: ImageLoaderOptions = {}
+  options: ImageLoaderOptions = {},
 ): Promise<ImageLoadResult | null> => {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  
+
   try {
     // Add cache-busting query parameter
     const url = `/api/projects/${projectId}/images/${imageId}${opts.cacheBuster ? `?_=${Date.now()}` : ''}`;
-    
+
     const response = await apiClient.get(url, {
       headers: {
         'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
+        Pragma: 'no-cache',
+      },
     });
-    
+
     if (response.data && response.data.storage_path) {
       const imageUrl = response.data.storage_path;
       const dimensions = await getImageDimensions(imageUrl, opts);
-      
+
       if (dimensions) {
         return {
           url: imageUrl,
-          ...dimensions
+          ...dimensions,
         };
       }
     }
-    
+
     return null;
   } catch (error) {
     logger.error(`Error loading image from API:`, error);
@@ -317,12 +309,12 @@ export const imageToCanvas = (img: HTMLImageElement): HTMLCanvasElement => {
   const canvas = document.createElement('canvas');
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
-  
+
   const ctx = canvas.getContext('2d');
   if (ctx) {
     ctx.drawImage(img, 0, 0);
   }
-  
+
   return canvas;
 };
 
@@ -332,11 +324,11 @@ export const imageToCanvas = (img: HTMLImageElement): HTMLCanvasElement => {
 export const getImageData = (img: HTMLImageElement): ImageData | null => {
   const canvas = imageToCanvas(img);
   const ctx = canvas.getContext('2d');
-  
+
   if (ctx) {
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
-  
+
   return null;
 };
 
@@ -346,89 +338,89 @@ export const getImageData = (img: HTMLImageElement): ImageData | null => {
 export const universalImageLoader = async (
   projectId: string,
   imageId: string,
-  options: ImageLoaderOptions = {}
+  options: ImageLoaderOptions = {},
 ): Promise<ImageLoadResult | null> => {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  
+
   if (opts.showToasts) {
-    toast.info("Loading image...");
+    toast.info('Loading image...');
   }
-  
+
   logger.debug(`Loading image: projectId=${projectId}, imageId=${imageId}`);
-  
+
   // Method 1: Try to load from API
   try {
     if (opts.showToasts) {
-      toast.info("Trying API method...");
+      toast.info('Trying API method...');
     }
-    
+
     const apiResult = await loadImageFromApi(projectId, imageId, opts);
-    
+
     if (apiResult) {
       if (opts.showToasts) {
-        toast.success("Image loaded from API");
+        toast.success('Image loaded from API');
       }
-      
+
       return apiResult;
     }
   } catch (error) {
     logger.error(`Error loading from API:`, error);
   }
-  
+
   // Method 2: Try to load by generating possible paths
   try {
     if (opts.showToasts) {
-      toast.info("Trying path method...");
+      toast.info('Trying path method...');
     }
-    
+
     // Generate possible URLs
     const possibleUrls = generatePossibleImageUrls(`/uploads/${projectId}/${imageId}`, projectId, imageId);
-    
+
     // Try each URL
     const pathResult = await tryMultipleImageUrls(possibleUrls, opts);
-    
+
     if (pathResult) {
       if (opts.showToasts) {
-        toast.success("Image loaded by path");
+        toast.success('Image loaded by path');
       }
-      
+
       return pathResult;
     }
   } catch (error) {
     logger.error(`Error loading by path:`, error);
   }
-  
+
   // Method 3: Try Docker-specific paths
   try {
     if (opts.showToasts) {
-      toast.info("Trying Docker paths...");
+      toast.info('Trying Docker paths...');
     }
-    
+
     // Generate Docker-specific URLs
     const dockerUrls = [
       `http://cellseg-backend:5000/uploads/${projectId}/${imageId}`,
       `http://cellseg-backend:5000/uploads/${projectId}/${imageId}.png`,
-      `http://cellseg-backend:5000/uploads/${projectId}/${imageId}.jpg`
+      `http://cellseg-backend:5000/uploads/${projectId}/${imageId}.jpg`,
     ];
-    
+
     // Try each URL
     const dockerResult = await tryMultipleImageUrls(dockerUrls, opts);
-    
+
     if (dockerResult) {
       if (opts.showToasts) {
-        toast.success("Image loaded from Docker path");
+        toast.success('Image loaded from Docker path');
       }
-      
+
       return dockerResult;
     }
   } catch (error) {
     logger.error(`Error loading from Docker path:`, error);
   }
-  
+
   if (opts.showToasts) {
-    toast.error("Failed to load image");
+    toast.error('Failed to load image');
   }
-  
+
   logger.error(`Failed to load image: projectId=${projectId}, imageId=${imageId}`);
   return null;
 };
@@ -445,5 +437,5 @@ export default {
   getImageData,
   addCacheBuster,
   checkImageExists,
-  generatePossibleImageUrls
+  generatePossibleImageUrls,
 };

@@ -1,0 +1,30 @@
+{
+  "threshold": 5,
+  "reporters": ["html", "console"],
+  "ignore": [
+    "node_modules/**",
+    "**/node_modules/**",
+    "dist/**",
+    "**/dist/**",
+    ".git/**",
+    "**/*.min.js",
+    "**/coverage/**",
+    "**/.turbo/**",
+    "**/tests/**",
+    "**/test/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.test.js",
+    "**/*.test.jsx"
+  ],
+  "format": [
+    "javascript",
+    "typescript",
+    "jsx",
+    "tsx"
+  ],
+  "output": "./jscpd-report",
+  "minLines": 5,
+  "maxLines": 1000,
+  "maxSize": 50000
+}

@@ -5,7 +5,9 @@ import type { ProjectImage, SegmentationResult } from '@/pages/segmentation/type
  * Batch fetch segmentations for all images in a project.
  * Returns a mapping from imageId to SegmentationResult (or null if missing).
  */
-export async function fetchAllSegmentationsForImages(images: ProjectImage[]): Promise<Record<string, SegmentationResult | null>> {
+export async function fetchAllSegmentationsForImages(
+  images: ProjectImage[],
+): Promise<Record<string, SegmentationResult | null>> {
   const results: Record<string, SegmentationResult | null> = {};
 
   // TODO: If backend supports batch endpoint, use it here for efficiency
@@ -13,7 +15,7 @@ export async function fetchAllSegmentationsForImages(images: ProjectImage[]): Pr
   await Promise.all(
     images.map(async (img) => {
       try {
-        const res = await apiClient.get(`/images/${img.id}/segmentation`);
+        const res = await apiClient.get(`/api/images/${img.id}/segmentation`);
         results[img.id] = res.data as SegmentationResult;
       } catch (err: any) {
         // If not found (404), treat as no segmentation
@@ -25,7 +27,7 @@ export async function fetchAllSegmentationsForImages(images: ProjectImage[]): Pr
           results[img.id] = null;
         }
       }
-    })
+    }),
   );
   return results;
 }

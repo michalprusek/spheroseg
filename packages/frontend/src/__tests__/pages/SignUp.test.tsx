@@ -11,8 +11,8 @@ const mockToastError = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
     success: mockToastSuccess,
-    error: mockToastError
-  }
+    error: mockToastError,
+  },
 }));
 
 // Mock the useNavigate hook
@@ -20,7 +20,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => vi.fn()
+    useNavigate: () => vi.fn(),
   };
 });
 
@@ -77,7 +77,7 @@ const MockSignUp = ({ signUpSuccess = true, language = 'en' }) => {
       password: 'Password',
       signUp: 'Sign Up',
       haveAccount: 'Already have an account?',
-      signIn: 'Sign In'
+      signIn: 'Sign In',
     },
     cs: {
       title: 'Registrace',
@@ -88,7 +88,7 @@ const MockSignUp = ({ signUpSuccess = true, language = 'en' }) => {
       password: 'Heslo',
       signUp: 'Registrovat',
       haveAccount: 'Již máte účet?',
-      signIn: 'Přihlásit se'
+      signIn: 'Přihlásit se',
     },
     de: {
       title: 'Registrieren',
@@ -99,8 +99,8 @@ const MockSignUp = ({ signUpSuccess = true, language = 'en' }) => {
       password: 'Passwort',
       signUp: 'Registrieren',
       haveAccount: 'Haben Sie bereits ein Konto?',
-      signIn: 'Anmelden'
-    }
+      signIn: 'Anmelden',
+    },
   };
 
   const t = translations[language] || translations.en;
@@ -112,44 +112,26 @@ const MockSignUp = ({ signUpSuccess = true, language = 'en' }) => {
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="firstName">{t.firstName}</label>
-          <input
-            id="firstName"
-            type="text"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
+          <input id="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
         </div>
         <div>
           <label htmlFor="lastName">{t.lastName}</label>
-          <input
-            id="lastName"
-            type="text"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
+          <input id="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </div>
         <div>
           <label htmlFor="email">{t.email}</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div>
           <label htmlFor="password">{t.password}</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <button type="submit">{t.signUp}</button>
       </form>
       <div>
-        <p>{t.haveAccount} <a href="/sign-in">{t.signIn}</a></p>
+        <p>
+          {t.haveAccount} <a href="/sign-in">{t.signIn}</a>
+        </p>
       </div>
     </div>
   );
@@ -157,12 +139,7 @@ const MockSignUp = ({ signUpSuccess = true, language = 'en' }) => {
 
 // Mock the actual SignUp component
 vi.mock('@/pages/SignUp', () => ({
-  default: ({ signUpSuccess, language }: any) => (
-    <MockSignUp
-      signUpSuccess={signUpSuccess}
-      language={language}
-    />
-  )
+  default: ({ signUpSuccess, language }: any) => <MockSignUp signUpSuccess={signUpSuccess} language={language} />,
 }));
 
 describe('SignUp Page', () => {
@@ -175,7 +152,7 @@ describe('SignUp Page', () => {
     return render(
       <BrowserRouter>
         <MockSignUp {...props} />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 
@@ -229,13 +206,10 @@ describe('SignUp Page', () => {
 
       return (
         <div>
-          <input
-            type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            data-testid="email-input"
-          />
-          <button onClick={validateEmail} data-testid="validate-button">Validate</button>
+          <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} data-testid="email-input" />
+          <button onClick={validateEmail} data-testid="validate-button">
+            Validate
+          </button>
         </div>
       );
     };
@@ -270,7 +244,9 @@ describe('SignUp Page', () => {
             onChange={(e) => setPassword(e.target.value)}
             data-testid="password-input"
           />
-          <button onClick={validatePassword} data-testid="validate-button">Validate</button>
+          <button onClick={validatePassword} data-testid="validate-button">
+            Validate
+          </button>
         </div>
       );
     };
@@ -289,19 +265,19 @@ describe('SignUp Page', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText(/^Name$/i), {
-      target: { value: 'John' }
+      target: { value: 'John' },
     });
 
     fireEvent.change(screen.getByLabelText(/^Last name$/i), {
-      target: { value: 'Doe' }
+      target: { value: 'Doe' },
     });
 
     fireEvent.change(screen.getByLabelText(/^Email$/i), {
-      target: { value: 'john.doe@example.com' }
+      target: { value: 'john.doe@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText(/^Password$/i), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     // Submit the form
@@ -318,19 +294,19 @@ describe('SignUp Page', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText(/^Name$/i), {
-      target: { value: 'John' }
+      target: { value: 'John' },
     });
 
     fireEvent.change(screen.getByLabelText(/^Last name$/i), {
-      target: { value: 'Doe' }
+      target: { value: 'Doe' },
     });
 
     fireEvent.change(screen.getByLabelText(/^Email$/i), {
-      target: { value: 'john.doe@example.com' }
+      target: { value: 'john.doe@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText(/^Password$/i), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     // Submit the form

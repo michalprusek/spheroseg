@@ -1,9 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import '@testing-library/jest-dom';
 
@@ -13,9 +13,9 @@ vi.mock('react-i18next', () => ({
     t: (key: string) => key,
     i18n: {
       changeLanguage: vi.fn(),
-      language: 'en'
-    }
-  })
+      language: 'en',
+    },
+  }),
 }));
 
 // Mock the useLanguage hook
@@ -34,12 +34,14 @@ vi.mock('@/contexts/LanguageContext', () => {
           de: 'Deutsch',
           es: 'Español',
           fr: 'Français',
-          zh: '中文'
+          zh: '中文',
         };
         return names[code] || code;
-      }
+      },
     }),
-    LanguageProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="language-provider">{children}</div>
+    LanguageProvider: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="language-provider">{children}</div>
+    ),
   };
 });
 
@@ -47,9 +49,9 @@ vi.mock('@/contexts/LanguageContext', () => {
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: null,
-    loading: false
+    loading: false,
   }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
 }));
 
 describe('LanguageSwitcher Component', () => {
@@ -65,7 +67,7 @@ describe('LanguageSwitcher Component', () => {
             <LanguageSwitcher />
           </LanguageProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

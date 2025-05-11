@@ -9,7 +9,7 @@ import { API_BASE_URL } from '@/config';
 
 // Mock API_BASE_URL
 vi.mock('@/config', () => ({
-  API_BASE_URL: 'http://test-api'
+  API_BASE_URL: 'http://test-api',
 }));
 
 // Mock useSegmentationV2 hook with customizable state for testing
@@ -78,7 +78,7 @@ vi.mock('../../hooks/segmentation', () => {
       MergePolygons: 'MergePolygons',
     },
     // Export the mock state so tests can modify it
-    _mockSegmentationState: mockState
+    _mockSegmentationState: mockState,
   };
 });
 
@@ -101,72 +101,98 @@ vi.mock('react-router-dom', async () => {
 
 // Mock CanvasV2 component
 vi.mock('../../components/canvas/CanvasV2', () => ({
-  default: vi.fn(({ 
-    imageData, 
-    segmentationData, 
-    transform, 
-    editMode, 
-    selectedPolygonId, 
-    hoveredVertex, 
-    tempPoints, 
-    onMouseDown, 
-    onMouseMove, 
-    onMouseUp, 
-    canvasRef 
-  }) => (
-    <div 
-      data-testid="mock-canvas"
-      ref={canvasRef}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-    >
-      <div data-testid="canvas-info">
-        <div>Edit Mode: {editMode}</div>
-        <div>Selected Polygon: {selectedPolygonId || 'none'}</div>
-        <div>Zoom: {transform.zoom}x</div>
-        <div>Polygons: {segmentationData?.polygons?.length || 0}</div>
-        {imageData && <div>Image: {imageData.name}</div>}
+  default: vi.fn(
+    ({
+      imageData,
+      segmentationData,
+      transform,
+      editMode,
+      selectedPolygonId,
+      hoveredVertex,
+      tempPoints,
+      onMouseDown,
+      onMouseMove,
+      onMouseUp,
+      canvasRef,
+    }) => (
+      <div
+        data-testid="mock-canvas"
+        ref={canvasRef}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+      >
+        <div data-testid="canvas-info">
+          <div>Edit Mode: {editMode}</div>
+          <div>Selected Polygon: {selectedPolygonId || 'none'}</div>
+          <div>Zoom: {transform.zoom}x</div>
+          <div>Polygons: {segmentationData?.polygons?.length || 0}</div>
+          {imageData && <div>Image: {imageData.name}</div>}
+        </div>
       </div>
-    </div>
-  )),
+    ),
+  ),
 }));
 
 // Mock ToolbarV2 component
 vi.mock('../../components/toolbar/ToolbarV2', () => ({
-  ToolbarV2: vi.fn(({ 
-    editMode,
-    setEditMode,
-    onZoomIn, 
-    onZoomOut, 
-    onResetView, 
-    onSave, 
-    onUndo, 
-    onRedo, 
-    onResegment,
-    canUndo,
-    canRedo,
-    isSaving,
-    isResegmenting
-  }) => (
-    <div data-testid="mock-toolbar">
-      <button data-testid="edit-mode-view" onClick={() => setEditMode('View')}>View Mode</button>
-      <button data-testid="edit-mode-edit" onClick={() => setEditMode('EditVertices')}>Edit Mode</button>
-      <button data-testid="edit-mode-add" onClick={() => setEditMode('AddPolygon')}>Add Polygon</button>
-      <button data-testid="edit-mode-delete" onClick={() => setEditMode('DeletePolygon')}>Delete Polygon</button>
-      <button data-testid="edit-mode-slice" onClick={() => setEditMode('SlicePolygon')}>Slice Polygon</button>
-      <button data-testid="zoom-in-btn" onClick={onZoomIn}>Zoom In</button>
-      <button data-testid="zoom-out-btn" onClick={onZoomOut}>Zoom Out</button>
-      <button data-testid="reset-view-btn" onClick={onResetView}>Reset View</button>
-      <button data-testid="save-btn" onClick={onSave} disabled={isSaving}>Save {isSaving ? '(Saving...)' : ''}</button>
-      <button data-testid="undo-btn" onClick={onUndo} disabled={!canUndo}>Undo</button>
-      <button data-testid="redo-btn" onClick={onRedo} disabled={!canRedo}>Redo</button>
-      <button data-testid="resegment-btn" onClick={onResegment} disabled={isResegmenting}>
-        Resegment {isResegmenting ? '(Processing...)' : ''}
-      </button>
-      <div data-testid="current-mode">Current Mode: {editMode}</div>
-    </div>
-  )),
+  ToolbarV2: vi.fn(
+    ({
+      editMode,
+      setEditMode,
+      onZoomIn,
+      onZoomOut,
+      onResetView,
+      onSave,
+      onUndo,
+      onRedo,
+      onResegment,
+      canUndo,
+      canRedo,
+      isSaving,
+      isResegmenting,
+    }) => (
+      <div data-testid="mock-toolbar">
+        <button data-testid="edit-mode-view" onClick={() => setEditMode('View')}>
+          View Mode
+        </button>
+        <button data-testid="edit-mode-edit" onClick={() => setEditMode('EditVertices')}>
+          Edit Mode
+        </button>
+        <button data-testid="edit-mode-add" onClick={() => setEditMode('AddPolygon')}>
+          Add Polygon
+        </button>
+        <button data-testid="edit-mode-delete" onClick={() => setEditMode('DeletePolygon')}>
+          Delete Polygon
+        </button>
+        <button data-testid="edit-mode-slice" onClick={() => setEditMode('SlicePolygon')}>
+          Slice Polygon
+        </button>
+        <button data-testid="zoom-in-btn" onClick={onZoomIn}>
+          Zoom In
+        </button>
+        <button data-testid="zoom-out-btn" onClick={onZoomOut}>
+          Zoom Out
+        </button>
+        <button data-testid="reset-view-btn" onClick={onResetView}>
+          Reset View
+        </button>
+        <button data-testid="save-btn" onClick={onSave} disabled={isSaving}>
+          Save {isSaving ? '(Saving...)' : ''}
+        </button>
+        <button data-testid="undo-btn" onClick={onUndo} disabled={!canUndo}>
+          Undo
+        </button>
+        <button data-testid="redo-btn" onClick={onRedo} disabled={!canRedo}>
+          Redo
+        </button>
+        <button data-testid="resegment-btn" onClick={onResegment} disabled={isResegmenting}>
+          Resegment {isResegmenting ? '(Processing...)' : ''}
+        </button>
+        <div data-testid="current-mode">Current Mode: {editMode}</div>
+      </div>
+    ),
+  ),
 }));
 
 // Mock toast for notifications
@@ -204,7 +230,7 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
   beforeEach(() => {
     // Setup all context mocks
     setupAllContextMocks();
-    
+
     // Reset fetch mock
     vi.mocked(global.fetch).mockReset();
     vi.mocked(toast.success).mockReset();
@@ -275,12 +301,8 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
   const renderComponent = (props = {}) => {
     return render(
       <MemoryRouterWrapper>
-        <SegmentationEditorV2 
-          projectId="test-project-id" 
-          imageId="test-image-id" 
-          {...props} 
-        />
-      </MemoryRouterWrapper>
+        <SegmentationEditorV2 projectId="test-project-id" imageId="test-image-id" {...props} />
+      </MemoryRouterWrapper>,
     );
   };
 
@@ -294,19 +316,18 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
         id: 'actual-image-id',
         actualId: 'actual-image-id',
       };
-      
+
       renderComponent({
         projectId: 'test-project-id',
         imageId: 'test-image-id',
       });
-      
+
       // Check if the navigate function was called with the correct URL
-      expect(mockNavigate).toHaveBeenCalledWith(
-        '/projects/test-project-id/segmentation/actual-image-id',
-        { replace: true }
-      );
+      expect(mockNavigate).toHaveBeenCalledWith('/projects/test-project-id/segmentation/actual-image-id', {
+        replace: true,
+      });
     });
-    
+
     it('should not update URL when actualId matches imageId', () => {
       // Set up mock with matching actualId
       const { _mockSegmentationState } = require('../../hooks/segmentation');
@@ -315,12 +336,12 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
         id: 'test-image-id',
         actualId: 'test-image-id',
       };
-      
+
       renderComponent({
         projectId: 'test-project-id',
         imageId: 'test-image-id',
       });
-      
+
       // Check that navigate was not called
       expect(mockNavigate).not.toHaveBeenCalled();
     });
@@ -332,31 +353,28 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
       // Set isLoading to true
       const { _mockSegmentationState } = require('../../hooks/segmentation');
       _mockSegmentationState.isLoading = true;
-      
+
       renderComponent();
-      
+
       // Check if loading message is displayed
       expect(screen.getByText('Loading segmentation editor...')).toBeInTheDocument();
     });
-    
+
     it('should handle failed resegmentation API call gracefully', async () => {
       // Mock a failed fetch
       vi.mocked(global.fetch).mockRejectedValueOnce(new Error('API Error'));
-      
+
       renderComponent();
-      
+
       // Click resegment button
       fireEvent.click(screen.getByTestId('resegment-btn'));
-      
+
       // Wait for fetch error handler to execute
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith(
-          'segmentation.resegment.error.exception',
-          { error: 'API Error' }
-        );
+        expect(toast.error).toHaveBeenCalledWith('segmentation.resegment.error.exception', { error: 'API Error' });
       });
     });
-    
+
     it('should handle server error during resegmentation', async () => {
       // Mock a server error response
       vi.mocked(global.fetch).mockResolvedValueOnce({
@@ -364,53 +382,52 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
         status: 500,
         statusText: 'Internal Server Error',
       } as Response);
-      
+
       renderComponent();
-      
+
       // Click resegment button
       fireEvent.click(screen.getByTestId('resegment-btn'));
-      
+
       // Wait for the error handler
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith(
-          'segmentation.resegment.error.exception',
-          { error: 'Server responded with 500' }
-        );
+        expect(toast.error).toHaveBeenCalledWith('segmentation.resegment.error.exception', {
+          error: 'Server responded with 500',
+        });
       });
     });
-    
+
     it('should handle missing data for resegmentation', async () => {
       // Set imageData to null
       const { _mockSegmentationState } = require('../../hooks/segmentation');
       _mockSegmentationState.imageData = null;
-      
+
       renderComponent();
-      
+
       // Click resegment button
       fireEvent.click(screen.getByTestId('resegment-btn'));
-      
+
       // Error should be displayed immediately, no fetch
       expect(toast.error).toHaveBeenCalledWith('segmentation.resegment.error.missingData');
       expect(global.fetch).not.toHaveBeenCalled();
     });
-    
+
     it('should handle successful resegmentation but failed processing', async () => {
       // Mock a successful fetch but unsuccessful processing
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ success: false }),
       } as Response);
-      
+
       renderComponent();
-      
+
       // Click resegment button
       fireEvent.click(screen.getByTestId('resegment-btn'));
-      
+
       // Wait for the error handler
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith('segmentation.resegment.error.failed');
       });
-      
+
       // Page should not reload
       expect(window.location.reload).not.toHaveBeenCalled();
     });
@@ -420,9 +437,9 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
   describe('Canvas Interactions', () => {
     it('should pass through mouse events to the canvas', () => {
       renderComponent();
-      
+
       const canvas = screen.getByTestId('mock-canvas');
-      
+
       // Create mock event objects
       const mockEvent = {
         clientX: 150,
@@ -430,12 +447,12 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
         preventDefault: vi.fn(),
         stopPropagation: vi.fn(),
       };
-      
+
       // Trigger mouse events
       fireEvent.mouseDown(canvas, mockEvent);
       fireEvent.mouseMove(canvas, mockEvent);
       fireEvent.mouseUp(canvas, mockEvent);
-      
+
       // Check if handlers were called
       const { _mockSegmentationState } = require('../../hooks/segmentation');
       expect(_mockSegmentationState.onMouseDown).toHaveBeenCalled();
@@ -448,52 +465,52 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
   describe('Transform and View', () => {
     it('should correctly handle zoom in', () => {
       renderComponent();
-      
+
       // Get the setTransform mock
       const { _mockSegmentationState } = require('../../hooks/segmentation');
-      
+
       // Click zoom in button
       fireEvent.click(screen.getByTestId('zoom-in-btn'));
-      
+
       // Check that setTransform was called
       expect(_mockSegmentationState.setTransform).toHaveBeenCalled();
-      
+
       // Extract and call the transform function
       const transformFn = _mockSegmentationState.setTransform.mock.calls[0][0];
       const result = transformFn({ zoom: 1, translateX: 0, translateY: 0 });
-      
+
       // Check result
       expect(result).toEqual({
         zoom: 1.2,
         translateX: 0,
-        translateY: 0
+        translateY: 0,
       });
     });
-    
+
     it('should correctly handle zoom out', () => {
       renderComponent();
-      
+
       // Get the setTransform mock
       const { _mockSegmentationState } = require('../../hooks/segmentation');
-      
+
       // Click zoom out button
       fireEvent.click(screen.getByTestId('zoom-out-btn'));
-      
+
       // Check that setTransform was called
       expect(_mockSegmentationState.setTransform).toHaveBeenCalled();
-      
+
       // Extract and call the transform function
       const transformFn = _mockSegmentationState.setTransform.mock.calls[0][0];
       const result = transformFn({ zoom: 1, translateX: 0, translateY: 0 });
-      
+
       // Check result
       expect(result).toEqual({
         zoom: 0.8333333333333334, // 1 / 1.2
         translateX: 0,
-        translateY: 0
+        translateY: 0,
       });
     });
-    
+
     it('should handle reset view with an Element.getBoundingClientRect mock', () => {
       // Mock Element.getBoundingClientRect
       const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
@@ -508,18 +525,18 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
         bottom: 800,
         toJSON: () => {},
       }));
-      
+
       renderComponent();
-      
+
       // Get the setTransform mock
       const { _mockSegmentationState } = require('../../hooks/segmentation');
-      
+
       // Click reset view button
       fireEvent.click(screen.getByTestId('reset-view-btn'));
-      
+
       // Check that setTransform was called
       expect(_mockSegmentationState.setTransform).toHaveBeenCalled();
-      
+
       // Restore original getBoundingClientRect
       Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
     });
@@ -529,23 +546,23 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
   describe('Edit Modes', () => {
     it('should change edit mode when toolbar buttons are clicked', () => {
       renderComponent();
-      
+
       // Get the setEditMode mock
       const { _mockSegmentationState } = require('../../hooks/segmentation');
-      
+
       // Click edit mode buttons
       fireEvent.click(screen.getByTestId('edit-mode-view'));
       expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('View');
-      
+
       fireEvent.click(screen.getByTestId('edit-mode-edit'));
       expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('EditVertices');
-      
+
       fireEvent.click(screen.getByTestId('edit-mode-add'));
       expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('AddPolygon');
-      
+
       fireEvent.click(screen.getByTestId('edit-mode-delete'));
       expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('DeletePolygon');
-      
+
       fireEvent.click(screen.getByTestId('edit-mode-slice'));
       expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('SlicePolygon');
     });
@@ -559,15 +576,15 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
         ok: true,
         json: () => Promise.resolve({ success: true }),
       } as Response);
-      
+
       renderComponent();
-      
+
       // Mock timers to control setTimeout
       vi.useFakeTimers();
-      
+
       // Click resegment button
       fireEvent.click(screen.getByTestId('resegment-btn'));
-      
+
       // Wait for the fetch to complete
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
@@ -575,21 +592,21 @@ describe('SegmentationEditorV2 Component (Advanced Tests)', () => {
           expect.objectContaining({
             method: 'POST',
             body: JSON.stringify({ force: true }),
-          })
+          }),
         );
       });
-      
+
       // Verify success toast was called
       expect(toast.success).toHaveBeenCalledWith('Resegmentation successful');
-      
+
       // Advance timer to trigger page reload
       act(() => {
         vi.advanceTimersByTime(1000);
       });
-      
+
       // Verify page reload was called
       expect(window.location.reload).toHaveBeenCalled();
-      
+
       // Restore real timers
       vi.useRealTimers();
     });

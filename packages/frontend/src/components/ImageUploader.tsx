@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Trash2, Upload, ImagePlus } from 'lucide-react';
+import { uploadFilesWithFallback } from '@/api/imageUpload';
+import { storeUploadedImages } from '@/api/projectImages';
+import { toast } from 'sonner';
 
 interface UploadedFile {
   id: string;
@@ -31,18 +34,24 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   accept = ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
   dropzoneText,
   className = '',
+  segmentAfterUpload = true,
+  onSegmentAfterUploadChange,
 }) => {
   const { t } = useLanguage();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { trackImageLoad } = useImageLoadPerformance();
-  const [internalSegmentAfterUpload, setInternalSegmentAfterUpload] = useState<boolean>(false);
+  // Initialize the internal state from the prop
+  const [internalSegmentAfterUpload, setInternalSegmentAfterUpload] = useState<boolean>(segmentAfterUpload);
 
   // Use translation or fallback to prop
   const translatedDropzoneText = dropzoneText || t('uploader.dragDrop');
 
-  // Use passed segmentAfterUpload prop if available, otherwise use internal state
+  // Update internal state when prop changes
+  useEffect(() => {
+    setInternalSegmentAfterUpload(segmentAfterUpload);
+  }, [segmentAfterUpload]);
 
   // Function to update segmentation state that calls the prop handler if provided
   const handleSegmentAfterUploadChange = (value: boolean) => {
@@ -53,24 +62,24 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const clearAllFiles = useCallback(() => {
-    uploadedFiles.forEach(uploadedFile => URL.revokeObjectURL(uploadedFile.previewUrl));
+    uploadedFiles.forEach((uploadedFile) => URL.revokeObjectURL(uploadedFile.previewUrl));
     setUploadedFiles([]);
     setError(null);
   }, [uploadedFiles]);
 
   const removeFile = useCallback((fileId: string) => {
-    setUploadedFiles(prevFiles => {
-      const fileToRemove = prevFiles.find(f => f.id === fileId);
+    setUploadedFiles((prevFiles) => {
+      const fileToRemove = prevFiles.find((f) => f.id === fileId);
       if (fileToRemove) {
         URL.revokeObjectURL(fileToRemove.previewUrl);
       }
-      return prevFiles.filter(f => f.id !== fileId);
+      return prevFiles.filter((f) => f.id !== fileId);
     });
   }, []);
 
   useEffect(() => {
     return () => {
-      uploadedFiles.forEach(uploadedFile => URL.revokeObjectURL(uploadedFile.previewUrl));
+      uploadedFiles.forEach((uploadedFile) => URL.revokeObjectURL(uploadedFile.previewUrl));
     };
   }, [uploadedFiles]);
 
@@ -89,15 +98,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
 
       if (acceptedFiles.length > 0) {
-        const newFiles: UploadedFile[] = acceptedFiles.map(file => ({
+        const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
           id: `${file.name}-${file.lastModified}-${Math.random().toString(36).substring(2, 9)}`,
           file,
           previewUrl: URL.createObjectURL(file),
         }));
-        setUploadedFiles(prevFiles => [...prevFiles, ...newFiles]);
+        setUploadedFiles((prevFiles) => [...prevFiles, ...newFiles]);
       }
     },
-    [maxSize, accept]
+    [maxSize, accept],
   );
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -120,30 +129,56 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
   }, [open]);
 
-  const handleUploadClick = () => {
+  const handleUploadClick = async () => {
     if (uploadedFiles.length === 0) {
       setError(t('uploader.uploadError', {}, 'Please select some files to upload.'));
       return;
     }
-    console.log('Uploading files:', uploadedFiles.map(f => f.file));
-    console.log('Segment after upload:', internalSegmentAfterUpload);
 
-    // Create mock ProjectImage objects from uploaded files
-    const mockProjectImages = uploadedFiles.map(f => ({
-      id: f.id,
-      project_id: projectId,
-      name: f.file.name,
-      url: f.previewUrl,
-      thumbnail_url: f.previewUrl,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      width: 800,
-      height: 600,
-      segmentationStatus: 'pending'
-    }));
+    try {
+      console.log(
+        'Uploading files:',
+        uploadedFiles.map((f) => f.file),
+      );
+      console.log('Segment after upload:', internalSegmentAfterUpload);
 
-    // Call onUploadComplete with the projectId and the mock ProjectImage objects
-    onUploadComplete(projectId, mockProjectImages);
+      // Extract the File objects from the uploadedFiles
+      const files = uploadedFiles.map((f) => f.file);
+
+      // Log the number of files being uploaded
+      console.log(`Uploading ${files.length} files to project ${projectId}`);
+
+      // Informujeme uživatele o začátku nahrávání
+      toast.info(`Nahrávání ${files.length} obrázků...`);
+
+      // Použijeme uploadFilesWithFallback, který již implementuje dávkové nahrávání
+      const allUploadedImages = await uploadFilesWithFallback(projectId, files);
+
+      // Log the number of images returned from the upload function
+      console.log(`Received ${allUploadedImages.length} images from upload function`);
+      console.log('Uploaded images:', allUploadedImages);
+
+      // Store the uploaded images in memory - použijeme IndexedDB místo localStorage
+      try {
+        await storeUploadedImages(projectId, allUploadedImages);
+      } catch (storageError) {
+        console.warn('Chyba při ukládání obrázků do lokálního úložiště:', storageError);
+        // Pokračujeme i při chybě ukládání do lokálního úložiště
+      }
+
+      // Call onUploadComplete with the projectId and the uploaded images
+      onUploadComplete(projectId, allUploadedImages);
+
+      // Clear the uploaded files after successful upload
+      clearAllFiles();
+
+      // Informujeme uživatele o úspěšném nahrání
+      toast.success(`Úspěšně nahráno ${allUploadedImages.length} obrázků.`);
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      setError(t('uploader.uploadError', {}, 'An error occurred while uploading the files. Please try again.'));
+      toast.error('Chyba při nahrávání obrázků. Zkuste to prosím znovu.');
+    }
   };
 
   const formatBytes = (bytes: number, decimals = 2) => {
@@ -160,9 +195,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       <div
         {...getRootProps()}
         className={`dropzone border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
-          ${isDragActive
-            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg'
-            : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-md dark:border-gray-600 dark:hover:border-blue-500 dark:bg-gray-700 dark:hover:bg-gray-600/80'
+          ${
+            isDragActive
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg'
+              : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-md dark:border-gray-600 dark:hover:border-blue-500 dark:bg-gray-700 dark:hover:bg-gray-600/80'
           }
           transform hover:scale-[1.01] active:scale-[0.99]
         `}
@@ -172,12 +208,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         aria-label="Click to upload files or drag and drop files here"
         onClick={handleOpenFileDialog}
       >
-        <input
-          {...getInputProps()}
-          ref={fileInputRef}
-          aria-label="File upload input"
-          data-testid="file-input"
-        />
+        <input {...getInputProps()} ref={fileInputRef} aria-label="File upload input" data-testid="file-input" />
         <div className="flex flex-col items-center justify-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-800/40 transition-colors">
             <ImagePlus className="h-8 w-8 text-blue-500 dark:text-blue-400" />
@@ -209,8 +240,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </p>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              {t('common.maxFileSize', {size: maxSize / (1024*1024)}, `Max file size: ${maxSize / (1024*1024)}MB`)}.
-              {t('common.accepted', {}, 'Accepted')}: {accept.join(', ')}
+              {t(
+                'common.maxFileSize',
+                { size: maxSize / (1024 * 1024) },
+                `Max file size: ${maxSize / (1024 * 1024)}MB`,
+              )}
+              .{t('common.accepted', {}, 'Accepted')}: {accept.join(', ')}
             </p>
           </div>
         </div>
@@ -221,7 +256,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       {uploadedFiles.length > 0 && (
         <div className="image-previews-grid grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10 gap-4 mt-4">
           {uploadedFiles.map((uploadedFile) => (
-            <div key={uploadedFile.id} className="image-card-wrapper relative group border rounded-lg overflow-hidden shadow-sm">
+            <div
+              key={uploadedFile.id}
+              className="image-card-wrapper relative group border rounded-lg overflow-hidden shadow-sm"
+            >
               <img
                 src={uploadedFile.previewUrl}
                 alt={uploadedFile.file.name}
@@ -243,7 +281,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 </Button>
               </div>
               <div className="p-2 bg-white dark:bg-gray-800">
-                <p className="text-xs font-medium truncate text-gray-800 dark:text-gray-200" title={uploadedFile.file.name}>{uploadedFile.file.name}</p>
+                <p
+                  className="text-xs font-medium truncate text-gray-800 dark:text-gray-200"
+                  title={uploadedFile.file.name}
+                >
+                  {uploadedFile.file.name}
+                </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">{formatBytes(uploadedFile.file.size)}</p>
               </div>
             </div>

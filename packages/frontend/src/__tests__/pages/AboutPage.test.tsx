@@ -52,7 +52,7 @@ vi.mock('react-i18next', () => ({
         'zh:about.mission.title': '我们的使命',
         'zh:about.technology.title': '技术',
         'zh:about.team.title': '我们的团队',
-        'zh:about.contact.title': '联系我们'
+        'zh:about.contact.title': '联系我们',
       };
 
       // Check if we have a language prefix
@@ -68,18 +68,18 @@ vi.mock('react-i18next', () => ({
     },
     i18n: {
       changeLanguage: vi.fn(),
-      language: 'en'
-    }
-  })
+      language: 'en',
+    },
+  }),
 }));
 
 // Mock the AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: null,
-    loading: false
+    loading: false,
   }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
 }));
 
 describe('AboutPage', () => {
@@ -96,7 +96,7 @@ describe('AboutPage', () => {
             <AboutPage />
           </LanguageProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

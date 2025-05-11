@@ -1,21 +1,21 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import axios from "axios";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import axios from 'axios';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 const SignUp = () => {
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,7 @@ const SignUp = () => {
     email: z.string().email('Invalid email address').min(1, 'Email is required'),
     password: z.string().min(8, 'Password must be at least 8 characters long'),
     confirmPassword: z.string().min(8, 'Password must be at least 8 characters long'),
-    agreeTerms: z.boolean().refine(val => val, 'You must agree to the terms and conditions'),
+    agreeTerms: z.boolean().refine((val) => val, 'You must agree to the terms and conditions'),
   });
 
   const form = useForm<SignUpFormValues>({
@@ -44,7 +44,7 @@ const SignUp = () => {
       password: '',
       confirmPassword: '',
       agreeTerms: false,
-    }
+    },
   });
 
   const navigate = useNavigate();
@@ -58,9 +58,9 @@ const SignUp = () => {
       const name = `${data.firstName} ${data.lastName}`;
       await signUp(data.email, data.password, name);
       toast.success(t('auth.signUpSuccessEmail'));
-      navigate("/sign-in");
+      navigate('/sign-in');
     } catch (error: unknown) {
-      console.error("Sign up error:", error);
+      console.error('Sign up error:', error);
       let errorMessage = t('auth.signUpFailed');
       if (error instanceof Error) {
         errorMessage = error.message;
@@ -79,9 +79,7 @@ const SignUp = () => {
         <Card className="mx-auto max-w-sm">
           <CardHeader>
             <CardTitle className="text-xl">Already Logged In</CardTitle>
-            <CardDescription>
-              You are already signed in.
-            </CardDescription>
+            <CardDescription>You are already signed in.</CardDescription>
           </CardHeader>
           <CardContent>
             <Link to="/dashboard">
@@ -105,8 +103,12 @@ const SignUp = () => {
         <div className="w-full max-w-md">
           <Card className="shadow-xl rounded-lg overflow-hidden bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700/50">
             <CardHeader className="text-center pt-8 pb-4">
-              <CardTitle className="text-2xl font-bold text-gray-800 dark:text-gray-100">{t('common.signUp')}</CardTitle>
-              <CardDescription className="text-gray-500 dark:text-gray-400">{t('auth.enterInfoCreateAccount') || 'Enter your information to create an account'}</CardDescription>
+              <CardTitle className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                {t('common.signUp')}
+              </CardTitle>
+              <CardDescription className="text-gray-500 dark:text-gray-400">
+                {t('auth.enterInfoCreateAccount') || 'Enter your information to create an account'}
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <p className="text-gray-500 dark:text-gray-400">{t('auth.signUpSuccess')}</p>
@@ -241,20 +243,23 @@ const SignUp = () => {
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/50">
                     <div className="flex h-5 items-center">
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                     </div>
                     <div className="ml-2 leading-none">
                       <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                         {t('requestAccess.agreeToTerms')}{' '}
-                        <Link to="/terms-of-service" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors underline underline-offset-4">
+                        <Link
+                          to="/terms-of-service"
+                          className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors underline underline-offset-4"
+                        >
                           {t('common.termsOfService')}
                         </Link>{' '}
                         {t('requestAccess.and')}{' '}
-                        <Link to="/privacy-policy" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors underline underline-offset-4">
+                        <Link
+                          to="/privacy-policy"
+                          className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors underline underline-offset-4"
+                        >
                           {t('common.privacyPolicy')}
                         </Link>
                       </FormLabel>
@@ -271,7 +276,9 @@ const SignUp = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {t('auth.creatingAccount') || 'Creating Account...'}
                   </>
-                ) : t('common.createAccount')}
+                ) : (
+                  t('common.createAccount')
+                )}
               </Button>
             </form>
           </Form>
@@ -282,34 +289,36 @@ const SignUp = () => {
               <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">{t('auth.alreadyHaveAccount')}</span>
+              <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                {t('auth.alreadyHaveAccount')}
+              </span>
             </div>
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
             <Link to="/sign-in">
-              <Button
-                variant="outline"
-                className="w-full h-10 text-base rounded-md"
-              >
+              <Button variant="outline" className="w-full h-10 text-base rounded-md">
                 {t('auth.signIn')}
               </Button>
             </Link>
             <Link to="/request-access">
-              <Button
-                variant="outline"
-                className="w-full h-10 text-base rounded-md"
-              >
+              <Button variant="outline" className="w-full h-10 text-base rounded-md">
                 {t('auth.requestAccess')}
               </Button>
             </Link>
             <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-3">
               {t('auth.termsAndPrivacy')}{' '}
-              <Link to="/terms-of-service" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+              <Link
+                to="/terms-of-service"
+                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              >
                 {t('common.termsOfService')}
               </Link>{' '}
               {t('requestAccess.and')}{' '}
-              <Link to="/privacy-policy" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+              <Link
+                to="/privacy-policy"
+                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              >
                 {t('common.privacyPolicy')}
               </Link>
             </p>

@@ -1,27 +1,19 @@
-
-import React from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Folder } from "lucide-react";
+import React from 'react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Folder } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ProjectToolbar from "@/components/project/ProjectToolbar";
+import ProjectToolbar from '@/components/project/ProjectToolbar';
 
 interface DashboardTabsProps {
-  viewMode: "grid" | "list";
-  setViewMode: (mode: "grid" | "list") => void;
+  viewMode: 'grid' | 'list';
+  setViewMode: (mode: 'grid' | 'list') => void;
   onSort: (field: 'name' | 'updatedAt' | 'segmentationStatus') => void;
   sortField: 'name' | 'updatedAt' | 'segmentationStatus';
   sortDirection: 'asc' | 'desc';
   children: React.ReactNode;
 }
 
-const DashboardTabs = ({
-  viewMode,
-  setViewMode,
-  onSort,
-  sortField,
-  sortDirection,
-  children
-}: DashboardTabsProps) => {
+const DashboardTabs = ({ viewMode, setViewMode, onSort, sortField, sortDirection, children }: DashboardTabsProps) => {
   const { t } = useLanguage();
 
   return (

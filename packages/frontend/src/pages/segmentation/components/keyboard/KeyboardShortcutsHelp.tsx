@@ -11,18 +11,31 @@ interface KeyboardShortcutsHelpProps {
 const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }) => {
   const { t } = useLanguage();
 
-
-
   const shortcuts = [
     { key: 'V', description: t('shortcuts.viewMode') || 'View Mode' },
-    { key: 'E', description: t('shortcuts.editVerticesMode') || 'Edit Vertices Mode' },
-    { key: 'A', description: t('shortcuts.addPointsMode') || 'Add Points Mode' },
-    { key: 'C', description: t('shortcuts.createPolygonMode') || 'Create Polygon Mode' },
+    {
+      key: 'E',
+      description: t('shortcuts.editVerticesMode') || 'Edit Vertices Mode',
+    },
+    {
+      key: 'A',
+      description: t('shortcuts.addPointsMode') || 'Add Points Mode',
+    },
+    {
+      key: 'C',
+      description: t('shortcuts.createPolygonMode') || 'Create Polygon Mode',
+    },
     { key: 'S', description: t('shortcuts.sliceMode') || 'Slice Mode' },
     { key: 'Ctrl+Z', description: t('shortcuts.undo') || 'Undo' },
     { key: 'Ctrl+Y', description: t('shortcuts.redo') || 'Redo' },
-    { key: 'Delete', description: t('shortcuts.deletePolygon') || 'Delete Selected Polygon' },
-    { key: 'Esc', description: t('shortcuts.cancel') || 'Cancel Current Operation' },
+    {
+      key: 'Delete',
+      description: t('shortcuts.deletePolygon') || 'Delete Selected Polygon',
+    },
+    {
+      key: 'Esc',
+      description: t('shortcuts.cancel') || 'Cancel Current Operation',
+    },
     { key: '+', description: t('shortcuts.zoomIn') || 'Zoom In' },
     { key: '-', description: t('shortcuts.zoomOut') || 'Zoom Out' },
     { key: 'R', description: t('shortcuts.resetView') || 'Reset View' },
@@ -48,12 +61,7 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {t('shortcuts.title') || 'Keyboard Shortcuts'}
           </h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8"
-          >
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -70,15 +78,14 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }
               <div className="bg-gray-100 dark:bg-gray-700 rounded px-2.5 py-1 font-mono text-sm min-w-16 text-center">
                 {shortcut.key}
               </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                {shortcut.description}
-              </div>
+              <div className="text-sm text-gray-700 dark:text-gray-300">{shortcut.description}</div>
             </motion.div>
           ))}
         </div>
 
         <div className="mt-5 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">
-          {t('shortcuts.description') || 'These shortcuts work within the segmentation editor for faster and more comfortable work.'}
+          {t('shortcuts.description') ||
+            'These shortcuts work within the segmentation editor for faster and more comfortable work.'}
         </div>
       </motion.div>
     </motion.div>

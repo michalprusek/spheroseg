@@ -10,10 +10,18 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
     <div className="bg-gray-100 p-4 rounded-lg mb-4">
       <h2 className="text-lg font-bold mb-2">Image Debug Info</h2>
       <div className="mb-2">
-        <p><strong>ID:</strong> {image.id}</p>
-        <p><strong>Name:</strong> {image.name}</p>
-        <p><strong>URL:</strong> {image.url}</p>
-        <p><strong>Thumbnail URL:</strong> {image.thumbnail_url}</p>
+        <p>
+          <strong>ID:</strong> {image.id}
+        </p>
+        <p>
+          <strong>Name:</strong> {image.name}
+        </p>
+        <p>
+          <strong>URL:</strong> {image.url}
+        </p>
+        <p>
+          <strong>Thumbnail URL:</strong> {image.thumbnail_url}
+        </p>
       </div>
       <div className="mt-2">
         <h3 className="font-bold">Test Image Loading:</h3>
@@ -58,7 +66,9 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
                 src={constructUrl(image.thumbnail_url)}
                 alt="Thumbnail with constructUrl"
                 className="w-20 h-20 object-cover border border-gray-300"
-                onError={(e) => console.error(`Failed to load thumbnail with constructUrl: ${constructUrl(image.thumbnail_url)}`)}
+                onError={(e) =>
+                  console.error(`Failed to load thumbnail with constructUrl: ${constructUrl(image.thumbnail_url)}`)
+                }
               />
             )}
           </div>

@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import DashboardHeader from "@/components/DashboardHeader";
+import DashboardHeader from '@/components/DashboardHeader';
 import SegmentationProgress from './SegmentationProgress';
 
 interface ProjectHeaderProps {
@@ -24,12 +23,7 @@ const ProjectHeader = ({ projectTitle, imagesCount, loading, projectId }: Projec
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center">
-              <Button
-                variant="outline"
-                size="sm"
-                className="mr-4"
-                onClick={() => navigate("/dashboard")}
-              >
+              <Button variant="outline" size="sm" className="mr-4" onClick={() => navigate('/dashboard')}>
                 {t('common.back')}
               </Button>
               <div>

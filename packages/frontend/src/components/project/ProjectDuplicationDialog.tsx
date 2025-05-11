@@ -6,7 +6,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,7 +62,7 @@ export function ProjectDuplicationDialog({
   open,
   onClose,
   onDuplicate,
-  navigateToNewProject = false
+  navigateToNewProject = false,
 }: ProjectDuplicationDialogProps) {
   const { t } = useLanguage();
 
@@ -72,31 +72,25 @@ export function ProjectDuplicationDialog({
   const [resetStatus, setResetStatus] = useState(true);
 
   // Use the project duplication hook
-  const {
-    duplicateProject,
-    isDuplicating,
-    error,
-    newProject,
-    duplicationTask,
-    cancelDuplication
-  } = useProjectDuplicate({
-    onSuccess: (project) => {
-      logger.info('Project duplicated successfully', { projectId: project.id });
-      if (onDuplicate) {
-        onDuplicate(project);
-      }
+  const { duplicateProject, isDuplicating, error, newProject, duplicationTask, cancelDuplication } =
+    useProjectDuplicate({
+      onSuccess: (project) => {
+        logger.info('Project duplicated successfully', { projectId: project.id });
+        if (onDuplicate) {
+          onDuplicate(project);
+        }
 
-      // Auto-close dialog after 2 seconds when complete
-      if (!navigateToNewProject) {
-        setTimeout(() => {
-          handleClose();
-        }, 2000);
-      }
-    },
-    navigateToNewProject,
-    // Always use async mode in the dialog
-    async: true
-  });
+        // Auto-close dialog after 2 seconds when complete
+        if (!navigateToNewProject) {
+          setTimeout(() => {
+            handleClose();
+          }, 2000);
+        }
+      },
+      navigateToNewProject,
+      // Always use async mode in the dialog
+      async: true,
+    });
 
   /**
    * Handle duplication start
@@ -107,7 +101,7 @@ export function ProjectDuplicationDialog({
         projectId,
         newTitle,
         copySegmentations,
-        resetStatus
+        resetStatus,
       });
     } catch (err) {
       logger.error('Error starting project duplication', { error: err });
@@ -182,7 +176,7 @@ export function ProjectDuplicationDialog({
           </DialogTitle>
           <DialogDescription>
             {t('projects.duplicateProjectDescription') ||
-             'Create a copy of this project including all images. You can customize the options below.'}
+              'Create a copy of this project including all images. You can customize the options below.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -193,7 +187,7 @@ export function ProjectDuplicationDialog({
             <Input
               id="title"
               value={newTitle}
-              onChange={e => setNewTitle(e.target.value)}
+              onChange={(e) => setNewTitle(e.target.value)}
               disabled={isDuplicating}
               autoFocus
             />
@@ -219,9 +213,7 @@ export function ProjectDuplicationDialog({
                 onCheckedChange={(checked) => setResetStatus(!!checked)}
                 disabled={isDuplicating}
               />
-              <Label htmlFor="reset-status">
-                {t('projects.resetImageStatus') || 'Reset image processing status'}
-              </Label>
+              <Label htmlFor="reset-status">{t('projects.resetImageStatus') || 'Reset image processing status'}</Label>
             </div>
           </div>
         </div>
@@ -248,7 +240,8 @@ export function ProjectDuplicationDialog({
             <Progress value={duplicationTask.progress} className="h-2" />
 
             <div className="text-sm text-muted-foreground">
-              {duplicationTask.processedItems} / {duplicationTask.totalItems} {t('projects.itemsProcessed') || 'items processed'}
+              {duplicationTask.processedItems} / {duplicationTask.totalItems}{' '}
+              {t('projects.itemsProcessed') || 'items processed'}
             </div>
 
             {duplicationTask.status === 'failed' && duplicationTask.errorMessage && (
@@ -263,7 +256,7 @@ export function ProjectDuplicationDialog({
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
                   {t('projects.duplicationSuccessMessage') ||
-                   'Project duplicated successfully! You can now access the new project.'}
+                    'Project duplicated successfully! You can now access the new project.'}
                 </AlertDescription>
               </Alert>
             )}
@@ -281,21 +274,15 @@ export function ProjectDuplicationDialog({
             </Button>
           ) : (
             <Button onClick={handleClose} variant="outline">
-              {(isDuplicating && duplicationTask?.status === 'completed') ?
-                (t('common.close') || 'Close') :
-                (t('common.cancel') || 'Cancel')}
+              {isDuplicating && duplicationTask?.status === 'completed'
+                ? t('common.close') || 'Close'
+                : t('common.cancel') || 'Cancel'}
             </Button>
           )}
 
-          <Button
-            onClick={handleDuplicate}
-            disabled={isDuplicating || !newTitle.trim()}
-            className="gap-1"
-          >
+          <Button onClick={handleDuplicate} disabled={isDuplicating || !newTitle.trim()} className="gap-1">
             {isDuplicating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
-            {isDuplicating ?
-              (t('projects.duplicating') || 'Duplicating...') :
-              (t('projects.duplicate') || 'Duplicate')}
+            {isDuplicating ? t('projects.duplicating') || 'Duplicating...' : t('projects.duplicate') || 'Duplicate'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -84,10 +84,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
 
     // Record request count and duration
     httpRequestsTotal.inc({ method: req.method, path, status: res.statusCode });
-    httpRequestDurationSeconds.observe(
-      { method: req.method, path, status: res.statusCode },
-      duration
-    );
+    httpRequestDurationSeconds.observe({ method: req.method, path, status: res.statusCode }, duration);
 
     // Log request for debugging (only in development)
     if (process.env.NODE_ENV !== 'production') {
@@ -116,7 +113,7 @@ function normalizePath(path: string): string {
  */
 export const metricsEndpoint = (_req: Request, res: Response) => {
   res.set('Content-Type', register.contentType);
-  register.metrics().then(metrics => {
+  register.metrics().then((metrics) => {
     res.end(metrics);
   });
 };
@@ -129,20 +126,20 @@ export const updateSegmentationTaskMetrics = {
   setActiveTasks: (count: number) => {
     segmentationTasksActive.set(count);
   },
-  
+
   // Increment task counter by status
   incrementTasks: (status: 'success' | 'failure') => {
     segmentationTasksTotal.inc({ status });
   },
-  
+
   // Observe segmentation duration
   observeDuration: (durationSeconds: number) => {
     segmentationDurationSeconds.observe(durationSeconds);
-  }
+  },
 };
 
 export default {
   metricsMiddleware,
   metricsEndpoint,
-  updateSegmentationTaskMetrics
+  updateSegmentationTaskMetrics,
 };

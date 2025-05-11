@@ -21,23 +21,23 @@ vi.mock('react-i18next', () => ({
         'dashboard.stats.totalProjects': 'Total Projects',
         'dashboard.stats.totalImages': 'Total Images',
         'dashboard.stats.completedSegmentations': 'Completed Segmentations',
-        'dashboard.stats.segmentationsToday': 'Segmentations Today'
+        'dashboard.stats.segmentationsToday': 'Segmentations Today',
       };
       return translations[key] || key;
     },
     i18n: {
       changeLanguage: vi.fn(),
-      language: 'en'
-    }
-  })
+      language: 'en',
+    },
+  }),
 }));
 
 // Mock dependencies
 vi.mock('@/lib/apiClient', () => ({
   default: {
     get: vi.fn(),
-    post: vi.fn()
-  }
+    post: vi.fn(),
+  },
 }));
 
 // Mock CreateProjectDialog component
@@ -53,7 +53,7 @@ vi.mock('@/components/project/CreateProjectDialog', () => ({
         </>
       )}
     </div>
-  )
+  ),
 }));
 
 describe('DashboardPage Component', () => {
@@ -70,8 +70,8 @@ describe('DashboardPage Component', () => {
             segmentationCount: 8,
             segmentationCountChange: 3,
             segmentationsToday: 2,
-            segmentationsTodayChange: 1
-          }
+            segmentationsTodayChange: 1,
+          },
         });
       }
       if (url.includes('/projects')) {
@@ -83,7 +83,7 @@ describe('DashboardPage Component', () => {
               description: 'Test Description 1',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
-              image_count: 5
+              image_count: 5,
             },
             {
               id: 'test-project-id-2',
@@ -91,7 +91,7 @@ describe('DashboardPage Component', () => {
               description: 'Test Description 2',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
-              image_count: 3
+              image_count: 3,
             },
             {
               id: 'test-project-id-3',
@@ -99,9 +99,9 @@ describe('DashboardPage Component', () => {
               description: 'Test Description 3',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
-              image_count: 2
-            }
-          ]
+              image_count: 2,
+            },
+          ],
         });
       }
       return Promise.resolve({ data: {} });
@@ -122,7 +122,7 @@ describe('DashboardPage Component', () => {
             </LanguageProvider>
           </ProfileProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

@@ -22,21 +22,21 @@ vi.mock('@/contexts/AuthContext', () => ({
   // Export test helper to manipulate mock user
   __setMockUser: (user: any) => {
     currentUser = user;
-  }
+  },
 }));
 
 // Create test component that uses the profile context
 const ProfileDisplay: React.FC = () => {
   const { profile, loading, updateProfile, updateAvatar, removeAvatar } = useProfile();
-  
+
   if (loading) {
     return <div data-testid="loading">Loading profile...</div>;
   }
-  
+
   if (!profile) {
     return <div data-testid="no-profile">No profile available</div>;
   }
-  
+
   return (
     <div data-testid="profile-container">
       <h2>User Profile</h2>
@@ -50,29 +50,25 @@ const ProfileDisplay: React.FC = () => {
         Avatar: {profile.avatar_url ? 'Set' : 'Not set'}
         {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" width={50} height={50} />}
       </div>
-      
+
       <div className="actions">
-        <button 
+        <button
           data-testid="update-profile"
-          onClick={() => updateProfile({ 
-            full_name: 'Updated Name',
-            bio: 'Updated bio'
-          })}
+          onClick={() =>
+            updateProfile({
+              full_name: 'Updated Name',
+              bio: 'Updated bio',
+            })
+          }
         >
           Update Profile
         </button>
-        
-        <button 
-          data-testid="update-avatar"
-          onClick={() => updateAvatar('https://example.com/new-avatar.jpg')}
-        >
+
+        <button data-testid="update-avatar" onClick={() => updateAvatar('https://example.com/new-avatar.jpg')}>
           Update Avatar
         </button>
-        
-        <button 
-          data-testid="remove-avatar"
-          onClick={() => removeAvatar()}
-        >
+
+        <button data-testid="remove-avatar" onClick={() => removeAvatar()}>
           Remove Avatar
         </button>
       </div>
@@ -93,14 +89,14 @@ const ProfileConsumer: React.FC = () => {
 describe('ProfileContext (Enhanced)', () => {
   // Mock localStorage
   let localStorageMock: { [key: string]: string } = {};
-  
+
   beforeEach(() => {
     // Reset user to logged in state for most tests
     currentUser = { id: 'test-user-id', email: 'test@example.com' };
-    
+
     // Mock localStorage
     localStorageMock = {};
-    
+
     Object.defineProperty(window, 'localStorage', {
       value: {
         getItem: vi.fn((key) => localStorageMock[key] || null),
@@ -112,15 +108,15 @@ describe('ProfileContext (Enhanced)', () => {
       },
       writable: true,
     });
-    
+
     // Mock console.error to suppress expected errors
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
-  
+
   afterEach(() => {
     vi.clearAllMocks();
   });
-  
+
   it('should load initial profile from localStorage if available', async () => {
     // Set up a profile in localStorage
     const storedProfile: UserProfile = {
@@ -132,23 +128,23 @@ describe('ProfileContext (Enhanced)', () => {
       organization: 'Existing organization',
       avatar_url: 'https://example.com/existing-avatar.jpg',
     };
-    
+
     localStorageMock['userProfile'] = JSON.stringify(storedProfile);
-    
+
     render(
       <ProfileProvider>
         <ProfileDisplay />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Initially should show loading
     expect(screen.getByTestId('loading')).toBeInTheDocument();
-    
+
     // Then should show profile data
     await waitFor(() => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
-    
+
     // Check all profile fields
     expect(screen.getByTestId('profile-username').textContent).toContain('existinguser');
     expect(screen.getByTestId('profile-fullname').textContent).toContain('Existing User');
@@ -158,225 +154,211 @@ describe('ProfileContext (Enhanced)', () => {
     expect(screen.getByTestId('profile-organization').textContent).toContain('Existing organization');
     expect(screen.getByTestId('profile-avatar').textContent).toContain('Set');
   });
-  
+
   it('should create initial profile if none exists in localStorage', async () => {
     // Ensure no profile in localStorage
     localStorageMock = {};
-    
+
     render(
       <ProfileProvider>
         <ProfileDisplay />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Initially should show loading
     expect(screen.getByTestId('loading')).toBeInTheDocument();
-    
+
     // Then should show profile data
     await waitFor(() => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
-    
+
     // Username should be initialized from email
     expect(screen.getByTestId('profile-username').textContent).toContain('test');
-    
+
     // Default values for other fields
     expect(screen.getByTestId('profile-fullname').textContent).toContain('Not set');
     expect(screen.getByTestId('profile-bio').textContent).toContain('Not set');
-    
+
     // Should save initial profile to localStorage
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      'userProfile',
-      expect.any(String)
-    );
-    
+    expect(localStorage.setItem).toHaveBeenCalledWith('userProfile', expect.any(String));
+
     // Parse the saved profile to verify content
     const savedProfile = JSON.parse(
-      vi.mocked(localStorage.setItem).mock.calls.find(
-        call => call[0] === 'userProfile'
-      )?.[1] || '{}'
+      vi.mocked(localStorage.setItem).mock.calls.find((call) => call[0] === 'userProfile')?.[1] || '{}',
     );
-    
+
     expect(savedProfile.username).toBe('test');
   });
-  
+
   it('should update profile when updateProfile is called', async () => {
     render(
       <ProfileProvider>
         <ProfileDisplay />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Wait for profile to load
     await waitFor(() => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
-    
+
     // Initial values
     expect(screen.getByTestId('profile-fullname').textContent).toContain('Not set');
     expect(screen.getByTestId('profile-bio').textContent).toContain('Not set');
-    
+
     // Update profile
     act(() => {
       fireEvent.click(screen.getByTestId('update-profile'));
     });
-    
+
     // Check updated values
     expect(screen.getByTestId('profile-fullname').textContent).toContain('Updated Name');
     expect(screen.getByTestId('profile-bio').textContent).toContain('Updated bio');
-    
+
     // Should save updated profile to localStorage
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      'userProfile',
-      expect.stringContaining('Updated Name')
-    );
+    expect(localStorage.setItem).toHaveBeenCalledWith('userProfile', expect.stringContaining('Updated Name'));
   });
-  
+
   it('should update avatar when updateAvatar is called', async () => {
     render(
       <ProfileProvider>
         <ProfileDisplay />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Wait for profile to load
     await waitFor(() => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
-    
+
     // Initial values
     expect(screen.getByTestId('profile-avatar').textContent).toContain('Not set');
-    
+
     // Update avatar
     act(() => {
       fireEvent.click(screen.getByTestId('update-avatar'));
     });
-    
+
     // Check updated values
     expect(screen.getByTestId('profile-avatar').textContent).toContain('Set');
-    
+
     // Should save updated profile to localStorage
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      'userProfile',
-      expect.stringContaining('new-avatar.jpg')
-    );
+    expect(localStorage.setItem).toHaveBeenCalledWith('userProfile', expect.stringContaining('new-avatar.jpg'));
   });
-  
+
   it('should remove avatar when removeAvatar is called', async () => {
     // Set up a profile with avatar
     const profileWithAvatar: UserProfile = {
       username: 'user',
       avatar_url: 'https://example.com/avatar.jpg',
     };
-    
+
     localStorageMock['userProfile'] = JSON.stringify(profileWithAvatar);
     localStorageMock['userAvatar'] = 'base64data'; // Mock avatar data
     localStorageMock['userAvatarUrl'] = 'https://example.com/avatar.jpg';
-    
+
     render(
       <ProfileProvider>
         <ProfileDisplay />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Wait for profile to load
     await waitFor(() => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
-    
+
     // Initial values
     expect(screen.getByTestId('profile-avatar').textContent).toContain('Set');
-    
+
     // Remove avatar
     act(() => {
       fireEvent.click(screen.getByTestId('remove-avatar'));
     });
-    
+
     // Check updated values
     expect(screen.getByTestId('profile-avatar').textContent).toContain('Not set');
-    
+
     // Should update profile in localStorage
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      'userProfile',
-      expect.not.stringContaining('avatar.jpg')
-    );
-    
+    expect(localStorage.setItem).toHaveBeenCalledWith('userProfile', expect.not.stringContaining('avatar.jpg'));
+
     // Should remove avatar data from localStorage
     expect(localStorage.removeItem).toHaveBeenCalledWith('userAvatar');
     expect(localStorage.removeItem).toHaveBeenCalledWith('userAvatarUrl');
   });
-  
+
   it('should handle user sign-out correctly', async () => {
     render(
       <ProfileProvider>
         <ProfileDisplay />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Wait for profile to load
     await waitFor(() => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
-    
+
     // Simulate user sign-out
     act(() => {
       // Use the exported helper to update the mock user
       require('@/contexts/AuthContext').__setMockUser(null);
-      
+
       // Manually trigger a re-render since we're changing the mock outside React
       render(
         <ProfileProvider>
           <ProfileDisplay />
-        </ProfileProvider>
+        </ProfileProvider>,
       );
     });
-    
+
     // Should show no profile when user is signed out
     await waitFor(() => {
       expect(screen.getByTestId('no-profile')).toBeInTheDocument();
     });
   });
-  
+
   it('should handle user sign-in correctly', async () => {
     // Start with no user
     currentUser = null;
-    
+
     render(
       <ProfileProvider>
         <ProfileDisplay />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Should show no profile when user is signed out
     await waitFor(() => {
       expect(screen.getByTestId('no-profile')).toBeInTheDocument();
     });
-    
+
     // Simulate user sign-in
     act(() => {
       // Use the exported helper to update the mock user
-      require('@/contexts/AuthContext').__setMockUser({ 
-        id: 'new-user-id', 
-        email: 'newuser@example.com' 
+      require('@/contexts/AuthContext').__setMockUser({
+        id: 'new-user-id',
+        email: 'newuser@example.com',
       });
-      
+
       // Manually trigger a re-render
       render(
         <ProfileProvider>
           <ProfileDisplay />
-        </ProfileProvider>
+        </ProfileProvider>,
       );
     });
-    
+
     // Should load profile for new user
     await waitFor(() => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
-    
+
     // Username should be initialized from new email
     expect(screen.getByTestId('profile-username').textContent).toContain('newuser');
   });
-  
+
   it('should handle localStorage errors gracefully', async () => {
     // Mock localStorage to throw errors
     Object.defineProperty(window, 'localStorage', {
@@ -393,36 +375,33 @@ describe('ProfileContext (Enhanced)', () => {
       },
       writable: true,
     });
-    
+
     render(
       <ProfileProvider>
         <ProfileDisplay />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Should recover from localStorage errors
     await waitFor(() => {
       // Either shows loading followed by empty profile, or directly empty profile
-      expect(
-        screen.queryByTestId('profile-container') || 
-        screen.queryByTestId('no-profile')
-      ).toBeInTheDocument();
+      expect(screen.queryByTestId('profile-container') || screen.queryByTestId('no-profile')).toBeInTheDocument();
     });
-    
+
     // Console error should have been called
     expect(console.error).toHaveBeenCalled();
   });
-  
+
   it('should throw error when useProfile is used outside ProfileProvider', () => {
     render(<ProfileConsumer />);
-    
+
     // Should show error message
     expect(screen.getByTestId('profile-consumer-error')).toBeInTheDocument();
     expect(screen.getByTestId('profile-consumer-error').textContent).toContain(
-      'useProfile must be used within a ProfileProvider'
+      'useProfile must be used within a ProfileProvider',
     );
   });
-  
+
   it('should handle partial profile updates correctly', async () => {
     // Set up initial profile with some fields
     const initialProfile: UserProfile = {
@@ -430,61 +409,61 @@ describe('ProfileContext (Enhanced)', () => {
       full_name: 'Initial User',
       bio: 'Initial bio',
     };
-    
+
     localStorageMock['userProfile'] = JSON.stringify(initialProfile);
-    
+
     render(
       <ProfileProvider>
         <ProfileDisplay />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Wait for profile to load
     await waitFor(() => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
-    
+
     // Create a custom update button to test partial updates
     const TestUpdater = () => {
       const { updateProfile } = useProfile();
       return (
-        <button 
+        <button
           data-testid="partial-update"
-          onClick={() => updateProfile({ 
-            location: 'New Location',
-            title: 'New Title'
-          })}
+          onClick={() =>
+            updateProfile({
+              location: 'New Location',
+              title: 'New Title',
+            })
+          }
         >
           Partial Update
         </button>
       );
     };
-    
+
     // Re-render with the test updater
     const { rerender } = render(
       <ProfileProvider>
         <ProfileDisplay />
         <TestUpdater />
-      </ProfileProvider>
+      </ProfileProvider>,
     );
-    
+
     // Perform partial update
     act(() => {
       fireEvent.click(screen.getByTestId('partial-update'));
     });
-    
+
     // Should maintain existing fields while updating new ones
     expect(screen.getByTestId('profile-username').textContent).toContain('initialuser');
     expect(screen.getByTestId('profile-fullname').textContent).toContain('Initial User');
     expect(screen.getByTestId('profile-bio').textContent).toContain('Initial bio');
     expect(screen.getByTestId('profile-location').textContent).toContain('New Location');
     expect(screen.getByTestId('profile-title').textContent).toContain('New Title');
-    
+
     // Check localStorage for merged profile
-    const savedProfileJSON = vi.mocked(localStorage.setItem).mock.calls.find(
-      call => call[0] === 'userProfile'
-    )?.[1];
-    
+    const savedProfileJSON = vi.mocked(localStorage.setItem).mock.calls.find((call) => call[0] === 'userProfile')?.[1];
+
     if (savedProfileJSON) {
       const savedProfile = JSON.parse(savedProfileJSON);
       expect(savedProfile).toEqual({
@@ -492,7 +471,7 @@ describe('ProfileContext (Enhanced)', () => {
         full_name: 'Initial User',
         bio: 'Initial bio',
         location: 'New Location',
-        title: 'New Title'
+        title: 'New Title',
       });
     } else {
       fail('Expected localStorage.setItem to be called with userProfile');

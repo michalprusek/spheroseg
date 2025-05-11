@@ -1,7 +1,6 @@
-
-import React from "react";
-import { Link } from "react-router-dom";
-import { Microscope } from "lucide-react";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Microscope } from 'lucide-react';
 
 const Logo = () => {
   return (
@@ -9,9 +8,7 @@ const Logo = () => {
       <div className="w-9 h-9 flex items-center justify-center">
         <img src="/favicon.svg" alt="SpheroSeg Logo" className="w-9 h-9" />
       </div>
-      <span className="ml-2 text-xl font-semibold hidden sm:inline-block dark:text-white">
-        SpheroSeg
-      </span>
+      <span className="ml-2 text-xl font-semibold hidden sm:inline-block dark:text-white">SpheroSeg</span>
     </Link>
   );
 };

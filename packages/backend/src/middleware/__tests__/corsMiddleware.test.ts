@@ -90,18 +90,14 @@ describe('CORS Middleware', () => {
 
   describe('CORS headers', () => {
     it('should set Access-Control-Allow-Origin header for allowed origins', async () => {
-      const response = await request(app)
-        .get('/test')
-        .set('Origin', 'http://localhost:3000');
+      const response = await request(app).get('/test').set('Origin', 'http://localhost:3000');
 
       expect(response.status).toBe(200);
       expect(response.headers['access-control-allow-origin']).toBe('http://localhost:3000');
     });
 
     it('should set Access-Control-Allow-Credentials header', async () => {
-      const response = await request(app)
-        .get('/test')
-        .set('Origin', 'http://localhost:3000');
+      const response = await request(app).get('/test').set('Origin', 'http://localhost:3000');
 
       expect(response.headers['access-control-allow-credentials']).toBe('true');
     });

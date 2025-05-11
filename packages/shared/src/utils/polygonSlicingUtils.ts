@@ -6,7 +6,7 @@ export interface Polygon {
   id: string;
   points: Point[];
   type?: 'external' | 'internal';
-  [key: string]: any; // Allow for additional properties
+  [key: string]: unknown; // Allow for additional properties
 }
 
 // Intersection interface used for polygon slicing

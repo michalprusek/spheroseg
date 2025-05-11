@@ -1,6 +1,8 @@
 /* App-specific styles */
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
   margin: 0;
@@ -18,7 +20,9 @@ html, body, #root {
   border-radius: var(--toast-border-radius) !important;
   min-width: 320px !important;
   max-width: 420px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
 }
 
 [data-sonner-toast] [data-description] {
@@ -47,16 +51,18 @@ html, body, #root {
   font-family: 'Inter', sans-serif !important;
   font-size: 0.95rem !important;
   line-height: 1.5 !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
   border-width: 1px !important;
 }
 
 /* Toast types */
-.custom-toast[data-type="success"] {
+.custom-toast[data-type='success'] {
   border-left: 4px solid #10b981 !important;
 }
 
-.custom-toast[data-type="error"],
+.custom-toast[data-type='error'],
 .error-toast {
   border-left: 4px solid #ef4444 !important;
   padding: 1.25rem 1.5rem !important;
@@ -64,31 +70,47 @@ html, body, #root {
   color: #991b1b !important;
 }
 
-.custom-toast[data-type="error"] [data-description],
+.custom-toast[data-type='error'] [data-description],
 .error-toast [data-description] {
   color: #b91c1c !important;
   margin-top: 0.75rem !important;
   font-size: 0.875rem !important;
 }
 
-.custom-toast[data-type="warning"] {
+.custom-toast[data-type='warning'] {
   border-left: 4px solid #f59e0b !important;
 }
 
-.custom-toast[data-type="info"] {
+.custom-toast[data-type='info'] {
   border-left: 4px solid #3b82f6 !important;
 }
 
 /* Typography improvements */
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Open Sans',
+    'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   letter-spacing: -0.011em;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.02em;
@@ -122,7 +144,9 @@ p {
 
 /* Custom shadows */
 .shadow-soft {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.05),
+    0 8px 10px -6px rgba(0, 0, 0, 0.01);
 }
 
 .shadow-inner-light {
@@ -192,7 +216,9 @@ p {
 .staggered-fade-in {
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
 }
 
 .staggered-fade-in.active {

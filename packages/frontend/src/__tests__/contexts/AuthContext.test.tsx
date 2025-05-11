@@ -1,16 +1,19 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import '@testing-library/jest-dom';
-import apiClient from '@/lib/apiClient';
-import { toast } from 'sonner';
 
 // Mock fetch to avoid network requests in tests
-vi.stubGlobal('fetch', vi.fn().mockImplementation(() => Promise.resolve({
-  json: () => Promise.resolve({}),
-  ok: true
-})));
+vi.stubGlobal(
+  'fetch',
+  vi.fn().mockImplementation(() =>
+    Promise.resolve({
+      json: () => Promise.resolve({}),
+      ok: true,
+    }),
+  ),
+);
 
 // Create a more robust mock for the API client
 const mockApi = {
@@ -18,25 +21,25 @@ const mockApi = {
   post: vi.fn(),
   put: vi.fn(),
   delete: vi.fn(),
-  getUri: vi.fn().mockReturnValue('http://localhost:3000')
+  getUri: vi.fn().mockReturnValue('http://localhost:3000'),
 };
 
 // Mock the API client
 vi.mock('@/lib/apiClient', () => ({
-  default: mockApi
+  default: mockApi,
 }));
 
 // Mock the toast
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
-    error: vi.fn()
-  }
+    error: vi.fn(),
+  },
 }));
 
 // Mock the useNavigate hook
 vi.mock('react-router-dom', () => ({
-  useNavigate: () => vi.fn()
+  useNavigate: () => vi.fn(),
 }));
 
 // Mock localStorage
@@ -52,14 +55,14 @@ const localStorageMock = (() => {
     },
     clear: () => {
       store = {};
-    }
+    },
   };
 })();
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 // Test component that uses the auth context
 const TestComponent = () => {
-  const { user, token, loading, signIn, signUp, signOut } = useAuth();
+  const { user, loading, signIn, signUp, signOut } = useAuth();
 
   return (
     <div>
@@ -72,24 +75,15 @@ const TestComponent = () => {
       )}
       <div data-testid="loading-status">{loading ? 'Loading' : 'Not Loading'}</div>
 
-      <button
-        onClick={() => signIn('test@example.com', 'password123')}
-        data-testid="sign-in-button"
-      >
+      <button onClick={() => signIn('test@example.com', 'password123')} data-testid="sign-in-button">
         Sign In
       </button>
 
-      <button
-        onClick={() => signUp('test@example.com', 'password123', 'Test User')}
-        data-testid="sign-up-button"
-      >
+      <button onClick={() => signUp('test@example.com', 'password123', 'Test User')} data-testid="sign-up-button">
         Sign Up
       </button>
 
-      <button
-        onClick={() => signOut()}
-        data-testid="sign-out-button"
-      >
+      <button onClick={() => signOut()} data-testid="sign-out-button">
         Sign Out
       </button>
     </div>
@@ -105,8 +99,8 @@ describe('AuthContext', () => {
       data: {
         id: 'test-user-id',
         email: 'test@example.com',
-        name: 'Test User'
-      }
+        name: 'Test User',
+      },
     });
     mockApi.post.mockResolvedValue({
       data: {
@@ -114,9 +108,9 @@ describe('AuthContext', () => {
         user: {
           id: 'test-user-id',
           email: 'test@example.com',
-          name: 'Test User'
-        }
-      }
+          name: 'Test User',
+        },
+      },
     });
   });
 
@@ -124,7 +118,7 @@ describe('AuthContext', () => {
     return render(
       <AuthProvider>
         <TestComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
   };
 

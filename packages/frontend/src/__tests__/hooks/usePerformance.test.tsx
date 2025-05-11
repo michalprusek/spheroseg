@@ -41,36 +41,36 @@ describe('usePerformance', () => {
 
   it('should mark component mount and render', () => {
     const { result, unmount } = renderHook(() => usePerformance('TestComponent'));
-    
+
     // Should have marked render start and end
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-render-0-start');
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-render-0-end');
-    
+
     // Should have marked mount end
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-mount-end');
-    
+
     // Unmount to test unmount marking
     unmount();
-    
+
     // Should have marked unmount start
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-unmount-start');
-    
+
     // Wait for setTimeout to complete
     jest.runAllTimers();
-    
+
     // Should have marked unmount end
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-unmount-end');
   });
 
   it('should provide manual performance measurement functions', () => {
     const { result } = renderHook(() => usePerformance('TestComponent'));
-    
+
     // Test mark function
     act(() => {
       result.current.mark('custom-mark');
     });
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-custom-mark');
-    
+
     // Test measure function
     act(() => {
       result.current.measure('custom-measure', 'start-mark', 'end-mark');
@@ -78,16 +78,16 @@ describe('usePerformance', () => {
     expect(measurePerformance).toHaveBeenCalledWith(
       'TestComponent-custom-measure',
       'TestComponent-start-mark',
-      'TestComponent-end-mark'
+      'TestComponent-end-mark',
     );
-    
+
     // Test startMeasure function
     let measureOperation;
     act(() => {
       measureOperation = result.current.startMeasure('operation');
     });
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-operation-start');
-    
+
     // Test stop function
     act(() => {
       measureOperation.stop();
@@ -96,22 +96,22 @@ describe('usePerformance', () => {
   });
 
   it('should respect options to disable measurements', () => {
-    const { result, unmount } = renderHook(() => 
+    const { result, unmount } = renderHook(() =>
       usePerformance('TestComponent', {
         measureMount: false,
         measureRender: false,
         measureUnmount: false,
         logMeasurements: false,
-      })
+      }),
     );
-    
+
     // Should not have marked render or mount
     expect(markPerformance).not.toHaveBeenCalledWith('TestComponent-render-0-start');
     expect(markPerformance).not.toHaveBeenCalledWith('TestComponent-mount-end');
-    
+
     // Unmount
     unmount();
-    
+
     // Should not have marked unmount
     expect(markPerformance).not.toHaveBeenCalledWith('TestComponent-unmount-start');
   });

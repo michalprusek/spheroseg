@@ -9,7 +9,7 @@ export enum LogLevel {
   INFO = 1,
   WARN = 2,
   ERROR = 3,
-  NONE = 4
+  NONE = 4,
 }
 
 // Current log level - can be set via environment variable or localStorage
@@ -98,7 +98,7 @@ export const createLogger = (moduleName: string) => {
     // Create a child logger with a sub-module name
     child: (subModule: string) => {
       return createLogger(`${moduleName}:${subModule}`);
-    }
+    },
   };
 };
 

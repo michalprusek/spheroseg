@@ -27,15 +27,16 @@ vi.mock('@/contexts/LanguageContext', () => ({
       const translations = {
         'editor.sliceErrorInvalidPolygon': 'Cannot slice: Invalid polygon selected.',
         'editor.sliceWarningInvalidResult': 'Slice resulted in polygons too small to be valid.',
-        'editor.sliceWarningInvalidIntersections': 'Slice invalid: The cut line must intersect the polygon at exactly two points.',
+        'editor.sliceWarningInvalidIntersections':
+          'Slice invalid: The cut line must intersect the polygon at exactly two points.',
         'editor.sliceSuccess': 'Polygon sliced successfully.',
         'editor.noPolygonToSlice': 'No polygons available to slice.',
-        'editor.savingTooltip': 'Saving...'
+        'editor.savingTooltip': 'Saving...',
       };
       return translations[key] || key;
     },
     language: 'en',
-    changeLanguage: vi.fn()
+    changeLanguage: vi.fn(),
   }),
 }));
 
@@ -62,13 +63,17 @@ describe('Editor Slice Warning Translation Keys', () => {
         <LanguageProvider>
           <TestEditorTranslationComponent />
         </LanguageProvider>
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     // Check that all keys render with their expected values
     expect(screen.getByTestId('sliceErrorInvalidPolygon')).toHaveTextContent('Cannot slice: Invalid polygon selected.');
-    expect(screen.getByTestId('sliceWarningInvalidResult')).toHaveTextContent('Slice resulted in polygons too small to be valid.');
-    expect(screen.getByTestId('sliceWarningInvalidIntersections')).toHaveTextContent('Slice invalid: The cut line must intersect the polygon at exactly two points.');
+    expect(screen.getByTestId('sliceWarningInvalidResult')).toHaveTextContent(
+      'Slice resulted in polygons too small to be valid.',
+    );
+    expect(screen.getByTestId('sliceWarningInvalidIntersections')).toHaveTextContent(
+      'Slice invalid: The cut line must intersect the polygon at exactly two points.',
+    );
     expect(screen.getByTestId('sliceSuccess')).toHaveTextContent('Polygon sliced successfully.');
     expect(screen.getByTestId('noPolygonToSlice')).toHaveTextContent('No polygons available to slice.');
     expect(screen.getByTestId('savingTooltip')).toHaveTextContent('Saving...');

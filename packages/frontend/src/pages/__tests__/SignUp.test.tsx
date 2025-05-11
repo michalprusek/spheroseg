@@ -14,8 +14,8 @@ const mockToastSuccess = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
     error: mockToastError,
-    success: mockToastSuccess
-  }
+    success: mockToastSuccess,
+  },
 }));
 
 // Create a standalone SignUp component for testing
@@ -102,9 +102,7 @@ const MockSignUp = ({ isLoggedIn = false }) => {
           />
         </div>
 
-        <button type="submit">
-          {isLoading ? 'Creating account...' : 'Sign up'}
-        </button>
+        <button type="submit">{isLoading ? 'Creating account...' : 'Sign up'}</button>
       </form>
 
       <div>
@@ -169,15 +167,15 @@ describe('SignUp Component', () => {
 
     // Fill in the form with mismatched passwords
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     fireEvent.change(screen.getByLabelText('Confirm Password'), {
-      target: { value: 'password456' }
+      target: { value: 'password456' },
     });
 
     // Submit the form
@@ -195,15 +193,15 @@ describe('SignUp Component', () => {
 
     // Fill in the form with a short password
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Password'), {
-      target: { value: 'pass' }
+      target: { value: 'pass' },
     });
 
     fireEvent.change(screen.getByLabelText('Confirm Password'), {
-      target: { value: 'pass' }
+      target: { value: 'pass' },
     });
 
     // Submit the form
@@ -221,15 +219,15 @@ describe('SignUp Component', () => {
 
     // Fill in the form using fireEvent directly for this test
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     fireEvent.change(screen.getByLabelText('Confirm Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     // Submit the form
@@ -246,23 +244,26 @@ describe('SignUp Component', () => {
 
   it('shows loading state during sign up', async () => {
     // Mock signUp to return a promise that doesn't resolve immediately
-    mockSignUp.mockImplementation(() => new Promise(resolve => {
-      setTimeout(resolve, 100);
-    }));
+    mockSignUp.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(resolve, 100);
+        }),
+    );
 
     renderComponent();
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     fireEvent.change(screen.getByLabelText('Confirm Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     // Submit the form
@@ -282,15 +283,15 @@ describe('SignUp Component', () => {
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText('Email address'), {
-      target: { value: 'test@example.com' }
+      target: { value: 'test@example.com' },
     });
 
     fireEvent.change(screen.getByLabelText('Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     fireEvent.change(screen.getByLabelText('Confirm Password'), {
-      target: { value: 'password123' }
+      target: { value: 'password123' },
     });
 
     // Submit the form

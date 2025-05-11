@@ -14,9 +14,9 @@ export const mockVisualizationSegmentation = {
         { x: 10, y: 10 },
         { x: 100, y: 10 },
         { x: 100, y: 100 },
-        { x: 10, y: 100 }
+        { x: 10, y: 100 },
       ],
-      type: 'external' as const
+      type: 'external' as const,
     },
     {
       id: 'polygon-2',
@@ -24,17 +24,17 @@ export const mockVisualizationSegmentation = {
         { x: 200, y: 200 },
         { x: 300, y: 200 },
         { x: 300, y: 300 },
-        { x: 200, y: 300 }
+        { x: 200, y: 300 },
       ],
-      type: 'external' as const
-    }
-  ]
+      type: 'external' as const,
+    },
+  ],
 };
 
 // Empty segmentation for testing error states
 export const emptyVisualizationSegmentation = {
   ...mockVisualizationSegmentation,
-  polygons: []
+  polygons: [],
 };
 
 // Setup function to add common mocks before tests
@@ -55,8 +55,8 @@ export function setupVisualizationMocks() {
       Compactness: 0.8,
       Convexity: 0.95,
       Solidity: 0.9,
-      Sphericity: 0.75
-    })
+      Sphericity: 0.75,
+    }),
   }));
 
   // Mock the recharts components
@@ -75,7 +75,7 @@ export function setupVisualizationMocks() {
     ),
     Cell: () => <div data-testid="pie-cell"></div>,
     Tooltip: () => <div data-testid="tooltip"></div>,
-    Legend: () => <div data-testid="legend"></div>
+    Legend: () => <div data-testid="legend"></div>,
   }));
 
   // Mock the language context
@@ -84,19 +84,16 @@ export function setupVisualizationMocks() {
       t: (key: string) => key,
       language: 'en',
       setLanguage: vi.fn(),
-      availableLanguages: ['en', 'cs']
-    })
+      availableLanguages: ['en', 'cs'],
+    }),
   }));
 }
 
 // Render helper for visualization components
-export function renderVisualization(
-  ui: React.ReactElement,
-  options = {}
-) {
+export function renderVisualization(ui: React.ReactElement, options = {}) {
   return renderWithProviders(ui, {
     withLanguage: true,
-    ...options
+    ...options,
   });
 }
 

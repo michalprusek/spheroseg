@@ -115,7 +115,9 @@ describe('ProjectDialogForm Component', () => {
     render(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
 
     // Get submit button
-    const submitButton = screen.getByRole('button', { name: 'Creating Project...' });
+    const submitButton = screen.getByRole('button', {
+      name: 'Creating Project...',
+    });
 
     // Check if button is disabled
     expect(submitButton).toBeDisabled();

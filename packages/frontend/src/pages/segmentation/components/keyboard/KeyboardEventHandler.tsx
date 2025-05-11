@@ -1,4 +1,3 @@
-
 import React, { useEffect, ReactNode } from 'react';
 
 interface KeyboardEventHandlerProps {
@@ -21,7 +20,7 @@ const KeyboardEventHandler = ({
   toggleEditMode,
   toggleSlicingMode,
   togglePointAddingMode,
-  exitAllEditModes
+  exitAllEditModes,
 }: KeyboardEventHandlerProps) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -29,26 +28,25 @@ const KeyboardEventHandler = ({
         exitAllEditModes();
         return;
       }
-      
+
       if (e.key === 'e' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         toggleEditMode();
       }
-      
+
       if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         toggleSlicingMode();
       }
-      
+
       if (e.key === 'a' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         togglePointAddingMode();
       }
-      
+
       if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         onUndo();
       }
-      
-      if ((e.key === 'y' && (e.ctrlKey || e.metaKey)) ||
-          (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)) {
+
+      if ((e.key === 'y' && (e.ctrlKey || e.metaKey)) || (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)) {
         e.preventDefault();
         onRedo();
       }

@@ -13,7 +13,7 @@ vi.mock('sonner', () => ({
     success: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
-  }
+  },
 }));
 
 vi.mock('file-saver', () => ({
@@ -46,10 +46,10 @@ const mockImages = [
             { x: 100, y: 10 },
             { x: 100, y: 100 },
             { x: 10, y: 100 },
-          ]
-        }
-      ]
-    }
+          ],
+        },
+      ],
+    },
   },
   {
     id: 'img2',
@@ -58,34 +58,34 @@ const mockImages = [
     height: 600,
     createdAt: new Date('2023-01-02'),
     segmentationStatus: 'pending',
-    segmentationResult: null
-  }
+    segmentationResult: null,
+  },
 ];
 
 // Mock context providers
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     token: 'mock-token',
-    user: { id: 'user1', name: 'Test User' }
+    user: { id: 'user1', name: 'Test User' },
   }),
-  AuthProvider: ({ children }) => <>{children}</>
+  AuthProvider: ({ children }) => <>{children}</>,
 }));
 
 vi.mock('@/contexts/ProfileContext', () => ({
   useProfile: () => ({
     profile: { id: 'profile1', user_id: 'user1', preferred_language: 'en' },
     loading: false,
-    error: null
+    error: null,
   }),
-  ProfileProvider: ({ children }) => <>{children}</>
+  ProfileProvider: ({ children }) => <>{children}</>,
 }));
 
 vi.mock('@/contexts/ThemeContext', () => ({
   useTheme: () => ({
     theme: 'light',
-    setTheme: vi.fn()
+    setTheme: vi.fn(),
   }),
-  ThemeProvider: ({ children }) => <>{children}</>
+  ThemeProvider: ({ children }) => <>{children}</>,
 }));
 
 describe('useExportFunctions', () => {
@@ -94,7 +94,9 @@ describe('useExportFunctions', () => {
   });
 
   it('should initialize with default values', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper: AllProvidersWrapper });
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), {
+      wrapper: AllProvidersWrapper,
+    });
 
     expect(result.current.includeMetadata).toBe(true);
     expect(result.current.includeObjectMetrics).toBe(true);
@@ -106,7 +108,9 @@ describe('useExportFunctions', () => {
   });
 
   it('should select all images by default', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper: AllProvidersWrapper });
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), {
+      wrapper: AllProvidersWrapper,
+    });
 
     // Check that all images are selected
     expect(result.current.selectedImages['img1']).toBe(true);
@@ -114,7 +118,9 @@ describe('useExportFunctions', () => {
   });
 
   it('should toggle image selection', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper: AllProvidersWrapper });
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), {
+      wrapper: AllProvidersWrapper,
+    });
 
     // Initially all images are selected
     expect(result.current.selectedImages['img1']).toBe(true);
@@ -131,7 +137,9 @@ describe('useExportFunctions', () => {
   });
 
   it('should toggle all image selections', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper: AllProvidersWrapper });
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), {
+      wrapper: AllProvidersWrapper,
+    });
 
     // Initially all images are selected
     expect(result.current.selectedImages['img1']).toBe(true);
@@ -157,7 +165,9 @@ describe('useExportFunctions', () => {
   });
 
   it('should count selected images correctly', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper: AllProvidersWrapper });
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), {
+      wrapper: AllProvidersWrapper,
+    });
 
     // Initially all images are selected
     expect(result.current.getSelectedCount()).toBe(2);
@@ -180,7 +190,9 @@ describe('useExportFunctions', () => {
   });
 
   it('should export metrics as XLSX', async () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper: AllProvidersWrapper });
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), {
+      wrapper: AllProvidersWrapper,
+    });
 
     // Call the export function
     await act(async () => {
@@ -198,10 +210,12 @@ describe('useExportFunctions', () => {
     const mockBlob = new Blob(['test'], { type: 'application/zip' });
     (apiClient.get as any).mockResolvedValue({
       data: mockBlob,
-      headers: { 'content-disposition': 'attachment; filename="export.zip"' }
+      headers: { 'content-disposition': 'attachment; filename="export.zip"' },
     });
 
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper: AllProvidersWrapper });
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), {
+      wrapper: AllProvidersWrapper,
+    });
 
     // Call the export function with selected images
     await act(async () => {
@@ -220,7 +234,9 @@ describe('useExportFunctions', () => {
     // Mock API error
     (apiClient.get as any).mockRejectedValue(new Error('API error'));
 
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper: AllProvidersWrapper });
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), {
+      wrapper: AllProvidersWrapper,
+    });
 
     // Call the export function with selected images
     await act(async () => {

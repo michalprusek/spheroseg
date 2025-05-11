@@ -14,7 +14,7 @@ import {
   simplifyPolygon,
   calculatePolygonArea,
   calculatePolygonPerimeter,
-  calculateBoundingBox
+  calculateBoundingBox,
 } from '@/shared/utils/polygonOperationsUtils';
 
 // Handle messages from the main thread
@@ -56,7 +56,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
     const response: WorkerResponse = {
       id,
       operation,
-      result
+      result,
     };
 
     self.postMessage(response);
@@ -65,7 +65,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       id,
       operation,
       result: null,
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     };
 
     self.postMessage(response);

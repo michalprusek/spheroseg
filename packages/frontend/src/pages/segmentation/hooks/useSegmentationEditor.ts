@@ -23,7 +23,7 @@ export const useSegmentationEditor = (
   projectId?: string | null,
   imageId?: string | null,
   userId?: string | null,
-  svgRef?: React.RefObject<SVGSVGElement>
+  svgRef?: React.RefObject<SVGSVGElement>,
 ) => {
   const navigate = useNavigate();
 
@@ -31,7 +31,9 @@ export const useSegmentationEditor = (
   useEffect(() => {
     if (projectId && imageId) {
       console.log(`[useSegmentationEditor] Redirecting to new editor: /projects/${projectId}/segmentation/${imageId}`);
-      navigate(`/projects/${projectId}/segmentation/${imageId}`, { replace: true });
+      navigate(`/projects/${projectId}/segmentation/${imageId}`, {
+        replace: true,
+      });
     } else {
       console.error('[useSegmentationEditor] Missing projectId or imageId for redirect');
     }
@@ -55,7 +57,11 @@ export const useSegmentationEditor = (
     vertexDragState: { current: null },
     editMode: EditMode.VIEW,
     slicingMode: false,
-    pointAddingMode: { isActive: false, sourcePolygonId: null, pointIndex: null },
+    pointAddingMode: {
+      isActive: false,
+      sourcePolygonId: null,
+      pointIndex: null,
+    },
     tempPoints: { points: [] },
     cursorPosition: null,
     sliceStartPoint: null,

@@ -16,18 +16,13 @@ export const triggerSegmentationTask = async (
   imageId: string,
   imagePath: string,
   parameters: any,
-  priority: number = 1
+  priority: number = 1,
 ): Promise<string> => {
   logger.info(`Queueing segmentation for imageId: ${imageId}, path: ${imagePath}, priority: ${priority}`);
 
   try {
     // Use the centralized segmentation queue service
-    return await segmentationQueueService.triggerSegmentationTask(
-      imageId,
-      imagePath,
-      parameters,
-      priority
-    );
+    return await segmentationQueueService.triggerSegmentationTask(imageId, imagePath, parameters, priority);
   } catch (error) {
     logger.error(`Error adding segmentation task for image ${imageId} to queue:`, { error });
     throw error; // Re-throw to allow caller to handle the error

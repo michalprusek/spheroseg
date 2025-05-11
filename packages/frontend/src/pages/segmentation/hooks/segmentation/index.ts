@@ -8,31 +8,16 @@ export * from './constants';
 export { useSegmentationV2 } from './useSegmentationV2';
 
 // Export utility functions
-export { 
-  getScreenCoordinates, 
-  getCanvasCoordinates,
-  calculateCenteringTransform
-} from './coordinates';
+export { getScreenCoordinates, getCanvasCoordinates, calculateCenteringTransform } from './coordinates';
 
 export {
   isPointInPolygon,
   distanceToSegment,
   slicePolygon,
   createPolygon,
-  updateSegmentationWithPolygons
+  updateSegmentationWithPolygons,
 } from './geometry';
 
-export {
-  fetchImageData,
-  fetchSegmentationData,
-  createEmptySegmentation,
-  saveSegmentationData
-} from './api';
+export { fetchImageData, fetchSegmentationData, createEmptySegmentation, saveSegmentationData } from './api';
 
-export {
-  handleMouseDown,
-  handleMouseMove,
-  handleMouseUp,
-  handleWheel,
-  handleDeletePolygon
-} from './interactions';
+export { handleMouseDown, handleMouseMove, handleMouseUp, handleWheel, handleDeletePolygon } from './interactions';

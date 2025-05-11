@@ -22,22 +22,22 @@ vi.mock('react-i18next', () => ({
         'export.selectImages': 'Select Images to Export',
         'project.loading': 'Loading project...',
         'project.error': 'Error loading project',
-        'common.back': 'Back'
+        'common.back': 'Back',
       };
       return translations[key] || key;
     },
     i18n: {
       changeLanguage: vi.fn(),
-      language: 'en'
-    }
-  })
+      language: 'en',
+    },
+  }),
 }));
 
 // Mock dependencies
 vi.mock('@/lib/apiClient', () => ({
   default: {
-    get: vi.fn()
-  }
+    get: vi.fn(),
+  },
 }));
 
 // Mock react-router-dom hooks
@@ -46,7 +46,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useParams: () => ({ projectId: 'test-project-id' }),
-    useNavigate: () => vi.fn()
+    useNavigate: () => vi.fn(),
   };
 });
 
@@ -61,8 +61,8 @@ describe('ProjectExportPage Component', () => {
             title: 'Test Project',
             description: 'Test Description',
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
+            updated_at: new Date().toISOString(),
+          },
         });
       }
       if (url.includes('/projects/test-project-id/images')) {
@@ -72,15 +72,15 @@ describe('ProjectExportPage Component', () => {
               id: 'test-image-id-1',
               name: 'test-image-1.jpg',
               thumbnail_path: '/path/to/thumbnail-1.jpg',
-              status: 'completed'
+              status: 'completed',
             },
             {
               id: 'test-image-id-2',
               name: 'test-image-2.jpg',
               thumbnail_path: '/path/to/thumbnail-2.jpg',
-              status: 'completed'
-            }
-          ]
+              status: 'completed',
+            },
+          ],
         });
       }
       return Promise.resolve({ data: {} });
@@ -103,7 +103,7 @@ describe('ProjectExportPage Component', () => {
             </LanguageProvider>
           </ProfileProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

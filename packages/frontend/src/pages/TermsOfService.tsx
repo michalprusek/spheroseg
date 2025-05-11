@@ -1,8 +1,8 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/contexts/LanguageContext";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const TermsOfService = () => {
   const { t } = useLanguage();
@@ -16,34 +16,22 @@ const TermsOfService = () => {
 
           <div className="prose prose-blue max-w-none">
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('termsPage.acceptance.title')}</h2>
-            <p className="mb-4">
-              {t('termsPage.acceptance.paragraph1')}
-            </p>
+            <p className="mb-4">{t('termsPage.acceptance.paragraph1')}</p>
 
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('termsPage.useLicense.title')}</h2>
-            <p className="mb-4">
-              {t('termsPage.useLicense.paragraph1')}
-            </p>
+            <p className="mb-4">{t('termsPage.useLicense.paragraph1')}</p>
 
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('termsPage.dataUsage.title')}</h2>
-            <p className="mb-4">
-              {t('termsPage.dataUsage.paragraph1')}
-            </p>
+            <p className="mb-4">{t('termsPage.dataUsage.paragraph1')}</p>
 
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('termsPage.limitations.title')}</h2>
-            <p className="mb-4">
-              {t('termsPage.limitations.paragraph1')}
-            </p>
+            <p className="mb-4">{t('termsPage.limitations.paragraph1')}</p>
 
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('termsPage.revisions.title')}</h2>
-            <p className="mb-4">
-              {t('termsPage.revisions.paragraph1')}
-            </p>
+            <p className="mb-4">{t('termsPage.revisions.paragraph1')}</p>
 
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('termsPage.governingLaw.title')}</h2>
-            <p className="mb-4">
-              {t('termsPage.governingLaw.paragraph1')}
-            </p>
+            <p className="mb-4">{t('termsPage.governingLaw.paragraph1')}</p>
 
             <p className="text-sm text-gray-500 mt-8 mb-4">Last Updated: July 1, 2023</p>
           </div>

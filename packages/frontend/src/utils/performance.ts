@@ -24,7 +24,7 @@ export const initPerformanceMonitoring = () => {
         requestTime: timing.responseEnd - timing.requestStart,
         domProcessing: timing.domComplete - timing.domLoading,
         totalPageLoad: timing.loadEventEnd - navigationStart,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       navigator.sendBeacon('/api/metrics/performance', JSON.stringify(metrics));
@@ -36,7 +36,9 @@ export const initPerformanceMonitoring = () => {
     try {
       const observer = new PerformanceObserver((list) => {
         list.getEntries().forEach((entry) => {
-          console.debug(`[Performance] ${entry.name}: ${entry.startTime.toFixed(2)}ms (duration: ${entry.duration.toFixed(2)}ms)`);
+          console.debug(
+            `[Performance] ${entry.name}: ${entry.startTime.toFixed(2)}ms (duration: ${entry.duration.toFixed(2)}ms)`,
+          );
         });
       });
 
@@ -99,7 +101,7 @@ export const usePerformance = () => {
           userAgent: navigator.userAgent,
           timestamp: new Date().toISOString(),
           screenWidth: window.innerWidth,
-          screenHeight: window.innerHeight
+          screenHeight: window.innerHeight,
         };
 
         navigator.sendBeacon('/api/metrics/frontend', JSON.stringify(metrics));
@@ -140,12 +142,15 @@ export const usePerformance = () => {
 
     // Optionally send to backend
     if (navigator.sendBeacon) {
-      navigator.sendBeacon('/api/metrics/vitals', JSON.stringify({
-        name: metric.name,
-        value: metric.value,
-        id: metric.id,
-        timestamp: new Date().toISOString()
-      }));
+      navigator.sendBeacon(
+        '/api/metrics/vitals',
+        JSON.stringify({
+          name: metric.name,
+          value: metric.value,
+          id: metric.id,
+          timestamp: new Date().toISOString(),
+        }),
+      );
     }
   }, []);
 
@@ -158,7 +163,7 @@ export const usePerformance = () => {
       const duration = performance.now() - start;
       console.debug(`[Performance] ${label} took ${duration.toFixed(2)}ms`);
       return duration;
-    }
+    },
   };
 };
 
@@ -180,7 +185,7 @@ export const useImageLoadPerformance = () => {
         loadTime,
         width: img.naturalWidth,
         height: img.naturalHeight,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       if (navigator.sendBeacon) {
@@ -243,5 +248,5 @@ export default {
   useLazyLoading,
   initPerformanceMonitoring,
   markPerformance,
-  measurePerformance
+  measurePerformance,
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import KeyboardShortcutsHelp from '@/pages/segmentation/components/keyboard/KeyboardShortcutsHelp';
-import { LanguageProvider } from '@/contexts/LanguageContext';
+// LanguageProvider is provided by the mock below
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
@@ -11,15 +11,17 @@ vi.mock('@/contexts/LanguageContext', () => ({
     t: (key: string) => key,
     language: 'en',
   }),
-  LanguageProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="language-provider">{children}</div>
+  LanguageProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="language-provider">{children}</div>
+  ),
 }));
 
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: React.PropsWithChildren<unknown>) => <>{children}</>,
 }));
 
 describe('KeyboardShortcutsHelp', () => {
@@ -40,11 +42,9 @@ describe('KeyboardShortcutsHelp', () => {
     render(<KeyboardShortcutsHelp onClose={mockOnClose} />);
 
     // Check for all expected shortcuts
-    const expectedShortcuts = [
-      'V', 'E', 'A', 'C', 'S', 'Ctrl+Z', 'Ctrl+Y', 'Delete', 'Esc', '+', '-', 'R', 'Ctrl+S'
-    ];
+    const expectedShortcuts = ['V', 'E', 'A', 'C', 'S', 'Ctrl+Z', 'Ctrl+Y', 'Delete', 'Esc', '+', '-', 'R', 'Ctrl+S'];
 
-    expectedShortcuts.forEach(shortcut => {
+    expectedShortcuts.forEach((shortcut) => {
       expect(screen.getByText(shortcut)).toBeInTheDocument();
     });
   });

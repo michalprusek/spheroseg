@@ -13,16 +13,10 @@ const DuplicationTasksWidget: React.FC<DuplicationTasksWidgetProps> = ({ classNa
   return (
     <Card className={className}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">
-          {t('projects.duplicateProgress') || 'Duplication Tasks'}
-        </CardTitle>
+        <CardTitle className="text-lg font-medium">{t('projects.duplicateProgress') || 'Duplication Tasks'}</CardTitle>
       </CardHeader>
       <CardContent>
-        <DuplicationTasksList 
-          showActiveOnly={false}
-          maxTasks={3}
-          refreshInterval={5000}
-        />
+        <DuplicationTasksList showActiveOnly={false} maxTasks={3} refreshInterval={5000} />
       </CardContent>
     </Card>
   );

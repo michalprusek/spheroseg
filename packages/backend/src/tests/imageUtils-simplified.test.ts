@@ -1,6 +1,6 @@
 /**
  * Simplified Image Utils Tests
- * 
+ *
  * Tests for image utility functions without external dependencies
  */
 
@@ -25,18 +25,18 @@ interface ImageWithFullPaths extends ImageData {
 // Implement the functions to test
 function formatImagePaths(image: ImageData, origin: string): ImageWithFullPaths {
   const result: ImageWithFullPaths = { ...image };
-  
+
   // Only process relative paths that start with /
   // Any path that starts with http:// or https:// is considered absolute
   if (image.storage_path && image.storage_path.startsWith('/')) {
     result.storage_path_full = `${origin}${image.storage_path}`;
     result.src = `${origin}${image.storage_path}`;
   }
-  
+
   if (image.thumbnail_path && image.thumbnail_path.startsWith('/')) {
     result.thumbnail_path_full = `${origin}${image.thumbnail_path}`;
   }
-  
+
   return result;
 }
 
@@ -44,22 +44,20 @@ function dbPathToFilesystemPath(dbPath: string, uploadDir: string): string {
   if (!dbPath) {
     throw new Error('Invalid database path');
   }
-  
+
   // If the path already contains the upload directory, return it as is
   if (dbPath.includes(uploadDir)) {
     return dbPath;
   }
-  
+
   // If the path is absolute and doesn't start with /uploads, return it as is
   if (dbPath.startsWith('/') && !dbPath.startsWith('/uploads')) {
     return dbPath;
   }
-  
+
   // Remove /uploads prefix if present
-  const relativePath = dbPath.startsWith('/uploads/') 
-    ? dbPath.substring('/uploads'.length) 
-    : dbPath;
-  
+  const relativePath = dbPath.startsWith('/uploads/') ? dbPath.substring('/uploads'.length) : dbPath;
+
   // Join upload directory with relative path
   // Use consistent forward slashes
   return `${uploadDir}${relativePath.startsWith('/') ? '' : '/'}${relativePath}`;
@@ -69,46 +67,49 @@ function normalizePathForDb(path: string, uploadDir: string): string {
   if (!path) {
     throw new Error('Invalid path');
   }
-  
+
   // Normalize path separators to forward slashes
   const normalizedPath = path.replace(/\\/g, '/');
-  
+
   // If the path is within the upload directory, convert to a relative path with /uploads prefix
   if (normalizedPath.includes(uploadDir)) {
     return normalizedPath.replace(uploadDir, '/uploads');
   }
-  
+
   // If it's outside the upload directory, return it as is
   return normalizedPath;
 }
 
-function verifyImageFiles(image: ImageData, uploadDir: string): ImageData & { file_exists: boolean, thumbnail_exists: boolean } {
+function verifyImageFiles(
+  image: ImageData,
+  uploadDir: string,
+): ImageData & { file_exists: boolean; thumbnail_exists: boolean } {
   // Mock file system verification
   const mockFileExists = new Map<string, boolean>();
-  
+
   // Add some mock files
   mockFileExists.set('/app/uploads/test-project/test-image.jpg', true);
   mockFileExists.set('/app/uploads/test-project/thumb-test-image.jpg', true);
   mockFileExists.set('/app/uploads/missing-image.jpg', false);
-  
+
   // Convert paths to filesystem paths
   let fileExists = false;
   let thumbnailExists = false;
-  
+
   if (image.storage_path) {
     const filePath = dbPathToFilesystemPath(image.storage_path, uploadDir);
     fileExists = mockFileExists.has(filePath) ? mockFileExists.get(filePath)! : false;
   }
-  
+
   if (image.thumbnail_path) {
     const thumbnailPath = dbPathToFilesystemPath(image.thumbnail_path, uploadDir);
     thumbnailExists = mockFileExists.has(thumbnailPath) ? mockFileExists.get(thumbnailPath)! : false;
   }
-  
+
   return {
     ...image,
     file_exists: fileExists,
-    thumbnail_exists: thumbnailExists
+    thumbnail_exists: thumbnailExists,
   };
 }
 
@@ -124,7 +125,7 @@ describe('Image Utils', () => {
         storage_path: '/uploads/test-project/test-image.jpg',
         thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       const origin = 'http://localhost:3000';
@@ -144,7 +145,7 @@ describe('Image Utils', () => {
         storage_path: 'http://example.com/test-image.jpg',
         thumbnail_path: 'http://example.com/thumb-test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       const origin = 'http://localhost:3000';
@@ -163,7 +164,7 @@ describe('Image Utils', () => {
         name: 'test-image.jpg',
         storage_path: '/uploads/test-project/test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       const origin = 'http://localhost:3000';
@@ -252,7 +253,7 @@ describe('Image Utils', () => {
         storage_path: '/uploads/test-project/test-image.jpg',
         thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       const result = verifyImageFiles(image, uploadDir);
@@ -269,7 +270,7 @@ describe('Image Utils', () => {
         name: 'test-image.jpg',
         storage_path: '/uploads/test-project/test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       const result = verifyImageFiles(image, uploadDir);
@@ -286,7 +287,7 @@ describe('Image Utils', () => {
         name: 'test-image.jpg',
         storage_path: '', // Empty storage path
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       const result = verifyImageFiles(image, uploadDir);

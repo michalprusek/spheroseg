@@ -1,12 +1,12 @@
 /**
  * Unified Image Utilities for Server
- * 
+ *
  * This module provides a comprehensive set of utilities for working with images on the server:
  * - Path generation and manipulation
  * - Image metadata extraction
  * - File system operations
  * - Database path conversion
- * 
+ *
  * It consolidates functionality from:
  * - server/src/utils/imageUtils.ts
  * - server/src/utils/fileUtils.ts
@@ -16,7 +16,6 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
-import { promisify } from 'util';
 // Import the local logger instead of shared library for tests
 import logger from './logger';
 
@@ -29,14 +28,14 @@ function findLongestCommonSuffix<T>(arr1: T[], arr2: T[]): T[] {
   let i = arr1.length - 1;
   let j = arr2.length - 1;
   const commonSuffix: T[] = [];
-  
+
   // While we have elements in both arrays and they match
   while (i >= 0 && j >= 0 && arr1[i] === arr2[j]) {
     commonSuffix.unshift(arr1[i]);
     i--;
     j--;
   }
-  
+
   return commonSuffix;
 }
 
@@ -44,73 +43,78 @@ function findLongestCommonSuffix<T>(arr1: T[], arr2: T[]): T[] {
 const pathUtils = {
   dbPathToFilesystemPath: (dbPath: string, uploadDir: string): string => {
     if (!dbPath || !uploadDir) {
-      logger.error('Invalid parameters for dbPathToFilesystemPath', { dbPath, uploadDir });
+      logger.error('Invalid parameters for dbPathToFilesystemPath', {
+        dbPath,
+        uploadDir,
+      });
       return path.join(uploadDir || '.', dbPath || '');
     }
-    
+
     // Pokud cesta začíná celou absolutní cestou, vraťme ji přímo
     if (dbPath.startsWith(uploadDir)) {
       return dbPath;
     }
-    
+
     // If path starts with http:// or https://, extract the path component
     if (dbPath.startsWith('http://') || dbPath.startsWith('https://')) {
       try {
         const url = new URL(dbPath);
         dbPath = url.pathname;
-        logger.debug('Extracted path from URL', { originalPath: dbPath, extractedPath: url.pathname });
+        logger.debug('Extracted path from URL', {
+          originalPath: dbPath,
+          extractedPath: url.pathname,
+        });
       } catch (error) {
         logger.warn('Failed to parse URL', { path: dbPath, error });
         // Keep the original path if parsing fails
       }
     }
-    
+
     // Remove any leading '/uploads' or 'uploads' from the path
     const cleanPath = dbPath.replace(/^\/?(uploads\/)?/, '');
-    
+
     // Join with the upload directory - ensure uploadDir is absolute
-    const absoluteUploadDir = path.isAbsolute(uploadDir) 
-      ? uploadDir 
-      : path.resolve(process.cwd(), uploadDir);
-    
+    const absoluteUploadDir = path.isAbsolute(uploadDir) ? uploadDir : path.resolve(process.cwd(), uploadDir);
+
     const fullPath = path.join(absoluteUploadDir, cleanPath);
-    
+
     // Log the path conversion for debugging
-    logger.debug('dbPathToFilesystemPath conversion', { 
-      dbPath, 
-      uploadDir, 
+    logger.debug('dbPathToFilesystemPath conversion', {
+      dbPath,
+      uploadDir,
       absoluteUploadDir,
-      cleanPath, 
-      fullPath 
+      cleanPath,
+      fullPath,
     });
-    
+
     return fullPath;
   },
   normalizePathForDb: (absolutePath: string, uploadDir: string): string => {
     if (!absolutePath || !uploadDir) {
-      logger.error('Invalid parameters for normalizePathForDb', { absolutePath, uploadDir });
+      logger.error('Invalid parameters for normalizePathForDb', {
+        absolutePath,
+        uploadDir,
+      });
       return absolutePath || '';
     }
-    
+
     // Ensure all paths use forward slashes for consistency
     const normalizedAbsolutePath = absolutePath.replace(/\\/g, '/');
-    
+
     // Convert uploadDir to absolute path if it's not already
-    const absoluteUploadDir = path.isAbsolute(uploadDir) 
-      ? uploadDir 
-      : path.resolve(process.cwd(), uploadDir);
-    
+    const absoluteUploadDir = path.isAbsolute(uploadDir) ? uploadDir : path.resolve(process.cwd(), uploadDir);
+
     const normalizedUploadDir = absoluteUploadDir.replace(/\\/g, '/');
-    
+
     // Make sure uploadDir doesn't end with a slash
-    const normalizedUploadDirTrimmed = normalizedUploadDir.endsWith('/') 
-      ? normalizedUploadDir.slice(0, -1) 
+    const normalizedUploadDirTrimmed = normalizedUploadDir.endsWith('/')
+      ? normalizedUploadDir.slice(0, -1)
       : normalizedUploadDir;
-    
+
     // Get the project ID and filename from the absolute path
     const pathParts = normalizedAbsolutePath.split('/');
     const filename = pathParts[pathParts.length - 1];
-    
+
     // Try to find the project ID in the path
     let projectId = '';
     for (let i = 0; i < pathParts.length; i++) {
@@ -120,16 +124,20 @@ const pathUtils = {
         break;
       }
     }
-    
+
     // If we found a project ID, construct the path directly
     if (projectId) {
       const relativePath = `/uploads/${projectId}/${filename}`;
-      logger.debug('normalizePathForDb conversion with projectId', { 
-        absolutePath, uploadDir, projectId, filename, relativePath 
+      logger.debug('normalizePathForDb conversion with projectId', {
+        absolutePath,
+        uploadDir,
+        projectId,
+        filename,
+        relativePath,
       });
       return relativePath;
     }
-    
+
     // Fallback to the original logic if we couldn't find a project ID
     // Replace the upload directory with '/uploads' to create a relative path
     let relativePath;
@@ -139,47 +147,55 @@ const pathUtils = {
       // If the path doesn't start with the upload directory, try to find matching segments
       const uploadDirSegments = normalizedUploadDirTrimmed.split('/');
       const pathSegments = normalizedAbsolutePath.split('/');
-      
+
       // Find the longest common suffix between uploadDir and absolutePath
       // This handles cases where the paths might be different but have common components
       const commonSuffix = findLongestCommonSuffix(uploadDirSegments, pathSegments);
-      
+
       if (commonSuffix.length > 0) {
         // Found some common segments, use them to extract the relative path
         const commonPart = '/' + commonSuffix.join('/');
         const idx = normalizedAbsolutePath.indexOf(commonPart);
         if (idx >= 0) {
           relativePath = normalizedAbsolutePath.substring(idx);
-          logger.debug('Found common path segments', { 
-            commonPart, 
-            relativePath 
+          logger.debug('Found common path segments', {
+            commonPart,
+            relativePath,
           });
         } else {
           // Fallback to basename if something unexpected happened
           relativePath = '/' + path.basename(normalizedAbsolutePath);
-          logger.warn('Failed to extract relative path using common segments', { 
-            absolutePath, uploadDir, commonSuffix 
+          logger.warn('Failed to extract relative path using common segments', {
+            absolutePath,
+            uploadDir,
+            commonSuffix,
           });
         }
       } else {
         // If no common segments, just return the basename
         relativePath = '/' + path.basename(normalizedAbsolutePath);
-        logger.warn('Path is not within upload directory', { 
-          absolutePath, uploadDir, normalizedAbsolutePath, normalizedUploadDirTrimmed
+        logger.warn('Path is not within upload directory', {
+          absolutePath,
+          uploadDir,
+          normalizedAbsolutePath,
+          normalizedUploadDirTrimmed,
         });
       }
     }
-    
+
     // Ensure the path starts with /uploads
     if (!relativePath.startsWith('/uploads')) {
       relativePath = '/uploads' + (relativePath.startsWith('/') ? relativePath : `/${relativePath}`);
     }
-    
+
     // Log the path conversion for debugging
-    logger.debug('normalizePathForDb final path', { 
-      absolutePath, uploadDir, absoluteUploadDir, relativePath 
+    logger.debug('normalizePathForDb final path', {
+      absolutePath,
+      uploadDir,
+      absoluteUploadDir,
+      relativePath,
     });
-    
+
     return relativePath;
   },
   combineUrl: (baseUrl: string, pathStr: string): string => {
@@ -226,7 +242,7 @@ const pathUtils = {
     const uniqueFilename = pathUtils.generateUniqueFilename(
       pathUtils.extractBaseName(originalFilename),
       pathUtils.extractExtension(originalFilename) || 'png',
-      'img'
+      'img',
     );
     return path.join('uploads', projectId, uniqueFilename);
   },
@@ -235,15 +251,15 @@ const pathUtils = {
     const uniqueFilename = pathUtils.generateUniqueFilename(
       pathUtils.extractBaseName(originalFilename),
       pathUtils.extractExtension(originalFilename) || 'png',
-      'thumb'
+      'thumb',
     );
     return path.join('uploads', projectId, uniqueFilename);
-  }
+  },
 };
 
 // Create Promise-based fs functions for testing
 const fsExists = (path: string): Promise<boolean> => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     fs.access(path, fs.constants.F_OK, (err) => {
       resolve(!err);
     });
@@ -260,20 +276,17 @@ const fsMkdir = (path: string, options?: fs.MakeDirectoryOptions): Promise<void>
 };
 
 // Specifická implementace pro fs.readdir s lepším typováním
-const fsReaddir = (
-  path: string, 
-  options?: { withFileTypes?: boolean } & fs.ObjectEncodingOptions
-): Promise<string[] | fs.Dirent[]> => {
+const fsReaddir = (path: string, options?: { withFileTypes?: boolean }): Promise<string[] | fs.Dirent[]> => {
   return new Promise((resolve, reject) => {
     if (options?.withFileTypes) {
       // Pokud požadujeme Dirent objekty, použijeme správný callback typ
-      fs.readdir(path, { ...options, withFileTypes: true }, (err, files: fs.Dirent[]) => {
+      fs.readdir(path, { withFileTypes: true }, (err: NodeJS.ErrnoException | null, files: fs.Dirent[]) => {
         if (err) reject(err);
         else resolve(files);
       });
     } else {
       // Jinak zpracujeme jen stringy
-      fs.readdir(path, options || {}, (err, files: string[]) => {
+      fs.readdir(path, (err: NodeJS.ErrnoException | null, files: string[]) => {
         if (err) reject(err);
         else resolve(files);
       });
@@ -316,7 +329,7 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
  */
 export const ensureDirectoryExists = async (dirPath: string): Promise<void> => {
   try {
-    if (!await fsExists(dirPath)) {
+    if (!(await fsExists(dirPath))) {
       await fsMkdir(dirPath, { recursive: true });
       logger.debug(`Created directory: ${dirPath}`);
     }
@@ -330,14 +343,14 @@ export const ensureDirectoryExists = async (dirPath: string): Promise<void> => {
  * Get image metadata using sharp
  */
 export const getImageMetadata = async (
-  filePath: string
+  filePath: string,
 ): Promise<{ width: number; height: number; format: string }> => {
   try {
     const metadata = await sharp(filePath).metadata();
     return {
       width: metadata.width || 0,
       height: metadata.height || 0,
-      format: metadata.format || 'unknown'
+      format: metadata.format || 'unknown',
     };
   } catch (error) {
     logger.error(`Error getting image metadata: ${filePath}`, error);
@@ -351,15 +364,13 @@ export const getImageMetadata = async (
 export const createThumbnail = async (
   sourcePath: string,
   targetPath: string,
-  options: { width?: number; height?: number; fit?: keyof sharp.FitEnum } = {}
+  options: { width?: number; height?: number; fit?: keyof sharp.FitEnum } = {},
 ): Promise<void> => {
   try {
     const { width = 300, height = 300, fit = 'inside' } = options;
-    
-    await sharp(sourcePath)
-      .resize({ width, height, fit })
-      .toFile(targetPath);
-    
+
+    await sharp(sourcePath).resize({ width, height, fit }).toFile(targetPath);
+
     logger.debug(`Created thumbnail: ${targetPath}`);
   } catch (error) {
     logger.error(`Error creating thumbnail: ${sourcePath} -> ${targetPath}`, error);
@@ -384,16 +395,13 @@ export const normalizePathForDb = (absolutePath: string, uploadDir: string): str
 /**
  * Format image data for API responses
  */
-export const formatImageForApi = (
-  image: any,
-  baseUrl: string
-): any => {
-  if (!image) return null;
-  
+export const formatImageForApi = (image: Record<string, unknown>, baseUrl: string): Record<string, unknown> => {
+  if (!image) return {} as Record<string, unknown>;
+
   // Add full URLs for storage_path and thumbnail_path if they exist
   const result = { ...image };
-  
-  if (image.storage_path) {
+
+  if (image.storage_path && typeof image.storage_path === 'string') {
     // If the storage_path is already a full URL, don't modify it
     if (image.storage_path.startsWith('http://') || image.storage_path.startsWith('https://')) {
       result.storage_path = image.storage_path;
@@ -402,8 +410,8 @@ export const formatImageForApi = (
       result.storage_path = pathUtils.combineUrl(baseUrl, image.storage_path);
     }
   }
-  
-  if (image.thumbnail_path) {
+
+  if (image.thumbnail_path && typeof image.thumbnail_path === 'string') {
     // If the thumbnail_path is already a full URL, don't modify it
     if (image.thumbnail_path.startsWith('http://') || image.thumbnail_path.startsWith('https://')) {
       result.thumbnail_path = image.thumbnail_path;
@@ -412,22 +420,19 @@ export const formatImageForApi = (
       result.thumbnail_path = pathUtils.combineUrl(baseUrl, image.thumbnail_path);
     }
   }
-  
+
   return result;
 };
 
 /**
  * Copy a file from one location to another
  */
-export const copyFile = async (
-  sourcePath: string,
-  targetPath: string
-): Promise<void> => {
+export const copyFile = async (sourcePath: string, targetPath: string): Promise<void> => {
   try {
     // Ensure the target directory exists
     const targetDir = path.dirname(targetPath);
     await ensureDirectoryExists(targetDir);
-    
+
     // Copy the file
     await fsCopyFile(sourcePath, targetPath);
     logger.debug(`Copied file: ${sourcePath} -> ${targetPath}`);
@@ -457,21 +462,23 @@ export const deleteFile = async (filePath: string): Promise<void> => {
  */
 export const getFilesInDirectory = async (
   dirPath: string,
-  options: { recursive?: boolean; filter?: (filename: string) => boolean } = {}
+  options: { recursive?: boolean; filter?: (filename: string) => boolean } = {},
 ): Promise<string[]> => {
   try {
     const { recursive = false, filter } = options;
-    
-    if (!await fileExists(dirPath)) {
+
+    if (!(await fileExists(dirPath))) {
       return [];
     }
-    
-    const entries = await fsReaddir(dirPath, { withFileTypes: true }) as fs.Dirent[];
+
+    const entries = (await fsReaddir(dirPath, {
+      withFileTypes: true,
+    })) as fs.Dirent[];
     let files: string[] = [];
-    
+
     for (const entry of entries as fs.Dirent[]) {
       const fullPath = path.join(dirPath, entry.name);
-      
+
       if (entry.isDirectory() && recursive) {
         const subDirFiles = await getFilesInDirectory(fullPath, options);
         files = [...files, ...subDirFiles];
@@ -481,7 +488,7 @@ export const getFilesInDirectory = async (
         }
       }
     }
-    
+
     return files;
   } catch (error) {
     logger.error(`Error getting files in directory: ${dirPath}`, error);
@@ -495,7 +502,7 @@ export const getFilesInDirectory = async (
 export const processBatch = async <T>(
   items: T[],
   batchSize: number,
-  processFn: (batch: T[]) => Promise<void>
+  processFn: (batch: T[]) => Promise<void>,
 ): Promise<void> => {
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
@@ -506,13 +513,10 @@ export const processBatch = async <T>(
 /**
  * Generate a unique filename for an image
  */
-export const generateUniqueImageFilename = (
-  originalFilename: string,
-  prefix?: string
-): string => {
+export const generateUniqueImageFilename = (originalFilename: string, prefix?: string): string => {
   const baseName = pathUtils.extractBaseName(originalFilename);
   const extension = pathUtils.extractExtension(originalFilename) || 'png';
-  
+
   return pathUtils.generateUniqueFilename(baseName, extension, prefix);
 };
 
@@ -521,40 +525,37 @@ export const generateUniqueImageFilename = (
  */
 export const generateImagePaths = (
   projectId: string,
-  originalFilename: string
+  originalFilename: string,
 ): { storagePath: string; thumbnailPath: string } => {
   const storagePath = pathUtils.generateStoragePath(projectId, originalFilename);
   const thumbnailPath = pathUtils.generateThumbnailPath(projectId, originalFilename);
-  
+
   return { storagePath, thumbnailPath };
 };
 
 /**
  * Verify that image files exist on the filesystem
  */
-export const verifyImageFilesForApi = (
-  image: any,
-  uploadDir: string
-): any => {
-  if (!image) return null;
-  
+export const verifyImageFilesForApi = (image: Record<string, unknown>, uploadDir: string): Record<string, unknown> => {
+  if (!image) return {} as Record<string, unknown>;
+
   const result = { ...image, file_exists: true };
-  
+
   // Check if the main image file exists
-  if (image.storage_path) {
+  if (image.storage_path && typeof image.storage_path === 'string') {
     const storagePath = image.storage_path.startsWith('http')
       ? pathUtils.extractPathFromUrl(image.storage_path)
       : image.storage_path;
-    
+
     const fullStoragePath = dbPathToFilesystemPath(storagePath, uploadDir);
     const storageExists = fs.existsSync(fullStoragePath);
-    
+
     if (!storageExists) {
       result.file_exists = false;
       logger.warn(`Image file not found: ${fullStoragePath}`);
     }
   }
-  
+
   return result;
 };
 
@@ -572,5 +573,5 @@ export default {
   getFilesInDirectory,
   processBatch,
   generateUniqueImageFilename,
-  generateImagePaths
+  generateImagePaths,
 };

@@ -6,13 +6,18 @@ import { Loader2 } from 'lucide-react';
  * This component redirects from the old segmentation editor to the new one
  */
 const SegmentationEditorRedirect: React.FC = () => {
-  const { projectId, imageId } = useParams<{ projectId: string, imageId: string }>();
+  const { projectId, imageId } = useParams<{
+    projectId: string;
+    imageId: string;
+  }>();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (projectId && imageId) {
       console.log(`[SegmentationEditorRedirect] Redirecting to: /projects/${projectId}/segmentation/${imageId}`);
-      navigate(`/projects/${projectId}/segmentation/${imageId}`, { replace: true });
+      navigate(`/projects/${projectId}/segmentation/${imageId}`, {
+        replace: true,
+      });
     } else {
       console.error('[SegmentationEditorRedirect] Missing projectId or imageId for redirect');
       navigate('/dashboard', { replace: true });

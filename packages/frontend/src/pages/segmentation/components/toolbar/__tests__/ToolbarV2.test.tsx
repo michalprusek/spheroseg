@@ -46,7 +46,7 @@ describe('ToolbarV2 Component', () => {
     canUndo: true,
     canRedo: true,
     isSaving: false,
-    isResegmenting: false
+    isResegmenting: false,
   };
 
   beforeEach(() => {
@@ -55,11 +55,11 @@ describe('ToolbarV2 Component', () => {
 
   it('renders all toolbar buttons correctly', () => {
     render(<ToolbarV2 {...defaultProps} />);
-    
+
     // Check if all buttons are rendered
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(12); // Should have 12 buttons in total
-    
+
     // Check if all icon elements are present
     expect(screen.getByTestId('icon-zoom-in')).toBeInTheDocument();
     expect(screen.getByTestId('icon-zoom-out')).toBeInTheDocument();
@@ -77,53 +77,53 @@ describe('ToolbarV2 Component', () => {
 
   it('calls the appropriate callbacks when buttons are clicked', () => {
     render(<ToolbarV2 {...defaultProps} />);
-    
+
     const buttons = screen.getAllByRole('button');
-    
+
     // Test zoom in button
     fireEvent.click(buttons[0]);
     expect(defaultProps.onZoomIn).toHaveBeenCalledTimes(1);
-    
+
     // Test zoom out button
     fireEvent.click(buttons[1]);
     expect(defaultProps.onZoomOut).toHaveBeenCalledTimes(1);
-    
+
     // Test reset view button
     fireEvent.click(buttons[2]);
     expect(defaultProps.onResetView).toHaveBeenCalledTimes(1);
-    
+
     // Test view mode button
     fireEvent.click(buttons[3]);
     expect(defaultProps.setEditMode).toHaveBeenCalledWith(EditMode.View);
-    
+
     // Test add points button
     fireEvent.click(buttons[4]);
     expect(defaultProps.setEditMode).toHaveBeenCalledWith(EditMode.AddPoints);
-    
+
     // Test create polygon button
     fireEvent.click(buttons[5]);
     expect(defaultProps.setEditMode).toHaveBeenCalledWith(EditMode.CreatePolygon);
-    
+
     // Test slice button
     fireEvent.click(buttons[6]);
     expect(defaultProps.setEditMode).toHaveBeenCalledWith(EditMode.Slice);
-    
+
     // Test delete polygon button
     fireEvent.click(buttons[7]);
     expect(defaultProps.setEditMode).toHaveBeenCalledWith(EditMode.DeletePolygon);
-    
+
     // Test undo button
     fireEvent.click(buttons[8]);
     expect(defaultProps.onUndo).toHaveBeenCalledTimes(1);
-    
+
     // Test redo button
     fireEvent.click(buttons[9]);
     expect(defaultProps.onRedo).toHaveBeenCalledTimes(1);
-    
+
     // Test save button
     fireEvent.click(buttons[10]);
     expect(defaultProps.onSave).toHaveBeenCalledTimes(1);
-    
+
     // Test resegment button
     fireEvent.click(buttons[11]);
     expect(defaultProps.onResegment).toHaveBeenCalledTimes(1);
@@ -132,25 +132,25 @@ describe('ToolbarV2 Component', () => {
   it('applies active classes to the current edit mode button', () => {
     // Test with view mode
     const { rerender } = render(<ToolbarV2 {...defaultProps} editMode={EditMode.View} />);
-    
+
     const buttons = screen.getAllByRole('button');
-    
+
     // View mode button should have active classes
     expect(buttons[3]).toHaveClass('bg-primary/20');
     expect(buttons[3]).toHaveClass('text-primary');
     expect(buttons[3]).toHaveClass('border-l-4');
-    
+
     // Other mode buttons should not have active classes
     expect(buttons[4]).not.toHaveClass('bg-primary/20');
     expect(buttons[5]).not.toHaveClass('bg-primary/20');
-    
+
     // Rerender with a different mode
     rerender(<ToolbarV2 {...defaultProps} editMode={EditMode.CreatePolygon} />);
-    
+
     // Now create polygon button should have active classes
     expect(buttons[5]).toHaveClass('bg-primary/20');
     expect(buttons[5]).toHaveClass('text-green-400');
-    
+
     // And view mode button should not have active classes
     expect(buttons[3]).not.toHaveClass('bg-primary/20');
   });
@@ -160,135 +160,117 @@ describe('ToolbarV2 Component', () => {
     const modes = [
       { mode: EditMode.View, buttonIndex: 3, colorClass: '' },
       { mode: EditMode.AddPoints, buttonIndex: 4, colorClass: 'text-blue-400' },
-      { mode: EditMode.CreatePolygon, buttonIndex: 5, colorClass: 'text-green-400' },
+      {
+        mode: EditMode.CreatePolygon,
+        buttonIndex: 5,
+        colorClass: 'text-green-400',
+      },
       { mode: EditMode.Slice, buttonIndex: 6, colorClass: 'text-yellow-400' },
-      { mode: EditMode.DeletePolygon, buttonIndex: 7, colorClass: 'text-red-400' },
+      {
+        mode: EditMode.DeletePolygon,
+        buttonIndex: 7,
+        colorClass: 'text-red-400',
+      },
     ];
-    
+
     for (const { mode, buttonIndex, colorClass } of modes) {
       const { unmount } = render(<ToolbarV2 {...defaultProps} editMode={mode} />);
-      
+
       const buttons = screen.getAllByRole('button');
       if (colorClass) {
         expect(buttons[buttonIndex]).toHaveClass(colorClass);
       }
-      
+
       unmount();
     }
   });
 
   it('disables buttons when appropriate', () => {
     // Test with canUndo = false, canRedo = false
-    render(
-      <ToolbarV2 
-        {...defaultProps} 
-        canUndo={false} 
-        canRedo={false} 
-        isSaving={true}
-        isResegmenting={true}
-      />
-    );
-    
+    render(<ToolbarV2 {...defaultProps} canUndo={false} canRedo={false} isSaving={true} isResegmenting={true} />);
+
     const buttons = screen.getAllByRole('button');
-    
+
     // Undo button should be disabled
     expect(buttons[8]).toHaveClass('opacity-50');
     expect(buttons[8]).toHaveClass('cursor-not-allowed');
-    
+
     // Redo button should be disabled
     expect(buttons[9]).toHaveClass('opacity-50');
     expect(buttons[9]).toHaveClass('cursor-not-allowed');
-    
+
     // Save button should be disabled during saving
     expect(buttons[10]).toHaveClass('opacity-50');
     expect(buttons[10]).toHaveClass('cursor-not-allowed');
-    
+
     // Resegment button should be disabled during resegmentation
     expect(buttons[11]).toHaveClass('opacity-50');
     expect(buttons[11]).toHaveClass('cursor-not-allowed');
   });
-  
+
   it('enables buttons when appropriate', () => {
     // Test with canUndo = true, canRedo = true
-    render(
-      <ToolbarV2 
-        {...defaultProps} 
-        canUndo={true} 
-        canRedo={true} 
-        isSaving={false}
-        isResegmenting={false}
-      />
-    );
-    
+    render(<ToolbarV2 {...defaultProps} canUndo={true} canRedo={true} isSaving={false} isResegmenting={false} />);
+
     const buttons = screen.getAllByRole('button');
-    
+
     // Undo button should be enabled
     expect(buttons[8]).not.toHaveClass('opacity-50');
     expect(buttons[8]).not.toHaveClass('cursor-not-allowed');
-    
+
     // Redo button should be enabled
     expect(buttons[9]).not.toHaveClass('opacity-50');
     expect(buttons[9]).not.toHaveClass('cursor-not-allowed');
-    
+
     // Save button should be enabled
     expect(buttons[10]).not.toHaveClass('opacity-50');
     expect(buttons[10]).not.toHaveClass('cursor-not-allowed');
-    
+
     // Resegment button should be enabled
     expect(buttons[11]).not.toHaveClass('opacity-50');
     expect(buttons[11]).not.toHaveClass('cursor-not-allowed');
   });
-  
+
   it('shows spinning animation for resegment button when isResegmenting is true', () => {
-    render(
-      <ToolbarV2 
-        {...defaultProps} 
-        isResegmenting={true}
-      />
-    );
-    
+    render(<ToolbarV2 {...defaultProps} isResegmenting={true} />);
+
     // The refresh icon should have the animate-spin class
     const refreshIcon = screen.getByTestId('icon-refresh-cw');
     expect(refreshIcon.parentElement).toHaveClass('animate-spin');
   });
-  
+
   it('does not show spinning animation for resegment button when isResegmenting is false', () => {
-    render(
-      <ToolbarV2 
-        {...defaultProps} 
-        isResegmenting={false}
-      />
-    );
-    
+    render(<ToolbarV2 {...defaultProps} isResegmenting={false} />);
+
     // The refresh icon should not have the animate-spin class
     const refreshIcon = screen.getByTestId('icon-refresh-cw');
     expect(refreshIcon.parentElement).not.toHaveClass('animate-spin');
   });
-  
+
   it('handles missing onResegment callback gracefully', () => {
     // Remove the onResegment callback from props
     const { onResegment, ...propsWithoutResegment } = defaultProps;
-    
+
     // Spy on console.warn
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    
+
     render(<ToolbarV2 {...propsWithoutResegment} />);
-    
+
     const buttons = screen.getAllByRole('button');
-    
+
     // Resegment button should be rendered but disabled
     expect(buttons[11]).toBeInTheDocument();
     expect(buttons[11]).toHaveClass('opacity-50');
     expect(buttons[11]).toHaveClass('cursor-not-allowed');
-    
+
     // Clicking the button should not cause errors but should log a warning
     fireEvent.click(buttons[11]);
     expect(consoleSpy).toHaveBeenCalledWith('Resegment callback not provided');
-    
+
     // Clean up
     consoleSpy.mockRestore();
   });
-  
+
   it('renders with custom title texts from translations', () => {
     // Override the useLanguage mock for this test
     vi.mocked(require('@/contexts/LanguageContext').useLanguage).mockReturnValueOnce({
@@ -305,17 +287,17 @@ describe('ToolbarV2 Component', () => {
           'shortcuts.undo': 'Custom Undo',
           'shortcuts.redo': 'Custom Redo',
           'shortcuts.save': 'Custom Save',
-          'segmentation.resegmentButtonTooltip': 'Custom Resegment'
+          'segmentation.resegmentButtonTooltip': 'Custom Resegment',
         };
         return translations[key] || key;
       },
       language: 'en',
     });
-    
+
     render(<ToolbarV2 {...defaultProps} />);
-    
+
     const buttons = screen.getAllByRole('button');
-    
+
     // Check if buttons have custom titles
     expect(buttons[0]).toHaveAttribute('title', 'Custom Zoom In');
     expect(buttons[1]).toHaveAttribute('title', 'Custom Zoom Out');

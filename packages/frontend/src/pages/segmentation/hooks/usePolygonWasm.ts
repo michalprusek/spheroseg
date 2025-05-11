@@ -9,46 +9,45 @@ const logger = createLogger('segmentation:usePolygonWasm');
 export const usePolygonWasm = () => {
   const [isReady, setIsReady] = useState<boolean>(false);
   const sharedWasm = useSharedPolygonWasm();
-  
+
   // Load the WebAssembly module
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadWasm = async () => {
       try {
         await sharedWasm.load();
-        
+
         if (isMounted) {
           setIsReady(true);
           logger.info('Polygon WebAssembly module loaded');
         }
       } catch (error) {
         logger.error('Failed to load polygon WebAssembly module:', error);
-        
+
         if (isMounted) {
           setIsReady(false);
         }
       }
     };
-    
+
     loadWasm();
-    
+
     return () => {
       isMounted = false;
     };
   }, []);
-  
+
   // Use the shared implementation
   return {
     isReady,
-    isPointInPolygon: (x: number, y: number, points: Point[]): boolean => 
-      sharedWasm.isPointInPolygon({x, y}, points),
+    isPointInPolygon: (x: number, y: number, points: Point[]): boolean => sharedWasm.isPointInPolygon({ x, y }, points),
     distanceToSegment: sharedWasm.distanceToSegment,
     calculateIntersection: sharedWasm.calculateIntersection,
     calculatePolygonArea: sharedWasm.calculatePolygonArea,
     calculatePolygonPerimeter: sharedWasm.calculatePolygonPerimeter,
     calculateBoundingBox: sharedWasm.calculateBoundingBox,
-    doPolygonsIntersect: sharedWasm.doPolygonsIntersect
+    doPolygonsIntersect: sharedWasm.doPolygonsIntersect,
   };
 };
 

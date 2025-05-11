@@ -9,7 +9,7 @@ import { showError } from './toastUtils';
  */
 export const tryCatch = async <T>(
   fn: () => Promise<T>,
-  errorHandler?: (error: unknown) => void
+  errorHandler?: (error: unknown) => void,
 ): Promise<T | undefined> => {
   try {
     return await fn();
@@ -19,15 +19,15 @@ export const tryCatch = async <T>(
     } else {
       // Default error handling
       console.error('An error occurred:', error);
-      
+
       let errorMessage = 'An unexpected error occurred';
-      
+
       if (axios.isAxiosError(error)) {
         errorMessage = getAxiosErrorMessage(error);
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
-      
+
       showError(errorMessage);
     }
     return undefined;
@@ -44,14 +44,14 @@ export const getAxiosErrorMessage = (error: AxiosError): string => {
   if (error.response) {
     // The server responded with a status code outside the 2xx range
     const data = error.response.data as any;
-    
+
     // Try to get the error message from the response data
     if (data?.message) {
       return data.message;
     } else if (data?.error) {
       return data.error;
     }
-    
+
     // Fallback to status text
     return `Server error: ${error.response.status} ${error.response.statusText}`;
   } else if (error.request) {

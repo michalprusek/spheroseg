@@ -1,5 +1,5 @@
 import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
-import { 
+import {
   ErrorType,
   ErrorSeverity,
   getErrorType,
@@ -16,7 +16,7 @@ import {
   AuthenticationError,
   AuthorizationError,
   NotFoundError,
-  ServerError
+  ServerError,
 } from '../errorHandling';
 import logger from '../logger';
 import { AxiosError } from 'axios';
@@ -69,7 +69,9 @@ describe('errorHandling', () => {
 
   describe('getErrorType', () => {
     it('should identify network errors from AxiosError', () => {
-      const error = new AxiosError('Network Error', 'ECONNABORTED', { url: '/test' });
+      const error = new AxiosError('Network Error', 'ECONNABORTED', {
+        url: '/test',
+      });
       expect(getErrorType(error)).toBe(ErrorType.NETWORK);
     });
 
@@ -133,12 +135,22 @@ describe('errorHandling', () => {
     });
 
     it('should extract message from AxiosError response data object', () => {
-      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' }, { data: { message: 'API error message' } });
+      const error = new AxiosError(
+        'Error',
+        'ERR_BAD_RESPONSE',
+        { url: '/test' },
+        { data: { message: 'API error message' } },
+      );
       expect(getErrorMessage(error)).toBe('API error message');
     });
 
     it('should extract message from AxiosError response data error field', () => {
-      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' }, { data: { error: 'Validation failed' } });
+      const error = new AxiosError(
+        'Error',
+        'ERR_BAD_RESPONSE',
+        { url: '/test' },
+        { data: { error: 'Validation failed' } },
+      );
       expect(getErrorMessage(error)).toBe('Validation failed');
     });
 
@@ -148,12 +160,16 @@ describe('errorHandling', () => {
     });
 
     it('should use error message if no other info available', () => {
-      const error = new AxiosError('Custom error message', 'ERR_BAD_RESPONSE', { url: '/test' });
+      const error = new AxiosError('Custom error message', 'ERR_BAD_RESPONSE', {
+        url: '/test',
+      });
       expect(getErrorMessage(error)).toBe('Custom error message');
     });
 
     it('should use default message based on error type for network errors', () => {
-      const error = new AxiosError('Network Error', 'ERR_NETWORK', { url: '/test' });
+      const error = new AxiosError('Network Error', 'ERR_NETWORK', {
+        url: '/test',
+      });
       expect(getErrorMessage(error)).toBe('Network error. Please check your connection.');
     });
 
@@ -202,32 +218,57 @@ describe('errorHandling', () => {
 
   describe('getErrorDetails', () => {
     it('should extract details from AxiosError response data', () => {
-      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' }, { 
-        data: { details: { field: 'username', message: 'Required' } } 
+      const error = new AxiosError(
+        'Error',
+        'ERR_BAD_RESPONSE',
+        { url: '/test' },
+        {
+          data: { details: { field: 'username', message: 'Required' } },
+        },
+      );
+      expect(getErrorDetails(error)).toEqual({
+        field: 'username',
+        message: 'Required',
       });
-      expect(getErrorDetails(error)).toEqual({ field: 'username', message: 'Required' });
     });
 
     it('should extract errors from AxiosError response data', () => {
-      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' }, { 
-        data: { errors: [{ field: 'username', message: 'Required' }] } 
-      });
+      const error = new AxiosError(
+        'Error',
+        'ERR_BAD_RESPONSE',
+        { url: '/test' },
+        {
+          data: { errors: [{ field: 'username', message: 'Required' }] },
+        },
+      );
       expect(getErrorDetails(error)).toEqual([{ field: 'username', message: 'Required' }]);
     });
 
     it('should extract rest of data from AxiosError response when no details or errors', () => {
-      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' }, { 
-        data: { code: 'VALIDATION_ERROR', message: 'Validation failed', timestamp: '2023-01-01' } 
-      });
-      expect(getErrorDetails(error)).toEqual({ 
-        code: 'VALIDATION_ERROR', 
-        message: 'Validation failed', 
-        timestamp: '2023-01-01' 
+      const error = new AxiosError(
+        'Error',
+        'ERR_BAD_RESPONSE',
+        { url: '/test' },
+        {
+          data: {
+            code: 'VALIDATION_ERROR',
+            message: 'Validation failed',
+            timestamp: '2023-01-01',
+          },
+        },
+      );
+      expect(getErrorDetails(error)).toEqual({
+        code: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        timestamp: '2023-01-01',
       });
     });
 
     it('should include request metadata when no response data', () => {
-      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test', method: 'GET' });
+      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', {
+        url: '/test',
+        method: 'GET',
+      });
       expect(getErrorDetails(error)).toEqual({ url: '/test', method: 'GET' });
     });
 
@@ -239,13 +280,18 @@ describe('errorHandling', () => {
 
   describe('createErrorInfo', () => {
     it('should create error info with complete info from error', () => {
-      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' }, { 
-        status: 400, 
-        data: { message: 'Validation failed', details: { field: 'email' } } 
-      });
-      
+      const error = new AxiosError(
+        'Error',
+        'ERR_BAD_RESPONSE',
+        { url: '/test' },
+        {
+          status: 400,
+          data: { message: 'Validation failed', details: { field: 'email' } },
+        },
+      );
+
       const info = createErrorInfo(error);
-      
+
       expect(info).toEqual({
         type: ErrorType.VALIDATION,
         severity: ErrorSeverity.WARNING,
@@ -259,7 +305,7 @@ describe('errorHandling', () => {
 
     it('should override error properties with provided options', () => {
       const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' }, { status: 400 });
-      
+
       const info = createErrorInfo(error, {
         type: ErrorType.CLIENT,
         severity: ErrorSeverity.ERROR,
@@ -268,7 +314,7 @@ describe('errorHandling', () => {
         details: { custom: 'detail' },
         handled: true,
       });
-      
+
       expect(info).toEqual({
         type: ErrorType.CLIENT,
         severity: ErrorSeverity.ERROR,
@@ -284,7 +330,7 @@ describe('errorHandling', () => {
   describe('handleError', () => {
     it('should log critical errors', () => {
       const error = new Error('Critical error');
-      
+
       handleError(error, {
         errorInfo: {
           severity: ErrorSeverity.CRITICAL,
@@ -293,21 +339,21 @@ describe('errorHandling', () => {
         },
         context: 'Test Context',
       });
-      
+
       expect(logger.error).toHaveBeenCalledWith(
         'Critical error: Critical server error',
         expect.objectContaining({
           errorType: ErrorType.SERVER,
           context: 'Test Context',
-        })
+        }),
       );
-      
+
       expect(require('sonner').toast.error).toHaveBeenCalledWith('Critical server error');
     });
 
     it('should log errors', () => {
       const error = new Error('Regular error');
-      
+
       handleError(error, {
         errorInfo: {
           severity: ErrorSeverity.ERROR,
@@ -315,18 +361,15 @@ describe('errorHandling', () => {
           message: 'Client error',
         },
       });
-      
-      expect(logger.error).toHaveBeenCalledWith(
-        'Error: Client error',
-        expect.any(Object)
-      );
-      
+
+      expect(logger.error).toHaveBeenCalledWith('Error: Client error', expect.any(Object));
+
       expect(require('sonner').toast.error).toHaveBeenCalledWith('Client error');
     });
 
     it('should log warnings', () => {
       const error = new Error('Warning');
-      
+
       handleError(error, {
         errorInfo: {
           severity: ErrorSeverity.WARNING,
@@ -334,18 +377,15 @@ describe('errorHandling', () => {
           message: 'Validation warning',
         },
       });
-      
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Warning: Validation warning',
-        expect.any(Object)
-      );
-      
+
+      expect(logger.warn).toHaveBeenCalledWith('Warning: Validation warning', expect.any(Object));
+
       expect(require('sonner').toast.warning).toHaveBeenCalledWith('Validation warning');
     });
 
     it('should log info messages', () => {
       const error = new Error('Info');
-      
+
       handleError(error, {
         errorInfo: {
           severity: ErrorSeverity.INFO,
@@ -353,22 +393,19 @@ describe('errorHandling', () => {
           message: 'Authentication info',
         },
       });
-      
-      expect(logger.info).toHaveBeenCalledWith(
-        'Info: Authentication info',
-        expect.any(Object)
-      );
-      
+
+      expect(logger.info).toHaveBeenCalledWith('Info: Authentication info', expect.any(Object));
+
       expect(require('sonner').toast.info).toHaveBeenCalledWith('Authentication info');
     });
 
     it('should not show toast when showToast is false', () => {
       const error = new Error('Error');
-      
+
       handleError(error, {
         showToast: false,
       });
-      
+
       expect(require('sonner').toast.error).not.toHaveBeenCalled();
       expect(require('sonner').toast.warning).not.toHaveBeenCalled();
       expect(require('sonner').toast.info).not.toHaveBeenCalled();
@@ -376,11 +413,11 @@ describe('errorHandling', () => {
 
     it('should not log error when logError is false', () => {
       const error = new Error('Error');
-      
+
       handleError(error, {
         logError: false,
       });
-      
+
       expect(logger.error).not.toHaveBeenCalled();
       expect(logger.warn).not.toHaveBeenCalled();
       expect(logger.info).not.toHaveBeenCalled();
@@ -388,9 +425,9 @@ describe('errorHandling', () => {
 
     it('should return error info', () => {
       const error = new Error('Error');
-      
+
       const result = handleError(error);
-      
+
       expect(result).toEqual({
         type: expect.any(String),
         severity: expect.any(String),
@@ -409,7 +446,7 @@ describe('errorHandling', () => {
         code: 'ERR_APP',
         details: { source: 'test' },
       });
-      
+
       expect(error.name).toBe('AppError');
       expect(error.message).toBe('App error');
       expect(error.type).toBe(ErrorType.CLIENT);
@@ -422,7 +459,7 @@ describe('errorHandling', () => {
 
     it('should create NetworkError with correct defaults', () => {
       const error = new NetworkError();
-      
+
       expect(error.name).toBe('NetworkError');
       expect(error.message).toBe('Network error. Please check your connection.');
       expect(error.type).toBe(ErrorType.NETWORK);
@@ -433,7 +470,7 @@ describe('errorHandling', () => {
 
     it('should create ApiError with correct defaults', () => {
       const error = new ApiError();
-      
+
       expect(error.name).toBe('ApiError');
       expect(error.message).toBe('API error. Please try again later.');
       expect(error.type).toBe(ErrorType.API);
@@ -444,7 +481,7 @@ describe('errorHandling', () => {
 
     it('should create ValidationError with correct defaults', () => {
       const error = new ValidationError();
-      
+
       expect(error.name).toBe('ValidationError');
       expect(error.message).toBe('Validation error. Please check your input.');
       expect(error.type).toBe(ErrorType.VALIDATION);
@@ -455,7 +492,7 @@ describe('errorHandling', () => {
 
     it('should create AuthenticationError with correct defaults', () => {
       const error = new AuthenticationError();
-      
+
       expect(error.name).toBe('AuthenticationError');
       expect(error.message).toBe('Authentication error. Please sign in again.');
       expect(error.type).toBe(ErrorType.AUTHENTICATION);
@@ -466,9 +503,9 @@ describe('errorHandling', () => {
 
     it('should create AuthorizationError with correct defaults', () => {
       const error = new AuthorizationError();
-      
+
       expect(error.name).toBe('AuthorizationError');
-      expect(error.message).toBe('You don\'t have permission to perform this action.');
+      expect(error.message).toBe("You don't have permission to perform this action.");
       expect(error.type).toBe(ErrorType.AUTHORIZATION);
       expect(error.severity).toBe(ErrorSeverity.ERROR);
       expect(error instanceof AuthorizationError).toBe(true);
@@ -477,7 +514,7 @@ describe('errorHandling', () => {
 
     it('should create NotFoundError with correct defaults', () => {
       const error = new NotFoundError();
-      
+
       expect(error.name).toBe('NotFoundError');
       expect(error.message).toBe('The requested resource was not found.');
       expect(error.type).toBe(ErrorType.NOT_FOUND);
@@ -488,7 +525,7 @@ describe('errorHandling', () => {
 
     it('should create ServerError with correct defaults', () => {
       const error = new ServerError();
-      
+
       expect(error.name).toBe('ServerError');
       expect(error.message).toBe('Server error. Please try again later.');
       expect(error.type).toBe(ErrorType.SERVER);
@@ -502,7 +539,7 @@ describe('errorHandling', () => {
         severity: ErrorSeverity.CRITICAL,
         code: 'FATAL',
       });
-      
+
       expect(error.message).toBe('Custom server error');
       expect(error.type).toBe(ErrorType.SERVER);
       expect(error.severity).toBe(ErrorSeverity.CRITICAL);

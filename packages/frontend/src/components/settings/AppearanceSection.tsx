@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -38,18 +37,14 @@ const AppearanceSection = () => {
     <Card>
       <CardHeader>
         <CardTitle>{t('settings.appearance')}</CardTitle>
-        <CardDescription>
-          {t('settings.appearanceDescription')}
-        </CardDescription>
+        <CardDescription>{t('settings.appearanceDescription')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="language">{t('settings.language')}</Label>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('settings.languageDescription')}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{t('settings.languageDescription')}</p>
             </div>
             <div className="w-[180px]">
               <Select value={language} onValueChange={handleLanguageChange}>
@@ -75,9 +70,7 @@ const AppearanceSection = () => {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="theme">{t('settings.theme')}</Label>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('settings.themeDescription')}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{t('settings.themeDescription')}</p>
             </div>
             <div className="flex items-center space-x-2">
               <Button

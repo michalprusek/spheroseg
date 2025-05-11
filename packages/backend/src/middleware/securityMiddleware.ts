@@ -11,14 +11,14 @@ import securityReportRoutes from '../routes/securityReportRoutes';
 
 // Define cors.allowedOrigins fallback if config.cors is undefined
 const corsConfig = {
-  allowedOrigins: ['http://localhost:3000', 'http://frontend:3000', '*']
+  allowedOrigins: ['http://localhost:3000', 'http://frontend:3000', '*'],
 };
 
 // CORS configuration
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Make sure to configure this properly for your environment
-    const allowedOrigins = (config.cors?.allowedOrigins) || corsConfig.allowedOrigins;
+    const allowedOrigins = config.cors?.allowedOrigins || corsConfig.allowedOrigins;
 
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.indexOf('*') !== -1 || allowedOrigins.indexOf(origin) !== -1) {
@@ -31,7 +31,7 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN', 'X-Requested-With'],
 };
 
 /**
@@ -46,17 +46,19 @@ const applySecurityMiddleware = (app: Express) => {
   app.use(cookieParser());
 
   // Helmet helps secure Express apps by setting various HTTP headers
-  app.use(helmet({
-    contentSecurityPolicy: false, // We use custom CSP middleware
-    crossOriginEmbedderPolicy: false, // We handle this in security headers middleware
-    crossOriginOpenerPolicy: false, // We handle this in security headers middleware
-    crossOriginResourcePolicy: false, // We handle this in security headers middleware
-    referrerPolicy: false, // We handle this in security headers middleware
-    hsts: false, // We handle this in security headers middleware
-    xFrameOptions: false, // We handle this in security headers middleware
-    xContentTypeOptions: false, // We handle this in security headers middleware
-    xXssProtection: false, // We handle this in security headers middleware
-  }));
+  app.use(
+    helmet({
+      contentSecurityPolicy: false, // We use custom CSP middleware
+      crossOriginEmbedderPolicy: false, // We handle this in security headers middleware
+      crossOriginOpenerPolicy: false, // We handle this in security headers middleware
+      crossOriginResourcePolicy: false, // We handle this in security headers middleware
+      referrerPolicy: false, // We handle this in security headers middleware
+      hsts: false, // We handle this in security headers middleware
+      xFrameOptions: false, // We handle this in security headers middleware
+      xContentTypeOptions: false, // We handle this in security headers middleware
+      xXssProtection: false, // We handle this in security headers middleware
+    }),
+  );
 
   // Apply CORS
   app.use(cors(corsOptions));

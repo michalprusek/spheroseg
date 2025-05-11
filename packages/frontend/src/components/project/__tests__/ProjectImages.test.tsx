@@ -13,20 +13,20 @@ vi.mock('framer-motion', () => ({
 
 // Mock the ImageCard component
 vi.mock('../ImageCard', () => ({
-  ImageCard: ({
-    image,
-    onDelete,
-    onOpen,
-    onResegment,
-    selectionMode,
-    isSelected,
-    onToggleSelection
-  }: any) => (
+  ImageCard: ({ image, onDelete, onOpen, onResegment, selectionMode, isSelected, onToggleSelection }: any) => (
     <div data-testid={`image-card-${image.id}`} className="image-card">
       <div>{image.name}</div>
-      <button onClick={() => onDelete(image.id)} data-testid={`delete-${image.id}`}>Delete</button>
-      {onOpen && <button onClick={() => onOpen(image.id)} data-testid={`open-${image.id}`}>Open</button>}
-      <button onClick={() => onResegment(image.id)} data-testid={`resegment-${image.id}`}>Resegment</button>
+      <button onClick={() => onDelete(image.id)} data-testid={`delete-${image.id}`}>
+        Delete
+      </button>
+      {onOpen && (
+        <button onClick={() => onOpen(image.id)} data-testid={`open-${image.id}`}>
+          Open
+        </button>
+      )}
+      <button onClick={() => onResegment(image.id)} data-testid={`resegment-${image.id}`}>
+        Resegment
+      </button>
       {selectionMode && (
         <input
           type="checkbox"
@@ -41,20 +41,20 @@ vi.mock('../ImageCard', () => ({
 
 // Mock the ImageListItem component
 vi.mock('../ImageListItem', () => ({
-  ImageListItem: ({
-    image,
-    onDelete,
-    onOpen,
-    onResegment,
-    selectionMode,
-    isSelected,
-    onToggleSelection
-  }: any) => (
+  ImageListItem: ({ image, onDelete, onOpen, onResegment, selectionMode, isSelected, onToggleSelection }: any) => (
     <div data-testid={`image-list-item-${image.id}`} className="image-list-item">
       <div>{image.name}</div>
-      <button onClick={() => onDelete(image.id)} data-testid={`delete-list-${image.id}`}>Delete</button>
-      {onOpen && <button onClick={() => onOpen(image.id)} data-testid={`open-list-${image.id}`}>Open</button>}
-      <button onClick={() => onResegment(image.id)} data-testid={`resegment-list-${image.id}`}>Resegment</button>
+      <button onClick={() => onDelete(image.id)} data-testid={`delete-list-${image.id}`}>
+        Delete
+      </button>
+      {onOpen && (
+        <button onClick={() => onOpen(image.id)} data-testid={`open-list-${image.id}`}>
+          Open
+        </button>
+      )}
+      <button onClick={() => onResegment(image.id)} data-testid={`resegment-list-${image.id}`}>
+        Resegment
+      </button>
       {selectionMode && (
         <input
           type="checkbox"
@@ -167,11 +167,7 @@ describe('ProjectImages Component', () => {
 
   it('renders in selection mode with checkboxes', () => {
     render(
-      <ProjectImages
-        {...mockProps}
-        selectionMode={true}
-        selectedImages={{ 'image-1': true, 'image-2': false }}
-      />
+      <ProjectImages {...mockProps} selectionMode={true} selectedImages={{ 'image-1': true, 'image-2': false }} />,
     );
 
     // Check if checkboxes are rendered
@@ -188,11 +184,7 @@ describe('ProjectImages Component', () => {
 
   it('has checkboxes for selection mode', () => {
     render(
-      <ProjectImages
-        {...mockProps}
-        selectionMode={true}
-        selectedImages={{ 'image-1': false, 'image-2': false }}
-      />
+      <ProjectImages {...mockProps} selectionMode={true} selectedImages={{ 'image-1': false, 'image-2': false }} />,
     );
 
     // Verify the checkboxes are rendered
@@ -202,13 +194,7 @@ describe('ProjectImages Component', () => {
   });
 
   it('renders batch actions panel in selection mode', () => {
-    render(
-      <ProjectImages
-        {...mockProps}
-        selectionMode={true}
-        selectedImages={{ 'image-1': true, 'image-2': true }}
-      />
-    );
+    render(<ProjectImages {...mockProps} selectionMode={true} selectedImages={{ 'image-1': true, 'image-2': true }} />);
 
     // Check if the batch actions panel is rendered with the correct text
     expect(screen.getByText('Selected 2 images')).toBeInTheDocument();
@@ -224,11 +210,7 @@ describe('ProjectImages Component', () => {
 
   it('has batch action handlers', () => {
     render(
-      <ProjectImages
-        {...mockProps}
-        selectionMode={true}
-        selectedImages={{ 'image-1': true, 'image-2': false }}
-      />
+      <ProjectImages {...mockProps} selectionMode={true} selectedImages={{ 'image-1': true, 'image-2': false }} />,
     );
 
     // Verify the batch action handlers are available
@@ -243,11 +225,7 @@ describe('ProjectImages Component', () => {
 
   it('has select all functionality', () => {
     render(
-      <ProjectImages
-        {...mockProps}
-        selectionMode={true}
-        selectedImages={{ 'image-1': false, 'image-2': false }}
-      />
+      <ProjectImages {...mockProps} selectionMode={true} selectedImages={{ 'image-1': false, 'image-2': false }} />,
     );
 
     // Check if the select all text is displayed
@@ -259,11 +237,7 @@ describe('ProjectImages Component', () => {
 
   it('disables open functionality in selection mode', () => {
     render(
-      <ProjectImages
-        {...mockProps}
-        selectionMode={true}
-        selectedImages={{ 'image-1': false, 'image-2': false }}
-      />
+      <ProjectImages {...mockProps} selectionMode={true} selectedImages={{ 'image-1': false, 'image-2': false }} />,
     );
 
     // Check if open buttons are not rendered in selection mode

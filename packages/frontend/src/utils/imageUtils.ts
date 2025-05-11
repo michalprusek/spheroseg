@@ -18,8 +18,8 @@ export const checkFileExists = async (url: string): Promise<boolean> => {
       cache: 'no-cache',
       headers: {
         'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
+        Pragma: 'no-cache',
+      },
     });
     return response.ok;
   } catch (error) {
@@ -36,7 +36,7 @@ export const getImageDimensions = async (url: string): Promise<{ width: number; 
     img.onload = () => {
       resolve({
         width: img.naturalWidth,
-        height: img.naturalHeight
+        height: img.naturalHeight,
       });
     };
 
@@ -99,5 +99,5 @@ export default {
   loadImageByPath,
   loadImage,
   batchProcess,
-  generatePossibleImagePaths
+  generatePossibleImagePaths,
 };

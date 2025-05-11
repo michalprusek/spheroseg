@@ -1,4 +1,3 @@
-
 // Simple segmentation service
 // This simulates image segmentation with thresholding and contour finding
 // In a real app, this would use more advanced methods like WebAssembly or call a backend API
@@ -22,13 +21,10 @@ export interface Polygon {
 export type SegmentationResult = SegmentationData;
 
 // Apply a simple thresholding algorithm to create a binary mask
-export const applyThresholding = async (
-  imageSrc: string,
-  threshold: number = 127
-): Promise<ImageData> => {
+export const applyThresholding = async (imageSrc: string, threshold: number = 127): Promise<ImageData> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "Anonymous";
+    img.crossOrigin = 'Anonymous';
     img.onload = () => {
       // Create a canvas to draw the image
       const canvas = document.createElement('canvas');
@@ -37,7 +33,7 @@ export const applyThresholding = async (
       const ctx = canvas.getContext('2d');
 
       if (!ctx) {
-        reject(new Error("Failed to get canvas context"));
+        reject(new Error('Failed to get canvas context'));
         return;
       }
 
@@ -52,17 +48,17 @@ export const applyThresholding = async (
       for (let i = 0; i < data.length; i += 4) {
         const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
         const binary = gray > threshold ? 255 : 0;
-        data[i] = binary;     // R
+        data[i] = binary; // R
         data[i + 1] = binary; // G
         data[i + 2] = binary; // B
-        data[i + 3] = 255;    // A
+        data[i + 3] = 255; // A
       }
 
       resolve(imageData);
     };
 
     img.onerror = () => {
-      reject(new Error("Failed to load image"));
+      reject(new Error('Failed to load image'));
     };
 
     img.src = imageSrc;
@@ -98,7 +94,7 @@ export const findContours = (imageData: ImageData): Polygon[] => {
       const variation = 0.8 + Math.random() * 0.4;
       points.push({
         x: centerX + Math.cos(angle) * radius * variation,
-        y: centerY + Math.sin(angle) * radius * variation
+        y: centerY + Math.sin(angle) * radius * variation,
       });
     }
 
@@ -109,7 +105,7 @@ export const findContours = (imageData: ImageData): Polygon[] => {
       id: `polygon-${i}`,
       points,
       type: isExternal ? 'external' : 'internal',
-      class: 'spheroid'
+      class: 'spheroid',
     });
   }
 
@@ -126,11 +122,11 @@ export const segmentImage = async (imageSrc: string): Promise<SegmentationResult
     const basicPolygons = findContours(binaryMask);
 
     // Convert to PolygonData with required fields
-    const polygons: PolygonData[] = basicPolygons.map(poly => ({
+    const polygons: PolygonData[] = basicPolygons.map((poly) => ({
       id: poly.id,
       points: poly.points,
       type: poly.type || 'external',
-      class: poly.class || 'spheroid'
+      class: poly.class || 'spheroid',
     }));
 
     return {
@@ -138,16 +134,16 @@ export const segmentImage = async (imageSrc: string): Promise<SegmentationResult
       imageSrc,
       polygons,
       status: 'completed',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   } catch (error) {
-    console.error("Segmentation failed:", error);
+    console.error('Segmentation failed:', error);
     return {
       id: `seg-failed-${Date.now()}`,
       imageSrc,
       polygons: [],
       status: 'failed',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 };

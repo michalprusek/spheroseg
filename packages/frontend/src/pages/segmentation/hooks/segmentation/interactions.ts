@@ -67,7 +67,7 @@ export const handleMouseDown = (
   setEditMode: (mode: EditMode) => void,
   setTempPoints: (points: Point[]) => void,
   setInteractionState: (state: InteractionState) => void,
-  setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void
+  setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void,
 ) => {
   // Right-click - always cancel current operation
   if (e.button === 2) {
@@ -94,7 +94,7 @@ export const handleMouseDown = (
 
         // Create a map of polygons by ID for quick lookup
         const polygonsById = new Map();
-        segmentationData.polygons.forEach(polygon => {
+        segmentationData.polygons.forEach((polygon) => {
           polygonsById.set(polygon.id, polygon);
         });
 
@@ -115,7 +115,7 @@ export const handleMouseDown = (
           setInteractionState({
             ...interactionState,
             isPanning: true,
-            panStart: { x: e.clientX, y: e.clientY }
+            panStart: { x: e.clientX, y: e.clientY },
           });
           return;
         }
@@ -137,7 +137,7 @@ export const handleMouseDown = (
           setInteractionState({
             ...interactionState,
             isPanning: true,
-            panStart: { x: e.clientX, y: e.clientY }
+            panStart: { x: e.clientX, y: e.clientY },
           });
           return;
         }
@@ -151,7 +151,7 @@ export const handleMouseDown = (
           setInteractionState({
             ...interactionState,
             isPanning: true,
-            panStart: { x: e.clientX, y: e.clientY }
+            panStart: { x: e.clientX, y: e.clientY },
           });
           return;
         }
@@ -161,7 +161,7 @@ export const handleMouseDown = (
       setInteractionState({
         ...interactionState,
         isPanning: true,
-        panStart: { x: e.clientX, y: e.clientY }
+        panStart: { x: e.clientX, y: e.clientY },
       });
       return;
     }
@@ -180,10 +180,13 @@ export const handleMouseDown = (
           if (segmentationData) {
             const newPolygon = createPolygon(tempPoints);
 
-            setSegmentationDataWithHistory({
-              ...segmentationData,
-              polygons: [...segmentationData.polygons, newPolygon]
-            }, false);
+            setSegmentationDataWithHistory(
+              {
+                ...segmentationData,
+                polygons: [...segmentationData.polygons, newPolygon],
+              },
+              false,
+            );
 
             // Reset temporary points and switch back to view mode
             setTempPoints([]);
@@ -201,10 +204,10 @@ export const handleMouseDown = (
     // Handle vertex editing
     if (editMode === EditMode.EditVertices && selectedPolygonId) {
       // Check if we're clicking on a vertex
-      const selectedPolygon = segmentationData?.polygons.find(p => p.id === selectedPolygonId);
+      const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
       if (selectedPolygon) {
         // Find the vertex we're clicking on (if any)
-        const vertexIndex = selectedPolygon.points.findIndex(point => {
+        const vertexIndex = selectedPolygon.points.findIndex((point) => {
           const dx = point.x - imageX;
           const dy = point.y - imageY;
           // Adjust hit area based on zoom
@@ -213,11 +216,15 @@ export const handleMouseDown = (
         });
 
         if (vertexIndex !== -1) {
+          // Get the original position before dragging starts (for undo/redo)
+          const originalPosition = { ...selectedPolygon.points[vertexIndex] };
+
           // Start dragging this vertex
           setInteractionState({
             ...interactionState,
             isDraggingVertex: true,
-            draggedVertexInfo: { polygonId: selectedPolygonId, vertexIndex }
+            draggedVertexInfo: { polygonId: selectedPolygonId, vertexIndex },
+            originalVertexPosition: originalPosition, // Store the original position
           });
           return;
         }
@@ -226,7 +233,7 @@ export const handleMouseDown = (
 
     // Handle adding points to existing polygon - enhanced version
     if (editMode === EditMode.AddPoints && selectedPolygonId) {
-      const selectedPolygon = segmentationData?.polygons.find(p => p.id === selectedPolygonId);
+      const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
       if (selectedPolygon) {
         // Check if we're in the middle of adding a sequence of points
         if (interactionState.isAddingPoints) {
@@ -250,14 +257,15 @@ export const handleMouseDown = (
             }
 
             // If we found a close enough vertex and it's not the start vertex
-            if (minDistance <= hitRadius &&
-                closestVertexIndex !== -1 &&
-                closestVertexIndex !== interactionState.addPointStartVertex.vertexIndex) {
-
+            if (
+              minDistance <= hitRadius &&
+              closestVertexIndex !== -1 &&
+              closestVertexIndex !== interactionState.addPointStartVertex.vertexIndex
+            ) {
               // Set the end vertex
               const endVertex = {
                 polygonId: selectedPolygonId,
-                vertexIndex: closestVertexIndex
+                vertexIndex: closestVertexIndex,
               };
 
               logger.info(`Completing add points sequence at vertex ${closestVertexIndex}`);
@@ -320,10 +328,14 @@ export const handleMouseDown = (
 
                 // Determine if we should go forward or backward based on the shortest path
                 // and the orientation of the polygon
-                const goForward = (forwardDistance <= backwardDistance) === isClockwise;
+                const goForward = forwardDistance <= backwardDistance === isClockwise;
 
-                logger.info(`Replacing segment between vertices ${startIdx} and ${endIdx} with ${tempPoints.length} new points`);
-                logger.info(`Forward distance: ${forwardDistance}, Backward distance: ${backwardDistance}, Going: ${goForward ? 'forward' : 'backward'}`);
+                logger.info(
+                  `Replacing segment between vertices ${startIdx} and ${endIdx} with ${tempPoints.length} new points`,
+                );
+                logger.info(
+                  `Forward distance: ${forwardDistance}, Backward distance: ${backwardDistance}, Going: ${goForward ? 'forward' : 'backward'}`,
+                );
 
                 // Create a new array for the updated points
                 if (goForward) {
@@ -334,26 +346,22 @@ export const handleMouseDown = (
                     const pointsAfter = selectedPolygon.points.slice(endIdx);
 
                     // Combine: points before startIdx + new points + points after endIdx
-                    newPoints = [
-                      ...pointsBefore,
-                      ...tempPoints,
-                      ...pointsAfter
-                    ];
+                    newPoints = [...pointsBefore, ...tempPoints, ...pointsAfter];
 
-                    logger.info(`Forward, no wrap: ${pointsBefore.length} points before, ${tempPoints.length} new points, ${pointsAfter.length} points after`);
+                    logger.info(
+                      `Forward, no wrap: ${pointsBefore.length} points before, ${tempPoints.length} new points, ${pointsAfter.length} points after`,
+                    );
                   } else {
                     // Complex case: wrapping around the array
                     // We need to keep points from startIdx to end and from 0 to endIdx
                     const pointsStart = selectedPolygon.points.slice(startIdx);
                     const pointsEnd = selectedPolygon.points.slice(0, endIdx + 1);
 
-                    newPoints = [
-                      ...pointsStart,
-                      ...tempPoints,
-                      ...pointsEnd
-                    ];
+                    newPoints = [...pointsStart, ...tempPoints, ...pointsEnd];
 
-                    logger.info(`Forward, wrap: ${pointsStart.length} points before, ${tempPoints.length} new points, ${pointsEnd.length} points after`);
+                    logger.info(
+                      `Forward, wrap: ${pointsStart.length} points before, ${tempPoints.length} new points, ${pointsEnd.length} points after`,
+                    );
                   }
                 } else {
                   // Going backward - we need to reverse the temp points
@@ -366,44 +374,45 @@ export const handleMouseDown = (
                     const pointsAfter = selectedPolygon.points.slice(startIdx);
 
                     // Combine: points before endIdx + reversed new points + points after startIdx
-                    newPoints = [
-                      ...pointsBefore,
-                      ...reversedTempPoints,
-                      ...pointsAfter
-                    ];
+                    newPoints = [...pointsBefore, ...reversedTempPoints, ...pointsAfter];
 
-                    logger.info(`Backward, no wrap: ${pointsBefore.length} points before, ${reversedTempPoints.length} new points, ${pointsAfter.length} points after`);
+                    logger.info(
+                      `Backward, no wrap: ${pointsBefore.length} points before, ${reversedTempPoints.length} new points, ${pointsAfter.length} points after`,
+                    );
                   } else {
                     // Complex case: wrapping around the array
                     // We need to keep points from endIdx to end and from 0 to startIdx
                     const pointsEnd = selectedPolygon.points.slice(endIdx);
                     const pointsStart = selectedPolygon.points.slice(0, startIdx + 1);
 
-                    newPoints = [
-                      ...pointsEnd,
-                      ...reversedTempPoints,
-                      ...pointsStart
-                    ];
+                    newPoints = [...pointsEnd, ...reversedTempPoints, ...pointsStart];
 
-                    logger.info(`Backward, wrap: ${pointsEnd.length} points before, ${reversedTempPoints.length} new points, ${pointsStart.length} points after`);
+                    logger.info(
+                      `Backward, wrap: ${pointsEnd.length} points before, ${reversedTempPoints.length} new points, ${pointsStart.length} points after`,
+                    );
                   }
                 }
 
-                logger.info(`Original polygon had ${selectedPolygon.points.length} points, new polygon has ${newPoints.length} points`);
+                logger.info(
+                  `Original polygon had ${selectedPolygon.points.length} points, new polygon has ${newPoints.length} points`,
+                );
 
                 // Update the polygon
                 if (segmentationData) {
-                  const updatedPolygons = segmentationData.polygons.map(polygon => {
+                  const updatedPolygons = segmentationData.polygons.map((polygon) => {
                     if (polygon.id === selectedPolygonId) {
                       return { ...polygon, points: newPoints };
                     }
                     return polygon;
                   });
 
-                  setSegmentationDataWithHistory({
-                    ...segmentationData,
-                    polygons: updatedPolygons
-                  }, false);
+                  setSegmentationDataWithHistory(
+                    {
+                      ...segmentationData,
+                      polygons: updatedPolygons,
+                    },
+                    false,
+                  );
                 }
               }
 
@@ -413,7 +422,7 @@ export const handleMouseDown = (
                 ...interactionState,
                 isAddingPoints: false,
                 addPointStartVertex: null,
-                addPointEndVertex: null
+                addPointEndVertex: null,
               });
 
               // Switch back to view mode
@@ -456,8 +465,8 @@ export const handleMouseDown = (
               isAddingPoints: true,
               addPointStartVertex: {
                 polygonId: selectedPolygonId,
-                vertexIndex: closestVertexIndex
-              }
+                vertexIndex: closestVertexIndex,
+              },
             });
 
             // Clear any existing temporary points
@@ -480,11 +489,7 @@ export const handleMouseDown = (
           const p2 = selectedPolygon.points[(i + 1) % selectedPolygon.points.length];
 
           // Calculate distance from point to line segment
-          const distance = distanceToSegment(
-            { x: imageX, y: imageY },
-            p1,
-            p2
-          );
+          const distance = distanceToSegment({ x: imageX, y: imageY }, p1, p2);
 
           if (distance < minDistance) {
             minDistance = distance;
@@ -502,17 +507,20 @@ export const handleMouseDown = (
 
           // Update the polygon
           if (segmentationData) {
-            const updatedPolygons = segmentationData.polygons.map(polygon => {
+            const updatedPolygons = segmentationData.polygons.map((polygon) => {
               if (polygon.id === selectedPolygonId) {
                 return { ...polygon, points: newPoints };
               }
               return polygon;
             });
 
-            setSegmentationDataWithHistory({
-              ...segmentationData,
-              polygons: updatedPolygons
-            }, false);
+            setSegmentationDataWithHistory(
+              {
+                ...segmentationData,
+                polygons: updatedPolygons,
+              },
+              false,
+            );
           }
           return;
         }
@@ -556,7 +564,7 @@ export const handleMouseDown = (
 
       // Step 2: If polygon is selected, allow placing slice points anywhere
       if (selectedPolygonId) {
-        const selectedPolygon = segmentationData?.polygons.find(p => p.id === selectedPolygonId);
+        const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
 
         // Allow slicing anywhere, not just inside the polygon
         if (selectedPolygon) {
@@ -564,7 +572,7 @@ export const handleMouseDown = (
             // First click - set slice start point
             setInteractionState({
               ...interactionState,
-              sliceStartPoint: { x: imageX, y: imageY }
+              sliceStartPoint: { x: imageX, y: imageY },
             });
             setTempPoints([{ x: imageX, y: imageY }]);
           } else {
@@ -578,7 +586,7 @@ export const handleMouseDown = (
             // We use a small timeout to ensure the UI updates first
             setTimeout(() => {
               // Find the selected polygon
-              const polygon = segmentationData?.polygons.find(p => p.id === selectedPolygonId);
+              const polygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
               if (!polygon || !segmentationData) return;
 
               // Call the slice function with the selected polygon and slice points
@@ -586,20 +594,23 @@ export const handleMouseDown = (
 
               if (result.success) {
                 // Replace the original polygon with the two new ones
-                const updatedPolygons = segmentationData.polygons.filter(p => p.id !== selectedPolygonId);
+                const updatedPolygons = segmentationData.polygons.filter((p) => p.id !== selectedPolygonId);
                 updatedPolygons.push(...result.polygons);
 
-                setSegmentationDataWithHistory({
-                  ...segmentationData,
-                  polygons: updatedPolygons
-                }, false);
+                setSegmentationDataWithHistory(
+                  {
+                    ...segmentationData,
+                    polygons: updatedPolygons,
+                  },
+                  false,
+                );
               }
 
               // Reset state after slicing
               setTempPoints([]);
               setInteractionState({
                 ...interactionState,
-                sliceStartPoint: null
+                sliceStartPoint: null,
               });
               setSelectedPolygonId(null);
               setEditMode(EditMode.View);
@@ -632,22 +643,28 @@ export const handleMouseDown = (
 
           // Delete the smallest polygon (likely a hole)
           const polygonToDelete = containingPolygons[0];
-          const updatedPolygons = segmentationData.polygons.filter(p => p.id !== polygonToDelete.id);
-          setSegmentationDataWithHistory({
-            ...segmentationData,
-            polygons: updatedPolygons
-          }, false);
+          const updatedPolygons = segmentationData.polygons.filter((p) => p.id !== polygonToDelete.id);
+          setSegmentationDataWithHistory(
+            {
+              ...segmentationData,
+              polygons: updatedPolygons,
+            },
+            false,
+          );
           return;
         }
 
         // If we only found one polygon, delete it
         if (containingPolygons.length === 1) {
           const polygonToDelete = containingPolygons[0];
-          const updatedPolygons = segmentationData.polygons.filter(p => p.id !== polygonToDelete.id);
-          setSegmentationDataWithHistory({
-            ...segmentationData,
-            polygons: updatedPolygons
-          }, false);
+          const updatedPolygons = segmentationData.polygons.filter((p) => p.id !== polygonToDelete.id);
+          setSegmentationDataWithHistory(
+            {
+              ...segmentationData,
+              polygons: updatedPolygons,
+            },
+            false,
+          );
           return;
         }
       }
@@ -655,9 +672,11 @@ export const handleMouseDown = (
     }
 
     // Handle polygon selection (in any mode except DeletePolygon, Slice, and AddPoints with isAddingPoints)
-    if (segmentationData?.polygons &&
-        editMode !== EditMode.Slice &&
-        !(editMode === EditMode.AddPoints && interactionState.isAddingPoints)) {
+    if (
+      segmentationData?.polygons &&
+      editMode !== EditMode.Slice &&
+      !(editMode === EditMode.AddPoints && interactionState.isAddingPoints)
+    ) {
       // Find all polygons that contain the click point
       const containingPolygons = [];
       for (const polygon of segmentationData.polygons) {
@@ -675,7 +694,7 @@ export const handleMouseDown = (
         setInteractionState({
           ...interactionState,
           isPanning: true,
-          panStart: { x: e.clientX, y: e.clientY }
+          panStart: { x: e.clientX, y: e.clientY },
         });
         return;
       }
@@ -702,7 +721,7 @@ export const handleMouseDown = (
         setInteractionState({
           ...interactionState,
           isPanning: true,
-          panStart: { x: e.clientX, y: e.clientY }
+          panStart: { x: e.clientX, y: e.clientY },
         });
         return;
       }
@@ -721,7 +740,7 @@ export const handleMouseDown = (
         setInteractionState({
           ...interactionState,
           isPanning: true,
-          panStart: { x: e.clientX, y: e.clientY }
+          panStart: { x: e.clientX, y: e.clientY },
         });
         return;
       }
@@ -739,7 +758,7 @@ export const handleMouseDown = (
       setInteractionState({
         ...interactionState,
         isPanning: true,
-        panStart: { x: e.clientX, y: e.clientY }
+        panStart: { x: e.clientX, y: e.clientY },
       });
     }
   }
@@ -764,28 +783,29 @@ export const handleMouseMove = (
   setLastAutoAddedPoint: (point: Point | null) => void,
   setTransform: (transform: TransformState) => void,
   setInteractionState: (state: InteractionState) => void,
-  setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void
+  setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void,
 ) => {
   const coords = getCanvasCoordinates(e.clientX, e.clientY, transform, canvasRef);
   const { imageX, imageY } = coords;
   const currentPoint = { x: imageX, y: imageY };
 
   // Handle equidistant point placement with Shift key in CreatePolygon or AddPoints mode
-  if (isShiftPressed &&
-      (editMode === EditMode.CreatePolygon ||
-       (editMode === EditMode.AddPoints && interactionState.isAddingPoints))) {
-
+  if (
+    isShiftPressed &&
+    (editMode === EditMode.CreatePolygon || (editMode === EditMode.AddPoints && interactionState.isAddingPoints))
+  ) {
     // For Add Points mode, if we don't have any temp points yet but we have a start vertex,
     // we need to use the start vertex as the reference point
     let referencePoint: Point;
 
-    if (editMode === EditMode.AddPoints &&
-        interactionState.isAddingPoints &&
-        interactionState.addPointStartVertex &&
-        tempPoints.length === 0) {
-
+    if (
+      editMode === EditMode.AddPoints &&
+      interactionState.isAddingPoints &&
+      interactionState.addPointStartVertex &&
+      tempPoints.length === 0
+    ) {
       // Find the selected polygon and get the start vertex
-      const selectedPolygon = segmentationData?.polygons.find(p => p.id === selectedPolygonId);
+      const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
       if (selectedPolygon && interactionState.addPointStartVertex.vertexIndex < selectedPolygon.points.length) {
         referencePoint = selectedPolygon.points[interactionState.addPointStartVertex.vertexIndex];
 
@@ -844,12 +864,12 @@ export const handleMouseMove = (
       setTransform({
         ...transform,
         translateX: transform.translateX + dx,
-        translateY: transform.translateY + dy
+        translateY: transform.translateY + dy,
       });
 
       setInteractionState({
         ...interactionState,
-        panStart: { x: e.clientX, y: e.clientY }
+        panStart: { x: e.clientX, y: e.clientY },
       });
     }
     return;
@@ -862,19 +882,26 @@ export const handleMouseMove = (
     // Update the polygon's vertex position
     if (segmentationData && polygonId && vertexIndex !== null) {
       // Store the original vertex position if not already stored
+      // This is a safety check in case handleMouseDown didn't capture it
       if (!interactionState.originalVertexPosition) {
         // Find the original position
-        const polygon = segmentationData.polygons.find(p => p.id === polygonId);
+        const polygon = segmentationData.polygons.find((p) => p.id === polygonId);
         if (polygon && vertexIndex < polygon.points.length) {
+          // Log that we're capturing this late (should be a rare case)
+          logger.warn('Capturing original vertex position during drag (not in mouseDown)');
+
           // Store the original position in the interaction state
           setInteractionState({
             ...interactionState,
-            originalVertexPosition: { ...polygon.points[vertexIndex] }
+            originalVertexPosition: { ...polygon.points[vertexIndex] },
           });
+
+          // Continue with the next event to ensure we have the original position
+          return;
         }
       }
 
-      const updatedPolygons = segmentationData.polygons.map(polygon => {
+      const updatedPolygons = segmentationData.polygons.map((polygon) => {
         if (polygon.id === polygonId) {
           const updatedPoints = [...polygon.points];
           updatedPoints[vertexIndex] = { x: imageX, y: imageY };
@@ -885,10 +912,14 @@ export const handleMouseMove = (
 
       // Update the segmentation data without adding to history during dragging
       // We'll add to history only when the drag is complete (in handleMouseUp)
-      setSegmentationDataWithHistory({
-        ...segmentationData,
-        polygons: updatedPolygons
-      }, false);
+      // The false parameter ensures we don't reset history
+      setSegmentationDataWithHistory(
+        {
+          ...segmentationData,
+          polygons: updatedPolygons,
+        },
+        false,
+      );
     }
     return;
   }
@@ -897,10 +928,7 @@ export const handleMouseMove = (
   if (editMode === EditMode.Slice && interactionState.sliceStartPoint) {
     // Only show preview line if we have a selected polygon
     if (selectedPolygonId) {
-      setTempPoints([
-        interactionState.sliceStartPoint,
-        { x: imageX, y: imageY }
-      ]);
+      setTempPoints([interactionState.sliceStartPoint, { x: imageX, y: imageY }]);
     }
     return;
   }
@@ -913,7 +941,7 @@ export const handleMouseMove = (
       // This will be handled in the Canvas component
     } else if (selectedPolygonId) {
       // If we don't have any temp points yet, show a line from the start vertex to the cursor
-      const selectedPolygon = segmentationData?.polygons.find(p => p.id === selectedPolygonId);
+      const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
       if (selectedPolygon && interactionState.addPointStartVertex) {
         const startVertex = selectedPolygon.points[interactionState.addPointStartVertex.vertexIndex];
         // We don't need to set temp points here, just update the cursor position
@@ -924,7 +952,7 @@ export const handleMouseMove = (
 
   // Update hover state for vertices in EditVertices or AddPoints mode
   if ((editMode === EditMode.EditVertices || editMode === EditMode.AddPoints) && selectedPolygonId) {
-    const selectedPolygon = segmentationData?.polygons.find(p => p.id === selectedPolygonId);
+    const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
     if (selectedPolygon) {
       // Find the closest vertex within hit radius
       let closestVertexIndex = -1;
@@ -945,7 +973,10 @@ export const handleMouseMove = (
 
       // If we found a vertex within hit radius, hover it
       if (closestVertexIndex !== -1) {
-        setHoveredVertex({ polygonId: selectedPolygonId, vertexIndex: closestVertexIndex });
+        setHoveredVertex({
+          polygonId: selectedPolygonId,
+          vertexIndex: closestVertexIndex,
+        });
         return;
       }
 
@@ -979,7 +1010,10 @@ export const handleMouseMove = (
 
     // If we found a vertex within hit radius, hover it
     if (closestPolygonId !== null && closestVertexIndex !== -1) {
-      setHoveredVertex({ polygonId: closestPolygonId, vertexIndex: closestVertexIndex });
+      setHoveredVertex({
+        polygonId: closestPolygonId,
+        vertexIndex: closestVertexIndex,
+      });
       return;
     }
 
@@ -996,14 +1030,14 @@ export const handleMouseUp = (
   interactionState: InteractionState,
   setInteractionState: (state: InteractionState) => void,
   segmentationData: SegmentationData | null,
-  setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void
+  setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void,
 ) => {
   // End panning
   if (interactionState.isPanning) {
     setInteractionState({
       ...interactionState,
       isPanning: false,
-      panStart: null
+      panStart: null,
     });
   }
 
@@ -1011,29 +1045,38 @@ export const handleMouseUp = (
   if (interactionState.isDraggingVertex) {
     // If we have the original vertex position and the segmentation data,
     // log the operation but don't add to history here (that's handled in useSegmentationV2.ts)
-    if (interactionState.originalVertexPosition &&
-        interactionState.draggedVertexInfo &&
-        segmentationData) {
-
+    if (interactionState.originalVertexPosition && interactionState.draggedVertexInfo && segmentationData) {
       // Log the drag operation
       const { polygonId, vertexIndex } = interactionState.draggedVertexInfo;
-      const polygon = segmentationData.polygons.find(p => p.id === polygonId);
-      
+      const polygon = segmentationData.polygons.find((p) => p.id === polygonId);
+
       if (polygon && vertexIndex !== undefined && vertexIndex < polygon.points.length) {
         const finalPosition = polygon.points[vertexIndex];
-        logger.debug(`Vertex drag completed: from (${interactionState.originalVertexPosition.x}, ${interactionState.originalVertexPosition.y}) to (${finalPosition.x}, ${finalPosition.y})`);
-        
-        // Neukládáme do historie zde - to se provede v onMouseUp v useSegmentationV2.ts
-        // Tím zajistíme, že celý tah bude považován za jednu operaci pro undo/redo
+        logger.debug(
+          `Vertex drag completed: from (${interactionState.originalVertexPosition.x}, ${interactionState.originalVertexPosition.y}) to (${finalPosition.x}, ${finalPosition.y})`,
+        );
+
+        // Check if position actually changed (to avoid unnecessary history entries)
+        const originalPos = interactionState.originalVertexPosition;
+        const hasChanged =
+          Math.abs(originalPos.x - finalPosition.x) > 0.001 ||
+          Math.abs(originalPos.y - finalPosition.y) > 0.001;
+
+        // We'll let useSegmentationV2's onMouseUp handle the history update
+        // The draggedVertexInfo and originalVertexPosition are used there
+        if (!hasChanged) {
+          logger.debug(`Vertex position didn't change significantly, skipping history update`);
+        }
       }
     }
 
-    // Reset the interaction state
+    // Don't reset originalVertexPosition here - it needs to be available for
+    // onMouseUp in useSegmentationV2 to properly handle the history update
+    // We'll just mark dragging as finished
     setInteractionState({
       ...interactionState,
       isDraggingVertex: false,
-      draggedVertexInfo: null,
-      originalVertexPosition: null
+      // Keep draggedVertexInfo and originalVertexPosition for history handling
     });
   }
 };
@@ -1045,7 +1088,7 @@ export const handleWheel = (
   e: WheelEvent,
   transform: TransformState,
   canvasRef: RefObject<HTMLDivElement>,
-  setTransform: (transform: TransformState) => void
+  setTransform: (transform: TransformState) => void,
 ) => {
   // Get mouse position relative to canvas
   const canvasEl = canvasRef.current;
@@ -1058,11 +1101,11 @@ export const handleWheel = (
   // Calculate zoom factor based on wheel delta with better sensitivity control
   // Smaller base values make zooming smoother
   const scaleFactor = 0.05; // Reduced from implicit 0.1 to make zooming smoother
-  const zoomFactor = e.deltaY < 0 ? (1 + scaleFactor) : (1 - scaleFactor);
-  
+  const zoomFactor = e.deltaY < 0 ? 1 + scaleFactor : 1 - scaleFactor;
+
   // Apply zoom limits
   const newZoom = Math.max(0.5, Math.min(10.0, transform.zoom * zoomFactor));
-  
+
   // Skip if the zoom level didn't change
   if (newZoom === transform.zoom) return;
 
@@ -1078,7 +1121,7 @@ export const handleWheel = (
     setTransform({
       zoom: newZoom,
       translateX: newTranslateX,
-      translateY: newTranslateY
+      translateY: newTranslateY,
     });
   });
 
@@ -1094,20 +1137,21 @@ export const handleDeletePolygon = (
   selectedPolygonId: string | null,
   segmentationData: SegmentationData | null,
   setSelectedPolygonId: (id: string | null) => void,
-  setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void
+  setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void,
 ) => {
   if (!selectedPolygonId || !segmentationData) return;
 
   // Filter out the selected polygon
-  const updatedPolygons = segmentationData.polygons.filter(
-    polygon => polygon.id !== selectedPolygonId
-  );
+  const updatedPolygons = segmentationData.polygons.filter((polygon) => polygon.id !== selectedPolygonId);
 
   // Update segmentation data
-  setSegmentationDataWithHistory({
-    ...segmentationData,
-    polygons: updatedPolygons
-  }, false);
+  setSegmentationDataWithHistory(
+    {
+      ...segmentationData,
+      polygons: updatedPolygons,
+    },
+    false,
+  );
 
   // Clear selection
   setSelectedPolygonId(null);

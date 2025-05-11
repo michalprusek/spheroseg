@@ -15,9 +15,9 @@ interface SlicingModeVisualizerProps {
 }
 
 // Use Omit to reflect removed props in type signature
-const SlicingModeVisualizer = ({ 
-  sliceStartPoint, 
-  cursorPosition 
+const SlicingModeVisualizer = ({
+  sliceStartPoint,
+  cursorPosition,
   // zoom, // Removed
   // offset // Removed
 }: Omit<SlicingModeVisualizerProps, 'zoom' | 'offset'>) => {
@@ -25,7 +25,7 @@ const SlicingModeVisualizer = ({
   // const { getScreenCoordinates } = useCoordinateTransform(zoom, offset);
 
   if (!sliceStartPoint) return null;
-  
+
   // Remove zoom-dependent calculations
   /*
   const getStrokeWidth = () => { ... };
@@ -47,7 +47,9 @@ const SlicingModeVisualizer = ({
   const cursorY = cursorPosition?.y;
 
   return (
-    <g shapeRendering="geometricPrecision" style={{ pointerEvents: 'none' }}> {/* Disable pointer events on visualizer */} 
+    <g shapeRendering="geometricPrecision" style={{ pointerEvents: 'none' }}>
+      {' '}
+      {/* Disable pointer events on visualizer */}
       {/* Slicing indicator line */}
       {cursorPosition && (
         <line
@@ -62,7 +64,6 @@ const SlicingModeVisualizer = ({
           filter="url(#line-glow)"
         />
       )}
-      
       {/* Slicing start point */}
       <circle
         cx={startX} // Use image coordinate

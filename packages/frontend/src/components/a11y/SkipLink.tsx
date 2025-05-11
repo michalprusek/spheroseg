@@ -14,11 +14,7 @@ const SkipLink: React.FC<SkipLinkProps> = ({ targetId, className }) => {
   const { t } = useLanguage();
 
   return (
-    <a
-      href={`#${targetId}`}
-      className={`skip-link ${className || ''}`}
-      data-testid="skip-link"
-    >
+    <a href={`#${targetId}`} className={`skip-link ${className || ''}`} data-testid="skip-link">
       {t('accessibility.skipToContent', 'Skip to main content')}
     </a>
   );

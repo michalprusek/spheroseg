@@ -13,9 +13,9 @@ export interface UserPayload {
   email: string;
   type?: TokenType;
   // Enhanced JWT security fields
-  tokenId?: string;           // JWT ID (jti)
-  fingerprint?: string;       // Security fingerprint
-  tokenVersion?: number;      // Token format version
+  tokenId?: string; // JWT ID (jti)
+  fingerprint?: string; // Security fingerprint
+  tokenVersion?: number; // Token format version
 }
 
 // Token metadata for additional token information
@@ -51,7 +51,7 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     const decoded = tokenService.verifyToken(token, TokenType.ACCESS, {
       validateFingerprint: config.auth.tokenSecurityMode === 'strict',
       requiredIssuer: 'spheroseg-auth',
-      requiredAudience: 'spheroseg-api'
+      requiredAudience: 'spheroseg-api',
     });
 
     // Add user data to request
@@ -62,34 +62,40 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
       // Add additional claims for enhanced security
       tokenId: decoded.jti,
       fingerprint: decoded.fingerprint,
-      tokenVersion: decoded.version
+      tokenVersion: decoded.version,
     };
 
     // Add token metadata to request for access in routes
     req.tokenMetadata = {
       issuedAt: new Date((decoded as any).iat * 1000),
-      expiresAt: new Date((decoded as any).exp * 1000)
+      expiresAt: new Date((decoded as any).exp * 1000),
     };
 
     logger.debug(`User authenticated: ${req.user.userId}, ${req.user.email}`, {
       tokenId: decoded.jti,
-      fingerprint: decoded.fingerprint?.substring(0, 8) // Only log part of the fingerprint for privacy
+      fingerprint: decoded.fingerprint?.substring(0, 8), // Only log part of the fingerprint for privacy
     });
-    
+
     next();
   } catch (error) {
     // Special case for development - use mock user ID
-    if (process.env.NODE_ENV === 'development' && config.auth.tokenSecurityMode !== 'strict') {
-      logger.warn("Using mock user ID for development", { error });
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.USE_MOCK_USER === 'true' &&
+      config.auth.tokenSecurityMode !== 'strict'
+    ) {
+      logger.warn('Using development authentication mode', { error });
       req.user = {
-        userId: '5af06e91-7821-4242-9c15-a23fb1e15f57', // Valid UUID format
+        userId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', // Valid UUID format that matches our test user
         email: 'dev@example.com',
         type: TokenType.ACCESS,
         tokenId: 'dev-token-id',
         fingerprint: 'dev-fingerprint',
-        tokenVersion: 1
+        tokenVersion: 1,
       };
-      logger.debug('Using development mock user', { userId: req.user.userId });
+      logger.debug('Using development authentication', {
+        userId: req.user.userId,
+      });
       next();
       return;
     }
@@ -97,45 +103,45 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     // Handle different error types with enhanced error details
     if (error instanceof Error) {
       const errorMessage = error.message;
-      
+
       if (errorMessage === 'Token expired') {
-        return res.status(401).json({ 
+        return res.status(401).json({
           message: 'Your session has expired. Please sign in again.',
           code: 'token_expired',
-          showRefresh: true
+          showRefresh: true,
         });
       } else if (errorMessage === 'Invalid token') {
-        return res.status(401).json({ 
-          message: 'Invalid authentication token', 
-          code: 'invalid_token'
+        return res.status(401).json({
+          message: 'Invalid authentication token',
+          code: 'invalid_token',
         });
       } else if (errorMessage.includes('token type')) {
-        return res.status(401).json({ 
-          message: 'Invalid token type', 
-          code: 'invalid_token_type'
+        return res.status(401).json({
+          message: 'Invalid token type',
+          code: 'invalid_token_type',
         });
       } else if (errorMessage.includes('fingerprint')) {
         // Security error - possible token theft or replay
-        logger.warn('Security warning: Token fingerprint mismatch', { 
+        logger.warn('Security warning: Token fingerprint mismatch', {
           error: errorMessage,
-          ip: req.ip
+          ip: req.ip,
         });
-        return res.status(401).json({ 
+        return res.status(401).json({
           message: 'Security verification failed',
-          code: 'security_verification_failed'
+          code: 'security_verification_failed',
         });
       } else if (errorMessage === 'Token not active yet') {
-        return res.status(401).json({ 
-          message: 'Token not yet valid', 
-          code: 'token_not_active'
+        return res.status(401).json({
+          message: 'Token not yet valid',
+          code: 'token_not_active',
         });
       }
     }
 
-    logger.warn('Authentication failed', { 
+    logger.warn('Authentication failed', {
       error: error instanceof Error ? error.message : String(error),
       ip: req.ip,
-      userAgent: req.headers['user-agent']
+      userAgent: req.headers['user-agent'],
     });
     return res.status(401).json({ message: 'Authentication failed', code: 'auth_failed' });
   }
@@ -161,7 +167,7 @@ export const optionalAuthMiddleware = (req: AuthenticatedRequest, res: Response,
     const decoded = tokenService.verifyToken(token, TokenType.ACCESS, {
       validateFingerprint: config.auth.tokenSecurityMode === 'strict',
       requiredIssuer: 'spheroseg-auth',
-      requiredAudience: 'spheroseg-api'
+      requiredAudience: 'spheroseg-api',
     });
 
     // Add user data to request
@@ -172,23 +178,23 @@ export const optionalAuthMiddleware = (req: AuthenticatedRequest, res: Response,
       // Add additional claims for enhanced security
       tokenId: decoded.jti,
       fingerprint: decoded.fingerprint,
-      tokenVersion: decoded.version
+      tokenVersion: decoded.version,
     };
 
     // Add token metadata to request for access in routes
     req.tokenMetadata = {
       issuedAt: new Date((decoded as any).iat * 1000),
-      expiresAt: new Date((decoded as any).exp * 1000)
+      expiresAt: new Date((decoded as any).exp * 1000),
     };
 
     logger.debug(`Optional auth: User authenticated: ${req.user.userId}, ${req.user.email}`, {
-      tokenId: decoded.jti?.substring(0, 8)
+      tokenId: decoded.jti?.substring(0, 8),
     });
   } catch (error) {
     // Token invalid, but that's ok for optional auth
-    logger.debug('Optional auth: Invalid token', { 
+    logger.debug('Optional auth: Invalid token', {
       error: error instanceof Error ? error.message : String(error),
-      ip: req.ip?.substring(0, 16) // Only log part of the IP for privacy
+      ip: req.ip?.substring(0, 16), // Only log part of the IP for privacy
     });
   }
 
@@ -218,7 +224,7 @@ export const authorizeRoles = (roles: string[]) => {
 
       // In a real app, we would query the database for the user's role
       // Here's a simplified example:
-      const userPool = await import('../db').then(module => module.default);
+      const userPool = await import('../db').then((module) => module.default);
       const result = await userPool.query('SELECT role FROM users WHERE id = $1', [userId]);
 
       if (result.rows.length === 0) {
@@ -230,13 +236,20 @@ export const authorizeRoles = (roles: string[]) => {
 
       // Check if user's role is in the allowed roles
       if (!roles.includes(userRole)) {
-        logger.warn('Unauthorized role access attempt', { userId, userRole, requiredRoles: roles });
+        logger.warn('Unauthorized role access attempt', {
+          userId,
+          userRole,
+          requiredRoles: roles,
+        });
         return res.status(403).json({ message: 'Unauthorized: Insufficient privileges' });
       }
 
       next();
     } catch (error) {
-      logger.error('Error during role authorization', { error, userId: req.user.userId });
+      logger.error('Error during role authorization', {
+        error,
+        userId: req.user.userId,
+      });
       return res.status(500).json({ message: 'Authorization error' });
     }
   };

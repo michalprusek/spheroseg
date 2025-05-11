@@ -1,6 +1,6 @@
 /**
  * Translation Utilities
- * 
+ *
  * This module provides centralized utilities for working with translations,
  * including checking for missing keys, generating missing translations,
  * and validating translation files.
@@ -18,17 +18,13 @@ export interface TranslationKey {
 
 /**
  * Check if all keys in the reference object exist in the target object
- * 
+ *
  * @param reference Reference object (usually English translations)
  * @param target Target object to check against
  * @param path Current path in the object hierarchy
  * @returns Array of missing key paths
  */
-export function checkKeysExist(
-  reference: Record<string, any>,
-  target: Record<string, any>,
-  path = ''
-): string[] {
+export function checkKeysExist(reference: Record<string, any>, target: Record<string, any>, path = ''): string[] {
   const missingKeys: string[] = [];
 
   for (const key in reference) {
@@ -54,21 +50,18 @@ export function checkKeysExist(
 
 /**
  * Find missing keys in target compared to reference
- * 
+ *
  * @param reference Reference object (usually English translations)
  * @param target Target object to check against
  * @returns Array of missing keys with their paths and values
  */
-export function findMissingKeys(
-  reference: Record<string, any>,
-  target: Record<string, any>
-): TranslationKey[] {
+export function findMissingKeys(reference: Record<string, any>, target: Record<string, any>): TranslationKey[] {
   const missingKeys: TranslationKey[] = [];
-  
+
   function findMissingKeysRecursive(refObj: Record<string, any>, targetObj: Record<string, any>, path = '') {
     for (const key in refObj) {
       const currentPath = path ? `${path}.${key}` : key;
-      
+
       if (typeof refObj[key] === 'object' && refObj[key] !== null) {
         // If target doesn't have this object, all nested keys are missing
         if (!targetObj[key] || typeof targetObj[key] !== 'object') {
@@ -82,49 +75,46 @@ export function findMissingKeys(
         // Add missing key
         missingKeys.push({
           path: currentPath,
-          value: refObj[key]
+          value: refObj[key],
         });
       }
     }
   }
-  
+
   function collectAllNestedKeys(obj: Record<string, any>, basePath: string) {
     for (const key in obj) {
       const currentPath = `${basePath}.${key}`;
-      
+
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         collectAllNestedKeys(obj[key], currentPath);
       } else {
         missingKeys.push({
           path: currentPath,
-          value: obj[key]
+          value: obj[key],
         });
       }
     }
   }
-  
+
   findMissingKeysRecursive(reference, target);
   return missingKeys;
 }
 
 /**
  * Generate missing translations object
- * 
+ *
  * @param missingKeys Array of missing keys
  * @param reference Reference object (usually English translations)
  * @param langCode Language code for the target language
  * @returns Object with missing translations
  */
-export function generateMissingTranslations(
-  missingKeys: TranslationKey[],
-  langCode: string
-): Record<string, any> {
+export function generateMissingTranslations(missingKeys: TranslationKey[], langCode: string): Record<string, any> {
   const result: Record<string, any> = {};
-  
-  missingKeys.forEach(key => {
+
+  missingKeys.forEach((key) => {
     const pathParts = key.path.split('.');
     let current = result;
-    
+
     // Build the nested structure
     for (let i = 0; i < pathParts.length - 1; i++) {
       const part = pathParts[i];
@@ -133,18 +123,18 @@ export function generateMissingTranslations(
       }
       current = current[part];
     }
-    
+
     // Add the leaf value
     const lastPart = pathParts[pathParts.length - 1];
     current[lastPart] = `[${langCode}] ${key.value}`;
   });
-  
+
   return result;
 }
 
 /**
  * Parse translations from file content
- * 
+ *
  * @param content File content as string
  * @returns Parsed translations object
  */
@@ -164,17 +154,17 @@ export function parseTranslations(content: string): Record<string, any> {
 
 /**
  * Extract all keys from a translations object
- * 
+ *
  * @param obj Translations object
  * @param path Current path in the object hierarchy
  * @returns Array of key paths
  */
 export function extractAllKeys(obj: Record<string, any>, path = ''): string[] {
   const keys: string[] = [];
-  
+
   for (const key in obj) {
     const currentPath = path ? `${path}.${key}` : key;
-    
+
     if (typeof obj[key] === 'object' && obj[key] !== null) {
       // Recursively extract keys from nested objects
       keys.push(...extractAllKeys(obj[key], currentPath));
@@ -183,23 +173,19 @@ export function extractAllKeys(obj: Record<string, any>, path = ''): string[] {
       keys.push(currentPath);
     }
   }
-  
+
   return keys;
 }
 
 /**
  * Find placeholder translations in a translations object
- * 
+ *
  * @param translations Translations object
  * @param langCode Language code to check for placeholders
  * @param path Current path in the object hierarchy
  * @returns Array of placeholder translations
  */
-export function findPlaceholderTranslations(
-  translations: Record<string, any>,
-  langCode: string,
-  path = ''
-): string[] {
+export function findPlaceholderTranslations(translations: Record<string, any>, langCode: string, path = ''): string[] {
   const placeholders: string[] = [];
 
   for (const key in translations) {
@@ -222,17 +208,17 @@ export function findPlaceholderTranslations(
 
 /**
  * Generate code for missing translations
- * 
+ *
  * @param missingTranslations Missing translations object
  * @param existingTranslations Existing translations object
  * @returns Generated code as string
  */
 export function generateMissingCode(
   missingTranslations: Record<string, any>,
-  existingTranslations: Record<string, any>
+  existingTranslations: Record<string, any>,
 ): string {
   let code = '';
-  
+
   // Process top-level sections
   for (const section in missingTranslations) {
     if (typeof missingTranslations[section] === 'object') {
@@ -252,13 +238,13 @@ export function generateMissingCode(
       code += `  ${section}: "${missingTranslations[section]}",\n`;
     }
   }
-  
+
   return code;
 }
 
 /**
  * Generate code for nested missing translations
- * 
+ *
  * @param missing Missing translations object
  * @param existing Existing translations object
  * @param parentPath Parent path
@@ -267,10 +253,10 @@ export function generateMissingCode(
 export function generateNestedCode(
   missing: Record<string, any>,
   existing: Record<string, any>,
-  parentPath: string
+  parentPath: string,
 ): string {
   let code = '';
-  
+
   for (const key in missing) {
     if (typeof missing[key] === 'object') {
       if (!existing[key]) {
@@ -288,30 +274,30 @@ export function generateNestedCode(
       code += `  ${parentPath}: {\n    ...${parentPath},\n    ${key}: "${missing[key]}"\n  },\n`;
     }
   }
-  
+
   return code;
 }
 
 /**
  * Check for potential hardcoded text in a file
- * 
+ *
  * @param content File content as string
  * @returns Array of potential hardcoded text
  */
 export function checkForHardcodedText(content: string): { line: number; text: string }[] {
   const lines = content.split('\n');
   const results: { line: number; text: string }[] = [];
-  
+
   // Regular expression to match potential hardcoded text in JSX
   const jsxTextRegex = />([A-Za-z0-9 ,.!?;:'"()-]+)</g;
   const stringLiteralRegex = /["']([A-Za-z0-9 ,.!?;:'"()-]{3,})["']/g;
-  
+
   lines.forEach((line, index) => {
     // Skip comments and imports
     if (line.trim().startsWith('//') || line.includes('import ')) {
       return;
     }
-    
+
     // Check for JSX text
     let match;
     while ((match = jsxTextRegex.exec(line)) !== null) {
@@ -321,28 +307,30 @@ export function checkForHardcodedText(content: string): { line: number; text: st
         results.push({ line: index + 1, text });
       }
     }
-    
+
     // Check for string literals that might be UI text
     // This has more false positives, so we're more selective
     while ((match = stringLiteralRegex.exec(line)) !== null) {
       const text = match[1].trim();
       // Skip if it looks like a variable, path, or code
-      if (text && 
-          text.length > 3 && 
-          !text.includes('/') && 
-          !text.includes('.') && 
-          !text.includes('_') &&
-          !text.includes('-') &&
-          text.match(/[A-Z]/) && // Has at least one uppercase letter
-          text.match(/[a-z]/) && // Has at least one lowercase letter
-          !line.includes('import') &&
-          !line.includes('require') &&
-          !line.includes('path')) {
+      if (
+        text &&
+        text.length > 3 &&
+        !text.includes('/') &&
+        !text.includes('.') &&
+        !text.includes('_') &&
+        !text.includes('-') &&
+        text.match(/[A-Z]/) && // Has at least one uppercase letter
+        text.match(/[a-z]/) && // Has at least one lowercase letter
+        !line.includes('import') &&
+        !line.includes('require') &&
+        !line.includes('path')
+      ) {
         results.push({ line: index + 1, text });
       }
     }
   });
-  
+
   return results;
 }
 
@@ -355,5 +343,5 @@ export default {
   findPlaceholderTranslations,
   generateMissingCode,
   generateNestedCode,
-  checkForHardcodedText
+  checkForHardcodedText,
 };

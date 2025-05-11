@@ -1,6 +1,6 @@
 /**
  * Project Export API Test
- * 
+ *
  * This test verifies the project export endpoints
  * using a simplified approach with mocked dependencies.
  */
@@ -17,9 +17,9 @@ const NON_EXISTENT_PROJECT_ID = '123e4567-e89b-12d3-a456-426614174999';
 
 // Simple auth middleware mock that adds a test user to the request
 const mockAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  (req as any).user = { 
+  (req as any).user = {
     userId: 'test-user-id',
-    email: 'test@example.com'
+    email: 'test@example.com',
   };
   next();
 };
@@ -49,9 +49,9 @@ async function queryMock(query: string, params: any[] = []): Promise<QueryResult
             title: 'Test Project',
             description: 'Test Description',
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]
+            updated_at: new Date().toISOString(),
+          },
+        ],
       };
     }
     // Non-existent project
@@ -74,9 +74,9 @@ async function queryMock(query: string, params: any[] = []): Promise<QueryResult
           metadata: { size: 12345, format: 'jpeg' },
           status: 'completed',
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ]
+          updated_at: new Date().toISOString(),
+        },
+      ],
     };
   }
 
@@ -93,12 +93,12 @@ async function queryMock(query: string, params: any[] = []): Promise<QueryResult
           metrics: { count: 10, area: 1000, coverage: 0.35 },
           status: 'completed',
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ]
+          updated_at: new Date().toISOString(),
+        },
+      ],
     };
   }
-  
+
   // Default response for any other query
   return { rows: [] };
 }
@@ -112,18 +112,18 @@ const mockExcelBuffer = Buffer.from('Mock Excel File');
 // Mock all required dependencies
 jest.mock('../middleware/authMiddleware', () => ({
   __esModule: true,
-  default: mockAuthMiddleware
+  default: mockAuthMiddleware,
 }));
 
 jest.mock('../middleware/validationMiddleware', () => ({
-  validate: mockValidate
+  validate: mockValidate,
 }));
 
 jest.mock('../db', () => ({
   __esModule: true,
   default: {
-    query: mockDbQuery
-  }
+    query: mockDbQuery,
+  },
 }));
 
 jest.mock('../utils/logger', () => ({
@@ -133,8 +133,8 @@ jest.mock('../utils/logger', () => ({
     error: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
-    http: jest.fn()
-  }
+    http: jest.fn(),
+  },
 }));
 
 // Mock Excel.js library for metrics export
@@ -142,7 +142,7 @@ jest.mock('exceljs', () => {
   const mockWriteBuffer = jest.fn().mockImplementation(() => {
     return Promise.resolve(mockExcelBuffer);
   });
-  
+
   return {
     Workbook: jest.fn().mockImplementation(() => {
       return {
@@ -151,14 +151,14 @@ jest.mock('exceljs', () => {
           columns: [],
           addRow: jest.fn(),
           getCell: jest.fn().mockReturnValue({
-            style: {}
-          })
+            style: {},
+          }),
         }),
         xlsx: {
-          writeBuffer: mockWriteBuffer
-        }
+          writeBuffer: mockWriteBuffer,
+        },
       };
-    })
+    }),
   };
 });
 
@@ -169,62 +169,60 @@ router.get('/:id/export', mockAuthMiddleware, mockValidate(), async (req: Reques
   const includeMetadata = req.query.includeMetadata === 'true';
   const includeSegmentation = req.query.includeSegmentation === 'true';
   const includeMetrics = req.query.includeMetrics === 'true';
-  
+
   try {
     // Fetch project
-    const projectResult = await mockDbQuery(
-      'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
-      [projectId, userId]
-    );
-    
+    const projectResult = await mockDbQuery('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
+      projectId,
+      userId,
+    ]);
+
     if (projectResult.rows.length === 0) {
       return res.status(404).json({ message: 'Project not found or access denied' });
     }
-    
+
     const project = projectResult.rows[0];
-    
+
     // Fetch images
-    const imagesResult = await mockDbQuery(
-      'SELECT * FROM images WHERE project_id = $1',
-      [projectId]
-    );
-    
-    const images = await Promise.all(imagesResult.rows.map(async (image) => {
-      // Clone image to avoid modifying the original
-      const imageClone = { ...image };
-      
-      // Remove paths if metadata should not be included
-      if (!includeMetadata) {
-        delete imageClone.storage_path;
-        delete imageClone.thumbnail_path;
-      }
-      
-      // Include segmentation if requested
-      if (includeSegmentation) {
-        const segmentationResult = await mockDbQuery(
-          'SELECT * FROM segmentation_results WHERE image_id = $1',
-          [image.id]
-        );
-        
-        if (segmentationResult.rows.length > 0) {
-          const segmentation = segmentationResult.rows[0];
-          
-          // Remove metrics if not requested
-          if (!includeMetrics) {
-            delete segmentation.metrics;
-          }
-          
-          imageClone.segmentation = segmentation;
+    const imagesResult = await mockDbQuery('SELECT * FROM images WHERE project_id = $1', [projectId]);
+
+    const images = await Promise.all(
+      imagesResult.rows.map(async (image) => {
+        // Clone image to avoid modifying the original
+        const imageClone = { ...image };
+
+        // Remove paths if metadata should not be included
+        if (!includeMetadata) {
+          delete imageClone.storage_path;
+          delete imageClone.thumbnail_path;
         }
-      }
-      
-      return imageClone;
-    }));
-    
+
+        // Include segmentation if requested
+        if (includeSegmentation) {
+          const segmentationResult = await mockDbQuery('SELECT * FROM segmentation_results WHERE image_id = $1', [
+            image.id,
+          ]);
+
+          if (segmentationResult.rows.length > 0) {
+            const segmentation = segmentationResult.rows[0];
+
+            // Remove metrics if not requested
+            if (!includeMetrics) {
+              delete segmentation.metrics;
+            }
+
+            imageClone.segmentation = segmentation;
+          }
+        }
+
+        return imageClone;
+      }),
+    );
+
     // Return project export
     res.status(200).json({
       project,
-      images
+      images,
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -235,25 +233,25 @@ router.get('/:id/export', mockAuthMiddleware, mockValidate(), async (req: Reques
 router.get('/:id/export/metrics', mockAuthMiddleware, mockValidate(), async (req: Request, res: Response) => {
   const userId = (req as any).user?.userId;
   const projectId = req.params.id;
-  
+
   try {
     // Fetch project
-    const projectResult = await mockDbQuery(
-      'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
-      [projectId, userId]
-    );
-    
+    const projectResult = await mockDbQuery('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
+      projectId,
+      userId,
+    ]);
+
     if (projectResult.rows.length === 0) {
       return res.status(404).json({ message: 'Project not found or access denied' });
     }
-    
+
     // In a real implementation, we would create an Excel file with metrics.
     // For testing, we just return a mock Excel buffer.
-    
+
     // Set headers for Excel download
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="project-${projectId}-metrics.xlsx"`);
-    
+
     res.status(200).send(mockExcelBuffer);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -266,7 +264,7 @@ describe('Project Export API', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks();
-    
+
     // Setup Express app
     app = express();
     app.use(express.json());
@@ -275,13 +273,11 @@ describe('Project Export API', () => {
 
   describe('GET /projects/:id/export', () => {
     it('should return project export data with all options', async () => {
-      const response = await request(app)
-        .get(`/projects/${VALID_PROJECT_ID}/export`)
-        .query({
-          includeMetadata: 'true',
-          includeSegmentation: 'true',
-          includeMetrics: 'true'
-        });
+      const response = await request(app).get(`/projects/${VALID_PROJECT_ID}/export`).query({
+        includeMetadata: 'true',
+        includeSegmentation: 'true',
+        includeMetrics: 'true',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('project');
@@ -294,55 +290,47 @@ describe('Project Export API', () => {
       expect(response.body.images[0].segmentation).toHaveProperty('id', 'test-segmentation-id');
       expect(response.body.images[0].segmentation).toHaveProperty('metrics');
     });
-    
+
     it('should return project export data without metadata', async () => {
-      const response = await request(app)
-        .get(`/projects/${VALID_PROJECT_ID}/export`)
-        .query({
-          includeMetadata: 'false',
-          includeSegmentation: 'true',
-          includeMetrics: 'true'
-        });
+      const response = await request(app).get(`/projects/${VALID_PROJECT_ID}/export`).query({
+        includeMetadata: 'false',
+        includeSegmentation: 'true',
+        includeMetrics: 'true',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body.images[0]).not.toHaveProperty('storage_path');
       expect(response.body.images[0]).not.toHaveProperty('thumbnail_path');
     });
-    
+
     it('should return project export data without segmentation', async () => {
-      const response = await request(app)
-        .get(`/projects/${VALID_PROJECT_ID}/export`)
-        .query({
-          includeMetadata: 'true',
-          includeSegmentation: 'false',
-          includeMetrics: 'true'
-        });
+      const response = await request(app).get(`/projects/${VALID_PROJECT_ID}/export`).query({
+        includeMetadata: 'true',
+        includeSegmentation: 'false',
+        includeMetrics: 'true',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body.images[0]).not.toHaveProperty('segmentation');
     });
-    
+
     it('should return project export data without metrics', async () => {
-      const response = await request(app)
-        .get(`/projects/${VALID_PROJECT_ID}/export`)
-        .query({
-          includeMetadata: 'true',
-          includeSegmentation: 'true',
-          includeMetrics: 'false'
-        });
+      const response = await request(app).get(`/projects/${VALID_PROJECT_ID}/export`).query({
+        includeMetadata: 'true',
+        includeSegmentation: 'true',
+        includeMetrics: 'false',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body.images[0].segmentation).not.toHaveProperty('metrics');
     });
 
     it('should return 404 if project does not exist', async () => {
-      const response = await request(app)
-        .get(`/projects/${NON_EXISTENT_PROJECT_ID}/export`)
-        .query({
-          includeMetadata: 'true',
-          includeSegmentation: 'true',
-          includeMetrics: 'true'
-        });
+      const response = await request(app).get(`/projects/${NON_EXISTENT_PROJECT_ID}/export`).query({
+        includeMetadata: 'true',
+        includeSegmentation: 'true',
+        includeMetrics: 'true',
+      });
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('message', 'Project not found or access denied');
@@ -351,8 +339,7 @@ describe('Project Export API', () => {
 
   describe('GET /projects/:id/export/metrics', () => {
     it('should return project metrics as Excel file', async () => {
-      const response = await request(app)
-        .get(`/projects/${VALID_PROJECT_ID}/export/metrics`);
+      const response = await request(app).get(`/projects/${VALID_PROJECT_ID}/export/metrics`);
 
       expect(response.status).toBe(200);
       expect(response.header['content-type']).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -360,8 +347,7 @@ describe('Project Export API', () => {
     });
 
     it('should return 404 if project does not exist', async () => {
-      const response = await request(app)
-        .get(`/projects/${NON_EXISTENT_PROJECT_ID}/export/metrics`);
+      const response = await request(app).get(`/projects/${NON_EXISTENT_PROJECT_ID}/export/metrics`);
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('message', 'Project not found or access denied');

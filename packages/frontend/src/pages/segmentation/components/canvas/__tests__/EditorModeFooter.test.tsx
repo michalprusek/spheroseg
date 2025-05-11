@@ -74,7 +74,7 @@ describe('EditorModeFooter Component', () => {
   });
 
   it('renders correctly with long text', () => {
-    const longText = "This is a very long text that should still be displayed correctly in the footer component";
+    const longText = 'This is a very long text that should still be displayed correctly in the footer component';
     render(<EditorModeFooter mode="edit" text={longText} />);
     expect(screen.getByText(longText)).toBeInTheDocument();
   });

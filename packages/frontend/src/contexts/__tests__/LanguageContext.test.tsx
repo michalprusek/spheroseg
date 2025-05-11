@@ -6,8 +6,8 @@ import { LanguageProvider, useLanguage, Language } from '../LanguageContext';
 // Mock dependencies
 vi.mock('../AuthContext', () => ({
   useAuth: vi.fn(() => ({
-    user: null
-  }))
+    user: null,
+  })),
 }));
 
 vi.mock('i18next', () => ({
@@ -22,22 +22,22 @@ vi.mock('i18next', () => ({
       de: {},
       es: {},
       fr: {},
-      zh: {}
-    }
-  }
+      zh: {},
+    },
+  },
 }));
 
 vi.mock('@/lib/apiClient', () => ({
   default: {
     get: vi.fn().mockResolvedValue({ data: { preferred_language: 'en' } }),
-    put: vi.fn().mockResolvedValue({ data: { success: true } })
-  }
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+  },
 }));
 
 // Mock navigator.language
 Object.defineProperty(window.navigator, 'language', {
   writable: true,
-  value: 'en-US'
+  value: 'en-US',
 });
 
 // Mock localStorage
@@ -54,33 +54,27 @@ const localStorageMock = (() => {
     clear: vi.fn(() => {
       store = {};
     }),
-    store
+    store,
   };
 })();
 
 Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock
+  value: localStorageMock,
 });
 
 // Create a test component to access the context
 const TestLanguageConsumer = () => {
   const { language, setLanguage, t, availableLanguages } = useLanguage();
-  
+
   return (
     <div>
       <div data-testid="current-language">{language}</div>
       <div data-testid="available-languages">{availableLanguages.join(',')}</div>
       <div data-testid="translated-text">{t('test.key', undefined, 'fallback-text')}</div>
-      <button 
-        data-testid="change-language-en" 
-        onClick={() => setLanguage('en')}
-      >
+      <button data-testid="change-language-en" onClick={() => setLanguage('en')}>
         Set English
       </button>
-      <button 
-        data-testid="change-language-cs" 
-        onClick={() => setLanguage('cs')}
-      >
+      <button data-testid="change-language-cs" onClick={() => setLanguage('cs')}>
         Set Czech
       </button>
     </div>
@@ -91,7 +85,7 @@ const renderWithLanguageProvider = () => {
   return render(
     <LanguageProvider>
       <TestLanguageConsumer />
-    </LanguageProvider>
+    </LanguageProvider>,
   );
 };
 
@@ -103,10 +97,10 @@ describe('LanguageContext', () => {
 
   it('initializes with English as default language', async () => {
     renderWithLanguageProvider();
-    
+
     // Initial language should be English
     expect(screen.getByTestId('current-language')).toHaveTextContent('en');
-    
+
     // Should have available languages
     expect(screen.getByTestId('available-languages')).toHaveTextContent('en,cs,de,es,fr,zh');
   });
@@ -114,14 +108,14 @@ describe('LanguageContext', () => {
   it('loads language from localStorage if available', async () => {
     // Set language in localStorage
     localStorage.setItem('language', 'cs');
-    
+
     renderWithLanguageProvider();
-    
+
     // Wait for initialization
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
-    
+
     // Language should be loaded from localStorage
     expect(screen.getByTestId('current-language')).toHaveTextContent('cs');
   });
@@ -129,42 +123,42 @@ describe('LanguageContext', () => {
   it('detects browser language when localStorage is empty', async () => {
     // Change navigator language
     Object.defineProperty(window.navigator, 'language', {
-      value: 'fr-FR'
+      value: 'fr-FR',
     });
-    
+
     renderWithLanguageProvider();
-    
+
     // Wait for initialization
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
-    
+
     // Since detection uses just the language part, it should detect 'fr'
     expect(screen.getByTestId('current-language')).toHaveTextContent('fr');
-    
+
     // Should save detected language to localStorage
     expect(localStorage.setItem).toHaveBeenCalledWith('language', 'fr');
   });
 
   it('changes language when setLanguage is called', async () => {
     const i18n = await import('i18next');
-    
+
     renderWithLanguageProvider();
-    
+
     // Initial language should be English
     expect(screen.getByTestId('current-language')).toHaveTextContent('en');
-    
+
     // Click button to change language to Czech
     await act(async () => {
       screen.getByTestId('change-language-cs').click();
     });
-    
+
     // Language state should be updated
     expect(screen.getByTestId('current-language')).toHaveTextContent('cs');
-    
+
     // i18n.changeLanguage should be called
     expect(i18n.changeLanguage).toHaveBeenCalledWith('cs');
-    
+
     // localStorage should be updated
     expect(localStorage.setItem).toHaveBeenCalledWith('language', 'cs');
   });
@@ -178,14 +172,14 @@ describe('LanguageContext', () => {
       }
       return `translated:${key}`;
     });
-    
+
     renderWithLanguageProvider();
-    
+
     // Wait for initialization
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
-    
+
     // Should show fallback for missing translation
     expect(screen.getByTestId('translated-text')).toHaveTextContent('fallback-text');
   });
@@ -202,14 +196,14 @@ describe('LanguageContext', () => {
       }
       return `translated:${key}`;
     });
-    
+
     renderWithLanguageProvider();
-    
+
     // Wait for initialization
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
-    
+
     // Should try alternative keys and find a match
     expect(screen.getByTestId('translated-text')).toHaveTextContent('translated from alternative key');
   });
@@ -218,20 +212,22 @@ describe('LanguageContext', () => {
     // Mock authenticated user
     const authModule = await import('../AuthContext');
     vi.mocked(authModule.useAuth).mockReturnValue({
-      user: { id: 'user-123', email: 'test@example.com' }
+      user: { id: 'user-123', email: 'test@example.com' },
     } as any);
-    
+
     const apiClient = await import('@/lib/apiClient');
-    
+
     renderWithLanguageProvider();
-    
+
     // Change language
     await act(async () => {
       screen.getByTestId('change-language-cs').click();
     });
-    
+
     // Should call API to update preference
-    expect(apiClient.default.put).toHaveBeenCalledWith('/users/me', { preferred_language: 'cs' });
+    expect(apiClient.default.put).toHaveBeenCalledWith('/users/me', {
+      preferred_language: 'cs',
+    });
   });
 });
-EOF < /dev/null
+EOF < /dev/llnu;

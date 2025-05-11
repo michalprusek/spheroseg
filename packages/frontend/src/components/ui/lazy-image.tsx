@@ -50,7 +50,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         root: null,
         rootMargin: '100px', // Start loading a bit before it enters the viewport
         threshold,
-      }
+      },
     );
 
     const currentRef = containerRef.current;
@@ -99,15 +99,10 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   return (
     <div
       ref={containerRef}
-      className={cn(
-        'relative overflow-hidden bg-muted',
-        containerClassName
-      )}
+      className={cn('relative overflow-hidden bg-muted', containerClassName)}
       style={{ backgroundColor: placeholderColor }}
     >
-      {(!isLoaded && showSkeleton) && (
-        <Skeleton className="absolute inset-0 z-10" />
-      )}
+      {!isLoaded && showSkeleton && <Skeleton className="absolute inset-0 z-10" />}
 
       {imgSrc && (
         <img
@@ -118,7 +113,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
             'w-full h-full object-cover transition-opacity duration-300',
             !isLoaded ? 'opacity-0' : 'opacity-100',
             hasError ? 'grayscale' : '',
-            className
+            className,
           )}
           onLoad={handleLoad}
           onError={handleError}

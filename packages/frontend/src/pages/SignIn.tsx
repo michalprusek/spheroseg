@@ -1,20 +1,20 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2 } from "lucide-react";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Loader2 } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { ArrowLeft } from "lucide-react"; // Import ArrowLeft
+import { ArrowLeft } from 'lucide-react'; // Import ArrowLeft
 
 const SignIn = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, user } = useAuth();
@@ -33,22 +33,28 @@ const SignIn = () => {
     try {
       await signIn(email, password);
     } catch (error: unknown) {
-      console.error("Sign in error:", error);
+      console.error('Sign in error:', error);
 
       // Default error message with fallbacks
-      let errorMessage = t('auth.signInError') || t('auth.signInFailed') || "Sign in failed. Please check your credentials and try again.";
+      let errorMessage =
+        t('auth.signInError') ||
+        t('auth.signInFailed') ||
+        'Sign in failed. Please check your credentials and try again.';
 
       // Handle server errors more gracefully
       if (typeof error === 'object' && error !== null) {
-        const errObj = error as { response?: { data?: { message?: string }, status?: number }, message?: string };
+        const errObj = error as {
+          response?: { data?: { message?: string }; status?: number };
+          message?: string;
+        };
 
         // Handle specific HTTP status codes
         if (errObj.response?.status === 500) {
-          errorMessage = t('auth.serverError') || "The server encountered an error. Please try again later.";
+          errorMessage = t('auth.serverError') || 'The server encountered an error. Please try again later.';
         } else if (errObj.response?.status === 401) {
-          errorMessage = t('auth.invalidCredentials') || "Invalid email or password. Please try again.";
+          errorMessage = t('auth.invalidCredentials') || 'Invalid email or password. Please try again.';
         } else if (errObj.response?.status === 403) {
-          errorMessage = t('auth.accountLocked') || "Your account has been locked. Please contact support.";
+          errorMessage = t('auth.accountLocked') || 'Your account has been locked. Please contact support.';
         } else if (errObj.response?.data?.message && typeof errObj.response.data.message === 'string') {
           errorMessage = errObj.response.data.message;
         } else if (errObj.message && typeof errObj.message === 'string') {
@@ -62,7 +68,7 @@ const SignIn = () => {
       toast.error(errorMessage, {
         duration: 5000, // Show error for longer
         className: 'error-toast',
-        description: "Please check your credentials or try again later."
+        description: 'Please check your credentials or try again later.',
       });
     } finally {
       setIsLoading(false);
@@ -141,7 +147,12 @@ const SignIn = () => {
                 <Checkbox id="remember" />
               </div>
               <div className="ml-2">
-                <Label htmlFor="remember" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">{t('auth.rememberMe')}</Label>
+                <Label
+                  htmlFor="remember"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                >
+                  {t('auth.rememberMe')}
+                </Label>
               </div>
             </div>
 
@@ -151,7 +162,9 @@ const SignIn = () => {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {t('auth.signingIn')}
                 </>
-              ) : t('auth.signIn')}
+              ) : (
+                t('auth.signIn')
+              )}
             </Button>
           </form>
         </div>
@@ -161,34 +174,36 @@ const SignIn = () => {
               <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-300">{t('auth.dontHaveAccount')}</span>
+              <span className="px-4 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-300">
+                {t('auth.dontHaveAccount')}
+              </span>
             </div>
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
             <Link to="/sign-up">
-              <Button
-                variant="outline"
-                className="w-full h-10 text-base rounded-md"
-              >
+              <Button variant="outline" className="w-full h-10 text-base rounded-md">
                 {t('auth.signUp')}
               </Button>
             </Link>
             <Link to="/request-access">
-              <Button
-                variant="outline"
-                className="w-full h-10 text-base rounded-md"
-              >
+              <Button variant="outline" className="w-full h-10 text-base rounded-md">
                 {t('auth.requestAccess')}
               </Button>
             </Link>
             <p className="text-center text-sm text-gray-600 mt-3">
               {t('auth.termsAndPrivacy')}{' '}
-              <Link to="/terms-of-service" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+              <Link
+                to="/terms-of-service"
+                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              >
                 {t('common.termsOfService')}
               </Link>{' '}
               {t('requestAccess.and')}{' '}
-              <Link to="/privacy-policy" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+              <Link
+                to="/privacy-policy"
+                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              >
                 {t('common.privacyPolicy')}
               </Link>
             </p>

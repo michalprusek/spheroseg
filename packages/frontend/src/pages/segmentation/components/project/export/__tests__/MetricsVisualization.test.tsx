@@ -12,7 +12,7 @@ import {
   verifyBarChartPresent,
   verifyBarCount,
   verifyChartTabs,
-  verifyEmptyState
+  verifyEmptyState,
 } from './visualizationTestUtils';
 
 // Setup mocks for testing

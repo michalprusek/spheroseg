@@ -17,7 +17,7 @@ export const useAutoPointAdding = ({
   cursorPosition,
   isShiftPressed,
   tempPoints,
-  addPointToTemp
+  addPointToTemp,
 }: AutoPointAddingProps) => {
   // Define the distance function locally
   const distance = useCallback((p1: Point, p2: Point): number => {
@@ -29,47 +29,47 @@ export const useAutoPointAdding = ({
 
   // Automatické přidávání bodů při držení Shift
   useEffect(() => {
-    console.log('[useAutoPointAdding Debug] Effect triggered.', { editMode, isShiftPressed, tempPointsLength: tempPoints.points.length, cursorPosition, lastAutoAddedPoint });
-    if (!editMode || !cursorPosition || !isShiftPressed || 
-        tempPoints.points.length === 0) {
+    console.log('[useAutoPointAdding Debug] Effect triggered.', {
+      editMode,
+      isShiftPressed,
+      tempPointsLength: tempPoints.points.length,
+      cursorPosition,
+      lastAutoAddedPoint,
+    });
+    if (!editMode || !cursorPosition || !isShiftPressed || tempPoints.points.length === 0) {
       console.log('[useAutoPointAdding Debug] Conditions not met, resetting lastAutoAddedPoint.');
       setLastAutoAddedPoint(null);
       return;
     }
-    
+
     const lastPoint = tempPoints.points[tempPoints.points.length - 1];
     const currentCursor = cursorPosition;
-    
+
     // Pokud není nastaven poslední auto přidaný bod, nastavíme ho jako poslední bod v sekvenci
     if (!lastAutoAddedPoint) {
       setLastAutoAddedPoint(lastPoint);
       return;
     }
-    
+
     // Zjistíme vzdálenost od posledního auto přidaného bodu k aktuálnímu kurzoru
     const dist = distance(lastAutoAddedPoint, currentCursor);
-    
+
     // Pokud je vzdálenost větší než práh, přidáme nový bod
     if (dist >= MIN_DISTANCE_FOR_AUTO_POINT) {
-      console.log(`[useAutoPointAdding Debug] Distance (${dist.toFixed(2)}) >= threshold (${MIN_DISTANCE_FOR_AUTO_POINT}). Adding point:`, currentCursor);
+      console.log(
+        `[useAutoPointAdding Debug] Distance (${dist.toFixed(2)}) >= threshold (${MIN_DISTANCE_FOR_AUTO_POINT}). Adding point:`,
+        currentCursor,
+      );
       addPointToTemp(currentCursor);
       setLastAutoAddedPoint(currentCursor);
     }
-  }, [
-    editMode, 
-    cursorPosition, 
-    isShiftPressed, 
-    tempPoints.points, 
-    addPointToTemp, 
-    lastAutoAddedPoint, 
-    distance
-  ]);
+  }, [editMode, cursorPosition, isShiftPressed, tempPoints.points, addPointToTemp, lastAutoAddedPoint, distance]);
 
   const resetLastAutoAddedPoint = useCallback(() => {
     setLastAutoAddedPoint(null);
   }, []);
 
   return {
-    resetLastAutoAddedPoint
+    resetLastAutoAddedPoint,
   };
 };

@@ -20,7 +20,7 @@ export const simplifyPolygon = (
   polygon: Polygon,
   zoom: number,
   minPoints: number = 8,
-  maxPoints: number = 1000
+  maxPoints: number = 1000,
 ): Polygon => {
   const { id, points, type, color } = polygon;
 
@@ -36,10 +36,7 @@ export const simplifyPolygon = (
   const zoomFactor = Math.min(5, Math.max(0.2, zoom)); // Omezíme zoom faktor na rozumný rozsah
   const targetPoints = Math.min(
     maxPoints,
-    Math.max(
-      minPoints,
-      Math.floor(minPoints + (maxPoints - minPoints) * (1 - Math.exp(-zoomFactor / 2)))
-    )
+    Math.max(minPoints, Math.floor(minPoints + (maxPoints - minPoints) * (1 - Math.exp(-zoomFactor / 2)))),
   );
 
   // Pokud má polygon méně bodů než targetPoints, vrátíme ho beze změny
@@ -55,7 +52,7 @@ export const simplifyPolygon = (
       id,
       points: uniformSample(points, Math.min(50, targetPoints)),
       type,
-      color
+      color,
     };
   }
 
@@ -70,7 +67,7 @@ export const simplifyPolygon = (
       id,
       points: uniformSample(points, minPoints),
       type,
-      color
+      color,
     };
   }
 
@@ -80,7 +77,7 @@ export const simplifyPolygon = (
       id,
       points: uniformSample(simplifiedPoints, targetPoints),
       type,
-      color
+      color,
     };
   }
 
@@ -88,7 +85,7 @@ export const simplifyPolygon = (
     id,
     points: simplifiedPoints,
     type,
-    color
+    color,
   };
 };
 
@@ -105,9 +102,9 @@ export const simplifyPolygons = (
   polygons: Polygon[],
   zoom: number,
   minPoints: number = 8,
-  maxPoints: number = 1000
+  maxPoints: number = 1000,
 ): Polygon[] => {
-  return polygons.map(polygon => simplifyPolygon(polygon, zoom, minPoints, maxPoints));
+  return polygons.map((polygon) => simplifyPolygon(polygon, zoom, minPoints, maxPoints));
 };
 
 /**
@@ -165,18 +162,14 @@ const perpendicularDistance = (point: Point, lineStart: Point, lineEnd: Point): 
 
   // Pokud jsou body přímky shodné, vrátíme vzdálenost od bodu
   if (dx === 0 && dy === 0) {
-    return Math.sqrt(
-      Math.pow(point.x - lineStart.x, 2) + Math.pow(point.y - lineStart.y, 2)
-    );
+    return Math.sqrt(Math.pow(point.x - lineStart.x, 2) + Math.pow(point.y - lineStart.y, 2));
   }
 
   // Normalizovaná délka přímky
   const norm = Math.sqrt(dx * dx + dy * dy);
 
   // Kolmá vzdálenost bodu od přímky
-  return Math.abs(
-    (dy * point.x - dx * point.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x) / norm
-  );
+  return Math.abs((dy * point.x - dx * point.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x) / norm);
 };
 
 /**

@@ -9,7 +9,7 @@ vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
-  }
+  },
 }));
 
 vi.mock('react-i18next', () => ({
@@ -21,13 +21,13 @@ vi.mock('react-i18next', () => ({
         'segmentation.sliceFailed': 'Failed to slice polygon',
       };
       return translations[key] || key;
-    }
-  })
+    },
+  }),
 }));
 
 // Mock slicePolygon utility
 vi.mock('../utils/slicePolygon', () => ({
-  slicePolygon: vi.fn()
+  slicePolygon: vi.fn(),
 }));
 
 import { slicePolygon } from '../utils/slicePolygon';
@@ -45,14 +45,14 @@ describe('useSlicing hook', () => {
       { x: 0, y: 0 },
       { x: 10, y: 0 },
       { x: 10, y: 10 },
-      { x: 0, y: 10 }
+      { x: 0, y: 10 },
     ],
     color: '#FF0000',
-    label: 'Test Polygon'
+    label: 'Test Polygon',
   };
 
   const mockSegmentationData = {
-    polygons: [mockPolygon]
+    polygons: [mockPolygon],
   };
 
   // Create mock props
@@ -63,22 +63,22 @@ describe('useSlicing hook', () => {
     setSelectedPolygonId: vi.fn(),
     tempPoints: [
       { x: 0, y: 5 },
-      { x: 10, y: 5 }
+      { x: 10, y: 5 },
     ],
     setTempPoints: vi.fn(),
     setInteractionState: vi.fn(),
-    setEditMode: vi.fn()
+    setEditMode: vi.fn(),
   });
 
   it('should return false when required data is missing', () => {
     // Create props with missing data
     const props = createMockProps();
     props.tempPoints = []; // Empty temp points
-    
+
     const { result } = renderHook(() => useSlicing(props));
-    
+
     const success = result.current.handleSliceAction();
-    
+
     expect(success).toBe(false);
   });
 
@@ -86,11 +86,11 @@ describe('useSlicing hook', () => {
     // Create props with non-existent polygon ID
     const props = createMockProps();
     props.selectedPolygonId = 'non-existent-id';
-    
+
     const { result } = renderHook(() => useSlicing(props));
-    
+
     const success = result.current.handleSliceAction();
-    
+
     expect(success).toBe(false);
     expect(toast.error).toHaveBeenCalledWith('Polygon not found');
   });
@@ -98,13 +98,13 @@ describe('useSlicing hook', () => {
   it('should handle slice failure correctly', () => {
     // Mock the slicePolygon utility to return null (slice failure)
     vi.mocked(slicePolygon).mockReturnValueOnce(null);
-    
+
     const props = createMockProps();
-    
+
     const { result } = renderHook(() => useSlicing(props));
-    
+
     const success = result.current.handleSliceAction();
-    
+
     expect(success).toBe(false);
     expect(slicePolygon).toHaveBeenCalledWith(mockPolygon, props.tempPoints[0], props.tempPoints[1]);
     expect(toast.error).toHaveBeenCalledWith('Failed to slice polygon');
@@ -120,55 +120,55 @@ describe('useSlicing hook', () => {
         { x: 0, y: 0 },
         { x: 10, y: 0 },
         { x: 10, y: 5 },
-        { x: 0, y: 5 }
+        { x: 0, y: 5 },
       ],
       color: '#FF0000',
-      label: 'Test Polygon Part 1'
+      label: 'Test Polygon Part 1',
     };
-    
+
     const newPolygon2 = {
       id: 'new-polygon-2',
       points: [
         { x: 0, y: 5 },
         { x: 10, y: 5 },
         { x: 10, y: 10 },
-        { x: 0, y: 10 }
+        { x: 0, y: 10 },
       ],
       color: '#FF0000',
-      label: 'Test Polygon Part 2'
+      label: 'Test Polygon Part 2',
     };
-    
+
     vi.mocked(slicePolygon).mockReturnValueOnce([newPolygon1, newPolygon2]);
-    
+
     const props = createMockProps();
-    
+
     const { result } = renderHook(() => useSlicing(props));
-    
+
     const success = result.current.handleSliceAction();
-    
+
     expect(success).toBe(true);
     expect(slicePolygon).toHaveBeenCalledWith(mockPolygon, props.tempPoints[0], props.tempPoints[1]);
-    
+
     // Should update segmentation data with the two new polygons
     expect(props.setSegmentationData).toHaveBeenCalledWith(
       {
-        polygons: [newPolygon1, newPolygon2]
+        polygons: [newPolygon1, newPolygon2],
       },
-      false
+      false,
     );
-    
+
     // Should clear selection
     expect(props.setSelectedPolygonId).toHaveBeenCalledWith(null);
-    
+
     // Should show success message
     expect(toast.success).toHaveBeenCalledWith('Polygon sliced successfully');
-    
+
     // Should clear temporary points
     expect(props.setTempPoints).toHaveBeenCalledWith([]);
-    
+
     // Should reset interaction state
     expect(props.setInteractionState).toHaveBeenCalled();
-    
+
     // Should reset edit mode
     expect(props.setEditMode).toHaveBeenCalledWith(EditMode.View);
   });
@@ -181,36 +181,36 @@ describe('useSlicing hook', () => {
         { x: 0, y: 0 },
         { x: 10, y: 0 },
         { x: 10, y: 5 },
-        { x: 0, y: 5 }
+        { x: 0, y: 5 },
       ],
       color: '#FF0000',
-      label: 'Test Polygon Part 1'
+      label: 'Test Polygon Part 1',
     };
-    
+
     const newPolygon2 = {
       id: 'new-polygon-2',
       points: [
         { x: 0, y: 5 },
         { x: 10, y: 5 },
         { x: 10, y: 10 },
-        { x: 0, y: 10 }
+        { x: 0, y: 10 },
       ],
       color: '#FF0000',
-      label: 'Test Polygon Part 2'
+      label: 'Test Polygon Part 2',
     };
-    
+
     vi.mocked(slicePolygon).mockReturnValueOnce([newPolygon1, newPolygon2]);
-    
+
     // Create props without setEditMode
     const props = createMockProps();
     delete props.setEditMode;
-    
+
     const { result } = renderHook(() => useSlicing(props));
-    
+
     const success = result.current.handleSliceAction();
-    
+
     expect(success).toBe(true);
-    
+
     // All other expectations remain the same except for setEditMode
     expect(props.setSegmentationData).toHaveBeenCalled();
     expect(props.setSelectedPolygonId).toHaveBeenCalledWith(null);

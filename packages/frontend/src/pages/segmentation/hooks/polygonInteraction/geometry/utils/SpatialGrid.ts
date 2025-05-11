@@ -1,4 +1,3 @@
-
 import { Point } from '@/lib/segmentation';
 
 /**
@@ -34,31 +33,28 @@ export class SpatialGrid {
   findPointsInRadius(center: Point, radius: number): number[] {
     const result: number[] = [];
     const cellRadius = Math.ceil(radius / this.cellSize);
-    
+
     const centerCellX = Math.floor(center.x / this.cellSize);
     const centerCellY = Math.floor(center.y / this.cellSize);
-    
+
     // Procházíme okolní buňky
     for (let dx = -cellRadius; dx <= cellRadius; dx++) {
       for (let dy = -cellRadius; dy <= cellRadius; dy++) {
         const key = `${centerCellX + dx},${centerCellY + dy}`;
         const cellPoints = this.grid.get(key) || [];
-        
+
         // Kontrolujeme body v buňce
         for (const pointIndex of cellPoints) {
           const point = this.points[pointIndex];
-          const dist = Math.sqrt(
-            Math.pow(point.x - center.x, 2) + 
-            Math.pow(point.y - center.y, 2)
-          );
-          
+          const dist = Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2));
+
           if (dist <= radius) {
             result.push(pointIndex);
           }
         }
       }
     }
-    
+
     return result;
   }
 }

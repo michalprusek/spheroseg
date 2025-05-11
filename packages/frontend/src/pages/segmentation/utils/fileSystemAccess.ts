@@ -22,20 +22,20 @@ export const pickImageFile = async (): Promise<File | null> => {
     console.log('File System Access API not available');
     return null;
   }
-  
+
   try {
     const [fileHandle] = await window.showOpenFilePicker({
       types: [
         {
           description: 'Images',
           accept: {
-            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
-          }
-        }
+            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+          },
+        },
       ],
-      multiple: false
+      multiple: false,
     });
-    
+
     return await fileHandle.getFile();
   } catch (error) {
     console.error('Error picking file:', error);
@@ -61,20 +61,20 @@ export const loadImageFile = async (file: File): Promise<{ width: number; height
   return new Promise((resolve) => {
     const img = new Image();
     const url = createObjectURL(file);
-    
+
     img.onload = () => {
       resolve({
         width: img.naturalWidth,
         height: img.naturalHeight,
-        url
+        url,
       });
     };
-    
+
     img.onerror = () => {
       URL.revokeObjectURL(url);
       resolve(null);
     };
-    
+
     img.src = url;
   });
 };
@@ -83,23 +83,28 @@ export const loadImageFile = async (file: File): Promise<{ width: number; height
  * Pick an image file and load it
  * @returns Promise resolving to the image dimensions and object URL
  */
-export const pickAndLoadImage = async (): Promise<{ width: number; height: number; url: string; name: string } | null> => {
+export const pickAndLoadImage = async (): Promise<{
+  width: number;
+  height: number;
+  url: string;
+  name: string;
+} | null> => {
   const file = await pickImageFile();
-  
+
   if (!file) {
     return null;
   }
-  
+
   const result = await loadImageFile(file);
-  
+
   if (!result) {
     toast.error('Failed to load the selected image');
     return null;
   }
-  
+
   return {
     ...result,
-    name: file.name
+    name: file.name,
   };
 };
 

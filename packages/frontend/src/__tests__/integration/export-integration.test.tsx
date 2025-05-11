@@ -19,7 +19,7 @@ vi.mock('jszip', () => {
     default: vi.fn().mockImplementation(() => {
       const folders = {};
       const files = {};
-      
+
       return {
         folder: (name) => {
           folders[name] = { files: {} };
@@ -33,9 +33,9 @@ vi.mock('jszip', () => {
               return {
                 file: (filename, content) => {
                   folders[subFolderName].files[filename] = content;
-                }
+                },
               };
-            }
+            },
           };
         },
         file: (name, content) => {
@@ -43,9 +43,9 @@ vi.mock('jszip', () => {
         },
         generateAsync: async () => Buffer.from('mock-zip-content'),
         files: { ...files },
-        folders: { ...folders }
+        folders: { ...folders },
       };
-    })
+    }),
   };
 });
 
@@ -56,7 +56,7 @@ const mockProject = {
   description: 'Test project description',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
-  user_id: 'test-user-id'
+  user_id: 'test-user-id',
 };
 
 const mockImages = [
@@ -78,13 +78,13 @@ const mockImages = [
             { x: 100, y: 100 },
             { x: 200, y: 100 },
             { x: 200, y: 200 },
-            { x: 100, y: 200 }
-          ]
-        }
-      ]
+            { x: 100, y: 200 },
+          ],
+        },
+      ],
     },
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'test-image-id-2',
@@ -104,14 +104,14 @@ const mockImages = [
             { x: 300, y: 300 },
             { x: 400, y: 300 },
             { x: 400, y: 400 },
-            { x: 300, y: 400 }
-          ]
-        }
-      ]
+            { x: 300, y: 400 },
+          ],
+        },
+      ],
     },
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 // Set up MSW server
@@ -120,58 +120,60 @@ const server = setupServer(
   rest.get('/api/projects/:projectId', (req, res, ctx) => {
     return res(ctx.json(mockProject));
   }),
-  
+
   // Get project images
   rest.get('/api/projects/:projectId/images', (req, res, ctx) => {
     return res(ctx.json({ images: mockImages, total: mockImages.length }));
   }),
-  
+
   // Get segmentation results for each image
   rest.get('/api/images/:imageId/segmentation', (req, res, ctx) => {
     const imageId = req.params.imageId;
-    const image = mockImages.find(img => img.id === imageId);
-    
+    const image = mockImages.find((img) => img.id === imageId);
+
     if (image?.segmentationResult) {
-      return res(ctx.json({
-        id: `segmentation-${imageId}`,
-        image_id: imageId,
-        status: 'completed',
-        result_data: image.segmentationResult
-      }));
+      return res(
+        ctx.json({
+          id: `segmentation-${imageId}`,
+          image_id: imageId,
+          status: 'completed',
+          result_data: image.segmentationResult,
+        }),
+      );
     }
-    
+
     return res(ctx.status(404));
   }),
-  
+
   // Export project
   rest.get('/api/projects/:projectId/export', (req, res, ctx) => {
     return res(
       ctx.set('Content-Type', 'application/zip'),
       ctx.set('Content-Disposition', 'attachment; filename=project-export.zip'),
-      ctx.body('mock-zip-data')
+      ctx.body('mock-zip-data'),
     );
   }),
-  
+
   // Export metrics only
   rest.get('/api/projects/:projectId/export/metrics', (req, res, ctx) => {
     const format = req.url.searchParams.get('format') || 'EXCEL';
-    
+
     if (format === 'EXCEL') {
       return res(
         ctx.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
         ctx.set('Content-Disposition', 'attachment; filename=metrics.xlsx'),
-        ctx.body('mock-excel-data')
+        ctx.body('mock-excel-data'),
       );
     } else if (format === 'CSV') {
       return res(
         ctx.set('Content-Type', 'text/csv'),
         ctx.set('Content-Disposition', 'attachment; filename=metrics.csv'),
-        ctx.body('Image Name,Image ID,Object ID,Area\ntest-image-1.jpg,test-image-id-1,1,10000')
+        ctx.body('Image Name,Image ID,Object ID,Area\ntest-image-1.jpg,test-image-id-1,1,10000'),
       );
     }
-    
+
     return res(ctx.status(400));
-  })
+  }),
 );
 
 // Set up context mocks
@@ -179,16 +181,16 @@ vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({
     t: (key) => key, // Simple translation mock
     setLanguage: vi.fn(),
-    language: 'en'
-  })
+    language: 'en',
+  }),
 }));
 
 // Mock auth context
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'test-user-id', name: 'Test User' },
-    isAuthenticated: true
-  })
+    isAuthenticated: true,
+  }),
 }));
 
 // Start MSW server before tests
@@ -203,19 +205,19 @@ const renderWithRouter = (ui, { route = '/projects/test-project-id/export' } = {
       <Routes>
         <Route path="/projects/:projectId/export" element={ui} />
       </Routes>
-    </BrowserRouter>
+    </BrowserRouter>,
   );
 };
 
 describe('Export Integration Tests', () => {
   test('should load project and images on component mount', async () => {
     renderWithRouter(<ProjectExport />);
-    
+
     // Wait for project title to load
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
     });
-    
+
     // Images should be loaded and displayed
     await waitFor(() => {
       expect(screen.getByText('test-image-1.jpg')).toBeInTheDocument();
@@ -225,27 +227,27 @@ describe('Export Integration Tests', () => {
 
   test('should export project with all options', async () => {
     renderWithRouter(<ProjectExport />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
     });
-    
+
     // Select all export options
     const metadataCheckbox = screen.getByLabelText(/include.metadata/i);
     const segmentationCheckbox = screen.getByLabelText(/include.segmentation/i);
     const metricsCheckbox = screen.getByLabelText(/include.object.metrics/i);
     const imagesCheckbox = screen.getByLabelText(/include.images/i);
-    
+
     fireEvent.click(metadataCheckbox);
     fireEvent.click(segmentationCheckbox);
     fireEvent.click(metricsCheckbox);
     fireEvent.click(imagesCheckbox);
-    
+
     // Wait for select elements to be available after clicking checkboxes
     await waitFor(() => {
       expect(screen.getByText(/select.export.format/i)).toBeInTheDocument();
     });
-    
+
     // Select export format (COCO)
     const formatSelect = screen.getByText(/select.export.format/i);
     fireEvent.click(formatSelect);
@@ -253,11 +255,11 @@ describe('Export Integration Tests', () => {
       expect(screen.getByText('COCO')).toBeInTheDocument();
     });
     fireEvent.click(screen.getByText('COCO'));
-    
+
     // Click the export button
     const exportButton = screen.getByText(/export.project/i);
     fireEvent.click(exportButton);
-    
+
     // Wait for the export to complete
     await waitFor(() => {
       expect(saveAs).toHaveBeenCalled();
@@ -266,20 +268,20 @@ describe('Export Integration Tests', () => {
 
   test('should export metrics in Excel format', async () => {
     renderWithRouter(<ProjectExport />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
     });
-    
+
     // Enable metrics export
     const metricsCheckbox = screen.getByLabelText(/include.object.metrics/i);
     fireEvent.click(metricsCheckbox);
-    
+
     // Wait for metrics format selection to be available
     await waitFor(() => {
       expect(screen.getByText(/select.metrics.format/i)).toBeInTheDocument();
     });
-    
+
     // Select Excel format
     const formatSelect = screen.getByText(/select.metrics.format/i);
     fireEvent.click(formatSelect);
@@ -287,11 +289,11 @@ describe('Export Integration Tests', () => {
       expect(screen.getByText('EXCEL')).toBeInTheDocument();
     });
     fireEvent.click(screen.getByText('EXCEL'));
-    
+
     // Click the "Export Metrics Only" button
     const exportMetricsButton = screen.getByText(/export.metrics.only/i);
     fireEvent.click(exportMetricsButton);
-    
+
     // Wait for the export to complete
     await waitFor(() => {
       expect(saveAs).toHaveBeenCalled();
@@ -300,20 +302,20 @@ describe('Export Integration Tests', () => {
 
   test('should export metrics in CSV format', async () => {
     renderWithRouter(<ProjectExport />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
     });
-    
+
     // Enable metrics export
     const metricsCheckbox = screen.getByLabelText(/include.object.metrics/i);
     fireEvent.click(metricsCheckbox);
-    
+
     // Wait for metrics format selection to be available
     await waitFor(() => {
       expect(screen.getByText(/select.metrics.format/i)).toBeInTheDocument();
     });
-    
+
     // Select CSV format
     const formatSelect = screen.getByText(/select.metrics.format/i);
     fireEvent.click(formatSelect);
@@ -321,22 +323,22 @@ describe('Export Integration Tests', () => {
       expect(screen.getByText('CSV')).toBeInTheDocument();
     });
     fireEvent.click(screen.getByText('CSV'));
-    
+
     // Mock the server to return CSV data
     server.use(
       rest.get('/api/projects/:projectId/export/metrics', (req, res, ctx) => {
         return res(
           ctx.set('Content-Type', 'text/csv'),
           ctx.set('Content-Disposition', 'attachment; filename=metrics.csv'),
-          ctx.body('Image Name,Image ID,Object ID,Area\ntest-image-1.jpg,test-image-id-1,1,10000')
+          ctx.body('Image Name,Image ID,Object ID,Area\ntest-image-1.jpg,test-image-id-1,1,10000'),
         );
-      })
+      }),
     );
-    
+
     // Click the "Export Metrics Only" button
     const exportMetricsButton = screen.getByText(/export.metrics.only/i);
     fireEvent.click(exportMetricsButton);
-    
+
     // Wait for the export to complete
     await waitFor(() => {
       expect(saveAs).toHaveBeenCalled();
@@ -348,23 +350,23 @@ describe('Export Integration Tests', () => {
     server.use(
       rest.get('/api/projects/:projectId/export', (req, res, ctx) => {
         return res(ctx.status(500), ctx.json({ message: 'Server error during export' }));
-      })
+      }),
     );
-    
+
     renderWithRouter(<ProjectExport />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
     });
-    
+
     // Select export options
     const segmentationCheckbox = screen.getByLabelText(/include.segmentation/i);
     fireEvent.click(segmentationCheckbox);
-    
+
     // Click the export button
     const exportButton = screen.getByText(/export.project/i);
     fireEvent.click(exportButton);
-    
+
     // Should display error (in real app would show toast)
     await waitFor(() => {
       // This test assumes there's error state handling in the component
@@ -372,44 +374,44 @@ describe('Export Integration Tests', () => {
       expect(saveAs).not.toHaveBeenCalled();
     });
   });
-  
+
   test('should allow selecting and deselecting images for export', async () => {
     renderWithRouter(<ProjectExport />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
     });
-    
+
     // Find image selection checkboxes
     await waitFor(() => {
       const checkboxes = screen.getAllByRole('checkbox');
       expect(checkboxes.length).toBeGreaterThanOrEqual(2);
     });
-    
-    // Find and click "Select All" 
+
+    // Find and click "Select All"
     const selectAllCheckbox = screen.getByLabelText(/select all/i);
     expect(selectAllCheckbox).toBeInTheDocument();
-    
+
     // Uncheck "Select All"
     fireEvent.click(selectAllCheckbox);
-    
+
     // Check individual image
-    const firstImageCheckbox = screen.getAllByRole('checkbox').find(
-      checkbox => checkbox.getAttribute('name')?.includes('image-') || false
-    );
-    
+    const firstImageCheckbox = screen
+      .getAllByRole('checkbox')
+      .find((checkbox) => checkbox.getAttribute('name')?.includes('image-') || false);
+
     if (firstImageCheckbox) {
       fireEvent.click(firstImageCheckbox);
     }
-    
+
     // Enable segmentation export
     const segmentationCheckbox = screen.getByLabelText(/include.segmentation/i);
     fireEvent.click(segmentationCheckbox);
-    
+
     // Click export button
     const exportButton = screen.getByText(/export.project/i);
     fireEvent.click(exportButton);
-    
+
     // Wait for the export to complete
     await waitFor(() => {
       expect(saveAs).toHaveBeenCalled();

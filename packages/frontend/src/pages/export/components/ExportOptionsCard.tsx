@@ -44,10 +44,10 @@ const ExportOptionsCard: React.FC<ExportOptionsCardProps> = ({
   setMetricsFormat,
   handleExportMetricsAsXlsx,
   getSelectedCount,
-  isExporting
+  isExporting,
 }) => {
   const { t } = useLanguage();
-  
+
   return (
     <Card>
       <CardHeader>
@@ -113,10 +113,7 @@ const ExportOptionsCard: React.FC<ExportOptionsCardProps> = ({
               <Label htmlFor="metrics-format" className="text-sm mb-1 block">
                 {t('export.options.selectMetricsFormat')}:
               </Label>
-              <Select
-                value={metricsFormat}
-                onValueChange={(value) => setMetricsFormat(value as MetricsFormat)}
-              >
+              <Select value={metricsFormat} onValueChange={(value) => setMetricsFormat(value as MetricsFormat)}>
                 <SelectTrigger id="metrics-format" className="w-full">
                   <SelectValue placeholder={t('export.options.selectMetricsFormat')} />
                 </SelectTrigger>
@@ -169,9 +166,7 @@ const ExportOptionsCard: React.FC<ExportOptionsCardProps> = ({
               {getSelectedCount() === 0 && (
                 <p className="text-xs text-amber-500">{t('export.selectImagesForExport')}</p>
               )}
-              <p className="text-xs text-gray-500">
-                {t('export.metricsRequireSegmentation')}
-              </p>
+              <p className="text-xs text-gray-500">{t('export.metricsRequireSegmentation')}</p>
             </div>
           )}
         </div>

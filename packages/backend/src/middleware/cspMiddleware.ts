@@ -44,16 +44,16 @@ const generateNonce = (): string => {
  */
 export const cspMiddleware = (options: CSPOptions = {}) => {
   const opts = { ...defaultOptions, ...options };
-  
+
   return (req: Request, res: Response, next: NextFunction) => {
     // Generate a nonce for this request
     const nonce = opts.useNonce ? generateNonce() : '';
-    
+
     // Make the nonce available to the templates
     if (opts.useNonce) {
       res.locals.cspNonce = nonce;
     }
-    
+
     // Base CSP directives
     const directives: Record<string, string[]> = {
       'default-src': ["'self'"],
@@ -73,13 +73,13 @@ export const cspMiddleware = (options: CSPOptions = {}) => {
       'upgrade-insecure-requests': [],
       'block-all-mixed-content': [],
     };
-    
+
     // Add report-uri if specified
     if (opts.reportUri) {
       directives['report-uri'] = [opts.reportUri];
       directives['report-to'] = ['csp-endpoint'];
     }
-    
+
     // Add additional directives
     if (opts.additionalDirectives) {
       Object.entries(opts.additionalDirectives).forEach(([key, value]) => {
@@ -90,19 +90,17 @@ export const cspMiddleware = (options: CSPOptions = {}) => {
         }
       });
     }
-    
+
     // Build the CSP header value
     const cspValue = Object.entries(directives)
       .map(([key, value]) => `${key} ${value.join(' ')}`)
       .join('; ');
-    
+
     // Set the CSP header
-    const headerName = opts.reportOnly
-      ? 'Content-Security-Policy-Report-Only'
-      : 'Content-Security-Policy';
-    
+    const headerName = opts.reportOnly ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy';
+
     res.setHeader(headerName, cspValue);
-    
+
     // If report-uri is specified, add the Report-To header
     if (opts.reportUri) {
       const reportTo = JSON.stringify({
@@ -110,10 +108,10 @@ export const cspMiddleware = (options: CSPOptions = {}) => {
         max_age: 10886400,
         endpoints: [{ url: opts.reportUri }],
       });
-      
+
       res.setHeader('Report-To', reportTo);
     }
-    
+
     next();
   };
 };
@@ -134,7 +132,7 @@ export const createCSPMiddleware = (env: string) => {
           'connect-src': ['ws:', 'wss:'], // Allow WebSocket for hot reload
         },
       });
-    
+
     case 'production':
       return cspMiddleware({
         reportOnly: false,
@@ -146,7 +144,7 @@ export const createCSPMiddleware = (env: string) => {
           'block-all-mixed-content': [],
         },
       });
-    
+
     default:
       return cspMiddleware();
   }

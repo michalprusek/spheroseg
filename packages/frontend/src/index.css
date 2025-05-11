@@ -1,4 +1,3 @@
-
 /* Basic styles for the application */
 
 /* Accordion animations for UI components */
@@ -11,22 +10,34 @@
 }
 
 @keyframes accordion-down {
-  from { height: 0; }
-  to { height: var(--radix-accordion-content-height); }
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
 }
 
 @keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height); }
-  to { height: 0; }
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
 }
 
 /* Base font settings */
 body {
-  font-feature-settings: "rlig" 1, "calt" 1;
+  font-feature-settings:
+    'rlig' 1,
+    'calt' 1;
 }
 
 /* Ensure proper height for all containers */
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 

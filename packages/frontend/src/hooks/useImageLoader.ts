@@ -9,6 +9,7 @@ interface ImageLoaderOptions {
   maxRetries?: number;
   retryDelay?: number;
   timeout?: number;
+  alternativeUrls?: string[]; // Seznam alternativních URL ke zkoušení
 }
 
 interface ImageLoaderResult {
@@ -22,33 +23,27 @@ interface ImageLoaderResult {
 /**
  * Hook for loading images with advanced features like retries, timeouts, and cache busting
  */
-export const useImageLoader = (
-  src: string | null,
-  options: ImageLoaderOptions = {}
-): ImageLoaderResult => {
-  const {
-    crossOrigin = 'anonymous',
-    cacheBuster = true,
-    maxRetries = 2,
-    retryDelay = 1000,
-    timeout = 30000,
-  } = options;
+export const useImageLoader = (src: string | null, options: ImageLoaderOptions = {}): ImageLoaderResult => {
+  const { crossOrigin = 'anonymous', cacheBuster = true, maxRetries = 2, retryDelay = 1000, timeout = 30000 } = options;
 
   const [isLoading, setIsLoading] = useState<boolean>(!!src);
   const [error, setError] = useState<Error | null>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
-  
+
   const imgRef = useRef<HTMLImageElement | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Add cache-busting parameter to prevent browser caching
-  const addCacheBuster = useCallback((url: string): string => {
-    if (!cacheBuster) return url;
-    const cacheBusterParam = `_cb=${Date.now()}`;
-    return url.includes('?') ? `${url}&${cacheBusterParam}` : `${url}?${cacheBusterParam}`;
-  }, [cacheBuster]);
+  const addCacheBuster = useCallback(
+    (url: string): string => {
+      if (!cacheBuster) return url;
+      const cacheBusterParam = `_cb=${Date.now()}`;
+      return url.includes('?') ? `${url}&${cacheBusterParam}` : `${url}?${cacheBusterParam}`;
+    },
+    [cacheBuster],
+  );
 
   // Function to abort current loading
   const abort = useCallback(() => {
@@ -56,12 +51,12 @@ export const useImageLoader = (
       window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    
+
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    
+
     if (imgRef.current) {
       imgRef.current.onload = null;
       imgRef.current.onerror = null;
@@ -73,11 +68,11 @@ export const useImageLoader = (
   // Function to retry loading
   const retry = useCallback(() => {
     if (!src) return;
-    
-    setRetryCount(prev => prev + 1);
+
+    setRetryCount((prev) => prev + 1);
     setError(null);
     setIsLoading(true);
-    
+
     // Small delay before retrying
     setTimeout(() => {
       loadImage(src);
@@ -85,66 +80,69 @@ export const useImageLoader = (
   }, [src, retryDelay]);
 
   // Function to load the image
-  const loadImage = useCallback((imageSrc: string) => {
-    // Abort any previous loading
-    abort();
-    
-    // Create a new abort controller
-    abortControllerRef.current = new AbortController();
-    
-    // Create a new image
-    const img = new Image();
-    imgRef.current = img;
-    
-    // Set crossOrigin
-    if (crossOrigin) {
-      img.crossOrigin = crossOrigin;
-    }
-    
-    // Set up timeout
-    if (timeout > 0) {
-      timeoutRef.current = window.setTimeout(() => {
-        logger.warn(`Image load timeout after ${timeout}ms: ${imageSrc}`);
-        setError(new Error(`Image load timeout after ${timeout}ms`));
+  const loadImage = useCallback(
+    (imageSrc: string) => {
+      // Abort any previous loading
+      abort();
+
+      // Create a new abort controller
+      abortControllerRef.current = new AbortController();
+
+      // Create a new image
+      const img = new Image();
+      imgRef.current = img;
+
+      // Set crossOrigin
+      if (crossOrigin) {
+        img.crossOrigin = crossOrigin;
+      }
+
+      // Set up timeout
+      if (timeout > 0) {
+        timeoutRef.current = window.setTimeout(() => {
+          logger.warn(`Image load timeout after ${timeout}ms: ${imageSrc}`);
+          setError(new Error(`Image load timeout after ${timeout}ms`));
+          setIsLoading(false);
+          abort();
+        }, timeout);
+      }
+
+      // Set up load handler
+      img.onload = () => {
+        logger.debug(`Image loaded successfully: ${imageSrc}`);
+
+        // Clear timeout
+        if (timeoutRef.current) {
+          window.clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+
+        setImage(img);
         setIsLoading(false);
-        abort();
-      }, timeout);
-    }
-    
-    // Set up load handler
-    img.onload = () => {
-      logger.debug(`Image loaded successfully: ${imageSrc}`);
-      
-      // Clear timeout
-      if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      
-      setImage(img);
-      setIsLoading(false);
-      setError(null);
-    };
-    
-    // Set up error handler
-    img.onerror = (e) => {
-      logger.error(`Error loading image: ${imageSrc}`, e);
-      
-      // Clear timeout
-      if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      
-      setError(new Error(`Failed to load image: ${imageSrc}`));
-      setIsLoading(false);
-    };
-    
-    // Start loading the image with cache-busting
-    const urlWithCacheBuster = addCacheBuster(imageSrc);
-    logger.debug(`Loading image: ${urlWithCacheBuster}`);
-    img.src = urlWithCacheBuster;
-  }, [abort, addCacheBuster, crossOrigin, timeout]);
+        setError(null);
+      };
+
+      // Set up error handler
+      img.onerror = (e) => {
+        logger.error(`Error loading image: ${imageSrc}`, e);
+
+        // Clear timeout
+        if (timeoutRef.current) {
+          window.clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+
+        setError(new Error(`Failed to load image: ${imageSrc}`));
+        setIsLoading(false);
+      };
+
+      // Start loading the image with cache-busting
+      const urlWithCacheBuster = addCacheBuster(imageSrc);
+      logger.debug(`Loading image: ${urlWithCacheBuster}`);
+      img.src = urlWithCacheBuster;
+    },
+    [abort, addCacheBuster, crossOrigin, timeout],
+  );
 
   // Effect to load the image when src changes
   useEffect(() => {
@@ -154,13 +152,13 @@ export const useImageLoader = (
       setImage(null);
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
     setRetryCount(0);
-    
+
     loadImage(src);
-    
+
     // Cleanup
     return () => {
       abort();
@@ -171,9 +169,40 @@ export const useImageLoader = (
   useEffect(() => {
     if (error && retryCount < maxRetries) {
       logger.info(`Auto-retrying image load (${retryCount + 1}/${maxRetries}): ${src}`);
-      retry();
+
+      // Před dosažením max pokusů zkusme alternativní URL, pokud existují
+      const alternativeUrls = options.alternativeUrls || [];
+      if (alternativeUrls.length > 0 && retryCount < alternativeUrls.length) {
+        const alternativeUrl = alternativeUrls[retryCount];
+        logger.info(`Trying alternative URL (${retryCount + 1}/${alternativeUrls.length}): ${alternativeUrl}`);
+
+        // Vytvoříme nový obraz s alternativním URL
+        const altImg = new Image();
+        if (crossOrigin) {
+          altImg.crossOrigin = crossOrigin;
+        }
+
+        altImg.onload = () => {
+          logger.info(`Alternative URL loaded successfully: ${alternativeUrl}`);
+          setImage(altImg);
+          setIsLoading(false);
+          setError(null);
+        };
+
+        altImg.onerror = () => {
+          logger.error(`Failed to load alternative URL: ${alternativeUrl}`);
+          // Pokračujeme k dalšímu pokusu
+          retry();
+        };
+
+        // Načteme alternativní URL
+        altImg.src = alternativeUrl;
+      } else {
+        // Pokud nemáme alternativní URL nebo jsme je již všechny zkusili, použijeme standardní retry
+        retry();
+      }
     }
-  }, [error, retryCount, maxRetries, retry, src]);
+  }, [error, retryCount, maxRetries, retry, src, options.alternativeUrls, crossOrigin]);
 
   return { isLoading, error, image, retry, abort };
 };

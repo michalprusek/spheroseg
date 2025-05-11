@@ -19,12 +19,12 @@ interface FallbackImageProps {
  */
 const FallbackImage: React.FC<FallbackImageProps> = ({
   src,
-  alt = "Image",
+  alt = 'Image',
   width,
   height,
-  fallbackSrc = "/placeholder.svg",
+  fallbackSrc = '/placeholder.svg',
   alternativeUrls = [],
-  onLoad
+  onLoad,
 }) => {
   const [imageSource, setImageSource] = useState<string>(src);
   const [hasErrored, setHasErrored] = useState<boolean>(false);
@@ -62,8 +62,8 @@ const FallbackImage: React.FC<FallbackImageProps> = ({
             cache: 'no-cache',
             headers: {
               'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            }
+              Pragma: 'no-cache',
+            },
           });
 
           if (response.ok) {
@@ -101,7 +101,9 @@ const FallbackImage: React.FC<FallbackImageProps> = ({
 
       // If data URL creation fails, try with alternative URLs if available
       if (alternativeUrls && alternativeUrls.length > 0) {
-        console.log(`FallbackImage: Trying to create data URL from alternative URLs (${alternativeUrls.length} available)`);
+        console.log(
+          `FallbackImage: Trying to create data URL from alternative URLs (${alternativeUrls.length} available)`,
+        );
 
         for (const altUrl of alternativeUrls) {
           try {
@@ -118,7 +120,9 @@ const FallbackImage: React.FC<FallbackImageProps> = ({
       }
 
       // If all data URL creation attempts fail, use the processed URL directly
-      console.log(`FallbackImage: All data URL creation attempts failed, using processed URL directly: ${processedSrc}`);
+      console.log(
+        `FallbackImage: All data URL creation attempts failed, using processed URL directly: ${processedSrc}`,
+      );
       setImageSource(processedSrc);
     };
 
@@ -152,42 +156,45 @@ const FallbackImage: React.FC<FallbackImageProps> = ({
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+          Pragma: 'no-cache',
+        },
       })
-      .then(response => {
-        console.log(`[FallbackImage] GET response for ${imageSource}: ${response.status} ${response.statusText}`);
-        response.headers.forEach((value, key) => {
-          console.log(`[FallbackImage] Header ${key}: ${value}`);
+        .then((response) => {
+          console.log(`[FallbackImage] GET response for ${imageSource}: ${response.status} ${response.statusText}`);
+          response.headers.forEach((value, key) => {
+            console.log(`[FallbackImage] Header ${key}: ${value}`);
+          });
+          return response.text();
+        })
+        .then((text) => {
+          if (text.length < 1000) {
+            console.log(`[FallbackImage] Response body: ${text}`);
+          } else {
+            console.log(`[FallbackImage] Response body too large to log (${text.length} bytes)`);
+          }
+        })
+        .catch((error) => {
+          console.error(`[FallbackImage] Error fetching image with GET:`, error);
         });
-        return response.text();
-      })
-      .then(text => {
-        if (text.length < 1000) {
-          console.log(`[FallbackImage] Response body: ${text}`);
-        } else {
-          console.log(`[FallbackImage] Response body too large to log (${text.length} bytes)`);
-        }
-      })
-      .catch(error => {
-        console.error(`[FallbackImage] Error fetching image with GET:`, error);
-      });
 
       // Try alternative approaches before falling back
-      if (loadAttempts < 15) { // Increase max attempts to try all alternatives
+      if (loadAttempts < 15) {
+        // Increase max attempts to try all alternatives
         const nextAttempt = loadAttempts + 1;
         setLoadAttempts(nextAttempt);
 
         // First try any provided alternative URLs
         if (alternativeUrls && alternativeUrls.length > 0 && nextAttempt <= alternativeUrls.length) {
           const alternativeUrl = alternativeUrls[nextAttempt - 1];
-          console.log(`[FallbackImage] Trying alternative URL ${nextAttempt}/${alternativeUrls.length}: ${alternativeUrl}`);
+          console.log(
+            `[FallbackImage] Trying alternative URL ${nextAttempt}/${alternativeUrls.length}: ${alternativeUrl}`,
+          );
           setImageSource(alternativeUrl);
           return;
         }
 
         // If we've exhausted alternative URLs or none were provided, try different URL formats
-        const remainingAttempts = nextAttempt - ((alternativeUrls?.length) || 0);
+        const remainingAttempts = nextAttempt - (alternativeUrls?.length || 0);
 
         // Extract filename and project ID from the source URL
         const segments = src.split('/');
@@ -269,7 +276,7 @@ const FallbackImage: React.FC<FallbackImageProps> = ({
       // If all attempts fail, use fallback
       setHasErrored(true);
       setImageSource(fallbackSrc);
-      toast.error("Failed to load image, using placeholder image");
+      toast.error('Failed to load image, using placeholder image');
     }
   };
 
@@ -290,7 +297,9 @@ const FallbackImage: React.FC<FallbackImageProps> = ({
 
         // If the actual dimensions are different from the props, call onLoad with the actual dimensions
         if (img.naturalWidth !== width || img.naturalHeight !== height) {
-          console.log(`[FallbackImage] Dimensions differ from props: ${width}x${height} vs ${img.naturalWidth}x${img.naturalHeight}`);
+          console.log(
+            `[FallbackImage] Dimensions differ from props: ${width}x${height} vs ${img.naturalWidth}x${img.naturalHeight}`,
+          );
           if (onLoad) {
             onLoad(img.naturalWidth, img.naturalHeight);
           }
@@ -319,7 +328,7 @@ const FallbackImage: React.FC<FallbackImageProps> = ({
 
     // Show success toast if we recovered from errors
     if (loadAttempts > 0 && !hasErrored) {
-      toast.success("Image loaded successfully");
+      toast.success('Image loaded successfully');
     }
   };
 

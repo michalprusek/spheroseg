@@ -8,16 +8,17 @@ import { ProfileProvider } from '@/contexts/ProfileContext';
 import { vi } from 'vitest';
 
 // Create a new QueryClient for each test
-const createTestQueryClient = () => new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      cacheTime: 0,
-      staleTime: 0,
-      refetchOnWindowFocus: false,
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        cacheTime: 0,
+        staleTime: 0,
+        refetchOnWindowFocus: false,
+      },
     },
-  },
-});
+  });
 
 // Mock authentication context values
 export const mockAuthContextValues = {
@@ -93,9 +94,7 @@ export const TestWrapper = ({ children }: { children: ReactNode }) => {
 
   return (
     <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </BrowserRouter>
   );
 };
@@ -124,9 +123,7 @@ export const MockedContextWrapper = ({
 
   return (
     <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </BrowserRouter>
   );
 };
@@ -223,7 +220,7 @@ export const createMockDragEvent = (type: string, files: File[] = []) => {
     type,
     dataTransfer: {
       files,
-      items: files.map(file => ({
+      items: files.map((file) => ({
         kind: 'file',
         type: file.type,
         getAsFile: () => file,

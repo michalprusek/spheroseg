@@ -25,7 +25,7 @@ const Profile: React.FC = () => {
     bio: user?.bio || '',
     location: user?.location || '',
     preferredLanguage: user?.preferred_language || currentLanguage,
-    themePreference: user?.theme_preference || 'system'
+    themePreference: user?.theme_preference || 'system',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -43,15 +43,15 @@ const Profile: React.FC = () => {
         bio: user.bio || '',
         location: user.location || '',
         preferredLanguage: user.preferred_language || currentLanguage,
-        themePreference: user.theme_preference || 'system'
+        themePreference: user.theme_preference || 'system',
       });
     }
   }, [user, currentLanguage]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     // Apply language change immediately
     if (name === 'preferredLanguage' && value !== currentLanguage) {
       changeLanguage(value);
@@ -71,20 +71,20 @@ const Profile: React.FC = () => {
     try {
       // Create form data for multipart upload (for avatar)
       const profileData = new FormData();
-      
+
       // Add all text fields
       Object.entries(formData).forEach(([key, value]) => {
         profileData.append(key, value);
       });
-      
+
       // Add avatar if selected
       if (avatarFile) {
         profileData.append('avatar', avatarFile);
       }
-      
+
       // Update profile through auth context
       await updateUserProfile(profileData);
-      
+
       setSuccessMessage(t('profile.updateSuccess'));
       setAvatarFile(null); // Clear avatar selection after successful update
     } catch (error) {
@@ -103,27 +103,19 @@ const Profile: React.FC = () => {
     <div className="profile-container">
       <h2 className="profile-title">{t('profile.title')}</h2>
 
-      {successMessage && (
-        <div className="success-message">{successMessage}</div>
-      )}
+      {successMessage && <div className="success-message">{successMessage}</div>}
 
-      {errorMessage && (
-        <div className="error-message">{errorMessage}</div>
-      )}
+      {errorMessage && <div className="error-message">{errorMessage}</div>}
 
       <form onSubmit={handleSubmit} className="profile-form">
         <div className="form-section">
           <h3>{t('profile.personalInfo')}</h3>
-          
+
           <div className="avatar-section">
             <label>{t('profile.avatar')}</label>
             <div className="avatar-wrapper">
               {user?.avatar_url && (
-                <img
-                  src={user.avatar_url}
-                  alt={t('profile.avatarAlt')}
-                  className="current-avatar"
-                />
+                <img src={user.avatar_url} alt={t('profile.avatarAlt')} className="current-avatar" />
               )}
               <ImageUploader
                 onImageUpload={handleAvatarUpload}
@@ -249,11 +241,7 @@ const Profile: React.FC = () => {
         </div>
 
         <div className="form-actions">
-          <button
-            type="submit"
-            className="save-button"
-            disabled={isSubmitting}
-          >
+          <button type="submit" className="save-button" disabled={isSubmitting}>
             {isSubmitting ? t('common.saving') : t('common.save')}
           </button>
         </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Point } from '@/lib/segmentation';
 import { TempPointsState } from '@/pages/segmentation/types';
@@ -10,19 +9,17 @@ import { getCanvasCoordinates, screenToImageCoordinates } from '../coordinateUti
 export const useTempPoints = (
   editMode: boolean,
   zoom: number = 1,
-  offset: { x: number; y: number } = { x: 0, y: 0 }
+  offset: { x: number; y: number } = { x: 0, y: 0 },
 ) => {
   const [tempPoints, setTempPoints] = useState<TempPointsState>({
     points: [],
     startIndex: null,
     endIndex: null,
-    polygonId: null
+    polygonId: null,
   });
-  
+
   const [cursorPosition, setCursorPosition] = useState<Point | null>(null);
   const [isShiftPressed, setIsShiftPressed] = useState<boolean>(false);
-  
-
 
   // Sledování pozice kurzoru pro editační režim
   useEffect(() => {
@@ -30,7 +27,7 @@ export const useTempPoints = (
       setCursorPosition(null);
       return;
     }
-    
+
     const handleMouseMove = (e: MouseEvent) => {
       // Use getCanvasCoordinates from useCoordinateTransform
       const containerElement = document.querySelector('[data-testid="canvas-container"]') as HTMLElement;
@@ -39,13 +36,13 @@ export const useTempPoints = (
       const { x, y } = getCanvasCoordinates(e.clientX, e.clientY, rect, zoom, offset);
       setCursorPosition({ x, y });
     };
-    
+
     document.addEventListener('mousemove', handleMouseMove);
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
     };
   }, [editMode, zoom, offset, getCanvasCoordinates]);
-  
+
   // Sledování klávesy Shift pro automatické přidávání bodů
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,13 +50,13 @@ export const useTempPoints = (
         setIsShiftPressed(true);
       }
     };
-    
+
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         setIsShiftPressed(false);
       }
     };
-    
+
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     return () => {
@@ -70,19 +67,19 @@ export const useTempPoints = (
 
   // Funkce pro přidání bodu do dočasných bodů
   const addPointToTemp = useCallback((point: Point) => {
-    setTempPoints(prev => ({
+    setTempPoints((prev) => ({
       ...prev,
-      points: [...prev.points, point]
+      points: [...prev.points, point],
     }));
   }, []);
-  
+
   // Funkce pro reset dočasných bodů
   const resetTempPoints = useCallback(() => {
     setTempPoints({
       points: [],
       startIndex: null,
       endIndex: null,
-      polygonId: null
+      polygonId: null,
     });
   }, []);
 
@@ -92,6 +89,6 @@ export const useTempPoints = (
     cursorPosition,
     resetTempPoints,
     addPointToTemp,
-    isShiftPressed
+    isShiftPressed,
   };
 };

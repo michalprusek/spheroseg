@@ -23,7 +23,7 @@ vi.mock('sonner', () => ({
     dismiss: vi.fn(),
     promise: vi.fn(),
     custom: vi.fn(),
-  }
+  },
 }));
 
 vi.mock('@/contexts/LanguageContext', () => ({
@@ -55,30 +55,30 @@ vi.mock('@/hooks/useErrorHandler', () => ({
   useToastErrorHandler: vi.fn(() => ({
     handleError: (error: any) => {
       toast.error(`Error: ${error.message || 'Unknown error'}`);
-    }
-  }))
+    },
+  })),
 }));
 
 // Sample component that uses toast for various notifications
 const ToastDemoComponent = () => {
   const { handleError } = useToastErrorHandler();
-  
+
   const showSuccessToast = () => {
     toast.success('Operation completed successfully');
   };
-  
+
   const showErrorToast = () => {
     toast.error('An error occurred');
   };
-  
+
   const showInfoToast = () => {
     toast.info('Here is some information');
   };
-  
+
   const showWarningToast = () => {
     toast.warning('Warning: This action cannot be undone');
   };
-  
+
   const showErrorUsingHandler = () => {
     try {
       throw new Error('Something went wrong');
@@ -86,7 +86,7 @@ const ToastDemoComponent = () => {
       handleError(error);
     }
   };
-  
+
   return (
     <div>
       <h1>Toast Demo</h1>
@@ -102,7 +102,7 @@ const ToastDemoComponent = () => {
 // Test application wrapper with router
 const TestApp = () => {
   const history = createMemoryHistory({ initialEntries: ['/'] });
-  
+
   return (
     <Router location={history.location} navigator={history}>
       <Toaster />
@@ -121,65 +121,67 @@ describe('Notification System Integration', () => {
 
   it('renders both toast system and notification components', () => {
     render(<TestApp />);
-    
+
     // The toast container should be rendered
     expect(screen.getByTestId('mock-sonner-toaster')).toBeInTheDocument();
-    
+
     // The demo component should be visible
     expect(screen.getByText('Toast Demo')).toBeInTheDocument();
   });
 
   it('triggers success toast notifications', async () => {
     render(<TestApp />);
-    
+
     // Trigger a success toast
     const successButton = screen.getByRole('button', { name: 'Show Success' });
     fireEvent.click(successButton);
-    
+
     // Success toast should be triggered
     expect(toast.success).toHaveBeenCalledWith('Operation completed successfully');
   });
 
   it('triggers error toast notifications', async () => {
     render(<TestApp />);
-    
+
     // Trigger an error toast
     const errorButton = screen.getByRole('button', { name: 'Show Error' });
     fireEvent.click(errorButton);
-    
+
     // Error toast should be triggered
     expect(toast.error).toHaveBeenCalledWith('An error occurred');
   });
 
   it('triggers info toast notifications', async () => {
     render(<TestApp />);
-    
+
     // Trigger an info toast
     const infoButton = screen.getByRole('button', { name: 'Show Info' });
     fireEvent.click(infoButton);
-    
+
     // Info toast should be triggered
     expect(toast.info).toHaveBeenCalledWith('Here is some information');
   });
 
   it('triggers warning toast notifications', async () => {
     render(<TestApp />);
-    
+
     // Trigger a warning toast
     const warningButton = screen.getByRole('button', { name: 'Show Warning' });
     fireEvent.click(warningButton);
-    
+
     // Warning toast should be triggered
     expect(toast.warning).toHaveBeenCalledWith('Warning: This action cannot be undone');
   });
 
   it('uses error handler with toast', async () => {
     render(<TestApp />);
-    
+
     // Trigger the error handler
-    const errorHandlerButton = screen.getByRole('button', { name: 'Trigger Error Handler' });
+    const errorHandlerButton = screen.getByRole('button', {
+      name: 'Trigger Error Handler',
+    });
     fireEvent.click(errorHandlerButton);
-    
+
     // Error toast should be triggered with the error message
     expect(toast.error).toHaveBeenCalledWith('Error: Something went wrong');
   });

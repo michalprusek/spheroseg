@@ -19,7 +19,7 @@ export interface ImageData {
   updated_at?: string;
   status?: ImageStatus;
   actualId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Image {

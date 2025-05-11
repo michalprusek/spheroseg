@@ -46,8 +46,8 @@ const errorHandler = (err: Error | ApiError, req: Request, res: Response, next: 
     error: {
       message,
       details,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   });
 };
 
@@ -59,8 +59,8 @@ export const notFoundHandler = (req: Request, res: Response) => {
   res.status(404).json({
     error: {
       message: `Route not found: ${req.method} ${req.originalUrl}`,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   });
 };
 

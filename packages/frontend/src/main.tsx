@@ -1,15 +1,14 @@
-
 // React Router future flags are set in index.html
 
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
-import './styles/tailwind.css'
-import './App.css'
-import { Toaster } from 'sonner'
-import { initPerformanceMonitoring, markPerformance } from './utils/performance'
-import logger from './utils/logger'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+import './styles/tailwind.css';
+import './App.css';
+import { Toaster } from 'sonner';
+import { initPerformanceMonitoring, markPerformance } from './utils/performance';
+import logger from './utils/logger';
 
 // Global error handler
 const handleError = (error: ErrorEvent) => {

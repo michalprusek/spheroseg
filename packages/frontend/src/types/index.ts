@@ -91,6 +91,7 @@ export interface SegmentationApiResponse {
 export interface ProjectImage {
   id: string;
   project_id: string;
+  imageUuid: string; // Original image UUID from backend
   name: string;
   url: string; // Derived from storage_path (e.g., prepended base URL)
   thumbnail_url: string | null; // Derived from thumbnail_path
@@ -100,6 +101,7 @@ export interface ProjectImage {
   height: number | null; // Added height
   segmentationStatus: ImageStatus; // Maps to Image.status, includes 'saving'
   segmentationResultPath?: string | null; // Add this field for result URL
+  _tempUrl?: string; // Temporary URL for the current session (not persisted)
 }
 
 // Export UserProfile from its dedicated file

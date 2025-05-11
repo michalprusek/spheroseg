@@ -14,7 +14,7 @@ vi.mock('@/utils/errorHandling', () => ({
   },
   ErrorSeverity: {
     ERROR: 'ERROR',
-  }
+  },
 }));
 
 // Mock the logger
@@ -35,7 +35,7 @@ vi.mock('sonner', () => ({
   toast: {
     error: vi.fn(),
     dismiss: vi.fn(),
-  }
+  },
 }));
 
 // Mock the useLanguage hook
@@ -125,7 +125,7 @@ describe('ErrorBoundary Component', () => {
     render(
       <ErrorBoundary>
         <div>Test content</div>
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByText('Test content')).toBeInTheDocument();
@@ -140,7 +140,7 @@ describe('ErrorBoundary Component', () => {
     render(
       <ErrorBoundary>
         <ErrorThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     // Check if the fallback UI is rendered
@@ -173,11 +173,13 @@ describe('ErrorBoundary Component', () => {
 
       render() {
         if (this.state.hasError) {
-          return this.props.fallback || (
-            <div>
-              <h2>Something went wrong</h2>
-              <p>An error occurred in this component</p>
-            </div>
+          return (
+            this.props.fallback || (
+              <div>
+                <h2>Something went wrong</h2>
+                <p>An error occurred in this component</p>
+              </div>
+            )
           );
         }
         return this.props.children;
@@ -194,7 +196,7 @@ describe('ErrorBoundary Component', () => {
     render(
       <CustomErrorBoundary fallback={customFallback}>
         <ErrorThrowingComponent shouldThrow={true} />
-      </CustomErrorBoundary>
+      </CustomErrorBoundary>,
     );
 
     // Check if the custom fallback UI is rendered
@@ -253,27 +255,27 @@ describe('ErrorBoundary Component', () => {
       render(
         <ActualErrorBoundary componentName="TestComponent">
           <ErrorThrowingComponent shouldThrow={true} />
-        </ActualErrorBoundary>
+        </ActualErrorBoundary>,
       );
 
       // Check if the error was handled correctly
       expect(handleError).toHaveBeenCalled();
       expect(handleError).toHaveBeenCalledWith(
-        expect.any(Error), 
+        expect.any(Error),
         expect.objectContaining({
           showToast: false, // Configured not to show toast for UI errors
           context: 'ErrorBoundary: TestComponent',
-        })
+        }),
       );
 
       // Check if error was logged correctly
       expect(logger.error).toHaveBeenCalledWith(
-        'Error caught by ErrorBoundary', 
+        'Error caught by ErrorBoundary',
         expect.objectContaining({
           error: expect.any(String),
           componentStack: expect.any(String),
           component: 'TestComponent',
-        })
+        }),
       );
 
       // Toast error should not be called (since showToast is false)

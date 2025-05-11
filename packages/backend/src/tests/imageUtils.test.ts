@@ -1,4 +1,10 @@
-import { formatImagePaths, dbPathToFilesystemPath, normalizePathForDb, verifyImageFiles, ImageData } from '../utils/imageUtils';
+import {
+  formatImagePaths,
+  dbPathToFilesystemPath,
+  normalizePathForDb,
+  verifyImageFiles,
+  ImageData,
+} from '../utils/imageUtils';
 import path from 'path';
 
 describe('imageUtils', () => {
@@ -12,7 +18,7 @@ describe('imageUtils', () => {
         storage_path: '/uploads/test-project/test-image.jpg',
         thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       const origin = 'http://localhost:3000';
@@ -32,7 +38,7 @@ describe('imageUtils', () => {
         storage_path: 'http://example.com/test-image.jpg',
         thumbnail_path: 'http://example.com/thumb-test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       const origin = 'http://localhost:3000';
@@ -51,7 +57,7 @@ describe('imageUtils', () => {
         name: 'test-image.jpg',
         storage_path: '/uploads/test-project/test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       const origin = 'http://localhost:3000';
@@ -156,7 +162,7 @@ describe('imageUtils', () => {
         storage_path: '/uploads/test-project/test-image.jpg',
         thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       // Mock fs.existsSync to return true for both files
@@ -181,7 +187,7 @@ describe('imageUtils', () => {
         storage_path: '/uploads/test-project/test-image.jpg',
         thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       // Mock fs.existsSync to return false for the image file and true for the thumbnail
@@ -208,7 +214,7 @@ describe('imageUtils', () => {
         storage_path: '/uploads/test-project/test-image.jpg',
         thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       // Mock fs.existsSync to return true for the image file and false for the thumbnail
@@ -234,7 +240,7 @@ describe('imageUtils', () => {
         name: 'test-image.jpg',
         storage_path: '/uploads/test-project/test-image.jpg',
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       // Mock fs.existsSync to return true
@@ -258,7 +264,7 @@ describe('imageUtils', () => {
         name: 'test-image.jpg',
         storage_path: '', // Empty storage path
         created_at: '2023-01-01',
-        updated_at: '2023-01-01'
+        updated_at: '2023-01-01',
       };
 
       // Execute

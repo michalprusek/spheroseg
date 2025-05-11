@@ -11,9 +11,9 @@ import '@testing-library/jest-dom';
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: null,
-    loading: false
+    loading: false,
   }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
 }));
 
 // Mock the LanguageContext
@@ -25,7 +25,9 @@ vi.mock('@/contexts/LanguageContext', () => {
     ...actualModule,
     useLanguage: () => ({
       language: currentLanguage,
-      setLanguage: (lang: string) => { currentLanguage = lang; },
+      setLanguage: (lang: string) => {
+        currentLanguage = lang;
+      },
       t: (key: string) => {
         // Simple translation mapping for testing
         const translations: Record<string, Record<string, string>> = {
@@ -135,7 +137,7 @@ vi.mock('@/contexts/LanguageContext', () => {
             // Common translations
             'common.appName': 'Segmentation de Sphéroïdes',
             'common.appNameShort': 'SpheroSeg',
-            'common.backToHome': 'Retour à l\'Accueil',
+            'common.backToHome': "Retour à l'Accueil",
             'common.privacyPolicyLink': 'Politique de Confidentialité',
 
             // Navbar translations
@@ -145,7 +147,7 @@ vi.mock('@/contexts/LanguageContext', () => {
             'navbar.terms': 'Conditions',
             'navbar.privacy': 'Confidentialité',
             'navbar.login': 'Se connecter',
-            'navbar.requestAccess': 'Demander l\'accès',
+            'navbar.requestAccess': "Demander l'accès",
 
             // Footer translations
             'footer.copyrightNotice': '© 2023 Plateforme de Segmentation de Sphéroïdes',
@@ -178,14 +180,14 @@ vi.mock('@/contexts/LanguageContext', () => {
             'privacyPage.title': '隐私政策',
             'privacyPage.introduction.title': '介绍',
             'privacyPage.informationWeCollect.title': '我们收集的信息',
-          }
+          },
         };
 
         return translations[currentLanguage]?.[key] || key;
       },
-      availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh']
+      availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
     }),
-    LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+    LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
 });
 
@@ -203,7 +205,7 @@ describe('PrivacyPolicy Page', () => {
             <PrivacyPolicy />
           </LanguageProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 
@@ -227,13 +229,13 @@ describe('PrivacyPolicy Page', () => {
     const navLinks = screen.getAllByRole('link');
 
     // Check if there's a Home link
-    expect(navLinks.some(link => link.textContent?.match(/Home/i))).toBeTruthy();
+    expect(navLinks.some((link) => link.textContent?.match(/Home/i))).toBeTruthy();
 
     // Check if there's a Documentation link
-    expect(navLinks.some(link => link.textContent?.match(/Documentation/i))).toBeTruthy();
+    expect(navLinks.some((link) => link.textContent?.match(/Documentation/i))).toBeTruthy();
 
     // Check if there's a Sign In link
-    expect(navLinks.some(link => link.textContent?.match(/Sign In/i))).toBeTruthy();
+    expect(navLinks.some((link) => link.textContent?.match(/Sign In/i))).toBeTruthy();
   });
 
   it('renders the footer', () => {

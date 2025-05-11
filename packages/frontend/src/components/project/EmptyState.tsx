@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { ImageIcon } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { ImageIcon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EmptyStateProps {
@@ -19,9 +18,7 @@ const EmptyState = ({ hasSearchTerm, onUpload }: EmptyStateProps) => {
       <p className="text-gray-500 dark:text-gray-400 mb-6">
         {hasSearchTerm ? t('dashboard.searchImagesPlaceholder') : t('dashboard.noImagesDescription')}
       </p>
-      <Button onClick={onUpload}>
-        {t('common.uploadImages')}
-      </Button>
+      <Button onClick={onUpload}>{t('common.uploadImages')}</Button>
     </div>
   );
 };

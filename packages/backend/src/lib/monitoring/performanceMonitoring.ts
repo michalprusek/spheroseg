@@ -17,7 +17,11 @@ import { client as prometheusClient } from '../metrics/prometheusClient';
  */
 export class BackendPerformanceMonitoring extends PerformanceMonitoring {
   private static instance: BackendPerformanceMonitoring | null = null;
-  private cpuUsageLastSample: { user: number; system: number; idle: number } | null = null;
+  private cpuUsageLastSample: {
+    user: number;
+    system: number;
+    idle: number;
+  } | null = null;
 
   /**
    * Get singleton instance
@@ -74,7 +78,7 @@ export class BackendPerformanceMonitoring extends PerformanceMonitoring {
     method: string,
     statusCode: number,
     responseTime: number,
-    userId?: string
+    userId?: string,
   ): void {
     if (!this.options.enabled) return;
 
@@ -109,12 +113,7 @@ export class BackendPerformanceMonitoring extends PerformanceMonitoring {
   /**
    * Record database query metric
    */
-  public recordDatabaseQueryMetric(
-    operation: string,
-    table: string,
-    duration: number,
-    rowCount?: number
-  ): void {
+  public recordDatabaseQueryMetric(operation: string, table: string, duration: number, rowCount?: number): void {
     if (!this.options.enabled) return;
 
     const metric: DatabaseQueryMetric = {
@@ -146,12 +145,7 @@ export class BackendPerformanceMonitoring extends PerformanceMonitoring {
   /**
    * Record file operation metric
    */
-  public recordFileOperationMetric(
-    operation: string,
-    filePath: string,
-    duration: number,
-    fileSize?: number
-  ): void {
+  public recordFileOperationMetric(operation: string, filePath: string, duration: number, fileSize?: number): void {
     if (!this.options.enabled) return;
 
     const metric: FileOperationMetric = {
@@ -170,12 +164,7 @@ export class BackendPerformanceMonitoring extends PerformanceMonitoring {
   /**
    * Record ML inference metric
    */
-  public recordMLInferenceMetric(
-    model: string,
-    inputSize: number,
-    duration: number,
-    memoryUsage?: number
-  ): void {
+  public recordMLInferenceMetric(model: string, inputSize: number, duration: number, memoryUsage?: number): void {
     if (!this.options.enabled) return;
 
     const metric: MLInferenceMetric = {
@@ -228,7 +217,7 @@ export class BackendPerformanceMonitoring extends PerformanceMonitoring {
         const nodeMemoryHeapTotal = prometheusClient.getMetric('node_memory_heap_total_bytes');
         const nodeMemoryHeapUsed = prometheusClient.getMetric('node_memory_heap_used_bytes');
         const nodeMemoryRss = prometheusClient.getMetric('node_memory_rss_bytes');
-        
+
         if (nodeMemoryHeapTotal) {
           nodeMemoryHeapTotal.set(memoryUsage.heapTotal);
         }
@@ -255,17 +244,17 @@ export class BackendPerformanceMonitoring extends PerformanceMonitoring {
       const totalUser = cpus.reduce((acc, cpu) => acc + cpu.times.user, 0);
       const totalSystem = cpus.reduce((acc, cpu) => acc + cpu.times.sys, 0);
       const totalIdle = cpus.reduce((acc, cpu) => acc + cpu.times.idle, 0);
-      
+
       if (this.cpuUsageLastSample) {
         const userDiff = totalUser - this.cpuUsageLastSample.user;
         const systemDiff = totalSystem - this.cpuUsageLastSample.system;
         const idleDiff = totalIdle - this.cpuUsageLastSample.idle;
         const totalDiff = userDiff + systemDiff + idleDiff;
-        
+
         const userPercentage = (userDiff / totalDiff) * 100;
         const systemPercentage = (systemDiff / totalDiff) * 100;
         const totalPercentage = ((userDiff + systemDiff) / totalDiff) * 100;
-        
+
         const metric: CPUUsageMetric = {
           type: MetricType.CPU_USAGE,
           timestamp: Date.now(),
@@ -285,7 +274,7 @@ export class BackendPerformanceMonitoring extends PerformanceMonitoring {
           }
         }
       }
-      
+
       // Update last sample
       this.cpuUsageLastSample = {
         user: totalUser,
@@ -310,12 +299,12 @@ export class BackendPerformanceMonitoring extends PerformanceMonitoring {
       // In a real implementation, you would store these metrics in a database
       // or send them to a monitoring service
       console.log(`Flushing ${metrics.length} metrics to storage`);
-      
+
       // For now, we'll just log them if console logging is enabled
       if (this.options.consoleLogging) {
         console.log('Metrics:', metrics);
       }
-      
+
       // TODO: Implement actual storage of metrics
       // This could be a database, a file, or a third-party service
     } catch (error) {
@@ -330,7 +319,7 @@ export class BackendPerformanceMonitoring extends PerformanceMonitoring {
  * Create a backend performance monitoring instance
  */
 export function createPerformanceMonitoring(
-  options: Partial<PerformanceMonitoringOptions> = {}
+  options: Partial<PerformanceMonitoringOptions> = {},
 ): BackendPerformanceMonitoring {
   return BackendPerformanceMonitoring.getInstance(options);
 }

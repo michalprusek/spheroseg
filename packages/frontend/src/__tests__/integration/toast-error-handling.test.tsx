@@ -13,7 +13,7 @@ vi.mock('sonner', () => ({
     error: vi.fn(),
     success: vi.fn(),
     promise: vi.fn(),
-  }
+  },
 }));
 
 vi.mock('@/hooks/useErrorHandler', () => ({
@@ -49,7 +49,7 @@ vi.mock('@/lib/apiClient', () => ({
 const ApiComponentWithTryCatch = () => {
   const { handleError } = useToastErrorHandler();
   const [data, setData] = React.useState(null);
-  
+
   const fetchData = async () => {
     try {
       const response = await apiClient.get('/api/data');
@@ -58,7 +58,7 @@ const ApiComponentWithTryCatch = () => {
       handleError(error, 'API Error', 'Failed to fetch data');
     }
   };
-  
+
   return (
     <div>
       <h2>API Component With Try/Catch</h2>
@@ -72,23 +72,19 @@ const ApiComponentWithTryCatch = () => {
 const ApiComponentWithAsyncHandler = () => {
   const { createAsyncErrorHandler } = useToastErrorHandler();
   const [data, setData] = React.useState(null);
-  
+
   const fetchDataRaw = async () => {
     const response = await apiClient.post('/api/submit', { value: 'test' });
     return response.data;
   };
-  
+
   const handleSuccess = (result) => {
     setData(result);
     toast.success('Data fetched successfully');
   };
-  
-  const fetchData = createAsyncErrorHandler(
-    fetchDataRaw,
-    handleSuccess,
-    'Failed to fetch data'
-  );
-  
+
+  const fetchData = createAsyncErrorHandler(fetchDataRaw, handleSuccess, 'Failed to fetch data');
+
   return (
     <div>
       <h2>API Component With Async Handler</h2>
@@ -101,15 +97,15 @@ const ApiComponentWithAsyncHandler = () => {
 // 3. Component with promise toast
 const PromiseToastComponent = () => {
   const fetchWithPromise = () => {
-    const promise = apiClient.get('/api/promise-data').then(res => res.data);
-    
+    const promise = apiClient.get('/api/promise-data').then((res) => res.data);
+
     toast.promise(promise, {
       loading: 'Loading data...',
       success: 'Data loaded successfully',
       error: 'Failed to load data',
     });
   };
-  
+
   return (
     <div>
       <h2>Promise Toast Component</h2>
@@ -123,11 +119,15 @@ const ErrorComponent = ({ shouldThrow = false }) => {
   if (shouldThrow) {
     throw new Error('Uncaught component error');
   }
-  
+
   return (
     <div>
       <h2>Error Component</h2>
-      <button onClick={() => { throw new Error('Button click error'); }}>
+      <button
+        onClick={() => {
+          throw new Error('Button click error');
+        }}
+      >
         Trigger Error
       </button>
     </div>
@@ -155,16 +155,14 @@ describe('Toast Error Handling Integration', () => {
 
   it('handles API errors with try/catch pattern', async () => {
     // Mock API to throw error
-    (apiClient.get as any).mockRejectedValueOnce(
-      new Error('Network error')
-    );
-    
+    (apiClient.get as any).mockRejectedValueOnce(new Error('Network error'));
+
     render(<ApiComponentWithTryCatch />);
-    
+
     // Click button to trigger API call
     const fetchButton = screen.getByText('Fetch Data');
     fireEvent.click(fetchButton);
-    
+
     // Wait for error handling to complete
     await waitFor(() => {
       expect(apiClient.get).toHaveBeenCalledWith('/api/data');
@@ -175,19 +173,19 @@ describe('Toast Error Handling Integration', () => {
 
   it('handles API errors with async error handler pattern', async () => {
     // Mock API to throw error
-    (apiClient.post as any).mockRejectedValueOnce(
-      new Error('Validation error')
-    );
-    
+    (apiClient.post as any).mockRejectedValueOnce(new Error('Validation error'));
+
     render(<ApiComponentWithAsyncHandler />);
-    
+
     // Click button to trigger API call
     const submitButton = screen.getByText('Submit Data');
     fireEvent.click(submitButton);
-    
+
     // Wait for error handling to complete
     await waitFor(() => {
-      expect(apiClient.post).toHaveBeenCalledWith('/api/submit', { value: 'test' });
+      expect(apiClient.post).toHaveBeenCalledWith('/api/submit', {
+        value: 'test',
+      });
       expect(toast.error).toHaveBeenCalledWith('Validation error');
     });
   });
@@ -196,16 +194,18 @@ describe('Toast Error Handling Integration', () => {
     // Mock API to return success
     const mockData = { id: 1, status: 'success' };
     (apiClient.post as any).mockResolvedValueOnce({ data: mockData });
-    
+
     render(<ApiComponentWithAsyncHandler />);
-    
+
     // Click button to trigger API call
     const submitButton = screen.getByText('Submit Data');
     fireEvent.click(submitButton);
-    
+
     // Wait for success handling
     await waitFor(() => {
-      expect(apiClient.post).toHaveBeenCalledWith('/api/submit', { value: 'test' });
+      expect(apiClient.post).toHaveBeenCalledWith('/api/submit', {
+        value: 'test',
+      });
       expect(toast.success).toHaveBeenCalledWith('Data fetched successfully');
       expect(screen.getByTestId('async-data-display')).toHaveTextContent(JSON.stringify(mockData));
     });
@@ -214,20 +214,20 @@ describe('Toast Error Handling Integration', () => {
   it('shows promise toast for API calls', async () => {
     // Mock API for promise toast
     (apiClient.get as any).mockResolvedValueOnce({ data: { success: true } });
-    
+
     render(<PromiseToastComponent />);
-    
+
     // Click button to trigger promise API call
     const promiseButton = screen.getByText('Fetch With Promise');
     fireEvent.click(promiseButton);
-    
+
     // Verify toast.promise was called
     expect(toast.promise).toHaveBeenCalled();
-    
+
     // Extract the promise from the call
     const promiseArg = (toast.promise as any).mock.calls[0][0];
     expect(promiseArg).toBeInstanceOf(Promise);
-    
+
     // Extract the loading/success/error messages
     const toastConfig = (toast.promise as any).mock.calls[0][1];
     expect(toastConfig.loading).toBe('Loading data...');
@@ -239,23 +239,23 @@ describe('Toast Error Handling Integration', () => {
     render(
       <ErrorBoundary fallback={<div>Something went wrong</div>}>
         <ErrorComponent shouldThrow={false} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
-    
+
     // The ErrorBoundary won't catch this as it's an event handler
     // But we can verify the error would be thrown
     const errorButton = screen.getByText('Trigger Error');
-    
+
     // This would normally throw, so we need to silence the error
     const originalConsoleError = console.error;
     console.error = vi.fn();
-    
+
     try {
       fireEvent.click(errorButton);
     } catch (error) {
       expect(error.message).toBe('Button click error');
     }
-    
+
     // Restore console.error
     console.error = originalConsoleError;
   });
@@ -269,20 +269,20 @@ describe('Toast Error Handling Integration', () => {
             'errors.somethingWentWrong': 'Something went wrong',
             'errors.componentError': 'An error occurred in this component',
             'errors.tryAgain': 'Try Again',
-            'errors.goBack': 'Go Back'
+            'errors.goBack': 'Go Back',
           };
           return translations[key] || key;
         },
       })),
     }));
-    
+
     // Test error boundary with component that immediately throws
     render(
       <ErrorBoundary>
         <ErrorComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
-    
+
     // Error boundary should show fallback UI with error message
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     expect(screen.getByText(/An error occurred in this component/)).toBeInTheDocument();

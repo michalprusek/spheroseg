@@ -9,7 +9,7 @@ type PolygonActions = {
 
 /**
  * Test utility function to test polygon action handlers
- * 
+ *
  * @param segmentation The segmentation data
  * @param setSegmentation Mock function for updating segmentation
  * @param selectedPolygonId Currently selected polygon ID
@@ -38,17 +38,17 @@ export const testPolygonAction = <T extends PolygonActions>(
     selectedPolygonId,
     setSelectedPolygonId,
     togglePointAddingMode,
-    toggleSlicingMode
+    toggleSlicingMode,
   });
-  
+
   let returnValue;
   act(() => {
     returnValue = result.current[actionName](...actionArgs);
   });
-  
+
   // Common assertions that were duplicated
   expect(setSegmentation).toHaveBeenCalled();
   expect(toast.success).toHaveBeenCalled();
-  
+
   return { result, returnValue };
 };

@@ -14,7 +14,7 @@ export interface Polygon {
   class?: string;
   color?: string;
   parentId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface VertexHoverInfo {
@@ -53,7 +53,7 @@ export enum EditMode {
   View = 'VIEW',
   Edit = 'EDIT',
   Slice = 'SLICE',
-  PointAdding = 'POINT_ADDING'
+  PointAdding = 'POINT_ADDING',
 }
 
 export interface InteractionState {

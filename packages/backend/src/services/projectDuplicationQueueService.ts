@@ -52,7 +52,7 @@ const projectDuplicationQueue = createTaskQueue<ProjectDuplicationTaskData>({
   defaultPriority: 1,
   defaultTimeout: 1800000, // 30 minutes - duplication can take a while for large projects
   defaultRetries: 1,
-  defaultRetryDelay: 10000 // 10 seconds
+  defaultRetryDelay: 10000, // 10 seconds
 });
 
 /**
@@ -67,10 +67,7 @@ projectDuplicationQueue.registerExecutor(PROJECT_DUPLICATION_TASK_TYPE, executeP
  * @param taskId ID of the duplication task
  * @param update Progress update data
  */
-export async function updateDuplicationProgress(
-  pool: Pool,
-  update: DuplicationProgressUpdate
-): Promise<void> {
+export async function updateDuplicationProgress(pool: Pool, update: DuplicationProgressUpdate): Promise<void> {
   logger.debug(`Updating duplication progress for task ${update.taskId}: ${update.status}, ${update.progress}%`);
 
   try {
@@ -95,7 +92,7 @@ export async function updateDuplicationProgress(
       update.progress,
       update.processedItems,
       update.totalItems,
-      update.result ? JSON.stringify(update.result) : null
+      update.result ? JSON.stringify(update.result) : null,
     ];
 
     // Add optional parameters if they exist
@@ -127,14 +124,16 @@ export async function updateDuplicationProgress(
           newProjectId: update.newProjectId,
           result: update.result,
           error: update.error,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
 
         // Emit to user's room - users automatically join rooms with their userId
         logger.debug(`Emitting duplication progress update to user ${userId}`);
         io.to(userId).emit('project_duplication_progress', notificationData);
       } catch (socketError) {
-        logger.error(`Error sending socket notification for duplication task ${update.taskId}:`, { error: socketError });
+        logger.error(`Error sending socket notification for duplication task ${update.taskId}:`, {
+          error: socketError,
+        });
       }
     } else {
       logger.error(`Task ${update.taskId} not found in database when updating progress.`);
@@ -184,7 +183,9 @@ export async function getDuplicationTasks(pool: Pool, userId: string): Promise<a
     const result = await pool.query(tasksQuery, [userId]);
     return result.rows;
   } catch (error) {
-    logger.error(`Error getting duplication tasks for user ${userId}:`, { error });
+    logger.error(`Error getting duplication tasks for user ${userId}:`, {
+      error,
+    });
     throw error;
   }
 }
@@ -287,7 +288,7 @@ export async function cancelDuplicationTask(pool: Pool, taskId: string, userId: 
         progress: 0,
         processedItems: 0,
         totalItems: 0,
-        error: 'Task cancelled by user'
+        error: 'Task cancelled by user',
       });
     }
 
@@ -311,7 +312,7 @@ export async function triggerProjectDuplication(
   pool: Pool,
   originalProjectId: string,
   userId: string,
-  options: DuplicationOptions = {}
+  options: DuplicationOptions = {},
 ): Promise<string> {
   logger.info(`Triggering project duplication for projectId: ${originalProjectId}, userId: ${userId}`);
 
@@ -331,15 +332,10 @@ export async function triggerProjectDuplication(
       newTitle: options.newTitle || undefined, // Don't store null values
       copyFiles: options.copyFiles !== false, // Default to true
       copySegmentations: options.copySegmentations === true, // Default to false
-      resetStatus: options.resetStatus !== false // Default to true
+      resetStatus: options.resetStatus !== false, // Default to true
     };
 
-    await pool.query(createTaskQuery, [
-      taskId,
-      userId,
-      originalProjectId,
-      JSON.stringify(taskOptions)
-    ]);
+    await pool.query(createTaskQuery, [taskId, userId, originalProjectId, JSON.stringify(taskOptions)]);
 
     logger.info(`Created duplication task record with ID: ${taskId}`);
 
@@ -350,12 +346,12 @@ export async function triggerProjectDuplication(
         taskId,
         originalProjectId,
         userId,
-        options: taskOptions
+        options: taskOptions,
       },
       {
         id: taskId, // Use taskId from database as queue task ID
-        priority: 1
-      }
+        priority: 1,
+      },
     );
 
     // Notify the client that the task has been queued
@@ -364,7 +360,7 @@ export async function triggerProjectDuplication(
       status: 'pending',
       progress: 0,
       processedItems: 0,
-      totalItems: 0
+      totalItems: 0,
     });
 
     return taskId;
@@ -382,70 +378,67 @@ export async function triggerProjectDuplication(
  */
 async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskData>): Promise<Project> {
   const { taskId, originalProjectId, userId, options } = task.data;
-  
+
   logger.info(`Executing project duplication task ${taskId} for project ${originalProjectId}`);
-  
+
   try {
     // Get database pool
     const pool = require('../db').default;
-    
+
     // Update status to processing
     await updateDuplicationProgress(pool, {
       taskId,
       status: 'processing',
       progress: 0,
       processedItems: 0,
-      totalItems: 100 // Initial estimate, will be updated later
+      totalItems: 100, // Initial estimate, will be updated later
     });
-    
+
     // First, estimate the work to be done by counting images in the project
     const countImagesQuery = `
       SELECT COUNT(*) as count FROM images WHERE project_id = $1
     `;
-    
+
     const countResult = await pool.query(countImagesQuery, [originalProjectId]);
     const imageCount = parseInt(countResult.rows[0].count, 10);
-    
+
     // Update total items count
     await updateDuplicationProgress(pool, {
       taskId,
       status: 'processing',
       progress: 5, // Show some initial progress
       processedItems: 0,
-      totalItems: imageCount > 0 ? imageCount + 1 : 10 // +1 for project creation, or default to 10 if no images
+      totalItems: imageCount > 0 ? imageCount + 1 : 10, // +1 for project creation, or default to 10 if no images
     });
-    
+
     // Step 1: Create the new project
     logger.info(`Creating new project for duplication task ${taskId}`);
-    
+
     // First, fetch original project data
     const projectQuery = `
       SELECT title, description FROM projects WHERE id = $1 AND user_id = $2
     `;
-    
+
     const projectResult = await pool.query(projectQuery, [originalProjectId, userId]);
-    
+
     if (projectResult.rows.length === 0) {
       throw new Error('Original project not found or access denied');
     }
-    
+
     const originalProject = projectResult.rows[0];
     const newTitle = options.newTitle || `${originalProject.title} (Copy)`;
-    
+
     // Create new project entry
     const createProjectQuery = `
       INSERT INTO projects (user_id, title, description)
       VALUES ($1, $2, $3)
       RETURNING *
     `;
-    
-    const newProjectResult = await pool.query(
-      createProjectQuery,
-      [userId, newTitle, originalProject.description]
-    );
-    
+
+    const newProjectResult = await pool.query(createProjectQuery, [userId, newTitle, originalProject.description]);
+
     const newProject = newProjectResult.rows[0];
-    
+
     // Update task with new project ID and progress
     await updateDuplicationProgress(pool, {
       taskId,
@@ -454,26 +447,26 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
       processedItems: 1,
       totalItems: imageCount > 0 ? imageCount + 1 : 10,
       newProjectId: newProject.id,
-      result: newProject
+      result: newProject,
     });
-    
+
     // Step 2: Start the worker to process images in the background
     const processImagesInWorker = false; // Set to true to use worker threads when available
-    
+
     if (processImagesInWorker && Worker) {
       logger.info(`Using worker thread for image duplication in task ${taskId}`);
-      
+
       // Create a worker thread for copying files
       const workerPath = path.join(__dirname, '../workers/projectDuplicationWorker.js');
-      
+
       // Check if the worker file exists
       if (!fs.existsSync(workerPath)) {
         logger.warn(`Worker file not found at ${workerPath}, falling back to synchronous processing`);
-        
+
         // Fall back to synchronous processing
         return processImagesSynchronously(pool, taskId, originalProjectId, newProject.id, userId, options);
       }
-      
+
       // Create worker
       const worker = new Worker(workerPath, {
         workerData: {
@@ -481,10 +474,10 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
           originalProjectId,
           newProjectId: newProject.id,
           userId,
-          options
-        }
+          options,
+        },
       });
-      
+
       return new Promise((resolve, reject) => {
         worker.on('message', async (message) => {
           if (message.type === 'progress') {
@@ -495,7 +488,7 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
               progress: message.progress,
               processedItems: message.processedItems,
               totalItems: message.totalItems,
-              newProjectId: newProject.id
+              newProjectId: newProject.id,
             });
           } else if (message.type === 'complete') {
             // Task completed successfully
@@ -506,9 +499,9 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
               processedItems: message.totalItems,
               totalItems: message.totalItems,
               newProjectId: newProject.id,
-              result: message.result
+              result: message.result,
             });
-            
+
             resolve(newProject);
           } else if (message.type === 'error') {
             // Task failed
@@ -519,16 +512,18 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
               processedItems: message.processedItems || 0,
               totalItems: message.totalItems || 0,
               newProjectId: newProject.id,
-              error: message.error
+              error: message.error,
             });
-            
+
             reject(new Error(message.error));
           }
         });
-        
+
         worker.on('error', async (err) => {
-          logger.error(`Worker error in duplication task ${taskId}:`, { error: err });
-          
+          logger.error(`Worker error in duplication task ${taskId}:`, {
+            error: err,
+          });
+
           await updateDuplicationProgress(pool, {
             taskId,
             status: 'failed',
@@ -536,12 +531,12 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
             processedItems: 0,
             totalItems: imageCount > 0 ? imageCount + 1 : 10,
             newProjectId: newProject.id,
-            error: err.message
+            error: err.message,
           });
-          
+
           reject(err);
         });
-        
+
         worker.on('exit', (code) => {
           if (code !== 0) {
             logger.error(`Worker stopped with exit code ${code} in duplication task ${taskId}`);
@@ -554,12 +549,14 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
     }
   } catch (error) {
     // Handle errors
-    logger.error(`Error executing project duplication task ${taskId}:`, { error });
-    
+    logger.error(`Error executing project duplication task ${taskId}:`, {
+      error,
+    });
+
     try {
       // Get database pool
       const pool = require('../db').default;
-      
+
       // Update task status to failed
       await updateDuplicationProgress(pool, {
         taskId,
@@ -567,19 +564,19 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
         progress: 0,
         processedItems: 0,
         totalItems: 0,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     } catch (updateError) {
       logger.error(`Error updating failed status for duplication task ${taskId}:`, { error: updateError });
     }
-    
+
     throw error;
   }
 }
 
 /**
  * Process images synchronously (without worker threads)
- * 
+ *
  * @param pool Database pool
  * @param taskId Task ID
  * @param originalProjectId Original project ID
@@ -594,76 +591,78 @@ async function processImagesSynchronously(
   originalProjectId: string,
   newProjectId: string,
   userId: string,
-  options: DuplicationOptions
+  options: DuplicationOptions,
 ): Promise<Project> {
   // Fetch images from the original project
   const imagesQuery = `SELECT * FROM images WHERE project_id = $1`;
   const imagesResult = await pool.query(imagesQuery, [originalProjectId]);
   const images = imagesResult.rows;
-  
+
   const totalItems = images.length + 1; // +1 for project creation
   let processedItems = 1; // Project creation already done
-  
+
   logger.info(`Processing ${images.length} images for duplication task ${taskId}`);
-  
+
   // Create directory for new project if copying files
   if (options.copyFiles) {
     const baseDir = options.baseDir || process.cwd();
     const projectDir = path.join(baseDir, 'public', 'uploads', newProjectId);
-    
+
     if (!fs.existsSync(projectDir)) {
       fs.mkdirSync(projectDir, { recursive: true });
       logger.debug(`Created directory for new project: ${projectDir}`);
     }
   }
-  
+
   // Process images in batches to avoid overwhelming the system
   const BATCH_SIZE = 5;
   const batches = Math.ceil(images.length / BATCH_SIZE);
-  
+
   for (let i = 0; i < batches; i++) {
     const batchStart = i * BATCH_SIZE;
     const batchEnd = Math.min((i + 1) * BATCH_SIZE, images.length);
     const batch = images.slice(batchStart, batchEnd);
-    
+
     logger.debug(`Processing batch ${i + 1}/${batches} for duplication task ${taskId}`);
-    
+
     // Process batch in parallel
-    await Promise.all(batch.map(async (image) => {
-      try {
-        // Use existing service to duplicate the image
-        await projectDuplicationService.duplicateImage(
-          await pool.connect(), // Get a client for this operation
-          image,
-          newProjectId,
-          userId,
-          options
-        );
-        
-        // Update progress
-        processedItems++;
-        const progress = Math.floor((processedItems / totalItems) * 100);
-        
-        await updateDuplicationProgress(pool, {
-          taskId,
-          status: 'processing',
-          progress,
-          processedItems,
-          totalItems,
-          newProjectId
-        });
-      } catch (error) {
-        logger.error(`Error duplicating image ${image.id} in duplication task ${taskId}:`, { error });
-        // Continue with other images, don't fail the whole task
-      }
-    }));
+    await Promise.all(
+      batch.map(async (image) => {
+        try {
+          // Use existing service to duplicate the image
+          await projectDuplicationService.duplicateImage(
+            await pool.connect(), // Get a client for this operation
+            image,
+            newProjectId,
+            userId,
+            options,
+          );
+
+          // Update progress
+          processedItems++;
+          const progress = Math.floor((processedItems / totalItems) * 100);
+
+          await updateDuplicationProgress(pool, {
+            taskId,
+            status: 'processing',
+            progress,
+            processedItems,
+            totalItems,
+            newProjectId,
+          });
+        } catch (error) {
+          logger.error(`Error duplicating image ${image.id} in duplication task ${taskId}:`, { error });
+          // Continue with other images, don't fail the whole task
+        }
+      }),
+    );
   }
-  
+
   // Get the updated project after all images are processed
   const updatedProjectQuery = `SELECT * FROM projects WHERE id = $1`;
   const updatedProjectResult = await pool.query(updatedProjectQuery, [newProjectId]);
   const updatedProject = updatedProjectResult.rows[0];
-  
+
   // Mark the task as completed
   await updateDuplicationProgress(pool, {
     taskId,
@@ -672,11 +671,11 @@ async function processImagesSynchronously(
     processedItems,
     totalItems,
     newProjectId,
-    result: updatedProject
+    result: updatedProject,
   });
-  
+
   logger.info(`Project duplication task ${taskId} completed successfully`);
-  
+
   return updatedProject;
 }
 
@@ -685,25 +684,25 @@ projectDuplicationQueue.on('queue:updated', (status) => {
   try {
     // Emit queue status update via WebSocket
     const io = getIO();
-    
+
     // Add timestamp to the status update
     const statusWithTimestamp = {
       ...status,
       timestamp: new Date().toISOString(),
       queueLength: status.queueLength,
-      activeTasksCount: status.runningCount
+      activeTasksCount: status.runningCount,
     };
-    
+
     // Broadcast to all authenticated users
     io.emit('project_duplication_queue_update', statusWithTimestamp);
-    
-    logger.debug('Broadcasting project duplication queue status update', { 
+
+    logger.debug('Broadcasting project duplication queue status update', {
       queueLength: statusWithTimestamp.queueLength,
-      activeTasksCount: statusWithTimestamp.activeTasksCount
+      activeTasksCount: statusWithTimestamp.activeTasksCount,
     });
   } catch (error) {
     logger.error('Error broadcasting project duplication queue status update', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -713,5 +712,5 @@ export default {
   getDuplicationTasks,
   getDuplicationTask,
   cancelDuplicationTask,
-  updateDuplicationProgress
+  updateDuplicationProgress,
 };

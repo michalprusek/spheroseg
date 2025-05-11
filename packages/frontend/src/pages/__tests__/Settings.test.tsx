@@ -13,15 +13,15 @@ const mockNavigate = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
     error: mockToastError,
-    success: vi.fn()
-  }
+    success: vi.fn(),
+  },
 }));
 
 // Mock apiClient
 vi.mock('@/lib/apiClient', () => ({
   default: {
-    get: mockApiGet
-  }
+    get: mockApiGet,
+  },
 }));
 
 // Mock react-router-dom
@@ -29,17 +29,19 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => mockNavigate
+    useNavigate: () => mockNavigate,
   };
 });
 
 // Create a standalone Settings component for testing
 const MockSettings = ({ isLoggedIn = true, isLoading = false, hasError = false }) => {
-  const user = isLoggedIn ? {
-    id: 'user-123',
-    email: 'test@example.com',
-    created_at: '2023-01-01T00:00:00Z'
-  } : null;
+  const user = isLoggedIn
+    ? {
+        id: 'user-123',
+        email: 'test@example.com',
+        created_at: '2023-01-01T00:00:00Z',
+      }
+    : null;
 
   const profile = {
     user_id: 'user-123',
@@ -50,7 +52,7 @@ const MockSettings = ({ isLoggedIn = true, isLoading = false, hasError = false }
     bio: 'This is a test bio',
     location: 'Test Location',
     avatar_url: 'https://example.com/avatar.jpg',
-    preferred_language: 'en'
+    preferred_language: 'en',
   };
 
   if (isLoading) {
@@ -77,10 +79,18 @@ const MockSettings = ({ isLoggedIn = true, isLoading = false, hasError = false }
       ) : (
         <div className="tabs">
           <div className="tabs-list">
-            <button className="tab active" data-value="profile">Profile</button>
-            <button className="tab" data-value="account">Account</button>
-            <button className="tab" data-value="appearance">Appearance</button>
-            <button className="tab" data-value="notifications">Notifications</button>
+            <button className="tab active" data-value="profile">
+              Profile
+            </button>
+            <button className="tab" data-value="account">
+              Account
+            </button>
+            <button className="tab" data-value="appearance">
+              Appearance
+            </button>
+            <button className="tab" data-value="notifications">
+              Notifications
+            </button>
           </div>
 
           <div className="tab-content" data-value="profile">
@@ -180,7 +190,7 @@ describe('Settings Page', () => {
     return render(
       <BrowserRouter>
         <MockSettings {...props} />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

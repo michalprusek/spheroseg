@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import type { ProjectImage } from '@/types';
 
@@ -7,38 +6,44 @@ type SortDirection = 'asc' | 'desc';
 
 export const useImageFilter = (images: ProjectImage[]) => {
   const [filteredImages, setFilteredImages] = useState<ProjectImage[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortField, setSortField] = useState<SortField>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     let result = [...images];
-    
+
     if (searchTerm) {
-      result = result.filter(img => 
-        img.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      result = result.filter((img) => img.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
-    
+
     result.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortField) {
         case 'name':
           comparison = a.name.localeCompare(b.name);
           break;
         case 'updatedAt':
-          comparison = a.updatedAt.getTime() - b.updatedAt.getTime();
+          // Safely handle Date objects and string dates
+          const aTime = a.updatedAt instanceof Date ? a.updatedAt.getTime() : new Date(a.updatedAt).getTime();
+          const bTime = b.updatedAt instanceof Date ? b.updatedAt.getTime() : new Date(b.updatedAt).getTime();
+          comparison = aTime - bTime;
           break;
         case 'segmentationStatus':
-          const statusOrder = { completed: 1, processing: 2, pending: 3, failed: 4 };
+          const statusOrder = {
+            completed: 1,
+            processing: 2,
+            pending: 3,
+            failed: 4,
+          };
           comparison = statusOrder[a.segmentationStatus] - statusOrder[b.segmentationStatus];
           break;
       }
-      
+
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-    
+
     setFilteredImages(result);
   }, [images, searchTerm, sortField, sortDirection]);
 
@@ -61,6 +66,6 @@ export const useImageFilter = (images: ProjectImage[]) => {
     sortField,
     sortDirection,
     handleSearch,
-    handleSort
+    handleSort,
   };
 };

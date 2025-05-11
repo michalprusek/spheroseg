@@ -4,12 +4,12 @@ import { useExportFunctions } from '../useExportFunctions';
 import { saveAs } from 'file-saver';
 import { utils, writeFile } from 'xlsx';
 import '@testing-library/jest-dom';
-import { 
-  mockLanguageContext, 
-  mockApiClient, 
+import {
+  mockLanguageContext,
+  mockApiClient,
   mockExportDependencies,
   mockSelectedImages,
-  mockProjectData
+  mockProjectData,
 } from '../../../../../shared/test-utils/export-test-utils';
 import { toast } from 'sonner';
 
@@ -24,8 +24,8 @@ vi.mock('sonner', () => ({
     success: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
-    warning: vi.fn()
-  }
+    warning: vi.fn(),
+  },
 }));
 
 describe('useExportFunctions', () => {
@@ -49,11 +49,11 @@ describe('useExportFunctions', () => {
               { x: 10, y: 10 },
               { x: 100, y: 10 },
               { x: 100, y: 100 },
-              { x: 10, y: 100 }
-            ]
-          }
-        ]
-      }
+              { x: 10, y: 100 },
+            ],
+          },
+        ],
+      },
     },
     {
       id: 'image-2',
@@ -64,8 +64,8 @@ describe('useExportFunctions', () => {
       updatedAt: new Date('2023-01-04'),
       segmentationStatus: 'failed' as const,
       width: 800,
-      height: 600
-    }
+      height: 600,
+    },
   ];
 
   beforeEach(() => {
@@ -100,7 +100,7 @@ describe('useExportFunctions', () => {
 
     expect(result.current.selectedImages).toEqual({
       'image-1': false,
-      'image-2': false
+      'image-2': false,
     });
 
     // Second call should select all
@@ -110,7 +110,7 @@ describe('useExportFunctions', () => {
 
     expect(result.current.selectedImages).toEqual({
       'image-1': true,
-      'image-2': true
+      'image-2': true,
     });
   });
 
@@ -129,7 +129,7 @@ describe('useExportFunctions', () => {
 
     expect(result.current.selectedImages).toEqual({
       'image-1': true,
-      'image-2': false
+      'image-2': false,
     });
 
     // Toggle selection
@@ -139,7 +139,7 @@ describe('useExportFunctions', () => {
 
     expect(result.current.selectedImages).toEqual({
       'image-1': false,
-      'image-2': false
+      'image-2': false,
     });
   });
 
@@ -350,7 +350,7 @@ describe('useExportFunctions', () => {
 
     expect(result.current.selectedImages).toEqual({
       'image-1': false,
-      'image-2': true
+      'image-2': true,
     });
 
     // Rerender the hook
@@ -359,7 +359,7 @@ describe('useExportFunctions', () => {
     // Selected state should be preserved
     expect(result.current.selectedImages).toEqual({
       'image-1': false,
-      'image-2': true
+      'image-2': true,
     });
   });
 
@@ -374,8 +374,8 @@ describe('useExportFunctions', () => {
         updatedAt: new Date('2023-01-06'),
         segmentationStatus: 'pending' as const,
         width: 800,
-        height: 600
-      }
+        height: 600,
+      },
     ];
 
     const { result } = renderHook(() => useExportFunctions(imagesWithoutSegmentation, 'Test Project'));
@@ -425,12 +425,12 @@ describe('useExportFunctions', () => {
                 { x: 10, y: 10 },
                 { x: 100, y: 10 },
                 { x: 100, y: 100 },
-                { x: 10, y: 100 }
-              ]
-            }
-          ]
-        })
-      }
+                { x: 10, y: 100 },
+              ],
+            },
+          ],
+        }),
+      },
     ];
 
     const { result } = renderHook(() => useExportFunctions(imagesWithStringData, 'Test Project'));
@@ -459,8 +459,8 @@ describe('useExportFunctions', () => {
                 [10, 10],
                 [100, 10],
                 [100, 100],
-                [10, 100]
-              ]
+                [10, 100],
+              ],
             },
             {
               id: 'poly2',
@@ -470,8 +470,8 @@ describe('useExportFunctions', () => {
                 { x: 200, y: 200 },
                 { x: 300, y: 200 },
                 { x: 300, y: 300 },
-                { x: 200, y: 300 }
-              ]
+                { x: 200, y: 300 },
+              ],
             },
             {
               id: 'poly3',
@@ -481,12 +481,12 @@ describe('useExportFunctions', () => {
                 { x: 50, y: 50 },
                 { x: 80, y: 50 },
                 { x: 80, y: 80 },
-                { x: 50, y: 80 }
-              ]
-            }
-          ]
-        }
-      }
+                { x: 50, y: 80 },
+              ],
+            },
+          ],
+        },
+      },
     ];
 
     const { result } = renderHook(() => useExportFunctions(imagesWithDifferentFormats, 'Test Project'));

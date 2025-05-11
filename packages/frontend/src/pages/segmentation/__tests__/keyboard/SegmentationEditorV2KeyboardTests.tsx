@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 // Mock config
 vi.mock('@/config', () => ({
-  API_BASE_URL: 'http://test-api'
+  API_BASE_URL: 'http://test-api',
 }));
 
 // Mock useSegmentationV2 hook with focus on keyboard events
@@ -78,7 +78,7 @@ vi.mock('../../hooks/segmentation', () => {
       MergePolygons: 'MergePolygons',
     },
     // Export the mock state so we can modify it during tests
-    _mockSegmentationState: mockState
+    _mockSegmentationState: mockState,
   };
 });
 
@@ -101,7 +101,7 @@ vi.mock('react-router-dom', async () => {
 // Mock CanvasV2 component
 vi.mock('../../components/canvas/CanvasV2', () => ({
   default: vi.fn(({ canvasRef }) => (
-    <div 
+    <div
       data-testid="mock-canvas"
       ref={canvasRef}
       tabIndex={0} // Make sure it can receive keyboard events
@@ -113,11 +113,7 @@ vi.mock('../../components/canvas/CanvasV2', () => ({
 
 // Mock ToolbarV2 component
 vi.mock('../../components/toolbar/ToolbarV2', () => ({
-  ToolbarV2: vi.fn(() => (
-    <div data-testid="mock-toolbar">
-      Mock Toolbar
-    </div>
-  )),
+  ToolbarV2: vi.fn(() => <div data-testid="mock-toolbar">Mock Toolbar</div>),
 }));
 
 // Mock toast
@@ -142,7 +138,7 @@ describe('SegmentationEditorV2 Keyboard Interactions', () => {
   beforeEach(() => {
     // Setup all context mocks
     setupAllContextMocks();
-    
+
     // Reset mocks
     vi.clearAllMocks();
   });
@@ -154,11 +150,8 @@ describe('SegmentationEditorV2 Keyboard Interactions', () => {
   const renderComponent = () => {
     return render(
       <MemoryRouterWrapper>
-        <SegmentationEditorV2 
-          projectId="test-project-id" 
-          imageId="test-image-id" 
-        />
-      </MemoryRouterWrapper>
+        <SegmentationEditorV2 projectId="test-project-id" imageId="test-image-id" />
+      </MemoryRouterWrapper>,
     );
   };
 
@@ -171,10 +164,10 @@ describe('SegmentationEditorV2 Keyboard Interactions', () => {
 
     // Get the canvas element
     const canvas = screen.getByTestId('mock-canvas');
-    
+
     // Trigger Escape key
     fireEvent.keyDown(document, { key: 'Escape' });
-    
+
     // Verify that setEditMode was called with View mode
     expect(_mockSegmentationState.setEditMode).toHaveBeenCalledWith('View');
   });
@@ -185,10 +178,10 @@ describe('SegmentationEditorV2 Keyboard Interactions', () => {
     _mockSegmentationState.selectedPolygonId = 'polygon-1';
 
     renderComponent();
-    
+
     // Trigger Delete key
     fireEvent.keyDown(document, { key: 'Delete' });
-    
+
     // Verify that handleDeletePolygon was called
     expect(_mockSegmentationState.handleDeletePolygon).toHaveBeenCalled();
   });
@@ -199,10 +192,10 @@ describe('SegmentationEditorV2 Keyboard Interactions', () => {
     _mockSegmentationState.selectedPolygonId = null;
 
     renderComponent();
-    
+
     // Trigger Delete key
     fireEvent.keyDown(document, { key: 'Delete' });
-    
+
     // Verify that handleDeletePolygon was not called
     expect(_mockSegmentationState.handleDeletePolygon).not.toHaveBeenCalled();
   });
@@ -213,10 +206,10 @@ describe('SegmentationEditorV2 Keyboard Interactions', () => {
     _mockSegmentationState.canUndo = true;
 
     renderComponent();
-    
+
     // Trigger Ctrl+Z
     fireEvent.keyDown(document, { key: 'z', ctrlKey: true });
-    
+
     // Verify that undo was called
     expect(_mockSegmentationState.undo).toHaveBeenCalled();
   });
@@ -227,27 +220,27 @@ describe('SegmentationEditorV2 Keyboard Interactions', () => {
     _mockSegmentationState.canRedo = true;
 
     renderComponent();
-    
+
     // Trigger Ctrl+Shift+Z
     fireEvent.keyDown(document, { key: 'z', ctrlKey: true, shiftKey: true });
-    
+
     // Verify that redo was called
     expect(_mockSegmentationState.redo).toHaveBeenCalled();
   });
 
   it('should handle Ctrl+S for save', () => {
     renderComponent();
-    
+
     // Prevent default is needed for Ctrl+S
     const preventDefaultMock = vi.fn();
-    
+
     // Trigger Ctrl+S
     fireEvent.keyDown(document, {
       key: 's',
       ctrlKey: true,
-      preventDefault: preventDefaultMock
+      preventDefault: preventDefaultMock,
     });
-    
+
     // Verify that save was called and default was prevented
     const { _mockSegmentationState } = require('../../hooks/segmentation');
     expect(_mockSegmentationState.handleSave).toHaveBeenCalled();
@@ -261,25 +254,25 @@ describe('SegmentationEditorV2 Keyboard Interactions', () => {
     // Get the handler that will be called
     // We'll access the actual hook implementation to verify shift key state
     const { _mockSegmentationState } = require('../../hooks/segmentation');
-    
+
     // First get the handler function that should update shift key
-    const keyDownHandler = vi.fn(e => {
+    const keyDownHandler = vi.fn((e) => {
       if (e.key === 'Shift') {
         // This would set isShiftPressed, but we're just checking the call
         expect(e.key).toBe('Shift');
       }
     });
-    
+
     // Simulate shift key down
     fireEvent.keyDown(document, { key: 'Shift' });
     keyDownHandler({ key: 'Shift' });
-    
+
     // Verify handler was called with the right key
     expect(keyDownHandler).toHaveBeenCalledWith({ key: 'Shift' });
-    
+
     // Simulate shift key up
     fireEvent.keyUp(document, { key: 'Shift' });
-    
+
     // In a real implementation, this would reset isShiftPressed
     // But since we're mocking, we just verify the keyup event occurs
     expect(document.dispatchEvent).toHaveBeenCalled();
@@ -288,36 +281,36 @@ describe('SegmentationEditorV2 Keyboard Interactions', () => {
   // Tests for different platform key combinations
   it('should handle both Ctrl+Z and Meta+Z (Mac) for undo', () => {
     renderComponent();
-    
+
     // Simulate Windows/Linux Ctrl+Z
     fireEvent.keyDown(document, { key: 'z', ctrlKey: true });
-    
+
     // Verify undo was called
     const { _mockSegmentationState } = require('../../hooks/segmentation');
     expect(_mockSegmentationState.undo).toHaveBeenCalled();
     vi.mocked(_mockSegmentationState.undo).mockReset();
-    
+
     // Simulate Mac Command+Z (metaKey)
     fireEvent.keyDown(document, { key: 'z', metaKey: true });
-    
+
     // Verify undo was called again
     expect(_mockSegmentationState.undo).toHaveBeenCalled();
   });
-  
+
   it('should handle both Ctrl+Shift+Z and Meta+Shift+Z (Mac) for redo', () => {
     renderComponent();
-    
+
     // Simulate Windows/Linux Ctrl+Shift+Z
     fireEvent.keyDown(document, { key: 'z', ctrlKey: true, shiftKey: true });
-    
+
     // Verify redo was called
     const { _mockSegmentationState } = require('../../hooks/segmentation');
     expect(_mockSegmentationState.redo).toHaveBeenCalled();
     vi.mocked(_mockSegmentationState.redo).mockReset();
-    
+
     // Simulate Mac Command+Shift+Z (metaKey)
     fireEvent.keyDown(document, { key: 'z', metaKey: true, shiftKey: true });
-    
+
     // Verify redo was called again
     expect(_mockSegmentationState.redo).toHaveBeenCalled();
   });

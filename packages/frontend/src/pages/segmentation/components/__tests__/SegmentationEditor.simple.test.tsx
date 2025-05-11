@@ -32,7 +32,7 @@ const MockSegmentationEditor = () => {
 
 // Mock the actual SegmentationEditor component
 vi.mock('../../SegmentationEditor', () => ({
-  default: () => <MockSegmentationEditor />
+  default: () => <MockSegmentationEditor />,
 }));
 
 describe('SegmentationEditor Component', () => {
@@ -40,7 +40,7 @@ describe('SegmentationEditor Component', () => {
     render(
       <MemoryRouter>
         <MockSegmentationEditor />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Check if the editor container is rendered

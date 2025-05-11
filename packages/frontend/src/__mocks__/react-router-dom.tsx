@@ -6,7 +6,7 @@ import * as ReactRouterDom from 'react-router-dom';
 window.REACT_ROUTER_FUTURE_FLAGS = {
   v7_startTransition: true,
   v7_relativeSplatPath: true,
-  v7_normalizeFormMethod: true
+  v7_normalizeFormMethod: true,
 };
 
 console.log('React Router DOM mock loaded with future flags set');

@@ -36,32 +36,30 @@ describe('Export API Tests', () => {
   beforeAll(async () => {
     // Create test user
     testUser = await createTestUser();
-    
+
     // Get auth token
-    const response = await request(app)
-      .post('/api/auth/login')
-      .send({
-        email: testUser.email,
-        password: 'testpassword'
-      });
+    const response = await request(app).post('/api/auth/login').send({
+      email: testUser.email,
+      password: 'testpassword',
+    });
     authToken = response.body.token;
-    
+
     // Create test project
     const project = await createTestProject(testUser.id);
     projectId = project.id;
-    
+
     // Create a test image file
     testImagePath = path.join(__dirname, 'test-image.jpg');
     fs.writeFileSync(testImagePath, Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
-    
+
     // Upload the test image
     const imageResponse = await request(app)
       .post(`/api/projects/${projectId}/images`)
       .set('Authorization', `Bearer ${authToken}`)
       .attach('image', testImagePath);
-    
+
     imageId = imageResponse.body.id;
-    
+
     // Create a test segmentation result
     await pool.query(
       'INSERT INTO segmentation_results (id, image_id, user_id, status, polygons, metrics) VALUES ($1, $2, $3, $4, $5, $6)',
@@ -78,8 +76,8 @@ describe('Export API Tests', () => {
                 { x: 10, y: 10 },
                 { x: 20, y: 10 },
                 { x: 20, y: 20 },
-                { x: 10, y: 20 }
-              ]
+                { x: 10, y: 20 },
+              ],
             },
             {
               type: 'internal',
@@ -87,18 +85,18 @@ describe('Export API Tests', () => {
                 { x: 12, y: 12 },
                 { x: 18, y: 12 },
                 { x: 18, y: 18 },
-                { x: 12, y: 18 }
-              ]
-            }
-          ]
+                { x: 12, y: 18 },
+              ],
+            },
+          ],
         },
         {
           area: 100,
           perimeter: 40,
           circularity: 0.8,
-          objectCount: 1
-        }
-      ]
+          objectCount: 1,
+        },
+      ],
     );
   });
 
@@ -119,9 +117,9 @@ describe('Export API Tests', () => {
         includeMetadata: 'true',
         includeSegmentation: 'true',
         includeMetrics: 'true',
-        format: 'json'
+        format: 'json',
       });
-    
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('project');
     expect(response.body.project).toHaveProperty('id', projectId);
@@ -141,9 +139,9 @@ describe('Export API Tests', () => {
         includeMetadata: 'true',
         includeSegmentation: 'true',
         includeMetrics: 'true',
-        format: 'coco'
+        format: 'coco',
       });
-    
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('info');
     expect(response.body).toHaveProperty('images');
@@ -158,9 +156,11 @@ describe('Export API Tests', () => {
     const response = await request(app)
       .get(`/api/projects/${projectId}/export/metrics`)
       .set('Authorization', `Bearer ${authToken}`);
-    
+
     expect(response.status).toBe(200);
-    expect(response.header['content-type']).toMatch(/application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/);
+    expect(response.header['content-type']).toMatch(
+      /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/,
+    );
     expect(response.header['content-disposition']).toMatch(/attachment; filename=/);
   });
 
@@ -174,22 +174,22 @@ describe('Export API Tests', () => {
         includeSegmentation: true,
         includeMetrics: true,
         includeImages: true,
-        format: 'json'
+        format: 'json',
       });
-    
+
     expect(response.status).toBe(200);
     expect(response.header['content-type']).toBe('application/zip');
     expect(response.header['content-disposition']).toMatch(/attachment; filename=/);
-    
+
     // Verify ZIP content
     const zip = await JSZip.loadAsync(response.body);
     const files = Object.keys(zip.files);
-    
+
     // Check if ZIP contains expected folders and files
-    expect(files.some(file => file.includes('metadata.json'))).toBe(true);
-    expect(files.some(file => file.includes('segmentations/'))).toBe(true);
-    expect(files.some(file => file.includes('metrics.xlsx'))).toBe(true);
-    expect(files.some(file => file.includes('visualizations/'))).toBe(true);
+    expect(files.some((file) => file.includes('metadata.json'))).toBe(true);
+    expect(files.some((file) => file.includes('segmentations/'))).toBe(true);
+    expect(files.some((file) => file.includes('metrics.xlsx'))).toBe(true);
+    expect(files.some((file) => file.includes('visualizations/'))).toBe(true);
   });
 
   it('should return 404 if project does not exist', async () => {
@@ -200,23 +200,21 @@ describe('Export API Tests', () => {
         includeMetadata: 'true',
         includeSegmentation: 'true',
         includeMetrics: 'true',
-        format: 'json'
+        format: 'json',
       });
-    
+
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty('message', 'Project not found or access denied');
   });
 
   it('should return 401 if not authenticated', async () => {
-    const response = await request(app)
-      .get(`/api/projects/${projectId}/export`)
-      .query({
-        includeMetadata: 'true',
-        includeSegmentation: 'true',
-        includeMetrics: 'true',
-        format: 'json'
-      });
-    
+    const response = await request(app).get(`/api/projects/${projectId}/export`).query({
+      includeMetadata: 'true',
+      includeSegmentation: 'true',
+      includeMetrics: 'true',
+      format: 'json',
+    });
+
     expect(response.status).toBe(401);
   });
 });

@@ -11,7 +11,7 @@ const mockExportOptions: ExportOptions = {
   includeSegmentationMasks: true,
   includeMetadata: true,
   simplifyPolygons: false,
-  simplificationTolerance: 0
+  simplificationTolerance: 0,
 };
 
 const mockExportJob = {
@@ -21,12 +21,12 @@ const mockExportJob = {
   options: mockExportOptions,
   createdAt: '2023-06-15T10:00:00Z',
   updatedAt: '2023-06-15T10:00:00Z',
-  progress: 0
+  progress: 0,
 };
 
 const mockExportDownloadUrl = {
   url: 'https://example.com/download/project-1-export.zip',
-  expiresAt: '2023-06-15T11:00:00Z'
+  expiresAt: '2023-06-15T11:00:00Z',
 };
 
 describe('Export API Integration Tests', () => {
@@ -47,13 +47,13 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               startExport: {
                 data: mockExportJob,
-                status: 202
-              }
+                status: 202,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let job;
@@ -71,18 +71,23 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               startExport: {
                 error: new Error('Invalid export format'),
-                status: 400
-              }
+                status: 400,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
         // @ts-ignore - Intentionally passing invalid format
-        await expect(result.current.startExport('project-1', { ...mockExportOptions, format: 'invalid_format' })).rejects.toThrow('Invalid export format');
+        await expect(
+          result.current.startExport('project-1', {
+            ...mockExportOptions,
+            format: 'invalid_format',
+          }),
+        ).rejects.toThrow('Invalid export format');
       });
     });
 
@@ -93,17 +98,19 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               startExport: {
                 error: new Error('Project not found'),
-                status: 404
-              }
+                status: 404,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
-        await expect(result.current.startExport('non-existent', mockExportOptions)).rejects.toThrow('Project not found');
+        await expect(result.current.startExport('non-existent', mockExportOptions)).rejects.toThrow(
+          'Project not found',
+        );
       });
     });
   });
@@ -114,7 +121,7 @@ describe('Export API Integration Tests', () => {
         ...mockExportJob,
         status: 'processing',
         progress: 45,
-        updatedAt: '2023-06-15T10:05:00Z'
+        updatedAt: '2023-06-15T10:05:00Z',
       };
 
       const { result } = renderHook(() => useExportApi(), {
@@ -123,13 +130,13 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               getExportStatus: {
                 data: inProgressJob,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let status;
@@ -147,17 +154,19 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               getExportStatus: {
                 error: new Error('Export job not found'),
-                status: 404
-              }
+                status: 404,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
-        await expect(result.current.getExportStatus('project-1', 'non-existent')).rejects.toThrow('Export job not found');
+        await expect(result.current.getExportStatus('project-1', 'non-existent')).rejects.toThrow(
+          'Export job not found',
+        );
       });
     });
   });
@@ -168,7 +177,7 @@ describe('Export API Integration Tests', () => {
         ...mockExportJob,
         status: 'completed',
         progress: 100,
-        updatedAt: '2023-06-15T10:10:00Z'
+        updatedAt: '2023-06-15T10:10:00Z',
       };
 
       const { result } = renderHook(() => useExportApi(), {
@@ -177,17 +186,17 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               getExportStatus: {
                 data: completedJob,
-                status: 200
+                status: 200,
               },
               getExportDownloadUrl: {
                 data: mockExportDownloadUrl,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       // First check status
@@ -210,7 +219,7 @@ describe('Export API Integration Tests', () => {
         ...mockExportJob,
         status: 'processing',
         progress: 75,
-        updatedAt: '2023-06-15T10:05:00Z'
+        updatedAt: '2023-06-15T10:05:00Z',
       };
 
       const { result } = renderHook(() => useExportApi(), {
@@ -219,17 +228,17 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               getExportStatus: {
                 data: inProgressJob,
-                status: 200
+                status: 200,
               },
               getExportDownloadUrl: {
                 error: new Error('Export job is not yet complete'),
-                status: 400
-              }
+                status: 400,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       // First check status
@@ -241,7 +250,9 @@ describe('Export API Integration Tests', () => {
 
       // Then try to get download URL, which should fail
       await act(async () => {
-        await expect(result.current.getExportDownloadUrl('project-1', 'export-job-1')).rejects.toThrow('Export job is not yet complete');
+        await expect(result.current.getExportDownloadUrl('project-1', 'export-job-1')).rejects.toThrow(
+          'Export job is not yet complete',
+        );
       });
     });
   });
@@ -251,7 +262,7 @@ describe('Export API Integration Tests', () => {
       const cancelledJob = {
         ...mockExportJob,
         status: 'cancelled',
-        updatedAt: '2023-06-15T10:07:00Z'
+        updatedAt: '2023-06-15T10:07:00Z',
       };
 
       const { result } = renderHook(() => useExportApi(), {
@@ -260,13 +271,13 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               cancelExport: {
                 data: cancelledJob,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let job;
@@ -284,17 +295,19 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               cancelExport: {
                 error: new Error('Cannot cancel a completed export job'),
-                status: 400
-              }
+                status: 400,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
-        await expect(result.current.cancelExport('project-1', 'export-job-1')).rejects.toThrow('Cannot cancel a completed export job');
+        await expect(result.current.cancelExport('project-1', 'export-job-1')).rejects.toThrow(
+          'Cannot cancel a completed export job',
+        );
       });
     });
   });
@@ -302,10 +315,26 @@ describe('Export API Integration Tests', () => {
   describe('getExportFormats', () => {
     it('should get available export formats successfully', async () => {
       const mockFormats = [
-        { id: ExportFormat.GEOJSON, name: 'GeoJSON', description: 'Standard GIS format' },
-        { id: ExportFormat.SHAPEFILE, name: 'Shapefile', description: 'ESRI Shapefile format' },
-        { id: ExportFormat.KML, name: 'KML', description: 'Google Earth KML format' },
-        { id: ExportFormat.CSV, name: 'CSV', description: 'Comma-separated values' }
+        {
+          id: ExportFormat.GEOJSON,
+          name: 'GeoJSON',
+          description: 'Standard GIS format',
+        },
+        {
+          id: ExportFormat.SHAPEFILE,
+          name: 'Shapefile',
+          description: 'ESRI Shapefile format',
+        },
+        {
+          id: ExportFormat.KML,
+          name: 'KML',
+          description: 'Google Earth KML format',
+        },
+        {
+          id: ExportFormat.CSV,
+          name: 'CSV',
+          description: 'Comma-separated values',
+        },
       ];
 
       const { result } = renderHook(() => useExportApi(), {
@@ -314,13 +343,13 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               getExportFormats: {
                 data: mockFormats,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let formats;
@@ -342,7 +371,7 @@ describe('Export API Integration Tests', () => {
           options: mockExportOptions,
           createdAt: '2023-06-15T10:00:00Z',
           completedAt: '2023-06-15T10:10:00Z',
-          fileSize: 2500000
+          fileSize: 2500000,
         },
         {
           id: 'export-job-2',
@@ -351,8 +380,8 @@ describe('Export API Integration Tests', () => {
           options: { ...mockExportOptions, format: ExportFormat.SHAPEFILE },
           createdAt: '2023-06-16T15:00:00Z',
           completedAt: '2023-06-16T15:12:00Z',
-          fileSize: 3000000
-        }
+          fileSize: 3000000,
+        },
       ];
 
       const { result } = renderHook(() => useExportApi(), {
@@ -361,13 +390,13 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               getProjectExportHistory: {
                 data: mockHistory,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let history;
@@ -385,13 +414,13 @@ describe('Export API Integration Tests', () => {
             mockResponses={{
               getProjectExportHistory: {
                 data: [],
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let history;

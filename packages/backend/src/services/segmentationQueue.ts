@@ -42,7 +42,7 @@ export class SegmentationQueue extends EventEmitter {
       parameters,
       priority,
       status: 'queued',
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     this.queue.push(task);
@@ -64,8 +64,8 @@ export class SegmentationQueue extends EventEmitter {
       queueLength: this.queue.length,
       processing: this.processing.length,
       maxConcurrent: this.maxConcurrent,
-      runningTasks: this.processing.map(task => task.imageId),
-      queuedTasks: this.queue.map(task => task.imageId)
+      runningTasks: this.processing.map((task) => task.imageId),
+      queuedTasks: this.queue.map((task) => task.imageId),
     };
   }
 
@@ -107,7 +107,7 @@ export class SegmentationQueue extends EventEmitter {
     // Use a shorter timeout for tests
     setTimeout(() => {
       // Remove from processing list
-      this.processing = this.processing.filter(t => t.id !== task.id);
+      this.processing = this.processing.filter((t) => t.id !== task.id);
 
       // Update task status
       task.status = 'completed';

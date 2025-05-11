@@ -65,8 +65,7 @@ export const isPointInPolygon = (point: Point, polygon: Point[]): boolean => {
     const xj = polygon[j].x;
     const yj = polygon[j].y;
 
-    const intersect = ((yi > point.y) !== (yj > point.y)) &&
-      (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
+    const intersect = yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
 
     if (intersect) inside = !inside;
   }
@@ -77,9 +76,7 @@ export const isPointInPolygon = (point: Point, polygon: Point[]): boolean => {
 /**
  * Calculate the intersection point of two line segments
  */
-export const calculateIntersection = (
-  p1: Point, p2: Point, p3: Point, p4: Point
-): Point | null => {
+export const calculateIntersection = (p1: Point, p2: Point, p3: Point, p4: Point): Point | null => {
   // Line 1 represented as a1x + b1y = c1
   const a1 = p2.y - p1.y;
   const b1 = p1.x - p2.x;
@@ -102,12 +99,10 @@ export const calculateIntersection = (
 
   // Check if the intersection point is on both line segments
   const onSegment1 =
-    Math.min(p1.x, p2.x) <= x && x <= Math.max(p1.x, p2.x) &&
-    Math.min(p1.y, p2.y) <= y && y <= Math.max(p1.y, p2.y);
+    Math.min(p1.x, p2.x) <= x && x <= Math.max(p1.x, p2.x) && Math.min(p1.y, p2.y) <= y && y <= Math.max(p1.y, p2.y);
 
   const onSegment2 =
-    Math.min(p3.x, p4.x) <= x && x <= Math.max(p3.x, p4.x) &&
-    Math.min(p3.y, p4.y) <= y && y <= Math.max(p3.y, p4.y);
+    Math.min(p3.x, p4.x) <= x && x <= Math.max(p3.x, p4.x) && Math.min(p3.y, p4.y) <= y && y <= Math.max(p3.y, p4.y);
 
   if (onSegment1 && onSegment2) {
     return { x, y };
@@ -119,25 +114,18 @@ export const calculateIntersection = (
 /**
  * Calculate all intersection points between a line and a polygon
  */
-export const calculateLinePolygonIntersections = (
-  lineStart: Point,
-  lineEnd: Point,
-  polygon: Point[]
-): Point[] => {
+export const calculateLinePolygonIntersections = (lineStart: Point, lineEnd: Point, polygon: Point[]): Point[] => {
   const intersections: Point[] = [];
 
   for (let i = 0; i < polygon.length; i++) {
     const j = (i + 1) % polygon.length;
-    const intersection = calculateIntersection(
-      lineStart, lineEnd, polygon[i], polygon[j]
-    );
+    const intersection = calculateIntersection(lineStart, lineEnd, polygon[i], polygon[j]);
 
     if (intersection) {
       // Add a small epsilon to avoid duplicate points
       const epsilon = 0.0001;
-      const isDuplicate = intersections.some(p =>
-        Math.abs(p.x - intersection.x) < epsilon &&
-        Math.abs(p.y - intersection.y) < epsilon
+      const isDuplicate = intersections.some(
+        (p) => Math.abs(p.x - intersection.x) < epsilon && Math.abs(p.y - intersection.y) < epsilon,
       );
 
       if (!isDuplicate) {
@@ -152,11 +140,7 @@ export const calculateLinePolygonIntersections = (
 /**
  * Calculate perpendicular distance from a point to a line
  */
-export const perpendicularDistance = (
-  point: Point,
-  lineStart: Point,
-  lineEnd: Point
-): number => {
+export const perpendicularDistance = (point: Point, lineStart: Point, lineEnd: Point): number => {
   const dx = lineEnd.x - lineStart.x;
   const dy = lineEnd.y - lineStart.y;
 
@@ -165,10 +149,7 @@ export const perpendicularDistance = (
 
   if (lineLengthSquared === 0) {
     // Line is actually a point
-    return Math.sqrt(
-      Math.pow(point.x - lineStart.x, 2) +
-      Math.pow(point.y - lineStart.y, 2)
-    );
+    return Math.sqrt(Math.pow(point.x - lineStart.x, 2) + Math.pow(point.y - lineStart.y, 2));
   }
 
   // Calculate the projection of the point onto the line
@@ -176,42 +157,27 @@ export const perpendicularDistance = (
 
   if (t < 0) {
     // Point is beyond the lineStart end of the line segment
-    return Math.sqrt(
-      Math.pow(point.x - lineStart.x, 2) +
-      Math.pow(point.y - lineStart.y, 2)
-    );
+    return Math.sqrt(Math.pow(point.x - lineStart.x, 2) + Math.pow(point.y - lineStart.y, 2));
   }
 
   if (t > 1) {
     // Point is beyond the lineEnd end of the line segment
-    return Math.sqrt(
-      Math.pow(point.x - lineEnd.x, 2) +
-      Math.pow(point.y - lineEnd.y, 2)
-    );
+    return Math.sqrt(Math.pow(point.x - lineEnd.x, 2) + Math.pow(point.y - lineEnd.y, 2));
   }
 
   // Projection falls on the line segment
   const projectionX = lineStart.x + t * dx;
   const projectionY = lineStart.y + t * dy;
 
-  return Math.sqrt(
-    Math.pow(point.x - projectionX, 2) +
-    Math.pow(point.y - projectionY, 2)
-  );
+  return Math.sqrt(Math.pow(point.x - projectionX, 2) + Math.pow(point.y - projectionY, 2));
 };
 
 /**
  * Slice a polygon with a line
  */
-export const slicePolygon = (
-  polygon: Point[],
-  sliceStart: Point,
-  sliceEnd: Point
-): Point[][] => {
+export const slicePolygon = (polygon: Point[], sliceStart: Point, sliceEnd: Point): Point[][] => {
   // Find intersections
-  const intersections = calculateLinePolygonIntersections(
-    sliceStart, sliceEnd, polygon
-  );
+  const intersections = calculateLinePolygonIntersections(sliceStart, sliceEnd, polygon);
 
   // If we don't have exactly 2 intersections, we can't slice properly
   if (intersections.length !== 2) {
@@ -234,9 +200,7 @@ export const slicePolygon = (
       const p1 = polygon[i];
       const p2 = polygon[j];
 
-      const intersection2 = calculateIntersection(
-        sliceStart, sliceEnd, p1, p2
-      );
+      const intersection2 = calculateIntersection(sliceStart, sliceEnd, p1, p2);
 
       if (intersection2) {
         const epsilon = 0.0001;
@@ -303,10 +267,7 @@ export const calculatePolygonPerimeter = (points: Point[]): number => {
 
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
-    perimeter += Math.sqrt(
-      Math.pow(points[j].x - points[i].x, 2) +
-      Math.pow(points[j].y - points[i].y, 2)
-    );
+    perimeter += Math.sqrt(Math.pow(points[j].x - points[i].x, 2) + Math.pow(points[j].y - points[i].y, 2));
   }
 
   return perimeter;
@@ -315,10 +276,7 @@ export const calculatePolygonPerimeter = (points: Point[]): number => {
 /**
  * Simplify a polygon using the Ramer-Douglas-Peucker algorithm
  */
-export const simplifyPolygon = (
-  points: Point[],
-  epsilon: number
-): Point[] => {
+export const simplifyPolygon = (points: Point[], epsilon: number): Point[] => {
   if (points.length <= 2) return points;
 
   // Find the point with the maximum distance
@@ -355,17 +313,13 @@ export const simplifyPolygon = (
  * Check if a bounding box is visible in the viewport
  * Adds a margin to ensure polygons that are partially visible are included
  */
-export const isBoxVisible = (
-  box: BoundingBox,
-  viewport: BoundingBox,
-  margin: number = 100
-): boolean => {
+export const isBoxVisible = (box: BoundingBox, viewport: BoundingBox, margin: number = 100): boolean => {
   // Add margin to viewport
   const viewportWithMargin = {
     minX: viewport.minX - margin,
     minY: viewport.minY - margin,
     maxX: viewport.maxX + margin,
-    maxY: viewport.maxY + margin
+    maxY: viewport.maxY + margin,
   };
 
   // Check if the boxes overlap

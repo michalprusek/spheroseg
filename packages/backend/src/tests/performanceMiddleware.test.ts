@@ -55,11 +55,7 @@ describe('Performance Monitoring Middleware', () => {
     const middleware = performanceMonitoring();
 
     // Call middleware
-    middleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Check if next was called
     expect(nextFunction).toHaveBeenCalled();
@@ -70,11 +66,7 @@ describe('Performance Monitoring Middleware', () => {
     const middleware = performanceMonitoring();
 
     // Call middleware
-    middleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Check if event listener was registered
     expect(mockResponse.on).toHaveBeenCalledWith('finish', expect.any(Function));
@@ -85,11 +77,7 @@ describe('Performance Monitoring Middleware', () => {
     const middleware = performanceMonitoring();
 
     // Call middleware
-    middleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Simulate request finish
     finishCallback();
@@ -109,7 +97,7 @@ describe('Performance Monitoring Middleware', () => {
           current: expect.any(Object),
           diff: expect.any(Object),
         }),
-      })
+      }),
     );
   });
 
@@ -118,11 +106,7 @@ describe('Performance Monitoring Middleware', () => {
     const middleware = performanceMonitoring();
 
     // Call middleware
-    middleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Simulate request finish
     finishCallback();
@@ -146,20 +130,13 @@ describe('Performance Monitoring Middleware', () => {
     const middleware = performanceMonitoring();
 
     // Call middleware
-    middleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Simulate request finish
     finishCallback();
 
     // Check if warning was logged
-    expect(logger.warn).toHaveBeenCalledWith(
-      'Performance warning',
-      expect.any(Object)
-    );
+    expect(logger.warn).toHaveBeenCalledWith('Performance warning', expect.any(Object));
 
     // Restore original hrtime
     process.hrtime = originalHrtime;
@@ -179,20 +156,13 @@ describe('Performance Monitoring Middleware', () => {
     const middleware = performanceMonitoring();
 
     // Call middleware
-    middleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Simulate request finish
     finishCallback();
 
     // Check if error was logged
-    expect(logger.error).toHaveBeenCalledWith(
-      'Performance issue detected',
-      expect.any(Object)
-    );
+    expect(logger.error).toHaveBeenCalledWith('Performance issue detected', expect.any(Object));
 
     // Restore original hrtime
     process.hrtime = originalHrtime;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SegmentationResult } from '@/lib/segmentation';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -18,7 +17,7 @@ const StatusBar = ({
   autoSaveEnabled = false,
   autoSaveStatus = 'idle',
   hasUnsavedChanges = false,
-  onToggleAutoSave = () => {}
+  onToggleAutoSave = () => {},
 }: StatusBarProps) => {
   const { t } = useLanguage();
 
@@ -28,15 +27,30 @@ const StatusBar = ({
   const getAutoSaveStatusInfo = () => {
     switch (autoSaveStatus) {
       case 'pending':
-        return { text: t('segmentation.autoSave.pending') || 'Pending...', color: 'text-yellow-500' };
+        return {
+          text: t('segmentation.autoSave.pending') || 'Pending...',
+          color: 'text-yellow-500',
+        };
       case 'saving':
-        return { text: t('segmentation.autoSave.saving') || 'Saving...', color: 'text-blue-500' };
+        return {
+          text: t('segmentation.autoSave.saving') || 'Saving...',
+          color: 'text-blue-500',
+        };
       case 'success':
-        return { text: t('segmentation.autoSave.success') || 'Saved', color: 'text-green-500' };
+        return {
+          text: t('segmentation.autoSave.success') || 'Saved',
+          color: 'text-green-500',
+        };
       case 'error':
-        return { text: t('segmentation.autoSave.error') || 'Error', color: 'text-red-500' };
+        return {
+          text: t('segmentation.autoSave.error') || 'Error',
+          color: 'text-red-500',
+        };
       default:
-        return { text: t('segmentation.autoSave.idle') || 'Idle', color: 'text-gray-400' };
+        return {
+          text: t('segmentation.autoSave.idle') || 'Idle',
+          color: 'text-gray-400',
+        };
     }
   };
 
@@ -45,7 +59,7 @@ const StatusBar = ({
   // Vypočítáme celkový počet bodů napříč všemi polygony
   const totalVertices = segmentation.polygons.reduce(
     (sum, polygon) => sum + (polygon.points ? polygon.points.length : 0),
-    0
+    0,
   );
 
   return (
@@ -76,14 +90,14 @@ const StatusBar = ({
         {editMode && (
           <div className="flex items-center space-x-1">
             <span className="text-gray-400">{t('segmentation.mode')}:</span>
-            <span className={`${
-              editMode === "edit" ? "text-purple-500" :
-              editMode === "slice" ? "text-red-500" :
-              "text-green-500"
-            }`}>
-              {editMode === "edit"
+            <span
+              className={`${
+                editMode === 'edit' ? 'text-purple-500' : editMode === 'slice' ? 'text-red-500' : 'text-green-500'
+              }`}
+            >
+              {editMode === 'edit'
                 ? t('segmentation.modes.editMode')
-                : editMode === "slice"
+                : editMode === 'slice'
                   ? t('segmentation.modes.slicingMode')
                   : t('segmentation.modes.pointAddingMode')}
             </span>
@@ -111,9 +125,7 @@ const StatusBar = ({
               : t('segmentation.autoSave.disabled') || 'Auto-save: Off'}
           </button>
 
-          {autoSaveEnabled && (
-            <span className={`ml-2 ${autoSaveInfo.color}`}>{autoSaveInfo.text}</span>
-          )}
+          {autoSaveEnabled && <span className={`ml-2 ${autoSaveInfo.color}`}>{autoSaveInfo.text}</span>}
         </div>
       </div>
     </div>

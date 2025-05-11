@@ -14,7 +14,7 @@ import {
   isBoxVisible,
   PolygonBoundingBoxCache,
   polygonBoundingBoxCache,
-  slicePolygon
+  slicePolygon,
 } from './polygonOperationsUtils';
 
 // Import utility functions from polygon worker
@@ -23,7 +23,7 @@ import {
   calculatePolygonAreaAsync,
   calculatePolygonPerimeterAsync,
   calculateBoundingBoxAsync,
-  PolygonWorker
+  PolygonWorker,
 } from './polygonWorkerUtils';
 
 // Import utility functions from polygon slicing
@@ -32,7 +32,7 @@ import {
   getPointSideOfLine,
   calculateLineIntersection,
   distanceToLineSegment,
-  createPolygon
+  createPolygon,
 } from './polygonSlicingUtils';
 
 // Re-export functions and values
@@ -50,25 +50,19 @@ export {
   PolygonBoundingBoxCache,
   polygonBoundingBoxCache,
   slicePolygon,
-  
+
   // From polygonWorkerUtils
   executePolygonWorkerOperation,
   calculatePolygonAreaAsync,
   calculatePolygonPerimeterAsync,
   calculateBoundingBoxAsync,
-  
+
   // From polygonSlicingUtils
   getPointSideOfLine,
   calculateLineIntersection,
   distanceToLineSegment,
-  createPolygon
+  createPolygon,
 };
 
 // Re-export types
-export type {
-  BoundingBox,
-  WorkerRequest,
-  WorkerResponse,
-  Polygon,
-  PolygonWorker
-};
+export type { BoundingBox, WorkerRequest, WorkerResponse, Polygon, PolygonWorker };

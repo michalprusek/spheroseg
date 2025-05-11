@@ -4,11 +4,11 @@ import { vi } from 'vitest';
 import SegmentationProgress from '@/components/project/SegmentationProgress';
 import '@testing-library/jest-dom';
 import { AllProvidersWrapper } from '@/test-utils/test-wrapper';
-import { 
-  setupSegmentationProgressMocks, 
+import {
+  setupSegmentationProgressMocks,
   mockEmptyQueueResponse,
-  mockActiveQueueResponse, 
-  mockApiClientResponse 
+  mockActiveQueueResponse,
+  mockApiClientResponse,
 } from '../../../../../shared/test-utils/segmentation-progress-test-utils';
 
 // Setup all mocks
@@ -29,7 +29,7 @@ describe('SegmentationProgress Component', () => {
     render(
       <AllProvidersWrapper>
         <SegmentationProgress projectId="project-123" />
-      </AllProvidersWrapper>
+      </AllProvidersWrapper>,
     );
 
     // Wait for the component to fetch and display data
@@ -50,7 +50,7 @@ describe('SegmentationProgress Component', () => {
     render(
       <AllProvidersWrapper>
         <SegmentationProgress projectId="project-123" />
-      </AllProvidersWrapper>
+      </AllProvidersWrapper>,
     );
 
     // Wait for the component to fetch and display data
@@ -70,7 +70,7 @@ describe('SegmentationProgress Component', () => {
     render(
       <AllProvidersWrapper>
         <SegmentationProgress projectId="project-123" />
-      </AllProvidersWrapper>
+      </AllProvidersWrapper>,
     );
 
     // Wait for the component to fetch and display data
@@ -95,7 +95,7 @@ describe('SegmentationProgress Component', () => {
     render(
       <AllProvidersWrapper>
         <SegmentationProgress projectId="project-123" />
-      </AllProvidersWrapper>
+      </AllProvidersWrapper>,
     );
 
     // Wait for the component to handle the error and display fallback

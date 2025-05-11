@@ -16,7 +16,7 @@ jest.mock('fs', () => {
       // Just log the call but don't actually create directories
       console.log(`Mock: Creating directory ${path}`);
       return undefined;
-    })
+    }),
   };
 });
 
@@ -27,7 +27,7 @@ describe('Metrics Middleware', () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
   let next: jest.Mock;
-  
+
   beforeEach(() => {
     req = {
       path: '/api/test',
@@ -36,9 +36,9 @@ describe('Metrics Middleware', () => {
       get: jest.fn().mockImplementation((header) => {
         if (header === 'user-agent') return 'test-agent';
         return null;
-      })
+      }),
     };
-    
+
     res = {
       statusCode: 200,
       locals: {} as any,
@@ -49,64 +49,64 @@ describe('Metrics Middleware', () => {
         }
         return res;
       }),
-      removeListener: jest.fn()
+      removeListener: jest.fn(),
     };
-    
+
     next = jest.fn();
   });
-  
+
   it('should call next and register a finish listener', () => {
     // Act
     metricsMiddleware(req as Request, res as Response, next);
-    
+
     // Assert
     expect(next).toHaveBeenCalled();
     expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));
   });
-  
+
   it('should register finish listener', () => {
     // Act
     metricsMiddleware(req as Request, res as Response, next);
-    
+
     // Assert
     expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));
     // Note: The current implementation doesn't call removeListener, so we don't test for it
   });
-  
+
   it('should handle different response status codes', () => {
     // Arrange
     res.statusCode = 404;
-    
+
     // Act
     metricsMiddleware(req as Request, res as Response, next);
-    
+
     // Assert
     expect(next).toHaveBeenCalled();
     expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));
   });
-  
+
   it('should handle different request methods', () => {
     // Arrange
     req.method = 'POST';
-    
+
     // Act
     metricsMiddleware(req as Request, res as Response, next);
-    
+
     // Assert
     expect(next).toHaveBeenCalled();
     expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));
   });
-  
+
   it('should handle different request paths', () => {
     // Arrange
     const reqWithPath = {
       ...req,
-      path: '/api/users/me'
+      path: '/api/users/me',
     };
-    
+
     // Act
     metricsMiddleware(reqWithPath as Request, res as Response, next);
-    
+
     // Assert
     expect(next).toHaveBeenCalled();
     expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));

@@ -14,7 +14,7 @@ const mockProjects = [
     createdAt: '2023-06-01T12:00:00Z',
     updatedAt: '2023-06-02T12:00:00Z',
     imageCount: 3,
-    completedImageCount: 1
+    completedImageCount: 1,
   },
   {
     id: 'project-2',
@@ -24,19 +24,19 @@ const mockProjects = [
     createdAt: '2023-06-03T12:00:00Z',
     updatedAt: '2023-06-04T12:00:00Z',
     imageCount: 5,
-    completedImageCount: 0
-  }
+    completedImageCount: 0,
+  },
 ];
 
 const mockNewProject = {
   name: 'New Project',
-  description: 'A new project description'
+  description: 'A new project description',
 };
 
 const mockUpdatedProject = {
   id: 'project-1',
   name: 'Updated Project 1',
-  description: 'Updated description'
+  description: 'Updated description',
 };
 
 describe('Project API Integration Tests', () => {
@@ -57,13 +57,13 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               getProjects: {
                 data: mockProjects,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let projects;
@@ -82,13 +82,13 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               getProjects: {
                 error: new Error(errorMessage),
-                status: 500
-              }
+                status: 500,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -104,14 +104,14 @@ describe('Project API Integration Tests', () => {
               getProjects: {
                 data: mockProjects,
                 status: 200,
-                delay: 5000 // 5s delay
-              }
+                delay: 5000, // 5s delay
+              },
             }}
             timeoutMs={3000} // 3s timeout
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -122,14 +122,14 @@ describe('Project API Integration Tests', () => {
 
   describe('createProject', () => {
     it('should create a project successfully', async () => {
-      const createdProject = { 
-        ...mockNewProject, 
+      const createdProject = {
+        ...mockNewProject,
         id: 'new-project-id',
         status: ProjectStatus.ACTIVE,
         createdAt: '2023-06-10T12:00:00Z',
         updatedAt: '2023-06-10T12:00:00Z',
         imageCount: 0,
-        completedImageCount: 0
+        completedImageCount: 0,
       };
 
       const { result } = renderHook(() => useProjectApi(), {
@@ -138,13 +138,13 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               createProject: {
                 data: createdProject,
-                status: 201
-              }
+                status: 201,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let project;
@@ -162,30 +162,32 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               createProject: {
                 error: new Error('Project name is required'),
-                status: 400
-              }
+                status: 400,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
-        await expect(result.current.createProject({ description: 'Missing name' })).rejects.toThrow('Project name is required');
+        await expect(result.current.createProject({ description: 'Missing name' })).rejects.toThrow(
+          'Project name is required',
+        );
       });
     });
   });
 
   describe('updateProject', () => {
     it('should update a project successfully', async () => {
-      const updatedProject = { 
+      const updatedProject = {
         ...mockUpdatedProject,
         status: ProjectStatus.ACTIVE,
         createdAt: '2023-06-01T12:00:00Z',
         updatedAt: '2023-06-10T12:00:00Z',
         imageCount: 3,
-        completedImageCount: 1
+        completedImageCount: 1,
       };
 
       const { result } = renderHook(() => useProjectApi(), {
@@ -194,13 +196,13 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               updateProject: {
                 data: updatedProject,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let project;
@@ -218,17 +220,19 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               updateProject: {
                 error: new Error('Project not found'),
-                status: 404
-              }
+                status: 404,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
-        await expect(result.current.updateProject({ id: 'non-existent', name: 'Test' })).rejects.toThrow('Project not found');
+        await expect(result.current.updateProject({ id: 'non-existent', name: 'Test' })).rejects.toThrow(
+          'Project not found',
+        );
       });
     });
   });
@@ -241,13 +245,13 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               deleteProject: {
                 data: { success: true },
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let response;
@@ -265,13 +269,13 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               deleteProject: {
                 error: new Error('Unauthorized to delete this project'),
-                status: 403
-              }
+                status: 403,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {
@@ -287,8 +291,8 @@ describe('Project API Integration Tests', () => {
         images: [
           { id: 'img1', filename: 'test1.jpg', status: 'completed' },
           { id: 'img2', filename: 'test2.jpg', status: 'pending' },
-          { id: 'img3', filename: 'test3.jpg', status: 'pending' }
-        ]
+          { id: 'img3', filename: 'test3.jpg', status: 'pending' },
+        ],
       };
 
       const { result } = renderHook(() => useProjectApi(), {
@@ -297,13 +301,13 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               getProjectDetails: {
                 data: projectDetails,
-                status: 200
-              }
+                status: 200,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       let details;
@@ -321,13 +325,13 @@ describe('Project API Integration Tests', () => {
             mockResponses={{
               getProjectDetails: {
                 error: new Error('Access denied'),
-                status: 403
-              }
+                status: 403,
+              },
             }}
           >
             {children}
           </MockApiClientProvider>
-        )
+        ),
       });
 
       await act(async () => {

@@ -9,7 +9,7 @@ import type {
   CanvasSegmentationData,
   ProjectImage,
   Polygon,
-  Point // Import Point type
+  Point, // Import Point type
 } from '@/types';
 import apiClient from '@/lib/apiClient';
 import axios, { AxiosError } from 'axios';
@@ -45,7 +45,7 @@ const mapApiImageToProjectImage = (apiImage: Image): ProjectImage => {
 export const useSegmentationCore = (
   projectId: string | undefined,
   imageId: string | undefined,
-  userId: string | undefined
+  userId: string | undefined,
 ) => {
   const params = useParams<{ projectId: string; imageId: string }>();
   const navigate = useNavigate();
@@ -76,9 +76,9 @@ export const useSegmentationCore = (
       setProjectImages([]); // Clear previous images
       setProject(null); // Clear previous project
       try {
-        const projectResponse = await apiClient.get<Project>(`/projects/${finalProjectId}`);
+        const projectResponse = await apiClient.get<Project>(`/api/projects/${finalProjectId}`);
         setProject(projectResponse.data);
-        const imagesResponse = await apiClient.get<Image[]>(`/projects/${finalProjectId}/images`);
+        const imagesResponse = await apiClient.get<Image[]>(`/api/projects/${finalProjectId}/images`);
         const uiImages = imagesResponse.data.map(mapApiImageToProjectImage);
         setProjectImages(uiImages);
       } catch (error) {
@@ -96,9 +96,9 @@ export const useSegmentationCore = (
   const fetchCurrentImageAndSegmentation = useCallback(async () => {
     // Wait until project images are loaded and finalImageId is available
     if (projectLoading || !finalImageId || projectImages.length === 0) {
-       console.log('Skipping segmentation fetch: Project loading or no image ID/list');
-       setSegmentationLoading(false); // Ensure segmentation loading stops if preconditions fail
-       return;
+      console.log('Skipping segmentation fetch: Project loading or no image ID/list');
+      setSegmentationLoading(false); // Ensure segmentation loading stops if preconditions fail
+      return;
     }
 
     setSegmentationLoading(true);
@@ -106,7 +106,7 @@ export const useSegmentationCore = (
     setCurrentImage(null); // Clear previous image details
 
     // Find the image using direct string comparison (IDs should be strings)
-    const uiImage = projectImages.find(img => img.id === finalImageId);
+    const uiImage = projectImages.find((img) => img.id === finalImageId);
     if (!uiImage) {
       toast.error(t('segmentationPage.imageNotFoundError'));
       setSegmentationLoading(false);
@@ -118,7 +118,9 @@ export const useSegmentationCore = (
 
     try {
       console.log(`Fetching segmentation for image ${finalImageId}`);
-      const segmentationResponse = await apiClient.get<SegmentationApiResponse>(`/images/${finalImageId}/segmentation`);
+      const segmentationResponse = await apiClient.get<SegmentationApiResponse>(
+        `/api/images/${finalImageId}/segmentation`,
+      );
       const result = segmentationResponse.data;
       console.log(`Segmentation API response for ${finalImageId}:`, result);
 
@@ -130,9 +132,9 @@ export const useSegmentationCore = (
         polygons: Polygon[] | null,
         source: 'cv2' | 'api' | 'empty' = 'empty',
         contoursData?: {
-            contours: Array<Array<[number, number]>>;
-            hierarchy: Array<[number, number, number, number]>;
-        }
+          contours: Array<Array<[number, number]>>;
+          hierarchy: Array<[number, number, number, number]>;
+        },
       ) => {
         const finalPolygons = polygons || [];
         if (imageWidth > 0 && imageHeight > 0) {
@@ -141,15 +143,20 @@ export const useSegmentationCore = (
             imageWidth: imageWidth,
             imageHeight: imageHeight,
             // Include contours and hierarchy if provided
-            ...(contoursData && { contours: contoursData.contours, hierarchy: contoursData.hierarchy }),
+            ...(contoursData && {
+              contours: contoursData.contours,
+              hierarchy: contoursData.hierarchy,
+            }),
             metadata: {
               source,
               timestamp: new Date().toISOString(),
-              modelType: source === 'cv2' ? 'cv2' : undefined // Assuming 'cv2' implies the model used
-            }
+              modelType: source === 'cv2' ? 'cv2' : undefined, // Assuming 'cv2' implies the model used
+            },
           };
           setSegmentationData(enhancedData);
-          console.log(`Final segmentation data set from ${source}: ${finalPolygons.length} polygons, ${imageWidth}x${imageHeight}`);
+          console.log(
+            `Final segmentation data set from ${source}: ${finalPolygons.length} polygons, ${imageWidth}x${imageHeight}`,
+          );
         } else {
           // Fallback if dimensions are invalid
           setSegmentationData({
@@ -158,8 +165,8 @@ export const useSegmentationCore = (
             imageHeight: 600,
             metadata: {
               source: 'empty',
-              timestamp: new Date().toISOString()
-            }
+              timestamp: new Date().toISOString(),
+            },
           });
           console.warn('Final segmentation data created with fallback dimensions.');
         }
@@ -168,7 +175,9 @@ export const useSegmentationCore = (
 
       if (result?.status === 'completed' && result.result_data) {
         if (!(imageWidth > 0 && imageHeight > 0)) {
-          console.error(`Invalid image dimensions (${imageWidth}x${imageHeight}) for image ${finalImageId}. Cannot process segmentation.`);
+          console.error(
+            `Invalid image dimensions (${imageWidth}x${imageHeight}) for image ${finalImageId}. Cannot process segmentation.`,
+          );
           toast.error(t('segmentation.invalidImageDimensions'));
           finalizeSegmentation(null, 'empty');
           return;
@@ -176,67 +185,70 @@ export const useSegmentationCore = (
 
         // Check if contours and hierarchy are provided (new backend format)
         if (result.result_data.contours && result.result_data.hierarchy) {
-            console.log(`Processing ${result.result_data.contours.length} contours from backend (cv2 format)`);
-            const processedPolygons: Polygon[] = [];
-            const contours = result.result_data.contours;
-            const hierarchy = result.result_data.hierarchy;
+          console.log(`Processing ${result.result_data.contours.length} contours from backend (cv2 format)`);
+          const processedPolygons: Polygon[] = [];
+          const contours = result.result_data.contours;
+          const hierarchy = result.result_data.hierarchy;
 
-            if (contours.length !== hierarchy.length) {
-                 console.error('Mismatch between contour and hierarchy count!');
-                 finalizeSegmentation(null, 'empty'); // Handle error
-                 return;
+          if (contours.length !== hierarchy.length) {
+            console.error('Mismatch between contour and hierarchy count!');
+            finalizeSegmentation(null, 'empty'); // Handle error
+            return;
+          }
+
+          for (let i = 0; i < contours.length; i++) {
+            const contourPoints = contours[i];
+            const contourHierarchy = hierarchy[i]; // [Next, Previous, First_Child, Parent]
+
+            if (!Array.isArray(contourPoints) || contourPoints.length < 3) {
+              console.warn(`Skipping invalid contour at index ${i}:`, contourPoints);
+              continue; // Skip invalid contours
             }
 
-            for (let i = 0; i < contours.length; i++) {
-                const contourPoints = contours[i];
-                const contourHierarchy = hierarchy[i]; // [Next, Previous, First_Child, Parent]
+            const points: Point[] = contourPoints.map((p) => ({
+              x: p[0],
+              y: p[1],
+            }));
+            const parentIndex = contourHierarchy[3];
+            // Assign color and type based on hierarchy (OpenCV convention)
+            const color = parentIndex === -1 ? 'red' : 'blue'; // Outer contours red, inner (holes) blue
+            const type = parentIndex === -1 ? 'external' : 'internal';
+            const parentId = parentIndex !== -1 ? `temp-parent-${parentIndex}` : undefined; // Placeholder, might need mapping later
 
-                if (!Array.isArray(contourPoints) || contourPoints.length < 3) {
-                   console.warn(`Skipping invalid contour at index ${i}:`, contourPoints);
-                   continue; // Skip invalid contours
-                }
-
-                const points: Point[] = contourPoints.map(p => ({ x: p[0], y: p[1] }));
-                const parentIndex = contourHierarchy[3];
-                // Assign color and type based on hierarchy (OpenCV convention)
-                const color = parentIndex === -1 ? 'red' : 'blue'; // Outer contours red, inner (holes) blue
-                const type = parentIndex === -1 ? 'external' : 'internal';
-                const parentId = parentIndex !== -1 ? `temp-parent-${parentIndex}` : undefined; // Placeholder, might need mapping later
-
-                processedPolygons.push({
-                    id: uuidv4(),
-                    points: points,
-                    color: color,
-                    type: type,
-                    parentId: parentId // Include parentId if it's a hole
-                    // Potentially map parentId to actual polygon UUIDs if needed
-                });
-            }
-            console.log(`Successfully processed ${processedPolygons.length} polygons from contours.`);
-            finalizeSegmentation(processedPolygons, 'cv2', {
-              contours: result.result_data.contours, // Keep original contour data if needed
-              hierarchy: result.result_data.hierarchy
+            processedPolygons.push({
+              id: uuidv4(),
+              points: points,
+              color: color,
+              type: type,
+              parentId: parentId, // Include parentId if it's a hole
+              // Potentially map parentId to actual polygon UUIDs if needed
             });
+          }
+          console.log(`Successfully processed ${processedPolygons.length} polygons from contours.`);
+          finalizeSegmentation(processedPolygons, 'cv2', {
+            contours: result.result_data.contours, // Keep original contour data if needed
+            hierarchy: result.result_data.hierarchy,
+          });
 
-        // --- Fallback for old format ---
+          // --- Fallback for old format ---
         } else if (result.result_data.polygons && result.result_data.polygons.length > 0) {
-             console.log(`Processing ${result.result_data.polygons.length} polygons from backend (legacy format)`);
-             // Ensure polygons have IDs and basic structure if needed
-             const validatedPolygons = result.result_data.polygons.map(p => ({
-                ...p,
-                id: p.id || uuidv4(), // Ensure ID exists
-                // Optionally add color/type based on old logic if missing
-                // color: p.color || (p.parentId ? 'blue' : 'red'),
-                // type: p.type || (p.parentId ? 'internal' : 'external')
-             }));
-             finalizeSegmentation(validatedPolygons, 'api'); // Use 'api' source for old format
-
+          console.log(`Processing ${result.result_data.polygons.length} polygons from backend (legacy format)`);
+          // Ensure polygons have IDs and basic structure if needed
+          const validatedPolygons = result.result_data.polygons.map((p) => ({
+            ...p,
+            id: p.id || uuidv4(), // Ensure ID exists
+            // Optionally add color/type based on old logic if missing
+            // color: p.color || (p.parentId ? 'blue' : 'red'),
+            // type: p.type || (p.parentId ? 'internal' : 'external')
+          }));
+          finalizeSegmentation(validatedPolygons, 'api'); // Use 'api' source for old format
         } else {
-            console.warn(`Segmentation completed but no valid contours/hierarchy or polygons found in result_data for ${finalImageId}.`);
-            //toast.info('Segmentace dokončena, ale bez dat kontur nebo polygonů. Zkuste resegmentaci nebo zkontrolujte backend.');
-            finalizeSegmentation([], 'empty');
+          console.warn(
+            `Segmentation completed but no valid contours/hierarchy or polygons found in result_data for ${finalImageId}.`,
+          );
+          //toast.info('Segmentace dokončena, ale bez dat kontur nebo polygonů. Zkuste resegmentaci nebo zkontrolujte backend.');
+          finalizeSegmentation([], 'empty');
         }
-
       } else if (result?.status === 'failed') {
         console.warn(`Segmentation failed for image ${finalImageId}: ${result.error}`);
         toast.warning(t('segmentationPage.segmentationFailedPreviously') + `: ${result.error || ''}`);
@@ -246,11 +258,10 @@ export const useSegmentationCore = (
         const status = result?.status || 'unknown';
         console.log(`Segmentation status for ${finalImageId} is ${status}. Waiting...`);
         if (status !== 'unknown') {
-             toast.info(`Segmentace (${status}) pro ${uiImage.name} stále probíhá...`);
+          toast.info(`Segmentace (${status}) pro ${uiImage.name} stále probíhá...`);
         }
         finalizeSegmentation(null, 'empty');
       }
-
     } catch (error) {
       console.error(`Error fetching segmentation for image ${finalImageId}:`, error);
       toast.error(t('segmentationPage.fetchSegmentationError'));
@@ -261,7 +272,7 @@ export const useSegmentationCore = (
 
   // Fetch segmentation data when the image ID or project images change
   useEffect(() => {
-      fetchCurrentImageAndSegmentation();
+    fetchCurrentImageAndSegmentation();
   }, [fetchCurrentImageAndSegmentation]); // Dependency array correctly includes the memoized callback
 
   // Function to trigger resegmentation using the neural network
@@ -273,22 +284,26 @@ export const useSegmentationCore = (
     console.log(`Triggering resegmentation for image ${finalImageId}`);
     try {
       setSegmentationLoading(true);
-      toast.info(t('segmentationPage.resegmentationStarted') || 'Starting resegmentation with ResUNet neural network...');
+      toast.info(
+        t('segmentationPage.resegmentationStarted') || 'Starting resegmentation with ResUNet neural network...',
+      );
 
       // Make API call to trigger batch segmentation with high priority
-      await apiClient.post(`/segmentation/trigger-batch`, {
+      await apiClient.post(`/api/segmentations/batch`, {
         imageIds: [finalImageId],
         priority: 10, // High priority for resegmentation
-        model_type: 'resunet' // Explicitly specify the model
+        model_type: 'resunet', // Explicitly specify the model
       });
 
-      toast.success(t('segmentationPage.resegmentationQueued') ||
-        `Resegmentation for image ${currentImage?.name || finalImageId} has been queued.`);
+      toast.success(
+        t('segmentationPage.resegmentationQueued') ||
+          `Resegmentation for image ${currentImage?.name || finalImageId} has been queued.`,
+      );
 
       // Set up a polling mechanism to check for segmentation completion
       const pollInterval = setInterval(async () => {
         try {
-          const response = await apiClient.get(`/images/${finalImageId}`);
+          const response = await apiClient.get(`/api/images/${finalImageId}`);
           const imageStatus = response.data?.segmentationStatus;
 
           if (imageStatus === 'completed') {
@@ -306,20 +321,31 @@ export const useSegmentationCore = (
       }, 5000); // Poll every 5 seconds
 
       // Clear the interval after 5 minutes (timeout)
-      setTimeout(() => {
-        clearInterval(pollInterval);
-        if (segmentationLoading) {
-          setSegmentationLoading(false);
-          toast.error(t('segmentationPage.resegmentationTimeout') || 'Resegmentation timed out. Please check the queue status.');
-        }
-      }, 5 * 60 * 1000);
-
+      setTimeout(
+        () => {
+          clearInterval(pollInterval);
+          if (segmentationLoading) {
+            setSegmentationLoading(false);
+            toast.error(
+              t('segmentationPage.resegmentationTimeout') || 'Resegmentation timed out. Please check the queue status.',
+            );
+          }
+        },
+        5 * 60 * 1000,
+      );
     } catch (error) {
       console.error('Error triggering resegmentation:', error);
       setSegmentationLoading(false);
       toast.error(t('segmentationPage.resegmentationError') || 'Failed to start resegmentation.');
     }
-  }, [finalImageId, currentImage?.name, fetchCurrentImageAndSegmentation, t, segmentationLoading, setSegmentationLoading]);
+  }, [
+    finalImageId,
+    currentImage?.name,
+    fetchCurrentImageAndSegmentation,
+    t,
+    segmentationLoading,
+    setSegmentationLoading,
+  ]);
 
   // Recalculate derived loading state - SIMPLIFIED
   const isLoading = useMemo(() => {
@@ -337,36 +363,39 @@ export const useSegmentationCore = (
   const imageName = currentImage?.name || 'Neznámý obrázek';
 
   // Function to navigate between images
-  const navigateToImage = useCallback((direction: 'prev' | 'next' | number) => {
-    // Immediately clear current segmentation data to prevent showing stale polygons
-    setSegmentationData(null);
-    setCurrentImage(null); // Also clear current image details immediately
-    console.log('Cleared segmentation and current image for navigation.');
+  const navigateToImage = useCallback(
+    (direction: 'prev' | 'next' | number) => {
+      // Immediately clear current segmentation data to prevent showing stale polygons
+      setSegmentationData(null);
+      setCurrentImage(null); // Also clear current image details immediately
+      console.log('Cleared segmentation and current image for navigation.');
 
-    if (!projectImages || projectImages.length === 0) {
-       console.warn('Navigation attempt with no project images loaded.');
-       return;
-    }
+      if (!projectImages || projectImages.length === 0) {
+        console.warn('Navigation attempt with no project images loaded.');
+        return;
+      }
 
-    const currentIndex = projectImages.findIndex(img => img.id === finalImageId);
-    if (currentIndex === -1) return;
+      const currentIndex = projectImages.findIndex((img) => img.id === finalImageId);
+      if (currentIndex === -1) return;
 
-    let nextIndex: number;
-    if (typeof direction === 'number') {
-      nextIndex = direction;
-    } else if (direction === 'prev') {
-      nextIndex = (currentIndex - 1 + projectImages.length) % projectImages.length;
-    } else {
-      nextIndex = (currentIndex + 1) % projectImages.length;
-    }
+      let nextIndex: number;
+      if (typeof direction === 'number') {
+        nextIndex = direction;
+      } else if (direction === 'prev') {
+        nextIndex = (currentIndex - 1 + projectImages.length) % projectImages.length;
+      } else {
+        nextIndex = (currentIndex + 1) % projectImages.length;
+      }
 
-    if (nextIndex >= 0 && nextIndex < projectImages.length) {
-      const nextImageId = projectImages[nextIndex].id;
-      navigate(`/projects/${finalProjectId}/segmentation/${nextImageId}`);
-    } else {
-      console.warn('Invalid navigation index:', nextIndex);
-    }
-  }, [projectImages, finalImageId, finalProjectId, navigate, setSegmentationData, setCurrentImage]);
+      if (nextIndex >= 0 && nextIndex < projectImages.length) {
+        const nextImageId = projectImages[nextIndex].id;
+        navigate(`/projects/${finalProjectId}/segmentation/${nextImageId}`);
+      } else {
+        console.warn('Invalid navigation index:', nextIndex);
+      }
+    },
+    [projectImages, finalImageId, finalProjectId, navigate, setSegmentationData, setCurrentImage],
+  );
 
   // Function to save segmentation data
   const handleSave = useCallback(async () => {
@@ -396,8 +425,8 @@ export const useSegmentationCore = (
 
     setSaving(true);
     try {
-      await apiClient.put(`/projects/${finalProjectId}/images/${finalImageId}/segmentation`, {
-        segmentation_data: segmentationData
+      await apiClient.put(`/api/projects/${finalProjectId}/images/${finalImageId}/segmentation`, {
+        segmentation_data: segmentationData,
       });
       toast.success(t('segmentationPage.saveSuccess'));
     } catch (error) {
@@ -410,7 +439,9 @@ export const useSegmentationCore = (
 
   // Log the return value for debugging timing
   useEffect(() => {
-     console.log(`[useSegmentationCore Return] isLoading: ${isLoading}, projectLoading: ${projectLoading}, segmentationLoading: ${segmentationLoading}, segmentationData: ${segmentationData ? 'Exists' : 'Null'}, imageWidth: ${segmentationData?.imageWidth}, imageHeight: ${segmentationData?.imageHeight}`);
+    console.log(
+      `[useSegmentationCore Return] isLoading: ${isLoading}, projectLoading: ${projectLoading}, segmentationLoading: ${segmentationLoading}, segmentationData: ${segmentationData ? 'Exists' : 'Null'}, imageWidth: ${segmentationData?.imageWidth}, imageHeight: ${segmentationData?.imageHeight}`,
+    );
   });
 
   return {
@@ -428,6 +459,6 @@ export const useSegmentationCore = (
     canvasContainerRef,
     projectImages,
     navigateToImage,
-    handleResegmentCurrentImage
+    handleResegmentCurrentImage,
   };
 };

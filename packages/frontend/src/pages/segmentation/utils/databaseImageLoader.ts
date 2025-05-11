@@ -11,10 +11,7 @@ import { toast } from 'sonner';
  * @param imageId Image ID
  * @returns Promise resolving to image data if found, null otherwise
  */
-export const loadImageFromDatabase = async (
-  projectId: string,
-  imageId: string
-): Promise<any | null> => {
+export const loadImageFromDatabase = async (projectId: string, imageId: string): Promise<any | null> => {
   console.log(`Attempting to load image from database: projectId=${projectId}, imageId=${imageId}`);
 
   // Try all possible endpoints in sequence
@@ -23,7 +20,7 @@ export const loadImageFromDatabase = async (
     {
       url: `/api/projects/${projectId}/images/${imageId}`,
       method: 'get',
-      description: 'direct by ID'
+      description: 'direct by ID',
     },
     // 2. All images, then filter
     {
@@ -34,43 +31,40 @@ export const loadImageFromDatabase = async (
         if (!Array.isArray(data)) return null;
 
         // Try to find by ID first
-        let match = data.find(img => img.id === imageId);
+        let match = data.find((img) => img.id === imageId);
 
         // If not found by ID, try by name
         if (!match) {
-          match = data.find(img => img.name === imageId);
+          match = data.find((img) => img.name === imageId);
         }
 
         // If still not found, try by partial match on name or ID
         if (!match) {
-          match = data.find(img =>
-            (img.id && img.id.includes(imageId)) ||
-            (img.name && img.name.includes(imageId))
-          );
+          match = data.find((img) => (img.id && img.id.includes(imageId)) || (img.name && img.name.includes(imageId)));
         }
 
         return match;
-      }
+      },
     },
     // 3. Query by name
     {
       url: `/api/projects/${projectId}/images?name=${encodeURIComponent(imageId)}`,
       method: 'get',
       description: 'by name',
-      process: (data: any[]) => Array.isArray(data) && data.length > 0 ? data[0] : null
+      process: (data: any[]) => (Array.isArray(data) && data.length > 0 ? data[0] : null),
     },
     // 4. Alternative endpoint
     {
       url: `/api/images/${imageId}`,
       method: 'get',
-      description: 'alternative endpoint'
+      description: 'alternative endpoint',
     },
     // 5. Another alternative endpoint
     {
       url: `/api/projects/images/${imageId}`,
       method: 'get',
-      description: 'another alternative'
-    }
+      description: 'another alternative',
+    },
   ];
 
   // Try each endpoint in sequence
@@ -84,8 +78,8 @@ export const loadImageFromDatabase = async (
       const response = await apiClient[endpoint.method](url, {
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+          Pragma: 'no-cache',
+        },
       });
 
       let imageData = response.data;
@@ -129,9 +123,7 @@ export const loadImageFromDatabase = async (
  * @param projectId Project ID
  * @returns Promise resolving to array of image data
  */
-export const loadAllImagesFromDatabase = async (
-  projectId: string
-): Promise<any[]> => {
+export const loadAllImagesFromDatabase = async (projectId: string): Promise<any[]> => {
   console.log(`Attempting to load all images for project: ${projectId}`);
 
   try {
@@ -141,8 +133,8 @@ export const loadAllImagesFromDatabase = async (
     const response = await apiClient.get(url, {
       headers: {
         'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
+        Pragma: 'no-cache',
+      },
     });
 
     if (Array.isArray(response.data)) {

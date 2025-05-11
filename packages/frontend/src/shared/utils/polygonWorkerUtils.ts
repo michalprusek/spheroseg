@@ -21,14 +21,14 @@ export const executePolygonWorkerOperation = async <T>(
   polygonWorker: PolygonWorker,
   operation: (points: Point[]) => Promise<T>,
   operationName: string,
-  defaultValue: T
+  defaultValue: T,
 ): Promise<T> => {
   try {
     if (!polygonWorker.isReady) {
       console.warn(`Polygon worker not ready, returning ${defaultValue} for ${operationName}`);
       return defaultValue;
     }
-    
+
     return await operation(points);
   } catch (error) {
     console.error(`Error in ${operationName}:`, error);
@@ -39,16 +39,13 @@ export const executePolygonWorkerOperation = async <T>(
 /**
  * Calculate polygon area using WebWorker
  */
-export const calculatePolygonAreaAsync = async (
-  points: Point[],
-  polygonWorker: PolygonWorker
-): Promise<number> => {
+export const calculatePolygonAreaAsync = async (points: Point[], polygonWorker: PolygonWorker): Promise<number> => {
   return executePolygonWorkerOperation(
     points,
     polygonWorker,
     (pts) => polygonWorker.calculatePolygonArea(pts),
     'calculatePolygonAreaAsync',
-    0
+    0,
   );
 };
 
@@ -57,14 +54,14 @@ export const calculatePolygonAreaAsync = async (
  */
 export const calculatePolygonPerimeterAsync = async (
   points: Point[],
-  polygonWorker: PolygonWorker
+  polygonWorker: PolygonWorker,
 ): Promise<number> => {
   return executePolygonWorkerOperation(
     points,
     polygonWorker,
     (pts) => polygonWorker.calculatePolygonPerimeter(pts),
     'calculatePolygonPerimeterAsync',
-    0
+    0,
   );
 };
 
@@ -73,13 +70,13 @@ export const calculatePolygonPerimeterAsync = async (
  */
 export const calculateBoundingBoxAsync = async (
   points: Point[],
-  polygonWorker: PolygonWorker
+  polygonWorker: PolygonWorker,
 ): Promise<{ x: number; y: number; width: number; height: number } | null> => {
   return executePolygonWorkerOperation(
     points,
     polygonWorker,
     (pts) => polygonWorker.calculateBoundingBox(pts),
     'calculateBoundingBoxAsync',
-    null
+    null,
   );
 };

@@ -11,13 +11,7 @@ interface FocusTrapProps {
  * Component to trap focus within a container
  * Useful for modals, dialogs, and other components that should trap focus
  */
-const FocusTrap: React.FC<FocusTrapProps> = ({
-  children,
-  active = true,
-  restoreFocus = true,
-  className,
-  ...props
-}) => {
+const FocusTrap: React.FC<FocusTrapProps> = ({ children, active = true, restoreFocus = true, className, ...props }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
 
@@ -32,7 +26,7 @@ const FocusTrap: React.FC<FocusTrapProps> = ({
       if (!containerRef.current) return [];
 
       const elements = containerRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
 
       return Array.from(elements);

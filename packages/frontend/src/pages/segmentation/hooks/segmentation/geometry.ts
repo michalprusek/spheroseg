@@ -23,7 +23,7 @@ export const distanceToSegment = (p: Point, v: Point, w: Point): number => {
 export const slicePolygon = (
   polygon: Polygon,
   sliceStart: Point,
-  sliceEnd: Point
+  sliceEnd: Point,
 ): { success: boolean; polygons: Polygon[] } => {
   return polygonUtils.slicePolygon(polygon, sliceStart, sliceEnd);
 };
@@ -41,10 +41,10 @@ export const createPolygon = (points: Point[], type: 'external' | 'internal' = '
  */
 export const updateSegmentationWithPolygons = (
   segmentationData: SegmentationData,
-  polygons: Polygon[]
+  polygons: Polygon[],
 ): SegmentationData => {
   return {
     ...segmentationData,
-    polygons
+    polygons,
   };
 };

@@ -43,24 +43,30 @@ export const createTestUser = async (): Promise<TestUser> => {
   const email = `test-${userId}@example.com`;
   const password = 'Password123!';
   const name = `Test User ${userId}`;
-  
+
   // Insert user into database
-  await db.query(`
+  await db.query(
+    `
     INSERT INTO users (id, email, password_hash, name)
     VALUES ($1, $2, crypt($3, gen_salt('bf')), $4)
-  `, [userId, email, password, name]);
-  
+  `,
+    [userId, email, password, name],
+  );
+
   // Create profile
-  await db.query(`
+  await db.query(
+    `
     INSERT INTO profiles (user_id, preferred_language)
     VALUES ($1, 'en')
-  `, [userId]);
-  
+  `,
+    [userId],
+  );
+
   // Create token
   const token = jwt.sign({ userId }, process.env.JWT_SECRET || 'test-secret', {
     expiresIn: '1h',
   });
-  
+
   return {
     id: userId,
     email,
@@ -77,13 +83,16 @@ export const createTestProject = async (userId: string): Promise<TestProject> =>
   const projectId = uuidv4();
   const name = `Test Project ${projectId}`;
   const description = `Description for test project ${projectId}`;
-  
+
   // Insert project into database
-  await db.query(`
+  await db.query(
+    `
     INSERT INTO projects (id, name, description, user_id)
     VALUES ($1, $2, $3, $4)
-  `, [projectId, name, description, userId]);
-  
+  `,
+    [projectId, name, description, userId],
+  );
+
   return {
     id: projectId,
     name,
@@ -102,13 +111,16 @@ export const createTestImage = async (projectId: string): Promise<TestImage> => 
   const thumbnail_url = `/uploads/thumbnails/${name}`;
   const width = 800;
   const height = 600;
-  
+
   // Insert image into database
-  await db.query(`
+  await db.query(
+    `
     INSERT INTO images (id, name, url, thumbnail_url, width, height, project_id)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
-  `, [imageId, name, url, thumbnail_url, width, height, projectId]);
-  
+  `,
+    [imageId, name, url, thumbnail_url, width, height, projectId],
+  );
+
   return {
     id: imageId,
     name,
@@ -138,13 +150,16 @@ export const createTestSegmentation = async (imageId: string): Promise<void> => 
       },
     ],
   };
-  
+
   // Insert segmentation into database
-  await db.query(`
+  await db.query(
+    `
     UPDATE images
     SET segmentation_result = $1, segmentation_status = 'completed'
     WHERE id = $2
-  `, [JSON.stringify(segmentationData), imageId]);
+  `,
+    [JSON.stringify(segmentationData), imageId],
+  );
 };
 
 /**
@@ -153,22 +168,25 @@ export const createTestSegmentation = async (imageId: string): Promise<void> => 
 export const cleanupTestData = async (userId: string): Promise<void> => {
   // Get all projects for this user
   const projectResult = await db.query('SELECT id FROM projects WHERE user_id = $1', [userId]);
-  const projectIds = projectResult.rows.map(row => row.id);
-  
+  const projectIds = projectResult.rows.map((row) => row.id);
+
   // Delete image data for these projects
   if (projectIds.length > 0) {
-    await db.query(`
+    await db.query(
+      `
       DELETE FROM images
       WHERE project_id IN (${projectIds.map((_, i) => `$${i + 1}`).join(',')})
-    `, projectIds);
+    `,
+      projectIds,
+    );
   }
-  
+
   // Delete projects
   await db.query('DELETE FROM projects WHERE user_id = $1', [userId]);
-  
+
   // Delete profile
   await db.query('DELETE FROM profiles WHERE user_id = $1', [userId]);
-  
+
   // Delete user
   await db.query('DELETE FROM users WHERE id = $1', [userId]);
 };
@@ -181,7 +199,7 @@ export const setupCompleteTestEnv = async () => {
   const project = await createTestProject(user.id);
   const image = await createTestImage(project.id);
   await createTestSegmentation(image.id);
-  
+
   return {
     user,
     project,

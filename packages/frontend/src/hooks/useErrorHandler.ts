@@ -15,20 +15,12 @@ export const useToastErrorHandler = () => {
    * @param title Optional custom title
    * @param defaultMessage Optional default message if error doesn't have one
    */
-  const handleError = (
-    error: any, 
-    title?: string, 
-    defaultMessage?: string
-  ) => {
+  const handleError = (error: any, title?: string, defaultMessage?: string) => {
     // Log the error
     logger.error('Error handled by toast handler', { error });
 
     // Determine the error message
-    const errorMessage = 
-      error?.message || 
-      error?.toString?.() ||
-      defaultMessage || 
-      t('error.handler.defaultMessage');
+    const errorMessage = error?.message || error?.toString?.() || defaultMessage || t('error.handler.defaultMessage');
 
     // Show toast notification
     toast.error(errorMessage, {

@@ -48,7 +48,7 @@ vi.mock('react-i18next', () => ({
         // Chinese translations
         'zh:landing.hero.title': '类器官分割平台',
         'zh:auth.signIn': '登录',
-        'zh:auth.signUp': '注册'
+        'zh:auth.signUp': '注册',
       };
 
       // Check if we have a language prefix
@@ -64,18 +64,18 @@ vi.mock('react-i18next', () => ({
     },
     i18n: {
       changeLanguage: vi.fn(),
-      language: 'en'
-    }
-  })
+      language: 'en',
+    },
+  }),
 }));
 
 // Mock the AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: null,
-    loading: false
+    loading: false,
   }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
 }));
 
 // Mock the useNavigate hook
@@ -83,7 +83,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => vi.fn()
+    useNavigate: () => vi.fn(),
   };
 });
 
@@ -101,7 +101,7 @@ describe('LandingPage', () => {
             <LandingPage />
           </LanguageProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

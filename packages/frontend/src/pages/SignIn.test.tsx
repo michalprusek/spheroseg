@@ -59,7 +59,10 @@ const MockSignIn = () => {
         </div>
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               Your Email Address
             </label>
             <input
@@ -73,7 +76,10 @@ const MockSignIn = () => {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Password
               </label>
             </div>
@@ -101,13 +107,13 @@ const MockSignIn = () => {
 
 // Mock the SignIn component
 vi.mock('./SignIn', () => ({
-  default: () => <MockSignIn />
+  default: () => <MockSignIn />,
 }));
 
 // Mock the AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="mock-auth-provider">{children}</div>
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="mock-auth-provider">{children}</div>,
 }));
 
 // Mock the LanguageContext
@@ -116,9 +122,9 @@ vi.mock('@/contexts/LanguageContext', () => ({
     language: 'en',
     setLanguage: vi.fn(),
     t: (key: string) => key,
-    availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh']
+    availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
   }),
-  LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+  LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // Create a spy for the toast.error method
@@ -146,7 +152,7 @@ describe('SignIn Component', () => {
     render(
       <MemoryRouter>
         <MockSignIn />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Check for key elements
@@ -160,14 +166,14 @@ describe('SignIn Component', () => {
     render(
       <MemoryRouter>
         <MockSignIn />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     const emailInput = screen.getByLabelText(/your email address/i);
     const passwordInput = screen.getByLabelText(/password/i);
     // Get the form element - assuming there's only one form or it's identifiable
     const form = emailInput.closest('form');
     if (!form) {
-      throw new Error("Form element not found");
+      throw new Error('Form element not found');
     }
 
     // Ensure fields are empty (default state, but good practice)
@@ -187,12 +193,12 @@ describe('SignIn Component', () => {
   });
 
   test('calls signIn function and shows loading state on submit', async () => {
-    mockSignIn.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 50))); // Short delay
+    mockSignIn.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 50))); // Short delay
 
     render(
       <MemoryRouter>
         <MockSignIn />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const emailInput = screen.getByLabelText(/your email address/i);
@@ -228,7 +234,7 @@ describe('SignIn Component', () => {
     render(
       <MemoryRouter>
         <MockSignIn />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const emailInput = screen.getByLabelText(/your email address/i);
@@ -251,7 +257,7 @@ describe('SignIn Component', () => {
     });
 
     await waitFor(() => {
-        expect(screen.getByRole('button', { name: /sign in/i })).toBeEnabled();
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeEnabled();
     });
   });
 
@@ -277,7 +283,7 @@ describe('SignIn Component', () => {
     render(
       <MemoryRouter>
         <LoggedInMockSignIn />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Check for logged-in message and link, not the form

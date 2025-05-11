@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
 import { SegmentationProvider, useSegmentationContext } from '@/pages/segmentation/contexts/SegmentationContext';
 import '@testing-library/jest-dom';
 
@@ -15,14 +14,14 @@ const mockSegmentation = {
         { x: 10, y: 10 },
         { x: 100, y: 10 },
         { x: 100, y: 100 },
-        { x: 10, y: 100 }
+        { x: 10, y: 100 },
       ],
       type: 'external',
-      class: 'spheroid'
-    }
+      class: 'spheroid',
+    },
   ],
   status: 'completed',
-  timestamp: new Date()
+  timestamp: new Date(),
 };
 
 // Test component that uses the segmentation context
@@ -50,7 +49,7 @@ describe('SegmentationContext', () => {
     render(
       <SegmentationProvider segmentation={mockSegmentation} loading={false}>
         <TestComponent />
-      </SegmentationProvider>
+      </SegmentationProvider>,
     );
 
     // Check if segmentation data is provided
@@ -64,7 +63,7 @@ describe('SegmentationContext', () => {
     render(
       <SegmentationProvider segmentation={null} loading={false}>
         <TestComponent />
-      </SegmentationProvider>
+      </SegmentationProvider>,
     );
 
     // Check if no segmentation message is displayed
@@ -76,7 +75,7 @@ describe('SegmentationContext', () => {
     render(
       <SegmentationProvider segmentation={null} loading={true}>
         <TestComponent />
-      </SegmentationProvider>
+      </SegmentationProvider>,
     );
 
     // Check if loading state is provided

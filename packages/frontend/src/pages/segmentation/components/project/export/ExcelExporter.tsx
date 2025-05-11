@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SegmentationResult } from '@/lib/segmentation';
 import { FileSpreadsheet } from 'lucide-react';
@@ -14,21 +13,21 @@ interface ExcelExporterProps {
 
 const ExcelExporter: React.FC<ExcelExporterProps> = ({ segmentation, imageName }) => {
   if (!segmentation || !segmentation.polygons) return null;
-  
+
   const handleExportXlsx = () => {
     if (!segmentation || !segmentation.polygons) return;
-    
+
     // Get only external polygons
-    const externalPolygons = segmentation.polygons.filter(polygon => polygon.type === 'external');
-    
+    const externalPolygons = segmentation.polygons.filter((polygon) => polygon.type === 'external');
+
     // Calculate metrics for each external polygon
     const metricsData: SpheroidMetric[] = externalPolygons.map((polygon, index) => {
       // Find internal polygons (holes) related to this external polygon
-      const holes = segmentation.polygons.filter(p => p.type === 'internal');
-      
+      const holes = segmentation.polygons.filter((p) => p.type === 'internal');
+
       // Calculate metrics with holes considered
       const metrics = calculateMetrics(polygon, holes);
-      
+
       return {
         imageId: segmentation.id || '',
         imageName: imageName || 'unnamed',
@@ -46,34 +45,36 @@ const ExcelExporter: React.FC<ExcelExporterProps> = ({ segmentation, imageName }
         lengthMajorDiameter: metrics.LengthMajorDiameterThroughCentroid,
         lengthMinorDiameter: metrics.LengthMinorDiameterThroughCentroid,
         solidity: metrics.Solidity,
-        sphericity: metrics.Sphericity
+        sphericity: metrics.Sphericity,
       };
     });
-    
+
     // Create worksheet
-    const worksheet = utils.json_to_sheet(metricsData.map(metric => ({
-      'Image Name': metric.imageName,
-      'Contour': metric.contourNumber,
-      'Area': metric.area,
-      'Circularity': metric.circularity,
-      'Compactness': metric.compactness,
-      'Convexity': metric.convexity,
-      'Equivalent Diameter': metric.equivalentDiameter,
-      'Aspect Ratio': metric.aspectRatio,
-      'Feret Diameter Max': metric.feretDiameterMax,
-      'Feret Diameter Max Orthogonal': metric.feretDiameterMaxOrthogonal,
-      'Feret Diameter Min': metric.feretDiameterMin,
-      'Length Major Diameter': metric.lengthMajorDiameter,
-      'Length Minor Diameter': metric.lengthMinorDiameter,
-      'Perimeter': metric.perimeter,
-      'Solidity': metric.solidity,
-      'Sphericity': metric.sphericity
-    })));
-    
+    const worksheet = utils.json_to_sheet(
+      metricsData.map((metric) => ({
+        'Image Name': metric.imageName,
+        Contour: metric.contourNumber,
+        Area: metric.area,
+        Circularity: metric.circularity,
+        Compactness: metric.compactness,
+        Convexity: metric.convexity,
+        'Equivalent Diameter': metric.equivalentDiameter,
+        'Aspect Ratio': metric.aspectRatio,
+        'Feret Diameter Max': metric.feretDiameterMax,
+        'Feret Diameter Max Orthogonal': metric.feretDiameterMaxOrthogonal,
+        'Feret Diameter Min': metric.feretDiameterMin,
+        'Length Major Diameter': metric.lengthMajorDiameter,
+        'Length Minor Diameter': metric.lengthMinorDiameter,
+        Perimeter: metric.perimeter,
+        Solidity: metric.solidity,
+        Sphericity: metric.sphericity,
+      })),
+    );
+
     // Set column widths
     const colWidths = [
       { wch: 15 }, // Image Name
-      { wch: 8 },  // Contour
+      { wch: 8 }, // Contour
       { wch: 10 }, // Area
       { wch: 10 }, // Circularity
       { wch: 10 }, // Compactness
@@ -87,27 +88,22 @@ const ExcelExporter: React.FC<ExcelExporterProps> = ({ segmentation, imageName }
       { wch: 20 }, // Length Minor Diameter
       { wch: 10 }, // Perimeter
       { wch: 10 }, // Solidity
-      { wch: 10 }  // Sphericity
+      { wch: 10 }, // Sphericity
     ];
-    
+
     worksheet['!cols'] = colWidths;
-    
+
     // Create workbook
     const workbook = utils.book_new();
     utils.book_append_sheet(workbook, worksheet, 'Spheroid Metrics');
-    
+
     // Download
     const filename = `${imageName || 'spheroid'}_metrics.xlsx`;
     writeFile(workbook, filename);
   };
-  
+
   return (
-    <Button 
-      variant="default" 
-      size="sm" 
-      onClick={handleExportXlsx}
-      className="text-xs"
-    >
+    <Button variant="default" size="sm" onClick={handleExportXlsx} className="text-xs">
       <FileSpreadsheet className="h-4 w-4 mr-1" />
       Exportovat všechny metriky jako XLSX
     </Button>

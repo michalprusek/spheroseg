@@ -1,30 +1,30 @@
-import { toast } from "sonner";
-import logger from "./logger";
-import { AxiosError } from "axios";
+import { toast } from 'sonner';
+import logger from './logger';
+import { AxiosError } from 'axios';
 
 /**
  * Error types for better categorization
  */
 export enum ErrorType {
-  NETWORK = "network",
-  API = "api",
-  VALIDATION = "validation",
-  AUTHENTICATION = "authentication",
-  AUTHORIZATION = "authorization",
-  NOT_FOUND = "not_found",
-  SERVER = "server",
-  CLIENT = "client",
-  UNKNOWN = "unknown",
+  NETWORK = 'network',
+  API = 'api',
+  VALIDATION = 'validation',
+  AUTHENTICATION = 'authentication',
+  AUTHORIZATION = 'authorization',
+  NOT_FOUND = 'not_found',
+  SERVER = 'server',
+  CLIENT = 'client',
+  UNKNOWN = 'unknown',
 }
 
 /**
  * Error severity levels
  */
 export enum ErrorSeverity {
-  INFO = "info",
-  WARNING = "warning",
-  ERROR = "error",
-  CRITICAL = "critical",
+  INFO = 'info',
+  WARNING = 'warning',
+  ERROR = 'error',
+  CRITICAL = 'critical',
 }
 
 /**
@@ -44,15 +44,15 @@ export interface ErrorInfo {
  * Default error messages by error type
  */
 const DEFAULT_ERROR_MESSAGES: Record<ErrorType, string> = {
-  [ErrorType.NETWORK]: "Network error. Please check your connection.",
-  [ErrorType.API]: "API error. Please try again later.",
-  [ErrorType.VALIDATION]: "Validation error. Please check your input.",
-  [ErrorType.AUTHENTICATION]: "Authentication error. Please sign in again.",
+  [ErrorType.NETWORK]: 'Network error. Please check your connection.',
+  [ErrorType.API]: 'API error. Please try again later.',
+  [ErrorType.VALIDATION]: 'Validation error. Please check your input.',
+  [ErrorType.AUTHENTICATION]: 'Authentication error. Please sign in again.',
   [ErrorType.AUTHORIZATION]: "You don't have permission to perform this action.",
-  [ErrorType.NOT_FOUND]: "The requested resource was not found.",
-  [ErrorType.SERVER]: "Server error. Please try again later.",
-  [ErrorType.CLIENT]: "An error occurred in the application.",
-  [ErrorType.UNKNOWN]: "An unknown error occurred. Please try again.",
+  [ErrorType.NOT_FOUND]: 'The requested resource was not found.',
+  [ErrorType.SERVER]: 'Server error. Please try again later.',
+  [ErrorType.CLIENT]: 'An error occurred in the application.',
+  [ErrorType.UNKNOWN]: 'An unknown error occurred. Please try again.',
 };
 
 /**
@@ -88,7 +88,7 @@ const HTTP_STATUS_TO_SEVERITY: Record<number, ErrorSeverity> = {
  */
 export function getErrorType(error: unknown): ErrorType {
   if (error instanceof AxiosError) {
-    if (error.code === "ECONNABORTED" || error.code === "ERR_NETWORK") {
+    if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
       return ErrorType.NETWORK;
     }
 
@@ -105,7 +105,7 @@ export function getErrorType(error: unknown): ErrorType {
   }
 
   if (error instanceof Error) {
-    if (error.message.includes("network") || error.message.includes("connection")) {
+    if (error.message.includes('network') || error.message.includes('connection')) {
       return ErrorType.NETWORK;
     }
   }
@@ -141,14 +141,14 @@ export function getErrorMessage(error: unknown, fallbackMessage?: string): strin
     // Try to get message from response data
     const responseData = error.response?.data;
     if (responseData) {
-      if (typeof responseData === "string") {
+      if (typeof responseData === 'string') {
         return responseData;
       }
       if (responseData.message) {
         return responseData.message;
       }
       if (responseData.error) {
-        return typeof responseData.error === "string"
+        return typeof responseData.error === 'string'
           ? responseData.error
           : responseData.error.message || JSON.stringify(responseData.error);
       }
@@ -160,7 +160,7 @@ export function getErrorMessage(error: unknown, fallbackMessage?: string): strin
     }
 
     // Use error message
-    if (error.message && error.message !== "Network Error") {
+    if (error.message && error.message !== 'Network Error') {
       return error.message;
     }
 
@@ -173,7 +173,7 @@ export function getErrorMessage(error: unknown, fallbackMessage?: string): strin
     return error.message;
   }
 
-  if (typeof error === "string") {
+  if (typeof error === 'string') {
     return error;
   }
 
@@ -201,7 +201,7 @@ export function getErrorCode(error: unknown): string | number | undefined {
 export function getErrorDetails(error: unknown): Record<string, any> | undefined {
   if (error instanceof AxiosError) {
     const responseData = error.response?.data;
-    if (responseData && typeof responseData === "object") {
+    if (responseData && typeof responseData === 'object') {
       if (responseData.details || responseData.errors) {
         return responseData.details || responseData.errors;
       }
@@ -249,15 +249,9 @@ export function handleError(
     context?: string;
     fallbackMessage?: string;
     errorInfo?: Partial<ErrorInfo>;
-  }
+  },
 ): ErrorInfo {
-  const {
-    showToast = true,
-    logError = true,
-    context = "",
-    fallbackMessage,
-    errorInfo = {},
-  } = options || {};
+  const { showToast = true, logError = true, context = '', fallbackMessage, errorInfo = {} } = options || {};
 
   // Create structured error info
   const info = createErrorInfo(error, {
@@ -321,7 +315,7 @@ export class AppError extends Error {
 
   constructor(message: string, options?: Partial<ErrorInfo>) {
     super(message);
-    this.name = "AppError";
+    this.name = 'AppError';
     this.type = options?.type || ErrorType.UNKNOWN;
     this.severity = options?.severity || ErrorSeverity.ERROR;
     this.code = options?.code;
@@ -338,48 +332,48 @@ export class AppError extends Error {
 export class NetworkError extends AppError {
   constructor(message = DEFAULT_ERROR_MESSAGES[ErrorType.NETWORK], options?: Partial<ErrorInfo>) {
     super(message, { type: ErrorType.NETWORK, ...options });
-    this.name = "NetworkError";
+    this.name = 'NetworkError';
   }
 }
 
 export class ApiError extends AppError {
   constructor(message = DEFAULT_ERROR_MESSAGES[ErrorType.API], options?: Partial<ErrorInfo>) {
     super(message, { type: ErrorType.API, ...options });
-    this.name = "ApiError";
+    this.name = 'ApiError';
   }
 }
 
 export class ValidationError extends AppError {
   constructor(message = DEFAULT_ERROR_MESSAGES[ErrorType.VALIDATION], options?: Partial<ErrorInfo>) {
     super(message, { type: ErrorType.VALIDATION, ...options });
-    this.name = "ValidationError";
+    this.name = 'ValidationError';
   }
 }
 
 export class AuthenticationError extends AppError {
   constructor(message = DEFAULT_ERROR_MESSAGES[ErrorType.AUTHENTICATION], options?: Partial<ErrorInfo>) {
     super(message, { type: ErrorType.AUTHENTICATION, ...options });
-    this.name = "AuthenticationError";
+    this.name = 'AuthenticationError';
   }
 }
 
 export class AuthorizationError extends AppError {
   constructor(message = DEFAULT_ERROR_MESSAGES[ErrorType.AUTHORIZATION], options?: Partial<ErrorInfo>) {
     super(message, { type: ErrorType.AUTHORIZATION, ...options });
-    this.name = "AuthorizationError";
+    this.name = 'AuthorizationError';
   }
 }
 
 export class NotFoundError extends AppError {
   constructor(message = DEFAULT_ERROR_MESSAGES[ErrorType.NOT_FOUND], options?: Partial<ErrorInfo>) {
     super(message, { type: ErrorType.NOT_FOUND, ...options });
-    this.name = "NotFoundError";
+    this.name = 'NotFoundError';
   }
 }
 
 export class ServerError extends AppError {
   constructor(message = DEFAULT_ERROR_MESSAGES[ErrorType.SERVER], options?: Partial<ErrorInfo>) {
     super(message, { type: ErrorType.SERVER, ...options });
-    this.name = "ServerError";
+    this.name = 'ServerError';
   }
 }

@@ -12,25 +12,27 @@ const mockToastError = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
     error: mockToastError,
-    success: vi.fn()
-  }
+    success: vi.fn(),
+  },
 }));
 
 // Mock apiClient
 vi.mock('@/lib/apiClient', () => ({
   default: {
-    get: mockApiGet
-  }
+    get: mockApiGet,
+  },
 }));
 
 // Create a standalone Profile component for testing
 const MockProfile = ({ isLoggedIn = true, isLoading = false, hasError = false }) => {
-  const user = isLoggedIn ? { 
-    id: 'user-123', 
-    email: 'test@example.com',
-    created_at: '2023-01-01T00:00:00Z'
-  } : null;
-  
+  const user = isLoggedIn
+    ? {
+        id: 'user-123',
+        email: 'test@example.com',
+        created_at: '2023-01-01T00:00:00Z',
+      }
+    : null;
+
   const profile = {
     user_id: 'user-123',
     username: 'testuser',
@@ -39,9 +41,9 @@ const MockProfile = ({ isLoggedIn = true, isLoading = false, hasError = false })
     organization: 'Test Organization',
     bio: 'This is a test bio',
     location: 'Test Location',
-    avatar_url: 'https://example.com/avatar.jpg'
+    avatar_url: 'https://example.com/avatar.jpg',
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -49,30 +51,26 @@ const MockProfile = ({ isLoggedIn = true, isLoading = false, hasError = false })
       </div>
     );
   }
-  
+
   if (!isLoggedIn) {
     return <div>Please login to view your profile</div>;
   }
-  
+
   if (hasError) {
     return <div>Failed to fetch profile data</div>;
   }
-  
+
   return (
     <div>
       <h1>Profile</h1>
       <div className="profile-card">
-        <img 
-          alt="User Avatar" 
-          src={profile.avatar_url}
-          className="avatar"
-        />
+        <img alt="User Avatar" src={profile.avatar_url} className="avatar" />
         <h2>{profile.full_name || profile.username}</h2>
         <p>{profile.title}</p>
         <p>{profile.organization}</p>
         <a href="/settings#user-profile">Edit Profile</a>
       </div>
-      
+
       <div className="profile-details">
         <div>
           <span>Email:</span>
@@ -87,12 +85,12 @@ const MockProfile = ({ isLoggedIn = true, isLoading = false, hasError = false })
           <span>January 2023</span>
         </div>
       </div>
-      
+
       <div className="about-section">
         <h3>About Me</h3>
         <p>{profile.bio}</p>
       </div>
-      
+
       <div className="statistics-section">
         <h3>Statistics</h3>
         <div className="stats-grid">
@@ -114,7 +112,7 @@ const MockProfile = ({ isLoggedIn = true, isLoading = false, hasError = false })
           </div>
         </div>
       </div>
-      
+
       <div className="activity-section">
         <h3>Recent Activity</h3>
         <p>No recent activity</p>
@@ -127,18 +125,18 @@ describe('Profile Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  
+
   const renderComponent = (props = {}) => {
     return render(
       <BrowserRouter>
         <MockProfile {...props} />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
-  
+
   it('renders the profile page correctly when user is logged in', () => {
     renderComponent();
-    
+
     // Check if the profile information is displayed
     expect(screen.getByText('Profile')).toBeInTheDocument();
     expect(screen.getByText('Test User')).toBeInTheDocument();
@@ -148,42 +146,42 @@ describe('Profile Page', () => {
     expect(screen.getByText('Test Location')).toBeInTheDocument();
     expect(screen.getByText('test@example.com')).toBeInTheDocument();
     expect(screen.getByText('January 2023')).toBeInTheDocument();
-    
+
     // Check if the avatar is displayed
     expect(screen.getByAltText('User Avatar')).toBeInTheDocument();
-    
+
     // Check if the edit profile link is displayed
     expect(screen.getByText('Edit Profile')).toBeInTheDocument();
-    
+
     // Check if the statistics section is displayed
     expect(screen.getByText('Statistics')).toBeInTheDocument();
     expect(screen.getByText('Projects')).toBeInTheDocument();
     expect(screen.getByText('Images')).toBeInTheDocument();
     expect(screen.getByText('Analyses')).toBeInTheDocument();
     expect(screen.getByText('Storage Used')).toBeInTheDocument();
-    
+
     // Check if the activity section is displayed
     expect(screen.getByText('Recent Activity')).toBeInTheDocument();
     expect(screen.getByText('No recent activity')).toBeInTheDocument();
   });
-  
+
   it('shows loading state when profile is loading', () => {
     renderComponent({ isLoading: true });
-    
+
     // Check if the loading indicator is displayed
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
-  
+
   it('shows login message when user is not logged in', () => {
     renderComponent({ isLoggedIn: false });
-    
+
     // Check if the login message is displayed
     expect(screen.getByText('Please login to view your profile')).toBeInTheDocument();
   });
-  
+
   it('shows error message when profile fetch fails', () => {
     renderComponent({ hasError: true });
-    
+
     // Check if the error message is displayed
     expect(screen.getByText('Failed to fetch profile data')).toBeInTheDocument();
   });

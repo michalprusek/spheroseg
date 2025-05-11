@@ -1,15 +1,15 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import axios, { AxiosError } from 'axios';
-import { 
-  getErrorType, 
-  getErrorSeverity, 
-  getErrorMessage, 
+import {
+  getErrorType,
+  getErrorSeverity,
+  getErrorMessage,
   createErrorInfo,
   ErrorType,
   ErrorSeverity,
   AppError,
   NetworkError,
-  ValidationError
+  ValidationError,
 } from '@/utils/errorHandling';
 
 // Mock dependencies
@@ -19,7 +19,7 @@ vi.mock('@/utils/logger', () => ({
     warn: vi.fn(),
     info: vi.fn(),
     debug: vi.fn(),
-  }
+  },
 }));
 
 describe('Error Handling Utilities - Basic Tests', () => {
@@ -81,7 +81,7 @@ describe('Error Handling Utilities - Basic Tests', () => {
   describe('Custom Error Classes', () => {
     it('should create AppError with correct properties', () => {
       const error = new AppError('Generic app error');
-      
+
       expect(error instanceof Error).toBe(true);
       expect(error.name).toBe('AppError');
       expect(error.message).toBe('Generic app error');
@@ -91,7 +91,7 @@ describe('Error Handling Utilities - Basic Tests', () => {
 
     it('should create NetworkError with correct properties', () => {
       const error = new NetworkError('Network connection failed');
-      
+
       expect(error instanceof Error).toBe(true);
       expect(error.name).toBe('NetworkError');
       expect(error.message).toBe('Network connection failed');
@@ -102,12 +102,15 @@ describe('Error Handling Utilities - Basic Tests', () => {
       const error = new ValidationError('Invalid input', {
         details: { field: 'email', message: 'Invalid email format' },
       });
-      
+
       expect(error instanceof Error).toBe(true);
       expect(error.name).toBe('ValidationError');
       expect(error.message).toBe('Invalid input');
       expect(error.type).toBe(ErrorType.VALIDATION);
-      expect(error.details).toEqual({ field: 'email', message: 'Invalid email format' });
+      expect(error.details).toEqual({
+        field: 'email',
+        message: 'Invalid email format',
+      });
     });
   });
 });

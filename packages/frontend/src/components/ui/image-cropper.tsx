@@ -92,7 +92,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       0,
       0,
       completedCrop.width,
-      completedCrop.height
+      completedCrop.height,
     );
 
     if (rotation > 0) {
@@ -106,11 +106,11 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
 
   return (
     <div className="flex flex-col items-center space-y-4">
-      <div 
+      <div
         className="relative max-w-full overflow-hidden"
-        style={{ 
+        style={{
           transform: `scale(${zoom})`,
-          transition: 'transform 0.3s ease'
+          transition: 'transform 0.3s ease',
         }}
       >
         <ReactCrop
@@ -127,7 +127,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
             style={{
               transform: `rotate(${rotation}deg)`,
               maxWidth: '100%',
-              transition: 'transform 0.3s ease'
+              transition: 'transform 0.3s ease',
             }}
           />
         </ReactCrop>
@@ -151,23 +151,13 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
           )}
 
           {showRotation && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRotate}
-              className="flex items-center"
-            >
+            <Button type="button" variant="outline" size="sm" onClick={handleRotate} className="flex items-center">
               <RotateCw className="mr-2 h-4 w-4" />
               Rotate
             </Button>
           )}
 
-          <Button
-            type="button"
-            onClick={generateCroppedImage}
-            className="w-full"
-          >
+          <Button type="button" onClick={generateCroppedImage} className="w-full">
             <Check className="mr-2 h-4 w-4" />
             Apply Crop
           </Button>

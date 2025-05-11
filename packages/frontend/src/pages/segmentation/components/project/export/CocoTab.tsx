@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SegmentationResult } from '@/lib/segmentation';
 import { CheckCircle, Clipboard, DownloadCloud } from 'lucide-react';
@@ -12,7 +11,7 @@ interface CocoTabProps {
 const CocoTab: React.FC<CocoTabProps> = ({ segmentation }) => {
   const [copied, setCopied] = useState(false);
   const cocoData = convertToCOCO(segmentation);
-  
+
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(cocoData).then(() => {
       setCopied(true);
@@ -21,7 +20,7 @@ const CocoTab: React.FC<CocoTabProps> = ({ segmentation }) => {
       }, 2000);
     });
   };
-  
+
   const handleDownload = () => {
     const blob = new Blob([cocoData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -33,31 +32,17 @@ const CocoTab: React.FC<CocoTabProps> = ({ segmentation }) => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-  
+
   return (
     <div className="flex-1 overflow-auto flex flex-col">
       <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
         <h3 className="font-medium">COCO formát (Common Objects in Context)</h3>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="h-8 text-xs" 
-            onClick={handleCopyToClipboard}
-          >
-            {copied ? (
-              <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-            ) : (
-              <Clipboard className="h-4 w-4 mr-1" />
-            )}
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleCopyToClipboard}>
+            {copied ? <CheckCircle className="h-4 w-4 mr-1 text-green-500" /> : <Clipboard className="h-4 w-4 mr-1" />}
             Kopírovat
           </Button>
-          <Button 
-            variant="default" 
-            size="sm"
-            className="h-8 text-xs" 
-            onClick={handleDownload}
-          >
+          <Button variant="default" size="sm" className="h-8 text-xs" onClick={handleDownload}>
             <DownloadCloud className="h-4 w-4 mr-1" />
             Stáhnout JSON
           </Button>

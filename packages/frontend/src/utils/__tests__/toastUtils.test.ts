@@ -9,8 +9,8 @@ vi.mock('react-hot-toast', () => ({
     error: vi.fn(),
     // Default toast function
     __esModule: true,
-    default: vi.fn()
-  }
+    default: vi.fn(),
+  },
 }));
 
 describe('toastUtils', () => {
@@ -22,7 +22,7 @@ describe('toastUtils', () => {
     it('should call toast.success with the correct parameters', () => {
       const message = 'Success message';
       showSuccess(message);
-      
+
       expect(toast.success).toHaveBeenCalledWith(message, {
         duration: 3000,
         style: {
@@ -38,7 +38,7 @@ describe('toastUtils', () => {
       const message = 'Success message';
       const customDuration = 5000;
       showSuccess(message, customDuration);
-      
+
       expect(toast.success).toHaveBeenCalledWith(message, {
         duration: customDuration,
         style: expect.any(Object),
@@ -50,7 +50,7 @@ describe('toastUtils', () => {
     it('should call toast.error with the correct parameters', () => {
       const message = 'Error message';
       showError(message);
-      
+
       expect(toast.error).toHaveBeenCalledWith(message, {
         duration: 4000,
         style: {
@@ -66,7 +66,7 @@ describe('toastUtils', () => {
       const message = 'Error message';
       const customDuration = 6000;
       showError(message, customDuration);
-      
+
       expect(toast.error).toHaveBeenCalledWith(message, {
         duration: customDuration,
         style: expect.any(Object),
@@ -78,7 +78,7 @@ describe('toastUtils', () => {
     it('should call toast with the correct parameters', () => {
       const message = 'Info message';
       showInfo(message);
-      
+
       expect(toast).toHaveBeenCalledWith(message, {
         duration: 3000,
         style: {
@@ -94,7 +94,7 @@ describe('toastUtils', () => {
       const message = 'Info message';
       const customDuration = 7000;
       showInfo(message, customDuration);
-      
+
       expect(toast).toHaveBeenCalledWith(message, {
         duration: customDuration,
         style: expect.any(Object),
@@ -106,7 +106,7 @@ describe('toastUtils', () => {
     it('should call toast with the correct parameters', () => {
       const message = 'Warning message';
       showWarning(message);
-      
+
       expect(toast).toHaveBeenCalledWith(message, {
         duration: 3500,
         style: {
@@ -123,7 +123,7 @@ describe('toastUtils', () => {
       const message = 'Warning message';
       const customDuration = 8000;
       showWarning(message, customDuration);
-      
+
       expect(toast).toHaveBeenCalledWith(message, {
         duration: customDuration,
         style: expect.any(Object),

@@ -1,6 +1,6 @@
 /**
  * Delete Project Dialog Component
- * 
+ *
  * A dialog for confirming project deletion with a more user-friendly interface
  * than the native browser confirm dialog.
  */
@@ -12,7 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,26 +65,26 @@ export function DeleteProjectDialog({
   open,
   onClose,
   onDelete,
-  navigateToDashboard = true
+  navigateToDashboard = true,
 }: DeleteProjectDialogProps) {
   const { t } = useLanguage();
-  
+
   // State for confirmation input
   const [confirmText, setConfirmText] = useState('');
   const [error, setError] = useState<string | null>(null);
-  
+
   // Use the project delete hook
   const {
     deleteProject,
     isDeleting,
-    error: deleteError
+    error: deleteError,
   } = useProjectDelete({
     onSuccess: (deletedId) => {
       logger.info('Project deleted successfully', { projectId: deletedId });
       if (onDelete) {
         onDelete(deletedId);
       }
-      
+
       // Auto-close dialog after deletion
       handleClose();
     },
@@ -93,9 +93,9 @@ export function DeleteProjectDialog({
     // Always navigate to dashboard after deletion for consistent behavior
     navigateToDashboard: true, // Always navigate to dashboard after deletion
     // Show toast notifications
-    showToasts: true
+    showToasts: true,
   });
-  
+
   /**
    * Handle deletion confirmation
    */
@@ -122,7 +122,7 @@ export function DeleteProjectDialog({
       // Error is already handled by the hook
     }
   };
-  
+
   /**
    * Handle dialog close
    */
@@ -131,13 +131,13 @@ export function DeleteProjectDialog({
     if (isDeleting) {
       return;
     }
-    
+
     // Reset form state
     setConfirmText('');
     setError(null);
     onClose();
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="sm:max-w-md">
@@ -147,24 +147,23 @@ export function DeleteProjectDialog({
             {t('projects.deleteProject') || 'Delete Project'}
           </DialogTitle>
           <DialogDescription>
-            {t('projects.deleteProjectDescription') || 
-             'This action cannot be undone. This will permanently delete the project and all associated data.'}
+            {t('projects.deleteProjectDescription') ||
+              'This action cannot be undone. This will permanently delete the project and all associated data.'}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-2">
           <Alert variant="destructive" className="bg-destructive/10">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              {t('projects.deleteWarning') || 
-               'You are about to delete the following project:'}
+              {t('projects.deleteWarning') || 'You are about to delete the following project:'}
             </AlertDescription>
           </Alert>
-          
+
           <div className="font-medium text-center py-2 border border-destructive/20 rounded-md bg-destructive/5">
             {projectTitle || t('projects.untitledProject') || 'Untitled Project'}
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="confirm-delete">
               {t('projects.typeToConfirm') || `Type "${projectTitle || ''}" to confirm`}
@@ -172,32 +171,26 @@ export function DeleteProjectDialog({
             <Input
               id="confirm-delete"
               value={confirmText}
-              onChange={e => setConfirmText(e.target.value)}
+              onChange={(e) => setConfirmText(e.target.value)}
               disabled={isDeleting}
               placeholder={projectTitle}
               className="border-destructive/50 focus:border-destructive"
               autoFocus
             />
           </div>
-          
+
           {(error || deleteError) && (
             <Alert variant="destructive">
-              <AlertDescription>
-                {error || deleteError}
-              </AlertDescription>
+              <AlertDescription>{error || deleteError}</AlertDescription>
             </Alert>
           )}
         </div>
-        
+
         <DialogFooter className="flex justify-between sm:justify-between">
-          <Button 
-            onClick={handleClose} 
-            variant="outline"
-            disabled={isDeleting}
-          >
+          <Button onClick={handleClose} variant="outline" disabled={isDeleting}>
             {t('common.cancel') || 'Cancel'}
           </Button>
-          
+
           <Button
             onClick={handleDelete}
             variant="destructive"
@@ -205,9 +198,7 @@ export function DeleteProjectDialog({
             className="gap-1"
           >
             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-            {isDeleting ? 
-              (t('projects.deleting') || 'Deleting...') : 
-              (t('projects.delete') || 'Delete')}
+            {isDeleting ? t('projects.deleting') || 'Deleting...' : t('projects.delete') || 'Delete'}
           </Button>
         </DialogFooter>
       </DialogContent>

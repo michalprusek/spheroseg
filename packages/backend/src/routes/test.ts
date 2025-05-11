@@ -11,8 +11,8 @@ const router: Router = express.Router();
 router.get('/', (_req: Request, res: Response) => {
   logger.debug('Test endpoint called');
   res.status(200).json({
-    status: "ok",
-    message: "API is working"
+    status: 'ok',
+    message: 'API is working',
   });
 });
 

@@ -1,6 +1,6 @@
 /**
  * Database Metrics Routes
- * 
+ *
  * API routes specifically for database monitoring and metrics
  */
 
@@ -22,21 +22,21 @@ router.get('/top-slow', authMiddleware, administratorAccessMiddleware, (req, res
   try {
     // Get query parameter for limit (optional)
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
-    
+
     // Get top slow queries
     const slowQueries = dbMonitoring.getTopSlowQueries(limit);
-    
+
     res.status(200).json({
       success: true,
       count: slowQueries.length,
-      data: slowQueries
+      data: slowQueries,
     });
   } catch (error) {
     logger.error('Error retrieving top slow queries', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve top slow queries',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -49,25 +49,25 @@ router.get('/top-slow', authMiddleware, administratorAccessMiddleware, (req, res
 router.get('/by-table/:table', authMiddleware, administratorAccessMiddleware, (req, res) => {
   try {
     const { table } = req.params;
-    
+
     // Get queries for the specified table
     const tableQueries = dbMonitoring.getQueryPatternsByTable(table);
-    
+
     res.status(200).json({
       success: true,
       count: tableQueries.length,
       table,
-      data: tableQueries
+      data: tableQueries,
     });
   } catch (error) {
-    logger.error('Error retrieving table query patterns', { 
+    logger.error('Error retrieving table query patterns', {
       error,
-      table: req.params.table
+      table: req.params.table,
     });
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve table query patterns',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -81,17 +81,17 @@ router.get('/frequency', authMiddleware, administratorAccessMiddleware, (req, re
   try {
     // Get query frequency stats
     const frequencyStats = dbMonitoring.getQueryFrequencyStats();
-    
+
     res.status(200).json({
       success: true,
-      data: frequencyStats
+      data: frequencyStats,
     });
   } catch (error) {
     logger.error('Error retrieving query frequency statistics', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve query frequency statistics',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -104,24 +104,24 @@ router.get('/frequency', authMiddleware, administratorAccessMiddleware, (req, re
 router.post('/export', authMiddleware, administratorAccessMiddleware, async (req, res) => {
   try {
     const { path } = req.body;
-    
+
     // Default path if not provided
     const exportPath = path || 'monitoring/data/query_patterns.json';
-    
+
     // Export patterns
     await exportPatterns.exportPatternsToJson(exportPath);
-    
+
     res.status(200).json({
       success: true,
       message: 'Query patterns exported successfully',
-      path: exportPath
+      path: exportPath,
     });
   } catch (error) {
     logger.error('Error exporting query patterns', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to export query patterns',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -134,20 +134,20 @@ router.post('/export', authMiddleware, administratorAccessMiddleware, async (req
 router.post('/export-dashboard', authMiddleware, administratorAccessMiddleware, async (req, res) => {
   try {
     const { outputDir } = req.body;
-    
+
     // Export to Grafana
     await exportPatterns.exportToGrafana(outputDir);
-    
+
     res.status(200).json({
       success: true,
-      message: 'Grafana dashboard exported successfully'
+      message: 'Grafana dashboard exported successfully',
     });
   } catch (error) {
     logger.error('Error exporting Grafana dashboard', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to export Grafana dashboard',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -161,17 +161,17 @@ router.post('/reset', authMiddleware, administratorAccessMiddleware, (req, res) 
   try {
     // Reset pattern statistics
     dbMonitoring.resetPatternStats();
-    
+
     res.status(200).json({
       success: true,
-      message: 'Query pattern statistics reset successfully'
+      message: 'Query pattern statistics reset successfully',
     });
   } catch (error) {
     logger.error('Error resetting query pattern statistics', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to reset query pattern statistics',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

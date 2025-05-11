@@ -6,7 +6,7 @@ import '@testing-library/jest-dom';
 
 // Mock dependencies
 vi.mock('@/contexts/LanguageContext', () => ({
-  useLanguage: () => ({ t: (key: string) => key })
+  useLanguage: () => ({ t: (key: string) => key }),
 }));
 
 // Mock framer-motion to avoid animation issues in tests
@@ -66,11 +66,9 @@ describe('KeyboardShortcutsHelp', () => {
     fireEvent.click(screen.getByText('shortcuts.title'));
 
     // Check for all expected shortcuts
-    const expectedShortcuts = [
-      'V', 'E', 'A', 'C', 'S', 'Ctrl+Z', 'Ctrl+Y', 'Delete', 'Esc', '+', '-', 'R', 'Ctrl+S'
-    ];
+    const expectedShortcuts = ['V', 'E', 'A', 'C', 'S', 'Ctrl+Z', 'Ctrl+Y', 'Delete', 'Esc', '+', '-', 'R', 'Ctrl+S'];
 
-    expectedShortcuts.forEach(shortcut => {
+    expectedShortcuts.forEach((shortcut) => {
       expect(screen.getByText(shortcut)).toBeInTheDocument();
     });
   });

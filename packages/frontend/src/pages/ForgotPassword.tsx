@@ -1,18 +1,18 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { useLanguage } from "@/contexts/LanguageContext";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { Loader2 } from "lucide-react";
+import { Loader2 } from 'lucide-react';
 
 const ForgotPassword = () => {
   const { t } = useLanguage();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -31,12 +31,14 @@ const ForgotPassword = () => {
     // The backend should handle sending the reset link to the user's email.
     try {
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       // Assume success for now
       setIsSubmitted(true);
-      toast.success(t('auth.passwordResetLinkSent') || 'If an account exists for this email, a password reset link has been sent.');
+      toast.success(
+        t('auth.passwordResetLinkSent') || 'If an account exists for this email, a password reset link has been sent.',
+      );
     } catch (error) {
-      console.error("Password reset request error:", error);
+      console.error('Password reset request error:', error);
       toast.error(t('auth.passwordResetFailed') || 'Failed to send password reset link. Please try again.');
     } finally {
       setIsLoading(false);
@@ -57,10 +59,7 @@ const ForgotPassword = () => {
       <Card className="w-full max-w-md shadow-xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-gray-200 dark:border-gray-700/50 rounded-lg overflow-hidden">
         <CardHeader className="p-6 text-center">
           <div className="flex justify-center mb-4">
-            <Link
-              to="/"
-              className="inline-flex items-center justify-center mx-auto mb-4"
-            >
+            <Link to="/" className="inline-flex items-center justify-center mx-auto mb-4">
               <div className="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center shadow-md">
                 <span className="text-white font-bold text-xl">S</span>
               </div>
@@ -100,7 +99,9 @@ const ForgotPassword = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {t('auth.sendingResetLink')}
                   </>
-                ) : t('auth.sendResetLink')}
+                ) : (
+                  t('auth.sendResetLink')
+                )}
               </Button>
             </form>
           )}

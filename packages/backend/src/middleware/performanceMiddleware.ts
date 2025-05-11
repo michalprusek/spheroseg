@@ -84,11 +84,15 @@ export const performanceMonitoring = () => {
 
       // Determine log level based on thresholds
       let logLevel = 'info';
-      if (durationMs > PERFORMANCE_THRESHOLDS.duration.error ||
-          endMemory.heapUsed > PERFORMANCE_THRESHOLDS.memory.error) {
+      if (
+        durationMs > PERFORMANCE_THRESHOLDS.duration.error ||
+        endMemory.heapUsed > PERFORMANCE_THRESHOLDS.memory.error
+      ) {
         logLevel = 'error';
-      } else if (durationMs > PERFORMANCE_THRESHOLDS.duration.warn ||
-                endMemory.heapUsed > PERFORMANCE_THRESHOLDS.memory.warn) {
+      } else if (
+        durationMs > PERFORMANCE_THRESHOLDS.duration.warn ||
+        endMemory.heapUsed > PERFORMANCE_THRESHOLDS.memory.warn
+      ) {
         logLevel = 'warn';
       }
 

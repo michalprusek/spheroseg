@@ -22,6 +22,69 @@ export enum LogLevel {
   DEBUG = 3,
 }
 
+// Whether to send logs to the server
+const SEND_LOGS_TO_SERVER = process.env.NODE_ENV === 'production';
+const LOG_ENDPOINT = '/api/logs';
+
+// Queue of logs to be sent to the server
+const logQueue: LogEntry[] = [];
+let isSendingLogs = false;
+
+// Send logs to the server in batches
+const sendLogsToServer = async () => {
+  if (isSendingLogs || logQueue.length === 0) return;
+
+  try {
+    isSendingLogs = true;
+
+    // Take up to 50 logs from the queue
+    const logsToSend = logQueue.splice(0, 50);
+
+    // Send logs to the server
+    const response = await fetch(LOG_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        logs: logsToSend,
+        source: 'frontend',
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to send logs: ${response.status} ${response.statusText}`);
+    }
+  } catch (error) {
+    // If sending logs fails, put them back in the queue
+    console.error('Failed to send logs to server:', error);
+  } finally {
+    isSendingLogs = false;
+
+    // If there are more logs in the queue, schedule sending them
+    if (logQueue.length > 0) {
+      setTimeout(sendLogsToServer, 1000);
+    }
+  }
+};
+
+// Add log to the server queue
+const addToServerQueue = (entry: LogEntry) => {
+  if (!SEND_LOGS_TO_SERVER) return;
+
+  // Only send ERROR and WARN logs to the server
+  if (entry.level <= LogLevel.WARN) {
+    logQueue.push(entry);
+
+    // Schedule sending logs to the server
+    if (!isSendingLogs) {
+      setTimeout(sendLogsToServer, 1000);
+    }
+  }
+};
+
 // Create a simplified logger without external dependencies
 const createLogger = (namespace: string) => {
   return {
@@ -32,13 +95,55 @@ const createLogger = (namespace: string) => {
     },
     info(message: string, ...args: any[]) {
       console.info(`[${namespace}] ${message}`, ...args);
+
+      // If first arg is an error object, extract stack trace
+      const errorData =
+        args[0] instanceof Error
+          ? {
+              message: args[0].message,
+              stack: args[0].stack,
+              name: args[0].name,
+            }
+          : args[0];
+
+      const entry = createLogEntry(LogLevel.INFO, `[${namespace}] ${message}`, errorData);
+      addToMemoryLogs(entry);
+      addToServerQueue(entry);
     },
     warn(message: string, ...args: any[]) {
       console.warn(`[${namespace}] ${message}`, ...args);
+
+      // If first arg is an error object, extract stack trace
+      const errorData =
+        args[0] instanceof Error
+          ? {
+              message: args[0].message,
+              stack: args[0].stack,
+              name: args[0].name,
+            }
+          : args[0];
+
+      const entry = createLogEntry(LogLevel.WARN, `[${namespace}] ${message}`, errorData);
+      addToMemoryLogs(entry);
+      addToServerQueue(entry);
     },
     error(message: string, ...args: any[]) {
       console.error(`[${namespace}] ${message}`, ...args);
-    }
+
+      // If first arg is an error object, extract stack trace
+      const errorData =
+        args[0] instanceof Error
+          ? {
+              message: args[0].message,
+              stack: args[0].stack,
+              name: args[0].name,
+            }
+          : args[0];
+
+      const entry = createLogEntry(LogLevel.ERROR, `[${namespace}] ${message}`, errorData);
+      addToMemoryLogs(entry);
+      addToServerQueue(entry);
+    },
   };
 };
 

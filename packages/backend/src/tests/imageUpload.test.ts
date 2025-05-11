@@ -12,15 +12,15 @@ jest.mock('../config', () => ({
     port: 3000,
     host: 'localhost',
     corsOrigins: ['http://localhost:3000'],
-    publicUrl: 'http://localhost:3000'
+    publicUrl: 'http://localhost:3000',
   },
   storage: {
     uploadDir: '/tmp/uploads',
     avatarDir: '/tmp/uploads/avatars',
     processingDir: '/tmp/uploads/processing',
-    thumbSize: 200
+    thumbSize: 200,
   },
-  baseUrl: 'http://localhost:3000'
+  baseUrl: 'http://localhost:3000',
 }));
 
 // Mock database
@@ -41,9 +41,9 @@ jest.mock('../db', () => ({
             thumbnail_path: params[4],
             width: params[5],
             height: params[6],
-            metadata: params[7]
-          }
-        ]
+            metadata: params[7],
+          },
+        ],
       };
     }
     return { rows: [] };
@@ -62,16 +62,16 @@ jest.mock('../db', () => ({
               thumbnail_path: params[4],
               width: params[5],
               height: params[6],
-              metadata: params[7]
-            }
-          ]
+              metadata: params[7],
+            },
+          ],
         };
       }
       return { rows: [] };
     }),
     release: jest.fn(),
-    query: jest.fn().mockResolvedValue({ rows: [] })
-  })
+    query: jest.fn().mockResolvedValue({ rows: [] }),
+  }),
 }));
 
 // Mock fs module
@@ -80,16 +80,18 @@ jest.mock('fs', () => ({
   mkdirSync: jest.fn(),
   unlinkSync: jest.fn(),
   promises: {
-    mkdir: jest.fn().mockResolvedValue(undefined)
-  }
+    mkdir: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 
 // Mock sharp module
-jest.mock('sharp', () => jest.fn(() => ({
-  metadata: jest.fn().mockResolvedValue({ width: 800, height: 600, format: 'jpeg' }),
-  resize: jest.fn().mockReturnThis(),
-  toFile: jest.fn().mockResolvedValue({})
-})));
+jest.mock('sharp', () =>
+  jest.fn(() => ({
+    metadata: jest.fn().mockResolvedValue({ width: 800, height: 600, format: 'jpeg' }),
+    resize: jest.fn().mockReturnThis(),
+    toFile: jest.fn().mockResolvedValue({}),
+  })),
+);
 
 // Mock multer module
 jest.mock('multer', () => {
@@ -104,11 +106,11 @@ jest.mock('multer', () => {
           destination: '/tmp/uploads/test-project-id',
           filename: 'test-image-123456.jpg',
           path: '/tmp/uploads/test-project-id/test-image-123456.jpg',
-          size: 12345
-        }
+          size: 12345,
+        },
       ];
       next();
-    })
+    }),
   }));
   multerMock.diskStorage = jest.fn();
   return multerMock;
@@ -119,7 +121,7 @@ jest.mock('../utils/logger', () => ({
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
-  debug: jest.fn()
+  debug: jest.fn(),
 }));
 
 // Mock authentication middleware
@@ -142,16 +144,16 @@ jest.mock('../utils/imageUtils.unified', () => ({
     formatImageForApi: jest.fn().mockImplementation((image) => ({
       ...image,
       storage_path: `http://localhost:3000/uploads/test-project-id/test-image.jpg`,
-      thumbnail_path: `http://localhost:3000/uploads/test-project-id/thumb-test-image.jpg`
+      thumbnail_path: `http://localhost:3000/uploads/test-project-id/thumb-test-image.jpg`,
     })),
     verifyImageFilesForApi: jest.fn().mockImplementation((image) => ({ ...image, file_exists: true })),
-    deleteFile: jest.fn().mockResolvedValue(undefined)
+    deleteFile: jest.fn().mockResolvedValue(undefined),
   },
   fileExists: jest.fn().mockResolvedValue(true),
   getImageMetadata: jest.fn().mockResolvedValue({ width: 800, height: 600, format: 'jpeg' }),
   createThumbnail: jest.fn().mockResolvedValue(undefined),
   dbPathToFilesystemPath: jest.fn().mockReturnValue('/tmp/uploads/test-project-id/test-image.jpg'),
-  normalizePathForDb: jest.fn().mockReturnValue('/uploads/test-project-id/test-image.jpg')
+  normalizePathForDb: jest.fn().mockReturnValue('/uploads/test-project-id/test-image.jpg'),
 }));
 
 // Import after all mocks have been defined
@@ -190,7 +192,7 @@ describe('Image Upload API', () => {
     it('should return 404 if project does not exist', async () => {
       // Mock db.query to return empty rows for project check
       const db = require('../db');
-      
+
       // Použijeme typově bezpečnou implementaci
       (db.query as jest.Mock).mockImplementationOnce((query: unknown) => {
         // Testujeme SELECT projekt

@@ -4,6 +4,7 @@
  */
 import express, { Response, Router } from 'express';
 import bcryptjs from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 import pool from '../db';
 import { validate } from '../middleware/validationMiddleware';
 import {
@@ -14,7 +15,7 @@ import {
   refreshTokenSchema,
   RegisterRequest,
   LoginRequest,
-  RefreshTokenRequest
+  RefreshTokenRequest,
 } from '../validators/authValidators';
 import authMiddleware, { AuthenticatedRequest, optionalAuthMiddleware } from '../middleware/authMiddleware';
 import logger from '../utils/logger';
@@ -42,58 +43,98 @@ router.post('/register', validate(registerSchema), async (req: express.Request, 
     // Hash password
     const saltRounds = 10;
     const passwordHash = await bcryptjs.hash(password, saltRounds);
-    
+
+    // Generate new UUID for the user
+    const newUserId = uuidv4();
+    logger.debug('Generated newUserId for registration', {
+      newUserId,
+      email,
+    });
+
     // Begin transaction
     await pool.query('BEGIN');
+    let userId: string;
+    let userEmail: string;
+    let userName: string | undefined;
 
     try {
       // Insert new user
       const result = await pool.query(
-        'INSERT INTO users (email, password_hash, name, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id, email, name, created_at',
-        [email, passwordHash, name || email.split('@')[0]] // Use part of email as default name if not provided
+        'INSERT INTO users (id, email, password_hash, name, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING id, email, name, created_at',
+        [newUserId, email, passwordHash, name || email.split('@')[0]], // Use part of email as default name if not provided
       );
 
-      const userId = result.rows[0].id;
+      userId = result.rows[0].id;
+      userEmail = result.rows[0].email;
+      userName = result.rows[0].name; // Capture name for token response
+      logger.debug('User inserted into DB, obtained userId', {
+        userId,
+        email: userEmail,
+      });
 
       // Create user profile if preferred_language is provided
       if (preferred_language) {
         await pool.query(
           'INSERT INTO user_profiles (user_id, preferred_language, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())',
-          [userId, preferred_language]
+          [userId, preferred_language],
         );
       }
 
-      // Create tutorial project for the new user
-      try {
-        await tutorialProjectService.createTutorialProject(pool, userId);
-        logger.info('Tutorial project created for new user', { userId });
-      } catch (tutorialError) {
-        logger.warn('Failed to create tutorial project, continuing with registration', { 
-          error: tutorialError, 
-          userId 
-        });
-        // Don't fail registration if tutorial project creation fails
-      }
-
-      // Commit transaction
+      // Commit transaction for user and profile creation
       await pool.query('COMMIT');
-
-      // Generate tokens
-      const tokenResponse = await tokenService.createTokenResponse(userId, email);
-
-      logger.info('User registered successfully', { userId, email });
-      res.status(201).json({ 
-        user: result.rows[0],
-        ...tokenResponse
+      logger.info('User and profile DB transaction committed', {
+        userId,
+        email: userEmail,
       });
     } catch (error) {
       // Rollback transaction on error
       await pool.query('ROLLBACK');
+      logger.error('Error during user/profile DB transaction', {
+        error,
+        email,
+      });
+      // Re-throw the error to be caught by the outer catch block
       throw error;
     }
+
+    // Create tutorial project for the new user - AFTER user transaction is committed
+    try {
+      logger.debug('Attempting to create tutorial project with userId', {
+        userIdFromRegistration: userId,
+        email: userEmail,
+      });
+      await tutorialProjectService.createTutorialProject(pool, userId);
+      logger.info('Tutorial project creation initiated/completed for new user', { userId });
+    } catch (tutorialError) {
+      logger.warn('Failed to create tutorial project (non-critical), continuing with registration', {
+        error: tutorialError,
+        userId,
+      });
+      // Don't fail registration if tutorial project creation fails
+    }
+
+    // Generate tokens
+    // Use userEmail and userId obtained before the try-catch for tutorial project
+    const tokenResponse = await tokenService.createTokenResponse(userId, userEmail);
+
+    logger.info('User registered successfully', { userId, email: userEmail });
+    res.status(201).json({
+      user: {
+        id: userId,
+        email: userEmail,
+        name: userName,
+        created_at: new Date(),
+      }, // Reconstruct user object for response
+      ...tokenResponse,
+    });
   } catch (error) {
     logger.error('Registration error', { error, email });
-    res.status(500).json({ message: 'Failed to register user', error: (error as Error).message });
+    // Ensure that if error originated from DB transaction, it's handled
+    // The main DB transaction error is re-thrown and caught here.
+    res.status(500).json({
+      message: 'Failed to register user',
+      error: (error as Error).message,
+    });
   }
 });
 
@@ -105,10 +146,9 @@ router.post('/login', validate(loginSchema), async (req: express.Request, res: R
     logger.info('Processing login request', { email });
 
     // Find user by email
-    const result = await pool.query(
-      'SELECT id, email, name, password_hash, created_at FROM users WHERE email = $1',
-      [email]
-    );
+    const result = await pool.query('SELECT id, email, name, password_hash, created_at FROM users WHERE email = $1', [
+      email,
+    ]);
 
     if (result.rows.length === 0) {
       logger.warn('Login attempt with non-existent email', { email });
@@ -125,10 +165,12 @@ router.post('/login', validate(loginSchema), async (req: express.Request, res: R
     }
 
     // Generate tokens with longer expiry if remember_me is true
-    const tokenOptions = remember_me ? { 
-      accessTokenExpiry: '1d',
-      refreshTokenExpiry: '30d'
-    } : {};
+    const tokenOptions = remember_me
+      ? {
+          accessTokenExpiry: '1d',
+          refreshTokenExpiry: '30d',
+        }
+      : {};
 
     // Generate tokens
     const accessToken = tokenService.generateAccessToken(user.id, user.email);
@@ -146,7 +188,7 @@ router.post('/login', validate(loginSchema), async (req: express.Request, res: R
       FROM user_profiles
       WHERE user_id = $1
     `;
-    
+
     const profileRecord = await pool.query(profileQuery, [user.id]);
     const profileData = profileRecord.rows.length > 0 ? profileRecord.rows[0] : {};
 
@@ -157,11 +199,11 @@ router.post('/login', validate(loginSchema), async (req: express.Request, res: R
     res.json({
       user: {
         ...user,
-        ...profileData
+        ...profileData,
       },
       accessToken,
       refreshToken,
-      tokenType: 'Bearer'
+      tokenType: 'Bearer',
     });
   } catch (error) {
     logger.error('Login error', { error, email });
@@ -193,11 +235,11 @@ router.post('/refresh', validate(refreshTokenSchema), async (req: express.Reques
     res.json({
       accessToken,
       refreshToken: newRefreshToken,
-      tokenType: 'Bearer'
+      tokenType: 'Bearer',
     });
   } catch (error) {
     logger.warn('Token refresh failed', { error });
-    
+
     // Provide specific error messages for common failure cases
     if (error instanceof Error) {
       if (error.message.includes('expired')) {
@@ -208,7 +250,7 @@ router.post('/refresh', validate(refreshTokenSchema), async (req: express.Reques
         return res.status(401).json({ message: 'Invalid refresh token', code: 'invalid_token' });
       }
     }
-    
+
     res.status(401).json({ message: 'Invalid refresh token', code: 'invalid_token' });
   }
 });
@@ -224,8 +266,12 @@ router.post('/forgot-password', validate(forgotPasswordSchema), async (req: expr
     const result = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
     if (result.rows.length === 0) {
       // Don't reveal that email doesn't exist for security
-      logger.info('Forgot password request for non-existent email', { email });
-      return res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent' });
+      logger.info('Forgot password request for non-existent email', {
+        email,
+      });
+      return res.status(200).json({
+        message: 'If an account with that email exists, a password reset link has been sent',
+      });
     }
 
     const userId = result.rows[0].id;
@@ -241,16 +287,16 @@ router.post('/forgot-password', validate(forgotPasswordSchema), async (req: expr
 
     await pool.query(
       'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at, created_at) VALUES ($1, $2, $3, NOW())',
-      [userId, resetTokenHash, expiryTime]
+      [userId, resetTokenHash, expiryTime],
     );
 
     // In a real application, send email with reset link
     // For now, just return success message
     logger.info('Password reset token created', { userId });
-    res.json({ 
+    res.json({
       message: 'If an account with that email exists, a password reset link has been sent',
       // Include token in response for development/testing only
-      resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined
+      resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined,
     });
   } catch (error) {
     logger.error('Forgot password error', { error, email });
@@ -303,10 +349,10 @@ router.post('/reset-password', validate(resetPasswordSchema), async (req: expres
     try {
       await pool.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [passwordHash, userId]);
       await pool.query('DELETE FROM password_reset_tokens WHERE id = $1', [tokenId]);
-      
+
       // Revoke all refresh tokens for this user for security
       await tokenService.revokeAllUserTokens(userId);
-      
+
       await pool.query('COMMIT');
 
       logger.info('Password reset successful', { userId });
@@ -332,13 +378,12 @@ router.post('/logout', optionalAuthMiddleware, async (req: AuthenticatedRequest,
       try {
         // Try to get the token ID from the refresh token
         const [, jti] = refreshToken.split('.');
-        
+
         if (jti) {
           // Revoke the specific token
-          await pool.query(
-            'UPDATE refresh_tokens SET is_revoked = true, updated_at = NOW() WHERE token_id = $1',
-            [jti]
-          );
+          await pool.query('UPDATE refresh_tokens SET is_revoked = true, updated_at = NOW() WHERE token_id = $1', [
+            jti,
+          ]);
           logger.info('Refresh token revoked on logout', { jti });
         }
       } catch (error) {
@@ -374,7 +419,7 @@ router.post('/revoke', authMiddleware, async (req: AuthenticatedRequest, res: Re
 
     // Revoke all refresh tokens for this user
     await tokenService.revokeAllUserTokens(userId);
-    
+
     res.json({ message: 'All sessions revoked successfully' });
   } catch (error) {
     logger.error('Error revoking sessions', { error, userId });
@@ -394,10 +439,7 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
     logger.info('Fetching current user data', { userId });
 
     // Get user data
-    const userResult = await pool.query(
-      'SELECT id, email, name, created_at FROM users WHERE id = $1',
-      [userId]
-    );
+    const userResult = await pool.query('SELECT id, email, name, created_at FROM users WHERE id = $1', [userId]);
 
     if (userResult.rows.length === 0) {
       logger.warn('User not found in database', { userId });
@@ -419,14 +461,14 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
       FROM user_profiles
       WHERE user_id = $1
     `;
-    
+
     const profileResult = await pool.query(profileQuery, [userId]);
     const profileData = profileResult.rows.length > 0 ? profileResult.rows[0] : {};
 
     // Return combined data
     res.json({
       ...userResult.rows[0],
-      ...profileData
+      ...profileData,
     });
   } catch (error) {
     logger.error('Error fetching current user', { error, userId });

@@ -14,10 +14,7 @@ interface SegmentationEditorV2Props {
   imageId?: string;
 }
 
-export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({
-  projectId,
-  imageId,
-}) => {
+export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ projectId, imageId }) => {
   // Create a ref for the canvas
   const canvasRef = React.useRef<HTMLDivElement>(null);
 
@@ -74,7 +71,7 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({
     tempPoints,
     setTempPoints,
     setInteractionState,
-    setEditMode
+    setEditMode,
   });
 
   // Handle imageId changes
@@ -87,7 +84,9 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({
         console.log(`[SegmentationEditorV2] Need to update URL from ${imageId} to ${imageData.actualId}`);
 
         // Update the URL using react-router
-        navigate(`/projects/${projectId}/segmentation/${imageData.actualId}`, { replace: true });
+        navigate(`/projects/${projectId}/segmentation/${imageData.actualId}`, {
+          replace: true,
+        });
 
         // Note: Using replace: true to avoid adding to browser history
         // This prevents back button from going to the wrong image ID
@@ -97,16 +96,16 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({
 
   // Zoom handlers
   const handleZoomIn = () => {
-    setTransform(prev => ({
+    setTransform((prev) => ({
       ...prev,
-      zoom: prev.zoom * 1.2
+      zoom: prev.zoom * 1.2,
     }));
   };
 
   const handleZoomOut = () => {
-    setTransform(prev => ({
+    setTransform((prev) => ({
       ...prev,
-      zoom: prev.zoom / 1.2
+      zoom: prev.zoom / 1.2,
     }));
   };
 
@@ -114,10 +113,7 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({
     if (!imageData || !canvasRef.current) return;
 
     const canvasRect = canvasRef.current.getBoundingClientRect();
-    const initialZoom = Math.min(
-      canvasRect.width / imageData.width,
-      canvasRect.height / imageData.height
-    );
+    const initialZoom = Math.min(canvasRect.width / imageData.width, canvasRect.height / imageData.height);
 
     const tx = canvasRect.width / 2 - (imageData.width / 2) * initialZoom;
     const ty = canvasRect.height / 2 - (imageData.height / 2) * initialZoom;
@@ -125,7 +121,7 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({
     setTransform({
       zoom: initialZoom,
       translateX: tx,
-      translateY: ty
+      translateY: ty,
     });
   };
 
@@ -171,7 +167,11 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({
       }
     } catch (error) {
       console.error('Error during resegmentation:', error);
-      toast.error(t('segmentation.resegment.error.exception', { error: (error as Error).message }));
+      toast.error(
+        t('segmentation.resegment.error.exception', {
+          error: (error as Error).message,
+        }),
+      );
     } finally {
       setIsResegmenting(false);
     }

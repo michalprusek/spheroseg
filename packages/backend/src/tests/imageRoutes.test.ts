@@ -44,7 +44,7 @@ describe('Image Routes', () => {
     app.use((req: Request, res: Response, next: NextFunction) => {
       (req as AuthenticatedRequest).user = {
         userId: testUserId,
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
       next();
     });
@@ -79,18 +79,18 @@ describe('Image Routes', () => {
           storage_path: '/uploads/test-project/test-image.jpg',
           thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
           created_at: '2023-01-01T00:00:00.000Z',
-          updated_at: '2023-01-01T00:00:00.000Z'
-        }
+          updated_at: '2023-01-01T00:00:00.000Z',
+        },
       ];
 
       // Mock project check
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{ id: testProjectId }]
+        rows: [{ id: testProjectId }],
       }));
 
       // Mock image query
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: mockImages
+        rows: mockImages,
       }));
 
       const response = await request(app)
@@ -106,7 +106,7 @@ describe('Image Routes', () => {
     it('should return 404 if project not found', async () => {
       // Mock project check - no project found
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: []
+        rows: [],
       }));
 
       const response = await request(app)
@@ -130,17 +130,17 @@ describe('Image Routes', () => {
         storage_path: '/uploads/test-project/test-image.jpg',
         thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
         created_at: '2023-01-01T00:00:00.000Z',
-        updated_at: '2023-01-01T00:00:00.000Z'
+        updated_at: '2023-01-01T00:00:00.000Z',
       };
 
       // Mock project check
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{ id: testProjectId }]
+        rows: [{ id: testProjectId }],
       }));
 
       // Mock image query
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [mockImage]
+        rows: [mockImage],
       }));
 
       // Mock file existence check
@@ -158,12 +158,12 @@ describe('Image Routes', () => {
     it('should return 404 if image not found', async () => {
       // Mock project check
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{ id: testProjectId }]
+        rows: [{ id: testProjectId }],
       }));
 
       // Mock image query - no image found
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: []
+        rows: [],
       }));
 
       const response = await request(app)
@@ -182,22 +182,22 @@ describe('Image Routes', () => {
       const mockImage = {
         id: testImageId,
         storage_path: '/uploads/test-project/test-image.jpg',
-        thumbnail_path: '/uploads/test-project/thumb-test-image.jpg'
+        thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
       };
 
       // Mock project check
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{ id: testProjectId }]
+        rows: [{ id: testProjectId }],
       }));
 
       // Mock image query
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [mockImage]
+        rows: [mockImage],
       }));
 
       // Mock delete query
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: []
+        rows: [],
       }));
 
       // Mock file existence check
@@ -215,12 +215,12 @@ describe('Image Routes', () => {
     it('should return 404 if image not found', async () => {
       // Mock project check
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{ id: testProjectId }]
+        rows: [{ id: testProjectId }],
       }));
 
       // Mock image query - no image found
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: []
+        rows: [],
       }));
 
       const response = await request(app)
@@ -239,17 +239,17 @@ describe('Image Routes', () => {
       // Mock database responses
       const mockImage = {
         id: testImageId,
-        storage_path: '/uploads/test-project/test-image.jpg'
+        storage_path: '/uploads/test-project/test-image.jpg',
       };
 
       // Mock project check
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{ id: testProjectId }]
+        rows: [{ id: testProjectId }],
       }));
 
       // Mock image query
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [mockImage]
+        rows: [mockImage],
       }));
 
       // Mock file existence check
@@ -268,17 +268,17 @@ describe('Image Routes', () => {
       // Mock database responses
       const mockImage = {
         id: testImageId,
-        storage_path: '/uploads/test-project/test-image.jpg'
+        storage_path: '/uploads/test-project/test-image.jpg',
       };
 
       // Mock project check
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{ id: testProjectId }]
+        rows: [{ id: testProjectId }],
       }));
 
       // Mock image query
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [mockImage]
+        rows: [mockImage],
       }));
 
       // Mock file existence check - file doesn't exist
@@ -296,12 +296,12 @@ describe('Image Routes', () => {
     it('should return 404 if image not found', async () => {
       // Mock project check
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{ id: testProjectId }]
+        rows: [{ id: testProjectId }],
       }));
 
       // Mock image query - no image found
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: []
+        rows: [],
       }));
 
       const response = await request(app)
@@ -319,12 +319,14 @@ describe('Image Routes', () => {
     it('should redirect DELETE /api/images/:id to the new route', async () => {
       // Mock image query with project_id
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{
-          id: testImageId,
-          project_id: testProjectId,
-          storage_path: '/uploads/test-project/test-image.jpg',
-          thumbnail_path: '/uploads/test-project/thumb-test-image.jpg'
-        }]
+        rows: [
+          {
+            id: testImageId,
+            project_id: testProjectId,
+            storage_path: '/uploads/test-project/test-image.jpg',
+            thumbnail_path: '/uploads/test-project/thumb-test-image.jpg',
+          },
+        ],
       }));
 
       const response = await request(app)
@@ -339,11 +341,13 @@ describe('Image Routes', () => {
     it('should redirect GET /api/verify/:id to the new route', async () => {
       // Mock image query with project_id
       (pool.query as jest.Mock).mockImplementationOnce(() => ({
-        rows: [{
-          id: testImageId,
-          project_id: testProjectId,
-          storage_path: '/uploads/test-project/test-image.jpg'
-        }]
+        rows: [
+          {
+            id: testImageId,
+            project_id: testProjectId,
+            storage_path: '/uploads/test-project/test-image.jpg',
+          },
+        ],
       }));
 
       const response = await request(app)

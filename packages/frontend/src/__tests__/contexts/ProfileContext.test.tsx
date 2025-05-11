@@ -1,11 +1,11 @@
 import { vi } from 'vitest';
-import { ProfileProvider, useProfile } from '@/contexts/ProfileContext';
+import { useProfile } from '@/contexts/ProfileContext';
 
 // Mock the useAuth hook
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
-    user: { id: 'test-user-id', email: 'test@example.com' }
-  })
+    user: { id: 'test-user-id', email: 'test@example.com' },
+  }),
 }));
 
 // Mock the ProfileContext implementation
@@ -16,14 +16,14 @@ vi.mock('@/contexts/ProfileContext', () => ({
       username: 'testuser',
       full_name: 'Test User',
       bio: 'Test bio',
-      avatar_url: 'https://example.com/avatar.jpg'
+      avatar_url: 'https://example.com/avatar.jpg',
     },
     loading: false,
     updateProfile: vi.fn(),
     updateAvatar: vi.fn(),
-    removeAvatar: vi.fn()
+    removeAvatar: vi.fn(),
   }),
-  UserProfile: {}
+  UserProfile: {},
 }));
 
 describe('ProfileContext', () => {

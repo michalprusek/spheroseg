@@ -42,7 +42,7 @@ export const isKey = (event: KeyboardEvent, keys: KeyCode | KeyCode[]): boolean 
 export const handleKeyboardActivation = (
   event: KeyboardEvent,
   onActivate: () => void,
-  keys: KeyCode[] = [KeyCode.ENTER, KeyCode.SPACE]
+  keys: KeyCode[] = [KeyCode.ENTER, KeyCode.SPACE],
 ): void => {
   if (isKey(event, keys)) {
     event.preventDefault();
@@ -77,7 +77,7 @@ export const createFocusTrap = (containerId: string) => {
 
     // Get all focusable elements within the container
     const elements = container.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
 
     return Array.from(elements);
@@ -141,10 +141,7 @@ export const createFocusTrap = (containerId: string) => {
  * @param message Message to announce
  * @param priority Priority of the announcement (polite or assertive)
  */
-export const announceToScreenReader = (
-  message: string,
-  priority: 'polite' | 'assertive' = 'polite'
-): void => {
+export const announceToScreenReader = (message: string, priority: 'polite' | 'assertive' = 'polite'): void => {
   // Check if the live region already exists
   let liveRegion = document.getElementById(`sr-live-region-${priority}`);
 
@@ -161,7 +158,7 @@ export const announceToScreenReader = (
 
   // Update the live region with the message
   liveRegion.textContent = '';
-  
+
   // Use setTimeout to ensure the DOM update is recognized by screen readers
   setTimeout(() => {
     if (liveRegion) {
@@ -175,10 +172,7 @@ export const announceToScreenReader = (
  * @param elementRef Reference to the element to focus
  * @param restoreFocus Whether to restore focus to the previously focused element when unmounting
  */
-export const manageFocus = (
-  elementRef: React.RefObject<HTMLElement>,
-  restoreFocus = true
-): void => {
+export const manageFocus = (elementRef: React.RefObject<HTMLElement>, restoreFocus = true): void => {
   // Store the currently focused element
   const previouslyFocusedElement = document.activeElement as HTMLElement;
 
@@ -212,7 +206,7 @@ export const addSkipLink = (mainContentId: string): HTMLElement => {
     skipLink.href = `#${mainContentId}`;
     skipLink.textContent = 'Skip to main content';
     skipLink.className = 'skip-link';
-    
+
     // Style the skip link to be visually hidden until focused
     skipLink.style.position = 'absolute';
     skipLink.style.top = '-40px';
@@ -223,17 +217,17 @@ export const addSkipLink = (mainContentId: string): HTMLElement => {
     skipLink.style.color = '#000000';
     skipLink.style.textDecoration = 'none';
     skipLink.style.transition = 'top 0.2s ease-in-out';
-    
+
     // Show the skip link when focused
     skipLink.addEventListener('focus', () => {
       skipLink.style.top = '0';
     });
-    
+
     // Hide the skip link when blurred
     skipLink.addEventListener('blur', () => {
       skipLink.style.top = '-40px';
     });
-    
+
     // Add the skip link to the beginning of the body
     document.body.insertBefore(skipLink, document.body.firstChild);
   }

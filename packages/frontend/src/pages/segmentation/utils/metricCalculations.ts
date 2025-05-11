@@ -25,8 +25,8 @@ export interface PolygonMetrics {
 }
 
 // Convert polygon points to contour format for calculations
-const pointsToContour = (points: Array<{x: number, y: number}>): number[][] => {
-  return points.map(p => [p.x, p.y]);
+const pointsToContour = (points: Array<{ x: number; y: number }>): number[][] => {
+  return points.map((p) => [p.x, p.y]);
 };
 
 // Calculate area from contour
@@ -63,7 +63,7 @@ const calculatePerimeterFromContour = (contour: number[][]): number => {
 // Calculate equivalent diameter from contour
 const calculateEquivalentDiameterFromContour = (contour: number[][]): number => {
   const area = calculateAreaFromContour(contour);
-  return Math.sqrt(4 * area / Math.PI);
+  return Math.sqrt((4 * area) / Math.PI);
 };
 
 // Calculate convex hull of a contour
@@ -75,8 +75,7 @@ const calculateConvexHull = (contour: number[][]): number[][] => {
   let lowestPoint = contour[0];
   let lowestIndex = 0;
   for (let i = 1; i < contour.length; i++) {
-    if (contour[i][1] < lowestPoint[1] ||
-        (contour[i][1] === lowestPoint[1] && contour[i][0] < lowestPoint[0])) {
+    if (contour[i][1] < lowestPoint[1] || (contour[i][1] === lowestPoint[1] && contour[i][0] < lowestPoint[0])) {
       lowestPoint = contour[i];
       lowestIndex = i;
     }
@@ -121,14 +120,14 @@ const calculateConvexPerimeterFromContour = (contour: number[][]): number => {
 const calculateCircularityFromContour = (contour: number[][]): number => {
   const area = calculateAreaFromContour(contour);
   const convexPerimeter = calculateConvexPerimeterFromContour(contour);
-  return convexPerimeter ? (4 * Math.PI * area) / (convexPerimeter ** 2) : 0;
+  return convexPerimeter ? (4 * Math.PI * area) / convexPerimeter ** 2 : 0;
 };
 
 // Calculate compactness from contour
 const calculateCompactnessFromContour = (contour: number[][]): number => {
   const area = calculateAreaFromContour(contour);
   const perimeter = calculatePerimeterFromContour(contour);
-  return perimeter ? (4 * Math.PI * area) / (perimeter ** 2) : 0;
+  return perimeter ? (4 * Math.PI * area) / perimeter ** 2 : 0;
 };
 
 // Calculate convexity from contour
@@ -151,11 +150,11 @@ const calculateSolidityFromContour = (contour: number[][]): number => {
 const calculateSphericityFromContour = (contour: number[][]): number => {
   const area = calculateAreaFromContour(contour);
   const perimeter = calculatePerimeterFromContour(contour);
-  return perimeter ? Math.PI * Math.sqrt(4 * area / Math.PI) / perimeter : 0;
+  return perimeter ? (Math.PI * Math.sqrt((4 * area) / Math.PI)) / perimeter : 0;
 };
 
 // Calculate minimum area rectangle
-const calculateMinAreaRect = (contour: number[][]): { center: number[], size: number[], angle: number } => {
+const calculateMinAreaRect = (contour: number[][]): { center: number[]; size: number[]; angle: number } => {
   // Find the convex hull
   const hull = calculateConvexHull(contour);
 
@@ -214,12 +213,12 @@ const calculateMinAreaRect = (contour: number[][]): { center: number[], size: nu
       const centerY = centerProj1 * ny + centerProj2 * py;
 
       // Calculate the angle of the rectangle
-      const angle = Math.atan2(ny, nx) * 180 / Math.PI;
+      const angle = (Math.atan2(ny, nx) * 180) / Math.PI;
 
       minRect = {
         center: [centerX, centerY],
         size: [width, height],
-        angle: angle
+        angle: angle,
       };
     }
   }
@@ -228,7 +227,7 @@ const calculateMinAreaRect = (contour: number[][]): { center: number[], size: nu
 };
 
 // Calculate Feret properties from contour
-const calculateFeretPropertiesFromContour = (contour: number[][]): { max: number, min: number, ratio: number } => {
+const calculateFeretPropertiesFromContour = (contour: number[][]): { max: number; min: number; ratio: number } => {
   if (contour.length < 3) {
     return { max: 0, min: 0, ratio: 0 };
   }
@@ -244,7 +243,7 @@ const calculateFeretPropertiesFromContour = (contour: number[][]): { max: number
   return {
     max: feretDiameterMax,
     min: feretDiameterMin,
-    ratio: feretAspectRatio
+    ratio: feretAspectRatio,
   };
 };
 
@@ -259,7 +258,7 @@ const calculateOrthogonalDiameter = (contour: number[][]): number => {
 };
 
 // Calculate diameters through centroid
-const calculateDiametersFromContour = (contour: number[][]): { major: number, minor: number } => {
+const calculateDiametersFromContour = (contour: number[][]): { major: number; minor: number } => {
   if (contour.length < 3) {
     return { major: 0, minor: 0 };
   }
@@ -303,7 +302,7 @@ const calculateDiametersFromContour = (contour: number[][]): { major: number, mi
 
   return {
     major: majorAxisLength,
-    minor: minorAxisLength
+    minor: minorAxisLength,
   };
 };
 
@@ -312,14 +311,18 @@ const calculateDiametersFromContour = (contour: number[][]): { major: number, mi
  * @deprecated Use polygonUtils.calculateMetrics instead
  */
 export const calculateMetrics = (
-  polygon: { points: Array<{x: number, y: number}> },
-  holes: Array<{ points: Array<{x: number, y: number}> }> = []
+  polygon: { points: Array<{ x: number; y: number }> },
+  holes: Array<{ points: Array<{ x: number; y: number }> }> = [],
 ): PolygonMetrics => {
   try {
     // Use the centralized polygon utilities
     const metrics = polygonUtils.calculateMetrics(
       { id: 'temp', points: polygon.points, type: 'external' },
-      holes.map(hole => ({ id: 'temp-hole', points: hole.points, type: 'internal' }))
+      holes.map((hole) => ({
+        id: 'temp-hole',
+        points: hole.points,
+        type: 'internal',
+      })),
     );
 
     // Convert to the legacy format
@@ -337,7 +340,7 @@ export const calculateMetrics = (
       Compactness: metrics.compactness,
       Convexity: metrics.convexity,
       Solidity: metrics.solidity,
-      Sphericity: metrics.sphericity
+      Sphericity: metrics.sphericity,
     };
   } catch (error) {
     logger.error('Error calculating metrics:', { error });
@@ -357,7 +360,7 @@ export const calculateMetrics = (
       Compactness: 0,
       Convexity: 0,
       Solidity: 0,
-      Sphericity: 0
+      Sphericity: 0,
     };
   }
 };

@@ -22,21 +22,15 @@ vi.mock('../canvas/CanvasContainer', () => ({
     >
       {children}
     </div>
-  )
+  ),
 }));
 
 vi.mock('../canvas/CanvasContent', () => ({
-  default: ({ children }: any) => (
-    <div data-testid="canvas-content">
-      {children}
-    </div>
-  )
+  default: ({ children }: any) => <div data-testid="canvas-content">{children}</div>,
 }));
 
 vi.mock('../canvas/CanvasImage', () => ({
-  default: ({ src }: any) => (
-    <img data-testid="canvas-image" src={src} alt="mock" />
-  )
+  default: ({ src }: any) => <img data-testid="canvas-image" src={src} alt="mock" />,
 }));
 
 vi.mock('../canvas/CanvasPolygonLayer', () => ({
@@ -49,7 +43,7 @@ vi.mock('../canvas/CanvasPolygonLayer', () => ({
     >
       Polygon Layer
     </div>
-  )
+  ),
 }));
 
 vi.mock('../canvas/CanvasLoadingOverlay', () => ({
@@ -57,12 +51,12 @@ vi.mock('../canvas/CanvasLoadingOverlay', () => ({
     <div data-testid="canvas-loading-overlay" data-loading={loading}>
       {loading ? 'Loading...' : 'Not Loading'}
     </div>
-  )
+  ),
 }));
 
 // Mock the KeyboardShortcutsHelp component
 vi.mock('../KeyboardShortcutsHelp', () => ({
-  default: () => <div data-testid="keyboard-shortcuts-help">Keyboard Shortcuts</div>
+  default: () => <div data-testid="keyboard-shortcuts-help">Keyboard Shortcuts</div>,
 }));
 
 // Skip these tests for now due to complex mocking requirements
@@ -82,10 +76,10 @@ describe.skip('EditorCanvas', () => {
             { x: 100, y: 100 },
             { x: 200, y: 100 },
             { x: 200, y: 200 },
-            { x: 100, y: 200 }
-          ]
-        }
-      ]
+            { x: 100, y: 200 },
+          ],
+        },
+      ],
     } as SegmentationResult,
     zoom: 1,
     offset: { x: 0, y: 0 },
@@ -101,7 +95,7 @@ describe.skip('EditorCanvas', () => {
     pointAddingMode: {
       isActive: false,
       sourcePolygonId: null,
-      pointIndex: null
+      pointIndex: null,
     },
     cursorPosition: null as Point | null,
     sliceStartPoint: null as Point | null,
@@ -122,7 +116,7 @@ describe.skip('EditorCanvas', () => {
     onMouseDown: vi.fn(),
     onMouseMove: vi.fn(),
     onMouseUp: vi.fn(),
-    onMouseLeave: vi.fn()
+    onMouseLeave: vi.fn(),
   };
 
   it('renders loading state correctly', () => {
@@ -133,7 +127,7 @@ describe.skip('EditorCanvas', () => {
             <EditorCanvas {...defaultProps} loading={true} />
           </LanguageProvider>
         </AuthProvider>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByTestId('canvas-container')).toBeInTheDocument();
@@ -147,14 +141,10 @@ describe.skip('EditorCanvas', () => {
       <MemoryRouter>
         <AuthProvider>
           <LanguageProvider>
-            <EditorCanvas
-              {...defaultProps}
-              loading={false}
-              segmentation={null}
-            />
+            <EditorCanvas {...defaultProps} loading={false} segmentation={null} />
           </LanguageProvider>
         </AuthProvider>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByTestId('canvas-container')).toBeInTheDocument();
@@ -169,7 +159,7 @@ describe.skip('EditorCanvas', () => {
             <EditorCanvas {...defaultProps} />
           </LanguageProvider>
         </AuthProvider>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByTestId('canvas-container')).toBeInTheDocument();
@@ -183,13 +173,10 @@ describe.skip('EditorCanvas', () => {
       <MemoryRouter>
         <AuthProvider>
           <LanguageProvider>
-            <EditorCanvas
-              {...defaultProps}
-              selectedPolygonId="polygon-1"
-            />
+            <EditorCanvas {...defaultProps} selectedPolygonId="polygon-1" />
           </LanguageProvider>
         </AuthProvider>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const polygonLayer = screen.getByTestId('canvas-polygon-layer');
@@ -205,7 +192,7 @@ describe.skip('EditorCanvas', () => {
             <EditorCanvas {...defaultProps} />
           </LanguageProvider>
         </AuthProvider>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     fireEvent.click(screen.getByTestId('canvas-container'));
@@ -220,7 +207,7 @@ describe.skip('EditorCanvas', () => {
             <EditorCanvas {...defaultProps} />
           </LanguageProvider>
         </AuthProvider>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     fireEvent.click(screen.getByTestId('canvas-polygon-layer'));

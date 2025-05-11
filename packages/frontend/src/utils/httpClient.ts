@@ -40,7 +40,7 @@ axiosInstance.interceptors.request.use(
       config.url = config.url.substring(4); // Remove /api
       logger.debug('Removed duplicate /api prefix from URL', {
         originalUrl: '/api' + config.url,
-        fixedUrl: config.url
+        fixedUrl: config.url,
       });
     }
 
@@ -49,9 +49,7 @@ axiosInstance.interceptors.request.use(
       const cacheBuster = `_cb=${Date.now()}`;
 
       // Add cache-busting to URL
-      config.url = config.url?.includes('?')
-        ? `${config.url}&${cacheBuster}`
-        : `${config.url}?${cacheBuster}`;
+      config.url = config.url?.includes('?') ? `${config.url}&${cacheBuster}` : `${config.url}?${cacheBuster}`;
 
       // Add cache control headers
       if (config.headers) {
@@ -82,7 +80,7 @@ axiosInstance.interceptors.request.use(
   (error) => {
     logger.error('Request error:', { error });
     return Promise.reject(error);
-  }
+  },
 );
 
 // Add response interceptor for logging and error handling
@@ -103,7 +101,7 @@ axiosInstance.interceptors.response.use(
     });
 
     return Promise.reject(error);
-  }
+  },
 );
 
 /**
@@ -112,10 +110,7 @@ axiosInstance.interceptors.response.use(
  * @param config Optional axios config
  * @returns Promise resolving to response
  */
-export const get = async <T = any>(
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<AxiosResponse<T>> => {
+export const get = async <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
   return axiosInstance.get<T>(url, config);
 };
 
@@ -129,7 +124,7 @@ export const get = async <T = any>(
 export const post = async <T = any>(
   url: string,
   data?: any,
-  config?: AxiosRequestConfig
+  config?: AxiosRequestConfig,
 ): Promise<AxiosResponse<T>> => {
   return axiosInstance.post<T>(url, data, config);
 };
@@ -141,11 +136,7 @@ export const post = async <T = any>(
  * @param config Optional axios config
  * @returns Promise resolving to response
  */
-export const put = async <T = any>(
-  url: string,
-  data?: any,
-  config?: AxiosRequestConfig
-): Promise<AxiosResponse<T>> => {
+export const put = async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
   return axiosInstance.put<T>(url, data, config);
 };
 
@@ -155,10 +146,7 @@ export const put = async <T = any>(
  * @param config Optional axios config
  * @returns Promise resolving to response
  */
-export const del = async <T = any>(
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<AxiosResponse<T>> => {
+export const del = async <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
   return axiosInstance.delete<T>(url, config);
 };
 
@@ -172,7 +160,7 @@ export const del = async <T = any>(
 export const patch = async <T = any>(
   url: string,
   data?: any,
-  config?: AxiosRequestConfig
+  config?: AxiosRequestConfig,
 ): Promise<AxiosResponse<T>> => {
   return axiosInstance.patch<T>(url, data, config);
 };
@@ -183,10 +171,7 @@ export const patch = async <T = any>(
  * @param config Optional axios config
  * @returns Promise resolving to blob
  */
-export const fetchBlob = async (
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<Blob> => {
+export const fetchBlob = async (url: string, config?: AxiosRequestConfig): Promise<Blob> => {
   const response = await axiosInstance.get(url, {
     ...config,
     responseType: 'blob',
@@ -201,10 +186,7 @@ export const fetchBlob = async (
  * @param config Optional axios config
  * @returns Promise resolving to array buffer
  */
-export const fetchArrayBuffer = async (
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<ArrayBuffer> => {
+export const fetchArrayBuffer = async (url: string, config?: AxiosRequestConfig): Promise<ArrayBuffer> => {
   const response = await axiosInstance.get(url, {
     ...config,
     responseType: 'arraybuffer',
@@ -219,10 +201,7 @@ export const fetchArrayBuffer = async (
  * @param config Optional axios config
  * @returns Promise resolving to data URL
  */
-export const fetchDataUrl = async (
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<string | null> => {
+export const fetchDataUrl = async (url: string, config?: AxiosRequestConfig): Promise<string | null> => {
   try {
     const blob = await fetchBlob(url, config);
     return URL.createObjectURL(blob);
@@ -238,10 +217,7 @@ export const fetchDataUrl = async (
  * @param config Optional axios config
  * @returns Promise resolving to true if file exists, false otherwise
  */
-export const checkFileExists = async (
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<boolean> => {
+export const checkFileExists = async (url: string, config?: AxiosRequestConfig): Promise<boolean> => {
   try {
     const response = await axiosInstance.head(url, config);
     return response.status === 200;
@@ -270,7 +246,7 @@ const getCookieValue = (name: string): string | null => {
 export const withRetry = async <T>(
   requestFn: () => Promise<T>,
   retries: number = 3,
-  delay: number = 1000
+  delay: number = 1000,
 ): Promise<T> => {
   try {
     return await requestFn();
@@ -282,7 +258,7 @@ export const withRetry = async <T>(
     logger.warn(`Request failed, retrying in ${delay}ms (${retries} retries left)`, { error });
 
     // Wait for the specified delay
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
 
     // Retry with exponential backoff
     return withRetry(requestFn, retries - 1, delay * 2);
@@ -299,7 +275,7 @@ export const withRetry = async <T>(
 export const batchRequests = async <T>(
   requests: (() => Promise<T>)[],
   concurrency: number = 3,
-  onProgress?: (completed: number, total: number) => void
+  onProgress?: (completed: number, total: number) => void,
 ): Promise<T[]> => {
   const results: T[] = [];
   let completed = 0;
@@ -318,7 +294,7 @@ export const batchRequests = async <T>(
         }
 
         return result;
-      })
+      }),
     );
 
     results.push(...batchResults);

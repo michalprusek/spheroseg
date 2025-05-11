@@ -1,4 +1,3 @@
-
 import { SegmentationResult } from '@/lib/segmentation';
 import { usePolygonSimplifyAction } from './actions/usePolygonSimplifyAction';
 import { usePointEditor } from './geometry/usePointEditor';
@@ -17,18 +16,14 @@ export const usePolygonActions = (
   selectedPolygonId: string | null,
   setSelectedPolygonId: (id: string | null) => void,
   togglePointAddingMode: () => void,
-  toggleSlicingMode: () => void
+  toggleSlicingMode: () => void,
 ) => {
   const { t } = useLanguage();
   // Point editor utilities
   const pointEditor = usePointEditor(segmentation, setSegmentation);
   // Simplification actions
-  const { simplifySelectedPolygon } = usePolygonSimplifyAction(
-    segmentation, 
-    setSegmentation, 
-    selectedPolygonId
-  );
-  
+  const { simplifySelectedPolygon } = usePolygonSimplifyAction(segmentation, setSegmentation, selectedPolygonId);
+
   // --- Vertex actions ---
   // Delete vertex
   const handleDeleteVertex = (polygonId: string, vertexIndex: number) => {
@@ -56,18 +51,21 @@ export const usePolygonActions = (
   // Duplicate polygon
   const handleDuplicatePolygon = () => {
     if (!segmentation) return;
-    const polygon = segmentation.polygons.find(p => p.id === selectedPolygonId);
+    const polygon = segmentation.polygons.find((p) => p.id === selectedPolygonId);
     if (!polygon) return;
     const offsetX = 20;
     const offsetY = 20;
     const newPolygon = {
       ...polygon,
       id: uuidv4(),
-      points: polygon.points.map(p => ({ x: p.x + offsetX, y: p.y + offsetY }))
+      points: polygon.points.map((p) => ({
+        x: p.x + offsetX,
+        y: p.y + offsetY,
+      })),
     };
     setSegmentation({
       ...segmentation,
-      polygons: [...segmentation.polygons, newPolygon]
+      polygons: [...segmentation.polygons, newPolygon],
     });
     setSelectedPolygonId(newPolygon.id);
     toast.success(t('segmentation.polygonDuplicated'));
@@ -77,41 +75,37 @@ export const usePolygonActions = (
     if (!selectedPolygonId || !segmentation) return;
     setSegmentation({
       ...segmentation,
-      polygons: segmentation.polygons.filter(polygon => polygon.id !== selectedPolygonId)
+      polygons: segmentation.polygons.filter((polygon) => polygon.id !== selectedPolygonId),
     });
     setSelectedPolygonId(null);
     toast.success(t('segmentation.polygonDeleted'));
   };
 
-  
   // Edit mode actions
-  const { 
-    handleSlicePolygon, 
-    handleEditPolygon 
-  } = usePolygonEditModeActions(
-    setSelectedPolygonId, 
-    togglePointAddingMode, 
-    toggleSlicingMode
+  const { handleSlicePolygon, handleEditPolygon } = usePolygonEditModeActions(
+    setSelectedPolygonId,
+    togglePointAddingMode,
+    toggleSlicingMode,
   );
 
   return {
     // Simplification
     simplifySelectedPolygon,
-    
+
     // Vertex operations
     handleDeleteVertex,
     handleDuplicateVertex,
-    
+
     // Edit mode operations
     handleSlicePolygon,
     handleEditPolygon,
-    
+
     // Polygon operations
     handleDuplicatePolygon,
     handleDeletePolygon,
-    
+
     // Point editor direct methods
     addPointToPolygon,
-    removePointFromPolygon
+    removePointFromPolygon,
   };
 };
