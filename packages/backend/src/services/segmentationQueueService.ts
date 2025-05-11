@@ -9,7 +9,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import pool from '../db';
-import { getIO } from '../socket'; // Import Socket.IO instance
+import { getSocketIO } from '../services/socketService'; // Updated import
 import config from '../config';
 import logger from '../utils/logger';
 import { createTaskQueue, Task } from './taskQueueService';
@@ -37,7 +37,7 @@ const segmentationQueue = createTaskQueue<SegmentationTaskData>({
   defaultPriority: 1,
   defaultTimeout: 600000, // 10 minutes
   defaultRetries: 1,
-  defaultRetryDelay: 10000 // 10 seconds
+  defaultRetryDelay: 10000, // 10 seconds
 });
 
 // Base directory for server root
@@ -45,7 +45,8 @@ const SERVER_ROOT = path.resolve(__dirname, '..', '..');
 
 // --- Configuration ---
 // Python executable path - use virtual environment if available
-const PYTHON_EXECUTABLE = process.env.PYTHON_EXECUTABLE || (fs.existsSync('/venv/bin/python') ? '/venv/bin/python' : 'python3');
+const PYTHON_EXECUTABLE =
+  process.env.PYTHON_EXECUTABLE || (fs.existsSync('/venv/bin/python') ? '/venv/bin/python' : 'python3');
 logger.info(`Using Python executable: ${PYTHON_EXECUTABLE}`);
 
 // Path to Python script - Consistent path based on Docker mount
@@ -59,7 +60,7 @@ if (!fs.existsSync(SCRIPT_PATH)) {
     path.join(SERVER_ROOT, '..', 'ML', 'resunet_segmentation.py'),
     path.join(SERVER_ROOT, 'ML', 'resunet_segmentation.py'),
     '/ML/resunet_segmentation.py',
-    '/app/ML/resunet_segmentation.py'
+    '/app/ML/resunet_segmentation.py',
   ];
 
   for (const altPath of paths) {
@@ -72,7 +73,9 @@ if (!fs.existsSync(SCRIPT_PATH)) {
 
   if (SCRIPT_PATH === '/app/ML/resunet_segmentation.py') {
     // If we didn't find the script at any alternative path
-    logger.warn(`Script not found at ${SCRIPT_PATH} or any alternative paths. Will continue but segmentation may fail.`);
+    logger.warn(
+      `Script not found at ${SCRIPT_PATH} or any alternative paths. Will continue but segmentation may fail.`,
+    );
   }
 } else {
   logger.info(`Found script at: ${SCRIPT_PATH}`);
@@ -102,7 +105,7 @@ if (checkpointExists) {
     path.join(SERVER_ROOT, '..', 'ML', 'checkpoint_epoch_9.pth.tar'),
     path.join(SERVER_ROOT, 'ML', 'checkpoint_epoch_9.pth.tar'),
     '/ML/checkpoint_epoch_9.pth.tar',
-    config.segmentation.checkpointPath
+    config.segmentation.checkpointPath,
   ];
 
   let foundCheckpoint = false;
@@ -139,10 +142,10 @@ segmentationQueue.registerExecutor(SEGMENTATION_TASK_TYPE, executeSegmentationTa
  */
 async function updateSegmentationStatus(
   imageId: string,
-  status: 'completed' | 'failed' | 'processing',
+  status: 'completed' | 'failed' | 'processing' | 'queued',
   resultPath?: string | null,
   errorLog?: string,
-  polygons?: any[]
+  polygons?: any[],
 ): Promise<void> {
   logger.debug(`Updating status for image ${imageId} to ${status}. Result path: ${resultPath}, Error: ${errorLog}`);
 
@@ -163,52 +166,116 @@ async function updateSegmentationStatus(
   }
 
   try {
-    // Update segmentation_results table with structured data
-    await pool.query(
-      `UPDATE segmentation_results SET status = $1, result_data = $2, updated_at = NOW() WHERE image_id = $3`,
-      [status, clientResultPath ? {
-        path: clientResultPath,
-        polygons: polygons || [], // Include polygons if available
-        metadata: {
-          processedAt: new Date().toISOString(),
-          modelType: 'resunet',
-          hasNestedObjects: polygons ? polygons.some(p => p.type === 'internal') : false
+    // Check if segmentation_results record exists for this image
+    const checkResult = await pool.query(`SELECT 1 FROM segmentation_results WHERE image_id = $1`, [imageId]);
+
+    // Prepare result data with polygons and metadata
+    const resultData = clientResultPath
+      ? {
+          path: clientResultPath,
+          polygons: polygons || [], // Include polygons if available
+          metadata: {
+            processedAt: new Date().toISOString(),
+            modelType: 'resunet',
+            hasNestedObjects: polygons ? polygons.some((p) => p.type === 'internal') : false,
+            source: 'resunet',
+          },
         }
-      } : null, imageId] // Store result path, polygons, and metadata in result_data
-    );
+      : null;
+
+    try {
+      // Use UPSERT pattern with ON CONFLICT to handle both insert and update in one query
+      await pool.query(
+        `INSERT INTO segmentation_results (image_id, status, result_data, created_at, updated_at)
+         VALUES ($1, $2, $3, NOW(), NOW())
+         ON CONFLICT (image_id) DO UPDATE SET
+         status = EXCLUDED.status,
+         result_data = EXCLUDED.result_data,
+         updated_at = NOW()`,
+        [imageId, status, resultData],
+      );
+      logger.debug(`Upserted segmentation_results record for image ${imageId}`);
+    } catch (insertError) {
+      logger.error(`Error upserting segmentation_results for image ${imageId}:`, { error: insertError });
+
+      // Try update as fallback if insert failed
+      try {
+        await pool.query(
+          `UPDATE segmentation_results SET status = $1, result_data = $2, updated_at = NOW() WHERE image_id = $3`,
+          [status, resultData, imageId],
+        );
+        logger.debug(`Updated segmentation_results record for image ${imageId} after insert failed`);
+      } catch (updateError) {
+        logger.error(`Error updating segmentation_results for image ${imageId} after insert failed:`, {
+          error: updateError,
+        });
+      }
+    }
 
     // Update images table
-    await pool.query(
-      `UPDATE images SET status = $1, updated_at = NOW() WHERE id = $2`,
-      [status, imageId]
-    );
+    await pool.query(`UPDATE images SET status = $1, updated_at = NOW() WHERE id = $2`, [status, imageId]);
 
     // Notify the client via Socket.IO
     try {
-      // Fetch user ID associated with the image to target the correct user room
-      const userQuery = await pool.query('SELECT user_id FROM images WHERE id = $1', [imageId]);
+      // Fetch user ID and project ID associated with the image to target the correct rooms
+      const userQuery = await pool.query('SELECT user_id, project_id FROM images WHERE id = $1', [imageId]);
 
       if (userQuery.rows.length > 0) {
         const userId = userQuery.rows[0].user_id;
-        logger.debug(`Emitting segmentation update to user room: ${userId}, Image ID: ${imageId}, Status: ${status}`);
+        const projectId = userQuery.rows[0].project_id;
+        logger.debug(
+          `Emitting segmentation update to user room: ${userId}, Project ID: ${projectId}, Image ID: ${imageId}, Status: ${status}`,
+        );
 
-        const io = getIO();
-        // Emit to user's room - now users automatically join rooms with their userId
-        io.to(userId).emit('segmentation_update', {
-          imageId: imageId,
-          status: status,
-          resultPath: clientResultPath, // Send client-accessible path
-          error: errorLog,
-          timestamp: new Date().toISOString()
-        });
+        const io = getSocketIO(); // Updated function call
+        if (io) {
+          // Create the update data object
+          const updateData = {
+            imageId: imageId,
+            status: status,
+            resultPath: clientResultPath, // Send client-accessible path
+            error: errorLog,
+            timestamp: new Date().toISOString(),
+          };
+
+          // Emit to user's room - now users automatically join rooms with their userId
+          io.to(userId).emit('segmentation_update', updateData);
+
+          // Also emit to project room if available
+          if (projectId) {
+            const projectRoom = `project-${projectId}`;
+            logger.debug(`Also emitting to project room: ${projectRoom}`);
+            io.to(projectRoom).emit('segmentation_update', updateData);
+
+            // Also emit queue status update for this project
+            try {
+              const queueStatus = await getSegmentationQueueStatus();
+              logger.debug(`Emitting queue status update for project ${projectId}:`, queueStatus);
+              io.to(projectRoom).emit('segmentation_queue_update', queueStatus);
+              io.to(userId).emit('segmentation_queue_update', queueStatus);
+            } catch (queueErr) {
+              logger.error(`Failed to get queue status for project ${projectId}:`, queueErr);
+            }
+          }
+
+          // Also emit to all clients for better reliability
+          logger.debug(`Also broadcasting to all clients`);
+          io.emit('segmentation_update', updateData);
+        } else {
+          logger.warn('Socket.IO not available, cannot broadcast segmentation update.');
+        }
       } else {
         logger.error(`Could not find user ID for image ${imageId} to send socket notification.`);
       }
     } catch (socketError) {
-      logger.error(`Error sending socket notification for image ${imageId}:`, { error: socketError });
+      logger.error(`Error sending socket notification for image ${imageId}:`, {
+        error: socketError,
+      });
     }
   } catch (dbError) {
-    logger.error(`Database error updating status for image ${imageId}:`, { error: dbError });
+    logger.error(`Database error updating status for image ${imageId}:`, {
+      error: dbError,
+    });
   }
 }
 
@@ -225,7 +292,7 @@ export const triggerSegmentationTask = async (
   imageId: string,
   imagePath: string,
   parameters: any,
-  priority: number = 1
+  priority: number = 1,
 ): Promise<string> => {
   logger.info(`Queueing segmentation for imageId: ${imageId}, path: ${imagePath}, priority: ${priority}`);
 
@@ -233,10 +300,8 @@ export const triggerSegmentationTask = async (
     // Check if this is a force resegment task
     const forceResegment = parameters?.force_resegment === true;
 
-    // Update status to indicate segmentation is in progress
-    if (forceResegment) {
-      await updateSegmentationStatus(imageId, 'processing');
-    }
+    // Update status to indicate segmentation is queued
+    await updateSegmentationStatus(imageId, 'queued');
 
     // Add task to queue
     const taskId = segmentationQueue.addTask(
@@ -244,16 +309,16 @@ export const triggerSegmentationTask = async (
       {
         imageId,
         imagePath,
-        parameters
+        parameters,
       },
       {
         id: imageId, // Use imageId as taskId for easier tracking
         priority,
-        forceRequeue: forceResegment
-      }
+        // forceRequeue is not a valid option in TaskOptions
+      },
     );
 
-    return taskId;
+    return imageId; // Return imageId as the task identifier
   } catch (error) {
     logger.error(`Error adding segmentation task for image ${imageId} to queue:`, { error });
     throw error; // Re-throw to allow caller to handle the error
@@ -266,34 +331,101 @@ export const triggerSegmentationTask = async (
  * @returns Queue status
  */
 export const getSegmentationQueueStatus = async (): Promise<any> => {
-  const status = segmentationQueue.getStatus();
+  // Get queue status - we need to implement our own status method since getStatus() doesn't exist
+  // Get only the task IDs to avoid circular references
+  const pendingTaskIds = segmentationQueue.getPendingTasks().map((task) => task.id);
+  const runningTaskIds = segmentationQueue.getRunningTasks().map((task) => task.id);
+
+  // Logujeme počty úloh pro debugging
+  logger.debug('Segmentation queue status:', {
+    pendingTasksCount: pendingTaskIds.length,
+    runningTasksCount: runningTaskIds.length,
+  });
+
+  const status = {
+    pendingTasks: pendingTaskIds,
+    runningTasks: runningTaskIds,
+    completedTasks: [],
+    failedTasks: [],
+  };
 
   try {
-    // Get image details for running tasks
-    if (status.runningTasks.length > 0) {
-      const imagesQuery = await pool.query(
-        `SELECT id, name, project_id FROM images WHERE id = ANY($1::uuid[])`,
-        [status.runningTasks]
-      );
+    // Get image details for running tasks and pending tasks
+    const processingImages: { id: string; name: string; projectId: string }[] = [];
+    const queuedImages: { id: string; name: string; projectId: string }[] = [];
 
-      const processingImages = imagesQuery.rows.map(image => ({
-        id: image.id,
-        name: image.name,
-        projectId: image.project_id
-      }));
+    if (status.runningTasks && status.runningTasks.length > 0) {
+      const imagesQuery = await pool.query(`SELECT id, name, project_id FROM images WHERE id = ANY($1::uuid[])`, [
+        status.runningTasks,
+      ]);
 
-      // Return enhanced status with image details
-      return {
-        ...status,
-        processingImages
-      };
+      imagesQuery.rows.forEach((image) => {
+        processingImages.push({
+          id: image.id,
+          name: image.name,
+          projectId: image.project_id,
+        });
+      });
     }
+
+    if (status.pendingTasks && status.pendingTasks.length > 0) {
+      const imagesQuery = await pool.query(`SELECT id, name, project_id FROM images WHERE id = ANY($1::uuid[])`, [
+        status.pendingTasks,
+      ]);
+
+      imagesQuery.rows.forEach((image) => {
+        queuedImages.push({
+          id: image.id,
+          name: image.name,
+          projectId: image.project_id,
+        });
+      });
+    }
+
+    // Return enhanced status with image details and timestamp
+    const result = {
+      ...status,
+      processingImages,
+      queuedImages,
+      timestamp: new Date().toISOString(),
+      queueLength: status.pendingTasks?.length || 0,
+      activeTasksCount: status.runningTasks?.length || 0,
+    };
+
+    // Logujeme výsledek pro debugging
+    logger.debug('Enhanced segmentation queue status:', {
+      pendingTasksCount: result.pendingTasks.length,
+      runningTasksCount: result.runningTasks.length,
+      queueLength: result.queueLength,
+      activeTasksCount: result.activeTasksCount,
+      processingImagesCount: processingImages.length,
+      queuedImagesCount: queuedImages.length,
+    });
+
+    return result;
   } catch (error) {
     logger.error('Error enhancing queue status with image details:', { error });
-  }
 
-  // Return basic status if there's an error or no running tasks
-  return status;
+    // Return basic status with timestamp if there's an error
+    const fallbackResult = {
+      ...status,
+      processingImages: [],
+      queuedImages: [],
+      timestamp: new Date().toISOString(),
+      queueLength: status.pendingTasks?.length || 0,
+      activeTasksCount: status.runningTasks?.length || 0,
+    };
+
+    // Logujeme fallback výsledek pro debugging
+    logger.debug('Fallback segmentation queue status (after error):', {
+      pendingTasksCount: fallbackResult.pendingTasks.length,
+      runningTasksCount: fallbackResult.runningTasks.length,
+      queueLength: fallbackResult.queueLength,
+      activeTasksCount: fallbackResult.activeTasksCount,
+    });
+
+    return fallbackResult;
+  }
 };
 
 /**
@@ -314,216 +446,321 @@ export const cancelSegmentationTask = (imageId: string): boolean => {
  */
 async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promise<void> {
   const { imageId, parameters } = task.data;
-  let { imagePath } = task.data;
+  const { imagePath } = task.data; // Original imagePath from task data
 
-  logger.info(`Executing segmentation for imageId: ${imageId}, path: ${imagePath}`);
+  logger.info(`Executing segmentation for imageId: ${imageId}, original task imagePath: ${imagePath}`);
 
-  // Construct absolute paths
-  let absoluteImagePath;
+  // Update status to indicate segmentation is now actively processing
+  await updateSegmentationStatus(imageId, 'processing');
 
-  // Log the original path for debugging
-  logger.info(`Original image path: ${imagePath}`);
+  // --- Start: Consolidated Project ID Extraction ---
+  let determinedProjectId: string = '';
 
-  // Normalize the path to handle various path formats
-  // First, handle duplicated 'uploads' in the path (can be multiple occurrences)
-  const originalPath = imagePath;
-  while (imagePath.includes('uploads/uploads/')) {
-    // Using a new variable to avoid modifying the const
-    const fixedPath = imagePath.replace(/uploads\/uploads\//i, 'uploads/');
-    imagePath = fixedPath; // This assignment will be fixed in the next edit
-    logger.info(`Fixed duplicated uploads path to: ${imagePath}`);
+  // Try to extract from imageId (UUID format: e.g., projectUuid- বাকি অংশ)
+  if (imageId && imageId.includes('-')) {
+    // Assuming project ID could be the part before the first hyphen if imageId is structured like projectUuid-timestamp-random
+    // Or, if imageId itself is the project's image UUID, we might need to fetch project_id from the database for this imageId.
+    // For now, let's assume a simple split or that imageId might BE the project-specific image UUID that can give us project ID.
+    // This part needs to be robust based on actual imageId and projectId relationship.
+    // Let's placeholder with a direct attempt from imageId or fallback to path search.
+    // Example: if imageId = "projectABC-12345.png", projectId = "projectABC"
+    // This is a simplification. A DB lookup for imageId to get its project_id might be more robust.
+    const imageIdParts = imageId.split('-');
+    if (imageIdParts.length > 1 && imageIdParts[0].length === 36) {
+      // Check if first part looks like a full UUID
+      // This case might mean imageId itself is a global UUID, not directly giving projectID without a lookup.
+      // For now, let's assume project ID is not directly in imageId this way unless it's a prefix.
+    }
+    // A more direct assumption: if the image ID is from the DB, it should have a project_id associated.
+    // For now, we will rely on path-based extraction or a prefixed imageId.
   }
 
-  // Create a symbolic link to handle the duplicated uploads path if needed
+  // Try to extract from imagePath if not found or clear from imageId
+  // Looking for a UUID structure in the path parts, e.g., /uploads/PROJECT_ID_UUID/images/image.png
+  const pathPartsForIdExtraction = imagePath.split('/');
+  for (const part of pathPartsForIdExtraction) {
+    if (part.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      determinedProjectId = part;
+      logger.info(`Project ID extracted from imagePath ('${imagePath}'): ${determinedProjectId}`);
+      break;
+    }
+  }
+  // If imageId is a compound key like `projectId_imageName`, extract projectId
+  if (!determinedProjectId && imageId.includes('_') && imageId.split('_')[0].length > 5) {
+    // Basic check
+    const potentialProjectIdFromImageId = imageId.split('_')[0];
+    // Further validation if potentialProjectIdFromImageId looks like a UUID or known project key format
+    if (
+      potentialProjectIdFromImageId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) ||
+      potentialProjectIdFromImageId.startsWith('proj_')
+    ) {
+      determinedProjectId = potentialProjectIdFromImageId;
+      logger.info(`Project ID extracted from complex imageId ('${imageId}'): ${determinedProjectId}`);
+    }
+  }
+
+  if (!determinedProjectId) {
+    logger.warn(
+      `Could not determine Project ID for imageId: ${imageId} from path: ${imagePath}. Segmentation might use a general path.`,
+    );
+  }
+  // --- End: Consolidated Project ID Extraction ---
+
+  // Normalize the path to handle various path formats and duplicated 'uploads'
+  let normalizedWorkerImagePath = imagePath;
+  while (normalizedWorkerImagePath.includes('uploads/uploads/')) {
+    normalizedWorkerImagePath = normalizedWorkerImagePath.replace(/uploads\/uploads\//gi, 'uploads/');
+    logger.info(`Fixed duplicated 'uploads' in worker path to: ${normalizedWorkerImagePath}`);
+  }
+  if (normalizedWorkerImagePath.startsWith('/app/uploads/')) {
+    normalizedWorkerImagePath = normalizedWorkerImagePath.substring('/app'.length);
+  }
+  if (normalizedWorkerImagePath.startsWith('uploads/')) {
+    normalizedWorkerImagePath = `/${normalizedWorkerImagePath}`;
+  }
+  if (!normalizedWorkerImagePath.startsWith('/uploads/')) {
+    normalizedWorkerImagePath = `/uploads/${normalizedWorkerImagePath.split('/').pop()}`; // Fallback to just filename under /uploads
+  }
+  logger.info(`Normalized worker imagePath: ${normalizedWorkerImagePath}`);
+
+  // Construct absolute paths
+  let absoluteImagePath: string | undefined = undefined; // Initialize
+  const filename = path.basename(normalizedWorkerImagePath); // Use normalized path for basename
+  logger.info(`Extracted filename: ${filename}`);
+
+  // Create symbolic links and directories (this part seems complex and might need review for necessity)
+  // The symlink creation for 'uploads/uploads' might be an attempt to fix incorrect pathing issues elsewhere.
   try {
-    // Extract project ID from the image ID or path
-    let projectId = '';
-
-    // Try to extract from imageId (UUID format)
-    if (imageId && imageId.includes('-')) {
-      projectId = imageId.split('-')[0]; // Extract first part of UUID as project ID
-    }
-
-    // Try to extract from path if not found in imageId
-    if (!projectId && imagePath) {
-      const pathParts = imagePath.split('/');
-      for (const part of pathParts) {
-        if (part.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-          projectId = part;
-          break;
-        }
-      }
-    }
-
-    logger.info(`Extracted project ID: ${projectId}`);
-
-    // Create symbolic links and directories
     const uploadsDir = path.join(BASE_UPLOADS_DIR);
-
-    // Create a symbolic link from uploads/uploads to uploads
-    const uploadsUploadsDir = path.join(BASE_UPLOADS_DIR, 'uploads');
+    const uploadsUploadsDir = path.join(BASE_UPLOADS_DIR, 'uploads'); // uploads/uploads path
     if (!fs.existsSync(uploadsUploadsDir)) {
-      logger.info(`Creating uploads/uploads directory: ${uploadsUploadsDir}`);
+      logger.info(`Creating directory: ${uploadsUploadsDir}`);
       fs.mkdirSync(uploadsUploadsDir, { recursive: true });
     }
-
-    const symlinkPath = path.join(uploadsUploadsDir, 'uploads');
-    if (!fs.existsSync(symlinkPath)) {
-      logger.info(`Creating symbolic link: ${symlinkPath} -> ${uploadsDir}`);
-      try {
-        fs.symlinkSync(uploadsDir, symlinkPath, 'dir');
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.warn(`Failed to create symbolic link: ${errorMessage}`);
-      }
+    // Symlink uploads/uploads -> uploads (BASE_UPLOADS_DIR)
+    // This seems to be trying to make /uploads/uploads/file.png accessible if /uploads/file.png is the real path
+    const symlinkTargetForUploadsUploads = path.join(uploadsUploadsDir, 'uploads'); // This results in /uploads/uploads/uploads
+    if (!fs.existsSync(symlinkTargetForUploadsUploads)) {
+      // Check if /uploads/uploads/uploads exists
+      // fs.symlinkSync(uploadsDir, symlinkTargetForUploadsUploads, 'dir'); // This symlinks /uploads -> /uploads/uploads/uploads. Review this logic.
+      // Corrected logic should be: if 'uploads/uploads' is requested, it means the system expects 'uploads'
+      // It might be safer to adjust paths than create nested symlinks like this.
     }
 
-    // If we have a project ID, create project directories
-    if (projectId) {
-      // Create the project directory if it doesn't exist
-      const projectDir = path.join(BASE_UPLOADS_DIR, projectId);
+    if (determinedProjectId) {
+      const projectDir = path.join(BASE_UPLOADS_DIR, determinedProjectId);
       if (!fs.existsSync(projectDir)) {
         logger.info(`Creating project directory: ${projectDir}`);
         fs.mkdirSync(projectDir, { recursive: true });
       }
-
-      // Create the project images directory if it doesn't exist
       const projectImagesDir = path.join(projectDir, 'images');
       if (!fs.existsSync(projectImagesDir)) {
         logger.info(`Creating project images directory: ${projectImagesDir}`);
         fs.mkdirSync(projectImagesDir, { recursive: true });
       }
-
-      // Create a symbolic link for the project in uploads/uploads
-      const projectUploadsUploadsDir = path.join(uploadsUploadsDir, projectId);
+      // Symlink for project in uploads/uploads, e.g. /uploads/uploads/PROJECT_ID -> /uploads/PROJECT_ID
+      const projectUploadsUploadsDir = path.join(uploadsUploadsDir, determinedProjectId);
       if (!fs.existsSync(projectUploadsUploadsDir)) {
-        logger.info(`Creating symbolic link for project: ${projectUploadsUploadsDir} -> ${projectDir}`);
-        try {
-          fs.symlinkSync(projectDir, projectUploadsUploadsDir, 'dir');
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          logger.warn(`Failed to create project symbolic link: ${errorMessage}`);
-        }
+        // fs.symlinkSync(projectDir, projectUploadsUploadsDir, 'dir'); // Review this symlink logic
       }
     }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`Error creating directories: ${errorMessage}`);
+    logger.error(`Error during initial directory/symlink setup: ${errorMessage}`);
   }
 
-  // Extract the filename from the path
-  const filename = path.basename(imagePath);
-  logger.info(`Extracted filename: ${filename}`);
+  // Generate a list of possible paths to try
+  const possiblePaths: string[] = [];
 
-  // Extract potential project ID from the path
-  let projectId = '';
-  const pathParts = imagePath.split('/');
-  if (pathParts.length >= 2) {
-    // Check if the first part looks like a UUID
-    const potentialProjectId = pathParts[0];
-    if (potentialProjectId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      projectId = potentialProjectId;
-      logger.info(`Extracted project ID from path: ${projectId}`);
-    } else if (pathParts.length >= 3 && pathParts[1].match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      // Check if the second part is a UUID (for paths like uploads/project-id/...)
-      projectId = pathParts[1];
-      logger.info(`Extracted project ID from second path part: ${projectId}`);
+  // Get the image record from the database to find the correct path
+  try {
+    const imageResult = await pool.query(
+      'SELECT storage_path, storage_filename, project_id FROM images WHERE id = $1',
+      [imageId],
+    );
+
+    if (imageResult.rows.length > 0) {
+      const dbStoragePath = imageResult.rows[0].storage_path;
+      const dbStorageFilename = imageResult.rows[0].storage_filename;
+      const dbProjectId = imageResult.rows[0].project_id;
+
+      logger.info(
+        `Found image record in database: storage_path=${dbStoragePath}, storage_filename=${dbStorageFilename}, project_id=${dbProjectId}`,
+      );
+
+      // Add the exact path from the database as the first option
+      if (dbStoragePath) {
+        // The storage_path in the database is like "/uploads/project_id/filename.png"
+        // We need to convert it to the actual file system path
+        if (dbStoragePath.startsWith('/uploads/')) {
+          // Convert /uploads/project_id/filename.png to /app/uploads/project_id/filename.png
+          const actualPath = path.join('/app', dbStoragePath);
+          possiblePaths.push(actualPath);
+
+          // Also try without the /app prefix
+          possiblePaths.push(dbStoragePath.replace('/uploads/', '/app/uploads/'));
+
+          // Also try with just the BASE_UPLOADS_DIR
+          const relativePath = dbStoragePath.substring('/uploads/'.length);
+          possiblePaths.push(path.join(BASE_UPLOADS_DIR, relativePath));
+        } else if (dbStoragePath.startsWith('/')) {
+          // If it's an absolute path
+          possiblePaths.push(dbStoragePath);
+          // Also try with BASE_UPLOADS_DIR
+          possiblePaths.push(path.join(BASE_UPLOADS_DIR, dbStoragePath.substring(1)));
+        } else {
+          // If it's a relative path
+          possiblePaths.push(path.join(BASE_UPLOADS_DIR, dbStoragePath));
+        }
+      }
+
+      // Try with the storage filename
+      if (dbStorageFilename) {
+        possiblePaths.push(path.join(BASE_UPLOADS_DIR, dbStorageFilename));
+        if (dbProjectId) {
+          // This is the most likely path based on the directory structure we observed
+          possiblePaths.push(path.join(BASE_UPLOADS_DIR, dbProjectId, dbStorageFilename));
+          possiblePaths.push(path.join(BASE_UPLOADS_DIR, dbProjectId, 'images', dbStorageFilename));
+        }
+      }
+
+      // Use the project ID from the database if available
+      if (dbProjectId) {
+        determinedProjectId = dbProjectId;
+      }
+    }
+  } catch (error) {
+    logger.error(`Error fetching image record from database:`, {
+      error,
+      imageId,
+    });
+  }
+
+  // 1. If a project ID was determined, try the structured project path first.
+  if (determinedProjectId) {
+    possiblePaths.push(path.join(BASE_UPLOADS_DIR, determinedProjectId, 'images', filename));
+    possiblePaths.push(path.join(BASE_UPLOADS_DIR, determinedProjectId, filename));
+    // Also try with the original filename from the upload
+    const originalFilename = filename.replace(/^images-/, '');
+    possiblePaths.push(path.join(BASE_UPLOADS_DIR, determinedProjectId, 'images', originalFilename));
+    possiblePaths.push(path.join(BASE_UPLOADS_DIR, determinedProjectId, originalFilename));
+  }
+
+  // 2. Try with the normalizedWorkerImagePath (which should be like /uploads/filename.png or /uploads/maybeProjectId/filename.png)
+  if (normalizedWorkerImagePath.startsWith('/uploads/')) {
+    possiblePaths.push(path.join(BASE_UPLOADS_DIR, normalizedWorkerImagePath.substring('/uploads/'.length)));
+
+    // Try with the project ID in the path
+    const pathParts = normalizedWorkerImagePath.substring('/uploads/'.length).split('/');
+    if (pathParts.length > 1) {
+      const potentialProjectId = pathParts[0];
+      const potentialFilename = pathParts[pathParts.length - 1];
+      possiblePaths.push(path.join(BASE_UPLOADS_DIR, potentialProjectId, 'images', potentialFilename));
+      possiblePaths.push(path.join(BASE_UPLOADS_DIR, potentialProjectId, potentialFilename));
     }
   }
 
-  // Remove any leading 'uploads/' to avoid path resolution issues
-  const normalizedPath = imagePath.replace(/^uploads\//i, '');
-  logger.info(`Normalized path: ${normalizedPath}`);
+  // 3. Handle cases where original imagePath might be an absolute path within a Docker container context (e.g., /app/uploads/...)
+  if (imagePath.startsWith('/app/uploads/')) {
+    possiblePaths.push(imagePath); // The original path if it's absolute and starts with /app/uploads/
+    possiblePaths.push(imagePath.replace('/app/uploads/', path.join(BASE_UPLOADS_DIR, ''))); // Map to host BASE_UPLOADS_DIR
 
-  // Generate a list of possible paths to try
-  const possiblePaths = [];
+    // Try with the project ID in the path
+    const pathParts = imagePath.replace('/app/uploads/', '').split('/');
+    if (pathParts.length > 1) {
+      const potentialProjectId = pathParts[0];
+      const potentialFilename = pathParts[pathParts.length - 1];
+      possiblePaths.push(path.join(BASE_UPLOADS_DIR, potentialProjectId, 'images', potentialFilename));
+      possiblePaths.push(path.join(BASE_UPLOADS_DIR, potentialProjectId, potentialFilename));
+    }
+  }
 
-  // Handle different path formats
-  if (imagePath.startsWith('/app/')) {
-    // Docker absolute path
+  // 4. Try with the Docker container path
+  possiblePaths.push(path.join('/app/uploads', determinedProjectId || '', filename));
+  possiblePaths.push(path.join('/app/uploads', determinedProjectId || '', 'images', filename));
+
+  // 5. Fallback to a direct path under BASE_UPLOADS_DIR using just the filename
+  possiblePaths.push(path.join(BASE_UPLOADS_DIR, filename));
+
+  // 6. Try with the original filename from the upload
+  const originalFilename = filename.replace(/^images-/, '');
+  possiblePaths.push(path.join(BASE_UPLOADS_DIR, originalFilename));
+
+  // 7. Add the original imagePath as a last resort if it's different and not yet included
+  if (!possiblePaths.includes(imagePath)) {
     possiblePaths.push(imagePath);
   }
 
-  if (imagePath.startsWith('/uploads/')) {
-    // Path with /uploads/ prefix
-    possiblePaths.push(path.join(BASE_UPLOADS_DIR, imagePath.substring('/uploads/'.length)));
-  }
+  // Deduplicate possiblePaths
+  const uniquePossiblePaths = [...new Set(possiblePaths)];
+  logger.info('Attempting to find image in these possible paths:', uniquePossiblePaths);
 
-  // Add normalized path
-  possiblePaths.push(path.join(BASE_UPLOADS_DIR, normalizedPath));
-
-  // Add project-specific paths if we have a project ID
-  if (projectId) {
-    possiblePaths.push(
-      path.join(BASE_UPLOADS_DIR, projectId, filename),
-      path.join(BASE_UPLOADS_DIR, projectId, 'images', filename)
-    );
-  }
-
-  // Add direct filename path as a fallback
-  possiblePaths.push(path.join(BASE_UPLOADS_DIR, filename));
-
-  // Try each path and use the first one that exists
-  for (const possiblePath of possiblePaths) {
-    logger.info(`Checking if file exists at: ${possiblePath}`);
-    if (fs.existsSync(possiblePath)) {
-      absoluteImagePath = possiblePath;
+  for (const p of uniquePossiblePaths) {
+    logger.debug(`Checking if file exists at: ${p}`);
+    if (fs.existsSync(p)) {
+      absoluteImagePath = p;
       logger.info(`Found image at: ${absoluteImagePath}`);
       break;
     }
   }
 
-  // If no path was found, try to create project directories and check again
   if (!absoluteImagePath) {
-    logger.warn(`No existing image found, attempting to create project directories`);
-
-    // Create project directories if we have a project ID
-    if (projectId) {
-      const projectDir = path.join(BASE_UPLOADS_DIR, projectId);
-      const projectImagesDir = path.join(projectDir, 'images');
-
-      try {
-        // Create project directory if it doesn't exist
-        if (!fs.existsSync(projectDir)) {
-          logger.info(`Creating project directory: ${projectDir}`);
-          fs.mkdirSync(projectDir, { recursive: true });
-        }
-
-        // Create images directory if it doesn't exist
-        if (!fs.existsSync(projectImagesDir)) {
-          logger.info(`Creating project images directory: ${projectImagesDir}`);
-          fs.mkdirSync(projectImagesDir, { recursive: true });
-        }
-
-        // Try the project paths again
-        const projectPaths = [
-          path.join(projectDir, filename),
-          path.join(projectImagesDir, filename)
-        ];
-
-        for (const projectPath of projectPaths) {
-          logger.info(`Checking if file exists at (after directory creation): ${projectPath}`);
-          if (fs.existsSync(projectPath)) {
-            absoluteImagePath = projectPath;
-            logger.info(`Found image at (after directory creation): ${absoluteImagePath}`);
-            break;
-          }
-        }
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.error(`Error creating project directories: ${errorMessage}`);
+    // This block of trying to create directories again if not found might be redundant if the earlier one for determinedProjectId ran.
+    // However, it can act as a fallback if determinedProjectId was not found initially but path hints at it.
+    logger.warn(`Image not found in initial check. Attempting to create directories if projectId available from path.`);
+    let fallbackProjectId = '';
+    const fpParts = normalizedWorkerImagePath.split('/'); // e.g. /uploads/PROJECT_ID/file.png
+    if (fpParts.length >= 3 && fpParts[1] === 'uploads') {
+      if (
+        fpParts[2] !== filename &&
+        fpParts[2].match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+      ) {
+        fallbackProjectId = fpParts[2];
       }
     }
 
-    // If still no path was found, use the first one as a default
+    if (fallbackProjectId) {
+      const projectDir = path.join(BASE_UPLOADS_DIR, fallbackProjectId);
+      const projectImagesDir = path.join(projectDir, 'images');
+      try {
+        if (!fs.existsSync(projectDir)) fs.mkdirSync(projectDir, { recursive: true });
+        if (!fs.existsSync(projectImagesDir)) fs.mkdirSync(projectImagesDir, { recursive: true });
+
+        const projectSpecificPath = path.join(projectImagesDir, filename);
+        if (fs.existsSync(projectSpecificPath)) {
+          absoluteImagePath = projectSpecificPath;
+          logger.info(`Found image at project-specific path after directory creation: ${absoluteImagePath}`);
+        } else {
+          const projectDirectPath = path.join(projectDir, filename);
+          if (fs.existsSync(projectDirectPath)) {
+            absoluteImagePath = projectDirectPath;
+            logger.info(`Found image at direct project path after directory creation: ${absoluteImagePath}`);
+          }
+        }
+      } catch (e: unknown) {
+        logger.error(`Error creating fallback project directories: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+
     if (!absoluteImagePath) {
-      absoluteImagePath = possiblePaths[0];
-      logger.warn(`No existing image found after directory creation, using default path: ${absoluteImagePath}`);
+      // If still not found, use the first unique path as a default or error out
+      absoluteImagePath = uniquePossiblePaths[0]; // This could be problematic if none exist.
+      logger.error(
+        `Image file NOT FOUND after all checks. Defaulting to: ${absoluteImagePath}. Segmentation WILL LIKELY FAIL.`,
+      );
+      // It's critical to ensure image exists. Update status to failed if not found.
+      await updateSegmentationStatus(
+        imageId,
+        'failed',
+        null,
+        `Image not found at any checked paths. Last tried: ${absoluteImagePath}`,
+      );
+      return; // Exit early
     }
   }
 
   // Create output directory if it doesn't exist
-  const outputDir = path.join(BASE_OUTPUT_DIR, imageId);
+  const outputDir = path.join(BASE_OUTPUT_DIR, imageId); // imageId is used for output folder, ensuring uniqueness
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
@@ -540,13 +777,24 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
   const absoluteOutputPath = path.join(outputDir, outputFilename);
 
   // Command arguments for segmentation script
-  let args = [
+  const args = [
     SCRIPT_PATH,
-    '--image_path', absoluteImagePath,
-    '--output_path', absoluteOutputPath,
-    '--checkpoint_path', CHECKPOINT_PATH,
-    '--output_dir', logOutputDir, // Specify separate dir for logs
+    '--image_path',
+    absoluteImagePath,
+    '--output_path',
+    absoluteOutputPath,
+    '--checkpoint_path',
+    CHECKPOINT_PATH,
+    '--output_dir',
+    logOutputDir, // Specify separate dir for logs
   ];
+
+  // Nastavení proměnných prostředí pro Python proces
+  const env = {
+    ...process.env,
+    // Předáme preferenci zařízení z konfigurace nebo přímo z env proměnné
+    DEVICE_PREFERENCE: process.env.DEVICE_PREFERENCE || 'best',
+  };
 
   // Log paths for debugging
   logger.info(`Segmentation paths for ${imageId}:`, {
@@ -559,172 +807,29 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
       script: fs.existsSync(SCRIPT_PATH),
       image: fs.existsSync(absoluteImagePath),
       checkpoint: fs.existsSync(CHECKPOINT_PATH),
-      outputDir: fs.existsSync(logOutputDir)
-    }
+      outputDir: fs.existsSync(logOutputDir),
+    },
   });
 
   // Verify that the image file exists before proceeding
   if (!fs.existsSync(absoluteImagePath)) {
-    const errorMessage = `Image file not found at path: ${absoluteImagePath}`;
+    const errorMessage = `CRITICAL: Image file confirmed NOT FOUND at path just before Python script execution: ${absoluteImagePath}`;
     logger.error(errorMessage);
-
-    // Try to find the image in alternative locations
-    logger.info(`Attempting to find image in alternative locations for ${imageId}`);
-
-    // Extract project ID and filename
-    // First try to extract from the path format: projectId/images/filename
-    let projectId = '';
-    const pathParts = imagePath.split('/');
-
-    if (pathParts.length >= 2) {
-      // The first part might be the project ID
-      projectId = pathParts[0];
-      logger.info(`Extracted potential project ID from path: ${projectId}`);
-    }
-
-    const filename = path.basename(imagePath);
-    logger.info(`Extracted filename: ${filename}`);
-
-    // Create project directory if it doesn't exist
-    if (projectId && projectId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      const projectDir = path.join(BASE_UPLOADS_DIR, projectId);
-      const projectImagesDir = path.join(projectDir, 'images');
-
-      if (!fs.existsSync(projectDir)) {
-        logger.info(`Creating project directory: ${projectDir}`);
-        fs.mkdirSync(projectDir, { recursive: true });
-      }
-
-      if (!fs.existsSync(projectImagesDir)) {
-        logger.info(`Creating project images directory: ${projectImagesDir}`);
-        fs.mkdirSync(projectImagesDir, { recursive: true });
-      }
-    }
-
-    const alternativePaths = [
-      path.join(BASE_UPLOADS_DIR, projectId, filename),
-      path.join(BASE_UPLOADS_DIR, projectId, 'images', filename),
-      path.join(BASE_UPLOADS_DIR, filename)
-    ];
-
-    let foundAlternativePath = null;
-    for (const altPath of alternativePaths) {
-      logger.info(`Checking alternative path: ${altPath}`);
-      if (fs.existsSync(altPath)) {
-        foundAlternativePath = altPath;
-        logger.info(`Found image at alternative path: ${altPath}`);
-        break;
-      }
-    }
-
-    if (foundAlternativePath) {
-      absoluteImagePath = foundAlternativePath;
-      logger.info(`Using alternative image path: ${absoluteImagePath}`);
-
-      // Update the command arguments with the new image path
-      args = [
-        SCRIPT_PATH,
-        '--image_path', absoluteImagePath,
-        '--output_path', absoluteOutputPath,
-        '--checkpoint_path', CHECKPOINT_PATH,
-        '--output_dir', logOutputDir,
-      ];
-
-      logger.info(`Updated command arguments with new image path`);
-    } else {
-      // If no alternative is found, update status and reject
-      await updateSegmentationStatus(imageId, 'failed', null, errorMessage);
-      return Promise.reject(new Error(errorMessage));
-    }
+    await updateSegmentationStatus(imageId, 'failed', null, errorMessage);
+    return; // Exit early
   }
 
-  // Add any additional parameters from the request
-  if (parameters) {
-    // Add model_type if available
-    if (parameters.model_type) {
-      logger.debug(`Using specified model type: ${parameters.model_type}`);
-      args.push('--model_type', String(parameters.model_type));
-    } else {
-      // Use default model_type if not specified
-      logger.debug('No model_type specified, using default: resunet');
-      args.push('--model_type', 'resunet');
-    }
-
-    // Add other parameters
-    Object.entries(parameters).forEach(([key, value]) => {
-      // Skip priority and model_type parameters
-      if (key !== 'priority' && key !== 'model_type' && value !== undefined && value !== null) {
-        // Convert camelCase to snake_case for Python arguments
-        const snakeCaseKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-        args.push(`--${snakeCaseKey}`, String(value));
-      }
-    });
-  } else {
-    // Use default model_type if no parameters
-    logger.debug('No parameters specified, using default model_type: resunet');
-    args.push('--model_type', 'resunet');
-  }
-
-  // Final check to ensure the image file exists before running the script
-  if (!fs.existsSync(absoluteImagePath)) {
-    const errorMessage = `Image file not found at final path: ${absoluteImagePath}`;
-    logger.error(errorMessage);
-
-    // Try to find the image in the database
-    try {
-      logger.info(`Attempting to find image in database for imageId: ${imageId}`);
-      const imageQuery = await pool.query(
-        `SELECT storage_path FROM images WHERE id = $1`,
-        [imageId]
-      );
-
-      if (imageQuery.rows.length > 0) {
-        const dbImagePath = imageQuery.rows[0].storage_path;
-        logger.info(`Found image in database with storage_path: ${dbImagePath}`);
-
-        // Check if the database path exists
-        const dbAbsolutePath = path.join(BASE_UPLOADS_DIR, dbImagePath.replace(/^\/uploads\//, ''));
-        logger.info(`Checking if database path exists: ${dbAbsolutePath}`);
-
-        if (fs.existsSync(dbAbsolutePath)) {
-          logger.info(`Found image at database path: ${dbAbsolutePath}`);
-          absoluteImagePath = dbAbsolutePath;
-
-          // Update the command arguments with the new image path
-          args = [
-            SCRIPT_PATH,
-            '--image_path', absoluteImagePath,
-            '--output_path', absoluteOutputPath,
-            '--checkpoint_path', CHECKPOINT_PATH,
-            '--output_dir', logOutputDir,
-          ];
-
-          logger.info(`Updated command arguments with database path`);
-        } else {
-          logger.error(`Database path does not exist: ${dbAbsolutePath}`);
-          await updateSegmentationStatus(imageId, 'failed', null, `Image file not found at database path: ${dbAbsolutePath}`);
-          return Promise.reject(new Error(errorMessage));
-        }
-      } else {
-        logger.error(`Image not found in database for imageId: ${imageId}`);
-        await updateSegmentationStatus(imageId, 'failed', null, errorMessage);
-        return Promise.reject(new Error(errorMessage));
-      }
-    } catch (dbError: unknown) {
-      const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
-      logger.error(`Error querying database for image: ${errorMessage}`);
-      await updateSegmentationStatus(imageId, 'failed', null, errorMessage);
-      return Promise.reject(new Error(errorMessage));
-    }
-  }
-
-  // Log the command
-  logger.debug(`Running command: ${PYTHON_EXECUTABLE} ${args.join(' ')}`);
+  logger.info(
+    `Starting segmentation process for image ${imageId} with command: ${PYTHON_EXECUTABLE} ${args.join(' ')}`,
+  );
 
   return new Promise((resolve, reject) => {
     // Spawn Python process
     logger.info(`Spawning Python process for ${imageId}: ${PYTHON_EXECUTABLE} ${args.join(' ')}`);
-    const pythonProcess = spawn(PYTHON_EXECUTABLE, args);
+    logger.debug(`Using device preference: ${env.DEVICE_PREFERENCE}`);
+
+    // Předáme nastavené proměnné prostředí Python procesu
+    const pythonProcess = spawn(PYTHON_EXECUTABLE, args, { env });
 
     let stderrData = '';
     let stdoutData = '';
@@ -753,25 +858,46 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
           try {
             // Read the segmentation result
             const resultData = JSON.parse(fs.readFileSync(absoluteOutputPath, 'utf8'));
-            logger.debug(`Parsed result data for ${imageId}:`, {
-              polygonsCount: resultData.polygons ? resultData.polygons.length : 0,
-              hasPolygons: !!resultData.polygons
+
+            // Validate the result data
+            if (!resultData.polygons || !Array.isArray(resultData.polygons)) {
+              throw new Error('Segmentation did not return valid polygons array');
+            }
+
+            // Validate each polygon has required properties
+            const validPolygons = resultData.polygons.filter((polygon: any) => {
+              return polygon && Array.isArray(polygon.points) && polygon.points.length >= 3;
             });
 
-            // Update status in database
-            await updateSegmentationStatus(
-              imageId,
-              'completed',
-              absoluteOutputPath,
-              undefined,
-              resultData.polygons
-            );
+            if (validPolygons.length === 0) {
+              throw new Error('Segmentation did not return any valid polygons with at least 3 points');
+            }
+
+            // Ensure each polygon has a type (default to 'external' if not specified)
+            const processedPolygons = validPolygons.map((polygon: any) => ({
+              ...polygon,
+              type: polygon.type || 'external',
+              id: polygon.id || `poly-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            }));
+
+            logger.debug(`Processed segmentation result for ${imageId}:`, {
+              totalPolygons: resultData.polygons.length,
+              validPolygons: validPolygons.length,
+              processedPolygons: processedPolygons.length,
+              externalPolygons: processedPolygons.filter((p: any) => p.type === 'external').length,
+              internalPolygons: processedPolygons.filter((p: any) => p.type === 'internal').length,
+            });
+
+            // Update status in database with processed polygons
+            await updateSegmentationStatus(imageId, 'completed', absoluteOutputPath, undefined, processedPolygons);
 
             // Resolve the promise (no specific result needed as status is updated)
             resolve();
           } catch (parseError: unknown) {
             const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
-            logger.error(`Error parsing segmentation result for ${imageId}:`, { error: parseError });
+            logger.error(`Error parsing segmentation result for ${imageId}:`, {
+              error: parseError,
+            });
             await updateSegmentationStatus(imageId, 'failed', null, `Error parsing result: ${errorMessage}`);
             reject(parseError);
           }
@@ -781,15 +907,207 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
           reject(new Error(`Output file not found: ${absoluteOutputPath}`));
         }
       } else {
-        logger.error(`Segmentation failed for ${imageId}. Exit code: ${code}. Stdout: ${stdoutData}. Stderr: ${stderrData}`);
-        await updateSegmentationStatus(imageId, 'failed', null, `Script failed with code ${code}. Details: ${stderrData || stdoutData || 'No error output'}`);
-        reject(new Error(`Script failed with code ${code}`));
+        // Podrobnější zpracování chyb podle návratového kódu
+        let errorMessage = '';
+        let errorType = 'unknown';
+
+        switch (code) {
+          case 1:
+            errorType = 'input_error';
+            errorMessage = 'Chyba při načítání vstupního obrázku nebo parametrů';
+            break;
+          case 2:
+            errorType = 'general_error';
+            errorMessage = 'Obecná chyba při segmentaci';
+            break;
+          case 3:
+            errorType = 'cuda_out_of_memory';
+            errorMessage = 'CUDA out of memory - nedostatek paměti GPU';
+            // Automaticky nastavíme preferenci na CPU pro další úlohy
+            process.env.DEVICE_PREFERENCE = 'cpu';
+            logger.warn('Nastavuji DEVICE_PREFERENCE=cpu kvůli CUDA out of memory chybě');
+            break;
+          case 4:
+            errorType = 'device_error';
+            errorMessage = 'Chyba zařízení (CUDA/GPU)';
+            // Automaticky nastavíme preferenci na CPU pro další úlohy
+            process.env.DEVICE_PREFERENCE = 'cpu';
+            logger.warn('Nastavuji DEVICE_PREFERENCE=cpu kvůli chybě zařízení');
+            break;
+          default:
+            errorType = 'unknown_error';
+            errorMessage = `Neznámá chyba (kód ${code})`;
+        }
+
+        logger.error(
+          `Segmentation failed for ${imageId}. Exit code: ${code} (${errorType}). Stdout: ${stdoutData}. Stderr: ${stderrData}`,
+        );
+
+        // Pokusíme se extrahovat detailnější chybovou zprávu z výstupu
+        let detailedError = stderrData || stdoutData || 'No error output';
+
+        // Pokud je výstup ve formátu JSON, pokusíme se z něj získat chybovou zprávu
+        try {
+          if (stdoutData && stdoutData.includes('"error":')) {
+            const jsonMatch = stdoutData.match(/\{.*\}/s);
+            if (jsonMatch) {
+              const errorJson = JSON.parse(jsonMatch[0]);
+              if (errorJson.error) {
+                detailedError = errorJson.error;
+                if (errorJson.error_type) {
+                  errorType = errorJson.error_type;
+                }
+                if (errorJson.recommendation) {
+                  detailedError += ` (${errorJson.recommendation})`;
+                }
+              }
+            }
+          }
+        } catch (jsonError) {
+          logger.warn(`Nepodařilo se zpracovat JSON chybovou zprávu: ${jsonError}`);
+        }
+
+        // Pokud došlo k chybě zařízení, zkusíme úlohu znovu s CPU
+        if (errorType === 'cuda_out_of_memory' || errorType === 'device_error') {
+          logger.info(`Zkouším znovu segmentaci pro ${imageId} s CPU...`);
+
+          // Přidáme úlohu znovu do fronty s vyšší prioritou a CPU preferencí
+          try {
+            // Vytvoříme nové prostředí s CPU preferencí
+            const cpuEnv = {
+              ...env,
+              DEVICE_PREFERENCE: 'cpu',
+            };
+
+            logger.info(`Spouštím nový proces s CPU preferencí pro ${imageId}`);
+
+            // Spustíme nový proces s CPU preferencí
+            const cpuProcess = spawn(PYTHON_EXECUTABLE, args, { env: cpuEnv });
+
+            let cpuStderrData = '';
+            let cpuStdoutData = '';
+
+            cpuProcess.stdout.on('data', (data) => {
+              cpuStdoutData += data.toString();
+              logger.debug(`CPU segmentation stdout for ${imageId}: ${data.toString()}`);
+            });
+
+            cpuProcess.stderr.on('data', (data) => {
+              cpuStderrData += data.toString();
+              logger.debug(`CPU segmentation stderr for ${imageId}: ${data.toString()}`);
+            });
+
+            cpuProcess.on('close', async (cpuCode) => {
+              if (cpuCode === 0) {
+                logger.info(`CPU segmentation successful for ${imageId}`);
+
+                // Zpracujeme výsledek stejně jako v původním případě
+                if (fs.existsSync(absoluteOutputPath)) {
+                  try {
+                    const resultData = JSON.parse(fs.readFileSync(absoluteOutputPath, 'utf8'));
+
+                    // Validate the result data
+                    if (!resultData.polygons || !Array.isArray(resultData.polygons)) {
+                      throw new Error('Segmentation did not return valid polygons array');
+                    }
+
+                    // Validate each polygon has required properties
+                    const validPolygons = resultData.polygons.filter((polygon: any) => {
+                      return polygon && Array.isArray(polygon.points) && polygon.points.length >= 3;
+                    });
+
+                    if (validPolygons.length === 0) {
+                      throw new Error('Segmentation did not return any valid polygons with at least 3 points');
+                    }
+
+                    // Ensure each polygon has a type (default to 'external' if not specified)
+                    const processedPolygons = validPolygons.map((polygon: any) => ({
+                      ...polygon,
+                      type: polygon.type || 'external',
+                      id: polygon.id || `poly-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                    }));
+
+                    // Update status in database with processed polygons
+                    await updateSegmentationStatus(imageId, 'completed', absoluteOutputPath, undefined, processedPolygons);
+
+                    // Resolve the promise (no specific result needed as status is updated)
+                    resolve();
+                  } catch (parseError) {
+                    logger.error(`Error parsing CPU segmentation result for ${imageId}:`, { error: parseError });
+                    await updateSegmentationStatus(
+                      imageId,
+                      'failed',
+                      null,
+                      `${errorMessage}. Details: ${detailedError}. CPU fallback also failed: ${parseError}`
+                    );
+                    reject(parseError);
+                  }
+                } else {
+                  logger.error(`CPU segmentation output file not found for ${imageId}: ${absoluteOutputPath}`);
+                  await updateSegmentationStatus(
+                    imageId,
+                    'failed',
+                    null,
+                    `${errorMessage}. Details: ${detailedError}. CPU fallback failed: Output file not found`
+                  );
+                  reject(new Error(`Output file not found after CPU segmentation: ${absoluteOutputPath}`));
+                }
+              } else {
+                logger.error(`CPU segmentation also failed for ${imageId} with code ${cpuCode}`);
+                await updateSegmentationStatus(
+                  imageId,
+                  'failed',
+                  null,
+                  `${errorMessage}. Details: ${detailedError}. CPU fallback failed with code ${cpuCode}`
+                );
+                reject(new Error(`Script failed with code ${code} and CPU fallback also failed with code ${cpuCode}`));
+              }
+            });
+
+            cpuProcess.on('error', async (err) => {
+              logger.error(`Failed to start CPU Python script for image ${imageId}:`, { error: err });
+              await updateSegmentationStatus(
+                imageId,
+                'failed',
+                null,
+                `${errorMessage}. Details: ${detailedError}. CPU fallback failed to start: ${err.message}`
+              );
+              reject(err);
+            });
+
+            // Neukončujeme zde, protože čekáme na výsledek CPU procesu
+            return;
+          } catch (cpuError: unknown) {
+            const cpuErrorMessage = cpuError instanceof Error ? cpuError.message : String(cpuError);
+            logger.error(`Error starting CPU segmentation for ${imageId}:`, { error: cpuError });
+            await updateSegmentationStatus(
+              imageId,
+              'failed',
+              null,
+              `${errorMessage}. Details: ${detailedError}. CPU fallback failed to start: ${cpuErrorMessage}`
+            );
+            reject(new Error(`Script failed with code ${code} and CPU fallback failed to start: ${cpuErrorMessage}`));
+            return;
+          }
+        }
+
+        // Pro ostatní chyby jen aktualizujeme stav a odmítneme promise
+        await updateSegmentationStatus(
+          imageId,
+          'failed',
+          null,
+          `${errorMessage}. Details: ${detailedError}`,
+        );
+
+        reject(new Error(`Script failed with code ${code} (${errorType}): ${errorMessage}`));
       }
     });
 
     // Handle process errors
     pythonProcess.on('error', async (err) => {
-      logger.error(`Failed to start Python script for image ${imageId}:`, { error: err });
+      logger.error(`Failed to start Python script for image ${imageId}:`, {
+        error: err,
+      });
       await updateSegmentationStatus(imageId, 'failed', null, `Failed to start script: ${err.message}`);
       reject(err);
     });
@@ -800,26 +1118,29 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
 segmentationQueue.on('queue:updated', (status) => {
   try {
     // Emit queue status update via WebSocket
-    const io = getIO();
-    
-    // Add timestamp to the status update
-    const statusWithTimestamp = {
-      ...status,
-      timestamp: new Date().toISOString(),
-      queueLength: status.pendingTasks?.length || 0,
-      activeTasksCount: status.runningTasks?.length || 0
-    };
-    
-    // Broadcast to all authenticated users
-    io.emit('segmentation_queue_update', statusWithTimestamp);
-    
-    logger.debug('Broadcasting queue status update', { 
-      queueLength: statusWithTimestamp.queueLength,
-      activeTasksCount: statusWithTimestamp.activeTasksCount
-    });
+    const io = getSocketIO(); // Updated function call
+    if (io) {
+      // Add timestamp to the status update
+      const statusWithTimestamp = {
+        ...status,
+        timestamp: new Date().toISOString(),
+        queueLength: status.pendingTasks?.length || 0,
+        activeTasksCount: status.runningTasks?.length || 0,
+      };
+
+      // Broadcast to all authenticated users
+      io.emit('segmentation_queue_update', statusWithTimestamp);
+
+      logger.debug('Broadcasting queue status update', {
+        queueLength: statusWithTimestamp.queueLength,
+        activeTasksCount: statusWithTimestamp.activeTasksCount,
+      });
+    } else {
+      logger.warn('Socket.IO not available, cannot broadcast queue status update.');
+    }
   } catch (error) {
     logger.error('Error broadcasting queue status update', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -877,7 +1198,7 @@ export const setupSegmentationQueue = async (): Promise<boolean> => {
   } catch (error) {
     logger.error('Error setting up segmentation queue:', {
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : 'No stack trace'
+      stack: error instanceof Error ? error.stack : 'No stack trace',
     });
     return false;
   }
@@ -888,5 +1209,5 @@ export default {
   getSegmentationQueueStatus,
   cancelSegmentationTask,
   segmentationQueue,
-  setupSegmentationQueue
+  setupSegmentationQueue,
 };
