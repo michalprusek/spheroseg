@@ -84,3 +84,6 @@ docker-volumes/
 Thumbs.db
 
 **/.claude/settings.local.json
+
+# SSL Certificates
+letsencrypt/
