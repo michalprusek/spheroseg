@@ -1,4 +1,26 @@
 export default {
+  project: {
+    detail: {
+      noImagesSelected: '未选择图像',
+      triggeringResegmentation: '正在为 {{count}} 张图像触发重新分割...',
+      deleteConfirmation: '您确定要删除 {{count}} 张图像吗？此操作无法撤消。',
+      deletingImages: '正在删除 {{count}} 张图像...',
+      deleteSuccess: '成功删除 {{count}} 张图像',
+      deleteFailed: '删除 {{count}} 张图像失败',
+      preparingExport: '正在准备导出 {{count}} 张图像...'
+    },
+    segmentation: {
+      processingInBatches: '开始分批处理 {{count}} 张图像，共 {{batches}} 批...',
+      batchQueued: '批次 {{current}}/{{total}} 已成功排队',
+      batchQueuedFallback: '批次 {{current}}/{{total}} 已成功排队（备用端点）',
+      batchError: '处理批次 {{current}}/{{total}} 时出错',
+      partialSuccess: '分割：{{success}} 张图像成功排队，{{failed}} 张失败',
+      allSuccess: '分割：所有 {{count}} 张图像成功排队',
+      allFailed: '分割：所有 {{count}} 张图像均失败',
+      startedImages: '已为 {{count}} 张图像启动分割',
+      queuedLocallyWarning: '已在本地为 {{count}} 张图像排队分割。服务器连接失败。'
+    },
+  },
   common: {
     appName: '类器官分割平台',
     appNameShort: 'SpheroSeg',
@@ -831,6 +853,11 @@ export default {
       statusOnlyQueued: '分割：{{count}} 个排队中',
       statusOnlyQueued_one: '分割：1 个排队中',
       statusOnlyQueued_other: '分割：{{count}} 个排队中',
+      processing: '处理中',
+      queued: '排队中',
+      statusProcessing: '分割：{{count}} 个处理中',
+      statusReady: '分割：就绪',
+      tasksTotal: '共 {{total}} 个任务（{{running}} 个处理中，{{queued}} 个排队中）'
     },
     notifications: {
       completed: '分割成功完成',

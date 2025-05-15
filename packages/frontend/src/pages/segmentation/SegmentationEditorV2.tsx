@@ -48,6 +48,9 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
     setTransform,
     setTempPoints,
     setInteractionState,
+
+    // Add fetchData function to reload segmentation data
+    fetchData as fetchSegmentationData,
     setSegmentationDataWithHistory,
     handleSave,
     undo,
@@ -156,11 +159,11 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
       if (data.success) {
         toast.success(t('segmentation.resegment.success'));
 
-        // Reload the segmentation data
+        // Reload the segmentation data without refreshing the page
         // We'll use a small delay to allow the server to process the segmentation
         setTimeout(() => {
-          // Force reload the current page to get the new segmentation
-          window.location.reload();
+          // Fetch the updated segmentation data
+          fetchSegmentationData();
         }, 1000);
       } else {
         toast.error(t('segmentation.resegment.error.failed'));

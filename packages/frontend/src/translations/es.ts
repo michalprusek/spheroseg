@@ -1,4 +1,26 @@
 export default {
+  project: {
+    detail: {
+      noImagesSelected: 'No hay imágenes seleccionadas',
+      triggeringResegmentation: 'Iniciando re-segmentación para {{count}} imágenes...',
+      deleteConfirmation: '¿Está seguro de que desea eliminar {{count}} imágenes? Esta acción no se puede deshacer.',
+      deletingImages: 'Eliminando {{count}} imágenes...',
+      deleteSuccess: 'Se eliminaron {{count}} imágenes con éxito',
+      deleteFailed: 'No se pudieron eliminar {{count}} imágenes',
+      preparingExport: 'Preparando la exportación de {{count}} imágenes...'
+    },
+    segmentation: {
+      processingInBatches: 'Iniciando segmentación para {{count}} imágenes en {{batches}} lotes...',
+      batchQueued: 'Lote {{current}}/{{total}} puesto en cola con éxito',
+      batchQueuedFallback: 'Lote {{current}}/{{total}} puesto en cola con éxito (endpoint alternativo)',
+      batchError: 'Error al procesar el lote {{current}}/{{total}}',
+      partialSuccess: 'Segmentación: {{success}} imágenes puestas en cola con éxito, {{failed}} fallaron',
+      allSuccess: 'Segmentación: Todas las {{count}} imágenes puestas en cola con éxito',
+      allFailed: 'Segmentación: Todas las {{count}} imágenes fallaron',
+      startedImages: 'Segmentación iniciada para {{count}} imágenes',
+      queuedLocallyWarning: 'Segmentación puesta en cola localmente para {{count}} imágenes. Falló la conexión con el servidor.'
+    },
+  },
   common: {
     appName: 'Segmentación de Esferoides',
     appNameShort: 'SpheroSeg',

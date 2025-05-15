@@ -18,7 +18,7 @@ interface UseDashboardProjectsReturn {
   totalProjects: number;
   loading: boolean;
   error: string | null;
-  fetchProjects: (limit?: number, offset?: number) => void; // Allow optional args
+  fetchProjects: (limit?: number, offset?: number, sortField?: string, sortDirection?: 'asc' | 'desc') => void; // Allow sorting
   // Remove fetchTotalProjects
 }
 
@@ -29,9 +29,9 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Updated fetchProjects to handle pagination and total count
+  // Updated fetchProjects to handle pagination, sorting, and total count
   const fetchProjects = useCallback(
-    async (limit: number = 10, offset: number = 0) => {
+    async (limit: number = 10, offset: number = 0, sortField?: string, sortDirection?: 'asc' | 'desc') => {
       if (!user?.id) {
         setError('User not authenticated.');
         setLoading(false);
@@ -42,7 +42,7 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
       setError(null);
 
       try {
-        console.log(`Fetching projects for user ${user.id}, limit: ${limit}, offset: ${offset}`);
+        console.log(`Fetching projects for user ${user.id}, limit: ${limit}, offset: ${offset}, sortField: ${sortField}, sortDirection: ${sortDirection}`);
 
         // Create the API request with a timeout
         const controller = new AbortController();
@@ -52,9 +52,18 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
         }, 30000); // 30 second timeout - gives server more time to respond
 
         try {
+          // Create the params object with sorting parameters if provided
+          const params: Record<string, any> = { limit, offset };
+          if (sortField) {
+            params.sort_field = sortField;
+          }
+          if (sortDirection) {
+            params.sort_direction = sortDirection;
+          }
+
           // Make API request with abort signal and increased timeout
           const response = await apiClient.get<ProjectsApiResponse>('/api/projects', {
-            params: { limit, offset },
+            params,
             signal: controller.signal,
             timeout: 30000,
             // Force refresh for every request to ensure we have the latest data
@@ -130,7 +139,35 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
               return project;
             });
 
-            console.log('Processed projects:', processedProjects);
+            console.log('Processed projects before sorting:', processedProjects);
+
+            // Apply client-side sorting if sort parameters are provided
+            if (sortField && sortDirection) {
+              processedProjects.sort((a, b) => {
+                let valueA = a[sortField]?.toString().toLowerCase() || '';
+                let valueB = b[sortField]?.toString().toLowerCase() || '';
+
+                // For date fields, convert to Date objects
+                if (sortField === 'updated_at' || sortField === 'created_at') {
+                  valueA = new Date(a[sortField] || 0).getTime();
+                  valueB = new Date(b[sortField] || 0).getTime();
+                }
+
+                // Apply sort direction
+                if (sortDirection === 'asc') {
+                  return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+                } else {
+                  return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+                }
+              });
+
+              console.log('Projects after client-side sorting:', {
+                sortField,
+                sortDirection,
+                projects: processedProjects
+              });
+            }
+
             setProjects(processedProjects);
           } else {
             console.warn('No projects found in response:', response.data);
@@ -177,7 +214,7 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
         setLoading(false);
       }
     },
-    [user?.id],
+    [user?.id, /* sortField and sortDirection are provided when the function is called */],
   );
 
   // Remove fetchTotalProjects function

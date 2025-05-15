@@ -1,68 +1,53 @@
-import i18n from 'i18next';
+import i18nInstance from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { initializeTranslations } from '@/utils/translationLoader';
+import logger from './utils/logger';
 
-// Import translation files
-import enTranslations from '@/translations/en';
-import csTranslations from '@/translations/cs';
-import deTranslations from '@/translations/de';
-import esTranslations from '@/translations/es';
-import frTranslations from '@/translations/fr';
-import zhTranslations from '@/translations/zh';
-
-// Add missing translations for project.noImages
-const projectNoImagesTranslations = {
+// Define specific translations inline
+const projectNoImagesStrings = {
   title: 'No Images Yet',
   description: "This project doesn't have any images yet. Upload images to get started with segmentation.",
   uploadButton: 'Upload Images',
 };
+const projectErrorLoadingString = 'Error loading project';
 
-// Make sure enTranslations exists and has the right structure
-if (!enTranslations) {
-  console.warn('English translations not found, creating default object');
-  (window as any).enTranslations = {};
-}
+// Create a promise that resolves when i18next is initialized
+export const i18nInitializedPromise = (async () => {
+  try {
+    logger.info('[i18n] Starting asynchronous initialization...');
+    const baseResources = await initializeTranslations();
+    logger.info('[i18n] Base translations loaded:', Object.keys(baseResources || {}));
 
-// Create a proper structure for translations if it doesn't exist
-if (!enTranslations.project) {
-  enTranslations.project = {};
-}
+    // Ensure English translations are present before merging
+    if (!baseResources.en) {
+      baseResources.en = { translation: {} };
+    } else if (!baseResources.en.translation) {
+      baseResources.en.translation = {};
+    }
 
-// Add the missing translations directly to the translation object
-enTranslations.project.noImages = projectNoImagesTranslations;
-enTranslations.project.errorLoading = 'Error loading project';
+    // Merge additional translations into English
+    const enTranslation = baseResources.en.translation as Record<string, any>; 
+    enTranslation.projectNoImages = projectNoImagesStrings;
+    enTranslation.projectErrorLoading = projectErrorLoadingString;
+    logger.info('[i18n] Merged additional EN translations into:', Object.keys(baseResources.en.translation));
 
-// Initialize i18next
-i18n.use(initReactI18next).init({
-  resources: {
-    en: { translation: enTranslations },
-    cs: { translation: csTranslations },
-    de: { translation: deTranslations },
-    es: { translation: esTranslations },
-    fr: { translation: frTranslations },
-    zh: { translation: zhTranslations },
-  },
-  lng: 'en', // Default language
-  fallbackLng: 'en',
-  interpolation: {
-    escapeValue: false, // React already escapes values
-  },
-  react: {
-    useSuspense: false, // Disable suspense to avoid issues
-  },
-});
+    await i18nInstance.use(initReactI18next).init({
+      resources: baseResources,
+      lng: 'en', 
+      fallbackLng: 'en',
+      interpolation: {
+        escapeValue: false, 
+      },
+      debug: process.env.NODE_ENV === 'development',
+    });
+    logger.info('[i18n] i18next initialized successfully. Loaded languages:', Object.keys(i18nInstance.services.resourceStore.data));
+    return i18nInstance; 
+  } catch (error) {
+    logger.error('[i18n] Failed to initialize i18next:', error);
+    throw error;
+  }
+})();
 
-// Add the translations after initialization to ensure they're available
-i18n.addResourceBundle(
-  'en',
-  'translation',
-  {
-    project: {
-      noImages: projectNoImagesTranslations,
-      errorLoading: 'Error loading project',
-    },
-  },
-  true,
-  true,
-);
+logger.info('[i18n] i18n.ts module execution complete, initialization is async.');
 
-export default i18n;
+export default i18nInstance;

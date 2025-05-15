@@ -1,4 +1,26 @@
 export default {
+  project: {
+    detail: {
+      noImagesSelected: 'Nebyly vybrány žádné obrázky',
+      triggeringResegmentation: 'Spouštění resegmentace pro {{count}} obrázků...',
+      deleteConfirmation: 'Opravdu chcete smazat {{count}} obrázků? Tuto akci nelze vrátit zpět.',
+      deletingImages: 'Mazání {{count}} obrázků...',
+      deleteSuccess: 'Úspěšně smazáno {{count}} obrázků',
+      deleteFailed: 'Nepodařilo se smazat {{count}} obrázků',
+      preparingExport: 'Příprava exportu {{count}} obrázků...'
+    },
+    segmentation: {
+      processingInBatches: 'Spouštění segmentace pro {{count}} obrázků v {{batches}} dávkách...',
+      batchQueued: 'Dávka {{current}}/{{total}} úspěšně zařazena do fronty',
+      batchQueuedFallback: 'Dávka {{current}}/{{total}} úspěšně zařazena do fronty (záložní endpoint)',
+      batchError: 'Chyba při zpracování dávky {{current}}/{{total}}',
+      partialSuccess: 'Segmentace: {{success}} obrázků úspěšně zařazeno do fronty, {{failed}} selhalo',
+      allSuccess: 'Segmentace: Všech {{count}} obrázků úspěšně zařazeno do fronty',
+      allFailed: 'Segmentace: Všech {{count}} obrázků selhalo',
+      startedImages: 'Segmentace zahájena pro {{count}} obrázků',
+      queuedLocallyWarning: 'Segmentace zařazena lokálně pro {{count}} obrázků. Připojení k serveru selhalo.'
+    },
+  },
   common: {
     deletePolygon: 'Smazat polygon',
     appName: 'Segmentace Sféroidů',
@@ -100,6 +122,24 @@ export default {
     selectImages: 'Vybrat obrázky',
     noImagesDescription: 'Nahrajte obrázky pro začátek vašeho projektu',
     yes: 'Ano',
+    validationFailed: 'Validace selhala',
+    cropAvatar: 'Oříznout profilový obrázek',
+    actions: 'Akce',
+    view: 'Zobrazit',
+    share: 'Sdílet',
+    projectNamePlaceholder: 'Zadejte název projektu',
+    projectDescPlaceholder: 'Zadejte popis projektu',
+    creatingProject: 'Vytváření projektu...',
+    createSuccess: 'Projekt úspěšně vytvořen',
+    unauthorized: 'Nemáte oprávnění k provedení této akce',
+    forbidden: 'Přístup zakázán',
+    maxFileSize: 'Maximální velikost souboru: {size}MB',
+    accepted: 'Přijato',
+    processing: 'Zpracování...',
+    uploading: 'Nahrávání...',
+    uploadComplete: 'Nahrávání dokončeno',
+    uploadFailed: 'Nahrávání selhalo',
+    files: 'Soubory',
     editor: {
       error: 'Chyba',
       success: 'Úspěch',
@@ -790,6 +830,12 @@ export default {
     imageOnly: '(Pouze obrázkové soubory)',
   },
   export: {
+    formatDescriptions: {
+      COCO: "Common Objects in Context (COCO) JSON formát pro detekci objektů",
+      YOLO: "You Only Look Once (YOLO) textový formát pro detekci objektů",
+      MASK: "Binární maskové obrázky pro každý segmentovaný objekt",
+      POLYGONS: "Souřadnice polygonů v JSON formátu"
+    },
     exportCompleted: 'Export dokončen',
     exportFailed: 'Export selhal',
     title: 'Export segmentačních dat',
@@ -810,9 +856,12 @@ export default {
       },
       includeImages: 'Zahrnout originální obrázky',
       exportMetricsOnly: 'Exportovat pouze metriky',
+      selectImagesForExport: "Vyberte obrázky pro export",
       metricsRequireSegmentation: 'Export metrik vyžaduje dokončenou segmentaci',
     },
     formats: {
+      COCO: "COCO JSON",
+      YOLO: "YOLO TXT",
       MASK: 'Maska (TIFF)',
       POLYGONS: 'Polygony (JSON)',
     },
@@ -821,6 +870,8 @@ export default {
       CSV: 'CSV (.csv)',
     },
     selectImagesForExport: 'Vyberte obrázky pro export',
+    backToProject: 'Zpět na projekt',
+    exportImages: 'Exportovat obrázky',
   },
   metrics: {
     area: 'Plocha',
@@ -849,6 +900,17 @@ export default {
     untitledImage: 'Nepojmenovaný obrázek',
   },
   segmentation: {
+    queue: {
+      title: 'Segmentační fronta',
+      processing: 'Zpracovává se',
+      queued: 'Ve frontě',
+      noRunningTasks: 'Žádné běžící úlohy',
+      noQueuedTasks: 'Žádné úlohy ve frontě',
+      statusRunning: 'Segmentation: {{count}} zpracovává se, {{queued}} ve frontě',
+      statusProcessing: 'Segmentation: {{count}} zpracovává se',
+      statusReady: 'Segmentation: Připraveno',
+      tasksTotal: '{{total}} úloh celkem ({{running}} zpracovává se, {{queued}} ve frontě)'
+    },
     resolution: 'Rozlišení',
     selectPolygonForSlice: 'Vyberte polygon pro rozdělení',
     selectPolygonForAddPoints: 'Vyberte polygon pro přidání bodů',
@@ -1246,5 +1308,5 @@ export default {
     lastModified: 'Naposledy upraveno',
     projectDescPlaceholder: 'Zadejte popis projektu',
     creatingProject: 'Vytváření projektu...',
-  },
-};
+  }
+}

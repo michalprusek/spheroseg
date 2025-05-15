@@ -93,6 +93,9 @@ services:
       - DB_PASSWORD=postgres
       - USE_MOCK_USER=true
       - PYTHONUNBUFFERED=1
+      - MAX_UPLOAD_SIZE=100mb
+      - VALIDATION_STRICT=false
+      - DEBUG=true
     volumes:
       - ./packages/backend:/app
       - uploads_data:/app/uploads
@@ -181,9 +184,53 @@ services:
   #     retries: 3
   #     start_period: 40s
 
-  # Frontend development service with hot reload
-  frontend:
-    image: node:18-alpine
+  # NGINX reverse proxy for HTTPS
+  nginx:
+    image: nginx:alpine
+    container_name: spheroseg-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      # Let's Encrypt certificates
+      - ./letsencrypt/etc/letsencrypt:/etc/letsencrypt
+      - ./letsencrypt/var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./letsencrypt/webroot:/var/www/letsencrypt
+      # Fallback to self-signed certificates
+      - ./ssl/server.crt:/etc/nginx/ssl/server.crt
+      - ./ssl/server.key:/etc/nginx/ssl/server.key
+    depends_on:
+      - frontend-dev
+      - backend
+    command: >
+      sh -c "
+        mkdir -p /etc/nginx/ssl &&
+        nginx -g 'daemon off;'
+      "
+    networks:
+      - spheroseg-network
+      
+  # Certbot for SSL certificates
+  certbot:
+    image: certbot/certbot
+    container_name: spheroseg-certbot
+    volumes:
+      - ./letsencrypt/etc/letsencrypt:/etc/letsencrypt
+      - ./letsencrypt/var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./letsencrypt/webroot:/var/www/letsencrypt
+    depends_on:
+      - nginx
+    command: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/letsencrypt --quiet; if [ $? -eq 0 ]; then nginx -s reload; fi; sleep 12h & wait $${!}; done;'"
+    networks:
+      - spheroseg-network
+
+  # Frontend development service with Vite server
+  frontend-dev:
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile.fixed
     container_name: spheroseg-frontend-dev
     restart: always
     depends_on:
@@ -205,30 +252,13 @@ services:
       - VITE_DOCKER_ENV=true
       - VITE_ASSETS_URL=http://assets
     volumes:
-      - ./packages/frontend:/app
-      - ./packages/shared:/app/shared
-      - ./packages/types:/app/types
+      - ./packages/frontend:/app:cached
+      - ./packages/shared:/app/shared:cached
+      - ./packages/types:/app/types:cached
       - frontend_node_modules:/app/node_modules
     networks:
       - spheroseg-network
     working_dir: /app
-    command: >
-      sh -c "
-        echo 'Starting frontend development server with hot reload...' &&
-        echo 'VITE_API_URL=http://backend:5001' > .env.local &&
-        echo 'VITE_API_BASE_URL=/api' >> .env.local &&
-        echo 'VITE_API_AUTH_PREFIX=/auth' >> .env.local &&
-        echo 'VITE_API_USERS_PREFIX=/users' >> .env.local &&
-        echo 'VITE_API_PROXY_ENABLED=true' >> .env.local &&
-        echo 'VITE_DOCKER_ENV=true' >> .env.local &&
-        echo 'VITE_ASSETS_URL=http://assets' >> .env.local &&
-        mkdir -p node_modules/@spheroseg &&
-        rm -rf node_modules/@spheroseg/shared node_modules/@spheroseg/types &&
-        ln -sf /app/shared node_modules/@spheroseg/shared &&
-        ln -sf /app/types node_modules/@spheroseg/types &&
-        npm install --legacy-peer-deps &&
-        npm run dev
-      "
 
   # Static assets server
   assets:
@@ -248,7 +278,7 @@ services:
     container_name: spheroseg-adminer
     restart: always
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       - db
     networks:

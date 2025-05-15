@@ -258,7 +258,7 @@ const StatsOverview: React.FC = () => {
     clearCache
   } = useUserStatistics({
     showToasts: true,
-    useCache: true,
+    useCache: false, // Disable cache to always fetch fresh data
     autoFetch: true,
   });
 
@@ -490,7 +490,7 @@ const StatsOverview: React.FC = () => {
             </CardContent>
             <CardFooter>
               <Button variant="outline" size="sm" className="w-full" onClick={toggleExtendedView}>
-                {t('statsOverview.title') || 'Dashboard Overview'}
+                {t('statsOverview.hide') || 'Hide'}
               </Button>
             </CardFooter>
           </Card>

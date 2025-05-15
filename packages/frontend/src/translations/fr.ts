@@ -1,4 +1,26 @@
 export default {
+  project: {
+    detail: {
+      noImagesSelected: 'Aucune image sélectionnée',
+      triggeringResegmentation: 'Déclenchement de la re-segmentation pour {{count}} images...',
+      deleteConfirmation: 'Êtes-vous sûr de vouloir supprimer {{count}} images ? Cette action ne peut pas être annulée.',
+      deletingImages: 'Suppression de {{count}} images...',
+      deleteSuccess: '{{count}} images supprimées avec succès',
+      deleteFailed: 'Échec de la suppression de {{count}} images',
+      preparingExport: 'Préparation de l\'exportation de {{count}} images...'
+    },
+    segmentation: {
+      processingInBatches: 'Démarrage de la segmentation pour {{count}} images en {{batches}} lots...',
+      batchQueued: 'Lot {{current}}/{{total}} mis en file d\'attente avec succès',
+      batchQueuedFallback: 'Lot {{current}}/{{total}} mis en file d\'attente avec succès (endpoint de secours)',
+      batchError: 'Erreur lors du traitement du lot {{current}}/{{total}}',
+      partialSuccess: 'Segmentation : {{success}} images mises en file d\'attente avec succès, {{failed}} échecs',
+      allSuccess: 'Segmentation : Toutes les {{count}} images mises en file d\'attente avec succès',
+      allFailed: 'Segmentation : Toutes les {{count}} images ont échoué',
+      startedImages: 'Segmentation démarrée pour {{count}} images',
+      queuedLocallyWarning: 'Segmentation mise en file d\'attente localement pour {{count}} images. La connexion au serveur a échoué.'
+    },
+  },
   common: {
     appName: 'Segmentation de Sphéroïdes',
     appNameShort: 'SpheroSeg',
@@ -805,6 +827,11 @@ export default {
       statusOnlyQueued: 'Segmentation: {{count}} en attente',
       statusOnlyQueued_one: 'Segmentation: 1 en attente',
       statusOnlyQueued_other: 'Segmentation: {{count}} en attente',
+      processing: 'Traitement',
+      queued: 'En attente',
+      statusProcessing: 'Segmentation: {{count}} en traitement',
+      statusReady: 'Segmentation: Prêt',
+      tasksTotal: '{{total}} tâches au total ({{running}} en traitement, {{queued}} en attente)'
     },
     notifications: {
       completed: 'Segmentation terminée avec succès',

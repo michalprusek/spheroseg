@@ -117,8 +117,8 @@ export const useUserStatistics = (options: UseUserStatisticsOptions = {}): UseUs
 
   const {
     showToasts = true,
-    useCache = true,
-    cacheExpiration = 5 * 60 * 1000, // 5 minutes
+    useCache = false, // Disable cache by default to always fetch fresh data
+    cacheExpiration = 1 * 60 * 1000, // 1 minute cache expiration
     autoFetch = true,
   } = options;
 

@@ -48,7 +48,7 @@ const QueueItem: React.FC<QueueItemProps> = ({ name, status }) => {
         className={`text-xs font-medium px-2 py-1 rounded-full bg-opacity-10
         ${status === 'running' ? 'text-blue-500 bg-blue-100 dark:bg-blue-900 dark:bg-opacity-20' : 'text-gray-500 bg-gray-100 dark:bg-gray-700 dark:bg-opacity-50'}`}
       >
-        {status === 'running' ? 'Processing' : 'Queued'}
+        {status === 'running' ? t('segmentation.queue.processing') : t('segmentation.queue.queued')}
       </span>
     </div>
   );
@@ -693,22 +693,39 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
   // Queued count from filteredQueueStatus.queuedImages
   const queuedImagesCount = filteredQueueStatus.queuedImages?.length || 0;
 
-  // Calculate total tasks based on available data
-  // Pro běžící úkoly použijeme buď počet běžících úkolů, počet obrázků ve zpracování, nebo počet z backend images
-  const runningTasksCount = Math.max(
-    filteredQueueStatus.runningTasks?.length ?? 0,
-    filteredQueueStatus.processingImages?.length ?? 0,
-    processingImagesCount || 0
-  );
+  // Calculate task counts based on available data, but don't exaggerate unknown values
 
-  // Pro čekající úkoly použijeme buď počet čekajících úkolů, pendingTasks, queueLength, počet z backend images, nebo počet čekajících obrázků
-  const queuedTasksCount = Math.max(
-    filteredQueueStatus.queuedTasks?.length ?? 0,
-    filteredQueueStatus.pendingTasks?.length ?? 0,
-    filteredQueueStatus.queueLength ?? 0,
-    pendingImagesCount || 0,
-    queuedImagesCount || 0
-  );
+  // For running tasks, prefer the most specific count
+  let runningTasksCount = 0;
+  if (filteredQueueStatus.processingImages?.length > 0) {
+    // If we have processing images info, this is the most accurate
+    runningTasksCount = filteredQueueStatus.processingImages.length;
+  } else if (processingImagesCount > 0) {
+    // If we have processing count from backend, use it
+    runningTasksCount = processingImagesCount;
+  } else if (filteredQueueStatus.runningTasks?.length > 0) {
+    // Last option: running tasks IDs
+    runningTasksCount = filteredQueueStatus.runningTasks.length;
+  }
+
+  // For queued tasks, prefer the most specific count
+  let queuedTasksCount = 0;
+  if (filteredQueueStatus.queuedImages?.length > 0) {
+    // If we have queued images info, this is the most accurate
+    queuedTasksCount = filteredQueueStatus.queuedImages.length;
+  } else if (pendingImagesCount > 0) {
+    // If we have pending count from backend, use it
+    queuedTasksCount = pendingImagesCount;
+  } else if (filteredQueueStatus.pendingTasks?.length > 0) {
+    // If we have pending tasks list, use it
+    queuedTasksCount = filteredQueueStatus.pendingTasks.length;
+  } else if (filteredQueueStatus.queuedTasks?.length > 0) {
+    // If we have queued tasks list, use it
+    queuedTasksCount = filteredQueueStatus.queuedTasks.length;
+  } else if (filteredQueueStatus.queueLength > 0) {
+    // Last option: queue length
+    queuedTasksCount = filteredQueueStatus.queueLength;
+  }
 
   console.log('Calculated task counts:', {
     runningTasksCount,
@@ -727,46 +744,54 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
 
   // Prepare data for display in the queue
   let runningItems;
-  if (Array.isArray(filteredQueueStatus.processingImages) && filteredQueueStatus.processingImages.length > 0) {
-    // Pokud máme detailní informace o běžících úkolech, použijeme je
-    runningItems = filteredQueueStatus.processingImages.map((item) => (
-      <QueueItem key={item.id || item.name} name={item.name} status="running" />
-    ));
-  } else if (Array.isArray(filteredQueueStatus.runningTasks) && filteredQueueStatus.runningTasks.length > 0) {
-    // Pokud nemáme detailní informace, ale máme ID úkolů, vytvoříme zástupné položky
-    runningItems = filteredQueueStatus.runningTasks.map((taskId) => (
-      <QueueItem key={taskId} name={`Task ${taskId.substring(0, 6)}...`} status="running" />
-    ));
+  // Only show "running" items if count is actually > 0
+  if (runningTasksCount > 0) {
+    if (Array.isArray(filteredQueueStatus.processingImages) && filteredQueueStatus.processingImages.length > 0) {
+      // Pokud máme detailní informace o běžících úkolech, použijeme je
+      runningItems = filteredQueueStatus.processingImages.map((item) => (
+        <QueueItem key={item.id || item.name} name={item.name} status="running" />
+      ));
+    } else if (Array.isArray(filteredQueueStatus.runningTasks) && filteredQueueStatus.runningTasks.length > 0) {
+      // Pokud nemáme detailní informace, ale máme ID úkolů, vytvoříme zástupné položky
+      runningItems = filteredQueueStatus.runningTasks.map((taskId) => (
+        <QueueItem key={taskId} name={`Task ${taskId.substring(0, 6)}...`} status="running" />
+      ));
+    } else {
+      // Create placeholder running items based on count
+      runningItems = Array.from({ length: runningTasksCount }).map((_, index) => (
+        <QueueItem key={`running-${index}`} name={`Running task ${index + 1}`} status="running" />
+      ));
+    }
   } else {
     // Pokud nemáme žádné běžící úkoly
-    runningItems = <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">No running tasks</div>;
+    runningItems = <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">{t('segmentation.queue.noRunningTasks')}</div>;
   }
 
   // Prepare queued items
   let queuedItems;
-  if (Array.isArray(filteredQueueStatus.pendingTasks) && filteredQueueStatus.pendingTasks.length > 0) {
-    // Pokud máme seznam čekajících úkolů (pendingTasks)
+  if (Array.isArray(filteredQueueStatus.queuedImages) && filteredQueueStatus.queuedImages.length > 0) {
+    // First priority: if we have detailed queued images info, show them
+    queuedItems = filteredQueueStatus.queuedImages.map((item) => (
+      <QueueItem key={item.id || item.name} name={item.name} status="queued" />
+    ));
+  } else if (Array.isArray(filteredQueueStatus.pendingTasks) && filteredQueueStatus.pendingTasks.length > 0) {
+    // Second priority: if we have pending tasks IDs
     queuedItems = filteredQueueStatus.pendingTasks.map((taskId) => (
       <QueueItem key={taskId} name={`Task ${taskId.substring(0, 6)}...`} status="queued" />
     ));
   } else if (Array.isArray(filteredQueueStatus.queuedTasks) && filteredQueueStatus.queuedTasks.length > 0) {
-    // Alternativní název pro čekající úkoly (queuedTasks)
+    // Third priority: alternative name for pending tasks
     queuedItems = filteredQueueStatus.queuedTasks.map((taskId) => (
       <QueueItem key={taskId} name={`Task ${taskId.substring(0, 6)}...`} status="queued" />
     ));
-  } else if (Array.isArray(filteredQueueStatus.queuedImages) && filteredQueueStatus.queuedImages.length > 0) {
-    // Pokud máme seznam čekajících obrázků
-    queuedItems = filteredQueueStatus.queuedImages.map((item) => (
-      <QueueItem key={item.id || item.name} name={item.name} status="queued" />
-    ));
-  } else if (filteredQueueStatus.queueLength > 0) {
-    // Pokud nemáme seznam, ale máme počet čekajících úkolů
-    queuedItems = Array.from({ length: filteredQueueStatus.queueLength }).map((_, index) => (
+  } else if (queuedTasksCount > 0) {
+    // Fourth priority: if we have a count but no details, create placeholder items
+    queuedItems = Array.from({ length: Math.min(queuedTasksCount, 5) }).map((_, index) => (
       <QueueItem key={`queued-${index}`} name={`Queued task ${index + 1}`} status="queued" />
     ));
   } else {
-    // Pokud nemáme žádné čekající úkoly
-    queuedItems = <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">No queued tasks</div>;
+    // No queued tasks
+    queuedItems = <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">{t('segmentation.queue.noQueuedTasks')}</div>;
   }
 
   return (
@@ -776,15 +801,17 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           {runningTasksCount > 0 ? (
             <span>
               {queuedTasksCount > 0
-                ? `Segmentation: ${runningTasksCount} zpracovává se, ${queuedTasksCount} ve frontě`
-                : `Segmentation: ${runningTasksCount} zpracovává se`}
+                ? t('segmentation.queue.statusRunning', { count: runningTasksCount, queued: queuedTasksCount })
+                : t('segmentation.queue.statusProcessing', { count: runningTasksCount })}
             </span>
           ) : queuedTasksCount > 0 ? (
             <span>
-              {queuedTasksCount === 1 ? 'Segmentation: 1 ve frontě' : `Segmentation: ${queuedTasksCount} ve frontě`}
+              {queuedTasksCount === 1 
+                ? t('segmentation.queue.statusOnlyQueued_one') 
+                : t('segmentation.queue.statusOnlyQueued', { count: queuedTasksCount })}
             </span>
           ) : (
-            <span>Segmentation: Připraveno</span>
+            <span>{t('segmentation.queue.statusReady')}</span>
           )}
         </div>
         <div className="w-32">
@@ -799,15 +826,10 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50 overflow-hidden">
           <div className="p-3 border-b border-gray-100 dark:border-gray-700">
-            <h3 className="font-medium text-sm">Segmentační fronta</h3>
+            <h3 className="font-medium text-sm">{t('segmentation.queue.title')}</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {`${totalTasks} úloh celkem (${runningTasksCount} zpracovává se, ${queuedTasksCount} ve frontě)`}
+              {t('segmentation.queue.tasksTotal', { total: totalTasks, running: runningTasksCount, queued: queuedTasksCount })}
             </p>
-            {filteredQueueStatus.pendingTasks?.length > 0 && (
-              <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
-                {`Čekající úlohy: ${filteredQueueStatus.pendingTasks.length}`}
-              </p>
-            )}
           </div>
 
           <div className="max-h-60 overflow-y-auto">

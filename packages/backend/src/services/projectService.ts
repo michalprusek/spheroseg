@@ -10,6 +10,7 @@ import path from 'path';
 import config from '../config';
 import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
+import fileCleanupService from './fileCleanupService';
 
 interface CreateProjectParams {
   title: string;
@@ -504,6 +505,12 @@ export async function deleteProject(pool: Pool, projectId: string, userId: strin
       throw new ApiError(500, 'Error verifying project ownership');
     }
 
+    // Get all images in the project before deletion for cleanup
+    logger.info('Fetching all images in project before deletion', { projectId });
+    const imagesQuery = await client.query('SELECT id FROM images WHERE project_id = $1', [projectId]);
+    const imageIds = imagesQuery.rows.map(row => row.id);
+    logger.info(`Found ${imageIds.length} images to delete with project`, { projectId });
+
     // Step 1: First delete records from database (cascades to related tables)
     const deleteResult = await client.query('DELETE FROM projects WHERE id = $1 AND user_id = $2 RETURNING id', [
       projectId,
@@ -518,24 +525,30 @@ export async function deleteProject(pool: Pool, projectId: string, userId: strin
     // and transaction is committed
     await client.query('COMMIT');
 
-    // Step 2: Then delete associated files (outside of transaction) to avoid orphaned records
+    // Step 2: Properly clean up all project files using fileCleanupService
     try {
-      const projectDir = path.join(config.storage.uploadDir, 'projects', projectId);
 
-      if (fs.existsSync(projectDir)) {
-        // Recursively delete project directory
-        fs.rmSync(projectDir, { recursive: true, force: true });
-        logger.info('Project directory deleted', { projectId, projectDir });
-      } else {
-        logger.info('Project directory not found during deletion', {
+      logger.info('Starting thorough file cleanup for project', { projectId, imageCount: imageIds.length });
+
+      // Use the dedicated file cleanup service to properly clean all files
+      const cleanupResult = await fileCleanupService.cleanupProjectFiles(pool, projectId);
+
+      if (cleanupResult.success) {
+        logger.info('Successfully cleaned up all project files', {
           projectId,
-          projectDir,
+          deletedFiles: cleanupResult.deletedFiles.length,
+        });
+      } else {
+        logger.warn('Partial success cleaning up project files', {
+          projectId,
+          deletedFiles: cleanupResult.deletedFiles.length,
+          failedFiles: cleanupResult.failedFiles.length,
         });
       }
     } catch (error) {
       // Log file deletion error but consider the operation successful
       // since database records are already removed
-      logger.error('Failed to delete project directory, but database records were removed', {
+      logger.error('Failed to clean up project files, but database records were removed', {
         error,
         projectId,
         message: error instanceof Error ? error.message : 'Unknown error',

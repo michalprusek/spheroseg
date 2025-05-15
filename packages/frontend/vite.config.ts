@@ -55,6 +55,11 @@ export default defineConfig(({ mode }) => {
         ],
         usePolling: true, // Use polling for Docker volumes
       },
+      // Allow external access from any host
+      allowedHosts: ['localhost', 'spherosegapp.utia.cas.cz', '.utia.cas.cz'],
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
       proxy: {
         // Main API proxy with enhanced logging
         '/api': {
@@ -139,24 +144,26 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: 3000,
       strictPort: true, // Don't try other ports if 3000 is taken
+      cors: true, // Enable CORS for all requests
       hmr: {
-        // HMR configuration for Docker
-        host: 'localhost', // Use localhost instead of 0.0.0.0
-        port: 3000, // Match the port that's exposed to the host
-        clientPort: 3000, // Port exposed to the host - match the Docker port mapping
-        protocol: 'ws',
-        overlay: false, // Disable the error overlay
+        // Use HTTPS port for WebSocket when site is served over HTTPS
+        clientPort: 443, // Connect to the public-facing HTTPS port
+        protocol: 'wss', // Explicitly use wss for secure websockets
         path: '/@hmr',
-        timeout: 120000, // Increase timeout for Docker environment
-        // Disable HMR in production
-        disable: process.env.NODE_ENV === 'production',
+        // Make sure HMR is more resilient
+        timeout: 180000,
+        overlay: true,
       },
+      // Allow all hosts
+      origin: '*',
     },
     // Optimize build
     build: {
       sourcemap: true,
       chunkSizeWarningLimit: 1000,
     },
+    // Configure base path for production
+    base: '/',
     // Improve error handling
     logLevel: 'info',
   };

@@ -18,6 +18,7 @@ import { Project, ProjectImage, ImageStatus } from '@/types';
 import axios from 'axios';
 import socketClient from '@/socketClient';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
+import { useTranslation } from 'react-i18next';
 
 interface UseProjectDataReturn {
   project: Project | null;
@@ -34,6 +35,7 @@ const ProjectDetail = () => {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   console.log('ProjectDetail: Received projectId from URL:', id);
   useAuth();
@@ -45,6 +47,42 @@ const ProjectDetail = () => {
   const [selectedImages, setSelectedImages] = useState<Record<string, boolean>>({});
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const lastSelectedImageRef = useRef<string | null>(null);
+
+  // Funkce pro aktualizaci pouze statistik projektu bez načítání všech obrázků
+  const updateProjectStatistics = useCallback(async () => {
+    if (!id) return;
+
+    try {
+      // Načíst pouze statistiky projektu - toto je mnohem rychlejší než načítání všech obrázků
+      const response = await apiClient.get(`/api/projects/${id}/statistics`);
+
+      // Aktualizujeme pouze potřebné statistiky, neprovádíme refresh celé stránky
+      if (response.data) {
+        console.log('Aktualizovány statistiky projektu:', response.data);
+
+        // Oznámíme změnu statistik pomocí event
+        const statsEvent = new CustomEvent('project-statistics-updated', {
+          detail: {
+            projectId: id,
+            statistics: response.data
+          }
+        });
+        window.dispatchEvent(statsEvent);
+
+        // Také aktualizujeme statistiky fronty bez refreshování stránky
+        const queueUpdateEvent = new CustomEvent('queue-status-update', {
+          detail: {
+            refresh: true,
+            projectId: id,
+            forceRefresh: true,
+          },
+        });
+        window.dispatchEvent(queueUpdateEvent);
+      }
+    } catch (error) {
+      console.error('Chyba při aktualizaci statistik projektu:', error);
+    }
+  }, [id]);
 
   const {
     projectTitle,
@@ -107,11 +145,11 @@ const ProjectDetail = () => {
           updateImageStatus(data.imageId, data.status, data.resultPath, data.error);
 
           if (data.status === 'completed') {
-            toast.success(`Image segmentation complete for ${data.imageId.substring(0, 8)}...`);
-            refreshData();
+            // Odstraníme toast odsud, protože se zobrazí v handleImageStatusUpdate
+            // Namísto refreshData použijeme cílenější aktualizaci
+            updateProjectStatistics();
           } else if (data.status === 'failed') {
-            const errorMessage = data.error || 'Unknown error';
-            toast.error(`Segmentation failed: ${errorMessage}`);
+            // Odstraníme toast odsud, protože se zobrazí v handleImageStatusUpdate
 
             // Aktualizujeme také stav fronty
             const queueUpdateEvent = new CustomEvent('queue-status-update', {
@@ -123,7 +161,8 @@ const ProjectDetail = () => {
             });
             window.dispatchEvent(queueUpdateEvent);
 
-            refreshData();
+            // Namísto refreshData použijeme cílenější aktualizaci
+            updateProjectStatistics();
           }
         }
       };
@@ -183,7 +222,7 @@ const ProjectDetail = () => {
         isComponentMounted = false;
       };
     }
-  }, [id, updateImageStatus, refreshData, navigate]);
+  }, [id, updateImageStatus, updateProjectStatistics, navigate]);
 
   const { filteredImages, searchTerm, sortField, sortDirection, handleSearch, handleSort } = useImageFilter(images);
 
@@ -272,8 +311,11 @@ const ProjectDetail = () => {
         toast.success(`Image segmentation completed for ${imageId.substring(0, 8)}...`);
       }
 
-      // Pro všechny stavy okamžitě aktualizujeme data projektu
-      refreshData();
+      // Pro completed nebo failed stavy aktualizujeme statistiky bez refreshování celé stránky
+      if (status === 'completed' || status === 'failed') {
+        // Pouze aktualizujeme statistiky nebo jiná potřebná data, nikoliv celý seznam obrázků
+        updateProjectStatistics();
+      }
     };
 
     window.addEventListener('image-deleted', handleImageDeleted);
@@ -349,11 +391,11 @@ const ProjectDetail = () => {
       .map(([id]) => id);
 
     if (selectedImageIds.length === 0) {
-      toast.error('No images selected');
+      toast.error(t('project.detail.noImagesSelected'));
       return;
     }
 
-    toast.info(`Triggering re-segmentation for ${selectedImageIds.length} images...`);
+    toast.info(t('project.detail.triggeringResegmentation', { count: selectedImageIds.length }));
 
     const updatedImages = images.map((img) => {
       if (selectedImageIds.includes(img.id)) {
@@ -471,14 +513,14 @@ const ProjectDetail = () => {
       .map(([id]) => id);
 
     if (selectedImageIds.length === 0) {
-      toast.error('No images selected');
+      toast.error(t('project.detail.noImagesSelected'));
       return;
     }
 
     if (
-      window.confirm(`Are you sure you want to delete ${selectedImageIds.length} images? This action cannot be undone.`)
+      window.confirm(t('project.detail.deleteConfirmation', { count: selectedImageIds.length }))
     ) {
-      toast.info(`Deleting ${selectedImageIds.length} images...`);
+      toast.info(t('project.detail.deletingImages', { count: selectedImageIds.length }));
 
       const remainingImages = images.filter((img) => !selectedImageIds.includes(img.id));
       onImagesChange(remainingImages);
@@ -507,11 +549,11 @@ const ProjectDetail = () => {
         const failCount = results.length - successCount;
 
         if (successCount > 0) {
-          toast.success(`Successfully deleted ${successCount} images`);
+          toast.success(t('project.detail.deleteSuccess', { count: successCount }));
         }
 
         if (failCount > 0) {
-          toast.error(`Failed to delete ${failCount} images`);
+          toast.error(t('project.detail.deleteFailed', { count: failCount }));
           console.error(
             'Failed deletions:',
             results.filter((r) => r.status !== 'fulfilled' || !(r.value as any).success),
@@ -538,11 +580,11 @@ const ProjectDetail = () => {
       .map(([id]) => id);
 
     if (selectedImageIds.length === 0) {
-      toast.error('No images selected');
+      toast.error(t('project.detail.noImagesSelected'));
       return;
     }
 
-    toast.info(`Preparing export of ${selectedImageIds.length} images...`);
+    toast.info(t('project.detail.preparingExport', { count: selectedImageIds.length }));
 
     exportSelectedImages();
   };
@@ -601,7 +643,7 @@ const ProjectDetail = () => {
 
         // Zobrazíme informaci o zpracování
         if (batches.length > 1) {
-          toast.info(`Spouštění segmentace pro ${imageIdsForSegmentation.length} obrázků v ${batches.length} dávkách...`);
+          toast.info(t('project.segmentation.processingInBatches', { count: imageIdsForSegmentation.length, batches: batches.length }));
         }
 
         // Postupné zpracování všech dávek
@@ -635,7 +677,7 @@ const ProjectDetail = () => {
 
                 // Informujeme uživatele o průběhu
                 if (batches.length > 1) {
-                  toast.success(`Dávka ${i+1}/${batches.length} úspěšně zařazena do fronty`);
+                  toast.success(t('project.segmentation.batchQueued', { current: i+1, total: batches.length }));
                 }
             } catch (newEndpointErr) {
                 console.warn(`Batch ${i+1}: New endpoint failed, trying legacy endpoint:`, newEndpointErr);
@@ -658,7 +700,7 @@ const ProjectDetail = () => {
 
                     // Informujeme uživatele o průběhu
                     if (batches.length > 1) {
-                      toast.success(`Dávka ${i+1}/${batches.length} úspěšně zařazena do fronty (záložní endpoint)`);
+                      toast.success(t('project.segmentation.batchQueuedFallback', { current: i+1, total: batches.length }));
                     }
                 } catch (legacyErr) {
                     console.error(`Batch ${i+1}: Both endpoints failed:`, legacyErr);
@@ -666,7 +708,7 @@ const ProjectDetail = () => {
 
                     // Informujeme uživatele o chybě
                     if (batches.length > 1) {
-                      toast.error(`Chyba při zpracování dávky ${i+1}/${batches.length}`);
+                      toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
                     }
                 }
             }
@@ -676,19 +718,19 @@ const ProjectDetail = () => {
 
         // Zobrazíme celkový výsledek
         if (successCount > 0 && failCount > 0) {
-          toast.info(`Segmentace: ${successCount} obrázků úspěšně zařazeno do fronty, ${failCount} selhalo`);
+          toast.info(t('project.segmentation.partialSuccess', { success: successCount, failed: failCount }));
         } else if (successCount > 0) {
-          toast.success(`Segmentace: Všech ${successCount} obrázků úspěšně zařazeno do fronty`);
+          toast.success(t('project.segmentation.allSuccess', { count: successCount }));
         } else if (failCount > 0) {
-          toast.error(`Segmentace: Všech ${failCount} obrázků selhalo`);
+          toast.error(t('project.segmentation.allFailed', { count: failCount }));
         }
         apiSuccess = successCount > 0;
 
         if (apiSuccess) {
-          toast.success(`Segmentation started for ${imageIdsForSegmentation.length} images`);
+          toast.success(t('project.segmentation.startedImages', { count: imageIdsForSegmentation.length }));
         } else {
           toast.warning(
-            `Segmentation queued locally for ${imageIdsForSegmentation.length} images. Server connection failed.`,
+            t('project.segmentation.queuedLocallyWarning', { count: imageIdsForSegmentation.length }),
           );
         }
 

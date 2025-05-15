@@ -39,6 +39,7 @@ CMD ["sh", "-c", "echo 'Setting up application...' && \
      echo 'VITE_ASSETS_URL=http://assets:80' >> .env.local && \
      rm -f postcss.config.js && \
      echo 'Installing dependencies...' && \
-     npm install --legacy-peer-deps && \
+     npm install --legacy-peer-deps --force && \
+     npm install @rollup/rollup-linux-x64-musl @rollup/rollup-linux-x64-gnu --no-save --force || true && \
      echo 'Starting Vite development server...' && \
      npm run dev -- --host 0.0.0.0"]

@@ -36,14 +36,14 @@ const Dashboard = () => {
     // Log that we're refreshing data
     console.log('Dashboard loaded - refreshing statistics and projects data');
 
-    // Fetch projects directly
-    fetchProjects();
-  }, [queryClient, fetchProjects]);
+    // Fetch projects directly with current sort parameters
+    fetchProjects(10, 0, sortField, sortDirection);
+  }, [queryClient, fetchProjects, sortField, sortDirection]);
 
   useEffect(() => {
     // Poslouchej události pro aktualizaci seznamu projektů
-    const handleProjectCreated = () => fetchProjects();
-    const handleProjectDeleted = () => fetchProjects();
+    const handleProjectCreated = () => fetchProjects(10, 0, sortField, sortDirection);
+    const handleProjectDeleted = () => fetchProjects(10, 0, sortField, sortDirection);
 
     window.addEventListener('project-created', handleProjectCreated);
     window.addEventListener('project-deleted', handleProjectDeleted);
@@ -52,7 +52,7 @@ const Dashboard = () => {
       window.removeEventListener('project-created', handleProjectCreated);
       window.removeEventListener('project-deleted', handleProjectDeleted);
     };
-  }, [fetchProjects]);
+  }, [fetchProjects, sortField, sortDirection]);
 
   const handleOpenProject = (id: string) => {
     navigate(`/project/${id}`);
@@ -83,7 +83,7 @@ const Dashboard = () => {
 
     // The actual deletion is handled by DeleteProjectDialog through its own hook instance
     // We just need to refresh the project list when notified of deletion
-    fetchProjects();
+    fetchProjects(10, 0, sortField, sortDirection);
   };
 
   const handleSort = (field: 'name' | 'updatedAt' | 'segmentationStatus') => {
@@ -92,12 +92,19 @@ const Dashboard = () => {
     // Map field names to database fields
     if (field === 'name') dbField = 'title';
     else if (field === 'updatedAt') dbField = 'updated_at';
+    else if (field === 'segmentationStatus') dbField = 'status';
 
     // Toggle direction if same field
     const newDirection = dbField === sortField ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'desc';
 
+    // Log sorting to debug
+    console.log(`Sorting by ${field} (mapped to ${dbField}) in ${newDirection} order`);
+
     setSortField(dbField);
     setSortDirection(newDirection);
+
+    // Refresh projects with new sort parameters
+    fetchProjects(10, 0, dbField, newDirection);
   };
 
   if (error) {
@@ -131,6 +138,34 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  // Create a sorted copy of projects to display
+  const sortedProjects = [...projects].sort((a, b) => {
+    // Use the current sort field and direction
+    let valueA = a[sortField]?.toString().toLowerCase() || '';
+    let valueB = b[sortField]?.toString().toLowerCase() || '';
+
+    // For date fields, convert to Date objects
+    if (sortField === 'updated_at' || sortField === 'created_at') {
+      valueA = new Date(a[sortField] || 0).getTime();
+      valueB = new Date(b[sortField] || 0).getTime();
+    }
+
+    // Apply sort direction
+    if (sortDirection === 'asc') {
+      return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+    } else {
+      return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+    }
+  });
+
+  // Log the sorted projects for debugging
+  console.log('Dashboard rendering sorted projects:', {
+    originalProjects: projects,
+    sortedProjects,
+    sortField,
+    sortDirection
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
@@ -170,7 +205,7 @@ const Dashboard = () => {
             sortDirection={sortDirection}
           >
             <ProjectsTab
-              projects={projects}
+              projects={sortedProjects}
               viewMode={viewMode}
               loading={loading}
               onOpenProject={handleOpenProject}

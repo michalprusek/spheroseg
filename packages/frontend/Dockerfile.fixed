@@ -1,0 +1,37 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ git
+
+# Install Vite globally for access to vite binary
+RUN npm install -g vite
+
+# Set up environment for development
+ENV NODE_ENV=development
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+# Expose port 3000
+EXPOSE 3000
+
+# Set default command
+CMD ["sh", "-c", "\
+    echo 'Setting up application environment...' && \
+    mkdir -p node_modules/@spheroseg && \
+    rm -rf node_modules/@spheroseg/shared node_modules/@spheroseg/types && \
+    ln -sf /app/shared node_modules/@spheroseg/shared && \
+    ln -sf /app/types node_modules/@spheroseg/types && \
+    echo 'VITE_API_URL=http://backend:5001' > .env.local && \
+    echo 'VITE_API_BASE_URL=/api' >> .env.local && \
+    echo 'VITE_API_AUTH_PREFIX=/auth' >> .env.local && \
+    echo 'VITE_API_USERS_PREFIX=/users' >> .env.local && \
+    echo 'VITE_API_PROXY_ENABLED=true' >> .env.local && \
+    echo 'VITE_DOCKER_ENV=true' >> .env.local && \
+    echo 'VITE_ASSETS_URL=http://assets:80' >> .env.local && \
+    npm install --legacy-peer-deps --force && \
+    npm install @rollup/rollup-linux-x64-musl @rollup/rollup-linux-x64-gnu --no-save --force || true && \
+    echo 'Starting Vite development server...' && \
+    npm run dev -- --host 0.0.0.0 --port 3000 --strictPort \
+"]

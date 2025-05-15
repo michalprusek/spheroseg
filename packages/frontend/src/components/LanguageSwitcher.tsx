@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,67 +32,19 @@ const languageFlags: Record<string, string> = {
   zh: '🇨🇳',
 };
 
-// Type guard to check if a string is a valid Language
-const isLanguage = (lang: string, available: ReadonlyArray<Language>): lang is Language => {
-  return available.includes(lang as Language);
-};
-
 const LanguageSwitcher: React.FC = () => {
   const { t, language, setLanguage, availableLanguages } = useLanguage();
   const [open, setOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [browserLanguage, setBrowserLanguage] = useState<Language | null>(null);
 
-  // Function to get the display name of a language
-  const getLanguageName = (code: Language) => {
-    return languageNames[code] || code;
-  };
-
-  // Detect browser language on component mount
-  useEffect(() => {
-    const detectBrowserLanguage = () => {
-      const fullBrowserLanguage = navigator.language;
-      const baseLanguage = fullBrowserLanguage.split('-')[0];
-
-      // Check if the browser language is supported using type guard
-      if (isLanguage(baseLanguage, availableLanguages)) {
-        setBrowserLanguage(baseLanguage); // Type is narrowed to Language
-      } else {
-        setBrowserLanguage(null);
-      }
-    };
-
-    detectBrowserLanguage();
-  }, [availableLanguages]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
+  // Language change handler without page reload
   const handleLanguageChange = (lang: Language) => {
-    console.log(`[LanguageSwitcher] handleLanguageChange called with: ${lang}`);
-    setLanguage(lang); // Call the context's setLanguage function
+    console.log(`[LanguageSwitcher] Changing language to: ${lang}`);
+    setLanguage(lang);
     setOpen(false);
   };
 
-  const handleUseBrowserLanguage = () => {
-    if (browserLanguage) {
-      // browserLanguage is already Language | null
-      handleLanguageChange(browserLanguage);
-    }
-  };
-
   return (
-    <div ref={dropdownRef}>
+    <div>
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="flex items-center gap-2 relative">
@@ -111,44 +63,17 @@ const LanguageSwitcher: React.FC = () => {
           <DropdownMenuLabel>{t('settings.selectLanguage')}</DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          {browserLanguage && browserLanguage !== language && (
-            <>
-              <DropdownMenuItem
-                key="browser-language-item"
-                onSelect={(event) => {
-                  console.log(`[LanguageSwitcher] onSelect triggered for browser language. Event:`, event);
-                  handleUseBrowserLanguage();
-                }}
-                className="flex items-center justify-between"
-                data-lang={browserLanguage}
-              >
-                <div className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
-                  <span>{languageFlags[browserLanguage]}</span>
-                  <span>{t('settings.useBrowserLanguage', {}, 'Use browser language')}</span>
-                </div>
-                <Badge variant="outline" style={{ pointerEvents: 'none' }}>
-                  {browserLanguage.toUpperCase()}
-                </Badge>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
-          )}
-
           {availableLanguages.map((lang) => (
             <DropdownMenuItem
               key={lang}
-              onSelect={(event) => {
-                console.log(`[LanguageSwitcher] onSelect triggered for ${lang}. Event:`, event);
-                handleLanguageChange(lang);
-              }}
-              data-lang={lang}
-              className="flex items-center justify-between"
+              onClick={() => handleLanguageChange(lang)}
+              className="flex items-center justify-between cursor-pointer"
             >
-              <div className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
+              <div className="flex items-center gap-2">
                 <span>{languageFlags[lang]}</span>
                 <span>{languageNames[lang]}</span>
               </div>
-              {language === lang && <Check className="h-4 w-4 text-primary" style={{ pointerEvents: 'none' }} />}
+              {language === lang && <Check className="h-4 w-4 text-primary" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
