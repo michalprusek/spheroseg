@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import userProfileService from '../services/userProfileService';
 
 // Default theme (can be 'light', 'dark', or 'system')
 const defaultTheme = 'system';
@@ -17,31 +18,64 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user } = useAuth(); // Keep useAuth for potential future backend integration
+  const { user } = useAuth();
   const [theme, setThemeState] = useState<Theme>('system');
   const [loaded, setLoaded] = useState(false);
 
-  // Load theme from localStorage only
+  // Load theme from database or localStorage
   useEffect(() => {
-    const localTheme = localStorage.getItem('theme') as Theme | null;
-    if (localTheme) {
-      setThemeState(localTheme);
-      applyTheme(localTheme);
-    } else {
-      setThemeState('system'); // Default to system if nothing in localStorage
-      applyTheme('system');
-    }
-    setLoaded(true);
-    // Removed dependency on user, as Supabase logic is gone
-  }, []);
+    const loadTheme = async () => {
+      if (user) {
+        try {
+          // Try to load from database first
+          const dbTheme = await userProfileService.loadSettingFromDatabase('theme', 'theme', 'system');
+          if (dbTheme) {
+            setThemeState(dbTheme as Theme);
+            applyTheme(dbTheme as Theme);
+          }
+        } catch (error) {
+          console.warn('Failed to load theme from database, using localStorage fallback:', error);
+          // Fallback to localStorage
+          const localTheme = localStorage.getItem('theme') as Theme | null;
+          if (localTheme) {
+            setThemeState(localTheme);
+            applyTheme(localTheme);
+          } else {
+            setThemeState('system');
+            applyTheme('system');
+          }
+        }
+      } else {
+        // When not authenticated, use localStorage only
+        const localTheme = localStorage.getItem('theme') as Theme | null;
+        if (localTheme) {
+          setThemeState(localTheme);
+          applyTheme(localTheme);
+        } else {
+          setThemeState('system');
+          applyTheme('system');
+        }
+      }
+      setLoaded(true);
+    };
 
-  const setTheme = (newTheme: Theme) => {
+    loadTheme();
+  }, [user]);
+
+  const setTheme = async (newTheme: Theme) => {
     localStorage.setItem('theme', newTheme);
     setThemeState(newTheme);
     applyTheme(newTheme);
 
-    // Removed Supabase update logic
-    // TODO: Implement saving theme preference to our backend if needed
+    // Save to database if user is authenticated
+    if (user) {
+      try {
+        await userProfileService.setUserSetting('theme', newTheme, 'ui');
+      } catch (error) {
+        console.warn('Failed to save theme to database:', error);
+        // Continue with local storage as fallback
+      }
+    }
   };
 
   const applyTheme = (theme: Theme) => {

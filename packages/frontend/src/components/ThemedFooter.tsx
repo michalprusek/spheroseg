@@ -142,7 +142,7 @@ const ThemedFooter = () => {
               >
                 <Github className="w-5 h-5" />
               </a>
-              <a href="mailto:prusemic@cvut.cz" className={getLinkHoverClasses()} aria-label="Contact Email">
+              <a href="mailto:spheroseg@utia.cas.cz" className={getLinkHoverClasses()} aria-label="Contact Email">
                 <Mail className="w-5 h-5" />
               </a>
             </div>
@@ -180,8 +180,8 @@ const ThemedFooter = () => {
             <h3 className="text-lg font-semibold mb-6">{getTranslation('footer.contactTitle')}</h3>
             <ul className="space-y-4">
               <li>
-                <a href="mailto:prusemic@cvut.cz" className={getLinkHoverClasses()}>
-                  prusemic@cvut.cz
+                <a href="mailto:spheroseg@utia.cas.cz" className={getLinkHoverClasses()}>
+                  spheroseg@utia.cas.cz
                 </a>
               </li>
               <li>

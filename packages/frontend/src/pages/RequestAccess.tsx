@@ -41,7 +41,7 @@ const RequestAccess = () => {
       timestamp: new Date().toISOString(),
     };
 
-    console.log('Simulating sending access request email to prusemic@fjfi.cvut.cz with data:', requestData);
+    console.log('Simulating sending access request email to spheroseg@utia.cas.cz with data:', requestData);
 
     try {
       await apiClient.post('/api/access-requests', requestData);

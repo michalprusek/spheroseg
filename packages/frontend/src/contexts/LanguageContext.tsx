@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { useAuth } from './AuthContext';
 import i18n, { i18nInitializedPromise } from '../i18n';
 import apiClient from '@/lib/apiClient';
+import userProfileService from '../services/userProfileService';
 import { UserProfile } from '@/types/userProfile';
 import { toast } from 'react-hot-toast';
 import logger from '@/utils/logger';
@@ -135,13 +136,20 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       logger.info('[LanguageContext] fetchLanguagePreference: i18n not ready, skipping.');
       return 'en';
     }
-    logger.info('[LanguageContext] Fetching profile (for lang pref) for user: ' + userId);
+    logger.info('[LanguageContext] Fetching language preference for user: ' + userId);
     try {
-      const response = await apiClient.get<UserProfile>('/api/users/me');
-      return response.data.preferred_language || 'en';
+      const setting = await userProfileService.getUserSetting('language');
+      return setting?.value || 'en';
     } catch (error: unknown) {
-      logger.error('[LanguageContext] Error fetching profile for language preference:', error);
-      return (localStorage.getItem('language') as Language) || 'en';
+      logger.error('[LanguageContext] Error fetching language preference from database:', error);
+      // Fallback to old API method
+      try {
+        const response = await apiClient.get<UserProfile>('/api/users/me');
+        return response.data.preferred_language || 'en';
+      } catch (fallbackError) {
+        logger.error('[LanguageContext] Fallback API also failed:', fallbackError);
+        return (localStorage.getItem('language') as Language) || 'en';
+      }
     }
   }, [isI18nReady]);
 
@@ -211,10 +219,16 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
       if (auth.user && auth.user.id) {
         logger.info('[LanguageContext] Updating language preference on backend for user ' + auth.user.id + ' to ' + newLanguage);
-        apiClient
-          .put('/api/users/me', { preferred_language: newLanguage })
+        userProfileService
+          .setUserSetting('language', newLanguage, 'ui')
           .catch((err) => {
-            logger.error('[LanguageContext] Failed to update backend language preference:', err);
+            logger.error('[LanguageContext] Failed to update language preference in database:', err);
+            // Fallback to old API method
+            apiClient
+              .put('/api/users/me', { preferred_language: newLanguage })
+              .catch((fallbackErr) => {
+                logger.error('[LanguageContext] Fallback API update also failed:', fallbackErr);
+              });
           });
       }
     },

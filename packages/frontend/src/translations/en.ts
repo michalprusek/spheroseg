@@ -653,7 +653,7 @@ export default {
     developerName: 'Bc. Michal Průšek',
     facultyName: 'FNSPE CTU in Prague',
     description: 'Advanced platform for spheroid segmentation and analysis',
-    contactLabel: 'prusemic@cvut.cz',
+    contactLabel: 'spheroseg@utia.cas.cz',
     developerLabel: 'Bc. Michal Průšek',
     facultyLabel: 'FNSPE CTU in Prague',
     resourcesTitle: 'Resources',
@@ -714,7 +714,7 @@ export default {
         'Our tool combines cutting-edge artificial intelligence algorithms with an intuitive interface to provide researchers with precise spheroid boundary detection and analytical capabilities.',
       paragraph3:
         'The platform was developed by Michal Průšek from FNSPE CTU in Prague under the supervision of Adam Novozámský from UTIA CAS, in collaboration with researchers from the Department of Biochemistry and Microbiology at UCT Prague.',
-      contactPrefix: 'prusemic@cvut.cz',
+      contactPrefix: 'spheroseg@utia.cas.cz',
     },
     cta: {
       title: 'Ready to transform your research?',

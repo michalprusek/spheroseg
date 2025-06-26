@@ -2,7 +2,7 @@ import express from 'express';
 import { Request, Response } from 'express';
 import pool from '../db';
 import logger from '../utils/logger';
-import devAuthMiddleware, { AuthenticatedRequest } from '../middleware/devAuthMiddleware';
+import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
@@ -66,7 +66,7 @@ router.post('/', async (req: Request, res: Response) => {
 /**
  * Route handler for getting performance metrics for the current user
  */
-router.get('/me', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {

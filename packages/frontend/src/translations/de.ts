@@ -657,7 +657,7 @@ export default {
     developerName: 'Bc. Michal Průšek',
     facultyName: 'FNSPE CTU in Prag',
     description: 'Fortschrittliche Plattform für Sphäroidsegmentierung und -analyse',
-    contactLabel: 'prusemic@cvut.cz',
+    contactLabel: 'spheroseg@utia.cas.cz',
     developerLabel: 'Bc. Michal Průšek',
     facultyLabel: 'FNSPE CTU in Prag',
     resourcesTitle: 'Ressourcen',
@@ -715,7 +715,7 @@ export default {
       paragraph1: 'SpheroSeg ist eine fortschrittliche Plattform, die speziell für die Segmentierung und Analyse von Zellsphäroiden in mikroskopischen Bildern entwickelt wurde.',
       paragraph2: 'Unser Tool kombiniert modernste Algorithmen der künstlichen Intelligenz mit einer intuitiven Benutzeroberfläche, um Forschern präzise Sphäroidgrenzerkennung und Analysefunktionen zu bieten.',
       paragraph3: 'Die Plattform wurde von Michal Průšek von der FNSPE CTU in Prag unter der Betreuung von Adam Novozámský vom UTIA CAS in Zusammenarbeit mit Forschern der Abteilung für Biochemie und Mikrobiologie der UCT Prag entwickelt.',
-      contactPrefix: 'prusemic@cvut.cz',
+      contactPrefix: 'spheroseg@utia.cas.cz',
     },
     cta: {
       title: 'Bereit, Ihre Forschung zu transformieren?',

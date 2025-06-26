@@ -23,8 +23,25 @@ import { ApiError } from '../middleware/errorMiddleware';
 import config from '../config';
 import tokenService from '../services/tokenService';
 import tutorialProjectService from '../services/tutorialProjectService';
+import { sendPasswordReset } from '../services/emailService';
 
 const router: Router = express.Router();
+
+/**
+ * Generates a secure random password
+ */
+function generateSecurePassword(length: number = 12): string {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+  const crypto = require('crypto');
+  let password = '';
+  
+  for (let i = 0; i < length; i++) {
+    const randomIndex = crypto.randomInt(0, chars.length);
+    password += chars[randomIndex];
+  }
+  
+  return password;
+}
 
 // POST /api/auth/register - Register a new user
 router.post('/register', validate(registerSchema), async (req: express.Request, res: Response) => {
@@ -263,48 +280,63 @@ router.post('/forgot-password', validate(forgotPasswordSchema), async (req: expr
     logger.info('Processing forgot password request', { email });
 
     // Check if user exists
-    const result = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    const result = await pool.query('SELECT id, name FROM users WHERE email = $1', [email]);
     if (result.rows.length === 0) {
       // Don't reveal that email doesn't exist for security
       logger.info('Forgot password request for non-existent email', {
         email,
       });
       return res.status(200).json({
-        message: 'If an account with that email exists, a password reset link has been sent',
+        message: 'If an account with that email exists, a new password has been sent to your email',
       });
     }
 
-    const userId = result.rows[0].id;
+    const { id: userId, name } = result.rows[0];
 
-    // Generate reset token
-    const crypto = require('crypto');
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenHash = await bcryptjs.hash(resetToken, 10);
+    // Generate new secure password
+    const newPassword = generateSecurePassword(12);
+    const passwordHash = await bcryptjs.hash(newPassword, 10);
 
-    // Store token with expiry (1 hour)
-    const expiryTime = new Date();
-    expiryTime.setHours(expiryTime.getHours() + 1);
-
+    // Update user's password
     await pool.query(
-      'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at, created_at) VALUES ($1, $2, $3, NOW())',
-      [userId, resetTokenHash, expiryTime],
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [passwordHash, userId]
     );
 
-    // In a real application, send email with reset link
-    // For now, just return success message
-    logger.info('Password reset token created', { userId });
-    res.json({
-      message: 'If an account with that email exists, a password reset link has been sent',
-      // Include token in response for development/testing only
-      resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined,
-    });
+    // Revoke all existing refresh tokens for security
+    await pool.query(
+      'UPDATE refresh_tokens SET is_revoked = true WHERE user_id = $1',
+      [userId]
+    );
+
+    // Send password reset email
+    try {
+      const emailResult = await sendPasswordReset(email, name, newPassword);
+      logger.info('Password reset email sent', { 
+        userId, 
+        email, 
+        testUrl: emailResult.testUrl 
+      });
+      
+      res.json({
+        message: 'If an account with that email exists, a new password has been sent to your email',
+        // Include test URL for development/testing only
+        testUrl: process.env.NODE_ENV === 'development' ? emailResult.testUrl : undefined,
+      });
+    } catch (emailError) {
+      logger.error('Failed to send password reset email', { error: emailError, email, userId });
+      // Still return success to not reveal if email exists
+      res.json({
+        message: 'If an account with that email exists, a new password has been sent to your email',
+      });
+    }
   } catch (error) {
     logger.error('Forgot password error', { error, email });
     res.status(500).json({ message: 'Failed to process password reset request' });
   }
 });
 
-// POST /api/auth/reset-password - Reset password with token
+// POST /api/auth/reset-password - Reset password with token (deprecated - now using direct password reset)
 router.post('/reset-password', validate(resetPasswordSchema), async (req: express.Request, res: Response) => {
   const { token, password } = req.body;
 

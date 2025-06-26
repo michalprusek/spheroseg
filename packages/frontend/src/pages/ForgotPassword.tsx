@@ -9,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Loader2 } from 'lucide-react';
+import { requestPasswordReset } from '@/services/authService';
 
 const ForgotPassword = () => {
   const { t } = useLanguage();
@@ -23,23 +24,22 @@ const ForgotPassword = () => {
       return;
     }
     setIsLoading(true);
-    console.log(`Password reset requested for: ${email}`);
 
-    // --- Backend Integration Placeholder ---
-    // TODO: Replace with actual API call to backend endpoint for password reset
-    // Example: await requestPasswordReset(email);
-    // The backend should handle sending the reset link to the user's email.
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // Assume success for now
+      const response = await requestPasswordReset(email);
       setIsSubmitted(true);
       toast.success(
-        t('auth.passwordResetLinkSent') || 'If an account exists for this email, a password reset link has been sent.',
+        response.message || t('auth.passwordResetLinkSent') || 'If an account exists for this email, a new password has been sent.',
       );
+      
+      // In development mode, show test URL if available
+      if (response.testUrl && process.env.NODE_ENV === 'development') {
+        console.log('Email test URL:', response.testUrl);
+        toast.info(`Development: Check email at ${response.testUrl}`, { duration: 10000 });
+      }
     } catch (error) {
       console.error('Password reset request error:', error);
-      toast.error(t('auth.passwordResetFailed') || 'Failed to send password reset link. Please try again.');
+      toast.error(t('auth.passwordResetFailed') || 'Failed to process password reset request. Please try again.');
     } finally {
       setIsLoading(false);
     }

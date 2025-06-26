@@ -21,6 +21,7 @@ import {
   clearLastRoute,
 } from '@/services/authService'; // Import token services
 import { API_PATHS, formatApiPath } from '@/lib/apiPaths'; // Import centralized API paths
+import userProfileService from '../services/userProfileService';
 
 // Define simplified User type
 interface User {
@@ -466,35 +467,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserWithStorage(data.user);
       toast.success(data.message || 'Success!');
 
-      // Zachováme aktuální nastavení jazyka pro přihlášeného uživatele
-      const currentLanguage = localStorage.getItem('language') as Language | null;
-      if (currentLanguage) {
-        logger.info(`Updating language preference to ${currentLanguage} for user ${data.user.id}`);
-
-        // Aktualizujeme nastavení jazyka na serveru pro přihlášeného uživatele
-        (async () => {
-          try {
-            await axios.put(
-              API_PATHS.USERS.ME,
-              { preferred_language: currentLanguage },
-              {
-                timeout: 2000,
-                headers: {
-                  Authorization: `Bearer ${data.accessToken}`,
-                  'Content-Type': 'application/json',
+      // Migrate localStorage data to database for authenticated user
+      (async () => {
+        try {
+          logger.info(`Migrating localStorage data to database for user ${data.user.id}`);
+          await userProfileService.migrateLocalStorageToDatabase();
+          
+          // Also initialize user settings from database
+          await userProfileService.initializeUserSettings();
+          
+          logger.info(`Data migration completed for user ${data.user.id}`);
+        } catch (error) {
+          logger.error('Error during data migration:', {
+            error,
+            userId: data.user.id,
+          });
+          
+          // Fallback to legacy language update
+          const currentLanguage = localStorage.getItem('language') as Language | null;
+          if (currentLanguage) {
+            try {
+              await axios.put(
+                API_PATHS.USERS.ME,
+                { preferred_language: currentLanguage },
+                {
+                  timeout: 2000,
+                  headers: {
+                    Authorization: `Bearer ${data.accessToken}`,
+                    'Content-Type': 'application/json',
+                  },
                 },
-              },
-            );
-            logger.info(`Language preference updated to ${currentLanguage} for user ${data.user.id}`);
-          } catch (error) {
-            logger.error('Error updating language preference:', {
-              error,
-              userId: data.user.id,
-              language: currentLanguage,
-            });
+              );
+              logger.info(`Language preference updated via fallback for user ${data.user.id}`);
+            } catch (fallbackError) {
+              logger.error('Fallback language update also failed:', fallbackError);
+            }
           }
-        })();
-      }
+        }
+      })();
     },
     [setUserWithStorage],
   );
@@ -724,6 +734,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     removeTokens();
     setUserWithStorage(null);
     setToken(null);
+
+    // Clear ALL user-related localStorage data
+    localStorage.removeItem('userProfile');
+    localStorage.removeItem('userAvatar');
+    localStorage.removeItem('userAvatarUrl');
+    sessionStorage.removeItem('spheroseg_persisted_user');
 
     // Call the backend logout endpoint to invalidate the refresh token
     if (refreshToken) {

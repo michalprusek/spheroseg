@@ -225,7 +225,7 @@ export default {
       endpoint1Desc: 'Récupérez une liste de vos projets.',
       endpoint2Desc: 'Obtenez des images dans un projet spécifique.',
       endpoint3Desc: 'Initiez la segmentation pour une image spécifique.',
-      contactPrefix: 'prusemic@cvut.cz',
+      contactPrefix: 'spheroseg@utia.cas.cz',
     },
     backToHome: "Retour à l'accueil",
     backToTop: 'Retour en haut',
@@ -640,7 +640,7 @@ export default {
     facultyName: 'FJFI ČVUT v Praze',
     copyrightNotice: '© 2025 SpheroSeg.',
     description: "Plateforme avancée pour la segmentation et l'analyse des sphéroïdes cellulaires",
-    contactLabel: 'prusemic@cvut.cz',
+    contactLabel: 'spheroseg@utia.cas.cz',
     developerLabel: 'Bc. Michal Průšek',
     facultyLabel: 'FJFI ČVUT à Prague',
     resourcesTitle: 'Ressources',
@@ -698,7 +698,7 @@ export default {
         "Notre outil combine des algorithmes d'intelligence artificielle de pointe avec une interface intuitive pour fournir aux chercheurs une détection précise des contours des sphéroïdes et des capacités analytiques.",
       paragraph3:
         "La plateforme a été développée par Michal Průšek de FNSPE CTU à Prague sous la supervision d'Adam Novozámský de l'UTIA CAS, en collaboration avec des chercheurs du Département de Biochimie et Microbiologie de l'UCT Prague.",
-      contactPrefix: 'prusemic@cvut.cz',
+      contactPrefix: 'spheroseg@utia.cas.cz',
     },
     cta: {
       title: 'Prêt à transformer votre recherche ?',

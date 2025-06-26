@@ -25,17 +25,38 @@ const UserProfileDropdown = ({ username }: UserProfileDropdownProps) => {
   const { profile } = useProfile();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  // Load avatar from localStorage or profile
+  // Load avatar from localStorage or profile (with user validation)
   useEffect(() => {
+    if (!user) {
+      setAvatarUrl(null); // Clear avatar when no user
+      return;
+    }
+
     const storedAvatar = localStorage.getItem('userAvatar');
     if (storedAvatar) {
-      setAvatarUrl(storedAvatar);
-    } else if (profile?.avatar_url) {
+      // Validate that stored avatar belongs to current user
+      try {
+        const storedProfile = localStorage.getItem('userProfile');
+        if (storedProfile) {
+          const parsed = JSON.parse(storedProfile);
+          if (parsed.userId === user.id) {
+            setAvatarUrl(storedAvatar);
+            return;
+          }
+        }
+      } catch (error) {
+        // If validation fails, remove invalid data
+        localStorage.removeItem('userAvatar');
+        localStorage.removeItem('userProfile');
+      }
+    }
+    
+    if (profile?.avatar_url) {
       setAvatarUrl(profile.avatar_url);
     } else {
       setAvatarUrl(null);
     }
-  }, [profile]);
+  }, [profile, user]);
 
   const handleSignOut = async () => {
     try {

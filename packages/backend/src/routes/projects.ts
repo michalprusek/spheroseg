@@ -1,6 +1,6 @@
 import express, { Response, Router, NextFunction } from 'express';
 import pool from '../db';
-import devAuthMiddleware, { AuthenticatedRequest } from '../middleware/devAuthMiddleware';
+import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { validate } from '../middleware/validationMiddleware';
 import {
   listProjectsSchema,
@@ -17,7 +17,7 @@ const router: Router = express.Router();
 // @ts-ignore
 router.get(
   '/',
-  devAuthMiddleware,
+  authMiddleware,
   validate(listProjectsSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -86,7 +86,7 @@ router.get(
 // @ts-ignore
 router.post(
   '/',
-  devAuthMiddleware,
+  authMiddleware,
   validate(createProjectSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -198,7 +198,7 @@ router.post(
 // @ts-ignore
 router.get(
   '/:id',
-  devAuthMiddleware,
+  authMiddleware,
   validate(projectIdSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -276,7 +276,7 @@ router.get(
 // @ts-ignore
 router.delete(
   '/:id',
-  devAuthMiddleware,
+  authMiddleware,
   validate(deleteProjectSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -335,7 +335,7 @@ router.delete(
 // @ts-ignore
 router.post(
   '/:id/duplicate',
-  devAuthMiddleware,
+  authMiddleware,
   validate(duplicateProjectSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;

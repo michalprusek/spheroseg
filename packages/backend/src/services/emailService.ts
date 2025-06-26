@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { createLogger } from '@/utils/logger';
+import { createLogger } from '../utils/logger';
 
 const logger = createLogger('emailService');
 
@@ -8,7 +8,7 @@ const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.ethereal.email';
 const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '587', 10);
 const EMAIL_USER = process.env.EMAIL_USER || '';
 const EMAIL_PASS = process.env.EMAIL_PASS || '';
-const EMAIL_FROM = process.env.EMAIL_FROM || 'spheroseg@example.com';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'spheroseg@utia.cas.cz';
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 // Konfigurace pro vývojové prostředí, pokud nejsou k dispozici reálné SMTP údaje
@@ -23,7 +23,16 @@ async function createTransporter() {
     if (!testAccount) {
       try {
         logger.info('Creating Ethereal test account for email testing');
-        testAccount = await nodemailer.createTestAccount();
+        // Přidáme timeout pro vytvoření testovacího účtu
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Ethereal account creation timeout')), 10000);
+        });
+        
+        testAccount = await Promise.race([
+          nodemailer.createTestAccount(),
+          timeoutPromise
+        ]) as nodemailer.TestAccount;
+        
         logger.info(`Test account created: ${testAccount.user}`);
       } catch (error) {
         logger.error('Failed to create test email account', { error });
@@ -35,6 +44,9 @@ async function createTransporter() {
       host: 'smtp.ethereal.email',
       port: 587,
       secure: false,
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
       auth: {
         user: testAccount.user,
         pass: testAccount.pass,
@@ -47,6 +59,9 @@ async function createTransporter() {
     host: EMAIL_HOST,
     port: EMAIL_PORT,
     secure: EMAIL_PORT === 465, // true pro port 465, false pro ostatní porty
+    connectionTimeout: 10000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
     auth: {
       user: EMAIL_USER,
       pass: EMAIL_PASS,
@@ -71,13 +86,21 @@ export async function sendEmail({
   try {
     const transporter = await createTransporter();
 
-    const result = await transporter.sendMail({
-      from: EMAIL_FROM,
-      to,
-      subject,
-      text,
-      html: html || text,
+    // Přidáme timeout pro odeslání emailu
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Email send timeout')), 15000);
     });
+
+    const result = await Promise.race([
+      transporter.sendMail({
+        from: EMAIL_FROM,
+        to,
+        subject,
+        text,
+        html: html || text,
+      }),
+      timeoutPromise
+    ]) as any;
 
     // Pokud používáme testovací účet, vypíšeme URL pro zobrazení emailu
     if (testAccount) {
@@ -256,15 +279,114 @@ Datum žádosti: ${new Date().toLocaleString('cs-CZ')}
 `;
 
   return sendEmail({
-    to: 'prusemic@cvut.cz',
+    to: 'spheroseg@utia.cas.cz',
     subject,
     text,
     html,
   });
 }
 
+/**
+ * Sends a password reset email with a new generated password
+ */
+export async function sendPasswordReset(
+  email: string,
+  name: string,
+  newPassword: string,
+): Promise<{ success: boolean; testUrl?: string }> {
+
+  const subject = 'SpheroSeg - New Password';
+  
+  const text = `
+Hello ${name || 'User'},
+
+Your password has been reset as requested. Here is your new password:
+
+New Password: ${newPassword}
+
+Please use this password to log in to your account. For security reasons, we recommend changing this password after logging in.
+
+If you did not request this password reset, please contact us immediately at spheroseg@utia.cas.cz.
+
+Best regards,
+The SpheroSeg Team
+`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Reset - SpheroSeg</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: white; padding: 40px; border: 1px solid #e0e0e0; border-top: none; }
+    .password-box { background: #f8f9fa; border: 2px solid #007bff; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+    .password { font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; color: #007bff; letter-spacing: 2px; }
+    .warning { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin: 20px 0; color: #856404; }
+    .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 8px 8px; }
+    .button { display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔐 Password Reset</h1>
+    <p>Your new password for SpheroSeg</p>
+  </div>
+  
+  <div class="content">
+    <p>Hello <strong>${name || 'User'}</strong>,</p>
+    
+    <p>Your password has been reset as requested. Here is your new password:</p>
+    
+    <div class="password-box">
+      <p><strong>New Password:</strong></p>
+      <div class="password">${newPassword}</div>
+    </div>
+    
+    <div class="warning">
+      <strong>⚠️ Security Recommendation:</strong>
+      For your account security, please change this password after logging in.
+    </div>
+    
+    <p>You can now log in to your account using this new password.</p>
+    
+    <a href="${APP_URL}/signin" class="button">Log In to SpheroSeg</a>
+    
+    <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
+    
+    <p style="font-size: 14px; color: #666;">
+      If you did not request this password reset, please contact us immediately at 
+      <a href="mailto:spheroseg@utia.cas.cz">spheroseg@utia.cas.cz</a>.
+    </p>
+  </div>
+  
+  <div class="footer">
+    <p>This email was sent by SpheroSeg Platform</p>
+    <p>© 2025 SpheroSeg. All rights reserved.</p>
+  </div>
+</body>
+</html>
+`;
+
+  const result = await sendEmail({
+    to: email,
+    subject,
+    text,
+    html,
+  });
+
+  return {
+    success: true,
+    testUrl: testAccount ? (nodemailer.getTestMessageUrl(result as any) || undefined) : undefined,
+  };
+}
+
 export default {
   sendEmail,
   sendProjectInvitation,
   sendAccessRequest,
+  sendPasswordReset,
 };

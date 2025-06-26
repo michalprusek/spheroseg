@@ -24,7 +24,7 @@ interface AvatarUploaderProps {
 
 const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAvatarChange, size = 'md' }) => {
   const { t } = useLanguage();
-  const { updateAvatar } = useProfile();
+  const { updateAvatar, removeAvatar } = useProfile();
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalFile, setOriginalFile] = useState<File | null>(null);
@@ -97,23 +97,17 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
 
     await tryCatch(
       async () => {
-        // Implement a client-side simulation of avatar upload
-        console.log('Simulating avatar upload to localStorage');
+        // Convert data URL to File
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
 
-        // Generate a unique avatar URL
-        const timestamp = new Date().getTime();
-        const avatarUrl = `/uploads/avatars/avatar-${timestamp}.jpg`;
+        // Upload using profile context (which will use the API)
+        await updateAvatar(file);
 
-        // Store the data URL in localStorage
-        localStorage.setItem('userAvatar', dataUrl);
-        localStorage.setItem('userAvatarUrl', avatarUrl);
+        console.log('Avatar uploaded successfully via API');
 
-        // Update profile context
-        updateAvatar(avatarUrl);
-
-        console.log('Avatar stored in localStorage and profile context updated');
-
-        // Call the callback with the new avatar URL
+        // Call the callback with the data URL for immediate preview
         onAvatarChange(dataUrl);
 
         showSuccess(t('profile.avatarUpdated') || 'Profile picture updated');
@@ -130,19 +124,12 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
 
     await tryCatch(
       async () => {
-        // Implement a client-side simulation of avatar removal
-        console.log('Simulating avatar removal from localStorage');
+        // Remove avatar using profile context (which will use the API)
+        await removeAvatar();
 
-        // Remove the avatar from localStorage
-        localStorage.removeItem('userAvatar');
-        localStorage.removeItem('userAvatarUrl');
+        console.log('Avatar removed successfully via API');
 
-        // Update profile context
-        updateAvatar('');
-
-        console.log('Avatar removed from localStorage and profile context updated');
-
-        // Call the callback with null or a default avatar URL
+        // Call the callback with empty string
         onAvatarChange('');
 
         // Clear preview

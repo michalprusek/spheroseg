@@ -4,17 +4,18 @@
  * This file contains routes for user-related operations.
  */
 import express, { Response, Router, Request } from 'express';
-import devAuthMiddleware, { AuthenticatedRequest } from '../middleware/devAuthMiddleware';
+import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
 import logger from '../utils/logger';
 import pool from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import config from '../config';
+import tokenService, { TokenType } from '../services/tokenService';
 
 const router: Router = express.Router();
 
 // GET /api/users/me - Get current user's profile
-router.get('/me', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
@@ -196,16 +197,16 @@ router.post('/login', async (req: Request, res: Response) => {
         [userId, email || 'dev@example.com', 'Development User'],
       );
 
-      // Generate JWT
-      const token = jwt.sign(
-        { userId, email: email || 'dev@example.com' },
-        config.security.jwtSecret || 'development_secret',
+      // Generate JWT using tokenService
+      const tokenResponse = await tokenService.createTokenResponse(
+        userId,
+        email || 'dev@example.com'
       );
 
       logger.info('Development user created and logged in', { userId, email });
       return res.status(200).json({
         message: 'Login successful',
-        token,
+        token: tokenResponse.accessToken,
         user: {
           id: userId,
           email: email || 'dev@example.com',
@@ -226,13 +227,16 @@ router.post('/login', async (req: Request, res: Response) => {
         [userId, email, 'Development User'],
       );
 
-      // Generate JWT
-      const token = jwt.sign({ userId, email }, config.security.jwtSecret || 'development_secret');
+      // Generate JWT using tokenService
+      const tokenResponse = await tokenService.createTokenResponse(
+        userId,
+        email
+      );
 
       logger.info('Development user created and logged in', { userId, email });
       return res.status(200).json({
         message: 'Login successful',
-        token,
+        token: tokenResponse.accessToken,
         user: {
           id: userId,
           email,
@@ -243,13 +247,16 @@ router.post('/login', async (req: Request, res: Response) => {
 
     const user = userResult.rows[0];
 
-    // Generate JWT
-    const token = jwt.sign({ userId: user.id, email: user.email }, config.security.jwtSecret || 'development_secret');
+    // Generate JWT using tokenService
+    const tokenResponse = await tokenService.createTokenResponse(
+      user.id,
+      user.email
+    );
 
     logger.info('Login successful', { userId: user.id, email: user.email });
     return res.status(200).json({
       message: 'Login successful',
-      token,
+      token: tokenResponse.accessToken,
       user: {
         id: user.id,
         email: user.email,
@@ -263,7 +270,7 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 // GET /api/users/me/statistics - Get current user's statistics
-router.get('/me/statistics', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
@@ -437,7 +444,7 @@ router.get('/me/statistics', devAuthMiddleware, async (req: AuthenticatedRequest
 });
 
 // GET /api/users/me/stats - Alternative endpoint for statistics (simplified)
-router.get('/me/stats', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {

@@ -227,7 +227,7 @@ export default {
       endpoint1Desc: '获取您的项目列表。',
       endpoint2Desc: '获取特定项目中的图像。',
       endpoint3Desc: '为特定图像启动分割。',
-      contactPrefix: 'prusemic@cvut.cz',
+      contactPrefix: 'spheroseg@utia.cas.cz',
     },
     backToHome: '返回首页',
     backToTop: '返回顶部',
@@ -634,7 +634,7 @@ export default {
     facultyName: 'FJFI ČVUT v Praze',
     copyrightNotice: '© 2025 SpheroSeg.',
     description: '先进的细胞类球体分割和分析平台',
-    contactLabel: 'prusemic@cvut.cz',
+    contactLabel: 'spheroseg@utia.cas.cz',
     developerLabel: 'Bc. Michal Průšek',
     facultyLabel: '布拉格FJFI ČVUT',
     resourcesTitle: '资源',
@@ -689,7 +689,7 @@ export default {
       paragraph2: '我们的工具结合了最先进的人工智能算法和直观的界面，为研究人员提供精确的类球体边界检测和分析能力。',
       paragraph3:
         '该平台由布拉格FNSPE CTU的Michal Průšek在UTIA CAS的Adam Novozámský的指导下开发，并与UCT布拉格生物化学与微生物学系的研究人员合作完成。',
-      contactPrefix: 'prusemic@cvut.cz',
+      contactPrefix: 'spheroseg@utia.cas.cz',
     },
     cta: {
       title: '准备好改变您的研究方式了吗？',

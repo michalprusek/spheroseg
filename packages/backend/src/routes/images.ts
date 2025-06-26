@@ -1,6 +1,6 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import pool from '../db';
-import devAuthMiddleware, { AuthenticatedRequest } from '../middleware/devAuthMiddleware';
+import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -285,7 +285,7 @@ async function processAndStoreImage(
  */
 router.post(
   '/projects/:projectId/images',
-  devAuthMiddleware,
+  authMiddleware,
   validate(uploadImagesSchema),
   upload.array('images', 20), // Zvýšíme limit na 20 obrázků najednou
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -515,7 +515,7 @@ router.post(
  */
 router.delete(
   '/projects/:projectId/images/:imageId',
-  devAuthMiddleware,
+  authMiddleware,
   validate(deleteImageSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -570,7 +570,7 @@ router.delete(
 // POST /api/projects/:projectId/images/upload-batch - Upload multiple images to a project in a batch
 router.post(
   '/projects/:projectId/images/upload-batch',
-  devAuthMiddleware,
+  authMiddleware,
   upload.array('images', 50),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Forward to the main image upload endpoint
@@ -585,7 +585,7 @@ router.post(
 // Legacy route for backward compatibility - will be deprecated
 router.delete(
   '/images/:id',
-  devAuthMiddleware,
+  authMiddleware,
   validate(imageIdSchema),
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
@@ -663,7 +663,7 @@ router.delete(
  */
 router.get(
   '/projects/:projectId/images/:imageId',
-  devAuthMiddleware,
+  authMiddleware,
   validate(imageDetailSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -742,7 +742,7 @@ router.get(
  */
 router.get(
   '/projects/:projectId/images',
-  devAuthMiddleware,
+  authMiddleware,
   validate(listImagesSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -833,7 +833,7 @@ router.get(
  */
 router.get(
   '/projects/:projectId/images/:imageId/verify',
-  devAuthMiddleware,
+  authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
@@ -899,7 +899,7 @@ router.get(
 );
 
 // Legacy route for backward compatibility - will be deprecated
-router.get('/verify/:id', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/verify/:id', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
   const imageId = req.params.id;
 

@@ -16,6 +16,7 @@ import testRoute from './test';
 import logsRoutes from './logs';
 import performanceRoutes from './performance';
 import userStatsRoutes from './userStats';
+import userProfileRoutes from './userProfile';
 
 // Create main router
 const router: Router = express.Router();
@@ -24,6 +25,7 @@ const router: Router = express.Router();
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/users', userStatsRoutes);
+router.use('/user-profile', userProfileRoutes);
 router.use('/projects', projectRoutes);
 router.use('/images', imageRoutes);
 router.use('/segmentation', segmentationRoutes);

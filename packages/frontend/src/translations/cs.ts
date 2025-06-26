@@ -260,7 +260,7 @@ export default {
       endpoint1Desc: 'Získá seznam všech vašich projektů',
       endpoint2Desc: 'Získá všechny obrázky v rámci konkrétního projektu',
       endpoint3Desc: 'Spustí segmentaci pro konkrétní obrázek',
-      contactPrefix: 'prusemic@cvut.cz',
+      contactPrefix: 'spheroseg@utia.cas.cz',
     },
     backToHome: 'Zpět domů',
     backToTop: 'Zpět nahoru',
@@ -704,7 +704,7 @@ export default {
     facultyName: 'FJFI ČVUT v Praze',
     copyrightNotice: '© 2025 SpheroSeg.',
     description: 'Pokročilá platforma pro segmentaci a analýzu buněčných sféroidů',
-    contactLabel: 'prusemic@cvut.cz',
+    contactLabel: 'spheroseg@utia.cas.cz',
     developerLabel: 'Bc. Michal Průšek',
     facultyLabel: 'FJFI ČVUT v Praze',
     resourcesTitle: 'Zdroje',
@@ -761,7 +761,7 @@ export default {
         'Náš nástroj kombinuje špičkové algoritmy umělé inteligence s intuitivním rozhraním, aby poskytl výzkumníkům přesnou detekci hranic sféroidů a analytické schopnosti.',
       paragraph3:
         'Platforma byla vyvinuta Michalem Průškem z FJFI ČVUT v Praze pod vedením Adama Novozámského z ÚTIA AV ČR, ve spolupráci s výzkumníky z Ústavu biochemie a mikrobiologie VŠCHT Praha.',
-      contactPrefix: 'prusemic@cvut.cz',
+      contactPrefix: 'spheroseg@utia.cas.cz',
     },
     cta: {
       title: 'Připraveni transformovat váš výzkum?',

@@ -74,16 +74,73 @@ tmp/
 temp/
 .tmp/
 .temp/
+*.tmp
+*.temp
+.cache/
+cache/
+
+# Processing files
+processing/
+.processing/
+segmentation_temp/
+ml_temp/
 
 # Docker
 .docker/
 docker-volumes/
 
-# Misc
+# Package manager files
+package-lock.json.bak
+yarn.lock.bak
+.pnpm-store/
+.yarn/
+.npm/
+
+# Runtime files
+*.pid
+*.sock
+*.lock
+
+# Backup files
+*.bak
+*.backup
+*~
+*.orig
+
+# Cache files
+.cache/
+.parcel-cache/
+.webpack/
+.eslintcache
+.stylelintcache
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
 **/.claude/settings.local.json
 
 # SSL Certificates
 letsencrypt/
+
+# User data and uploads (prevent accidental commits)
+user_uploads/
+public/user_data/
+assets/user_content/
+storage/uploads/
+
+# Generated reports
+reports/
+benchmarks/
+performance_logs/
+
+# IDE temp files
+.vscode/settings.json
+.idea/workspace.xml
+.idea/tasks.xml

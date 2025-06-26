@@ -1,5 +1,5 @@
 import express, { Response, Router } from 'express';
-import devAuthMiddleware, { AuthenticatedRequest } from '../middleware/devAuthMiddleware';
+import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
 import userStatsService from '../services/userStatsService';
 import pool from '../db';
 import logger from '../utils/logger';
@@ -7,7 +7,7 @@ import logger from '../utils/logger';
 const router: Router = express.Router();
 
 // GET /api/users/me/stats - Get basic statistics for the current user
-router.get('/me/stats', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
@@ -70,7 +70,7 @@ router.get('/me/stats', devAuthMiddleware, async (req: AuthenticatedRequest, res
 });
 
 // GET /api/users/me/statistics - Alias for /api/users/me/stats
-router.get('/me/statistics', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {

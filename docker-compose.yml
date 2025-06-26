@@ -96,6 +96,9 @@ services:
       - MAX_UPLOAD_SIZE=100mb
       - VALIDATION_STRICT=false
       - DEBUG=true
+      # Email configuration
+      - EMAIL_FROM=spheroseg@utia.cas.cz
+      - APP_URL=http://localhost:3000
     volumes:
       - ./packages/backend:/app
       - uploads_data:/app/uploads

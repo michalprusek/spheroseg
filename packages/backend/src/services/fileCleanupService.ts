@@ -187,6 +187,241 @@ export async function cleanupProjectFiles(
   }
 }
 
+/**
+ * Cleans up temporary files older than the specified age
+ * @param maxAgeHours Maximum age in hours for temporary files
+ * @param options Cleanup options
+ */
+export async function cleanupTemporaryFiles(
+  maxAgeHours: number = 24,
+  options: FileCleanupOptions = {},
+): Promise<FileCleanupResult> {
+  const { dryRun = false } = options;
+  const result: FileCleanupResult = {
+    success: true,
+    deletedFiles: [],
+    failedFiles: [],
+    dryRun,
+  };
+
+  logger.info(`Starting temporary file cleanup (files older than ${maxAgeHours} hours)`, { maxAgeHours, dryRun });
+
+  const cutoffTime = Date.now() - (maxAgeHours * 60 * 60 * 1000);
+  const tempDirs = [
+    path.join(config.storage.uploadDir, 'temp'),
+    path.join(config.storage.uploadDir, 'processing'),
+    path.join(config.storage.uploadDir, 'segmentation_temp'),
+    path.join(config.storage.uploadDir, 'ml_temp'),
+    '/tmp',
+  ];
+
+  for (const tempDir of tempDirs) {
+    if (!fs.existsSync(tempDir)) continue;
+
+    try {
+      const files = fs.readdirSync(tempDir, { withFileTypes: true });
+      
+      for (const file of files) {
+        const filePath = path.join(tempDir, file.name);
+        
+        try {
+          const stats = fs.statSync(filePath);
+          
+          if (stats.mtime.getTime() < cutoffTime) {
+            if (dryRun) {
+              result.deletedFiles.push(filePath);
+            } else {
+              if (file.isDirectory()) {
+                fs.rmSync(filePath, { recursive: true, force: true });
+              } else {
+                fs.unlinkSync(filePath);
+              }
+              result.deletedFiles.push(filePath);
+            }
+          }
+        } catch (error) {
+          result.failedFiles.push({
+            path: filePath,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    } catch (error) {
+      logger.warn(`Failed to process temp directory ${tempDir}`, { error });
+    }
+  }
+
+  logger.info(`Temporary file cleanup completed`, {
+    deletedCount: result.deletedFiles.length,
+    failedCount: result.failedFiles.length,
+    dryRun,
+  });
+
+  return result;
+}
+
+/**
+ * Cleans up orphaned files (files not referenced in database)
+ * @param pool Database pool
+ * @param options Cleanup options
+ */
+export async function cleanupOrphanedFiles(
+  pool: Pool,
+  options: FileCleanupOptions = {},
+): Promise<FileCleanupResult> {
+  const { transactionClient, dryRun = false } = options;
+  const client = transactionClient || pool;
+  const result: FileCleanupResult = {
+    success: true,
+    deletedFiles: [],
+    failedFiles: [],
+    dryRun,
+  };
+
+  logger.info('Starting orphaned file cleanup', { dryRun });
+
+  try {
+    // Get all files referenced in database
+    const referencedFiles = new Set<string>();
+    
+    // Images
+    const imagesResult = await client.query('SELECT storage_path, thumbnail_path FROM images WHERE storage_path IS NOT NULL');
+    imagesResult.rows.forEach(row => {
+      if (row.storage_path) referencedFiles.add(row.storage_path);
+      if (row.thumbnail_path) referencedFiles.add(row.thumbnail_path);
+    });
+
+    // Segmentation results
+    const segmentationResult = await client.query(`
+      SELECT result_data->>'mask_path' as mask_path, 
+             result_data->>'visualization_path' as visualization_path
+      FROM segmentation_results 
+      WHERE result_data IS NOT NULL
+    `);
+    segmentationResult.rows.forEach(row => {
+      if (row.mask_path) referencedFiles.add(row.mask_path);
+      if (row.visualization_path) referencedFiles.add(row.visualization_path);
+    });
+
+    // Scan upload directory for actual files
+    const uploadDir = config.storage.uploadDir;
+    const actualFiles = await getAllFilesRecursively(uploadDir);
+
+    // Find orphaned files
+    for (const filePath of actualFiles) {
+      const relativePath = path.relative(uploadDir, filePath);
+      const dbPath = imageUtils.normalizePathForDb(relativePath);
+      
+      if (!referencedFiles.has(dbPath)) {
+        // Skip certain directories/files that should not be cleaned
+        const skipPatterns = ['/temp/', '/processing/', '/logs/', '/backups/'];
+        const shouldSkip = skipPatterns.some(pattern => filePath.includes(pattern));
+        
+        if (!shouldSkip) {
+          if (dryRun) {
+            result.deletedFiles.push(filePath);
+          } else {
+            try {
+              fs.unlinkSync(filePath);
+              result.deletedFiles.push(filePath);
+            } catch (error) {
+              result.failedFiles.push({
+                path: filePath,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            }
+          }
+        }
+      }
+    }
+
+    logger.info('Orphaned file cleanup completed', {
+      referencedCount: referencedFiles.size,
+      actualCount: actualFiles.length,
+      deletedCount: result.deletedFiles.length,
+      failedCount: result.failedFiles.length,
+      dryRun,
+    });
+
+  } catch (error) {
+    logger.error('Error during orphaned file cleanup', { error });
+    result.success = false;
+  }
+
+  return result;
+}
+
+/**
+ * Recursively get all files in a directory
+ */
+async function getAllFilesRecursively(dir: string): Promise<string[]> {
+  const files: string[] = [];
+  
+  if (!fs.existsSync(dir)) return files;
+  
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    
+    if (entry.isDirectory()) {
+      files.push(...await getAllFilesRecursively(fullPath));
+    } else {
+      files.push(fullPath);
+    }
+  }
+  
+  return files;
+}
+
+/**
+ * Runs a scheduled cleanup of temporary and orphaned files
+ * @param pool Database pool
+ * @param options Cleanup configuration
+ */
+export async function runScheduledCleanup(
+  pool: Pool,
+  options: {
+    tempFileMaxAgeHours?: number;
+    cleanupOrphaned?: boolean;
+    dryRun?: boolean;
+  } = {},
+): Promise<void> {
+  const {
+    tempFileMaxAgeHours = 24,
+    cleanupOrphaned = true,
+    dryRun = false,
+  } = options;
+
+  logger.info('Starting scheduled file cleanup', { options });
+
+  try {
+    // Clean temporary files
+    const tempResult = await cleanupTemporaryFiles(tempFileMaxAgeHours, { dryRun });
+    logger.info('Temporary file cleanup completed', {
+      deleted: tempResult.deletedFiles.length,
+      failed: tempResult.failedFiles.length,
+    });
+
+    // Clean orphaned files if enabled
+    if (cleanupOrphaned) {
+      const orphanedResult = await cleanupOrphanedFiles(pool, { dryRun });
+      logger.info('Orphaned file cleanup completed', {
+        deleted: orphanedResult.deletedFiles.length,
+        failed: orphanedResult.failedFiles.length,
+      });
+    }
+
+    logger.info('Scheduled file cleanup completed successfully');
+  } catch (error) {
+    logger.error('Error during scheduled file cleanup', { error });
+    throw error;
+  }
+}
+
 export default {
   cleanupProjectFiles,
+  cleanupTemporaryFiles,
+  cleanupOrphanedFiles,
+  runScheduledCleanup,
 };

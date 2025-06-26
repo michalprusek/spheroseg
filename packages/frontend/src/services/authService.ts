@@ -550,3 +550,24 @@ export const setToken = setAccessToken;
  * @deprecated Use removeTokens instead
  */
 export const removeToken = removeTokens;
+
+/**
+ * Request password reset for a user
+ * @param email The email address to send the reset to
+ * @returns Promise with the response
+ */
+export const requestPasswordReset = async (email: string): Promise<{ message: string; testUrl?: string }> => {
+  try {
+    logger.info('[authService] Requesting password reset for email:', email);
+
+    const response = await httpClient.post(API_PATHS.AUTH.FORGOT_PASSWORD, {
+      email,
+    });
+
+    logger.info('[authService] Password reset request successful');
+    return response.data;
+  } catch (error) {
+    logger.error('[authService] Password reset request failed:', error);
+    throw error;
+  }
+};

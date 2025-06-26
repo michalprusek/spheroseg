@@ -12,14 +12,14 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@spheroseg/types": ["../types/src"],
-      "@spheroseg/shared": ["../shared"],
-      "@shared/*": ["../shared/src/*"]
+      "@spheroseg/types": ["../types/src"]
     },
     "resolveJsonModule": true,
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

@@ -37,8 +37,8 @@ const About = () => {
                 <p className="text-gray-600 dark:text-gray-300">{t('index.about.paragraph2')}</p>
                 <p className="text-gray-600 dark:text-gray-300">{t('index.about.paragraph3')}</p>
                 <p className="text-gray-600 dark:text-gray-300">
-                  <a href="mailto:prusemic@cvut.cz" className="text-blue-600 dark:text-blue-400 hover:underline">
-                    prusemic@cvut.cz
+                  <a href="mailto:spheroseg@utia.cas.cz" className="text-blue-600 dark:text-blue-400 hover:underline">
+                    spheroseg@utia.cas.cz
                   </a>
                 </p>
               </div>

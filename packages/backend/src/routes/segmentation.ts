@@ -1,6 +1,6 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import pool from '../db';
-import devAuthMiddleware, { AuthenticatedRequest } from '../middleware/devAuthMiddleware';
+import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { triggerSegmentationTask, getSegmentationQueueStatus } from '../services/segmentationService';
 import { validate } from '../middleware/validationMiddleware';
 import { z } from 'zod';
@@ -27,7 +27,7 @@ const triggerBatchSchema = z.object({
 // @ts-ignore // TS2769: No overload matches this call.
 router.get(
   '/images/:id/segmentation',
-  devAuthMiddleware,
+  authMiddleware,
   validate(getSegmentationSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -90,7 +90,7 @@ router.get(
 // @ts-ignore // TS2769: No overload matches this call.
 router.get(
   '/projects/:projectId/segmentations/:imageId',
-  devAuthMiddleware,
+  authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId, imageId } = req.params;
@@ -175,7 +175,7 @@ const triggerSingleWithPrioritySchema = z.object({
 // @ts-ignore // TS2769: No overload matches this call.
 router.post(
   '/images/:id/segmentation',
-  devAuthMiddleware,
+  authMiddleware,
   validate(triggerSingleWithPrioritySchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -262,7 +262,7 @@ const triggerBatchWithPrioritySchema = z.object({
 // @ts-ignore // TS2769: No overload matches this call.
 router.post(
   '/segmentation/trigger-batch',
-  devAuthMiddleware,
+  authMiddleware,
   validate(triggerBatchWithPrioritySchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Main implementation
@@ -274,7 +274,7 @@ router.post(
 // @ts-ignore // TS2769: No overload matches this call.
 router.post(
   '/images/segmentation/trigger-batch',
-  devAuthMiddleware,
+  authMiddleware,
   validate(triggerBatchWithPrioritySchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Redirect to the main implementation
@@ -393,7 +393,7 @@ async function handleBatchSegmentation(req: AuthenticatedRequest, res: Response,
 // @ts-ignore // TS2769: No overload matches this call.
 router.put(
   '/images/:id/segmentation',
-  devAuthMiddleware,
+  authMiddleware,
   validate(updateSegmentationSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId; // Used for permission check
@@ -457,7 +457,7 @@ router.put(
 // @ts-ignore // TS2769: No overload matches this call.
 router.post(
   '/projects/:projectId/segmentation/batch-trigger',
-  devAuthMiddleware,
+  authMiddleware,
   validate(triggerProjectBatchSegmentationSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -549,7 +549,7 @@ router.post(
 // @ts-ignore // TS2769: No overload matches this call.
 router.put(
   '/projects/:projectId/images/:imageId/segmentations',
-  devAuthMiddleware,
+  authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId, imageId } = req.params;
@@ -622,7 +622,7 @@ router.put(
 
 // GET /api/segmentation/queue - Get current segmentation queue status
 // @ts-ignore // TS2769: No overload matches this call.
-router.get('/queue', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get('/queue', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const queueStatus = await getSegmentationQueueStatus();
 
@@ -643,7 +643,7 @@ router.get('/queue', devAuthMiddleware, async (req: AuthenticatedRequest, res: R
 
 // GET /api/queue-status - Get global segmentation queue status
 // @ts-ignore // TS2769: No overload matches this call.
-router.get('/queue-status', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get('/queue-status', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const userId = req.user?.userId;
 
   if (!userId) {
@@ -709,7 +709,7 @@ router.get('/queue-status', devAuthMiddleware, async (req: AuthenticatedRequest,
 // @ts-ignore // TS2769: No overload matches this call.
 router.get(
   '/queue-status/:projectId',
-  devAuthMiddleware,
+  authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
@@ -806,7 +806,7 @@ router.get(
 // @ts-ignore // TS2769: No overload matches this call.
 router.get(
   '/jobs/:projectId',
-  devAuthMiddleware,
+  authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       // TODO: Implement logic - verify project access, query jobs
@@ -819,7 +819,7 @@ router.get(
 
 // GET /api/segmentation/job/:jobId - Get details of a specific segmentation job
 // @ts-ignore // TS2769: No overload matches this call.
-router.get('/job/:jobId', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get('/job/:jobId', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // TODO: Implement logic - verify job access, query job details
     res.json({ message: 'Placeholder: Get job details' });
@@ -831,7 +831,7 @@ router.get('/job/:jobId', devAuthMiddleware, async (req: AuthenticatedRequest, r
 /* // Commented out route due to missing schema import
 // POST /api/segmentation/job - Create a new segmentation job
 // @ts-ignore // TS2769: No overload matches this call.
-router.post('/job', devAuthMiddleware, validate(createSegmentationJobSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.post('/job', authMiddleware, validate(createSegmentationJobSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     console.log('POST /api/segmentation/job called');
     res.status(501).json({ message: 'Not Implemented' });
 });
@@ -841,7 +841,7 @@ router.post('/job', devAuthMiddleware, validate(createSegmentationJobSchema), as
 // @ts-ignore // Keep ignore for now
 router.delete(
   '/job/:jobId',
-  devAuthMiddleware,
+  authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // ... handler code ...
   },
@@ -851,7 +851,7 @@ router.delete(
 // @ts-ignore // TS2769: No overload matches this call.
 router.post(
   '/:imageId/resegment',
-  devAuthMiddleware,
+  authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const imageId = req.params.imageId;
@@ -913,7 +913,7 @@ router.post(
 
 // Fetch all polygons for a specific image
 // @ts-ignore // TS2769
-router.get('/:imageId/polygons', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:imageId/polygons', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const { imageId } = req.params;
   // ... existing code ...
 });
@@ -922,7 +922,7 @@ router.get('/:imageId/polygons', devAuthMiddleware, async (req: AuthenticatedReq
 // @ts-ignore // TS2769
 router.post(
   '/:imageId/polygons',
-  devAuthMiddleware,
+  authMiddleware,
   /* validatePolygonData, */ async (req: AuthenticatedRequest, res: Response) => {
     // TODO: Uncomment validatePolygonData when implemented
     const { imageId } = req.params;
@@ -933,7 +933,7 @@ router.post(
 
 // Clear all polygons for a specific image
 // @ts-ignore // TS2769
-router.delete('/:imageId/polygons', devAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:imageId/polygons', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const { imageId } = req.params;
   // ... existing code ...
 });

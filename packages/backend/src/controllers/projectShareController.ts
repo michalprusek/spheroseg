@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { ApiError } from '@/utils/errors';
 import { ProjectShareService } from '@/services/projectShareService';
-import { db } from '@/db';
+import db from '@/db';
 
 // Vytvoření instance service
 const projectShareService = new ProjectShareService(db);
