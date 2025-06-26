@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,8 @@ import apiClient from '@/lib/apiClient';
 import axios, { AxiosError } from 'axios';
 import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { useEmailValidation } from '@/hooks/useEmailValidation';
 
 const RequestAccess = () => {
   const [email, setEmail] = useState('');
@@ -22,6 +23,18 @@ const RequestAccess = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const { t } = useLanguage();
+  const emailValidation = useEmailValidation(300);
+
+  // Trigger email validation when email changes
+  useEffect(() => {
+    if (email) {
+      emailValidation.checkEmail(email);
+    }
+  }, [email, emailValidation.checkEmail]);
+
+  // Determine if form can be submitted
+  // If email validation fails/errors, don't block submission - just check basic form validity
+  const canSubmit = email && name && reason && !emailValidation.exists && !emailValidation.hasAccessRequest && !emailValidation.isValidating;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,15 +131,41 @@ const RequestAccess = () => {
                 <Label htmlFor="email" className="font-medium text-gray-700 dark:text-gray-300">
                   {t('requestAccess.emailLabel')} <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t('requestAccess.emailPlaceholder')}
-                  required
-                  className="h-10 bg-gray-50 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 rounded-md"
-                />
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t('requestAccess.emailPlaceholder')}
+                    required
+                    className={`h-10 bg-gray-50 dark:bg-gray-700/50 rounded-md transition-colors pr-10 ${
+                      emailValidation.exists || emailValidation.hasAccessRequest
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : email && !emailValidation.isValidating && !emailValidation.exists && !emailValidation.hasAccessRequest
+                        ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    {emailValidation.isValidating && email && (
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                    )}
+                    {!emailValidation.isValidating && email && (emailValidation.exists || emailValidation.hasAccessRequest) && (
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    {!emailValidation.isValidating && email && !emailValidation.exists && !emailValidation.hasAccessRequest && email.includes('@') && (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    )}
+                  </div>
+                </div>
+                {(emailValidation.exists || emailValidation.hasAccessRequest) && (
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                    {emailValidation.exists
+                      ? t('auth.emailAlreadyExists') || 'This email is already registered. Please sign in instead.'
+                      : t('auth.emailHasPendingRequest') || 'This email already has a pending access request. Please wait for approval.'}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -182,8 +221,19 @@ const RequestAccess = () => {
                 </Link>
               </p>
 
-              <Button type="submit" className="w-full h-10 text-base font-semibold rounded-md" disabled={isSubmitting}>
-                {isSubmitting ? t('requestAccess.submittingRequest') : t('requestAccess.submitRequest')}
+              <Button 
+                type="submit" 
+                className="w-full h-10 text-base font-semibold rounded-md" 
+                disabled={isSubmitting || !canSubmit}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('requestAccess.submittingRequest')}
+                  </>
+                ) : (
+                  t('requestAccess.submitRequest')
+                )}
               </Button>
             </form>
           )}

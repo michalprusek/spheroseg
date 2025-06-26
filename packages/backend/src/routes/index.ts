@@ -1,10 +1,14 @@
 /**
  * API Routes
  *
- * This file exports the main API router with all routes registered.
+ * This file exports the main API router with versioning support.
+ * Routes are organized by version for better API evolution.
  */
 
 import express, { Router } from 'express';
+import v1Routes from './v1';
+
+// Import legacy routes for backward compatibility
 import authRoutes from './auth';
 import userRoutes from './users';
 import projectRoutes from './projects';
@@ -21,7 +25,11 @@ import userProfileRoutes from './userProfile';
 // Create main router
 const router: Router = express.Router();
 
-// Register routes
+// Version 1 routes (recommended)
+router.use('/v1', v1Routes);
+
+// Legacy routes (for backward compatibility)
+// TODO: Deprecate these in favor of versioned routes
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/users', userStatsRoutes);

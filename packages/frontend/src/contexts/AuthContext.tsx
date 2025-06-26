@@ -674,10 +674,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             );
 
             logger.info('Signup successful');
-            toast.success(response.data.message || 'Registration successful!');
-            if (navigate) {
-              navigate('/sign-in?signupSuccess=true'); // Redirect to sign-in after signup
-            }
+            // Don't show toast here - let the signup component handle success messages
             return true;
           } catch (error) {
             // Propagate all errors without mock workarounds
@@ -687,36 +684,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         },
         {
-          // Custom error handler
-          onError: (error) => {
-            logger.error('Error signing up:', { error });
-
-            // Use enhanced error handling
-            const errorType = getErrorType(error);
-
-            // Special handling for specific error cases
-            if (axios.isAxiosError(error) && error.response?.status === 409) {
-              toast.error('User with this email already exists.', {
-                duration: 5000,
-                description: 'Please use a different email address or try to sign in.',
-              });
-            } else if (errorType === NetworkErrorType.NETWORK_ERROR) {
-              toast.error('Cannot connect to server', {
-                duration: 5000,
-                description: 'Please check your internet connection and try again.',
-              });
-            } else if (errorType === NetworkErrorType.SERVER_ERROR) {
-              toast.error('Server error during registration', {
-                duration: 5000,
-                description: 'Our server is experiencing issues. Please try again later.',
-              });
-            } else {
-              // Use enhanced error display for other errors
-              showEnhancedError(error);
-            }
-          },
-          showToast: false, // We're handling toasts manually in onError
-          defaultValue: false, // Return false on error
+          // Don't use custom error handler - let errors bubble up to SignUp component
+          showToast: false, // Let SignUp component handle toasts
+          rethrow: true, // Rethrow errors so SignUp can catch them
         },
       );
 

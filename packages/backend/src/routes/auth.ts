@@ -459,6 +459,56 @@ router.post('/revoke', authMiddleware, async (req: AuthenticatedRequest, res: Re
   }
 });
 
+// GET /api/auth/check-email - Check if email exists in the system
+router.get('/check-email', async (req: express.Request, res: Response) => {
+  const { email } = req.query;
+
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ 
+      exists: false, 
+      error: 'Email parameter is required' 
+    });
+  }
+
+  try {
+    logger.info('Checking email existence', { email });
+
+    // Check if email exists in users table
+    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    const exists = userResult.rows.length > 0;
+
+    // Try to check access requests table, but handle if it doesn't exist
+    let hasAccessRequest = false;
+    try {
+      const accessRequestResult = await pool.query('SELECT id FROM access_requests WHERE email = $1', [email]);
+      hasAccessRequest = accessRequestResult.rows.length > 0;
+    } catch (accessRequestError: any) {
+      // If access_requests table doesn't exist, log and continue
+      if (accessRequestError.code === '42P01') { // relation does not exist
+        logger.debug('access_requests table does not exist, skipping check', { email });
+      } else {
+        logger.warn('Error checking access_requests table', { error: accessRequestError, email });
+      }
+    }
+
+    res.json({ 
+      exists,
+      hasAccessRequest,
+      message: exists 
+        ? 'Email is already registered' 
+        : hasAccessRequest 
+          ? 'Email has pending access request'
+          : 'Email is available'
+    });
+  } catch (error) {
+    logger.error('Error checking email existence', { error, email });
+    res.status(500).json({ 
+      exists: false, 
+      error: 'Failed to check email' 
+    });
+  }
+});
+
 // GET /api/auth/me - Get current user (useful for token verification)
 router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;

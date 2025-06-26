@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useEmailValidation } from '@/hooks/useEmailValidation';
 
 const SignUp = () => {
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,7 @@ const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { t } = useLanguage();
+  const emailValidation = useEmailValidation(300);
 
   type SignUpFormValues = z.infer<typeof formSchema>;
 
@@ -47,6 +49,20 @@ const SignUp = () => {
     },
   });
 
+  // Watch email field to trigger validation
+  const emailValue = form.watch('email');
+
+  // Trigger email validation when email changes
+  useEffect(() => {
+    if (emailValue) {
+      emailValidation.checkEmail(emailValue);
+    }
+  }, [emailValue, emailValidation.checkEmail]);
+
+  // Determine if form can be submitted
+  // If email validation fails/errors, don't block submission - just check basic form validity
+  const canSubmit = !emailValidation.exists && !emailValidation.hasAccessRequest && !emailValidation.isValidating;
+
   const navigate = useNavigate();
   const { signUp, user } = useAuth();
 
@@ -56,12 +72,22 @@ const SignUp = () => {
 
     try {
       const name = `${data.firstName} ${data.lastName}`;
-      await signUp(data.email, data.password, name);
-      toast.success(t('auth.signUpSuccessEmail'));
-      navigate('/sign-in');
+      const success = await signUp(data.email, data.password, name);
+      
+      if (success) {
+        toast.success(t('auth.signUpSuccessEmail') || 'Registration successful! Please check your email.');
+        navigate('/sign-in');
+      }
     } catch (error: unknown) {
       console.error('Sign up error:', error);
-      let errorMessage = t('auth.signUpFailed');
+      
+      // Check for 409 Conflict (user already exists)
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        setError(t('auth.emailAlreadyExists') || 'This email is already registered. Please use a different email or sign in.');
+        return; // Don't navigate or show success message
+      }
+      
+      let errorMessage = t('auth.signUpFailed') || 'Registration failed. Please try again.';
       if (error instanceof Error) {
         errorMessage = error.message;
       } else if (typeof error === 'string') {
@@ -182,21 +208,52 @@ const SignUp = () => {
               <FormField
                 control={form.control}
                 name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('common.email')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder={t('auth.emailPlaceholder')}
-                        {...field}
-                        className="h-10 bg-gray-50 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 rounded-md"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const hasEmailError = emailValidation.exists || emailValidation.hasAccessRequest;
+                  const inputClassName = `h-10 bg-gray-50 dark:bg-gray-700/50 rounded-md transition-colors ${
+                    hasEmailError
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : emailValue && !emailValidation.isValidating && !hasEmailError
+                      ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`;
+
+                  return (
+                    <FormItem>
+                      <FormLabel>{t('common.email')}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder={t('auth.emailPlaceholder')}
+                            {...field}
+                            className={inputClassName}
+                          />
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                            {emailValidation.isValidating && emailValue && (
+                              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                            )}
+                            {!emailValidation.isValidating && emailValue && hasEmailError && (
+                              <AlertCircle className="h-4 w-4 text-red-500" />
+                            )}
+                            {!emailValidation.isValidating && emailValue && !hasEmailError && emailValue.includes('@') && (
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            )}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                      {hasEmailError && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                          {emailValidation.exists
+                            ? t('auth.emailAlreadyExists') || 'This email is already registered. Please use a different email or sign in.'
+                            : t('auth.emailHasPendingRequest') || 'This email has a pending access request. Please wait for approval or use a different email.'}
+                        </p>
+                      )}
+                    </FormItem>
+                  );
+                }}
               />
               <FormField
                 control={form.control}
@@ -270,7 +327,11 @@ const SignUp = () => {
 
               {error && <p className="text-xs text-red-500">{error}</p>}
 
-              <Button type="submit" className="w-full h-10 text-base font-semibold rounded-md" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full h-10 text-base font-semibold rounded-md" 
+                disabled={isLoading || !canSubmit}
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

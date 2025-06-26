@@ -1,29 +1,131 @@
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+import { ApiError, ErrorCode } from '../utils/ApiError';
+import { sendError } from '../utils/apiResponse';
+import logger from '../utils/logger';
+import config from '../config';
 
 /**
- * Generic error handling middleware.
- * Catches errors passed via next(error) and sends a standardized JSON response.
+ * Enhanced error handling middleware with proper logging and standardized responses
  */
 export const errorHandler: ErrorRequestHandler = (
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction, // next is required for Express to recognize it as an error handler
+  next: NextFunction
 ) => {
-  console.error('Unhandled Error:', err); // Log the full error for debugging
+  // Don't respond if response was already sent
+  if (res.headersSent) {
+    return next(err);
+  }
 
-  // Determine status code - default to 500 if not specified
-  const statusCode = err.statusCode || 500;
+  let error = err;
 
-  // Determine message - use error message or a generic one
-  const message = err.message || 'Internal Server Error';
+  // Convert non-ApiError instances to ApiError
+  if (!(err instanceof ApiError)) {
+    // Handle specific error types
+    if (err.name === 'ValidationError') {
+      error = ApiError.validation(err.message, err.details);
+    } else if (err.name === 'CastError') {
+      error = ApiError.validation(`Invalid ${err.path}: ${err.value}`);
+    } else if (err.code === 11000) {
+      // MongoDB duplicate key error
+      const field = Object.keys(err.keyValue)[0];
+      error = ApiError.conflict(`${field} already exists`);
+    } else if (err.name === 'JsonWebTokenError') {
+      error = ApiError.unauthorized('Invalid token');
+    } else if (err.name === 'TokenExpiredError') {
+      error = ApiError.unauthorized('Token expired');
+    } else if (err.code === 'LIMIT_FILE_SIZE') {
+      error = ApiError.validation('File too large');
+    } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      error = ApiError.validation('Unexpected file field');
+    } else {
+      // Generic server error
+      error = new ApiError(
+        config.isDevelopment ? err.message : 'Internal server error',
+        500,
+        ErrorCode.INTERNAL_SERVER_ERROR,
+        undefined,
+        false // Mark as non-operational (programming error)
+      );
+    }
+  }
 
-  // Send JSON response
-  res.status(statusCode).json({
-    status: 'error',
-    statusCode,
-    message,
-    // Optionally include stack trace in development mode
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+  // Log error details
+  const logContext = {
+    error: {
+      message: error.message,
+      code: error.code,
+      statusCode: error.statusCode,
+      stack: error.stack,
+      isOperational: error.isOperational,
+    },
+    request: {
+      method: req.method,
+      url: req.url,
+      headers: req.headers,
+      body: req.body,
+      params: req.params,
+      query: req.query,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+    },
+    user: (req as any).user?.id || 'anonymous',
+  };
+
+  // Log level based on error type
+  if (error.statusCode >= 500) {
+    logger.error('Server error occurred', logContext);
+  } else if (error.statusCode >= 400) {
+    logger.warn('Client error occurred', logContext);
+  } else {
+    logger.info('Request error occurred', logContext);
+  }
+
+  // Send standardized error response
+  const response = {
+    success: false,
+    error: error.code,
+    message: error.message,
+    statusCode: error.statusCode,
+    details: error.details,
+    timestamp: error.timestamp,
+    // Include additional debug info in development
+    ...(config.isDevelopment && {
+      stack: error.stack,
+      request: {
+        method: req.method,
+        url: req.url,
+        headers: req.headers,
+      },
+    }),
+  };
+
+  res.status(error.statusCode).json(response);
+};
+
+/**
+ * Middleware to handle async route handlers
+ * Wraps async functions to catch promise rejections
+ */
+export const asyncHandler = (fn: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
+/**
+ * 404 Not Found handler
+ */
+export const notFoundHandler = (req: Request, res: Response) => {
+  const error = ApiError.notFound(`Route ${req.method} ${req.originalUrl} not found`);
+  
+  logger.warn('Route not found', {
+    method: req.method,
+    url: req.originalUrl,
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
   });
+
+  res.status(404).json(error.toJSON());
 };

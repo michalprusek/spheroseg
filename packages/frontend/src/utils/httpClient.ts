@@ -250,8 +250,17 @@ export const withRetry = async <T>(
 ): Promise<T> => {
   try {
     return await requestFn();
-  } catch (error) {
+  } catch (error: any) {
     if (retries <= 0) {
+      throw error;
+    }
+
+    // Don't retry for client errors (4xx) - these are usually not transient
+    if (error?.response?.status >= 400 && error?.response?.status < 500) {
+      // Special handling for specific client errors that should not be retried
+      if (error?.response?.status === 409) {
+        logger.warn('User already exists, not retrying', { email: error?.config?.data ? JSON.parse(error.config.data)?.email : 'unknown' });
+      }
       throw error;
     }
 

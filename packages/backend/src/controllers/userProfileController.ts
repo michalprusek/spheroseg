@@ -2,12 +2,14 @@
  * User Profile Controller
  * Handles HTTP requests for user profile and settings management
  */
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { Pool } from 'pg';
 import multer from 'multer';
 import path from 'path';
 import userProfileService from '../services/userProfileService';
 import logger from '../utils/logger';
+import dbPool from '../db';
+import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
 // Multer configuration for avatar uploads
 const storage = multer.memoryStorage();
@@ -32,14 +34,14 @@ export const uploadAvatar = upload.single('avatar');
 /**
  * Get user profile
  */
-export const getUserProfile = async (req: Request, res: Response) => {
+export const getUserProfile = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const profile = await userProfileService.getUserProfile(req.db as Pool, userId);
+    const profile = await userProfileService.getUserProfile(dbPool, userId);
     
     if (!profile) {
       return res.status(404).json({ error: 'Profile not found' });
@@ -55,14 +57,14 @@ export const getUserProfile = async (req: Request, res: Response) => {
 /**
  * Get user profile with settings
  */
-export const getUserProfileWithSettings = async (req: Request, res: Response) => {
+export const getUserProfileWithSettings = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { profile, settings } = await userProfileService.getUserProfileWithSettings(req.db as Pool, userId);
+    const { profile, settings } = await userProfileService.getUserProfileWithSettings(dbPool, userId);
     
     // Convert settings to object for easier frontend usage
     const settingsObj = settings.reduce((acc, setting) => {
@@ -80,14 +82,14 @@ export const getUserProfileWithSettings = async (req: Request, res: Response) =>
 /**
  * Create user profile
  */
-export const createUserProfile = async (req: Request, res: Response) => {
+export const createUserProfile = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const profile = await userProfileService.createUserProfile(req.db as Pool, userId, req.body);
+    const profile = await userProfileService.createUserProfile(dbPool, userId, req.body);
     
     res.status(201).json(profile);
   } catch (error) {
@@ -99,14 +101,14 @@ export const createUserProfile = async (req: Request, res: Response) => {
 /**
  * Update user profile
  */
-export const updateUserProfile = async (req: Request, res: Response) => {
+export const updateUserProfile = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const profile = await userProfileService.updateUserProfile(req.db as Pool, userId, req.body);
+    const profile = await userProfileService.updateUserProfile(dbPool, userId, req.body);
     
     res.json(profile);
   } catch (error) {
@@ -121,9 +123,9 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 /**
  * Upload avatar
  */
-export const uploadAvatarHandler = async (req: Request, res: Response) => {
+export const uploadAvatarHandler = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -133,7 +135,7 @@ export const uploadAvatarHandler = async (req: Request, res: Response) => {
     }
 
     const uploadsDir = process.env.UPLOADS_DIR || '/app/uploads';
-    const avatarFile = await userProfileService.saveAvatarFile(req.db as Pool, userId, req.file, uploadsDir);
+    const avatarFile = await userProfileService.saveAvatarFile(dbPool, userId, req.file, uploadsDir);
     
     res.json({ 
       message: 'Avatar uploaded successfully',
@@ -151,14 +153,14 @@ export const uploadAvatarHandler = async (req: Request, res: Response) => {
 /**
  * Delete avatar
  */
-export const deleteAvatar = async (req: Request, res: Response) => {
+export const deleteAvatar = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    await userProfileService.deleteAvatarFile(req.db as Pool, userId);
+    await userProfileService.deleteAvatarFile(dbPool, userId);
     
     res.json({ message: 'Avatar deleted successfully' });
   } catch (error) {
@@ -170,16 +172,16 @@ export const deleteAvatar = async (req: Request, res: Response) => {
 /**
  * Get user setting
  */
-export const getUserSetting = async (req: Request, res: Response) => {
+export const getUserSetting = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const { key } = req.params;
     
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const setting = await userProfileService.getUserSetting(req.db as Pool, userId, key);
+    const setting = await userProfileService.getUserSetting(dbPool, userId, key);
     
     if (!setting) {
       return res.status(404).json({ error: 'Setting not found' });
@@ -199,14 +201,14 @@ export const getUserSetting = async (req: Request, res: Response) => {
 /**
  * Get all user settings
  */
-export const getUserSettings = async (req: Request, res: Response) => {
+export const getUserSettings = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const settings = await userProfileService.getUserSettings(req.db as Pool, userId);
+    const settings = await userProfileService.getUserSettings(dbPool, userId);
     
     // Convert to object format
     const settingsObj = settings.reduce((acc, setting) => {
@@ -228,9 +230,9 @@ export const getUserSettings = async (req: Request, res: Response) => {
 /**
  * Set user setting
  */
-export const setUserSetting = async (req: Request, res: Response) => {
+export const setUserSetting = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const { key } = req.params;
     const { value, category = 'general' } = req.body;
     
@@ -242,7 +244,7 @@ export const setUserSetting = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Value is required' });
     }
 
-    const setting = await userProfileService.setUserSetting(req.db as Pool, userId, key, value, category);
+    const setting = await userProfileService.setUserSetting(dbPool, userId, key, value, category);
     
     res.json({
       key: setting.setting_key,
@@ -259,16 +261,16 @@ export const setUserSetting = async (req: Request, res: Response) => {
 /**
  * Delete user setting
  */
-export const deleteUserSetting = async (req: Request, res: Response) => {
+export const deleteUserSetting = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const { key } = req.params;
     
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    await userProfileService.deleteUserSetting(req.db as Pool, userId, key);
+    await userProfileService.deleteUserSetting(dbPool, userId, key);
     
     res.json({ message: 'Setting deleted successfully' });
   } catch (error) {
@@ -280,9 +282,9 @@ export const deleteUserSetting = async (req: Request, res: Response) => {
 /**
  * Batch update user settings
  */
-export const batchUpdateUserSettings = async (req: Request, res: Response) => {
+export const batchUpdateUserSettings = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const { settings } = req.body;
     
     if (!userId) {
@@ -296,7 +298,7 @@ export const batchUpdateUserSettings = async (req: Request, res: Response) => {
     const updatedSettings = await Promise.all(
       Object.entries(settings).map(async ([key, data]: [string, any]) => {
         const { value, category = 'general' } = data;
-        return userProfileService.setUserSetting(req.db as Pool, userId, key, value, category);
+        return userProfileService.setUserSetting(dbPool, userId, key, value, category);
       })
     );
 

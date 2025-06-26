@@ -8,15 +8,19 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import { validateEnv } from '../utils/envValidation';
 
 // Load environment variables from .env file
 dotenv.config();
+
+// Validate environment variables early
+const validatedEnv = validateEnv();
 
 // Define the root directory of the application
 const ROOT_DIR = path.resolve(__dirname, '../..');
 
 // Environment detection
-const env = process.env.NODE_ENV || 'development';
+const env = validatedEnv.NODE_ENV;
 const isDevelopment = env === 'development';
 const isProduction = env === 'production';
 const isTest = env === 'test';
@@ -105,9 +109,10 @@ const config = {
   },
 
   security: {
-    rateLimitEnabled: process.env.RATE_LIMIT_ENABLED !== 'false',
-    rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '60000', 10),
-    rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+    rateLimitRequests: parseInt(process.env.RATE_LIMIT_REQUESTS || '100', 10),
+    rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '60', 10), // seconds
+    enableHelmet: process.env.ENABLE_HELMET !== 'false',
+    enableRateLimit: process.env.ENABLE_RATE_LIMIT !== 'false',
     csrfEnabled: process.env.CSRF_ENABLED !== 'false',
   },
 };

@@ -82,7 +82,7 @@ services:
       - PORT=5001
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/spheroseg
-      - JWT_SECRET=development_secret_key
+      - JWT_SECRET=development_secret_key_that_is_32_chars_long
       - LOG_LEVEL=debug
       - ALLOW_CORS=true
       - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3003,http://localhost:3005,http://frontend:3000,http://frontend:80,*
