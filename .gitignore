@@ -1,0 +1,106 @@
+**/.claude/settings.local.json
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Build outputs
+dist/
+build/
+.turbo/
+.next/
+out/
+.nuxt/
+.output/
+.cache/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+cypress/videos/
+cypress/screenshots/
+
+# ML model weights
+*.pth
+*.pth.tar
+*.pt
+*.onnx
+*.h5
+*.hdf5
+*.pb
+*.tflite
+*.mlmodel
+*.caffemodel
+*.weights
+*.bin
+checkpoint_*/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Uploads and media
+uploads/
+media/
+public/uploads/
+public/media/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# Docker
+.docker/
+docker-volumes/
+
+# Misc
+.DS_Store
+Thumbs.db
+
+**/.claude/settings.local.json
+
+# SSL certificates and sensitive files
+letsencrypt/
+**/letsencrypt/
+**/letsencrypt/etc/letsencrypt/archive/
+**/letsencrypt/etc/letsencrypt/accounts/
+**/letsencrypt/etc/letsencrypt/live/
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.p7b
+*.p7c
+*.pfx
+*.p12
+
+# Local configuration files
+**/nginx/conf.d/local*.conf
