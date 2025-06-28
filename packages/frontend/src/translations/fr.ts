@@ -1,4 +1,35 @@
 export default {
+  // Segmentation context menu
+  segmentation: {
+    contextMenu: {
+      editPolygon: 'Modifier le polygone',
+      splitPolygon: 'Diviser le polygone',
+      deletePolygon: 'Supprimer le polygone',
+      confirmDeleteTitle: 'Êtes-vous sûr de vouloir supprimer le polygone ?',
+      confirmDeleteMessage: 'Cette action est irréversible. Le polygone sera définitivement supprimé de la segmentation.',
+      duplicateVertex: 'Dupliquer le sommet',
+      deleteVertex: 'Supprimer le sommet',
+    },
+  },
+  // Common UI elements  
+  common: {
+    cancel: 'Annuler',
+    delete: 'Supprimer',
+    loadingApplication: 'Chargement de l\'application...',
+    selectAll: 'Tout sélectionner',
+  },
+  // Error messages
+  errors: {
+    somethingWentWrong: 'Quelque chose a mal tourné',
+    componentError: 'Une erreur s\'est produite dans ce composant. Nous avons été notifiés et corrigerons le problème dès que possible.',
+    errorDetails: 'Détails de l\'erreur',
+    tryAgain: 'Réessayer',
+    reloadPage: 'Recharger la page',
+    goBack: 'Retour',
+    notFound: '404',
+    pageNotFoundMessage: 'Oops ! Page introuvable',
+    returnToHome: 'Retour à l\'accueil',
+  },
   project: {
     detail: {
       noImagesSelected: 'Aucune image sélectionnée',
@@ -19,6 +50,11 @@ export default {
       allFailed: 'Segmentation : Toutes les {{count}} images ont échoué',
       startedImages: 'Segmentation démarrée pour {{count}} images',
       queuedLocallyWarning: 'Segmentation mise en file d\'attente localement pour {{count}} images. La connexion au serveur a échoué.'
+    },
+    noImages: {
+      title: 'Pas encore d\'images',
+      description: 'Ce projet n\'a pas encore d\'images. Téléchargez des images pour commencer la segmentation.',
+      uploadButton: 'Télécharger des images',
     },
   },
   common: {
@@ -67,7 +103,6 @@ export default {
     system: 'Système',
     welcome: 'Bienvenue sur la plateforme de segmentation de sphéroïdes',
     account: 'Compte',
-    notifications: 'Notifications',
     passwordConfirm: 'Confirmer le mot de passe',
     manageAccount: 'Gérer votre compte',
     changePassword: 'Changer le mot de passe',
@@ -373,21 +408,11 @@ export default {
     changeLanguage: 'Changer de langue',
     useBrowserLanguage: 'Utiliser la langue du navigateur',
     accountSettings: 'Paramètres du compte',
-    notificationSettings: 'Paramètres de notification',
-    emailNotifications: 'Notifications par email',
-    pushNotifications: 'Notifications push',
     profileSettings: 'Paramètres du profil',
     profileUpdated: 'Profil mis à jour avec succès',
     profileUpdateFailed: 'Échec de la mise à jour du profil',
     saveChanges: 'Enregistrer les modifications',
     savingChanges: 'Enregistrement des modifications...',
-    notifications: {
-      projectUpdates: 'Mises à jour de projet',
-      analysisCompleted: 'Analyse terminée',
-      newFeatures: 'Nouvelles fonctionnalités',
-      marketingEmails: 'Emails marketing',
-      billing: 'Notifications de facturation',
-    },
     pageTitle: 'Paramètres',
     profile: 'Profil',
     account: 'Compte',
@@ -413,7 +438,6 @@ export default {
     themeUpdated: 'Thème mis à jour avec succès',
     appearanceDescription: "Personnalisez l'apparence de l'application",
     languageDescription: 'Sélectionnez votre langue préférée',
-    notificationsTab: 'Notifications',
     personal: 'Informations personnelles',
     fullName: 'Nom complet',
     organization: 'Organisation',
@@ -523,13 +547,13 @@ export default {
     registerDescription: 'Inscrivez-vous pour un nouveau compte',
     registerSuccess: 'Inscription réussie! Vous pouvez maintenant vous connecter.',
     forgotPasswordTitle: 'Réinitialiser votre mot de passe',
-    checkYourEmail: 'Vérifiez votre e-mail pour obtenir un lien de réinitialisation',
-    enterEmailForReset: 'Entrez votre adresse e-mail et nous vous enverrons un lien de réinitialisation',
-    passwordResetLinkSent: 'Si un compte existe pour cet e-mail, un lien de réinitialisation a été envoyé',
-    passwordResetFailed: "Échec de l'envoi du lien de réinitialisation. Veuillez réessayer.",
+    checkYourEmail: 'Vérifiez votre e-mail pour obtenir un nouveau mot de passe',
+    enterEmailForReset: 'Entrez votre adresse e-mail et nous vous enverrons un nouveau mot de passe',
+    passwordResetLinkSent: 'Si un compte existe pour cet e-mail, un nouveau mot de passe a été envoyé',
+    passwordResetFailed: "Échec de l'envoi du nouveau mot de passe. Veuillez réessayer.",
     enterEmail: 'Veuillez entrer votre adresse e-mail',
-    sendingResetLink: 'Envoi du lien de réinitialisation...',
-    sendResetLink: 'Envoyer le lien de réinitialisation',
+    sendingResetLink: 'Envoi du nouveau mot de passe...',
+    sendResetLink: 'Envoyer un nouveau mot de passe',
     backToSignIn: 'Retour à la connexion',
   },
   requestAccessForm: {
@@ -815,6 +839,7 @@ export default {
       queued: "En file d'attente",
       completed: 'Terminé',
       failed: 'Échoué',
+      pending: 'En attente',
     },
     queue: {
       title: "File d'attente de segmentation",
@@ -833,7 +858,6 @@ export default {
       statusReady: 'Segmentation: Prêt',
       tasksTotal: '{{total}} tâches au total ({{running}} en traitement, {{queued}} en attente)'
     },
-    notifications: {
       completed: 'Segmentation terminée avec succès',
       failed: 'Échec de la segmentation: {{error}}',
       queued: "La segmentation a été mise en file d'attente",
@@ -900,17 +924,6 @@ export default {
         exit: "Appuyez sur Échap pour quitter le mode d'ajout de points",
       },
     },
-    title: 'Éditeur de segmentation',
-    clickToAddPoint: 'Cliquez pour ajouter un point',
-    clickToCompletePolygon: 'Cliquez sur le premier point pour compléter le polygone',
-    clickToAddFirstSlicePoint: 'Cliquez pour ajouter le premier point de découpe',
-    clickToAddSecondSlicePoint: 'Cliquez pour ajouter le second point de découpe',
-    polygonCreationMode: 'Mode création de polygone',
-    polygonEditMode: 'Mode édition de polygone',
-    polygonSliceMode: 'Mode découpe de polygone',
-    polygonAddPointsMode: 'Mode ajout de points',
-    viewMode: 'Mode visualisation',
-  },
   termsPage: {
     title: 'Terms of Service',
     acceptance: {
@@ -968,6 +981,7 @@ export default {
     storageLimit: 'Limite de stockage',
     activityTitle: 'Activité récente',
     noActivity: 'Aucune activité récente',
+    hide: 'Masquer',
     activityTypes: {
       project_created: 'Projet créé',
       image_uploaded: 'Image téléchargée',

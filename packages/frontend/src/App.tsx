@@ -28,7 +28,7 @@ import ThemedFooter from './components/ThemedFooter';
 import { toast } from 'sonner';
 
 // Import IndexedDB service for cleanup
-import { cleanupOldData, getDBStats } from './utils/indexedDBService';
+import { cleanupOldData, getDBStats, clearEntireDatabase } from './utils/indexedDBService';
 
 // Import accessibility CSS
 import './components/a11y/SkipLink.css';
@@ -124,14 +124,23 @@ const SegmentationEditorRedirect = lazy(() =>
     return import('./pages/NotFound');
   }),
 );
+const AcceptInvitation = lazy(() =>
+  import('./pages/AcceptInvitation').catch(() => {
+    // Error handled by returning NotFound page
+    return import('./pages/NotFound');
+  }),
+);
 
 // Create a client for React Query
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
       retry: 1,
-      staleTime: 60000, // 1 minute (reduces unnecessary refetches)
+      staleTime: 5 * 60 * 1000, // 5 minutes (reduces unnecessary refetches)
+      gcTime: 10 * 60 * 1000, // 10 minutes (cache time)
     },
     mutations: {
       onError: () => {
@@ -229,6 +238,19 @@ const AppLayout = () => {
 
     // Spustíme čištění po načtení aplikace
     cleanupStorage();
+
+    // Add debug function to window for development
+    if (import.meta.env.DEV) {
+      (window as any).clearImageCache = async () => {
+        try {
+          await clearEntireDatabase();
+          toast.success('Image cache cleared successfully. Please refresh the page.');
+        } catch (error) {
+          console.error('Error clearing cache:', error);
+          toast.error('Failed to clear cache');
+        }
+      };
+    }
 
     // Nastavíme interval pro pravidelné čištění (každých 24 hodin)
     const cleanupInterval = setInterval(cleanupStorage, 24 * 60 * 60 * 1000);
@@ -418,6 +440,16 @@ const routes = createRoutesFromElements(
         </ProtectedRoute>
       }
     />
+    <Route
+      path="/accept-invitation/:token"
+      element={
+        <ErrorBoundary componentName="AcceptInvitationPage">
+          <Suspense fallback={<LoadingFallback />}>
+            <AcceptInvitation />
+          </Suspense>
+        </ErrorBoundary>
+      }
+    />
     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
     <Route
       path="*"
@@ -437,6 +469,10 @@ const router = createBrowserRouter(routes, {
   future: {
     v7_relativeSplatPath: true,
     v7_normalizeFormMethod: true,
+    v7_fetcherPersist: true,
+    v7_partialHydration: true,
+    v7_skipActionErrorRevalidation: true,
+    v7_startTransition: true,
   },
 });
 

@@ -105,7 +105,61 @@ export const createUserProfile = async (
   try {
     await client.query('BEGIN');
 
+    // Check if a profile already exists for this user
+    const existingProfile = await client.query(
+      'SELECT * FROM user_profiles WHERE user_id = $1',
+      [userId]
+    );
+
+    if (existingProfile.rows.length > 0) {
+      await client.query('COMMIT');
+      logger.info('User profile already exists', { userId, profileId: existingProfile.rows[0].id });
+      return existingProfile.rows[0];
+    }
+
     const profileId = uuidv4();
+    let username = profileData.username;
+
+    // If username is provided, ensure it's unique
+    if (username) {
+      const usernameCheck = await client.query(
+        'SELECT COUNT(*) FROM user_profiles WHERE username = $1',
+        [username]
+      );
+
+      if (parseInt(usernameCheck.rows[0].count) > 0) {
+        // Generate a unique username by appending a number
+        let counter = 1;
+        let uniqueUsername = `${username}${counter}`;
+        
+        while (true) {
+          const check = await client.query(
+            'SELECT COUNT(*) FROM user_profiles WHERE username = $1',
+            [uniqueUsername]
+          );
+          
+          if (parseInt(check.rows[0].count) === 0) {
+            username = uniqueUsername;
+            break;
+          }
+          
+          counter++;
+          uniqueUsername = `${username}${counter}`;
+          
+          // Safety check to prevent infinite loop
+          if (counter > 1000) {
+            username = `${username}_${profileId.substring(0, 8)}`;
+            break;
+          }
+        }
+        
+        logger.info('Username conflict resolved', { 
+          originalUsername: profileData.username, 
+          newUsername: username,
+          userId 
+        });
+      }
+    }
     
     const result = await client.query(
       `INSERT INTO user_profiles (
@@ -116,7 +170,7 @@ export const createUserProfile = async (
       [
         profileId,
         userId,
-        profileData.username,
+        username,
         profileData.full_name,
         profileData.title,
         profileData.organization,
@@ -129,7 +183,7 @@ export const createUserProfile = async (
 
     await client.query('COMMIT');
     
-    logger.info('User profile created successfully', { userId, profileId });
+    logger.info('User profile created successfully', { userId, profileId, username });
     return result.rows[0];
   } catch (error) {
     await client.query('ROLLBACK');

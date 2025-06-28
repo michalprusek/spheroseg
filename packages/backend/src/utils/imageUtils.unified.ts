@@ -250,7 +250,7 @@ const pathUtils = {
   generateThumbnailPath: (projectId: string, originalFilename: string): string => {
     const uniqueFilename = pathUtils.generateUniqueFilename(
       pathUtils.extractBaseName(originalFilename),
-      pathUtils.extractExtension(originalFilename) || 'png',
+      'jpg', // Always use jpg extension for thumbnails since they're saved as JPEG
       'thumb',
     );
     return path.join('uploads', projectId, uniqueFilename);
@@ -346,6 +346,31 @@ export const getImageMetadata = async (
   filePath: string,
 ): Promise<{ width: number; height: number; format: string }> => {
   try {
+    const ext = path.extname(filePath).toLowerCase();
+    
+    // Special handling for BMP and TIFF files
+    if (ext === '.bmp' || ext === '.tiff' || ext === '.tif') {
+      const format = ext === '.bmp' ? 'bmp' : 'tiff';
+      try {
+        // Try to read metadata with Sharp
+        const metadata = await sharp(filePath).metadata();
+        return {
+          width: metadata.width || 0,
+          height: metadata.height || 0,
+          format: format,
+        };
+      } catch (sharpError) {
+        // If Sharp fails, return basic info
+        logger.warn(`Sharp cannot read ${format.toUpperCase()} metadata, using basic info`, { filePath });
+        return {
+          width: 0,
+          height: 0,
+          format: format,
+        };
+      }
+    }
+    
+    // Get metadata using sharp for other formats
     const metadata = await sharp(filePath).metadata();
     return {
       width: metadata.width || 0,
@@ -353,7 +378,11 @@ export const getImageMetadata = async (
       format: metadata.format || 'unknown',
     };
   } catch (error) {
-    logger.error(`Error getting image metadata: ${filePath}`, error);
+    const sharpError = error as Error;
+    logger.error(`Error getting image metadata: ${filePath}`, {
+      error: sharpError.message,
+      stack: sharpError.stack,
+    });
     throw error;
   }
 };
@@ -368,12 +397,86 @@ export const createThumbnail = async (
 ): Promise<void> => {
   try {
     const { width = 300, height = 300, fit = 'inside' } = options;
+    const ext = path.extname(sourcePath).toLowerCase();
 
-    await sharp(sourcePath).resize({ width, height, fit }).toFile(targetPath);
+    // Special handling for BMP files using Python PIL
+    if (ext === '.bmp') {
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execAsync = util.promisify(exec);
+      
+      const pythonScript = `
+from PIL import Image
+img = Image.open('${sourcePath}')
+img.thumbnail((${width}, ${height}), Image.Resampling.LANCZOS)
+# Save as PNG for lossless compression
+img.save('${targetPath}', 'PNG', optimize=True)
+`;
+      
+      try {
+        await execAsync(`python3 -c "${pythonScript}"`);
+        logger.debug(`Created BMP thumbnail using PIL: ${sourcePath} -> ${targetPath}`);
+      } catch (pilError) {
+        logger.error(`BMP thumbnail creation failed`, { sourcePath, error: pilError });
+        throw new Error(`Cannot create BMP thumbnail: ${(pilError as Error).message}`);
+      }
+    } else if (ext === '.tiff' || ext === '.tif') {
+      try {
+        // Try to create thumbnail directly for TIFF
+        await sharp(sourcePath)
+          .resize({ width, height, fit })
+          .png({ 
+            compressionLevel: 9, // Maximum compression (still lossless)
+            adaptiveFiltering: true 
+          })
+          .toFile(targetPath);
+      } catch (sharpError) {
+        // If Sharp fails with TIFF, try conversion through PNG
+        logger.warn(`Direct conversion of ${ext} failed, trying through temporary file`, { sourcePath });
+        
+        const tempPath = path.join(path.dirname(sourcePath), `temp_${Date.now()}.png`);
+        try {
+          // First convert TIFF to PNG
+          await sharp(sourcePath).png().toFile(tempPath);
+          
+          // Then create thumbnail from PNG
+          await sharp(tempPath)
+            .resize({ width, height, fit })
+            .png({ 
+              compressionLevel: 9,
+              adaptiveFiltering: true 
+            })
+            .toFile(targetPath);
+            
+          // Delete temporary file
+          try {
+            await fs.promises.unlink(tempPath);
+          } catch (unlinkError) {
+            logger.warn('Failed to delete temporary file', { tempPath });
+          }
+        } catch (conversionError) {
+          logger.error(`${ext} conversion failed completely`, { sourcePath, error: conversionError });
+          throw new Error(`Cannot process ${ext} file: ${(conversionError as Error).message}`);
+        }
+      }
+    } else {
+      // Create thumbnail for other formats
+      await sharp(sourcePath)
+        .resize({ width, height, fit })
+        .png({ 
+          compressionLevel: 9, // Maximum compression (still lossless)
+          adaptiveFiltering: true 
+        })
+        .toFile(targetPath);
+    }
 
     logger.debug(`Created thumbnail: ${targetPath}`);
   } catch (error) {
-    logger.error(`Error creating thumbnail: ${sourcePath} -> ${targetPath}`, error);
+    const sharpError = error as Error;
+    logger.error(`Error creating thumbnail: ${sourcePath} -> ${targetPath}`, {
+      error: sharpError.message,
+      stack: sharpError.stack,
+    });
     throw error;
   }
 };
@@ -400,6 +503,24 @@ export const formatImageForApi = (image: Record<string, unknown>, baseUrl: strin
 
   // Add full URLs for storage_path and thumbnail_path if they exist
   const result = { ...image };
+
+  // Convert snake_case segmentation_status to camelCase segmentationStatus
+  // Also handle the case where both might exist (from SQL alias)
+  if ('segmentation_status' in image) {
+    logger.debug('Converting segmentation_status to segmentationStatus', {
+      original: image.segmentation_status,
+    });
+    result.segmentationStatus = image.segmentation_status;
+    delete result.segmentation_status;
+  }
+  
+  // If the SQL alias worked and we have segmentationStatus directly, keep it
+  if ('segmentationStatus' in image && !('segmentationStatus' in result)) {
+    logger.debug('Found segmentationStatus directly in image', {
+      value: image.segmentationStatus,
+    });
+    result.segmentationStatus = image.segmentationStatus;
+  }
 
   if (image.storage_path && typeof image.storage_path === 'string') {
     // If the storage_path is already a full URL, don't modify it
@@ -559,6 +680,51 @@ export const verifyImageFilesForApi = (image: Record<string, unknown>, uploadDir
   return result;
 };
 
+/**
+ * Convert a TIFF or BMP image to a web-friendly format (PNG)
+ * This is crucial for displaying TIFFs and BMPs in browsers which typically don't support them natively.
+ * Using PNG for lossless compression to preserve all image details.
+ */
+export const convertTiffToWebFriendly = async (
+  sourcePath: string,
+  targetPath: string,
+): Promise<void> => {
+  const ext = path.extname(sourcePath).toLowerCase();
+  const formatName = ext === '.bmp' ? 'BMP' : 'TIFF';
+  
+  try {
+    // For BMP files, use Python PIL since Sharp doesn't support BMP natively
+    if (ext === '.bmp') {
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execAsync = util.promisify(exec);
+      
+      const pythonScript = `
+from PIL import Image
+img = Image.open('${sourcePath}')
+# Save as PNG for lossless compression
+img.save('${targetPath}', 'PNG', optimize=True)
+`;
+      
+      await execAsync(`python3 -c "${pythonScript}"`);
+      logger.debug(`Converted ${formatName} to web-friendly PNG using PIL: ${sourcePath} -> ${targetPath}`);
+    } else {
+      // For TIFF and other formats, use Sharp directly
+      await sharp(sourcePath)
+        .png({ 
+          compressionLevel: 9, // Maximum compression (still lossless)
+          adaptiveFiltering: true, // Better compression for some images
+          palette: false // Use full color depth
+        })
+        .toFile(targetPath);
+      logger.debug(`Converted ${formatName} to web-friendly PNG: ${sourcePath} -> ${targetPath}`);
+    }
+  } catch (error) {
+    logger.error(`Error converting ${formatName} to web-friendly format: ${sourcePath} -> ${targetPath}`, error);
+    throw error;
+  }
+};
+
 export default {
   fileExists,
   ensureDirectoryExists,
@@ -574,4 +740,5 @@ export default {
   processBatch,
   generateUniqueImageFilename,
   generateImagePaths,
+  convertTiffToWebFriendly, // Add the new function to the export
 };

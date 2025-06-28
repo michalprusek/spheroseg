@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <rect width="300" height="300" fill="#f0f0f0"/>
+  <g transform="translate(150, 150)">
+    <rect x="-60" y="-80" width="120" height="120" fill="#e0e0e0" stroke="#999" stroke-width="2" rx="8"/>
+    <path d="M-40,-60 L-40,-20 L40,-20 L40,-60 L20,-80 L-40,-60 Z" fill="#fff" stroke="#999" stroke-width="2"/>
+    <path d="M20,-80 L20,-60 L40,-60" fill="none" stroke="#999" stroke-width="2"/>
+    <text x="0" y="0" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#666">TIFF</text>
+    <text x="0" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#999">Náhled bude k dispozici</text>
+    <text x="0" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#999">po nahrání</text>
+  </g>
+</svg>

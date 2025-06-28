@@ -87,21 +87,8 @@ const ProjectsList = ({
       <ProjectListItem
         key={project.id}
         id={project.id}
-        title={
-          <>
-            {project.title}
-            {!project.is_owner && (
-              <Badge className="ml-2" variant="outline">
-                {t(`shared.permission.${project.permission}`) || project.permission}
-              </Badge>
-            )}
-          </>
-        }
-        description={
-          !project.is_owner && project.owner_name
-            ? `${t('shared.sharedBy') || 'Shared by'}: ${project.owner_name} (${project.owner_email})`
-            : project.description || ''
-        }
+        title={project.title}
+        description={project.description || ''}
         thumbnailUrl={project.thumbnail_url}
         date={formatDistanceToNow(new Date(project.updated_at), {
           addSuffix: true,
@@ -113,6 +100,14 @@ const ProjectsList = ({
         onDelete={
           project.is_owner !== false && project.id ? () => onDeleteProject(project.id, project.title) : undefined
         }
+        onDuplicate={(newProject) => {
+          console.log(`ProjectsList: Project duplicated:`, newProject);
+          window.dispatchEvent(new CustomEvent('project-created'));
+        }}
+        isOwner={project.is_owner}
+        permission={project.permission}
+        ownerName={project.owner_name}
+        ownerEmail={project.owner_email}
       />
     ));
 

@@ -68,6 +68,14 @@ export const resetPasswordSchema = z.object({
     }),
 });
 
+// Schema for account deletion
+export const deleteAccountSchema = z.object({
+  body: z.object({
+    username: z.string().email('Email confirmation is required'),
+    password: z.string().min(1, 'Password is required'),
+  }),
+});
+
 // Export types based on the schemas
 export type RegisterRequest = z.infer<typeof registerSchema>['body'];
 export type LoginRequest = z.infer<typeof loginSchema>['body'];
@@ -76,3 +84,4 @@ export type LogoutRequest = z.infer<typeof logoutSchema>['body'];
 export type ChangePasswordRequest = z.infer<typeof changePasswordSchema>['body'];
 export type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>['body'];
 export type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>['body'];
+export type DeleteAccountRequest = z.infer<typeof deleteAccountSchema>['body'];

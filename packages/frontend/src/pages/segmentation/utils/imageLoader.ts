@@ -1,7 +1,43 @@
 /**
  * Utility for loading images and checking if they exist
  */
-import { generatePossibleImagePaths, isImageUrl, ImageLoadOptions } from '../../../../shared/utils/imageUtils';
+
+// Define ImageLoadOptions locally since it's not available from shared
+interface ImageLoadOptions {
+  timeout?: number;
+  maxRetries?: number;
+}
+
+/**
+ * Check if a filename has an image extension
+ */
+const isImageUrl = (filename: string): boolean => {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.tif'];
+  const lowerFilename = filename.toLowerCase();
+  return imageExtensions.some(ext => lowerFilename.endsWith(ext));
+};
+
+/**
+ * Generate possible image paths for a given project and image
+ */
+const generatePossibleImagePaths = (projectId: string, imageId: string, filename: string, baseUrl: string): string[] => {
+  const paths = [
+    `/uploads/${projectId}/${filename}`,
+    `/api/uploads/${projectId}/${filename}`,
+    `/uploads/${imageId}/${filename}`,
+    `/api/uploads/${imageId}/${filename}`,
+    `/uploads/${filename}`,
+    `/api/uploads/${filename}`,
+    `${baseUrl}/uploads/${projectId}/${filename}`,
+    `${baseUrl}/api/uploads/${projectId}/${filename}`,
+    `${baseUrl}/uploads/${imageId}/${filename}`,
+    `${baseUrl}/api/uploads/${imageId}/${filename}`,
+    `${baseUrl}/uploads/${filename}`,
+    `${baseUrl}/api/uploads/${filename}`,
+  ];
+  
+  return paths;
+};
 
 /**
  * Checks if an image exists at the given URL
@@ -108,6 +144,51 @@ export const generateAlternativeUrls = (originalUrl: string, projectId?: string,
     // Try with different extensions if no extension in original
     if (!isImageUrl(filename)) {
       urls.push(`${originalUrl}.png`, `${originalUrl}.jpg`, `${originalUrl}.jpeg`);
+    }
+  }
+
+  // Special handling for TIFF files - add converted PNG version
+  const lowerFilename = filename.toLowerCase();
+  if (lowerFilename.endsWith('.tiff') || lowerFilename.endsWith('.tif')) {
+    const baseFilename = filename.substring(0, filename.lastIndexOf('.'));
+    const pngFilename = `${baseFilename}.png`;
+    
+    // Add converted PNG versions to the beginning (higher priority)
+    urls.unshift(
+      originalUrl.replace(filename, pngFilename),
+      `${baseUrl}${urlWithoutOrigin.replace(filename, pngFilename)}`,
+      `/api${urlWithoutOrigin.replace(filename, pngFilename)}`,
+      `/uploads/${pngFilename}`,
+      `/api/uploads/${pngFilename}`
+    );
+    
+    if (projectId) {
+      urls.unshift(
+        `/uploads/${projectId}/${pngFilename}`,
+        `/api/uploads/${projectId}/${pngFilename}`
+      );
+    }
+  }
+  
+  // Special handling for BMP files - add converted PNG version
+  if (lowerFilename.endsWith('.bmp')) {
+    const baseFilename = filename.substring(0, filename.lastIndexOf('.'));
+    const pngFilename = `${baseFilename}.png`;
+    
+    // Add converted PNG versions to the beginning (higher priority)
+    urls.unshift(
+      originalUrl.replace(filename, pngFilename),
+      `${baseUrl}${urlWithoutOrigin.replace(filename, pngFilename)}`,
+      `/api${urlWithoutOrigin.replace(filename, pngFilename)}`,
+      `/uploads/${pngFilename}`,
+      `/api/uploads/${pngFilename}`
+    );
+    
+    if (projectId) {
+      urls.unshift(
+        `/uploads/${projectId}/${pngFilename}`,
+        `/api/uploads/${projectId}/${pngFilename}`
+      );
     }
   }
 

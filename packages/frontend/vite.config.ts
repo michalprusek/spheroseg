@@ -61,84 +61,51 @@ export default defineConfig(({ mode }) => {
         'Access-Control-Allow-Origin': '*',
       },
       proxy: {
-        // Main API proxy with enhanced logging
-        '/api': {
-          target: apiUrl,
-          changeOrigin: true,
-          secure: false,
-          // Keep /api prefix since backend expects it
-          rewrite: (path) => path,
-          configure: (proxy) => {
-            proxy.on('error', (err) => {
-              console.log('proxy error', err);
-            });
-            proxy.on('proxyReq', (_proxyReq, req) => {
-              console.log('Sending Request:', req.method, req.url);
-            });
-            proxy.on('proxyRes', (proxyRes, req) => {
-              console.log('Received Response:', proxyRes.statusCode, req.url);
-            });
-          },
-        },
-        // Handle auth endpoints with high priority
-        [apiAuthPrefix]: {
-          target: apiUrl,
-          changeOrigin: true,
-          secure: false,
-          // Keep /api prefix since backend expects it
-          rewrite: (path) => path,
-          // Higher priority for auth endpoints
-          configure: (proxy) => {
-            proxy.on('error', (err) => {
-              console.log('Auth proxy error', err);
-            });
-            proxy.on('proxyReq', (_proxyReq, req) => {
-              console.log('Auth Request:', req.method, req.url);
-            });
-            proxy.on('proxyRes', (proxyRes, req) => {
-              console.log('Auth Response:', proxyRes.statusCode, req.url);
-            });
-          },
-        },
-        // Handle users endpoints with high priority
-        [apiUsersPrefix]: {
-          target: apiUrl,
-          changeOrigin: true,
-          secure: false,
-          // Keep /api prefix since backend expects it
-          rewrite: (path) => path,
-        },
-        // Handle specific auth endpoints with highest priority
-        '/api/auth/login': {
-          target: apiUrl,
-          changeOrigin: true,
-          secure: false,
-          // Keep /api prefix since backend expects it
-          rewrite: (path) => path,
-        },
-        '/api/auth/register': {
-          target: apiUrl,
-          changeOrigin: true,
-          secure: false,
-          // Keep /api prefix since backend expects it
-          rewrite: (path) => path,
-        },
-        '/uploads': {
-          target: apiUrl,
-          changeOrigin: true,
-          secure: false,
-        },
-        '/assets/illustrations': {
-          target: apiUrl,
-          changeOrigin: true,
-          secure: false,
-        },
+        // Socket.IO proxy - highest priority to avoid conflicts
         '/socket.io': {
           target: apiUrl,
           changeOrigin: true,
           secure: false,
           ws: true,
-          rewrite: (path) => path, // Don't rewrite socket.io paths
+          rewrite: (path) => path,
+          configure: (proxy) => {
+            proxy.on('error', (err) => {
+              console.log('Socket.IO proxy error', err);
+            });
+            proxy.on('proxyReq', (_proxyReq, req) => {
+              console.log('Socket.IO Request:', req.method, req.url);
+            });
+          },
+        },
+        // Main API proxy
+        '/api': {
+          target: apiUrl,
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path,
+          configure: (proxy) => {
+            proxy.on('error', (err) => {
+              console.log('API proxy error', err);
+            });
+            proxy.on('proxyReq', (_proxyReq, req) => {
+              console.log('API Request:', req.method, req.url);
+            });
+            proxy.on('proxyRes', (proxyRes, req) => {
+              console.log('API Response:', proxyRes.statusCode, req.url);
+            });
+          },
+        },
+        // File uploads
+        '/uploads': {
+          target: apiUrl,
+          changeOrigin: true,
+          secure: false,
+        },
+        // Static assets
+        '/assets/illustrations': {
+          target: apiUrl,
+          changeOrigin: true,
+          secure: false,
         },
       },
       host: '0.0.0.0',
@@ -146,11 +113,10 @@ export default defineConfig(({ mode }) => {
       strictPort: true, // Don't try other ports if 3000 is taken
       cors: true, // Enable CORS for all requests
       hmr: {
-        // Use HTTPS port for WebSocket when site is served over HTTPS
-        clientPort: 443, // Connect to the public-facing HTTPS port
-        protocol: 'wss', // Explicitly use wss for secure websockets
+        // For development, use standard HTTP/WS
+        clientPort: mode === 'development' ? 3000 : 443,
+        protocol: mode === 'development' ? 'ws' : 'wss',
         path: '/@hmr',
-        // Make sure HMR is more resilient
         timeout: 180000,
         overlay: true,
       },

@@ -55,6 +55,9 @@ const SignIn = () => {
           errorMessage = t('auth.invalidCredentials') || 'Invalid email or password. Please try again.';
         } else if (errObj.response?.status === 403) {
           errorMessage = t('auth.accountLocked') || 'Your account has been locked. Please contact support.';
+        } else if (errObj.response?.status === 404) {
+          // User not found - show the specific message from backend
+          errorMessage = errObj.response?.data?.message || 'This email address is not registered. Please check your email or sign up for a new account.';
         } else if (errObj.response?.data?.message && typeof errObj.response.data.message === 'string') {
           errorMessage = errObj.response.data.message;
         } else if (errObj.message && typeof errObj.message === 'string') {

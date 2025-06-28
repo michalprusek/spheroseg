@@ -18,13 +18,14 @@ import ImageCropper from '@/components/ui/image-cropper';
 
 interface AvatarUploaderProps {
   currentAvatarUrl: string | null;
-  onAvatarChange: (newAvatarUrl: string) => void;
+  onAvatarChange: (newAvatarUrl: string, hasChanges: boolean) => void;
+  onUploadRequest?: (uploadFn: () => Promise<void>) => void; // Pass upload function to parent
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAvatarChange, size = 'md' }) => {
+const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAvatarChange, onUploadRequest, size = 'md' }) => {
   const { t } = useLanguage();
-  const { updateAvatar, removeAvatar } = useProfile();
+  const { updateAvatar, removeAvatar, updateProfile } = useProfile();
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalFile, setOriginalFile] = useState<File | null>(null);
@@ -73,6 +74,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
     }
   };
 
+
   // Handle cropper completion
   const handleCropComplete = async (cropData: any) => {
     if (!cropData.croppedImageData) {
@@ -87,18 +89,24 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
     // Close the cropper modal
     setIsCropperOpen(false);
 
-    // Upload the cropped image
+    // Upload immediately to database
     await uploadAvatar(cropData.croppedImageData);
   };
 
-  // Upload the avatar
-  const uploadAvatar = async (dataUrl: string) => {
+  // Upload the avatar - can be called by parent component
+  const uploadAvatar = async (dataUrl?: string) => {
+    const imageToUpload = dataUrl || previewUrl;
+    if (!imageToUpload) {
+      showError(t('profile.noImageToUpload') || 'No image to upload');
+      return;
+    }
+
     setIsUploading(true);
 
     await tryCatch(
       async () => {
         // Convert data URL to File
-        const response = await fetch(dataUrl);
+        const response = await fetch(imageToUpload);
         const blob = await response.blob();
         const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
 
@@ -107,16 +115,29 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
 
         console.log('Avatar uploaded successfully via API');
 
-        // Call the callback with the data URL for immediate preview
-        onAvatarChange(dataUrl);
+        // Store the data URL in localStorage for immediate display
+        localStorage.setItem('userAvatar', imageToUpload);
 
         showSuccess(t('profile.avatarUpdated') || 'Profile picture updated');
+        
+        // Clear preview after successful upload
+        setPreviewUrl(null);
+        
+        // Update parent with new avatar URL (no pending changes since it's uploaded)
+        onAvatarChange(imageToUpload, false);
       },
       t('profile.avatarUploadError') || 'Failed to upload profile picture',
     );
 
     setIsUploading(false);
   };
+
+  // Pass upload function to parent when preview changes
+  useEffect(() => {
+    if (onUploadRequest && previewUrl) {
+      onUploadRequest(() => uploadAvatar());
+    }
+  }, [previewUrl, onUploadRequest]);
 
   // Handle avatar removal
   const handleRemoveAvatar = async () => {
@@ -129,8 +150,8 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
 
         console.log('Avatar removed successfully via API');
 
-        // Call the callback with empty string
-        onAvatarChange('');
+        // Call the callback with empty string and no pending changes
+        onAvatarChange('', false);
 
         // Clear preview
         setPreviewUrl(null);
@@ -145,12 +166,24 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
 
   // Get avatar from localStorage if available
   useEffect(() => {
+    // Don't override if we already have a preview (user is in the middle of editing)
+    if (previewUrl) return;
+    
     const storedAvatar = localStorage.getItem('userAvatar');
-    if (storedAvatar && !previewUrl && (!currentAvatarUrl || currentAvatarUrl.length === 0)) {
-      // If we have a stored avatar and no preview or current avatar, use the stored one
-      setPreviewUrl(storedAvatar);
+    const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
+    
+    // If current avatar URL is empty/null, check localStorage
+    if (!currentAvatarUrl || currentAvatarUrl.length === 0) {
+      if (storedAvatar) {
+        // This is typically a data URL from recent upload
+        // Don't set as preview, just notify parent
+        onAvatarChange(storedAvatar, false);
+      } else if (storedAvatarUrl) {
+        // This is typically an API URL from previous session
+        onAvatarChange(storedAvatarUrl, false);
+      }
     }
-  }, [previewUrl, currentAvatarUrl]);
+  }, [currentAvatarUrl, previewUrl, onAvatarChange]);
 
   // Clean up object URLs when component unmounts
   useEffect(() => {

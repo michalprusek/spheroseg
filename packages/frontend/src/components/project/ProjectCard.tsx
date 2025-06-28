@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Image, Share2 } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ProjectActions from '@/components/project/ProjectActions';
+import ShareDialog from '@/components/project/ShareDialog';
 import { formatRelativeTime } from '@/utils/dateUtils';
 import { constructUrl } from '@/lib/urlUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -31,6 +32,7 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onProjectDeleted, onProjectDuplicated }) => {
   const { t } = useLanguage();
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   const handleDelete = (deletedProjectId: string) => {
     if (!project.id) {
@@ -43,6 +45,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onProjectDeleted, on
 
   const handleDuplicateSuccess = (newProject: { id: string; name: string }) => {
     onProjectDuplicated(newProject);
+  };
+
+  const handleShare = () => {
+    setShareDialogOpen(true);
   };
 
   const formattedTime = formatRelativeTime(project.updated_at);
@@ -127,8 +133,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onProjectDeleted, on
           projectTitle={project.name || project.title || 'Untitled Project'}
           onDelete={() => onProjectDeleted?.(project.id)}
           onDuplicate={handleDuplicateSuccess}
+          onShare={project.is_owner !== false ? handleShare : undefined}
         />
       </CardFooter>
+
+      {/* Share Dialog */}
+      {project.is_owner !== false && (
+        <ShareDialog
+          projectId={project.id}
+          projectName={project.name || project.title || 'Untitled Project'}
+          isOwner={true}
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+        />
+      )}
     </Card>
   );
 };

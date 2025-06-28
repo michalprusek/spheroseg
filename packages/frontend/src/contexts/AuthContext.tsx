@@ -132,8 +132,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (sessionUserData) {
         return JSON.parse(sessionUserData);
       }
-    } catch (e) {
-      console.error('Error reading persisted user from session storage:', e);
+    } catch (e: any) { // Cast e to any
+      logger.error('Error reading persisted user from session storage:', e);
     }
     return null;
   };
@@ -146,13 +146,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Pokud máme uživatele, uložíme ho do session pro případ ztráty
       try {
         sessionStorage.setItem('spheroseg_persisted_user', JSON.stringify(loadedUser));
-      } catch (e) {
-        console.error('Error saving user to session storage:', e);
+      } catch (e: any) { // Cast e to any
+        logger.error('Error saving user to session storage:', e);
       }
       return loadedUser;
     } else if (persistedUser) {
       // Pokud nemáme uživatele, ale máme ho v session, použijeme ho jako fallback
-      console.log('Using persisted user from session as fallback');
+      logger.debug('Using persisted user from session as fallback');
       return persistedUser;
     }
 
@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize user from localStorage with persistence protection
   const initialUser = ensureUserPersistence(loadUserFromStorage());
-  console.log('Initial user from storage (with persistence):', initialUser);
+  logger.debug('Initial user from storage (with persistence):', initialUser);
 
   const [user, setUser] = useState<User | null>(initialUser);
   const [token, setToken] = useState<string | null>(
@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Log auth state changes for debugging
   useEffect(() => {
-    console.log('Auth state changed:', {
+    logger.debug('Auth state changed:', {
       user: !!user,
       token: !!token,
       loading,
@@ -197,18 +197,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (newUser) {
       try {
         sessionStorage.setItem('spheroseg_persisted_user', JSON.stringify(newUser));
-      } catch (e) {
-        console.error('Error saving user to session storage:', e);
+      } catch (e: any) { // Cast e to any
+        logger.error('Error saving user to session storage:', e);
       }
     } else {
       // Only clear session storage if we're explicitly logging out
       // Pokud jsme došli sem voláním signOut funkce, vymažeme i z session
       const isLogout = new Error().stack?.includes('signOut');
       if (isLogout) {
-        console.log('Clearing persisted user due to explicit logout');
+        logger.debug('Clearing persisted user due to explicit logout');
         sessionStorage.removeItem('spheroseg_persisted_user');
       } else {
-        console.log('Not clearing persisted user (not an explicit logout)');
+        logger.debug('Not clearing persisted user (not an explicit logout)');
       }
     }
   };
@@ -229,12 +229,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Blokujeme veškeré navigační operace po dobu načítání
       window.sessionStorage.setItem('spheroseg_page_loading', 'true');
 
-      // Po 5 sekundách zrušíme blokaci (dáváme dost času pro obnovu tokenů)
+      // Po 2 sekundách zrušíme blokaci (sníženo z 5 sekund pro rychlejší načítání)
       setTimeout(() => {
         isPageLoadRef.current = false;
         window.sessionStorage.removeItem('spheroseg_page_loading');
         logger.info('Page reload blocker disabled');
-      }, 5000);
+      }, 2000);
     }
   }, []);
 
@@ -247,7 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // nebo pokud jsme na přihlašovací stránce, nemusíme inicializovat auth
       // Toto zabrání zbytečnému ověřování a ztrátě přihlášení při navigaci mezi stránkami
       if (location.pathname === '/sign-in' || location.pathname === '/sign-up') {
-        console.log('Skipping auth initialization on auth page');
+        logger.debug('Skipping auth initialization on auth page');
         setLoading(false);
         return;
       }
@@ -255,7 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // DŮLEŽITÉ: Pokud už máme platného uživatele, neresetujeme proces inicializace
       // Tím zabráníme ztrátě přihlášení při refreshi stránky
       if (user && !location.pathname.startsWith('/sign-')) {
-        console.log('Skipping auth re-initialization on protected page with valid user');
+        logger.debug('Skipping auth re-initialization on protected page with valid user');
         setLoading(false);
         return;
       }
@@ -291,7 +291,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setTimeout(() => {
               logger.warn('Auth API verification timed out, continuing with stored token and user data');
               resolve(null);
-            }, 20000); // Zvýšeno na 20 sekund pro větší toleranci pomalejší sítě
+            }, 5000); // Sníženo na 5 sekund pro rychlejší načítání
           });
 
           // Try to load user from storage first
@@ -376,7 +376,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setTimeout(() => navigate(savedRoute), 100);
             }
           }
-        } catch (error) {
+        } catch (error: any) { // Cast error to any
           logger.error('Token verification failed:', { error });
 
           // Try to use stored user data as fallback
@@ -477,7 +477,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await userProfileService.initializeUserSettings();
           
           logger.info(`Data migration completed for user ${data.user.id}`);
-        } catch (error) {
+        } catch (error: any) { // Cast error to any
           logger.error('Error during data migration:', {
             error,
             userId: data.user.id,
@@ -499,8 +499,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 },
               );
               logger.info(`Language preference updated via fallback for user ${data.user.id}`);
-            } catch (fallbackError) {
-              logger.error('Fallback language update also failed:', fallbackError);
+            } catch (fallbackErr: any) { // Cast fallbackErr to any
+              logger.error('Fallback language update also failed:', fallbackErr);
             }
           }
         }
@@ -560,7 +560,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   navigate('/dashboard');
                 }
                 return true;
-              } catch (error) {
+              } catch (error: any) { // Cast error to any
                 if (error.name === 'AbortError') {
                   logger.error('[authContext] Login request aborted due to timeout');
                   throw new Error('Login request timed out. Please try again.');
@@ -586,7 +586,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
         {
           // Custom error handler
-          onError: (error) => {
+          onError: (error: any) => { // Cast error to any
             logger.error('Error signing in:', { error });
 
             // Use enhanced error handling
@@ -656,7 +656,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                       'Content-Type': 'application/json',
                     },
                   });
-                } catch (error) {
+                } catch (error: any) { // Cast error to any
                   // Don't retry if user already exists (409 Conflict)
                   if (axios.isAxiosError(error) && error.response?.status === 409) {
                     logger.warn('User already exists, not retrying', { email });
@@ -676,7 +676,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             logger.info('Signup successful');
             // Don't show toast here - let the signup component handle success messages
             return true;
-          } catch (error) {
+          } catch (error: any) { // Cast error to any
             // Propagate all errors without mock workarounds
 
             // Otherwise, propagate the error
@@ -686,7 +686,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         {
           // Don't use custom error handler - let errors bubble up to SignUp component
           showToast: false, // Let SignUp component handle toasts
-          rethrow: true, // Rethrow errors so SignUp can catch them
+          // rethrow: true, // Removed, as it's not a valid property for safeAsync
         },
       );
 
@@ -710,6 +710,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('userAvatar');
     localStorage.removeItem('userAvatarUrl');
     sessionStorage.removeItem('spheroseg_persisted_user');
+    
+    // Clear context initialization markers to allow fresh initialization on next login
+    sessionStorage.removeItem('spheroseg_language_last_user');
+    sessionStorage.removeItem('spheroseg_theme_last_user');
+    sessionStorage.removeItem('spheroseg_profile_last_user');
+    sessionStorage.removeItem('spheroseg_last_auth_error');
 
     // Call the backend logout endpoint to invalidate the refresh token
     if (refreshToken) {
@@ -726,7 +732,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         );
         logger.info('Backend logout successful');
-      } catch (error) {
+      } catch (error: any) { // Cast error to any
         // Non-critical error, just log it
         logger.warn('Backend logout failed, but local session was cleared', {
           error,
@@ -735,7 +741,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (navigate) {
-      navigate('/sign-in');
+      navigate('/');
     }
     toast.success('Signed out successfully');
   }, [navigate]);
@@ -760,7 +766,7 @@ export function useAuth() {
     // Instead of throwing an error, provide a fallback context for development
     // This helps prevent crashes when components are tested in isolation
     if (process.env.NODE_ENV !== 'production') {
-      console.warn('useAuth was called outside of AuthProvider. Using fallback context.');
+      logger.warn('useAuth was called outside of AuthProvider. Using fallback context.');
 
       // Return a fallback context with dummy values
       return {

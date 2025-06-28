@@ -91,12 +91,13 @@ export async function createTutorialProject(pool: Pool, userId: string): Promise
     // First image - without segmentation
     await client.query(
       `INSERT INTO images (
-        project_id, user_id, name, storage_filename, status
-      ) VALUES ($1, $2, $3, $4, $5)`,
+        project_id, user_id, name, storage_filename, storage_path, status
+      ) VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         projectId,
         userId,
         'Hero Image 1 (No Segmentation)',
+        image1FileName,
         `/uploads/images/${projectId}/${image1FileName}`,
         'completed',
       ],
@@ -105,12 +106,13 @@ export async function createTutorialProject(pool: Pool, userId: string): Promise
     // Second image - with segmentation
     const image2Result = await client.query(
       `INSERT INTO images (
-        project_id, user_id, name, storage_filename, status, segmentation_status
-      ) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        project_id, user_id, name, storage_filename, storage_path, status, segmentation_status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
       [
         projectId,
         userId,
         'Hero Image 2 (With Segmentation)',
+        image2FileName,
         `/uploads/images/${projectId}/${image2FileName}`,
         'completed',
         'completed', // Mark for segmentation

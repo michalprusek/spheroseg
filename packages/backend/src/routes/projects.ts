@@ -510,4 +510,99 @@ router.post(
   },
 );
 
+// GET /api/projects/:id/images - Get images for a specific project
+// @ts-ignore
+router.get(
+  '/:id/images',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    const { id: projectId } = req.params;
+
+    if (!userId) return res.status(401).json({ message: 'Authentication error' });
+
+    try {
+      logger.info('Processing get project images request', { userId, projectId });
+
+      // First check if the projects table exists
+      const projectsTableCheck = await pool.query(`
+        SELECT EXISTS (
+          SELECT 1
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+          AND table_name = 'projects'
+        )
+      `);
+
+      const projectsTableExists = projectsTableCheck.rows[0].exists;
+      if (!projectsTableExists) {
+        logger.warn('Projects table does not exist in database');
+        return res.status(404).json({
+          message: 'Project not found - projects table missing',
+          error: 'NOT_FOUND',
+        });
+      }
+
+      // Verify user has access to the project
+      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
+        projectId,
+        userId,
+      ]);
+
+      if (projectCheck.rows.length === 0) {
+        logger.info('Project not found or access denied', { projectId, userId });
+        return res.status(404).json({ message: 'Project not found or access denied' });
+      }
+
+      // Check if images table exists
+      const imagesTableCheck = await pool.query(`
+        SELECT EXISTS (
+          SELECT 1
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+          AND table_name = 'images'
+        )
+      `);
+
+      const imagesTableExists = imagesTableCheck.rows[0].exists;
+      if (!imagesTableExists) {
+        logger.warn('Images table does not exist in database');
+        return res.status(200).json({
+          images: [],
+          total: 0,
+        });
+      }
+
+      // Get images for this project with segmentation status
+      const imagesQuery = `
+        SELECT 
+          i.id, i.project_id, i.name, i.storage_path, i.thumbnail_path, i.status, 
+          i.created_at, i.updated_at, i.file_size, i.width, i.height, i.storage_filename,
+          i.metadata,
+          COALESCE(sr.status, i.segmentation_status, 'pending') as "segmentationStatus",
+          sr.id as segmentation_id
+        FROM images i
+        LEFT JOIN segmentation_results sr ON i.id = sr.image_id
+        WHERE i.project_id = $1
+        ORDER BY i.created_at DESC
+      `;
+      const imagesResult = await pool.query(imagesQuery, [projectId]);
+
+      logger.info('Project images fetched successfully', {
+        projectId,
+        count: imagesResult.rows.length,
+      });
+
+      res.status(200).json({
+        images: imagesResult.rows,
+        total: imagesResult.rows.length,
+      });
+    } catch (error) {
+      logger.error('Error fetching project images', { error, projectId, userId });
+      next(error);
+    }
+  },
+);
+
+
 export default router;

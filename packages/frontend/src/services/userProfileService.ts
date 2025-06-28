@@ -164,14 +164,16 @@ class UserProfileService {
         value,
         category,
       });
+      console.log(`[UserProfileService] Successfully saved ${key} to database:`, value);
       return {
         key: response.data.key,
         value: response.data.value,
         category: response.data.category,
         updated_at: response.data.updated_at,
       };
-    } catch (error) {
-      console.error('Error setting user setting:', error);
+    } catch (error: any) {
+      const errorMessage = error.response?.status === 502 ? 'API Gateway error (502)' : 'API error';
+      console.warn(`[UserProfileService] Error setting user setting ${key} (${errorMessage}):`, error.message || error);
       throw error;
     }
   }
@@ -228,21 +230,65 @@ class UserProfileService {
   async loadSettingFromDatabase(key: string, localStorageKey: string, defaultValue?: any): Promise<any> {
     try {
       const setting = await this.getUserSetting(key);
-      if (setting) {
-        localStorage.setItem(localStorageKey, JSON.stringify(setting.value));
+      if (setting && setting.value !== undefined && setting.value !== null) {
+        // Only update localStorage if the DB value is different from current localStorage
+        const currentLocalValue = localStorage.getItem(localStorageKey);
+        const dbValueStr = JSON.stringify(setting.value);
+        
+        if (currentLocalValue !== dbValueStr) {
+          localStorage.setItem(localStorageKey, dbValueStr);
+          console.log(`[UserProfileService] Updated localStorage ${localStorageKey} with DB value:`, setting.value);
+        }
+        
         return setting.value;
       } else if (defaultValue !== undefined) {
-        localStorage.setItem(localStorageKey, JSON.stringify(defaultValue));
-        await this.setUserSetting(key, defaultValue, 'ui');
+        // Check if localStorage already has a value before setting default
+        const existingValue = localStorage.getItem(localStorageKey);
+        if (!existingValue) {
+          localStorage.setItem(localStorageKey, JSON.stringify(defaultValue));
+          console.log(`[UserProfileService] Set default value for ${localStorageKey}:`, defaultValue);
+        }
+        
+        // Try to set default in database but don't fail if it doesn't work
+        try {
+          await this.setUserSetting(key, defaultValue, 'ui');
+        } catch (dbError) {
+          console.warn(`[UserProfileService] Failed to set default ${key} in database:`, dbError);
+        }
+        
         return defaultValue;
       }
       return null;
     } catch (error) {
-      console.error(`Error loading ${key} from database:`, error);
+      console.warn(`[UserProfileService] Error loading ${key} from database, using localStorage fallback:`, error);
+      
+      // Try to get from localStorage first
+      const localValue = localStorage.getItem(localStorageKey);
+      if (localValue) {
+        try {
+          // First try to parse as JSON
+          return JSON.parse(localValue);
+        } catch (parseError) {
+          console.warn(`[UserProfileService] Failed to parse localStorage ${localStorageKey} as JSON, treating as plain string:`, parseError);
+          // If it's a valid non-JSON value (like 'system', 'light', 'dark' for theme), return as-is
+          if (['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(localValue)) {
+            console.log(`[UserProfileService] Using plain string value for ${localStorageKey}:`, localValue);
+            // Store it as JSON for future consistency
+            localStorage.setItem(localStorageKey, JSON.stringify(localValue));
+            return localValue;
+          }
+          // For other values, return as string
+          return localValue;
+        }
+      }
+      
+      // If nothing in localStorage and we have a default, use it
       if (defaultValue !== undefined) {
         localStorage.setItem(localStorageKey, JSON.stringify(defaultValue));
+        console.log(`[UserProfileService] Using default value for ${localStorageKey} due to API failure:`, defaultValue);
         return defaultValue;
       }
+      
       return null;
     }
   }

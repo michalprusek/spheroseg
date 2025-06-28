@@ -148,7 +148,7 @@ const ProjectImageGrid: React.FC<ProjectImageGridProps> = ({ images, loading, on
 
                     // For data URLs that might be corrupted, try to use the original URL
                     if ((image._tempUrl || image.thumbnail_url || image.url).startsWith('data:') && image._tempUrl) {
-                      console.log('Trying fallback to temp URL for', image.name);
+                      // console.log('Trying fallback to temp URL for', image.name); // Removed debug log
                       (e.target as HTMLImageElement).src = image._tempUrl;
                     } else {
                       // Use placeholder for failed images

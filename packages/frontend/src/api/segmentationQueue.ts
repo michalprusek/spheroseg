@@ -29,10 +29,18 @@ export const fetchQueueStatus = async (projectId: string): Promise<QueueStatusUp
     let success = false;
     let lastError = null;
 
-    // Array of endpoints to try
+    // Array of endpoints to try - updated for V2 service
     const endpoints = [
       {
-        name: 'Primary endpoint',
+        name: 'V2 Status endpoint',
+        url: `/api/queue-status/${projectId}`,
+      },
+      {
+        name: 'V2 Segmentation endpoint',
+        url: `/api/segmentation/queue-status/${projectId}`,
+      },
+      {
+        name: 'Legacy endpoint',
         url: `/api/segmentations/queue/status/${projectId}`,
       },
       {
@@ -40,11 +48,7 @@ export const fetchQueueStatus = async (projectId: string): Promise<QueueStatusUp
         url: `/api/projects/${projectId}/segmentations/queue`,
       },
       {
-        name: 'Legacy endpoint',
-        url: `/api/segmentations/queue/status?projectId=${projectId}`,
-      },
-      {
-        name: 'Direct queue endpoint',
+        name: 'Global queue endpoint',
         url: `/api/queue/status`,
       },
     ];
@@ -59,7 +63,7 @@ export const fetchQueueStatus = async (projectId: string): Promise<QueueStatusUp
         console.log(`${endpoint.name} response:`, response.data);
 
         if (response.data) {
-          // Normalize the response data to ensure it has all required fields
+          // Normalize the response data to ensure it has all required fields for V2 service
           const normalizedData: QueueStatusUpdate = {
             pendingTasks: response.data.pendingTasks || response.data.queuedTasks || [],
             runningTasks: response.data.runningTasks || [],
@@ -67,6 +71,11 @@ export const fetchQueueStatus = async (projectId: string): Promise<QueueStatusUp
             activeTasksCount: response.data.activeTasksCount || response.data.runningTasks?.length || 0,
             timestamp: response.data.timestamp || new Date().toISOString(),
             processingImages: response.data.processingImages || [],
+            // V2 service specific fields
+            queuedTasksCount: response.data.queuedTasksCount || response.data.queuedTasks?.length || 0,
+            pendingTasksCount: response.data.pendingTasksCount || response.data.pendingTasks?.length || 0,
+            runningTasksCount: response.data.runningTasksCount || response.data.runningTasks?.length || 0,
+            queuedImages: response.data.queuedImages || [],
           };
 
           // Cache the successful response

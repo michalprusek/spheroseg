@@ -91,11 +91,13 @@ services:
       - DB_NAME=spheroseg
       - DB_USER=postgres
       - DB_PASSWORD=postgres
-      - USE_MOCK_USER=true
+      - USE_MOCK_USER=false
       - PYTHONUNBUFFERED=1
       - MAX_UPLOAD_SIZE=100mb
       - VALIDATION_STRICT=false
       - DEBUG=true
+      # ML Service configuration
+      - ML_SERVICE_URL=http://ml:5002
       # Email configuration
       - EMAIL_FROM=spheroseg@utia.cas.cz
       - APP_URL=http://localhost:3000
@@ -111,7 +113,7 @@ services:
       bash -c "
         mkdir -p /app/uploads &&
         echo 'Starting server with hot reload...' &&
-        apt-get update && apt-get install -y curl gnupg make g++ libpixman-1-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev &&
+        apt-get update && apt-get install -y curl gnupg make g++ libpixman-1-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev libvips-dev &&
         # Install OpenCV system dependencies
         apt-get install -y libgl1-mesa-glx libglib2.0-0 libsm6 libxrender1 libxext6 &&
         curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &&
@@ -142,7 +144,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - MODEL_PATH=/ML/checkpoint_epoch_9.pth.tar
-      - DEBUG=true
+      - DEBUG=false
       - ML_SERVICE_URL=http://ml:5002
     ports:
       - "5002:5002"

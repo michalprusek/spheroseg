@@ -68,7 +68,7 @@ export const getUserProfileWithSettings = async (req: AuthenticatedRequest, res:
     
     // Convert settings to object for easier frontend usage
     const settingsObj = settings.reduce((acc, setting) => {
-      acc[setting.setting_key] = JSON.parse(setting.setting_value);
+      acc[setting.setting_key] = setting.setting_value;
       return acc;
     }, {} as Record<string, any>);
 
@@ -189,7 +189,7 @@ export const getUserSetting = async (req: AuthenticatedRequest, res: Response) =
 
     res.json({
       key: setting.setting_key,
-      value: JSON.parse(setting.setting_value),
+      value: setting.setting_value,
       category: setting.category
     });
   } catch (error) {
@@ -213,7 +213,7 @@ export const getUserSettings = async (req: AuthenticatedRequest, res: Response) 
     // Convert to object format
     const settingsObj = settings.reduce((acc, setting) => {
       acc[setting.setting_key] = {
-        value: JSON.parse(setting.setting_value),
+        value: setting.setting_value,
         category: setting.category,
         updated_at: setting.updated_at
       };
@@ -248,7 +248,7 @@ export const setUserSetting = async (req: AuthenticatedRequest, res: Response) =
     
     res.json({
       key: setting.setting_key,
-      value: JSON.parse(setting.setting_value),
+      value: setting.setting_value,
       category: setting.category,
       updated_at: setting.updated_at
     });
@@ -304,7 +304,7 @@ export const batchUpdateUserSettings = async (req: AuthenticatedRequest, res: Re
 
     const settingsObj = updatedSettings.reduce((acc, setting) => {
       acc[setting.setting_key] = {
-        value: JSON.parse(setting.setting_value),
+        value: setting.setting_value,
         category: setting.category,
         updated_at: setting.updated_at
       };

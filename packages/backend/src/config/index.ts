@@ -67,7 +67,7 @@ const config = {
   storage: {
     uploadDir: process.env.UPLOAD_DIR || path.join(ROOT_DIR, 'uploads'),
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '50000000', 10),
-    allowedFileTypes: (process.env.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/tiff').split(','),
+    allowedFileTypes: (process.env.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/tiff,image/tif,image/bmp').split(','),
     // Storage limits and monitoring
     defaultUserStorageLimit: parseInt(process.env.DEFAULT_USER_STORAGE_LIMIT || '10737418240', 10), // 10 GB
     defaultUserLimitBytes: BigInt(process.env.DEFAULT_USER_STORAGE_LIMIT || '10737418240'), // 10 GB as BigInt

@@ -1,8 +1,8 @@
 import { Pool } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
-import { createLogger } from '@/utils/logger';
+import { createLogger } from '../utils/logger';
 import { sendProjectInvitation } from './emailService';
-import { ApiError } from '@/utils/errors';
+import { ApiError } from '../utils/errors';
 
 const logger = createLogger('projectShareService');
 
@@ -13,6 +13,12 @@ export interface ShareProjectParams {
   projectId: string;
   ownerId: string;
   email: string;
+  permission: 'view' | 'edit';
+}
+
+export interface GenerateInvitationParams {
+  projectId: string;
+  ownerId: string;
   permission: 'view' | 'edit';
 }
 
@@ -73,11 +79,11 @@ export class ProjectShareService {
   async isProjectSharedWithEmail(projectId: string, email: string): Promise<boolean> {
     const query = `
       SELECT id FROM project_shares 
-      WHERE project_id = $1 AND email = $2
+      WHERE project_id = $1 AND (invitation_email = $2 OR user_id IN (SELECT id FROM users WHERE email = $2))
     `;
 
     const result = await this.pool.query(query, [projectId, email]);
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   /**
@@ -91,7 +97,7 @@ export class ProjectShareService {
     `;
 
     const ownerResult = await this.pool.query(ownerQuery, [projectId, userId]);
-    return ownerResult.rowCount > 0;
+    return (ownerResult.rowCount ?? 0) > 0;
   }
 
   /**
@@ -103,13 +109,13 @@ export class ProjectShareService {
     // Kontrola, zda je uživatel vlastníkem projektu
     const canShare = await this.canUserShareProject(projectId, ownerId);
     if (!canShare) {
-      throw new ApiError('Forbidden', 'You are not allowed to share this project', 403);
+      throw new ApiError(403, 'You are not allowed to share this project');
     }
 
     // Kontrola, zda už projekt není sdílen s tímto emailem
     const isAlreadyShared = await this.isProjectSharedWithEmail(projectId, email);
     if (isAlreadyShared) {
-      throw new ApiError('Conflict', 'Project is already shared with this email', 409);
+      throw new ApiError(409, 'Project is already shared with this email');
     }
 
     // Generování tokenu a data expirace pro pozvánku
@@ -131,7 +137,7 @@ export class ProjectShareService {
     const projectResult = await this.pool.query(projectQuery, [projectId]);
 
     if (projectResult.rows.length === 0) {
-      throw new ApiError('Not Found', 'Project not found', 404);
+      throw new ApiError(404, 'Project not found');
     }
 
     const { title: projectTitle, owner_name: ownerName } = projectResult.rows[0];
@@ -139,20 +145,18 @@ export class ProjectShareService {
     // Vytvoření záznamu v databázi
     const insertQuery = `
       INSERT INTO project_shares 
-        (project_id, owner_id, user_id, email, permission, invitation_token, invitation_expires_at)
+        (project_id, user_id, invitation_email, permission, invitation_token)
       VALUES 
-        ($1, $2, $3, $4, $5, $6, $7)
+        ($1, $2, $3, $4, $5)
       RETURNING *
     `;
 
     const result = await this.pool.query(insertQuery, [
       projectId,
-      ownerId,
       userId,
       email,
       permission,
       invitationToken,
-      invitationExpiresAt,
     ]);
 
     const shareDetails = result.rows[0];
@@ -187,7 +191,7 @@ export class ProjectShareService {
     // Kontrola, zda je uživatel vlastníkem projektu
     const canShare = await this.canUserShareProject(projectId, userId);
     if (!canShare) {
-      throw new ApiError('Forbidden', 'You are not allowed to manage shares for this project', 403);
+      throw new ApiError(403, 'You are not allowed to manage shares for this project');
     }
 
     const query = `
@@ -197,7 +201,7 @@ export class ProjectShareService {
     `;
 
     const result = await this.pool.query(query, [shareId, projectId]);
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   /**
@@ -217,7 +221,7 @@ export class ProjectShareService {
     const tokenResult = await this.pool.query(tokenQuery, [token]);
 
     if (tokenResult.rows.length === 0) {
-      throw new ApiError('Not Found', 'Invalid or expired invitation token', 404);
+      throw new ApiError(404, 'Invalid or expired invitation token');
     }
 
     const invitation = tokenResult.rows[0];
@@ -227,13 +231,13 @@ export class ProjectShareService {
     const userResult = await this.pool.query(userQuery, [userId]);
 
     if (userResult.rows.length === 0) {
-      throw new ApiError('Not Found', 'User not found', 404);
+      throw new ApiError(404, 'User not found');
     }
 
     const userEmail = userResult.rows[0].email;
 
     if (invitation.email.toLowerCase() !== userEmail.toLowerCase()) {
-      throw new ApiError('Forbidden', 'This invitation is not intended for this user', 403);
+      throw new ApiError(403, 'This invitation is not intended for this user');
     }
 
     // Aktualizace záznamu o sdílení - nastavení user_id a zrušení tokenu
@@ -296,12 +300,16 @@ export class ProjectShareService {
     // Kontrola, zda je uživatel vlastníkem projektu
     const canShare = await this.canUserShareProject(projectId, ownerId);
     if (!canShare) {
-      throw new ApiError('Forbidden', 'You are not allowed to view shares for this project', 403);
+      throw new ApiError(403, 'You are not allowed to view shares for this project');
     }
 
     const query = `
-      SELECT ps.id, ps.email, ps.permission, ps.created_at, 
-             u.name as user_name, ps.invitation_token IS NOT NULL as is_pending
+      SELECT ps.id, 
+             COALESCE(u.email, ps.invitation_email) as email, 
+             ps.permission, 
+             ps.created_at, 
+             u.name as user_name, 
+             ps.invitation_token IS NOT NULL as is_pending
       FROM project_shares ps
       LEFT JOIN users u ON ps.user_id = u.id
       WHERE ps.project_id = $1
@@ -325,7 +333,7 @@ export class ProjectShareService {
     const ownerResult = await this.pool.query(ownerQuery, [projectId, userId]);
 
     // Pokud je vlastníkem, má přístup
-    if (ownerResult.rowCount > 0) {
+    if ((ownerResult.rowCount ?? 0) > 0) {
       return true;
     }
 
@@ -336,7 +344,62 @@ export class ProjectShareService {
     `;
 
     const shareResult = await this.pool.query(shareQuery, [projectId, userId]);
-    return shareResult.rowCount > 0;
+    return (shareResult.rowCount ?? 0) > 0;
+  }
+
+  /**
+   * Generuje invitation link pro sdílení projektu
+   * Na rozdíl od shareProject(), tato metoda nevyžaduje email a neposílá pozvánku
+   */
+  async generateInvitationLink(params: GenerateInvitationParams): Promise<{
+    token: string;
+    expiresAt: Date;
+    permission: string;
+  }> {
+    const { projectId, ownerId, permission } = params;
+
+    // Kontrola, zda je uživatel vlastníkem projektu
+    const canShare = await this.canUserShareProject(projectId, ownerId);
+    if (!canShare) {
+      throw new ApiError(403, 'You are not allowed to share this project');
+    }
+
+    // Kontrola existence projektu
+    const projectQuery = `
+      SELECT id FROM projects WHERE id = $1
+    `;
+    const projectResult = await this.pool.query(projectQuery, [projectId]);
+
+    if (projectResult.rows.length === 0) {
+      throw new ApiError(404, 'Project not found');
+    }
+
+    // Generování tokenu a data expirace
+    const invitationToken = this.generateInvitationToken();
+    const invitationExpiresAt = this.getInvitationExpiryDate();
+
+    // Vytvoření záznamu v databázi bez emailu
+    const insertQuery = `
+      INSERT INTO project_shares 
+        (project_id, permission, invitation_token)
+      VALUES 
+        ($1, $2, $3)
+      RETURNING id
+    `;
+
+    await this.pool.query(insertQuery, [
+      projectId,
+      permission,
+      invitationToken,
+    ]);
+
+    logger.info(`Invitation link generated for project ${projectId}`);
+
+    return {
+      token: invitationToken,
+      expiresAt: invitationExpiresAt,
+      permission,
+    };
   }
 }
 

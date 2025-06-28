@@ -132,6 +132,21 @@ const BASE_OUTPUT_DIR = path.join(SERVER_ROOT, 'uploads', 'segmentations');
 segmentationQueue.registerExecutor(SEGMENTATION_TASK_TYPE, executeSegmentationTask);
 
 /**
+ * Helper function to update segmentation queue status in database
+ */
+async function updateQueueStatus(imageId: string, status: 'pending' | 'processing' | 'completed' | 'failed'): Promise<void> {
+  try {
+    await pool.query(
+      'UPDATE segmentation_queue SET status = $1, updated_at = NOW() WHERE image_id = $2',
+      [status, imageId]
+    );
+    logger.debug(`Updated queue status for image ${imageId} to ${status}`);
+  } catch (error) {
+    logger.error(`Error updating queue status for image ${imageId}:`, { error });
+  }
+}
+
+/**
  * Function to update status in DB and notify client
  *
  * @param imageId ID of the image
@@ -300,10 +315,26 @@ export const triggerSegmentationTask = async (
     // Check if this is a force resegment task
     const forceResegment = parameters?.force_resegment === true;
 
+    // Get project ID for the image
+    const imageResult = await pool.query('SELECT project_id FROM images WHERE id = $1', [imageId]);
+    const projectId = imageResult.rows.length > 0 ? imageResult.rows[0].project_id : null;
+
+    // Insert task into segmentation_queue table
+    await pool.query(
+      `INSERT INTO segmentation_queue (image_id, project_id, status, priority, parameters, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+       ON CONFLICT (image_id) DO UPDATE SET
+       status = EXCLUDED.status,
+       priority = EXCLUDED.priority,
+       parameters = EXCLUDED.parameters,
+       updated_at = NOW()`,
+      [imageId, projectId, 'pending', priority, JSON.stringify(parameters)]
+    );
+
     // Update status to indicate segmentation is queued
     await updateSegmentationStatus(imageId, 'queued');
 
-    // Add task to queue
+    // Add task to in-memory queue
     const taskId = segmentationQueue.addTask(
       SEGMENTATION_TASK_TYPE,
       {
@@ -317,6 +348,8 @@ export const triggerSegmentationTask = async (
         // forceRequeue is not a valid option in TaskOptions
       },
     );
+
+    logger.debug(`Task added to both database queue and in-memory queue for image ${imageId}`);
 
     return imageId; // Return imageId as the task identifier
   } catch (error) {
@@ -452,6 +485,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
 
   // Update status to indicate segmentation is now actively processing
   await updateSegmentationStatus(imageId, 'processing');
+  await updateQueueStatus(imageId, 'processing');
 
   // --- Start: Consolidated Project ID Extraction ---
   let determinedProjectId: string = '';
@@ -755,6 +789,8 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
         null,
         `Image not found at any checked paths. Last tried: ${absoluteImagePath}`,
       );
+      await updateQueueStatus(imageId, 'failed');
+      
       return; // Exit early
     }
   }
@@ -816,6 +852,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
     const errorMessage = `CRITICAL: Image file confirmed NOT FOUND at path just before Python script execution: ${absoluteImagePath}`;
     logger.error(errorMessage);
     await updateSegmentationStatus(imageId, 'failed', null, errorMessage);
+    await updateQueueStatus(imageId, 'failed');
     return; // Exit early
   }
 
@@ -890,6 +927,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
 
             // Update status in database with processed polygons
             await updateSegmentationStatus(imageId, 'completed', absoluteOutputPath, undefined, processedPolygons);
+            await updateQueueStatus(imageId, 'completed');
 
             // Resolve the promise (no specific result needed as status is updated)
             resolve();
@@ -899,11 +937,13 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
               error: parseError,
             });
             await updateSegmentationStatus(imageId, 'failed', null, `Error parsing result: ${errorMessage}`);
+            await updateQueueStatus(imageId, 'failed');
             reject(parseError);
           }
         } else {
           logger.error(`Segmentation output file not found for ${imageId}: ${absoluteOutputPath}`);
           await updateSegmentationStatus(imageId, 'failed', null, `Output file not found: ${absoluteOutputPath}`);
+          await updateQueueStatus(imageId, 'failed');
           reject(new Error(`Output file not found: ${absoluteOutputPath}`));
         }
       } else {
@@ -1040,6 +1080,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
                       null,
                       `${errorMessage}. Details: ${detailedError}. CPU fallback also failed: ${parseError}`
                     );
+                    await updateQueueStatus(imageId, 'failed');
                     reject(parseError);
                   }
                 } else {
@@ -1050,6 +1091,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
                     null,
                     `${errorMessage}. Details: ${detailedError}. CPU fallback failed: Output file not found`
                   );
+                  await updateQueueStatus(imageId, 'failed');
                   reject(new Error(`Output file not found after CPU segmentation: ${absoluteOutputPath}`));
                 }
               } else {
@@ -1060,6 +1102,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
                   null,
                   `${errorMessage}. Details: ${detailedError}. CPU fallback failed with code ${cpuCode}`
                 );
+                await updateQueueStatus(imageId, 'failed');
                 reject(new Error(`Script failed with code ${code} and CPU fallback also failed with code ${cpuCode}`));
               }
             });
@@ -1072,6 +1115,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
                 null,
                 `${errorMessage}. Details: ${detailedError}. CPU fallback failed to start: ${err.message}`
               );
+              await updateQueueStatus(imageId, 'failed');
               reject(err);
             });
 
@@ -1086,6 +1130,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
               null,
               `${errorMessage}. Details: ${detailedError}. CPU fallback failed to start: ${cpuErrorMessage}`
             );
+            await updateQueueStatus(imageId, 'failed');
             reject(new Error(`Script failed with code ${code} and CPU fallback failed to start: ${cpuErrorMessage}`));
             return;
           }
@@ -1098,6 +1143,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
           null,
           `${errorMessage}. Details: ${detailedError}`,
         );
+        await updateQueueStatus(imageId, 'failed');
 
         reject(new Error(`Script failed with code ${code} (${errorType}): ${errorMessage}`));
       }
@@ -1109,6 +1155,7 @@ async function executeSegmentationTask(task: Task<SegmentationTaskData>): Promis
         error: err,
       });
       await updateSegmentationStatus(imageId, 'failed', null, `Failed to start script: ${err.message}`);
+      await updateQueueStatus(imageId, 'failed');
       reject(err);
     });
   });

@@ -112,7 +112,14 @@ export const handleApiError = (error: unknown): string => {
         error: error.response?.data,
       });
     } else if (errorType === NetworkErrorType.NOT_FOUND_ERROR) {
-      errorMessage = 'The requested resource was not found.';
+      // Try to use the specific message from the API first
+      const data = error.response?.data as ApiError | undefined;
+      if (data?.message) {
+        errorMessage = data.message;
+      } else {
+        errorMessage = 'The requested resource was not found.';
+      }
+      
       logger.warn('[Not Found Error]', {
         url: error.config?.url,
         error: error.response?.data,

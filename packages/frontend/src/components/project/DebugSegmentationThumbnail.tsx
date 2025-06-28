@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
+import apiClient from '@/lib/apiClient';
 import { scalePolygons, createSvgPath } from '@/lib/svgUtils';
 import { createNamespacedLogger } from '@/utils/logger';
 
@@ -51,7 +51,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
         let originalHeight = 0;
 
         try {
-          const imageResponse = await axios.get(`/api/projects/${projectId}/images/${imageId}`);
+          const imageResponse = await apiClient.get(`/api/projects/${projectId}/images/${imageId}`);
           if (imageResponse.data && imageResponse.data.width && imageResponse.data.height) {
             originalWidth = imageResponse.data.width;
             originalHeight = imageResponse.data.height;
@@ -65,7 +65,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
         }
 
         // Then get the segmentation data
-        const response = await axios.get(`/api/images/${imageId}/segmentation`);
+        const response = await apiClient.get(`/api/images/${imageId}/segmentation`);
         console.log('[DEBUG] Segmentation API response:', response.data);
 
         // Check if segmentation data includes dimensions

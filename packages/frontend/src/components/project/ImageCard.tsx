@@ -12,6 +12,7 @@ import SegmentationThumbnail from './SegmentationThumbnail';
 import DebugSegmentationThumbnail from './DebugSegmentationThumbnail';
 import useSocketConnection from '@/hooks/useSocketConnection';
 import apiClient from '@/lib/apiClient';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface ImageCardProps {
   image: ProjectImage;
@@ -34,6 +35,7 @@ export const ImageCard = ({
   isSelected = false,
   onToggleSelection,
 }: ImageCardProps) => {
+  const { t } = useTranslations();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string>(image.segmentationStatus || 'pending');
 
@@ -126,7 +128,7 @@ export const ImageCard = ({
 
   // Periodically check status for processing images to catch missed updates
   useEffect(() => {
-    // Only set up polling for processing status
+    // Only set up polling for processing status and avoid infinite loops
     if (currentStatus === 'processing') {
       console.log(`ImageCard: Setting up status polling for processing image ${image.id}`);
 
@@ -155,31 +157,26 @@ export const ImageCard = ({
             }
           }
         } catch (error) {
-          console.warn(`ImageCard: Error checking segmentation status for image ${image.id}:`, error);
-          try {
-            // Fallback to checking image status directly
-            const imageResponse = await apiClient.get(`/api/images/${image.id}`);
-            if (imageResponse.data && imageResponse.data.status && imageResponse.data.status !== currentStatus) {
-              console.log(`ImageCard: Image API status update for ${image.id}: ${imageResponse.data.status}`);
-              setCurrentStatus(imageResponse.data.status);
-            }
-          } catch (imgError) {
-            console.warn(`ImageCard: Error checking image status for ${image.id}:`, imgError);
+          // Don't spam the console with 401 errors, just log once
+          if (error?.response?.status === 401) {
+            console.warn(`ImageCard: Authentication required for image ${image.id}, stopping polling`);
+            return; // Stop polling on auth errors
           }
+          console.warn(`ImageCard: Error checking segmentation status for image ${image.id}:`, error);
         }
       };
 
       // Check immediately on mount
       checkImageStatus();
 
-      // Set up polling interval - check every 10 seconds
-      const intervalId = setInterval(checkImageStatus, 10000);
+      // Set up polling interval - check every 15 seconds (increased to reduce spam)
+      const intervalId = setInterval(checkImageStatus, 15000);
 
       return () => {
         clearInterval(intervalId);
       };
     }
-  }, [image.id, currentStatus]);
+  }, [image.id]); // Removed currentStatus from dependencies to prevent infinite loops
 
   // Listen for custom events (fallback mechanism)
   useEffect(() => {
@@ -264,6 +261,9 @@ export const ImageCard = ({
     };
   }, [image.id, image.thumbnail_url, image.url]);
 
+  // Determine if image is originally a TIFF based on filename
+  const isOriginallyTiff = image.name?.toLowerCase().endsWith('.tiff') || image.name?.toLowerCase().endsWith('.tif');
+  
   // Handle image errors
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     console.error(`Failed to load image: ${imageSrc}`);
@@ -274,7 +274,7 @@ export const ImageCard = ({
     }
 
     try {
-      console.log(`Image load failed for image ${image.id}`);
+      console.log(`Image load failed for image ${image.id} (${image.name})`);
 
       // Try to load from IndexedDB first
       getImageBlob(image.id)
@@ -310,19 +310,30 @@ export const ImageCard = ({
             }
           }
 
+          // Check if we have the original URL (for converted TIFF files)
+          if (image.url && !image.url.startsWith('blob:')) {
+            const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+            const imagePath = image.url.includes('uploads/')
+              ? image.url.substring(image.url.indexOf('uploads/') + 8)
+              : image.url;
+            const directPath = `${backendUrl}/uploads/${imagePath}`;
+            e.currentTarget.src = directPath;
+            return;
+          }
+          
           // Final fallback
-          e.currentTarget.src = '/placeholder.svg';
+          e.currentTarget.src = isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg';
         })
         .catch((err) => {
           console.error('Error getting image from IndexedDB:', err);
           if (e.currentTarget) {
-            e.currentTarget.src = '/placeholder.svg';
+            e.currentTarget.src = isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg';
           }
         });
     } catch (err) {
       console.error('Error handling image fallback:', err);
       if (e.currentTarget) {
-        e.currentTarget.src = '/placeholder.svg';
+        e.currentTarget.src = isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg';
       }
     }
   };
@@ -384,11 +395,12 @@ export const ImageCard = ({
                 height={200}
               /> */}
               <img
-                src={imageSrc || '/placeholder.svg'}
+                src={imageSrc || (isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg')}
                 alt={image.name || 'Image'}
                 className="w-full h-full object-cover"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={handleImageError}
+                loading="lazy"
               />
               {/* Debug overlay for segmentation - bright red to make it visible */}
               {currentStatus === 'completed' && (
@@ -422,24 +434,24 @@ export const ImageCard = ({
                       ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
                       : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100',
             )}
-            title={image.error ? `Chyba: ${image.error}` : undefined}
+            title={image.error ? `${t('common.error')}: ${image.error}` : undefined}
           >
             {currentStatus === 'completed' ? (
-              'Zpracováno'
+              t('segmentation.status.completed')
             ) : currentStatus === 'processing' ? (
               <span className="flex items-center">
-                <span className="animate-pulse mr-1">●</span> Zpracovává se
+                <span className="animate-pulse mr-1">●</span> {t('segmentation.status.processing')}
               </span>
             ) : currentStatus === 'queued' ? (
               <span className="flex items-center">
-                <span className="mr-1">⏱</span> Ve frontě
+                <span className="mr-1">⏱</span> {t('segmentation.status.queued')}
               </span>
             ) : currentStatus === 'failed' ? (
               <span className="flex items-center">
-                <span className="mr-1">⚠️</span> Chyba
+                <span className="mr-1">⚠️</span> {t('segmentation.status.failed')}
               </span>
             ) : (
-              'Čeká'
+              t('segmentation.status.pending')
             )}
           </Badge>
         </div>
@@ -454,7 +466,7 @@ export const ImageCard = ({
             </p>
             {currentStatus === 'failed' && image.error && (
               <div className="mt-1 text-xs text-red-500 truncate" title={image.error}>
-                <span className="font-medium">Chyba:</span> {image.error.substring(0, 50)}
+                <span className="font-medium">{t('common.error')}:</span> {image.error.substring(0, 50)}
                 {image.error.length > 50 ? '...' : ''}
               </div>
             )}

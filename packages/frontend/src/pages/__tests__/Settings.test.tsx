@@ -88,9 +88,6 @@ const MockSettings = ({ isLoggedIn = true, isLoading = false, hasError = false }
             <button className="tab" data-value="appearance">
               Appearance
             </button>
-            <button className="tab" data-value="notifications">
-              Notifications
-            </button>
           </div>
 
           <div className="tab-content" data-value="profile">
@@ -164,17 +161,6 @@ const MockSettings = ({ isLoggedIn = true, isLoading = false, hasError = false }
             </div>
           </div>
 
-          <div className="tab-content hidden" data-value="notifications">
-            <h2>Notification Settings</h2>
-            <div className="form-group">
-              <label>Email Notifications</label>
-              <input type="checkbox" />
-            </div>
-            <div className="form-group">
-              <label>Push Notifications</label>
-              <input type="checkbox" />
-            </div>
-          </div>
         </div>
       )}
     </div>
@@ -207,7 +193,6 @@ describe('Settings Page', () => {
     expect(screen.getByText('Profile')).toBeInTheDocument();
     expect(screen.getByText('Account')).toBeInTheDocument();
     expect(screen.getByText('Appearance')).toBeInTheDocument();
-    expect(screen.getByText('Notifications')).toBeInTheDocument();
 
     // Check if the profile tab content is displayed by default
     expect(screen.getByText('User Profile')).toBeInTheDocument();
@@ -269,12 +254,5 @@ describe('Settings Page', () => {
     expect(screen.getByText('Theme')).toBeInTheDocument();
     expect(screen.getByText('Language')).toBeInTheDocument();
 
-    // Click the notifications tab
-    fireEvent.click(screen.getByText('Notifications'));
-
-    // Check if the notifications tab content is displayed
-    expect(screen.getByText('Notification Settings')).toBeInTheDocument();
-    expect(screen.getByText('Email Notifications')).toBeInTheDocument();
-    expect(screen.getByText('Push Notifications')).toBeInTheDocument();
   });
 });

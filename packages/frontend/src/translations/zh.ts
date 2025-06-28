@@ -1,4 +1,35 @@
 export default {
+  // Segmentation context menu
+  segmentation: {
+    contextMenu: {
+      editPolygon: '编辑多边形',
+      splitPolygon: '分割多边形',
+      deletePolygon: '删除多边形',
+      confirmDeleteTitle: '您确定要删除多边形吗？',
+      confirmDeleteMessage: '此操作不可逆。多边形将从分割中永久删除。',
+      duplicateVertex: '复制顶点',
+      deleteVertex: '删除顶点',
+    },
+  },
+  // Common UI elements  
+  common: {
+    cancel: '取消',
+    delete: '删除',
+    loadingApplication: '正在加载应用程序...',
+    selectAll: '全选',
+  },
+  // Error messages
+  errors: {
+    somethingWentWrong: '出现了问题',
+    componentError: '此组件发生错误。我们已收到通知，将尽快解决问题。',
+    errorDetails: '错误详细信息',
+    tryAgain: '重试',
+    reloadPage: '重新加载页面',
+    goBack: '返回',
+    notFound: '404',
+    pageNotFoundMessage: '糟糕！页面未找到',
+    returnToHome: '返回首页',
+  },
   project: {
     detail: {
       noImagesSelected: '未选择图像',
@@ -20,6 +51,11 @@ export default {
       startedImages: '已为 {{count}} 张图像启动分割',
       queuedLocallyWarning: '已在本地为 {{count}} 张图像排队分割。服务器连接失败。'
     },
+    noImages: {
+      title: '暂无图像',
+      description: '此项目尚无图像。上传图像以开始分割。',
+      uploadButton: '上传图像',
+    },
   },
   common: {
     appName: '类器官分割平台',
@@ -33,12 +69,6 @@ export default {
     search: '搜索',
     error: '错误',
     success: '成功',
-    editor: {
-      error: '错误',
-      success: '成功',
-      edit: '编辑',
-      create: '创建',
-    },
     back: '返回',
     signIn: '登录',
     signUp: '注册',
@@ -73,7 +103,6 @@ export default {
     system: '系统',
     welcome: '欢迎使用类器官分割平台',
     account: '账户',
-    notifications: '通知',
     passwordConfirm: '确认密码',
     manageAccount: '管理您的账户',
     changePassword: '更改密码',
@@ -374,21 +403,11 @@ export default {
     changeLanguage: '更改语言',
     useBrowserLanguage: '使用浏览器语言',
     accountSettings: '账户设置',
-    notificationSettings: '通知设置',
-    emailNotifications: '邮件通知',
-    pushNotifications: '推送通知',
     profileSettings: '个人资料设置',
     profileUpdated: '个人资料更新成功',
     profileUpdateFailed: '个人资料更新失败',
     saveChanges: '保存更改',
     savingChanges: '保存中...',
-    notifications: {
-      projectUpdates: '项目更新',
-      analysisCompleted: '分析完成',
-      newFeatures: '新功能',
-      marketingEmails: '营销邮件',
-      billing: '账单通知',
-    },
     pageTitle: '设置',
     profile: '个人资料',
     account: '账户',
@@ -414,7 +433,6 @@ export default {
     themeUpdated: '主题更新成功',
     appearanceDescription: '自定义应用程序的外观',
     languageDescription: '选择您的首选语言',
-    notificationsTab: '通知',
     personal: '个人信息',
     fullName: '全名',
     organization: '组织',
@@ -457,13 +475,13 @@ export default {
     signOut: '退出',
     forgotPassword: '忘记密码？',
     forgotPasswordTitle: '重置您的密码',
-    checkYourEmail: '查看您的邮箱获取重置链接',
-    enterEmailForReset: '输入您的电子邮件地址，我们将向您发送密码重置链接',
-    passwordResetLinkSent: '如果此电子邮件地址存在账户，已发送密码重置链接',
-    passwordResetFailed: '发送重置链接失败。请重试。',
+    checkYourEmail: '查看您的邮箱获取新密码',
+    enterEmailForReset: '输入您的电子邮件地址，我们将向您发送新密码',
+    passwordResetLinkSent: '如果此电子邮件地址存在账户，已发送新密码',
+    passwordResetFailed: '发送新密码失败。请重试。',
     enterEmail: '请输入您的电子邮件地址',
-    sendingResetLink: '正在发送重置链接...',
-    sendResetLink: '发送重置链接',
+    sendingResetLink: '正在发送新密码...',
+    sendResetLink: '发送新密码',
     backToSignIn: '返回登录',
     resetPassword: '重置密码',
     dontHaveAccount: '没有账户？',
@@ -841,6 +859,7 @@ export default {
       queued: '排队中',
       completed: '已完成',
       failed: '失败',
+      pending: '待处理',
     },
     queue: {
       title: '分割队列',
@@ -859,7 +878,6 @@ export default {
       statusReady: '分割：就绪',
       tasksTotal: '共 {{total}} 个任务（{{running}} 个处理中，{{queued}} 个排队中）'
     },
-    notifications: {
       completed: '分割成功完成',
       failed: '分割失败：{{error}}',
       queued: '分割已加入队列',
@@ -930,17 +948,6 @@ export default {
         exit: '按Esc退出添加点模式',
       },
     },
-    title: '分割编辑器',
-    clickToAddPoint: '点击添加点',
-    clickToCompletePolygon: '点击第一个点以完成多边形',
-    clickToAddFirstSlicePoint: '点击添加第一个切片点',
-    clickToAddSecondSlicePoint: '点击添加第二个切片点',
-    polygonCreationMode: '多边形创建模式',
-    polygonEditMode: '多边形编辑模式',
-    polygonSliceMode: '多边形切片模式',
-    polygonAddPointsMode: '添加点模式',
-    viewMode: '查看模式',
-  },
   termsPage: {
     title: 'Terms of Service',
     acceptance: {
@@ -998,6 +1005,7 @@ export default {
     storageLimit: '存储限制',
     activityTitle: '最近活动',
     noActivity: '没有最近活动',
+    hide: '隐藏',
     activityTypes: {
       project_created: '创建了项目',
       image_uploaded: '上传了图片',

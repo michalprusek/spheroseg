@@ -1,4 +1,35 @@
 export default {
+  // Segmentation context menu
+  segmentation: {
+    contextMenu: {
+      editPolygon: 'Polygon bearbeiten',
+      splitPolygon: 'Polygon teilen',
+      deletePolygon: 'Polygon löschen',
+      confirmDeleteTitle: 'Sind Sie sicher, dass Sie das Polygon löschen möchten?',
+      confirmDeleteMessage: 'Diese Aktion ist unwiderruflich. Das Polygon wird dauerhaft aus der Segmentierung entfernt.',
+      duplicateVertex: 'Scheitelpunkt duplizieren',
+      deleteVertex: 'Scheitelpunkt löschen',
+    },
+  },
+  // Common UI elements  
+  common: {
+    cancel: 'Abbrechen',
+    delete: 'Löschen',
+    loadingApplication: 'Anwendung wird geladen...',
+    selectAll: 'Alle auswählen',
+  },
+  // Error messages
+  errors: {
+    somethingWentWrong: 'Etwas ist schiefgelaufen',
+    componentError: 'In dieser Komponente ist ein Fehler aufgetreten. Wir wurden benachrichtigt und werden das Problem so schnell wie möglich beheben.',
+    errorDetails: 'Fehlerdetails',
+    tryAgain: 'Nochmal versuchen',
+    reloadPage: 'Seite neu laden',
+    goBack: 'Zurück',
+    notFound: '404',
+    pageNotFoundMessage: 'Oops! Seite nicht gefunden',
+    returnToHome: 'Zur Startseite zurückkehren',
+  },
   project: {
     detail: {
       noImagesSelected: 'Keine Bilder ausgewählt',
@@ -29,15 +60,8 @@ export default {
     notFound: 'Projekt nicht gefunden',
     error: 'Fehler beim Laden des Projekts',
     empty: 'Dieses Projekt ist leer',
-    // noImages key already exists under project.noImages, this one is a general string for a project without images.
-    // For clarity, if this 'noImages' key is meant to be a string value for `project.noImages`, it might be an error in the source structure.
-    // Assuming it's distinct as `project.noImagesFoundString` or similar, but following the structure:
-    // If `project: { noImages: 'No images found in this project' }` is intended:
-    // noImages: 'Keine Bilder in diesem Projekt gefunden',
-    // However, the structure has `project.noImages` as an object.
-    // This particular "noImages" appears later in the input under a root `project` key which is distinct from the first `project` key.
-    // This will be handled when that specific `project` key (at root level, not the one with `detail` and `segmentation`) is processed.
-    addImages: 'Fügen Sie Bilder hinzu, um zu beginnen', // This also seems to belong to the later, root-level 'project' key.
+    noImagesFound: 'Keine Bilder in diesem Projekt gefunden',
+    addImages: 'Fügen Sie Bilder hinzu, um zu beginnen',
   },
   projectsPage: {
     title: 'Projekte',
@@ -176,7 +200,6 @@ export default {
     system: 'System',
     welcome: 'Willkommen auf der Sphäroidsegmentierungs-Plattform',
     account: 'Konto',
-    notifications: 'Benachrichtigungen',
     passwordConfirm: 'Passwort bestätigen',
     manageAccount: 'Konto verwalten',
     changePassword: 'Passwort ändern',
@@ -248,16 +271,6 @@ export default {
       create: 'Erstellen',
     },
   },
-  // This is the root-level `project` key mentioned in comments during thought process.
-  // It's distinct from the first `project` key that contains `detail`, `segmentation`, `noImages` (object).
-  project: {
-    loading: 'Projekt wird geladen...',
-    notFound: 'Projekt nicht gefunden',
-    error: 'Fehler beim Laden des Projekts',
-    empty: 'Dieses Projekt ist leer',
-    noImages: 'Keine Bilder in diesem Projekt gefunden', // This is a string value, different from `project.noImages` (object) earlier
-    addImages: 'Fügen Sie Bilder hinzu, um zu beginnen',
-  },
   auth: {
     signIn: 'Anmelden',
     signUp: 'Registrieren',
@@ -319,13 +332,13 @@ export default {
     creatingAccount: 'Konto wird erstellt...',
     alreadyHaveAccess: 'Bereits Zugriff?',
     forgotPasswordTitle: 'Passwort zurücksetzen',
-    checkYourEmail: 'Überprüfen Sie Ihre E-Mails auf einen Link zum Zurücksetzen',
-    enterEmailForReset: 'Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen des Passworts',
-    passwordResetLinkSent: 'Wenn ein Konto für diese E-Mail existiert, wurde ein Link zum Zurücksetzen des Passworts gesendet',
-    passwordResetFailed: 'Fehler beim Senden des Links zum Zurücksetzen des Passworts. Bitte versuchen Sie es erneut.',
+    checkYourEmail: 'Überprüfen Sie Ihre E-Mails auf ein neues Passwort',
+    enterEmailForReset: 'Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen ein neues Passwort',
+    passwordResetLinkSent: 'Wenn ein Konto für diese E-Mail existiert, wurde ein neues Passwort gesendet',
+    passwordResetFailed: 'Fehler beim Senden des neuen Passworts. Bitte versuchen Sie es erneut.',
     enterEmail: 'Bitte geben Sie Ihre E-Mail-Adresse ein',
-    sendingResetLink: 'Link zum Zurücksetzen wird gesendet...',
-    sendResetLink: 'Link zum Zurücksetzen senden',
+    sendingResetLink: 'Neues Passwort wird gesendet...',
+    sendResetLink: 'Neues Passwort senden',
     backToSignIn: 'Zurück zum Anmelden',
   },
   requestAccess: {
@@ -647,6 +660,7 @@ export default {
     storageLimit: 'Speicherlimit',
     activityTitle: 'Letzte Aktivitäten',
     noActivity: 'Keine letzten Aktivitäten',
+    hide: 'Ausblenden',
     activityTypes: {
       project_created: 'Projekt erstellt',
       image_uploaded: 'Bild hochgeladen',
@@ -805,9 +819,9 @@ export default {
       queued: 'In Warteschlange',
       completed: 'Abgeschlossen',
       failed: 'Fehlgeschlagen',
+      pending: 'Ausstehend',
     },
     // segmentation.queue is duplicated here in the input. Already translated above.
-    notifications: {
       completed: 'Segmentierung erfolgreich abgeschlossen',
       failed: 'Segmentierung fehlgeschlagen: {{error}}',
       queued: 'Segmentierung wurde in die Warteschlange gestellt',
@@ -855,7 +869,6 @@ export default {
         exit: 'Esc, um den Hinzufügungsmodus zu verlassen',
       },
     },
-  },
   errors: {
     somethingWentWrong: 'Etwas ist schiefgelaufen',
     componentError: 'In dieser Komponente ist ein Fehler aufgetreten',
@@ -885,10 +898,8 @@ export default {
     profile: 'Profil',
     account: 'Konto',
     appearance: 'Erscheinungsbild',
-    notificationsTab: 'Benachrichtigungen',
     profileSettings: 'Profileinstellungen',
     accountSettings: 'Kontoeinstellungen',
-    notificationSettings: 'Benachrichtigungseinstellungen',
     securitySettings: 'Sicherheitseinstellungen',
     preferenceSettings: 'Präferenzeinstellungen',
     selectLanguage: 'Sprache auswählen',
@@ -907,8 +918,6 @@ export default {
     uploadAvatar: 'Profilbild hochladen',
     removeAvatar: 'Profilbild entfernen',
     twoFactorAuth: 'Zwei-Faktor-Authentifizierung',
-    emailNotifications: 'E-Mail-Benachrichtigungen',
-    pushNotifications: 'Push-Benachrichtigungen',
     weeklyDigest: 'Wöchentliche Zusammenfassung',
     monthlyReport: 'Monatlicher Bericht',
     displaySettings: 'Anzeigeeinstellungen',
@@ -940,25 +949,7 @@ export default {
     dangerZone: 'Gefahrenzone',
     deleteAccountWarning: 'Sobald Sie Ihr Konto löschen, gibt es kein Zurück mehr. Alle Ihre Daten werden dauerhaft gelöscht.',
     savingChanges: 'Änderungen werden gespeichert...',
-    notifications: {
-      projectUpdates: 'Projektaktualisierungen',
-      receiveProjectUpdates: 'Aktualisierungen zu Ihren Projekten erhalten',
-      analysisCompleted: 'Analyse abgeschlossen',
-      newFeatures: 'Neue Funktionen',
-      marketingEmails: 'Marketing-E-Mails',
-      billing: 'Rechnungsbenachrichtigungen',
-      segmentationResults: 'Segmentierungsergebnisse',
-      receiveSegmentationResults: 'Benachrichtigungen erhalten, wenn die Segmentierung abgeschlossen ist',
-      newsletterUpdates: 'Newsletter-Aktualisierungen',
-      receiveNewsletterUpdates: 'Informationen über neue Funktionen und Updates erhalten',
-      collaborationRequests: 'Kollaborationsanfragen',
-      receiveCollaborationRequests: 'Benachrichtigungen über Kollaborationsanfragen zu Projekten erhalten',
-      commentsMentions: 'Kommentare und Erwähnungen',
-      receiveCommentsMentions: 'Benachrichtigungen erhalten, wenn Sie jemand in einem Kommentar erwähnt',
-    },
-    inAppNotifications: 'In-App-Benachrichtigungen',
     savePreferences: 'Präferenzen speichern',
-    notificationSettingsSaved: 'Benachrichtigungseinstellungen gespeichert',
     usernameTaken: 'Dieser Benutzername ist bereits vergeben',
   },
   accessibility: {

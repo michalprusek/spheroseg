@@ -15,10 +15,10 @@ const DropZone: React.FC<DropZoneProps> = ({ disabled, onDrop, isDragActive }) =
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
     accept: {
-      'image/jpeg': [],
-      'image/png': [],
-      'image/tiff': [],
-      'image/bmp': [],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/tiff': ['.tiff', '.tif'],
+      'image/bmp': ['.bmp'],
     },
     maxSize: 10485760,
     disabled,

@@ -33,6 +33,9 @@ export const ImageListItem = ({
 }: ImageListItemProps) => {
   const { t } = useLanguage();
   const [currentStatus, setCurrentStatus] = useState<string>(image.segmentationStatus || 'pending');
+  
+  // Determine if image is originally a TIFF based on filename
+  const isOriginallyTiff = image.name?.toLowerCase().endsWith('.tiff') || image.name?.toLowerCase().endsWith('.tif');
 
   // Get socket connection
   const { socket, isConnected } = useSocketConnection();
@@ -190,7 +193,7 @@ export const ImageListItem = ({
               }
 
               // Final fallback
-              e.currentTarget.src = '/placeholder.svg';
+              e.currentTarget.src = isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg';
             }}
           />
         ) : image.url ? (

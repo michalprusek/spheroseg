@@ -8,6 +8,7 @@
 import { Image, ProjectImage, ImageStatus } from '@/types';
 import { constructUrl } from '@/lib/urlUtils';
 import { storeImageBlob } from '@/utils/indexedDBService';
+import apiClient from '@/lib/apiClient';
 
 /**
  * Default illustration images to use when no real images are available
@@ -112,7 +113,7 @@ export const mapApiImageToProjectImage = (apiImage: Image): ProjectImage => {
     imageUuid: apiImage.id,
     name: apiImage.name || `Image ${apiImage.id.substring(0, 8)}`,
     url: imageUrl || '/placeholder-image.png',
-    thumbnail_url: thumbnailUrl,
+    thumbnail_url: thumbnailUrl ?? null,
     createdAt: new Date(apiImage.created_at),
     updatedAt: new Date(apiImage.updated_at),
     width: apiImage.width || null,
@@ -166,14 +167,24 @@ export const loadImagesFromStorage = (projectId: string): ProjectImage[] => {
             segmentationResultPath: img.segmentationResultPath || null,
           } as ProjectImage;
 
-          // Pokud URL odkazuje na IndexedDB, nastavíme příznak pro pozdější načtení
-          if (imageObject.url && imageObject.url.startsWith('indexed-db://')) {
+          // Check for IndexedDB flags instead of URL schemes
+          if (img._hasIndexedDBImage) {
             imageObject._needsIndexedDBLoad = true;
           }
 
-          // Pokud thumbnail odkazuje na IndexedDB, nastavíme příznak pro pozdější načtení
+          if (img._hasIndexedDBThumb) {
+            imageObject._needsIndexedDBThumbLoad = true;
+          }
+
+          // Handle legacy indexed-db:// URLs for backward compatibility
+          if (imageObject.url && imageObject.url.startsWith('indexed-db://')) {
+            imageObject._needsIndexedDBLoad = true;
+            imageObject.url = '';
+          }
+
           if (imageObject.thumbnail_url && imageObject.thumbnail_url.startsWith('indexed-db-thumb://')) {
             imageObject._needsIndexedDBThumbLoad = true;
+            imageObject.thumbnail_url = null;
           }
 
           return imageObject;
@@ -244,12 +255,13 @@ export const saveImagesToStorage = (projectId: string, images: ProjectImage[]): 
     // Pro velké obrázky uložíme pouze metadata do localStorage
     const metadataImages = imagesToStore.map(img => ({
       ...img,
-      // Pokud je URL base64, nahradíme ji placeholderem
-      url: (img.url && img.url.startsWith('data:')) ?
-        `indexed-db://${img.id}` : img.url,
-      // Pokud je thumbnail base64, nahradíme ho placeholderem
-      thumbnail_url: (img.thumbnail_url && img.thumbnail_url.startsWith('data:')) ?
-        `indexed-db-thumb://${img.id}` : img.thumbnail_url,
+      // Pokud je URL base64, označíme ji pro IndexedDB a nastavíme prázdný string
+      url: (img.url && img.url.startsWith('data:')) ? '' : img.url,
+      // Pokud je thumbnail base64, označíme ho pro IndexedDB a nastavíme null
+      thumbnail_url: (img.thumbnail_url && img.thumbnail_url.startsWith('data:')) ? null : img.thumbnail_url,
+      // Přidáme flagy pro označení, že data jsou v IndexedDB
+      _hasIndexedDBImage: img.url && img.url.startsWith('data:'),
+      _hasIndexedDBThumb: img.thumbnail_url && img.thumbnail_url.startsWith('data:'),
     }));
 
     // Uložíme metadata do localStorage
@@ -456,73 +468,40 @@ export const storeUploadedImages = async (projectId: string, imagesToStore: Proj
 };
 
 export const getProjectImages = async (projectId: string): Promise<ProjectImage[]> => {
-  // Očištění projektového ID
   const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
-
-  // Nejprve vyčistíme lokální úložiště od blob URL
   cleanLocalStorageFromBlobUrls(cleanProjectId);
 
   try {
-    // DŮLEŽITÁ ZMĚNA: Vždy se pokusíme načíst obrázky přímo z API
     console.log(`Fetching images from API for project: ${cleanProjectId}`);
+    const response = await apiClient.get(`/api/projects/${cleanProjectId}/images`);
+    const responseData = response.data;
 
-    // Sestavíme URL pro API endpoint
-    const apiUrl = `/api/projects/${cleanProjectId}/images`;
-
-    // Načteme data z API (používáme fetch místo apiClient pro jednodušší kód)
-    const response = await fetch(apiUrl);
-
-    // Pokud API vrátí chybu, vyhodíme ji
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}: ${response.statusText}`);
+    if (typeof responseData !== 'object' || responseData === null || !('images' in responseData) || !Array.isArray(responseData.images)) {
+        console.warn(`API returned unexpected data for project ${cleanProjectId}:`, responseData);
+        throw new Error('Invalid data from API');
     }
 
-    // Načteme data z odpovědi
-    const apiImages = await response.json();
-
-    // Kontrola dat
-    if (!Array.isArray(apiImages)) {
-      console.warn(`API returned non-array data for project ${cleanProjectId}:`, apiImages);
-      return [];
-    }
+    const apiImages = responseData.images;
 
     console.log(`Retrieved ${apiImages.length} images from API for project ${cleanProjectId}`);
+    const mappedImages = apiImages.map((image: Image) => {
+        const projectImage = mapApiImageToProjectImage(image);
+        // Removed explicit placeholder assignment for TIFFs as backend now handles conversion
+        return projectImage;
+    });
 
-    // Mapujeme API data na ProjectImage formát
-    const mappedImages = apiImages.map(mapApiImageToProjectImage);
-
-    // Aktualizujeme cache
-    projectImagesCache[cleanProjectId] = {
-      data: mappedImages,
-      timestamp: Date.now(),
-    };
-
+    projectImagesCache[cleanProjectId] = { data: mappedImages, timestamp: Date.now() };
+    saveImagesToStorage(cleanProjectId, mappedImages); // Save to local storage
     return mappedImages;
   } catch (apiError) {
     console.warn(`Failed to fetch images from API for project ${cleanProjectId}:`, apiError);
 
-    // Zkusíme použít cachovana data, pokud jsou k dispozici a ne příliš stará
-    const cachedData = projectImagesCache[cleanProjectId];
-    if (cachedData && Date.now() - cachedData.timestamp < CACHE_EXPIRATION) {
-      console.log(`Using cached images for project ${cleanProjectId} due to API error`);
-      return cachedData.data;
-    }
-
-    // Jako poslední možnost zkusíme localStorage
     const localImages = loadImagesFromStorage(cleanProjectId);
     if (localImages.length > 0) {
       console.log(`Loaded ${localImages.length} images from local storage for project ${cleanProjectId}`);
-
-      // Aktualizujeme cache s daty z localStorage
-      projectImagesCache[cleanProjectId] = {
-        data: localImages,
-        timestamp: Date.now(),
-      };
-
       return localImages;
     }
 
-    // Pokud vše selže, vrátíme prázdné pole
     console.error(`No images available for project ${cleanProjectId}`);
     return [];
   }

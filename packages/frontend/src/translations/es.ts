@@ -1,4 +1,35 @@
 export default {
+  // Segmentation context menu
+  segmentation: {
+    contextMenu: {
+      editPolygon: 'Editar polígono',
+      splitPolygon: 'Dividir polígono',
+      deletePolygon: 'Eliminar polígono',
+      confirmDeleteTitle: '¿Está seguro de que desea eliminar el polígono?',
+      confirmDeleteMessage: 'Esta acción es irreversible. El polígono será eliminado permanentemente de la segmentación.',
+      duplicateVertex: 'Duplicar vértice',
+      deleteVertex: 'Eliminar vértice',
+    },
+  },
+  // Common UI elements  
+  common: {
+    cancel: 'Cancelar',
+    delete: 'Eliminar',
+    loadingApplication: 'Cargando aplicación...',
+    selectAll: 'Seleccionar todo',
+  },
+  // Error messages
+  errors: {
+    somethingWentWrong: 'Algo salió mal',
+    componentError: 'Ocurrió un error en este componente. Hemos sido notificados y solucionaremos el problema lo antes posible.',
+    errorDetails: 'Detalles del error',
+    tryAgain: 'Intentar de nuevo',
+    reloadPage: 'Recargar página',
+    goBack: 'Volver',
+    notFound: '404',
+    pageNotFoundMessage: '¡Oops! Página no encontrada',
+    returnToHome: 'Volver al inicio',
+  },
   project: {
     detail: {
       noImagesSelected: 'No hay imágenes seleccionadas',
@@ -19,6 +50,11 @@ export default {
       allFailed: 'Segmentación: Todas las {{count}} imágenes fallaron',
       startedImages: 'Segmentación iniciada para {{count}} imágenes',
       queuedLocallyWarning: 'Segmentación puesta en cola localmente para {{count}} imágenes. Falló la conexión con el servidor.'
+    },
+    noImages: {
+      title: 'Aún no hay imágenes',
+      description: 'Este proyecto aún no tiene imágenes. Sube imágenes para comenzar la segmentación.',
+      uploadButton: 'Subir imágenes',
     },
   },
   common: {
@@ -67,7 +103,6 @@ export default {
     system: 'Sistema',
     welcome: 'Bienvenido a la plataforma de segmentación de esferoides',
     account: 'Cuenta',
-    notifications: 'Notificaciones',
     passwordConfirm: 'Confirmar contraseña',
     manageAccount: 'Administrar tu cuenta',
     changePassword: 'Cambiar contraseña',
@@ -373,21 +408,11 @@ export default {
     changeLanguage: 'Cambiar idioma',
     useBrowserLanguage: 'Usar idioma del navegador',
     accountSettings: 'Configuración de la cuenta',
-    notificationSettings: 'Configuración de notificaciones',
-    emailNotifications: 'Notificaciones por correo electrónico',
-    pushNotifications: 'Notificaciones push',
     profileSettings: 'Configuración del perfil',
     profileUpdated: 'Perfil actualizado con éxito',
     profileUpdateFailed: 'Error al actualizar el perfil',
     saveChanges: 'Guardar cambios',
     savingChanges: 'Guardando cambios...',
-    notifications: {
-      projectUpdates: 'Actualizaciones de proyectos',
-      analysisCompleted: 'Análisis completado',
-      newFeatures: 'Nuevas características',
-      marketingEmails: 'Correos de marketing',
-      billing: 'Notificaciones de facturación',
-    },
     pageTitle: 'Configuración',
     profile: 'Perfil',
     account: 'Cuenta',
@@ -413,7 +438,6 @@ export default {
     themeUpdated: 'Tema actualizado con éxito',
     appearanceDescription: 'Personaliza la apariencia de la aplicación',
     languageDescription: 'Selecciona tu idioma preferido',
-    notificationsTab: 'Notificaciones',
     personal: 'Información personal',
     fullName: 'Nombre completo',
     organization: 'Organización',
@@ -457,15 +481,15 @@ export default {
     signOut: 'Cerrar sesión',
     forgotPassword: '¿Olvidaste tu contraseña?',
     forgotPasswordTitle: 'Restablecer tu contraseña',
-    checkYourEmail: 'Revisa tu correo electrónico para el enlace de restablecimiento',
+    checkYourEmail: 'Revisa tu correo electrónico para la nueva contraseña',
     enterEmailForReset:
-      'Ingresa tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña',
+      'Ingresa tu dirección de correo electrónico y te enviaremos una nueva contraseña',
     passwordResetLinkSent:
-      'Si existe una cuenta con este correo electrónico, se ha enviado un enlace para restablecer la contraseña',
-    passwordResetFailed: 'Error al enviar el enlace para restablecer la contraseña. Por favor, inténtalo de nuevo.',
+      'Si existe una cuenta con este correo electrónico, se ha enviado una nueva contraseña',
+    passwordResetFailed: 'Error al enviar la nueva contraseña. Por favor, inténtalo de nuevo.',
     enterEmail: 'Por favor ingresa tu dirección de correo electrónico',
-    sendingResetLink: 'Enviando enlace de restablecimiento...',
-    sendResetLink: 'Enviar enlace de restablecimiento',
+    sendingResetLink: 'Enviando nueva contraseña...',
+    sendResetLink: 'Enviar nueva contraseña',
     backToSignIn: 'Volver a iniciar sesión',
     resetPassword: 'Restablecer contraseña',
     dontHaveAccount: '¿No tienes una cuenta?',
@@ -812,6 +836,7 @@ export default {
       queued: 'En cola',
       completed: 'Completado',
       failed: 'Fallido',
+      pending: 'Pendiente',
     },
     queue: {
       title: 'Cola de segmentación',
@@ -825,7 +850,6 @@ export default {
       statusOnlyQueued_one: 'Segmentación: 1 en cola',
       statusOnlyQueued_other: 'Segmentación: {{count}} en cola',
     },
-    notifications: {
       completed: 'Segmentación completada con éxito',
       failed: 'Segmentación fallida: {{error}}',
       queued: 'La segmentación ha sido puesta en cola',
@@ -892,17 +916,6 @@ export default {
         exit: 'Presiona Esc para salir del modo de añadir puntos',
       },
     },
-    title: 'Editor de segmentación',
-    clickToAddPoint: 'Haz clic para añadir un punto',
-    clickToCompletePolygon: 'Haz clic en el primer punto para completar el polígono',
-    clickToAddFirstSlicePoint: 'Haz clic para añadir el primer punto de corte',
-    clickToAddSecondSlicePoint: 'Haz clic para añadir el segundo punto de corte',
-    polygonCreationMode: 'Modo de creación de polígono',
-    polygonEditMode: 'Modo de edición de polígono',
-    polygonSliceMode: 'Modo de corte de polígono',
-    polygonAddPointsMode: 'Modo de añadir puntos',
-    viewMode: 'Modo de vista',
-  },
   termsPage: {
     title: 'Términos de Servicio',
     acceptance: {
@@ -960,6 +973,7 @@ export default {
     storageLimit: 'Límite de almacenamiento',
     activityTitle: 'Actividad reciente',
     noActivity: 'No hay actividad reciente',
+    hide: 'Ocultar',
     activityTypes: {
       project_created: 'Proyecto creado',
       image_uploaded: 'Imagen subida',
@@ -1082,14 +1096,6 @@ export default {
     pageNotFound: 'Página no encontrada',
     pageNotFoundMessage: 'La página que solicitaste no pudo ser encontrada',
     goHome: 'Ir a la página de inicio',
-  },
-  project: {
-    loading: 'Cargando proyecto...',
-    notFound: 'Proyecto no encontrado',
-    error: 'Error al cargar el proyecto',
-    empty: 'Este proyecto está vacío',
-    noImages: 'No se encontraron imágenes en este proyecto',
-    addImages: 'Añade imágenes para comenzar',
   },
   navigation: {
     home: 'Inicio',

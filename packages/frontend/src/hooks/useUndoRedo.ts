@@ -71,8 +71,39 @@ export function useUndoRedo<T>(initialState: T) {
     [history, currentIndex],
   );
 
+  // Special function for dragging operations that preserves the original state
+  // and only updates the display temporarily
+  const [tempState, setTempState] = useState<T | null>(null);
+  const [originalStateBeforeDrag, setOriginalStateBeforeDrag] = useState<T | null>(null);
+
+  const startDragging = useCallback((initialState: T) => {
+    setOriginalStateBeforeDrag(initialState);
+    setTempState(null);
+  }, []);
+
+  const updateDuringDrag = useCallback((value: T) => {
+    setTempState(value);
+  }, []);
+
+  const finishDragging = useCallback((finalState: T | null = null) => {
+    if (finalState) {
+      // Add the final state to history as a new entry
+      setState(finalState, false);
+    }
+    setTempState(null);
+    setOriginalStateBeforeDrag(null);
+  }, [setState]);
+
+  const cancelDragging = useCallback(() => {
+    setTempState(null);
+    setOriginalStateBeforeDrag(null);
+  }, []);
+
+  // Return the temp state if dragging, otherwise the normal state
+  const displayState = tempState !== null ? tempState : state;
+
   return {
-    state,
+    state: displayState,
     setState,
     undo,
     redo,
@@ -83,5 +114,10 @@ export function useUndoRedo<T>(initialState: T) {
     clearHistory,
     setCurrentStateOnly,
     setStateWithoutHistory,
+    startDragging,
+    updateDuringDrag,
+    finishDragging,
+    cancelDragging,
+    isDragging: tempState !== null,
   };
 }

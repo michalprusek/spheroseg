@@ -20,7 +20,7 @@ interface UserProfileDropdownProps {
 
 const UserProfileDropdown = ({ username }: UserProfileDropdownProps) => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { t } = useLanguage();
   const { profile } = useProfile();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -32,30 +32,28 @@ const UserProfileDropdown = ({ username }: UserProfileDropdownProps) => {
       return;
     }
 
+    // Priority order: localStorage userAvatar > profile.avatar_url > localStorage userAvatarUrl
     const storedAvatar = localStorage.getItem('userAvatar');
+    const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
+    
     if (storedAvatar) {
-      // Validate that stored avatar belongs to current user
-      try {
-        const storedProfile = localStorage.getItem('userProfile');
-        if (storedProfile) {
-          const parsed = JSON.parse(storedProfile);
-          if (parsed.userId === user.id) {
-            setAvatarUrl(storedAvatar);
-            return;
-          }
-        }
-      } catch (error) {
-        // If validation fails, remove invalid data
-        localStorage.removeItem('userAvatar');
-        localStorage.removeItem('userProfile');
-      }
+      // This is typically a data URL from recent upload
+      setAvatarUrl(storedAvatar);
+      return;
     }
     
     if (profile?.avatar_url) {
       setAvatarUrl(profile.avatar_url);
-    } else {
-      setAvatarUrl(null);
+      return;
     }
+    
+    if (storedAvatarUrl) {
+      // This is typically an API URL from previous session
+      setAvatarUrl(storedAvatarUrl);
+      return;
+    }
+    
+    setAvatarUrl(null);
   }, [profile, user]);
 
   const handleSignOut = async () => {

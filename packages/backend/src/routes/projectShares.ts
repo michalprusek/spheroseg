@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import authMiddleware from '@/middleware/authMiddleware';
+import authMiddleware from '../middleware/authMiddleware';
 import {
   shareProject,
   removeProjectShare,
@@ -7,8 +7,9 @@ import {
   getSharedProjects,
   getProjectShares,
   checkProjectAccess,
-} from '@/controllers/projectShareController';
-import { createLogger } from '@/utils/logger';
+  generateInvitationLink,
+} from '../controllers/projectShareController';
+import { createLogger } from '../utils/logger';
 
 const logger = createLogger('projectSharesRoutes');
 const router: Router = express.Router();
@@ -21,6 +22,13 @@ const router: Router = express.Router();
  * @access Authenticated (pouze vlastník projektu)
  */
 router.post('/:projectId', authMiddleware, shareProject);
+
+/**
+ * @route POST /api/project-shares/:projectId/invitation-link
+ * @desc Generuje invitation link pro sdílení projektu
+ * @access Authenticated (pouze vlastník projektu)
+ */
+router.post('/:projectId/invitation-link', authMiddleware, generateInvitationLink);
 
 /**
  * @route DELETE /api/project-shares/:projectId/:shareId

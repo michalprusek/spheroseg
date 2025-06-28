@@ -5,7 +5,7 @@
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Socket } from 'socket.io-client';
-import { connectSocket, disconnectSocket } from '../socketClient';
+import { initializeSocket, disconnectSocket } from '../services/socketClient';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SocketOptions {
@@ -36,7 +36,7 @@ export const useSocketConnection = (options: SocketOptions = {}) => {
         return;
       }
 
-      const newSocket = connectSocket();
+      const newSocket = initializeSocket();
       setSocket(newSocket);
 
       // Set up event listeners

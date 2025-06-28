@@ -1,6 +1,7 @@
 import apiClient from '@/lib/apiClient';
 import { ImageData, SegmentationData, Polygon } from './types';
 import { loadImageDirectly } from '@/pages/segmentation/utils/directImageLoader';
+import { generateAlternativeUrls } from '@/pages/segmentation/utils/imageLoader';
 import { createLogger } from '@/lib/logger';
 
 // Create a logger for this module
@@ -180,13 +181,38 @@ const processImageUrl = (imageData: ImageData): ImageData => {
       // Add original as alternative
       imageData.alternativeUrls.push(imageData.src);
     }
+    // If it's already an absolute URL (http:// or https://), leave it as is
   }
   // Then try storage_path
   else if (imageData.storage_path) {
     const baseUrl = window.location.origin;
     imageData.alternativeUrls = [];
 
-    if (imageData.storage_path.startsWith('/')) {
+    // Check if storage_path is already a full URL
+    if (imageData.storage_path.startsWith('http://') || imageData.storage_path.startsWith('https://')) {
+      // Extract the path part from the URL to use relative paths
+      try {
+        const url = new URL(imageData.storage_path);
+        const pathOnly = url.pathname;
+        
+        // Use the pathname directly without prepending baseUrl (nginx will handle routing)
+        imageData.src = pathOnly;
+        
+        // Add alternatives
+        imageData.alternativeUrls.push(`${baseUrl}${pathOnly}`);
+        imageData.alternativeUrls.push(`/api${pathOnly}`);
+        imageData.alternativeUrls.push(pathOnly);
+      } catch (e) {
+        // If URL parsing fails, try to extract path manually
+        logger.warn('Failed to parse storage_path as URL:', e);
+        const match = imageData.storage_path.match(/https?:\/\/[^\/]+(\/.+)/);
+        if (match && match[1]) {
+          imageData.src = match[1];
+        } else {
+          imageData.src = imageData.storage_path;
+        }
+      }
+    } else if (imageData.storage_path.startsWith('/')) {
       imageData.src = `${baseUrl}${imageData.storage_path}`;
       // Add variations as alternatives
       imageData.alternativeUrls.push(`${baseUrl}/api${imageData.storage_path}`);
@@ -214,6 +240,15 @@ const processImageUrl = (imageData: ImageData): ImageData => {
   if (imageData.src) {
     const cacheBuster = `_cb=${Date.now()}`;
     imageData.src = imageData.src.includes('?') ? `${imageData.src}&${cacheBuster}` : `${imageData.src}?${cacheBuster}`;
+  }
+
+  // Generate comprehensive alternative URLs using the utility function
+  if (imageData.project_id && imageData.id) {
+    const generatedUrls = generateAlternativeUrls(imageData.src, imageData.project_id, imageData.id);
+    
+    // Merge with existing alternatives, removing duplicates
+    const allUrls = [...(imageData.alternativeUrls || []), ...generatedUrls];
+    imageData.alternativeUrls = [...new Set(allUrls)];
   }
 
   // Add cache busters to all alternative URLs

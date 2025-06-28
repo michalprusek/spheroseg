@@ -310,7 +310,7 @@ export async function cleanupOrphanedFiles(
     // Find orphaned files
     for (const filePath of actualFiles) {
       const relativePath = path.relative(uploadDir, filePath);
-      const dbPath = imageUtils.normalizePathForDb(relativePath);
+      const dbPath = imageUtils.normalizePathForDb(relativePath, uploadDir);
       
       if (!referencedFiles.has(dbPath)) {
         // Skip certain directories/files that should not be cleaned

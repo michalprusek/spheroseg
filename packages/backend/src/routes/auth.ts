@@ -13,9 +13,13 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   refreshTokenSchema,
+  changePasswordSchema,
+  deleteAccountSchema,
   RegisterRequest,
   LoginRequest,
   RefreshTokenRequest,
+  ChangePasswordRequest,
+  DeleteAccountRequest,
 } from '../validators/authValidators';
 import authMiddleware, { AuthenticatedRequest, optionalAuthMiddleware } from '../middleware/authMiddleware';
 import logger from '../utils/logger';
@@ -23,7 +27,7 @@ import { ApiError } from '../middleware/errorMiddleware';
 import config from '../config';
 import tokenService from '../services/tokenService';
 import tutorialProjectService from '../services/tutorialProjectService';
-import { sendPasswordReset } from '../services/emailService';
+// import { sendPasswordReset } from '../services/emailService';
 
 const router: Router = express.Router();
 
@@ -169,7 +173,7 @@ router.post('/login', validate(loginSchema), async (req: express.Request, res: R
 
     if (result.rows.length === 0) {
       logger.warn('Login attempt with non-existent email', { email });
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(404).json({ message: 'This email address is not registered. Please check your email or sign up for a new account.' });
     }
 
     const user = result.rows[0];
@@ -309,19 +313,18 @@ router.post('/forgot-password', validate(forgotPasswordSchema), async (req: expr
       [userId]
     );
 
-    // Send password reset email
+    // Send password reset email - temporarily disabled
     try {
-      const emailResult = await sendPasswordReset(email, name, newPassword);
-      logger.info('Password reset email sent', { 
-        userId, 
-        email, 
-        testUrl: emailResult.testUrl 
+      // const emailResult = await sendPasswordReset(email, name, newPassword);
+      logger.info('Password reset email would be sent (disabled)', {
+        userId,
+        email
       });
-      
+
       res.json({
         message: 'If an account with that email exists, a new password has been sent to your email',
         // Include test URL for development/testing only
-        testUrl: process.env.NODE_ENV === 'development' ? emailResult.testUrl : undefined,
+        testUrl: process.env.NODE_ENV === 'development' ? 'email-disabled' : undefined,
       });
     } catch (emailError) {
       logger.error('Failed to send password reset email', { error: emailError, email, userId });
@@ -555,6 +558,129 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
   } catch (error) {
     logger.error('Error fetching current user', { error, userId });
     res.status(500).json({ message: 'Failed to fetch user data' });
+  }
+});
+
+// PUT /api/auth/change-password - Change user password
+router.put('/change-password', authMiddleware, validate(changePasswordSchema), async (req: AuthenticatedRequest, res: Response) => {
+  const { current_password, new_password } = req.body as ChangePasswordRequest;
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+
+  try {
+    logger.info('Processing password change request', { userId });
+
+    // Get current user data
+    const userResult = await pool.query(
+      'SELECT id, email, password_hash FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcryptjs.compare(current_password, user.password_hash);
+    if (!isCurrentPasswordValid) {
+      logger.warn('Invalid current password provided', { userId });
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const newPasswordHash = await bcryptjs.hash(new_password, saltRounds);
+
+    // Update password in database
+    await pool.query(
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [newPasswordHash, userId]
+    );
+
+    // Revoke all existing refresh tokens for security
+    await pool.query(
+      'UPDATE refresh_tokens SET is_revoked = true WHERE user_id = $1',
+      [userId]
+    );
+
+    logger.info('Password changed successfully', { userId });
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    logger.error('Error changing password', { error, userId });
+    res.status(500).json({ message: 'Failed to change password' });
+  }
+});
+
+// DELETE /api/auth/account - Delete user account
+router.delete('/account', authMiddleware, validate(deleteAccountSchema), async (req: AuthenticatedRequest, res: Response) => {
+  const { username, password } = req.body as DeleteAccountRequest;
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+
+  try {
+    logger.info('Processing account deletion request', { userId });
+
+    // Get current user data
+    const userResult = await pool.query(
+      'SELECT id, email, password_hash FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+
+    // Verify email confirmation
+    if (username !== user.email) {
+      logger.warn('Email confirmation failed', { userId, providedEmail: username });
+      return res.status(400).json({ message: 'Email confirmation does not match' });
+    }
+
+    // Verify password
+    const isPasswordValid = await bcryptjs.compare(password, user.password_hash);
+    if (!isPasswordValid) {
+      logger.warn('Invalid password provided for account deletion', { userId });
+      return res.status(400).json({ message: 'Password is incorrect' });
+    }
+
+    // Begin transaction for cascading delete
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Delete all user data (CASCADE DELETE will handle most dependencies)
+      
+      // 1. Update access requests to remove processed_by reference (no CASCADE DELETE)
+      await client.query('UPDATE access_requests SET processed_by = NULL WHERE processed_by = $1', [userId]);
+      
+      // 2. Delete user (CASCADE DELETE will handle: user_profiles, user_settings, projects, 
+      //    images, segmentations, segmentation_queue, refresh_tokens, avatar_files, project_shares, 
+      //    project_duplication_tasks, and segmentation_results via image_id)
+      await client.query('DELETE FROM users WHERE id = $1', [userId]);
+
+      await client.query('COMMIT');
+      
+      logger.info('Account deleted successfully', { userId, email: user.email });
+      res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    logger.error('Error deleting account', { error, userId });
+    res.status(500).json({ message: 'Failed to delete account' });
   }
 });
 

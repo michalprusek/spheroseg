@@ -51,6 +51,8 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
   const { updateProfile } = useProfile();
   const [isLoading, setIsLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url);
+  const [hasAvatarChanges, setHasAvatarChanges] = useState(false);
+  const [avatarUploadFn, setAvatarUploadFn] = useState<(() => Promise<void>) | null>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -66,57 +68,67 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
   });
 
   // Handle avatar change
-  const handleAvatarChange = (newAvatarUrl: string) => {
+  const handleAvatarChange = (newAvatarUrl: string, hasChanges: boolean) => {
     setAvatarUrl(newAvatarUrl);
+    setHasAvatarChanges(hasChanges);
+  };
+
+  // Handle avatar upload function from AvatarUploader
+  const handleAvatarUploadRequest = (uploadFn: () => Promise<void>) => {
+    setAvatarUploadFn(() => uploadFn);
   };
 
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
 
-    // Prepare data for the API PUT /users/me
-    // Only include fields that are part of the form schema and are not empty strings
-    // This prevents sending empty or invalid fields that could cause backend errors
-    const dataToSend: Partial<ProfileFormValues> = {};
-    if (data.username && data.username.trim() !== '') dataToSend.username = data.username.trim();
-    if (data.full_name && data.full_name.trim() !== '') dataToSend.full_name = data.full_name.trim();
-    if (data.title && data.title.trim() !== '') dataToSend.title = data.title.trim();
-    if (data.organization && data.organization.trim() !== '') dataToSend.organization = data.organization.trim();
-    if (data.bio && data.bio.trim() !== '') dataToSend.bio = data.bio.trim();
-    if (data.location && data.location.trim() !== '') dataToSend.location = data.location.trim();
-    // avatar_url and preferred_language are not in this form
-
-    // Prevent submitting empty data if nothing changed (though isDirty check helps)
-    if (Object.keys(dataToSend).length === 0) {
-      showInfo(t('settings.noChanges'));
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // Implement a client-side simulation of profile update
-      console.log('Simulating profile update with data:', dataToSend);
+      // First, upload avatar if there are pending changes
+      if (hasAvatarChanges && avatarUploadFn) {
+        console.log('Uploading avatar changes...');
+        await avatarUploadFn();
+        setHasAvatarChanges(false);
+        setAvatarUploadFn(null);
+      }
 
-      // Store the profile data in localStorage
-      const currentProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-      const updatedProfile = { ...currentProfile, ...dataToSend };
-      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+      // Prepare profile data for the API PUT /users/me
+      // Only include fields that are part of the form schema and are not empty strings
+      // This prevents sending empty or invalid fields that could cause backend errors
+      const dataToSend: Partial<ProfileFormValues> = {};
+      if (data.username && data.username.trim() !== '') dataToSend.username = data.username.trim();
+      if (data.full_name && data.full_name.trim() !== '') dataToSend.full_name = data.full_name.trim();
+      if (data.title && data.title.trim() !== '') dataToSend.title = data.title.trim();
+      if (data.organization && data.organization.trim() !== '') dataToSend.organization = data.organization.trim();
+      if (data.bio && data.bio.trim() !== '') dataToSend.bio = data.bio.trim();
+      if (data.location && data.location.trim() !== '') dataToSend.location = data.location.trim();
+      // avatar_url and preferred_language are not in this form
 
-      // Update profile context
-      updateProfile(dataToSend);
+      // Check if there are form changes or avatar changes
+      const hasFormChanges = Object.keys(dataToSend).length > 0;
+      
+      if (!hasFormChanges && !hasAvatarChanges) {
+        showInfo(t('settings.noChanges') || 'No changes to save');
+        setIsLoading(false);
+        return;
+      }
 
-      console.log('Profile updated in localStorage and context:', updatedProfile);
+      // Only update profile if there are form changes
+      if (hasFormChanges) {
+        // Implement a client-side simulation of profile update
+        console.log('Simulating profile update with data:', dataToSend);
 
-      // Simulate a successful response
-      const responseData = {
-        ...updatedProfile,
-        message: 'Profile updated successfully',
-      };
+        // Store the profile data in localStorage
+        const currentProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        const updatedProfile = { ...currentProfile, ...dataToSend };
+        localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
 
-      console.log('Simulated profile update response:', responseData);
+        // Update profile context
+        updateProfile(dataToSend);
+
+        console.log('Profile updated in localStorage and context:', updatedProfile);
+      }
 
       showSuccess(t('settings.updateSuccess') || 'Profile updated successfully!');
       form.reset(data); // Reset form with new default values to clear dirty state
-      // TODO: Optionally update AuthContext or trigger refetch in Settings page
     } catch (error: unknown) {
       console.error('Error updating profile:', error);
       let errorMessage = t('settings.updateError') || 'Failed to update profile.';
@@ -150,7 +162,12 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
         <CardTitle>{t('profile.title')}</CardTitle>
         <CardDescription>{t('profile.description')}</CardDescription>
         <div className="mt-4 flex justify-center">
-          <AvatarUploader currentAvatarUrl={avatarUrl} onAvatarChange={handleAvatarChange} size="lg" />
+          <AvatarUploader 
+            currentAvatarUrl={avatarUrl} 
+            onAvatarChange={handleAvatarChange} 
+            onUploadRequest={handleAvatarUploadRequest}
+            size="lg" 
+          />
         </div>
       </CardHeader>
       <Form {...form}>
@@ -243,8 +260,8 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
             />
           </CardContent>
           <CardFooter className="border-t px-6 py-4">
-            {/* Disable button if form is not dirty */}
-            <Button type="submit" disabled={isLoading || !form.formState.isDirty}>
+            {/* Disable button if form is not dirty AND no avatar changes */}
+            <Button type="submit" disabled={isLoading || (!form.formState.isDirty && !hasAvatarChanges)}>
               {isLoading ? t('common.saving') + '...' : t('profile.saveButton')}
             </Button>
           </CardFooter>

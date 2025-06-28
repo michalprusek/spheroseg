@@ -52,4 +52,11 @@ export interface ProjectImage {
   height: number | null;
   segmentationStatus: ImageStatus;
   segmentationResultPath?: string | null;
+  imageUuid?: string;
+  error?: string;
+  _needsIndexedDBLoad?: boolean;
+  _needsIndexedDBThumbLoad?: boolean;
+  _tempUrl?: string;
+  _hasIndexedDBImage?: boolean; // Added for IndexedDB caching
+  _hasIndexedDBThumb?: boolean; // Added for IndexedDB caching
 }

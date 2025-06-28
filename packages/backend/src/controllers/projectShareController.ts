@@ -1,8 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { ApiError } from '@/utils/errors';
-import { ProjectShareService } from '@/services/projectShareService';
-import db from '@/db';
+import { ApiError } from '../utils/errors';
+import { ProjectShareService } from '../services/projectShareService';
+import db from '../db';
+import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
 // Vytvoření instance service
 const projectShareService = new ProjectShareService(db);
@@ -15,23 +16,30 @@ const shareProjectSchema = z.object({
   }),
 });
 
+// Validační schéma pro generování invitation linku
+const generateInvitationLinkSchema = z.object({
+  permission: z.enum(['view', 'edit'], {
+    errorMap: () => ({ message: 'Permission must be either "view" or "edit"' }),
+  }),
+});
+
 /**
  * Sdílí projekt s uživatelem pomocí emailu
  */
-export async function shareProject(req: Request, res: Response, next: NextFunction) {
+export async function shareProject(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const { projectId } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError('Unauthorized', 'You must be logged in to share projects', 401);
+      throw new ApiError(401, 'You must be logged in to share projects');
     }
 
     // Validace vstupních dat
     const validationResult = shareProjectSchema.safeParse(req.body);
 
     if (!validationResult.success) {
-      throw new ApiError('Bad Request', validationResult.error.message, 400);
+      throw new ApiError(400, validationResult.error.message);
     }
 
     const { email, permission } = validationResult.data;
@@ -39,7 +47,7 @@ export async function shareProject(req: Request, res: Response, next: NextFuncti
     // Kontrola, zda uživatel nesdílí sám se sebou
     const isSelfSharing = await isUserEmail(userId, email);
     if (isSelfSharing) {
-      throw new ApiError('Bad Request', 'You cannot share a project with yourself', 400);
+      throw new ApiError(400, 'You cannot share a project with yourself');
     }
 
     // Sdílení projektu
@@ -68,19 +76,19 @@ export async function shareProject(req: Request, res: Response, next: NextFuncti
 /**
  * Zruší sdílení projektu
  */
-export async function removeProjectShare(req: Request, res: Response, next: NextFunction) {
+export async function removeProjectShare(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const { projectId, shareId } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError('Unauthorized', 'You must be logged in to manage shared projects', 401);
+      throw new ApiError(401, 'You must be logged in to manage shared projects');
     }
 
     const result = await projectShareService.removeProjectShare(projectId, shareId, userId);
 
     if (!result) {
-      throw new ApiError('Not Found', 'Share not found or already removed', 404);
+      throw new ApiError(404, 'Share not found or already removed');
     }
 
     res.json({
@@ -94,13 +102,13 @@ export async function removeProjectShare(req: Request, res: Response, next: Next
 /**
  * Přijme pozvánku ke sdílení projektu
  */
-export async function acceptProjectInvitation(req: Request, res: Response, next: NextFunction) {
+export async function acceptProjectInvitation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const { token } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError('Unauthorized', 'You must be logged in to accept project invitations', 401);
+      throw new ApiError(401, 'You must be logged in to accept project invitations');
     }
 
     const project = await projectShareService.acceptProjectInvitation(token, userId);
@@ -117,12 +125,12 @@ export async function acceptProjectInvitation(req: Request, res: Response, next:
 /**
  * Získá seznam projektů sdílených s uživatelem
  */
-export async function getSharedProjects(req: Request, res: Response, next: NextFunction) {
+export async function getSharedProjects(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError('Unauthorized', 'You must be logged in to view shared projects', 401);
+      throw new ApiError(401, 'You must be logged in to view shared projects');
     }
 
     const projects = await projectShareService.getProjectsSharedWithUser(userId);
@@ -138,13 +146,13 @@ export async function getSharedProjects(req: Request, res: Response, next: NextF
 /**
  * Získá seznam sdílení pro konkrétní projekt
  */
-export async function getProjectShares(req: Request, res: Response, next: NextFunction) {
+export async function getProjectShares(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const { projectId } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError('Unauthorized', 'You must be logged in to view project shares', 401);
+      throw new ApiError(401, 'You must be logged in to view project shares');
     }
 
     const shares = await projectShareService.getProjectShares(projectId, userId);
@@ -160,22 +168,68 @@ export async function getProjectShares(req: Request, res: Response, next: NextFu
 /**
  * Kontroluje, zda má uživatel přístup k projektu (používá se jako middleware)
  */
-export async function checkProjectAccess(req: Request, res: Response, next: NextFunction) {
+export async function checkProjectAccess(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const { projectId } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError('Unauthorized', 'You must be logged in to access projects', 401);
+      throw new ApiError(401, 'You must be logged in to access projects');
     }
 
     const hasAccess = await projectShareService.hasUserAccessToProject(projectId, userId);
 
     if (!hasAccess) {
-      throw new ApiError('Forbidden', 'You do not have access to this project', 403);
+      throw new ApiError(403, 'You do not have access to this project');
     }
 
     next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Generuje invitation link pro sdílení projektu
+ */
+export async function generateInvitationLink(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const { projectId } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new ApiError(401, 'You must be logged in to generate invitation links');
+    }
+
+    // Validace vstupních dat
+    const validationResult = generateInvitationLinkSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+      throw new ApiError(400, validationResult.error.message);
+    }
+
+    const { permission } = validationResult.data;
+
+    // Generování invitation linku
+    const result = await projectShareService.generateInvitationLink({
+      projectId,
+      ownerId: userId,
+      permission,
+    });
+
+    // Vytvoření plné URL pro frontend
+    const frontendUrl = process.env.FRONTEND_URL || 'https://spherosegapp.utia.cas.cz';
+    const invitationUrl = `${frontendUrl}/accept-invitation/${result.token}`;
+
+    res.status(201).json({
+      message: 'Invitation link generated successfully',
+      data: {
+        invitationUrl,
+        token: result.token,
+        expiresAt: result.expiresAt,
+        permission: result.permission,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -187,5 +241,5 @@ export async function checkProjectAccess(req: Request, res: Response, next: Next
 async function isUserEmail(userId: string, email: string): Promise<boolean> {
   const query = `SELECT id FROM users WHERE id = $1 AND email = $2`;
   const result = await db.query(query, [userId, email]);
-  return result.rowCount > 0;
+  return (result.rowCount ?? 0) > 0;
 }

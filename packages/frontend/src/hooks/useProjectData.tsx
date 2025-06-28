@@ -6,7 +6,7 @@ import type { Project, Image, ProjectImage, ImageStatus } from '@/types';
 import apiClient from '@/lib/apiClient';
 import axios, { AxiosError } from 'axios';
 import { Socket } from 'socket.io-client';
-import socketClient from '@/socketClient';
+import socketClient from '@/services/socketClient';
 import config from '@/config';
 import { getProjectImages, mapApiImageToProjectImage } from '@/api/projectImages';
 
@@ -266,7 +266,7 @@ export const useProjectData = (projectId: string | undefined) => {
       
       // Try different API endpoints to get current segmentation status
       const endpoints = [
-        `/api/queue-status/${cleanedProjectId}`,
+        `/api/segmentation/queue-status/${cleanedProjectId}`,
         `/api/segmentation/queue-status/${cleanedProjectId}`,
         `/api/segmentations/queue/status/${cleanedProjectId}`
       ];
@@ -354,8 +354,11 @@ export const useProjectData = (projectId: string | undefined) => {
       // Update the image status directly
       updateImageStatus(imageId, status, resultPath, error);
 
-      // For any status change, refresh data to make sure we have the latest from the server
-      refreshData();
+      // Only refresh data for completed status to avoid infinite loops
+      if (status === 'completed') {
+        console.log('Image completed, refreshing project data');
+        refreshData();
+      }
     };
     
     // Add event listener

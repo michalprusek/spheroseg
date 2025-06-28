@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Settings as SettingsIcon, User as UserIcon, LogOut, X } from 'lucide-react';
+import { Settings as SettingsIcon, User as UserIcon, LogOut, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,10 +9,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 interface MobileMenuProps {
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
-  hasNotifications: boolean;
 }
 
-const MobileMenu = ({ isMenuOpen, setIsMenuOpen, hasNotifications }: MobileMenuProps) => {
+const MobileMenu = ({ isMenuOpen, setIsMenuOpen }: MobileMenuProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { t } = useLanguage();
@@ -66,17 +65,6 @@ const MobileMenu = ({ isMenuOpen, setIsMenuOpen, hasNotifications }: MobileMenuP
           >
             <SettingsIcon className="h-5 w-5 mr-3 text-gray-500" />
             <span>{t('common.settings')}</span>
-          </button>
-          <button
-            className="flex items-center w-full px-4 py-3 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-            onClick={() => {
-              setIsMenuOpen(false);
-              navigate('/settings?tab=notifications');
-            }}
-          >
-            <Bell className="h-5 w-5 mr-3 text-gray-500" />
-            <span>{t('common.notifications')}</span>
-            {hasNotifications && <span className="ml-2 h-2 w-2 rounded-full bg-red-500"></span>}
           </button>
           <div className="border-t my-2 dark:border-gray-700"></div>
           <button

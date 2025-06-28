@@ -46,9 +46,14 @@ apiClient.interceptors.request.use(
     // Get token from authService with validation and auto-removal if invalid
     const token = getAccessToken(true, true);
 
-    // Only add token if it exists (validation already happened in getAccessToken)
-    if (token) {
+    // Only add token if it exists and is valid (validation already happened in getAccessToken)
+    if (token && isValidToken(token, false)) {
       config.headers.Authorization = `Bearer ${token}`;
+      logger.debug('Added Authorization header with valid token');
+    } else if (token) {
+      // If token exists but is invalid, remove it
+      logger.warn('Token exists but is invalid, removing from storage');
+      removeTokens();
     }
 
     // Add request ID for tracking
@@ -155,37 +160,80 @@ apiClient.interceptors.response.use(
 
     // Handle authentication errors
     if (status === 401) {
-      logger.warn('Unauthorized access detected. Clearing tokens.');
-      // Use removeTokens from authService instead of directly removing from localStorage
-      removeTokens();
-
-      // Handle the error with our error handling system
-      handleError(error, {
-        context: `API ${method} ${url}`,
-        errorInfo: {
-          type: ErrorType.AUTHENTICATION,
-          severity: ErrorSeverity.WARNING,
-          message: 'Your session has expired. Please sign in again.',
-        },
-        // Show toast for auth errors
-        showToast: true,
+      // Check if we already handled an auth error recently to prevent spam
+      const lastAuthError = window.sessionStorage.getItem('spheroseg_last_auth_error');
+      const now = Date.now();
+      const AUTH_ERROR_THROTTLE = 5000; // Increased to 5 seconds to reduce spam
+      
+      if (lastAuthError && (now - parseInt(lastAuthError)) < AUTH_ERROR_THROTTLE) {
+        logger.debug('Suppressing duplicate auth error within throttle period');
+        return Promise.reject(error);
+      }
+      
+      // Update last auth error timestamp
+      window.sessionStorage.setItem('spheroseg_last_auth_error', now.toString());
+      
+      logger.warn('Unauthorized access detected', {
+        url,
+        method,
+        status,
+        message: error.response?.data?.message || error.message
       });
 
-      // Zkontrolujeme, zda nejsme ve fázi načítání stránky
+      // Check if page is still loading - don't clear tokens during initial load
       const isPageLoading = window.sessionStorage.getItem('spheroseg_page_loading') === 'true';
-
-      if (!isPageLoading) {
-        // Dispatch auth expired event
-        window.dispatchEvent(new CustomEvent('auth:expired'));
-        logger.info('Auth expired event dispatched');
-      } else {
-        logger.info('Suppressing auth:expired event during page load');
+      if (isPageLoading) {
+        logger.debug('Suppressing token clearing during page load');
+        return Promise.reject(error);
       }
 
-      // Nebudeme přesměrovávat přímo, místo toho necháme AuthContext a event handler
-      // kontrolovat stav přihlášení
-      // Necháme auth:expired event, který už je řádek výše, aby se postaral o vyčištění auth stavu
-      // window.location.href přímo resetuje stránku, což není žádoucí
+      // Only clear tokens if this is a legitimate auth failure
+      // Don't clear tokens for malformed requests or other 401 scenarios
+      const errorMessage = error.response?.data?.message?.toLowerCase() || '';
+      const shouldClearTokens = errorMessage.includes('token') || 
+                               errorMessage.includes('expired') || 
+                               errorMessage.includes('invalid') ||
+                               errorMessage.includes('unauthorized');
+
+      if (shouldClearTokens) {
+        logger.info('Clearing tokens due to auth error');
+        removeTokens();
+
+        // Handle the error with our error handling system
+        handleError(error, {
+          context: `API ${method} ${url}`,
+          errorInfo: {
+            type: ErrorType.AUTHENTICATION,
+            severity: ErrorSeverity.WARNING,
+            message: 'Your session has expired. Please sign in again.',
+          },
+          // Only show toast for legitimate auth errors
+          showToast: true,
+        });
+
+        // Check if we're in page loading phase
+        const isPageLoading = window.sessionStorage.getItem('spheroseg_page_loading') === 'true';
+
+        if (!isPageLoading) {
+          // Dispatch auth expired event
+          window.dispatchEvent(new CustomEvent('auth:expired'));
+          logger.info('Auth expired event dispatched');
+        } else {
+          logger.info('Suppressing auth:expired event during page load');
+        }
+      } else {
+        // For other 401 errors (like missing permissions), don't clear tokens
+        logger.info('401 error but not clearing tokens (not a token issue)');
+        handleError(error, {
+          context: `API ${method} ${url}`,
+          errorInfo: {
+            type: ErrorType.AUTHORIZATION,
+            severity: ErrorSeverity.WARNING,
+            message: error.response?.data?.message || 'Access denied',
+          },
+          showToast: false, // Don't show toast for permission errors
+        });
+      }
 
       return Promise.reject(error);
     }

@@ -50,27 +50,70 @@ def segment():
         image_path = data['image_path']
         logger.info(f"Processing segmentation request for image: {image_path}")
         
-        # In development mode, we'll simulate the segmentation process
-        if DEBUG:
-            # Simulate processing time
-            time.sleep(2)
-            
-            # Generate mock segmentation result
-            result = {
-                'status': 'success',
-                'image_path': image_path,
-                'processing_time': 2.0,
-                'polygons': generate_mock_polygons(),
-                'timestamp': datetime.now().isoformat()
-            }
-            
-            return jsonify(result)
+        # Use actual segmentation via resunet_segmentation.py
+        logger.info(f"Starting actual segmentation for: {image_path}")
         
-        # In production, this would call the actual ML model
-        # result = perform_actual_segmentation(image_path)
-        # return jsonify(result)
+        # Create output directory for this request
+        output_dir = os.path.join(UPLOADS_DIR, f"segmentation_{int(time.time() * 1000)}")
+        os.makedirs(output_dir, exist_ok=True)
         
-        return jsonify({'error': 'Production segmentation not implemented'}), 501
+        # Run segmentation using subprocess
+        import subprocess
+        
+        try:
+            # Prepare command
+            cmd = [
+                'python', '/ML/resunet_segmentation.py',
+                '--image_path', image_path,
+                '--output_path', os.path.join(output_dir, 'result.json'),
+                '--checkpoint_path', MODEL_PATH
+            ]
+            
+            logger.info(f"Running command: {' '.join(cmd)}")
+            
+            # Run the segmentation
+            start_time = time.time()
+            process = subprocess.run(cmd, capture_output=True, text=True)
+            processing_time = time.time() - start_time
+            
+            if process.returncode != 0:
+                logger.error(f"Segmentation failed: {process.stderr}")
+                return jsonify({
+                    'status': 'error',
+                    'error': f'Segmentation failed: {process.stderr}',
+                    'image_path': image_path
+                }), 500
+            
+            # Read the result
+            result_path = os.path.join(output_dir, 'result.json')
+            if os.path.exists(result_path):
+                with open(result_path, 'r') as f:
+                    segmentation_result = json.load(f)
+                
+                result = {
+                    'status': 'success',
+                    'image_path': image_path,
+                    'processing_time': processing_time,
+                    'polygons': segmentation_result.get('polygons', []),
+                    'timestamp': datetime.now().isoformat()
+                }
+                
+                return jsonify(result)
+            else:
+                logger.error(f"Result file not found at: {result_path}")
+                return jsonify({
+                    'status': 'error',
+                    'error': 'Result file not found',
+                    'image_path': image_path
+                }), 500
+                
+        except Exception as e:
+            logger.error(f"Error during segmentation: {str(e)}")
+            return jsonify({
+                'status': 'error',
+                'error': str(e),
+                'image_path': image_path
+            }), 500
         
     except Exception as e:
         logger.error(f"Error processing segmentation request: {str(e)}")

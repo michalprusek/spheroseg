@@ -131,6 +131,32 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: { fileSize: 200 * 1024 * 1024 }, // Increased limit to 200MB
+  fileFilter: (_req, file, cb) => {
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/tiff',
+      'image/tif',
+      'image/bmp',
+      'image/webp',
+      'image/avif',
+      'image/gif',
+    ];
+
+    // Also check file extension as fallback for cases where MIME type detection fails
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp', '.webp', '.avif', '.gif'];
+    const fileExtension = file.originalname.toLowerCase().match(/\.[^.]+$/)?.[0];
+
+    const isMimeTypeAllowed = allowedMimeTypes.includes(file.mimetype);
+    const isExtensionAllowed = fileExtension && allowedExtensions.includes(fileExtension);
+
+    if (isMimeTypeAllowed || isExtensionAllowed) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type. Only JPEG, PNG, TIFF, BMP, WebP, AVIF, and GIF are allowed. Received: ${file.mimetype} (${file.originalname})`));
+    }
+  },
 });
 // --- End Multer Configuration ---
 
@@ -144,12 +170,14 @@ async function processAndStoreImage(
   let thumbnailPath = null;
   let width = null;
   let height = null;
-  const cleanupPaths = [file.path];
+  let finalStoragePath = file.path; // Path to be stored in DB, potentially converted
+  const cleanupPaths = [file.path]; // All files to clean up in case of error
 
   try {
     logger.debug('Processing uploaded file', {
       filename: file.originalname,
       path: file.path,
+      mimetype: file.mimetype,
     });
 
     // Check if file exists
@@ -161,14 +189,41 @@ async function processAndStoreImage(
       throw new ApiError(`Uploaded file missing from filesystem: ${file.originalname}`, 500);
     }
 
-    // Generate thumbnail filename
-    const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const isTiff = fileExtension === '.tiff' || fileExtension === '.tif';
+    const isBmp = fileExtension === '.bmp';
+    const needsConversion = isTiff || isBmp;
+
+    let sourcePathForThumbnail = file.path; // Path to use for metadata and thumbnail generation
+
+    if (needsConversion) {
+      // Generate a new filename for the converted PNG
+      const baseFilename = path.basename(file.filename, path.extname(file.filename));
+      const convertedPngFilename = `${baseFilename}.png`;
+      const convertedPngPath = path.join(path.dirname(file.path), convertedPngFilename);
+      cleanupPaths.push(convertedPngPath); // Add converted file to cleanup list
+
+      const formatName = isTiff ? 'TIFF' : 'BMP';
+      logger.debug(`Converting ${formatName} to web-friendly PNG`, {
+        source: file.path,
+        target: convertedPngPath,
+      });
+
+      await imageUtils.convertTiffToWebFriendly(file.path, convertedPngPath);
+      finalStoragePath = convertedPngPath; // Update the path to be stored in DB
+      sourcePathForThumbnail = convertedPngPath; // Use converted PNG for thumbnail
+      logger.debug(`${formatName} converted to PNG successfully`, { path: finalStoragePath });
+    }
+
+    // Generate thumbnail filename - always use .png extension since thumbnails are saved as PNG
+    const baseFilename = path.basename(file.filename, path.extname(file.filename));
+    const thumbnailFilename = `thumb-${baseFilename}.png`;
     thumbnailPath = path.join(path.dirname(file.path), thumbnailFilename);
     cleanupPaths.push(thumbnailPath);
     logger.debug('Generating thumbnail', { path: thumbnailPath });
 
-    // Get image metadata
-    const metadata = await imageUtils.getImageMetadata(file.path);
+    // Get image metadata from the original file (or the converted JPEG if it's the source for metadata)
+    const metadata = await imageUtils.getImageMetadata(sourcePathForThumbnail);
     width = metadata.width;
     height = metadata.height;
     logger.debug('Image metadata extracted', {
@@ -177,8 +232,8 @@ async function processAndStoreImage(
       format: metadata.format,
     });
 
-    // Generate thumbnail
-    await imageUtils.createThumbnail(file.path, thumbnailPath, {
+    // Generate thumbnail from the original file (or the converted JPEG)
+    await imageUtils.createThumbnail(sourcePathForThumbnail, thumbnailPath, {
       width: 200,
       height: 200,
     });
@@ -188,6 +243,7 @@ async function processAndStoreImage(
     logger.error('Failed to process image or generate thumbnail', {
       filename: file.originalname,
       error: processError,
+      stack: processError.stack,
     });
 
     // Clean up any created files
@@ -212,12 +268,14 @@ async function processAndStoreImage(
   }
 
   // Normalize paths for database storage
-  const relativePath = imageUtils.normalizePathForDb(file.path, UPLOAD_DIR);
+  // Use finalStoragePath for the main image path
+  const relativePath = imageUtils.normalizePathForDb(finalStoragePath, UPLOAD_DIR);
   const relativeThumbnailPath = thumbnailPath ? imageUtils.normalizePathForDb(thumbnailPath, UPLOAD_DIR) : null;
 
   logger.debug('Storing paths in database', {
-    originalPath: file.path,
-    relativePath,
+    originalFilePath: file.path, // Original uploaded file path
+    finalStoragePath, // Path actually stored on disk for display (might be converted)
+    relativePath, // Relative path for DB
     originalThumbnailPath: thumbnailPath,
     relativeThumbnailPath,
   });
@@ -253,13 +311,14 @@ async function processAndStoreImage(
       projectIdStr, // Use validated UUID string
       userIdStr, // Use validated UUID string
       file.originalname,
-      file.filename, // Add file.filename for storage_filename
+      path.basename(finalStoragePath), // Use the filename of the *final* stored image
       relativePath,
       relativeThumbnailPath,
       width || 0,
       height || 0,
-      { originalSize: file.size },
-      file.size, // Store actual file size in file_size column
+      { originalSize: file.size, originalFormat: file.mimetype }, // Store original size and format
+      // If TIFF was converted, we store the size of the converted JPEG, not the original TIFF
+      (await fs.promises.stat(finalStoragePath)).size,
     ],
   );
 
@@ -284,7 +343,7 @@ async function processAndStoreImage(
  * - Handles image processing errors
  */
 router.post(
-  '/projects/:projectId/images',
+  '/:projectId/images',
   authMiddleware,
   validate(uploadImagesSchema),
   upload.array('images', 20), // Zvýšíme limit na 20 obrázků najednou
@@ -514,7 +573,7 @@ router.post(
  * - Returns 404 if image not found in the project
  */
 router.delete(
-  '/projects/:projectId/images/:imageId',
+  '/:projectId/images/:imageId',
   authMiddleware,
   validate(deleteImageSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -531,6 +590,71 @@ router.delete(
       originalProjectId,
       imageId,
     });
+
+    // Check if imageId is a frontend-generated ID (not a UUID)
+    if (imageId.startsWith('img-')) {
+      logger.warn('Attempting to delete frontend-generated image ID', {
+        imageId,
+        projectId,
+        userId,
+      });
+      
+      // Try to find the actual image by name or storage_filename pattern
+      try {
+        const imageRes = await pool.query(
+          `SELECT i.id, i.storage_filename, i.name FROM images i 
+           WHERE i.project_id = $1 
+           AND (i.storage_filename LIKE $2 OR i.name LIKE $3)
+           ORDER BY i.created_at DESC
+           LIMIT 1`,
+          [projectId, `%${imageId}%`, `%${imageId}%`]
+        );
+        
+        if (imageRes.rows.length > 0) {
+          const actualImageId = imageRes.rows[0].id;
+          logger.info('Found actual image ID for frontend-generated ID', {
+            frontendId: imageId,
+            actualId: actualImageId,
+            filename: imageRes.rows[0].storage_filename,
+            name: imageRes.rows[0].name
+          });
+          
+          // Use the actual ID for deletion
+          const result = await imageDeleteService.deleteImage(actualImageId, projectId, userId!);
+          
+          if (!result.success) {
+            if (result.error?.includes('not found') || result.error?.includes('access denied')) {
+              logger.warn('Image deletion denied', {
+                projectId,
+                imageId: actualImageId,
+                error: result.error,
+              });
+              return res.status(404).json({ message: result.error });
+            }
+            logger.error('Failed to delete image', {
+              projectId,
+              imageId: actualImageId,
+              error: result.error,
+            });
+            return res.status(500).json({ message: result.error || 'Failed to delete image' });
+          }
+          
+          // Return success with no content
+          return res.status(204).send();
+        }
+      } catch (lookupError) {
+        logger.error('Error looking up image by frontend ID', {
+          frontendId: imageId,
+          projectId,
+          error: lookupError
+        });
+      }
+      
+      return res.status(404).json({
+        error: 'ImageNotFound',
+        message: 'Image with this ID does not exist in the database',
+      });
+    }
 
     try {
       // Use the service to delete the image
@@ -569,7 +693,7 @@ router.delete(
 
 // POST /api/projects/:projectId/images/upload-batch - Upload multiple images to a project in a batch
 router.post(
-  '/projects/:projectId/images/upload-batch',
+  '/:projectId/images/upload-batch',
   authMiddleware,
   upload.array('images', 50),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -584,7 +708,7 @@ router.post(
 
 // Legacy route for backward compatibility - will be deprecated
 router.delete(
-  '/images/:id',
+  '/:id',
   authMiddleware,
   validate(imageIdSchema),
   async (req: AuthenticatedRequest, res: Response) => {
@@ -592,13 +716,75 @@ router.delete(
     const imageId = req.params.id;
 
     logger.warn('Using deprecated route', {
-      route: '/images/:id',
+      route: '/:id',
       method: 'DELETE',
       imageId,
     });
 
     if (!userId) {
       return res.status(401).json({ message: 'Authentication error' });
+    }
+
+    // Check if imageId is a frontend-generated ID (not a UUID)
+    if (imageId.startsWith('img-')) {
+      logger.warn('Attempting to delete frontend-generated image ID via legacy route', {
+        imageId,
+        userId,
+      });
+      
+      // Try to find the actual image by storage_filename pattern
+      try {
+        const imageRes = await pool.query(
+          `SELECT i.id, i.project_id, i.storage_filename, i.name 
+           FROM images i 
+           JOIN projects p ON i.project_id = p.id
+           WHERE p.user_id = $1
+           AND (i.storage_filename LIKE $2 OR i.name LIKE $3)
+           ORDER BY i.created_at DESC
+           LIMIT 1`,
+          [userId, `%${imageId}%`, `%${imageId}%`]
+        );
+        
+        if (imageRes.rows.length > 0) {
+          const actualImageId = imageRes.rows[0].id;
+          const projectId = imageRes.rows[0].project_id;
+          
+          logger.info('Found actual image ID for frontend-generated ID (legacy route)', {
+            frontendId: imageId,
+            actualId: actualImageId,
+            projectId: projectId,
+            filename: imageRes.rows[0].storage_filename,
+            name: imageRes.rows[0].name
+          });
+          
+          // Use the service to delete the image
+          const result = await imageDeleteService.deleteImage(actualImageId, projectId, userId!);
+          
+          if (!result.success) {
+            logger.error('Deprecated route: Failed to delete image', {
+              imageId: actualImageId,
+              error: result.error,
+            });
+            return res.status(500).json({
+              error: 'DeletionFailed',
+              message: result.error || 'Could not delete image',
+            });
+          }
+          
+          // Return success with no content
+          return res.status(204).send();
+        }
+      } catch (lookupError) {
+        logger.error('Error looking up image by frontend ID (legacy route)', {
+          frontendId: imageId,
+          error: lookupError
+        });
+      }
+      
+      return res.status(404).json({
+        error: 'ImageNotFound',
+        message: 'Image with this ID does not exist in the database',
+      });
     }
 
     try {
@@ -662,7 +848,7 @@ router.delete(
  * - Returns 404 if image file doesn't exist on the filesystem
  */
 router.get(
-  '/projects/:projectId/images/:imageId',
+  '/:projectId/images/:imageId',
   authMiddleware,
   validate(imageDetailSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -702,10 +888,16 @@ router.get(
         throw new ApiError('Project not found or access denied', 404);
       }
 
-      const imageResult = await pool.query('SELECT * FROM images WHERE id = $1 AND project_id = $2', [
-        imageId,
-        projectId,
-      ]);
+      const imageResult = await pool.query(
+        `SELECT 
+          i.*,
+          COALESCE(sr.status, i.segmentation_status, 'pending') as segmentationStatus,
+          sr.id as segmentation_id
+        FROM images i
+        LEFT JOIN segmentation_results sr ON i.id = sr.image_id
+        WHERE i.id = $1 AND i.project_id = $2`,
+        [imageId, projectId]
+      );
 
       if (imageResult.rows.length === 0) {
         logger.warn('Image not found in project', { imageId, projectId });
@@ -741,7 +933,7 @@ router.get(
  * - Returns 404 if project not found or user doesn't have access
  */
 router.get(
-  '/projects/:projectId/images',
+  '/:projectId/images',
   authMiddleware,
   validate(listImagesSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -776,12 +968,37 @@ router.get(
 
       const imageResult = await pool.query(
         name
-          ? 'SELECT * FROM images WHERE project_id = $1 AND name = $2 ORDER BY created_at DESC'
-          : 'SELECT * FROM images WHERE project_id = $1 ORDER BY created_at DESC',
+          ? `SELECT 
+              i.*,
+              COALESCE(sr.status, i.segmentation_status, 'pending') as "segmentationStatus",
+              sr.id as segmentation_id
+            FROM images i
+            LEFT JOIN segmentation_results sr ON i.id = sr.image_id
+            WHERE i.project_id = $1 AND i.name = $2 
+            ORDER BY i.created_at DESC`
+          : `SELECT 
+              i.*,
+              COALESCE(sr.status, i.segmentation_status, 'pending') as "segmentationStatus",
+              sr.id as segmentation_id
+            FROM images i
+            LEFT JOIN segmentation_results sr ON i.id = sr.image_id
+            WHERE i.project_id = $1 
+            ORDER BY i.created_at DESC`,
         name ? [projectId, name] : [projectId],
       );
 
       logger.debug('Image query results', { count: imageResult.rows.length });
+
+      // Debug: Check what fields are actually returned
+      if (imageResult.rows.length > 0) {
+        const firstImage = imageResult.rows[0];
+        logger.debug('First image fields from query:', {
+          hasSegmentationStatus: 'segmentationStatus' in firstImage,
+          hasSegmentation_status: 'segmentation_status' in firstImage,
+          segmentationStatus: firstImage.segmentationStatus,
+          segmentation_status: firstImage.segmentation_status,
+        });
+      }
 
       const verifyFiles = req.query.verifyFiles === 'true';
 
@@ -832,7 +1049,7 @@ router.get(
  * - Returns 200 with exists:false if the file doesn't exist on the filesystem
  */
 router.get(
-  '/projects/:projectId/images/:imageId/verify',
+  '/:projectId/images/:imageId/verify',
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -933,7 +1150,159 @@ router.get('/verify/:id', authMiddleware, async (req: AuthenticatedRequest, res:
   }
 });
 
-// The DELETE /api/projects/:projectId/images/:imageId route is already defined above (line 489)
-// This was a duplicate route that was causing 404 errors
+// Direct image access routes (legacy compatibility)
+// GET /api/images/:imageId - Get image by ID directly
+router.get(
+  '/:imageId',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    const imageId = req.params.imageId;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    logger.info('Direct image access request', { userId, imageId });
+
+    try {
+      let imageResult;
+      
+      // Check if imageId looks like a UUID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(imageId);
+      
+      if (isUUID) {
+        // Try to find by UUID
+        imageResult = await pool.query(
+          `SELECT 
+            i.*, 
+            p.user_id,
+            COALESCE(sr.status, i.segmentation_status, 'pending') as segmentationStatus,
+            sr.id as segmentation_id
+          FROM images i 
+          JOIN projects p ON i.project_id = p.id 
+          LEFT JOIN segmentation_results sr ON i.id = sr.image_id
+          WHERE i.id = $1 AND p.user_id = $2`,
+          [imageId, userId]
+        );
+      } else {
+        // Try to find by storage_filename pattern or name
+        imageResult = await pool.query(
+          `SELECT 
+            i.*, 
+            p.user_id,
+            COALESCE(sr.status, i.segmentation_status, 'pending') as segmentationStatus,
+            sr.id as segmentation_id
+          FROM images i 
+          JOIN projects p ON i.project_id = p.id 
+          LEFT JOIN segmentation_results sr ON i.id = sr.image_id
+          WHERE (i.storage_filename LIKE $1 OR i.name = $2) AND p.user_id = $3`,
+          [`%${imageId}%`, imageId, userId]
+        );
+      }
+
+      if (imageResult.rows.length === 0) {
+        logger.warn('Image not found or access denied', { imageId, userId, isUUID });
+        return res.status(404).json({ 
+          message: 'Image not found or access denied',
+          error: 'NOT_FOUND'
+        });
+      }
+
+      const image = imageResult.rows[0];
+      return formatAndSendImage(image, req, res);
+    } catch (error) {
+      logger.error('Error fetching image directly', { imageId, error });
+      next(error);
+    }
+  }
+);
+
+// GET /api/images/:imageId/segmentation - Get image segmentation
+router.get(
+  '/:imageId/segmentation',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    const imageId = req.params.imageId;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    logger.info('Image segmentation request', { userId, imageId });
+
+    try {
+      let imageResult;
+      
+      // Check if imageId looks like a UUID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(imageId);
+      
+      if (isUUID) {
+        // Try to find by UUID
+        imageResult = await pool.query(
+          'SELECT i.id, i.project_id, p.user_id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
+          [imageId, userId]
+        );
+      } else {
+        // Try to find by storage_filename pattern or name
+        imageResult = await pool.query(
+          'SELECT i.id, i.project_id, p.user_id FROM images i JOIN projects p ON i.project_id = p.id WHERE (i.storage_filename LIKE $1 OR i.name = $2) AND p.user_id = $3',
+          [`%${imageId}%`, imageId, userId]
+        );
+      }
+
+      if (imageResult.rows.length === 0) {
+        logger.warn('Image not found or access denied for segmentation', { imageId, userId, isUUID });
+        return res.status(404).json({ 
+          message: 'Image not found or access denied',
+          error: 'NOT_FOUND'
+        });
+      }
+
+      const actualImageId = imageResult.rows[0].id; // Get the actual UUID
+
+      // Check if segmentation_results table exists
+      const segmentationResultsTableCheck = await pool.query(`
+        SELECT EXISTS (
+          SELECT 1
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+          AND table_name = 'segmentation_results'
+        )
+      `);
+
+      if (!segmentationResultsTableCheck.rows[0].exists) {
+        logger.warn('Segmentation results table does not exist');
+        return res.status(404).json({
+          message: 'Segmentation not found',
+          error: 'NOT_FOUND'
+        });
+      }
+
+      // Get segmentation data for this image using the actual UUID
+      const segmentationResult = await pool.query(
+        'SELECT * FROM segmentation_results WHERE image_id = $1 ORDER BY created_at DESC LIMIT 1',
+        [actualImageId]
+      );
+
+      if (segmentationResult.rows.length === 0) {
+        logger.info('No segmentation found for image', { imageId, actualImageId });
+        return res.status(404).json({
+          message: 'Segmentation not found for this image',
+          error: 'NOT_FOUND'
+        });
+      }
+
+      const segmentation = segmentationResult.rows[0];
+      logger.info('Segmentation found for image', { imageId, actualImageId, segmentationId: segmentation.id });
+
+      res.status(200).json(segmentation);
+    } catch (error) {
+      logger.error('Error fetching image segmentation', { imageId, error });
+      next(error);
+    }
+  }
+);
 
 export default router;

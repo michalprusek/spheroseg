@@ -11,22 +11,22 @@
  */
 
 import { Pool, PoolClient } from 'pg';
-import fetch from 'node-fetch';
+// Using built-in fetch (Node.js 18+)
 import { v4 as uuidv4 } from 'uuid';
 import { EventEmitter } from 'events';
 import pool from '../db';
 import logger from '../utils/logger';
 import config from '../config';
 import { ApiError } from '../utils/errors';
-import { getIO } from '../socket';
+import { getSocketIO } from './socketService';
 
 // Konfigurace
 const ML_SERVICE_URL = config.ml.serviceUrl || 'http://localhost:5002';
 const MAX_RETRIES = config.ml.maxRetries || 3;
 const RETRY_DELAY = config.ml.retryDelay || 5000; // ms
 const MAX_CONCURRENT_TASKS = config.ml.maxConcurrentTasks || 2;
-const HEALTH_CHECK_INTERVAL = config.ml.healthCheckInterval || 60000; // ms
-const QUEUE_UPDATE_INTERVAL = config.ml.queueUpdateInterval || 5000; // ms
+const HEALTH_CHECK_INTERVAL = 60000; // ms
+const QUEUE_UPDATE_INTERVAL = 5000; // ms
 
 // Typy a rozhraní
 export enum TaskStatus {
@@ -62,10 +62,24 @@ export interface SegmentationTask {
 export interface QueueStatus {
   pendingTasks: string[];
   runningTasks: string[];
+  queuedTasks: string[]; // Alias for pendingTasks for frontend compatibility
   queueLength: number;
   activeTasksCount: number;
+  queuedTasksCount: number; // Count of queued tasks
+  pendingTasksCount: number; // Count of pending tasks
+  runningTasksCount: number; // Count of running tasks
   mlServiceStatus: 'online' | 'offline' | 'degraded';
   lastUpdated: Date;
+  processingImages?: Array<{
+    id: string;
+    name: string;
+    projectId: string;
+  }>;
+  queuedImages?: Array<{
+    id: string;
+    name: string;
+    projectId: string;
+  }>;
 }
 
 /**
@@ -77,8 +91,12 @@ class SegmentationQueueService extends EventEmitter {
   private queueStatus: QueueStatus = {
     pendingTasks: [],
     runningTasks: [],
+    queuedTasks: [], // Alias for pendingTasks
     queueLength: 0,
     activeTasksCount: 0,
+    queuedTasksCount: 0,
+    pendingTasksCount: 0,
+    runningTasksCount: 0,
     mlServiceStatus: 'offline',
     lastUpdated: new Date(),
   };
@@ -169,9 +187,7 @@ class SegmentationQueueService extends EventEmitter {
   private startHealthCheck(): void {
     setInterval(async () => {
       try {
-        const response = await fetch(`${ML_SERVICE_URL}/health`, {
-          timeout: 5000,
-        });
+        const response = await fetch(`${ML_SERVICE_URL}/health`);
 
         this.mlServiceAvailable = response.ok;
         this.queueStatus.mlServiceStatus = response.ok ? 'online' : 'offline';
@@ -226,24 +242,67 @@ class SegmentationQueueService extends EventEmitter {
       try {
         // Získání počtu úloh podle stavu
         const pendingResult = await client.query(`
-          SELECT id FROM segmentation_tasks 
-          WHERE status = 'pending'
-          ORDER BY priority DESC, created_at ASC
+          SELECT st.id, st.image_id FROM segmentation_tasks st
+          WHERE st.status = 'pending'
+          ORDER BY st.priority DESC, st.created_at ASC
         `);
 
         const runningResult = await client.query(`
-          SELECT id FROM segmentation_tasks 
-          WHERE status = 'processing'
+          SELECT st.id, st.image_id FROM segmentation_tasks st
+          WHERE st.status = 'processing'
         `);
+
+        // Získání detailů obrázků pro běžící úlohy
+        const processingImages: Array<{id: string; name: string; projectId: string}> = [];
+        if (runningResult.rows.length > 0) {
+          const imageIds = runningResult.rows.map(row => row.image_id);
+          const imagesQuery = await client.query(`
+            SELECT i.id, i.name, i.project_id
+            FROM images i
+            WHERE i.id = ANY($1::uuid[])
+          `, [imageIds]);
+
+          processingImages.push(...imagesQuery.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            projectId: row.project_id
+          })));
+        }
+
+        // Získání detailů obrázků pro čekající úlohy
+        const queuedImages: Array<{id: string; name: string; projectId: string}> = [];
+        if (pendingResult.rows.length > 0) {
+          const imageIds = pendingResult.rows.map(row => row.image_id);
+          const imagesQuery = await client.query(`
+            SELECT i.id, i.name, i.project_id
+            FROM images i
+            WHERE i.id = ANY($1::uuid[])
+          `, [imageIds]);
+
+          queuedImages.push(...imagesQuery.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            projectId: row.project_id
+          })));
+        }
+
+        const pendingTaskIds = pendingResult.rows.map((row) => row.id);
+        const runningTaskIds = runningResult.rows.map((row) => row.id);
 
         // Aktualizace stavu fronty
         this.queueStatus = {
-          pendingTasks: pendingResult.rows.map((row) => row.id),
-          runningTasks: runningResult.rows.map((row) => row.id),
-          queueLength: pendingResult.rows.length,
-          activeTasksCount: runningResult.rows.length,
+          pendingTasks: pendingTaskIds,
+          runningTasks: runningTaskIds,
+          queuedTasks: pendingTaskIds, // Alias for compatibility
+          queueLength: pendingTaskIds.length,
+          activeTasksCount: runningTaskIds.length,
+          queuedTasksCount: pendingTaskIds.length,
+          pendingTasksCount: pendingTaskIds.length,
+          runningTasksCount: runningTaskIds.length,
           mlServiceStatus: this.mlServiceAvailable ? 'online' : 'offline',
           lastUpdated: new Date(),
+          processingImages,
+          queuedImages,
         };
 
         // Emitování události aktualizace fronty
@@ -251,11 +310,13 @@ class SegmentationQueueService extends EventEmitter {
 
         // Odeslání aktualizace přes WebSocket
         try {
-          const io = getIO();
-          io.emit('segmentation_queue_update', {
-            ...this.queueStatus,
-            timestamp: new Date().toISOString(),
-          });
+          const io = getSocketIO();
+          if (io) {
+            io.emit('segmentation_queue_update', {
+              ...this.queueStatus,
+              timestamp: new Date().toISOString(),
+            });
+          }
         } catch (socketError) {
           logger.error('Chyba při odesílání aktualizace fronty přes WebSocket:', { error: socketError });
         }
@@ -348,8 +409,7 @@ class SegmentationQueueService extends EventEmitter {
           body: JSON.stringify({
             image_path: imagePath,
             parameters,
-          }),
-          timeout: 300000, // 5 minut
+          })
         });
 
         if (!response.ok) {
@@ -394,7 +454,7 @@ class SegmentationQueueService extends EventEmitter {
             SET status = 'pending', retries = retries + 1, error = $1, updated_at = NOW()
             WHERE id = $2
           `,
-            [error.message, taskId],
+            [error instanceof Error ? error.message : String(error), taskId],
           );
 
           logger.info('Úloha segmentace bude opakována:', {
@@ -410,11 +470,11 @@ class SegmentationQueueService extends EventEmitter {
             SET status = 'failed', error = $1, completed_at = NOW(), updated_at = NOW()
             WHERE id = $2
           `,
-            [error.message, taskId],
+            [error instanceof Error ? error.message : String(error), taskId],
           );
 
           // Aktualizace stavu segmentace
-          await this.updateSegmentationStatus(client, imageId, 'failed', error.message);
+          await this.updateSegmentationStatus(client, imageId, 'failed', error instanceof Error ? error.message : String(error));
 
           logger.error('Úloha segmentace selhala po maximálním počtu pokusů:', {
             taskId,
@@ -490,13 +550,15 @@ class SegmentationQueueService extends EventEmitter {
         if (userQuery.rows.length > 0) {
           const userId = userQuery.rows[0].user_id;
 
-          const io = getIO();
-          io.to(userId).emit('segmentation_update', {
-            imageId,
-            status,
-            error: errorMessage,
-            timestamp: new Date().toISOString(),
-          });
+          const io = getSocketIO();
+          if (io) {
+            io.to(userId).emit('segmentation_update', {
+              imageId,
+              status,
+              error: errorMessage,
+              timestamp: new Date().toISOString(),
+            });
+          }
         }
       } catch (socketError) {
         logger.error('Chyba při odesílání notifikace o stavu segmentace:', {
@@ -620,7 +682,7 @@ class SegmentationQueueService extends EventEmitter {
         error,
         imageId,
       });
-      throw new ApiError(`Nelze přidat úlohu segmentace do fronty: ${error.message}`, 500);
+      throw new ApiError(500, `Nelze přidat úlohu segmentace do fronty: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       client.release();
     }
@@ -660,7 +722,7 @@ class SegmentationQueueService extends EventEmitter {
       return true;
     } catch (error) {
       logger.error('Chyba při rušení úlohy segmentace:', { error, imageId });
-      throw new ApiError(`Nelze zrušit úlohu segmentace: ${error.message}`, 500);
+      throw new ApiError(500, `Nelze zrušit úlohu segmentace: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       client.release();
     }
@@ -671,6 +733,87 @@ class SegmentationQueueService extends EventEmitter {
    */
   public getQueueStatus(): QueueStatus {
     return this.queueStatus;
+  }
+
+  /**
+   * Získá stav fronty pro konkrétní projekt
+   */
+  public async getProjectQueueStatus(projectId: string): Promise<QueueStatus> {
+    try {
+      const client = await pool.connect();
+      try {
+        // Získání úloh pro konkrétní projekt
+        const pendingResult = await client.query(`
+          SELECT st.id, st.image_id FROM segmentation_tasks st
+          JOIN images i ON st.image_id = i.id
+          WHERE st.status = 'pending' AND i.project_id = $1
+          ORDER BY st.priority DESC, st.created_at ASC
+        `, [projectId]);
+
+        const runningResult = await client.query(`
+          SELECT st.id, st.image_id FROM segmentation_tasks st
+          JOIN images i ON st.image_id = i.id
+          WHERE st.status = 'processing' AND i.project_id = $1
+        `, [projectId]);
+
+        // Získání detailů obrázků pro běžící úlohy
+        const processingImages: Array<{id: string; name: string; projectId: string}> = [];
+        if (runningResult.rows.length > 0) {
+          const imageIds = runningResult.rows.map(row => row.image_id);
+          const imagesQuery = await client.query(`
+            SELECT i.id, i.name, i.project_id
+            FROM images i
+            WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2
+          `, [imageIds, projectId]);
+
+          processingImages.push(...imagesQuery.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            projectId: row.project_id
+          })));
+        }
+
+        // Získání detailů obrázků pro čekající úlohy
+        const queuedImages: Array<{id: string; name: string; projectId: string}> = [];
+        if (pendingResult.rows.length > 0) {
+          const imageIds = pendingResult.rows.map(row => row.image_id);
+          const imagesQuery = await client.query(`
+            SELECT i.id, i.name, i.project_id
+            FROM images i
+            WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2
+          `, [imageIds, projectId]);
+
+          queuedImages.push(...imagesQuery.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            projectId: row.project_id
+          })));
+        }
+
+        const pendingTaskIds = pendingResult.rows.map((row) => row.id);
+        const runningTaskIds = runningResult.rows.map((row) => row.id);
+
+        return {
+          pendingTasks: pendingTaskIds,
+          runningTasks: runningTaskIds,
+          queuedTasks: pendingTaskIds,
+          queueLength: pendingTaskIds.length,
+          activeTasksCount: runningTaskIds.length,
+          queuedTasksCount: pendingTaskIds.length,
+          pendingTasksCount: pendingTaskIds.length,
+          runningTasksCount: runningTaskIds.length,
+          mlServiceStatus: this.mlServiceAvailable ? 'online' : 'offline',
+          lastUpdated: new Date(),
+          processingImages,
+          queuedImages,
+        };
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      logger.error('Chyba při získávání stavu fronty pro projekt:', { error, projectId });
+      throw new ApiError(500, `Nelze získat stav fronty pro projekt: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /**
@@ -693,7 +836,7 @@ class SegmentationQueueService extends EventEmitter {
       return result.rows[0] as SegmentationTask;
     } catch (error) {
       logger.error('Chyba při získávání stavu úlohy:', { error, taskId });
-      throw new ApiError(`Nelze získat stav úlohy: ${error.message}`, 500);
+      throw new ApiError(500, `Nelze získat stav úlohy: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       client.release();
     }

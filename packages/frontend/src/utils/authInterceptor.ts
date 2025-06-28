@@ -85,7 +85,7 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
             setTimeout(() => {
               logger.warn('[authInterceptor] Token refresh timed out');
               resolve(false);
-            }, 2000); // Further reduced timeout to 2 seconds for faster response
+            }, 10000); // Increased timeout to 10 seconds for upload operations
           });
 
           // Race the refresh operation against the timeout
@@ -116,7 +116,7 @@ export const setupAuthInterceptors = (httpClient: AxiosInstance): void => {
             setTimeout(() => {
               logger.warn('[authInterceptor] Waiting for token refresh timed out');
               resolve();
-            }, 1000); // Very short timeout for waiting on existing refresh
+            }, 5000); // Increased timeout for waiting on existing refresh
           });
 
           // Don't block the request for too long waiting for refresh

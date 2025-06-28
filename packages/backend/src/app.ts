@@ -18,6 +18,9 @@ import { performHealthCheck } from './utils/healthCheck';
 export const createApp = (): Application => {
   const app = express();
 
+  // Enable trust proxy for proper IP detection behind nginx/docker
+  app.set('trust proxy', true);
+
   // Configure all middleware in the correct order
   configureMiddleware(app);
 

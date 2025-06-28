@@ -114,9 +114,14 @@ export const uploadFilesWithoutFallback = async (projectId: string, files: File[
  * Upload files with fallback to local storage if API fails
  * @param projectId The project ID to upload the files to
  * @param files The files to upload
+ * @param onProgress Optional progress callback (fileName, progress, fileIndex, totalFiles)
  * @returns The uploaded image data
  */
-export const uploadFilesWithFallback = async (projectId: string, files: File[]): Promise<ProjectImage[]> => {
+export const uploadFilesWithFallback = async (
+  projectId: string, 
+  files: File[], 
+  onProgress?: (fileName: string, progress: number, fileIndex: number, totalFiles: number) => void
+): Promise<ProjectImage[]> => {
   // Kontrola, zda máme nějaké soubory k nahrání
   if (!files || files.length === 0) {
     console.log('No files to upload');
@@ -129,7 +134,23 @@ export const uploadFilesWithFallback = async (projectId: string, files: File[]):
 
     // Pokud je souborů méně než BATCH_SIZE, použijeme standardní uploadFiles
     if (files.length <= BATCH_SIZE) {
-      return await uploadFiles(projectId, files);
+      // Report progress for single batch
+      if (onProgress) {
+        files.forEach((file, index) => {
+          onProgress(file.name, 50, index, files.length);
+        });
+      }
+      
+      const result = await uploadFiles(projectId, files);
+      
+      // Report completion
+      if (onProgress) {
+        files.forEach((file, index) => {
+          onProgress(file.name, 100, index, files.length);
+        });
+      }
+      
+      return result;
     }
 
     // Pokud je souborů více, rozdělíme je na dávky
@@ -145,19 +166,51 @@ export const uploadFilesWithFallback = async (projectId: string, files: File[]):
 
       console.log(`Uploading batch ${batchNumber}/${totalBatches} with ${batch.length} files`);
 
+      // Report progress for current batch start
+      if (onProgress) {
+        batch.forEach((file, batchIndex) => {
+          const globalIndex = i + batchIndex;
+          onProgress(file.name, 25, globalIndex, files.length);
+        });
+      }
+
       try {
         // Nahrajeme dávku
         const batchImages = await uploadFiles(projectId, batch);
         console.log(`Successfully uploaded batch ${batchNumber}/${totalBatches} with ${batchImages.length} images`);
+
+        // Report progress for current batch completion
+        if (onProgress) {
+          batch.forEach((file, batchIndex) => {
+            const globalIndex = i + batchIndex;
+            onProgress(file.name, 100, globalIndex, files.length);
+          });
+        }
 
         // Přidáme nahraná data do celkového výsledku
         allUploadedImages.push(...batchImages);
       } catch (batchError) {
         console.error(`Error uploading batch ${batchNumber}/${totalBatches}:`, batchError);
 
+        // Report progress for fallback processing
+        if (onProgress) {
+          batch.forEach((file, batchIndex) => {
+            const globalIndex = i + batchIndex;
+            onProgress(file.name, 75, globalIndex, files.length);
+          });
+        }
+
         // Pokud selže nahrávání dávky, vytvoříme lokální obrázky pro tuto dávku
         const localBatchImages = await createLocalImages(projectId, batch);
         allUploadedImages.push(...localBatchImages);
+
+        // Report completion for fallback
+        if (onProgress) {
+          batch.forEach((file, batchIndex) => {
+            const globalIndex = i + batchIndex;
+            onProgress(file.name, 100, globalIndex, files.length);
+          });
+        }
       }
     }
 
@@ -165,8 +218,24 @@ export const uploadFilesWithFallback = async (projectId: string, files: File[]):
   } catch (error) {
     console.error('Error uploading files to server, using local fallback:', error);
 
+    // Report progress for fallback processing
+    if (onProgress) {
+      files.forEach((file, index) => {
+        onProgress(file.name, 50, index, files.length);
+      });
+    }
+
     // Vytvoříme lokální obrázky pro všechny soubory
-    return await createLocalImages(projectId, files);
+    const result = await createLocalImages(projectId, files);
+
+    // Report completion for fallback
+    if (onProgress) {
+      files.forEach((file, index) => {
+        onProgress(file.name, 100, index, files.length);
+      });
+    }
+
+    return result;
   }
 };
 

@@ -68,6 +68,7 @@ export const handleMouseDown = (
   setTempPoints: (points: Point[]) => void,
   setInteractionState: (state: InteractionState) => void,
   setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void,
+  startDragging?: (initialState: SegmentationData | null) => void,
 ) => {
   // Right-click - always cancel current operation
   if (e.button === 2) {
@@ -218,6 +219,11 @@ export const handleMouseDown = (
         if (vertexIndex !== -1) {
           // Get the original position before dragging starts (for undo/redo)
           const originalPosition = { ...selectedPolygon.points[vertexIndex] };
+
+          // Start the dragging system with the current state
+          if (startDragging && segmentationData) {
+            startDragging(segmentationData);
+          }
 
           // Start dragging this vertex
           setInteractionState({
@@ -784,6 +790,7 @@ export const handleMouseMove = (
   setTransform: (transform: TransformState) => void,
   setInteractionState: (state: InteractionState) => void,
   setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void,
+  updateDuringDrag?: (state: SegmentationData | null) => void,
 ) => {
   const coords = getCanvasCoordinates(e.clientX, e.clientY, transform, canvasRef);
   const { imageX, imageY } = coords;
@@ -910,16 +917,18 @@ export const handleMouseMove = (
         return polygon;
       });
 
-      // Update the segmentation data without adding to history during dragging
-      // We'll add to history only when the drag is complete (in handleMouseUp)
-      // The false parameter ensures we don't reset history
-      setSegmentationDataWithHistory(
-        {
-          ...segmentationData,
-          polygons: updatedPolygons,
-        },
-        false,
-      );
+      const updatedState = {
+        ...segmentationData,
+        polygons: updatedPolygons,
+      };
+
+      // Use the new dragging system to update the display during drag
+      if (updateDuringDrag) {
+        updateDuringDrag(updatedState);
+      } else {
+        // Fallback to the old system if not available
+        setSegmentationDataWithHistory(updatedState, false);
+      }
     }
     return;
   }
@@ -1031,6 +1040,7 @@ export const handleMouseUp = (
   setInteractionState: (state: InteractionState) => void,
   segmentationData: SegmentationData | null,
   setSegmentationDataWithHistory: (data: SegmentationData | null, clearHistory: boolean) => void,
+  finishDragging?: (finalState: SegmentationData | null) => void,
 ) => {
   // End panning
   if (interactionState.isPanning) {
@@ -1044,7 +1054,7 @@ export const handleMouseUp = (
   // End vertex dragging
   if (interactionState.isDraggingVertex) {
     // If we have the original vertex position and the segmentation data,
-    // log the operation but don't add to history here (that's handled in useSegmentationV2.ts)
+    // complete the dragging operation using the new system
     if (interactionState.originalVertexPosition && interactionState.draggedVertexInfo && segmentationData) {
       // Log the drag operation
       const { polygonId, vertexIndex } = interactionState.draggedVertexInfo;
@@ -1062,8 +1072,14 @@ export const handleMouseUp = (
           Math.abs(originalPos.x - finalPosition.x) > 0.001 ||
           Math.abs(originalPos.y - finalPosition.y) > 0.001;
 
-        // We'll let useSegmentationV2's onMouseUp handle the history update
-        // The draggedVertexInfo and originalVertexPosition are used there
+        // Use the new dragging system to complete the operation
+        if (hasChanged && finishDragging) {
+          finishDragging(segmentationData);
+        } else if (finishDragging) {
+          // Still need to finish dragging even if no change occurred
+          finishDragging(null);
+        }
+
         if (!hasChanged) {
           logger.debug(`Vertex position didn't change significantly, skipping history update`);
         }

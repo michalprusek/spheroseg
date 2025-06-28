@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface PolygonContextMenuProps {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ interface PolygonContextMenuProps {
 
 const PolygonContextMenu = ({ children, onDelete, onSlice, onEdit, polygonId }: PolygonContextMenuProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+  const { t } = useTranslations();
 
   // Přidáme handler pro pravé tlačítko myši
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
@@ -53,16 +55,16 @@ const PolygonContextMenu = ({ children, onDelete, onSlice, onEdit, polygonId }: 
         <ContextMenuContent className="w-64">
           <ContextMenuItem onClick={onEdit} className="cursor-pointer">
             <Edit className="mr-2 h-4 w-4" />
-            <span>Upravit polygon</span>
+            <span>{t('segmentation.contextMenu.editPolygon')}</span>
           </ContextMenuItem>
           <ContextMenuItem onClick={onSlice} className="cursor-pointer">
             <Scissors className="mr-2 h-4 w-4" />
-            <span>Rozdělit polygon</span>
+            <span>{t('segmentation.contextMenu.splitPolygon')}</span>
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onClick={() => setShowDeleteDialog(true)} className="cursor-pointer text-red-600">
             <Trash className="mr-2 h-4 w-4" />
-            <span>Smazat polygon</span>
+            <span>{t('segmentation.contextMenu.deletePolygon')}</span>
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -70,13 +72,13 @@ const PolygonContextMenu = ({ children, onDelete, onSlice, onEdit, polygonId }: 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Opravdu chcete smazat polygon?</AlertDialogTitle>
+            <AlertDialogTitle>{t('segmentation.contextMenu.confirmDeleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Tato akce je nevratná. Polygon bude trvale odstraněn ze segmentace.
+              {t('segmentation.contextMenu.confirmDeleteMessage')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Zrušit</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 onDelete();
@@ -84,7 +86,7 @@ const PolygonContextMenu = ({ children, onDelete, onSlice, onEdit, polygonId }: 
               }}
               className="bg-red-600 hover:bg-red-700"
             >
-              Smazat
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

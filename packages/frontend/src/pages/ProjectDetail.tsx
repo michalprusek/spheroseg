@@ -16,9 +16,10 @@ import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 import { Project, ProjectImage, ImageStatus } from '@/types';
 import axios from 'axios';
-import socketClient from '@/socketClient';
+import socketClient from '@/services/socketClient';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { useTranslation } from 'react-i18next';
+import logger from '@/utils/logger'; // Import logger
 
 interface UseProjectDataReturn {
   project: Project | null;
@@ -37,7 +38,7 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  console.log('ProjectDetail: Received projectId from URL:', id);
+  logger.debug('ProjectDetail: Received projectId from URL:', id);
   useAuth();
 
   const [showUploader, setShowUploader] = useState<boolean>(false);
@@ -53,34 +54,34 @@ const ProjectDetail = () => {
     if (!id) return;
 
     try {
-      // Načíst pouze statistiky projektu - toto je mnohem rychlejší než načítání všech obrázků
-      const response = await apiClient.get(`/api/projects/${id}/statistics`);
+      // TODO: Statistics endpoint not implemented yet
+      // const response = await apiClient.get(`/api/projects/${id}/statistics`);
 
-      // Aktualizujeme pouze potřebné statistiky, neprovádíme refresh celé stránky
-      if (response.data) {
-        console.log('Aktualizovány statistiky projektu:', response.data);
+      // For now, just update queue status
+      // if (response.data) {
+      //   logger.debug('Aktualizovány statistiky projektu:', response.data);
 
-        // Oznámíme změnu statistik pomocí event
-        const statsEvent = new CustomEvent('project-statistics-updated', {
-          detail: {
-            projectId: id,
-            statistics: response.data
-          }
-        });
-        window.dispatchEvent(statsEvent);
+      //   // Oznámíme změnu statistik pomocí event
+      //   const statsEvent = new CustomEvent('project-statistics-updated', {
+      //     detail: {
+      //       projectId: id,
+      //       statistics: response.data
+      //     }
+      //   });
+      //   window.dispatchEvent(statsEvent);
+      // }
 
-        // Také aktualizujeme statistiky fronty bez refreshování stránky
-        const queueUpdateEvent = new CustomEvent('queue-status-update', {
-          detail: {
-            refresh: true,
-            projectId: id,
-            forceRefresh: true,
-          },
-        });
-        window.dispatchEvent(queueUpdateEvent);
-      }
+      // Aktualizujeme statistiky fronty bez refreshování stránky
+      const queueUpdateEvent = new CustomEvent('queue-status-update', {
+        detail: {
+          refresh: true,
+          projectId: id,
+          forceRefresh: true,
+        },
+      });
+      window.dispatchEvent(queueUpdateEvent);
     } catch (error) {
-      console.error('Chyba při aktualizaci statistik projektu:', error);
+      logger.error('Chyba při aktualizaci statistik projektu:', error);
     }
   }, [id]);
 
@@ -100,14 +101,14 @@ const ProjectDetail = () => {
     let isComponentMounted = true;
 
     try {
-      console.log('Setting up WebSocket connection for project updates');
+      logger.debug('Setting up WebSocket connection for project updates');
 
       const cleanProjectId = (rawId: string): string => {
         if (!rawId) return rawId;
 
         if (rawId.startsWith('project-')) {
           const cleanedId = rawId.substring(8);
-          console.log(`Removed 'project-' prefix: ${cleanedId}`);
+          logger.debug(`Removed 'project-' prefix: ${cleanedId}`);
           return cleanedId;
         }
 
@@ -115,7 +116,7 @@ const ProjectDetail = () => {
       };
 
       const cleanedId = cleanProjectId(id);
-      console.log(`Using cleaned project ID: ${cleanedId} (original: ${id})`);
+      logger.debug(`Using cleaned project ID: ${cleanedId} (original: ${id})`);
 
       // Okamžitě načteme data projektu při otevření stránky
       refreshData();
@@ -123,15 +124,15 @@ const ProjectDetail = () => {
       apiClient
         .get(`/api/projects/${cleanedId}`)
         .then(() => {
-          console.log(`Project ${cleanedId} verified as existing`);
+          logger.info(`Project ${cleanedId} verified as existing`);
         })
         .catch((err) => {
           if (axios.isAxiosError(err) && err.response?.status === 404) {
-            console.log(`Project ${cleanedId} not found, redirecting to dashboard`);
+            logger.info(`Project ${cleanedId} not found, redirecting to dashboard`);
             navigate('/dashboard', { replace: true });
             return;
           }
-          console.warn('Error verifying project:', err);
+          logger.warn('Error verifying project:', err);
         });
 
       const socket = socketClient.getSocket();
@@ -139,7 +140,7 @@ const ProjectDetail = () => {
       const handleSegmentationUpdate = (data: any) => {
         if (!isComponentMounted) return;
 
-        console.log('Received segmentation update:', data);
+        logger.debug('Received segmentation update:', data);
         if (data.imageId && data.status) {
           // Aktualizujeme stav obrázku včetně chybové zprávy, pokud existuje
           updateImageStatus(data.imageId, data.status, data.resultPath, data.error);
@@ -176,9 +177,9 @@ const ProjectDetail = () => {
           socket.emit('join-project', cleanedId);
           socket.emit('join', `project-${cleanedId}`);
           socket.emit('join', `project:${cleanedId}`);
-          console.log(`Joined WebSocket room for project ${cleanedId} in multiple formats`);
-        } catch (joinErr) {
-          console.error('Failed to join project room:', joinErr);
+          logger.info(`Joined WebSocket room for project ${cleanedId} in multiple formats`);
+        } catch (joinErr: any) { // Cast joinErr to any
+          logger.error('Failed to join project room:', joinErr);
         }
       };
 
@@ -186,10 +187,10 @@ const ProjectDetail = () => {
       socket.on('segmentation_update', handleSegmentationUpdate);
 
       if (socket.connected) {
-        console.log('WebSocket already connected:', socket.id);
+        logger.debug('WebSocket already connected:', socket.id);
         handleConnect();
       } else {
-        console.log('WebSocket connecting...');
+        logger.debug('WebSocket connecting...');
         socket.connect();
       }
 
@@ -204,18 +205,18 @@ const ProjectDetail = () => {
 
         try {
           socket.emit('leave_project', { projectId: cleanedId });
-          console.log(`Left WebSocket room for project ${cleanedId}`);
-        } catch (leaveErr) {
-          console.error('Error leaving project room:', leaveErr);
+          logger.info(`Left WebSocket room for project ${cleanedId}`);
+        } catch (leaveErr: any) { // Cast leaveErr to any
+          logger.error('Error leaving project room:', leaveErr);
         }
 
         socket.off('connect', handleConnect);
         socket.off('segmentation_update', handleSegmentationUpdate);
 
-        console.log('Cleaned up WebSocket event listeners');
+        logger.info('Cleaned up WebSocket event listeners');
       };
-    } catch (error) {
-      console.error('Error setting up WebSocket:', error);
+    } catch (error: any) { // Cast error to any
+      logger.error('Error setting up WebSocket:', error);
       toast.error('Failed to connect to real-time updates. Some features may be limited.');
 
       return () => {
@@ -244,12 +245,12 @@ const ProjectDetail = () => {
       const { imageId, projectId: eventProjectId, forceRefresh } = customEvent.detail;
 
       if (eventProjectId === id || eventProjectId === id?.replace('project-', '')) {
-        console.log(`ProjectDetail: Received image-deleted event for image ${imageId}, forceRefresh: ${forceRefresh}`);
+        logger.debug(`ProjectDetail: Received image-deleted event for image ${imageId}, forceRefresh: ${forceRefresh}`);
 
         // Okamžitě aktualizujeme UI odebráním smazaného obrázku
-        setImages(prevImages => {
+        onImagesChange(prevImages => {
           const updatedImages = prevImages.filter(img => img.id !== imageId);
-          console.log(`ProjectDetail: Filtered out deleted image. Before: ${prevImages.length}, After: ${updatedImages.length}`);
+          logger.debug(`ProjectDetail: Filtered out deleted image. Before: ${prevImages.length}, After: ${updatedImages.length}`);
           return updatedImages;
         });
 
@@ -258,7 +259,7 @@ const ProjectDetail = () => {
 
         // Pokud přijde flag forceRefresh, načteme znovu veškerá data ze serveru
         if (forceRefresh) {
-          console.log('ProjectDetail: Force refreshing project data due to forceRefresh flag');
+          logger.debug('ProjectDetail: Force refreshing project data due to forceRefresh flag');
           setTimeout(() => refreshData(), 100); // Přidáme malé zpoždění pro sekundární refresh
         }
 
@@ -284,7 +285,7 @@ const ProjectDetail = () => {
       }>;
       const { imageId, status, forceQueueUpdate, error, resultPath } = customEvent.detail;
 
-      console.log(`ProjectDetail: Received image-status-update event for image ${imageId} with status ${status}`);
+      logger.debug(`ProjectDetail: Received image-status-update event for image ${imageId} with status ${status}`);
 
       // Aktualizujeme stav obrázku včetně chybové zprávy, pokud existuje
       updateImageStatus(imageId, status, resultPath, error);
@@ -416,11 +417,11 @@ const ProjectDetail = () => {
           batches.push(selectedImageIds.slice(i, i + batchSize));
       }
 
-      console.log(`Rozdělení ${selectedImageIds.length} obrázků do ${batches.length} dávek po max ${batchSize}`);
+      logger.debug(`Rozdělení ${selectedImageIds.length} obrázků do ${batches.length} dávek po max ${batchSize}`);
 
       // Zobrazíme informaci o zpracování
       if (batches.length > 1) {
-        toast.info(`Spouštění segmentace pro ${selectedImageIds.length} obrázků v ${batches.length} dávkách...`);
+        toast.info(t('project.segmentation.processingInBatches', { count: selectedImageIds.length, batches: batches.length }));
       }
 
       // Postupné zpracování všech dávek
@@ -429,7 +430,7 @@ const ProjectDetail = () => {
 
       for (let i = 0; i < batches.length; i++) {
           const batch = batches[i];
-          console.log(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
+          logger.debug(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
 
           // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
           if (i > 0) {
@@ -448,15 +449,15 @@ const ProjectDetail = () => {
                     model: 'resunet'
                   }
               });
-              console.log(`Batch ${i+1} trigger response (new endpoint):`, response);
+              logger.debug(`Batch ${i+1} trigger response (new endpoint):`, response);
               successCount += batch.length;
 
               // Informujeme uživatele o průběhu
               if (batches.length > 1) {
-                toast.success(`Dávka ${i+1}/${batches.length} úspěšně zařazena do fronty`);
+                toast.success(t('project.segmentation.batchQueued', { current: i+1, total: batches.length }));
               }
-          } catch (newEndpointErr) {
-              console.warn(`Batch ${i+1}: New endpoint failed, trying legacy endpoint:`, newEndpointErr);
+          } catch (newEndpointErr: any) { // Cast error to any
+              logger.warn(`Batch ${i+1}: New endpoint failed, trying legacy endpoint:`, newEndpointErr);
 
               try {
                   // Zkusit záložní endpoint s validními parametry
@@ -470,26 +471,26 @@ const ProjectDetail = () => {
                         model: 'resunet'
                       }
                   });
-                  console.log(`Batch ${i+1} trigger response (legacy endpoint):`, legacyResponse);
+                  logger.debug(`Batch ${i+1} trigger response (legacy endpoint):`, legacyResponse);
                   successCount += batch.length;
 
                   // Informujeme uživatele o průběhu
                   if (batches.length > 1) {
-                    toast.success(`Dávka ${i+1}/${batches.length} úspěšně zařazena do fronty (záložní endpoint)`);
+                    toast.success(t('project.segmentation.batchQueuedFallback', { current: i+1, total: batches.length }));
                   }
-              } catch (legacyErr) {
-                  console.error(`Batch ${i+1}: Both endpoints failed:`, legacyErr);
+              } catch (legacyErr: any) { // Cast error to any
+                  logger.error(`Batch ${i+1}: Both endpoints failed:`, legacyErr);
                   failCount += batch.length;
 
                   // Informujeme uživatele o chybě
                   if (batches.length > 1) {
-                    toast.error(`Chyba při zpracování dávky ${i+1}/${batches.length}`);
+                    toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
                   }
               }
           }
       }
 
-      console.log(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
+      logger.info(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
 
       // Zobrazíme celkový výsledek
       if (successCount > 0 && failCount > 0) {
@@ -531,14 +532,14 @@ const ProjectDetail = () => {
             try {
               await apiClient.delete(`/api/projects/${id}/images/${imageId}`);
               return { success: true, imageId };
-            } catch (newEndpointErr) {
-              console.warn(`Failed to delete with new endpoint: ${imageId}`, newEndpointErr);
+            } catch (newEndpointErr: any) { // Cast error to any
+              logger.warn(`Failed to delete with new endpoint: ${imageId}`, newEndpointErr);
 
               try {
                 await apiClient.delete(`/api/images/${imageId}`);
                 return { success: true, imageId };
-              } catch (legacyErr) {
-                console.error(`Failed to delete with both endpoints: ${imageId}`, legacyErr);
+              } catch (legacyErr: any) { // Cast error to any
+                logger.error(`Failed to delete with both endpoints: ${imageId}`, legacyErr);
                 return { success: false, imageId, error: legacyErr };
               }
             }
@@ -554,7 +555,7 @@ const ProjectDetail = () => {
 
         if (failCount > 0) {
           toast.error(t('project.detail.deleteFailed', { count: failCount }));
-          console.error(
+          logger.error(
             'Failed deletions:',
             results.filter((r) => r.status !== 'fulfilled' || !(r.value as any).success),
           );
@@ -589,23 +590,43 @@ const ProjectDetail = () => {
     exportSelectedImages();
   };
 
+  // Health check function to verify server connectivity
+  const checkServerHealth = async (): Promise<boolean> => {
+    try {
+      const response = await apiClient.get('/health', { timeout: 5000 });
+      return response.status === 200;
+    } catch (error) {
+      logger.warn('Server health check failed:', error);
+      return false;
+    }
+  };
+
   const handleUploadComplete = useCallback(
     async (projectId: string, uploadedImages: ProjectImage[] | ProjectImage) => {
-      console.log('Upload complete:', projectId);
-      refreshData();
+      logger.debug('Upload complete:', projectId);
+      setTimeout(() => {
+        refreshData();
+      }, 2000);
       setShowUploader(false);
 
       const imagesArray = Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages];
 
-      console.log('Handling upload complete with images:', imagesArray);
+      logger.debug('Handling upload complete with images:', imagesArray);
 
       const { isValidImageId } = await import('@/api/projectImages');
 
       if (segmentAfterUpload && imagesArray.length > 0) {
+        // Check server health before attempting segmentation
+        const isServerHealthy = await checkServerHealth();
+        if (!isServerHealthy) {
+          logger.warn('Server health check failed, skipping automatic segmentation');
+          toast.warning('Server is not responding properly. Images uploaded but automatic segmentation skipped. You can manually trigger segmentation later.');
+          return;
+        }
         imagesArray.forEach((img, index) => {
-          console.log(`Image ${index}:`, img);
+          logger.debug(`Image ${index}:`, img);
           if (!img || !img.id) {
-            console.warn(`Image ${index} has invalid ID:`, img);
+            logger.warn(`Image ${index} has invalid ID:`, img);
           }
         });
 
@@ -613,10 +634,10 @@ const ProjectDetail = () => {
         const imageIdsForSegmentation = validImages.map((img) => img.id);
         const uiImageIdsToUpdate = validImages.map((img) => img.id);
 
-        console.log('Valid image IDs for segmentation API:', imageIdsForSegmentation);
+        logger.debug('Valid image IDs for segmentation API:', imageIdsForSegmentation);
 
         if (imageIdsForSegmentation.length === 0) {
-          console.error('No valid image IDs found for segmentation');
+          logger.error('No valid image IDs found for segmentation');
           toast.error('No images ready for server segmentation (missing IDs).');
           return;
         }
@@ -639,27 +660,33 @@ const ProjectDetail = () => {
             batches.push(imageIdsForSegmentation.slice(i, i + batchSize));
         }
 
-        console.log(`Rozdělení ${imageIdsForSegmentation.length} obrázků do ${batches.length} dávek po max ${batchSize}`);
+        logger.debug(`Rozdělení ${imageIdsForSegmentation.length} obrázků do ${batches.length} dávek po max ${batchSize}`);
 
         // Zobrazíme informaci o zpracování
         if (batches.length > 1) {
           toast.info(t('project.segmentation.processingInBatches', { count: imageIdsForSegmentation.length, batches: batches.length }));
         }
 
-        // Postupné zpracování všech dávek
+        // Postupné zpracování všech dávek s vylepšeným error handlingem
         let successCount = 0;
         let failCount = 0;
+        let retryCount = 0;
+        const maxRetries = 2;
 
         for (let i = 0; i < batches.length; i++) {
             const batch = batches[i];
-            console.log(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
+            logger.debug(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
 
             // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
             if (i > 0) {
               await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
-            try {
+            let batchSuccess = false;
+            let currentRetry = 0;
+
+            while (!batchSuccess && currentRetry <= maxRetries) {
+              try {
                 // Zkusit nejprve nový endpoint s validními parametry
                 const response = await apiClient.post(`/api/projects/${projectId}/segmentations/batch`, {
                     imageIds: batch,
@@ -670,17 +697,20 @@ const ProjectDetail = () => {
                       threshold: 0.5,
                       model: 'resunet'
                     }
+                }, {
+                  timeout: 30000, // 30 second timeout
                 });
-                console.log(`Batch ${i+1} trigger response (new endpoint):`, response);
+                logger.debug(`Batch ${i+1} trigger response (new endpoint):`, response);
                 successCount += batch.length;
                 apiSuccess = true;
+                batchSuccess = true;
 
                 // Informujeme uživatele o průběhu
                 if (batches.length > 1) {
                   toast.success(t('project.segmentation.batchQueued', { current: i+1, total: batches.length }));
                 }
-            } catch (newEndpointErr) {
-                console.warn(`Batch ${i+1}: New endpoint failed, trying legacy endpoint:`, newEndpointErr);
+              } catch (newEndpointErr: any) {
+                logger.warn(`Batch ${i+1}: New endpoint failed (attempt ${currentRetry + 1}):`, newEndpointErr);
 
                 try {
                     // Zkusit záložní endpoint s validními parametry
@@ -693,36 +723,57 @@ const ProjectDetail = () => {
                           threshold: 0.5,
                           model: 'resunet'
                         }
+                    }, {
+                      timeout: 30000, // 30 second timeout
                     });
-                    console.log(`Batch ${i+1} trigger response (legacy endpoint):`, legacyResponse);
+                    logger.debug(`Batch ${i+1} trigger response (legacy endpoint):`, legacyResponse);
                     successCount += batch.length;
                     apiSuccess = true;
+                    batchSuccess = true;
 
                     // Informujeme uživatele o průběhu
                     if (batches.length > 1) {
                       toast.success(t('project.segmentation.batchQueuedFallback', { current: i+1, total: batches.length }));
                     }
-                } catch (legacyErr) {
-                    console.error(`Batch ${i+1}: Both endpoints failed:`, legacyErr);
-                    failCount += batch.length;
+                } catch (legacyErr: any) {
+                    logger.error(`Batch ${i+1}: Both endpoints failed (attempt ${currentRetry + 1}):`, legacyErr);
 
-                    // Informujeme uživatele o chybě
-                    if (batches.length > 1) {
-                      toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
+                    // Check if it's a server error (502, 503, 504) and retry
+                    const isServerError = legacyErr.response?.status >= 500;
+                    const isNetworkError = !legacyErr.response;
+
+                    if ((isServerError || isNetworkError) && currentRetry < maxRetries) {
+                      currentRetry++;
+                      retryCount++;
+                      logger.info(`Retrying batch ${i+1} (attempt ${currentRetry + 1}/${maxRetries + 1})`);
+
+                      // Exponential backoff: wait longer between retries
+                      await new Promise(resolve => setTimeout(resolve, 2000 * currentRetry));
+                      continue;
+                    } else {
+                      // Final failure
+                      failCount += batch.length;
+                      batchSuccess = true; // Exit retry loop
+
+                      // Informujeme uživatele o chybě
+                      if (batches.length > 1) {
+                        toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
+                      }
                     }
                 }
+              }
             }
         }
 
-        console.log(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
+        logger.info(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
 
         // Zobrazíme celkový výsledek
         if (successCount > 0 && failCount > 0) {
-          toast.info(t('project.segmentation.partialSuccess', { success: successCount, failed: failCount }));
+          toast.info(`Segmentace: ${successCount} obrázků úspěšně zařazeno do fronty, ${failCount} selhalo`);
         } else if (successCount > 0) {
-          toast.success(t('project.segmentation.allSuccess', { count: successCount }));
+          toast.success(`Segmentace: Všech ${successCount} obrázků úspěšně zařazeno do fronty`);
         } else if (failCount > 0) {
-          toast.error(t('project.segmentation.allFailed', { count: failCount }));
+          toast.error(`Segmentace: Všech ${failCount} obrázků selhalo`);
         }
         apiSuccess = successCount > 0;
 
@@ -796,7 +847,7 @@ const ProjectDetail = () => {
                   if (id) {
                     handleUploadComplete(id, imagesArray);
                   } else {
-                    console.error('Project ID is missing in onUploadComplete wrapper');
+                    logger.error('Project ID is missing in onUploadComplete wrapper');
                     toast.error('An error occurred during upload completion.');
                   }
                 }}

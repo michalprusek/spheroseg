@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import AccountSection from '@/components/settings/AccountSection';
-import NotificationSection from '@/components/settings/NotificationSection';
 import AppearanceSection from '@/components/settings/AppearanceSection';
 import UserProfileSection from '@/components/settings/UserProfileSection';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -116,11 +115,10 @@ const Settings = () => {
 
         {!loading && (
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="mb-8 grid w-full grid-cols-4">
+            <TabsList className="mb-8 grid w-full grid-cols-3">
               <TabsTrigger value="profile">{t('settings.profile')}</TabsTrigger>
               <TabsTrigger value="account">{t('settings.account')}</TabsTrigger>
               <TabsTrigger value="appearance">{t('settings.appearance')}</TabsTrigger>
-              <TabsTrigger value="notifications">{t('settings.notificationsTab')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile">
@@ -137,10 +135,6 @@ const Settings = () => {
 
             <TabsContent value="appearance">
               <AppearanceSection />
-            </TabsContent>
-
-            <TabsContent value="notifications">
-              <NotificationSection />
             </TabsContent>
           </Tabs>
         )}

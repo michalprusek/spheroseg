@@ -11,8 +11,9 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mail, Share2, UserPlus, X, Eye, Edit, Trash } from 'lucide-react';
+import { Loader2, Mail, Share2, UserPlus, X, Eye, Edit, Trash, Link, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,22 +21,28 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import apiClient from '@/lib/apiClient';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ShareDialogProps {
   projectId: string;
   projectName: string;
   isOwner: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-// Schema pro validaci formuláře pro sdílení
-const shareFormSchema = z.object({
-  email: z.string().email({ message: 'Neplatná e-mailová adresa' }),
+// Validation schema for sharing form - will be created inside component
+const createShareFormSchema = (t: any) => z.object({
+  email: z.string().email({ message: t('share.invalidEmail') || 'Invalid email address' }),
   permission: z.enum(['view', 'edit'], {
-    required_error: 'Vyberte typ oprávnění',
+    required_error: t('share.selectPermission') || 'Please select a permission type',
   }),
 });
 
-type ShareFormValues = z.infer<typeof shareFormSchema>;
+type ShareFormValues = {
+  email: string;
+  permission: 'view' | 'edit';
+};
 
 // Typ pro sdílené uživatele
 interface SharedUser {
@@ -46,13 +53,21 @@ interface SharedUser {
   isPending: boolean;
 }
 
-const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwner }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwner, open, onOpenChange }) => {
+  const { t } = useLanguage();
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setIsOpen = onOpenChange || setInternalOpen;
+  
   const [isLoading, setIsLoading] = useState(false);
   const [sharedUsers, setSharedUsers] = useState<SharedUser[]>([]);
   const [isLoadingShares, setIsLoadingShares] = useState(false);
+  const [invitationLink, setInvitationLink] = useState<string>('');
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [linkPermission, setLinkPermission] = useState<'view' | 'edit'>('view');
 
-  // Inicializace React Hook Form
+  // Initialize React Hook Form with translated schema
+  const shareFormSchema = createShareFormSchema(t);
   const form = useForm<ShareFormValues>({
     resolver: zodResolver(shareFormSchema),
     defaultValues: {
@@ -78,7 +93,8 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
       setSharedUsers(response.data.data);
     } catch (error) {
       console.error('Error fetching shared users:', error);
-      toast.error('Nepodařilo se načíst sdílené uživatele');
+      // Silently fail - don't show error toast, just set empty array
+      setSharedUsers([]);
     } finally {
       setIsLoadingShares(false);
     }
@@ -89,7 +105,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
     setIsLoading(true);
     try {
       await apiClient.post(`/api/project-shares/${projectId}`, values);
-      toast.success(`Projekt "${projectName}" byl sdílen s ${values.email}`);
+      toast.success(t('share.sharedSuccess', { projectName, email: values.email }) || `Project "${projectName}" has been shared with ${values.email}`);
       form.reset();
       fetchSharedUsers(); // Po úspěšném sdílení znovu načteme seznam sdílených uživatelů
     } catch (error: any) {
@@ -97,13 +113,13 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
 
       // Zpracování různých typů chyb
       if (error.response?.status === 409) {
-        toast.error('Projekt je již sdílen s tímto uživatelem');
+        toast.error(t('share.alreadyShared') || 'Project is already shared with this user');
       } else if (error.response?.status === 400) {
-        toast.error('Neplatný email nebo oprávnění');
+        toast.error(t('share.invalidEmailOrPermission') || 'Invalid email or permission');
       } else if (error.response?.status === 404) {
-        toast.error('Projekt nebyl nalezen');
+        toast.error(t('share.projectNotFound') || 'Project not found');
       } else {
-        toast.error('Nepodařilo se sdílet projekt');
+        toast.error(t('share.failedToShare') || 'Failed to share project');
       }
     } finally {
       setIsLoading(false);
@@ -114,39 +130,66 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
   const handleRemoveShare = async (shareId: string, email: string) => {
     try {
       await apiClient.delete(`/api/project-shares/${projectId}/${shareId}`);
-      toast.success(`Sdílení s ${email} bylo odebráno`);
+      toast.success(t('share.removedSuccess', { email }) || `Share with ${email} has been removed`);
       fetchSharedUsers(); // Po úspěšném odebrání znovu načteme seznam sdílených uživatelů
     } catch (error) {
       console.error('Error removing share:', error);
-      toast.error('Nepodařilo se odebrat sdílení');
+      toast.error(t('share.failedToRemove') || 'Failed to remove share');
+    }
+  };
+
+  // Funkce pro generování invitation linku
+  const generateInvitationLink = async () => {
+    setIsGeneratingLink(true);
+    try {
+      const response = await apiClient.post(`/api/project-shares/${projectId}/invitation-link`, {
+        permission: linkPermission,
+      });
+      setInvitationLink(response.data.data.invitationUrl);
+      toast.success(t('share.linkGenerated') || 'Invitation link has been generated');
+    } catch (error) {
+      console.error('Error generating invitation link:', error);
+      toast.error(t('share.failedToGenerateLink') || 'Failed to generate invitation link');
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  // Funkce pro kopírování linku do schránky
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(invitationLink);
+      toast.success(t('share.linkCopied') || 'Link copied to clipboard');
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      toast.error(t('share.failedToCopy') || 'Failed to copy link');
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation(); // Zabránění propagace kliknutí na kartu
-            setIsOpen(true);
-          }}
-          title="Sdílet projekt"
-        >
-          <Share2 className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-md md:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Sdílet projekt "{projectName}"</DialogTitle>
-          <DialogDescription>Pozvěte ostatní uživatele ke spolupráci na tomto projektu.</DialogDescription>
+          <DialogTitle>{t('share.shareProjectTitle', { projectName }) || `Share project "${projectName}"`}</DialogTitle>
+          <DialogDescription>{t('share.shareDescription') || 'Invite other users to collaborate on this project.'}</DialogDescription>
         </DialogHeader>
 
         {isOwner ? (
-          <div className="space-y-4">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <Tabs defaultValue="email" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="email">
+                <Mail className="h-4 w-4 mr-2" />
+                {t('share.inviteByEmail') || 'Invite by email'}
+              </TabsTrigger>
+              <TabsTrigger value="link">
+                <Link className="h-4 w-4 mr-2" />
+                {t('share.inviteByLink') || 'Invitation link'}
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="email" className="space-y-4">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="flex space-x-2">
                   <FormField
                     control={form.control}
@@ -156,7 +199,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                         <FormControl>
                           <div className="relative">
                             <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Email uživatele" className="pl-8" {...field} disabled={isLoading} />
+                            <Input placeholder={t('share.userEmail') || 'User email'} className="pl-8" {...field} disabled={isLoading} />
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -168,12 +211,12 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sdílení...
+                        {t('share.sharing') || 'Sharing...'}
                       </>
                     ) : (
                       <>
                         <UserPlus className="mr-2 h-4 w-4" />
-                        Pozvat
+                        {t('share.invite') || 'Invite'}
                       </>
                     )}
                   </Button>
@@ -184,7 +227,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                   name="permission"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Oprávnění</FormLabel>
+                      <FormLabel>{t('share.permissions') || 'Permissions'}</FormLabel>
                       <RadioGroup
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -197,7 +240,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                           </FormControl>
                           <FormLabel className="font-normal cursor-pointer">
                             <Eye className="h-4 w-4 inline mr-1" />
-                            Pouze zobrazení
+                            {t('share.viewOnly') || 'View only'}
                           </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2 space-y-0">
@@ -206,11 +249,11 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                           </FormControl>
                           <FormLabel className="font-normal cursor-pointer">
                             <Edit className="h-4 w-4 inline mr-1" />
-                            Úpravy
+                            {t('share.canEdit') || 'Can edit'}
                           </FormLabel>
                         </FormItem>
                       </RadioGroup>
-                      <FormDescription>Vyberte úroveň přístupu pro tohoto uživatele</FormDescription>
+                      <FormDescription>{t('share.selectAccessLevel') || 'Select access level for this user'}</FormDescription>
                     </FormItem>
                   )}
                 />
@@ -220,7 +263,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
             <Separator />
 
             <div>
-              <h3 className="text-sm font-medium mb-2">Sdíleno s</h3>
+              <h3 className="text-sm font-medium mb-2">{t('share.sharedWith') || 'Shared with'}</h3>
 
               {isLoadingShares ? (
                 <div className="flex justify-center py-4">
@@ -231,9 +274,9 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Oprávnění</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>{t('share.email') || 'Email'}</TableHead>
+                        <TableHead>{t('share.permissions') || 'Permissions'}</TableHead>
+                        <TableHead>{t('share.status') || 'Status'}</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -245,20 +288,20 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                             {user.permission === 'view' ? (
                               <span className="flex items-center">
                                 <Eye className="h-3 w-3 mr-1" />
-                                Zobrazení
+                                {t('share.view') || 'View'}
                               </span>
                             ) : (
                               <span className="flex items-center">
                                 <Edit className="h-3 w-3 mr-1" />
-                                Úpravy
+                                {t('share.edit') || 'Edit'}
                               </span>
                             )}
                           </TableCell>
                           <TableCell>
                             {user.isPending ? (
-                              <span className="text-amber-500 text-xs">Čeká na přijetí</span>
+                              <span className="text-amber-500 text-xs">{t('share.pendingAcceptance') || 'Pending acceptance'}</span>
                             ) : (
-                              <span className="text-green-500 text-xs">Přijato</span>
+                              <span className="text-green-500 text-xs">{t('share.accepted') || 'Accepted'}</span>
                             )}
                           </TableCell>
                           <TableCell>
@@ -266,7 +309,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                               variant="ghost"
                               size="icon"
                               onClick={() => handleRemoveShare(user.id, user.email)}
-                              title="Odebrat sdílení"
+                              title={t('share.removeShare') || 'Remove share'}
                             >
                               <Trash className="h-4 w-4 text-destructive" />
                             </Button>
@@ -278,19 +321,166 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground py-4 text-center">
-                  Tento projekt zatím není sdílen s nikým
+                  {t('share.noShares') || 'This project is not shared with anyone yet'}
                 </p>
               )}
             </div>
-          </div>
+          </TabsContent>
+          
+          <TabsContent value="link" className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('share.linkPermissions') || 'Link permissions'}</label>
+                <RadioGroup
+                  value={linkPermission}
+                  onValueChange={(value) => setLinkPermission(value as 'view' | 'edit')}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="view" />
+                    <label className="font-normal cursor-pointer">
+                      <Eye className="h-4 w-4 inline mr-1" />
+                      {t('share.viewOnly') || 'View only'}
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="edit" />
+                    <label className="font-normal cursor-pointer">
+                      <Edit className="h-4 w-4 inline mr-1" />
+                      {t('share.canEdit') || 'Can edit'}
+                    </label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {!invitationLink ? (
+                <Button 
+                  onClick={generateInvitationLink}
+                  disabled={isGeneratingLink}
+                  className="w-full"
+                >
+                  {isGeneratingLink ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('share.generating') || 'Generating...'}
+                    </>
+                  ) : (
+                    <>
+                      <Link className="mr-2 h-4 w-4" />
+                      {t('share.generateLink') || 'Generate invitation link'}
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {t('share.shareLinkDescription') || 'Share this link with users you want to give access to the project:'}
+                  </p>
+                  <div className="flex space-x-2">
+                    <Input
+                      value={invitationLink}
+                      readOnly
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={copyToClipboard}
+                      size="icon"
+                      variant="outline"
+                      title={t('share.copyToClipboard') || 'Copy to clipboard'}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setInvitationLink('');
+                      generateInvitationLink();
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Link className="mr-2 h-4 w-4" />
+                    {t('share.generateNewLink') || 'Generate new link'}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-sm font-medium mb-2">{t('share.sharedWith') || 'Shared with'}</h3>
+
+              {isLoadingShares ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : sharedUsers.length > 0 ? (
+                <div className="border rounded-md max-h-48 overflow-y-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('share.email') || 'Email'}</TableHead>
+                        <TableHead>{t('share.permissions') || 'Permissions'}</TableHead>
+                        <TableHead>{t('share.status') || 'Status'}</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sharedUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.email}</TableCell>
+                          <TableCell>
+                            {user.permission === 'view' ? (
+                              <span className="flex items-center">
+                                <Eye className="h-3 w-3 mr-1" />
+                                {t('share.view') || 'View'}
+                              </span>
+                            ) : (
+                              <span className="flex items-center">
+                                <Edit className="h-3 w-3 mr-1" />
+                                {t('share.edit') || 'Edit'}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {user.isPending ? (
+                              <span className="text-amber-500 text-xs">{t('share.pendingAcceptance') || 'Pending acceptance'}</span>
+                            ) : (
+                              <span className="text-green-500 text-xs">{t('share.accepted') || 'Accepted'}</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveShare(user.id, user.email)}
+                              title={t('share.removeShare') || 'Remove share'}
+                            >
+                              <Trash className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  {t('share.noShares') || 'This project is not shared with anyone yet'}
+                </p>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
         ) : (
-          <p className="text-center py-4">Nemáte oprávnění ke sdílení tohoto projektu.</p>
+          <p className="text-center py-4">{t('share.noPermission') || 'You do not have permission to share this project.'}</p>
         )}
 
         <DialogFooter className="sm:justify-end">
           <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
             <X className="mr-2 h-4 w-4" />
-            Zavřít
+            {t('common.close') || 'Close'}
           </Button>
         </DialogFooter>
       </DialogContent>

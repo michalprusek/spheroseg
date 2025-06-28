@@ -176,7 +176,9 @@ const ErrorBoundary: React.FC<ErrorBoundaryProps> = (props) => {
         'errors.somethingWentWrong': 'Something went wrong',
         'errors.componentError':
           "An error occurred in this component. We've been notified and will fix the issue as soon as possible.",
+        'errors.errorDetails': 'Error Details',
         'errors.tryAgain': 'Try Again',
+        'errors.reloadPage': 'Reload Page',
         'errors.goBack': 'Go Back',
       };
       return fallbacks[key] || key;

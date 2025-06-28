@@ -42,6 +42,11 @@ export const useSegmentationV2 = (
     redo,
     canUndo,
     canRedo,
+    startDragging,
+    updateDuringDrag,
+    finishDragging,
+    cancelDragging,
+    isDragging,
   } = useUndoRedo<SegmentationData | null>(null);
 
   // Use segmentation cache
@@ -482,6 +487,7 @@ export const useSegmentationV2 = (
         setTempPoints,
         setInteractionState,
         setSegmentationDataWithHistory,
+        startDragging,
       );
     },
     [
@@ -497,17 +503,18 @@ export const useSegmentationV2 = (
       setTempPoints,
       setInteractionState,
       setSegmentationDataWithHistory,
+      startDragging,
     ],
   );
 
   // Function to handle mouse move
   const onMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // If we're dragging a vertex, use updateSegmentationWithoutHistory
-      // to avoid adding each movement to history - we want the entire drag to be a single undo/redo action
+      // If we're dragging a vertex, use updateDuringDrag for the new dragging system
+      // Otherwise use setSegmentationDataWithHistory for normal operations
       const updateFn = interactionState.isDraggingVertex
-        ? updateSegmentationWithoutHistory  // During drag - don't add to history
-        : setSegmentationDataWithHistory;   // Normal case - add to history
+        ? setSegmentationDataWithHistory   // Normal case - still needed for non-drag operations
+        : setSegmentationDataWithHistory;
 
       // Call the main mouse move handler with all dependencies
       handleMouseMove(
@@ -527,6 +534,7 @@ export const useSegmentationV2 = (
         setTransform,
         setInteractionState,
         updateFn,
+        updateDuringDrag,
       );
     },
     [
@@ -545,7 +553,7 @@ export const useSegmentationV2 = (
       setTransform,
       setInteractionState,
       setSegmentationDataWithHistory,
-      updateSegmentationWithoutHistory,
+      updateDuringDrag,
     ],
   );
 
@@ -558,33 +566,10 @@ export const useSegmentationV2 = (
       const originalPosition = interactionState.originalVertexPosition; // Capture the original position before resetting
 
       // First reset the drag state to stop the dragging
-      handleMouseUp(e, interactionState, setInteractionState, segmentationData, setSegmentationDataWithHistory);
+      handleMouseUp(e, interactionState, setInteractionState, segmentationData, setSegmentationDataWithHistory, finishDragging);
 
-      // After completing vertex drag, explicitly add state to history
-      // This ensures the entire drag operation is treated as a single action for undo/redo
-      if (wasDraggingVertex && segmentationData && originalPosition && vertexInfo) {
-        // Get the final position to check if it actually changed
-        const polygon = segmentationData.polygons.find(p => p.id === vertexInfo.polygonId);
-        if (polygon && vertexInfo.vertexIndex < polygon.points.length) {
-          const finalPosition = polygon.points[vertexInfo.vertexIndex];
-
-          // Only add to history if the position actually changed
-          const hasChanged =
-            Math.abs(originalPosition.x - finalPosition.x) > 0.001 ||
-            Math.abs(originalPosition.y - finalPosition.y) > 0.001;
-
-          if (hasChanged) {
-            console.log(`[useSegmentationV2] Vertex drag completed, adding to history. Original: (${originalPosition.x},${originalPosition.y}), Final: (${finalPosition.x},${finalPosition.y})`);
-
-            // Capture the final state in the history with proper history management
-            setSegmentationDataWithHistory({ ...segmentationData }, false);
-          } else {
-            console.log('[useSegmentationV2] Vertex position didn\'t change significantly, skipping history update');
-          }
-        } else {
-          console.log('[useSegmentationV2] Could not find polygon or vertex index is invalid');
-        }
-      }
+      // The dragging system now handles history management properly
+      // No need for additional history management here
 
       // Finally, fully clear the drag state including originalVertexPosition
       setInteractionState(prevState => ({
@@ -593,7 +578,7 @@ export const useSegmentationV2 = (
         originalVertexPosition: null,
       }));
     },
-    [interactionState, segmentationData, setInteractionState, setSegmentationDataWithHistory],
+    [interactionState, segmentationData, setInteractionState, setSegmentationDataWithHistory, finishDragging],
   );
 
   // Function to handle wheel events for zooming

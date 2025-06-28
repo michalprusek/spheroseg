@@ -36,6 +36,29 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       try {
         if (user) {
+          // Prevent multiple concurrent API calls for the same user
+          const lastUserId = window.sessionStorage.getItem('spheroseg_profile_last_user');
+          if (lastUserId === user.id) {
+            console.log('[ProfileContext] Profile already loaded for user', user.id, ', using localStorage fallback');
+            // Use localStorage fallback
+            try {
+              const storedProfile = localStorage.getItem('userProfile');
+              if (storedProfile) {
+                setProfile(JSON.parse(storedProfile));
+              }
+            } catch (fallbackError) {
+              console.error('Error loading profile from localStorage:', fallbackError);
+            }
+            setLoading(false);
+            return;
+          }
+
+          // Mark this user as processed
+          window.sessionStorage.setItem('spheroseg_profile_last_user', user.id);
+          
+          // Add a small delay to ensure auth is fully initialized
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
           await loadFromDatabase();
         } else {
           setProfile(null);
@@ -43,8 +66,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('userProfile');
           localStorage.removeItem('userAvatar');
           localStorage.removeItem('userAvatarUrl');
+          // Clear session markers
+          window.sessionStorage.removeItem('spheroseg_profile_last_user');
         }
       } catch (error) {
+        // Clear the user marker if API fails so we can retry later
+        window.sessionStorage.removeItem('spheroseg_profile_last_user');
         console.error('Error loading profile:', error);
         // Fallback to localStorage if database fails
         try {
@@ -66,6 +93,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   // Load profile from database
   const loadFromDatabase = async (): Promise<void> => {
     try {
+      // Skip if no user is authenticated
+      if (!user) {
+        console.log('[ProfileContext] Skipping profile load - no authenticated user');
+        return;
+      }
+
       const apiProfile = await userProfileService.getUserProfile();
       if (apiProfile) {
         const profile: UserProfile = {
@@ -80,6 +113,11 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         setProfile(profile);
         // Cache in localStorage for offline use
         localStorage.setItem('userProfile', JSON.stringify(profile));
+        
+        // If there's an avatar URL from API, also store it separately for easier access
+        if (apiProfile.avatar_url) {
+          localStorage.setItem('userAvatarUrl', apiProfile.avatar_url);
+        }
       } else {
         // Create default profile if none exists
         const defaultProfile: UserProfile = {

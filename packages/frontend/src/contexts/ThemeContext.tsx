@@ -25,36 +25,58 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Load theme from database or localStorage
   useEffect(() => {
     const loadTheme = async () => {
+      // Always check localStorage first as it's the most reliable fallback
+      const localTheme = localStorage.getItem('theme') as Theme | null;
+      const validLocalTheme = localTheme && ['light', 'dark', 'system'].includes(localTheme) ? localTheme as Theme : 'system';
+      
       if (user) {
+        // Prevent multiple concurrent API calls for the same user
+        const lastUserId = window.sessionStorage.getItem('spheroseg_theme_last_user');
+        if (lastUserId === user.id) {
+          console.log('[ThemeContext] Theme already loaded for user', user.id, ', using localStorage:', validLocalTheme);
+          setThemeState(validLocalTheme);
+          applyTheme(validLocalTheme);
+          setLoaded(true);
+          return;
+        }
+
         try {
-          // Try to load from database first
+          // Mark this user as processed
+          window.sessionStorage.setItem('spheroseg_theme_last_user', user.id);
+          
+          // Try to load from database
           const dbTheme = await userProfileService.loadSettingFromDatabase('theme', 'theme', 'system');
-          if (dbTheme) {
-            setThemeState(dbTheme as Theme);
-            applyTheme(dbTheme as Theme);
+          
+          if (dbTheme && ['light', 'dark', 'system'].includes(dbTheme)) {
+            const validDbTheme = dbTheme as Theme;
+            
+            // Update localStorage if DB has different value
+            if (localTheme !== validDbTheme) {
+              localStorage.setItem('theme', validDbTheme);
+              console.log('[ThemeContext] Updated localStorage with DB theme:', validDbTheme);
+            }
+            
+            setThemeState(validDbTheme);
+            applyTheme(validDbTheme);
+          } else {
+            // Use localStorage fallback
+            console.log('[ThemeContext] No valid DB theme, using localStorage fallback:', validLocalTheme);
+            setThemeState(validLocalTheme);
+            applyTheme(validLocalTheme);
           }
         } catch (error) {
-          console.warn('Failed to load theme from database, using localStorage fallback:', error);
+          // Clear the user marker if API fails so we can retry later
+          window.sessionStorage.removeItem('spheroseg_theme_last_user');
+          console.warn('[ThemeContext] Failed to load theme from database, using localStorage fallback:', error);
           // Fallback to localStorage
-          const localTheme = localStorage.getItem('theme') as Theme | null;
-          if (localTheme) {
-            setThemeState(localTheme);
-            applyTheme(localTheme);
-          } else {
-            setThemeState('system');
-            applyTheme('system');
-          }
+          setThemeState(validLocalTheme);
+          applyTheme(validLocalTheme);
         }
       } else {
         // When not authenticated, use localStorage only
-        const localTheme = localStorage.getItem('theme') as Theme | null;
-        if (localTheme) {
-          setThemeState(localTheme);
-          applyTheme(localTheme);
-        } else {
-          setThemeState('system');
-          applyTheme('system');
-        }
+        console.log('[ThemeContext] No user, using localStorage theme:', validLocalTheme);
+        setThemeState(validLocalTheme);
+        applyTheme(validLocalTheme);
       }
       setLoaded(true);
     };
@@ -71,9 +93,11 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (user) {
       try {
         await userProfileService.setUserSetting('theme', newTheme, 'ui');
+        console.log('[ThemeContext] Successfully saved theme to database:', newTheme);
       } catch (error) {
-        console.warn('Failed to save theme to database:', error);
-        // Continue with local storage as fallback
+        console.warn('[ThemeContext] Failed to save theme to database (theme saved in localStorage):', error);
+        // Theme is already saved in localStorage above, so this is not critical
+        // The user's preference is preserved locally and will sync when the API is available
       }
     }
   };

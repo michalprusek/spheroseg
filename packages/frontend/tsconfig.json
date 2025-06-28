@@ -28,4 +28,5 @@
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
+  // Adding a comment to force a reload of the TS server
 }

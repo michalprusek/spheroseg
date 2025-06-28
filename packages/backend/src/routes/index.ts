@@ -21,6 +21,8 @@ import logsRoutes from './logs';
 import performanceRoutes from './performance';
 import userStatsRoutes from './userStats';
 import userProfileRoutes from './userProfile';
+import projectSharesRoutes from './projectShares';
+import previewRoutes from './preview';
 
 // Create main router
 const router: Router = express.Router();
@@ -35,13 +37,21 @@ router.use('/users', userRoutes);
 router.use('/users', userStatsRoutes);
 router.use('/user-profile', userProfileRoutes);
 router.use('/projects', projectRoutes);
-router.use('/images', imageRoutes);
+router.use('/projects', imageRoutes);  // Mount image routes under /projects for nested routes
+router.use('/images', imageRoutes);     // Keep original mounting for backward compatibility
+router.use('/project-shares', projectSharesRoutes);
 router.use('/segmentation', segmentationRoutes);
+router.use('/segmentations', segmentationRoutes); // Add plural variant for frontend compatibility
+router.use('/', segmentationRoutes); // Mount at root level for routes like /projects/:id/segmentations/batch
 router.use('/status', statusRoute);
 router.use('/duplication', projectDuplicationRoutes);
 router.use('/test', testRoute);
 router.use('/logs', logsRoutes);
 router.use('/metrics/performance', performanceRoutes);
+router.use('/preview', previewRoutes);
+
+// Add queue-status routes at root level for convenience
+router.use('/queue-status', segmentationRoutes);
 
 // Add a default route for root
 router.get('/', (req, res) => {

@@ -5,9 +5,16 @@ import logger from './utils/logger';
 
 // Define specific translations inline
 const projectNoImagesStrings = {
-  title: 'No Images Yet',
-  description: "This project doesn't have any images yet. Upload images to get started with segmentation.",
-  uploadButton: 'Upload Images',
+  en: {
+    title: 'No Images Yet',
+    description: "This project doesn't have any images yet. Upload images to get started with segmentation.",
+    uploadButton: 'Upload Images',
+  },
+  cs: {
+    title: 'Zatím žádné obrázky',
+    description: 'Tento projekt zatím neobsahuje žádné obrázky. Nahrajte obrázky a začněte se segmentací.',
+    uploadButton: 'Nahrát obrázky',
+  },
 };
 const projectErrorLoadingString = 'Error loading project';
 
@@ -27,9 +34,22 @@ export const i18nInitializedPromise = (async () => {
 
     // Merge additional translations into English
     const enTranslation = baseResources.en.translation as Record<string, any>; 
-    enTranslation.projectNoImages = projectNoImagesStrings;
+    enTranslation.project = { ...enTranslation.project, noImages: projectNoImagesStrings.en };
     enTranslation.projectErrorLoading = projectErrorLoadingString;
     logger.info('[i18n] Merged additional EN translations into:', Object.keys(baseResources.en.translation));
+
+    // Ensure Czech translations are present before merging
+    if (!baseResources.cs) {
+      baseResources.cs = { translation: {} };
+    } else if (!baseResources.cs.translation) {
+      baseResources.cs.translation = {};
+    }
+
+    // Merge additional translations into Czech
+    const csTranslation = baseResources.cs.translation as Record<string, any>;
+    csTranslation.project = { ...csTranslation.project, noImages: projectNoImagesStrings.cs };
+    csTranslation.projectErrorLoading = 'Chyba při načítání projektu';
+    logger.info('[i18n] Merged additional CS translations into:', Object.keys(baseResources.cs.translation));
 
     await i18nInstance.use(initReactI18next).init({
       resources: baseResources,

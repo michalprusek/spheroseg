@@ -9,6 +9,7 @@ import { Trash2, Upload, ImagePlus } from 'lucide-react';
 import { uploadFilesWithFallback } from '@/api/imageUpload';
 import { storeUploadedImages } from '@/api/projectImages';
 import { toast } from 'sonner';
+import { generateTiffPreview, generateCanvasPreview } from '@/utils/tiffPreview';
 
 interface UploadedFile {
   id: string;
@@ -31,7 +32,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   projectId,
   onUploadComplete,
   maxSize = 10 * 1024 * 1024,
-  accept = ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
+  accept = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/tiff',
+    'image/tif',
+    'image/bmp',
+    'image/webp',
+    'image/avif',
+    'image/gif'
+  ],
   dropzoneText,
   className = '',
   segmentAfterUpload = true,
@@ -40,6 +51,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const { t } = useLanguage();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [currentFileName, setCurrentFileName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { trackImageLoad } = useImageLoadPerformance();
   // Initialize the internal state from the prop
@@ -62,7 +76,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const clearAllFiles = useCallback(() => {
-    uploadedFiles.forEach((uploadedFile) => URL.revokeObjectURL(uploadedFile.previewUrl));
+    uploadedFiles.forEach((uploadedFile) => {
+      // Only revoke blob URLs, not data URLs
+      if (uploadedFile.previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(uploadedFile.previewUrl);
+      }
+    });
     setUploadedFiles([]);
     setError(null);
   }, [uploadedFiles]);
@@ -70,7 +89,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const removeFile = useCallback((fileId: string) => {
     setUploadedFiles((prevFiles) => {
       const fileToRemove = prevFiles.find((f) => f.id === fileId);
-      if (fileToRemove) {
+      if (fileToRemove && fileToRemove.previewUrl.startsWith('blob:')) {
         URL.revokeObjectURL(fileToRemove.previewUrl);
       }
       return prevFiles.filter((f) => f.id !== fileId);
@@ -79,12 +98,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   useEffect(() => {
     return () => {
-      uploadedFiles.forEach((uploadedFile) => URL.revokeObjectURL(uploadedFile.previewUrl));
+      uploadedFiles.forEach((uploadedFile) => {
+        if (uploadedFile.previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(uploadedFile.previewUrl);
+        }
+      });
     };
   }, [uploadedFiles]);
 
   const onDrop = useCallback(
-    (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+    async (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
       setError(null);
       if (rejectedFiles.length > 0) {
         const firstRejection = rejectedFiles[0];
@@ -98,12 +121,51 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
 
       if (acceptedFiles.length > 0) {
-        const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
-          id: `${file.name}-${file.lastModified}-${Math.random().toString(36).substring(2, 9)}`,
-          file,
-          previewUrl: URL.createObjectURL(file),
+        // Show loading toast for TIFF/BMP preview generation
+        const hasTiffOrBmp = acceptedFiles.some(file => {
+          const ext = file.name.toLowerCase();
+          return ext.endsWith('.tiff') || ext.endsWith('.tif') || ext.endsWith('.bmp');
+        });
+        
+        if (hasTiffOrBmp) {
+          toast.info('Generování náhledů pro TIFF/BMP soubory...');
+        }
+
+        const newFiles: UploadedFile[] = await Promise.all(acceptedFiles.map(async (file) => {
+          const isTiffOrBmp = file.type === 'image/tiff' || file.type === 'image/tif' || 
+                              file.name.toLowerCase().endsWith('.tiff') || 
+                              file.name.toLowerCase().endsWith('.tif') ||
+                              file.name.toLowerCase().endsWith('.bmp');
+          
+          let previewUrl: string;
+          
+          if (isTiffOrBmp) {
+            // Try to generate server-side preview first
+            const serverPreview = await generateTiffPreview(file);
+            
+            if (serverPreview) {
+              previewUrl = serverPreview;
+            } else {
+              // Fallback to canvas preview
+              previewUrl = generateCanvasPreview(file);
+            }
+          } else {
+            // For other formats, use regular blob URL
+            previewUrl = URL.createObjectURL(file);
+          }
+          
+          return {
+            id: `${file.name}-${file.lastModified}-${Math.random().toString(36).substring(2, 9)}`,
+            file,
+            previewUrl,
+          };
         }));
+        
         setUploadedFiles((prevFiles) => [...prevFiles, ...newFiles]);
+        
+        if (hasTiffOrBmp) {
+          toast.success('Náhledy vygenerovány');
+        }
       }
     },
     [maxSize, accept],
@@ -136,6 +198,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
 
     try {
+      setIsUploading(true);
+      setUploadProgress(0);
+      setError(null);
+
       console.log(
         'Uploading files:',
         uploadedFiles.map((f) => f.file),
@@ -151,12 +217,49 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       // Informujeme uživatele o začátku nahrávání
       toast.info(`Nahrávání ${files.length} obrázků...`);
 
-      // Použijeme uploadFilesWithFallback, který již implementuje dávkové nahrávání
-      const allUploadedImages = await uploadFilesWithFallback(projectId, files);
+      // Create a progress callback function
+      const onProgress = (fileName: string, progress: number, fileIndex: number, totalFiles: number) => {
+        setCurrentFileName(fileName);
+        // Calculate overall progress: each file contributes equally to total progress
+        const overallProgress = ((fileIndex) / totalFiles * 100) + (progress / totalFiles);
+        setUploadProgress(Math.min(overallProgress, 100));
+      };
+
+      // Použijeme uploadFilesWithFallback s progress callback a vylepšeným error handlingem
+      let allUploadedImages;
+      try {
+        allUploadedImages = await uploadFilesWithFallback(projectId, files, onProgress);
+      } catch (uploadError: any) {
+        // Enhanced error handling for different types of upload failures
+        console.error('Upload failed:', uploadError);
+
+        let errorMessage = 'An error occurred while uploading the files. Please try again.';
+
+        if (uploadError.response?.status === 413) {
+          errorMessage = 'Files are too large. Please reduce file sizes and try again.';
+        } else if (uploadError.response?.status === 415) {
+          errorMessage = 'Unsupported file format. Please check that all files are valid images.';
+        } else if (uploadError.response?.status >= 500) {
+          errorMessage = 'Server error. Please try again later or contact support if the problem persists.';
+        } else if (uploadError.code === 'ECONNABORTED' || uploadError.message?.includes('timeout')) {
+          errorMessage = 'Upload timeout. Please check your connection and try again with fewer files.';
+        } else if (!uploadError.response) {
+          errorMessage = 'Network error. Please check your internet connection and try again.';
+        }
+
+        setError(t('uploader.uploadError', {}, errorMessage));
+        toast.error(errorMessage);
+        throw uploadError; // Re-throw to be caught by outer catch block
+      }
 
       // Log the number of images returned from the upload function
       console.log(`Received ${allUploadedImages.length} images from upload function`);
       console.log('Uploaded images:', allUploadedImages);
+
+      // Validate that we received images
+      if (!allUploadedImages || allUploadedImages.length === 0) {
+        throw new Error('No images were successfully uploaded');
+      }
 
       // Store the uploaded images in memory - použijeme IndexedDB místo localStorage
       try {
@@ -173,11 +276,23 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       clearAllFiles();
 
       // Informujeme uživatele o úspěšném nahrání
-      toast.success(`Úspěšně nahráno ${allUploadedImages.length} obrázků.`);
-    } catch (error) {
+      const successMessage = allUploadedImages.length === files.length
+        ? `Successfully uploaded ${allUploadedImages.length} images.`
+        : `Uploaded ${allUploadedImages.length} of ${files.length} images. Some files may have failed.`;
+
+      toast.success(successMessage);
+    } catch (error: any) {
       console.error('Error uploading files:', error);
-      setError(t('uploader.uploadError', {}, 'An error occurred while uploading the files. Please try again.'));
-      toast.error('Chyba při nahrávání obrázků. Zkuste to prosím znovu.');
+
+      // Only set error if it wasn't already set by the upload function
+      if (!error.response || !error.message?.includes('timeout')) {
+        setError(t('uploader.uploadError', {}, 'An unexpected error occurred. Please try again.'));
+        toast.error('An unexpected error occurred during upload. Please try again.');
+      }
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      setCurrentFileName('');
     }
   };
 
@@ -294,6 +409,35 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         </div>
       )}
 
+      {/* Upload Progress Bar */}
+      {isUploading && (
+        <div className="upload-progress mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+              Nahrávání obrázků...
+            </span>
+            <span className="text-sm text-blue-600 dark:text-blue-400">
+              {Math.round(uploadProgress)}%
+            </span>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5 mb-2">
+            <div 
+              className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+          
+          {/* Current File Name */}
+          {currentFileName && (
+            <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
+              Zpracovávám: {currentFileName}
+            </div>
+          )}
+        </div>
+      )}
+
       {uploadedFiles.length > 0 && (
         <div className="controls mt-6 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg shadow">
           <div className="flex items-center space-x-2">
@@ -317,10 +461,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             </Button>
             <Button
               onClick={handleUploadClick}
-              disabled={uploadedFiles.length === 0}
+              disabled={uploadedFiles.length === 0 || isUploading}
               className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {t('uploader.uploadBtn', {}, 'Upload')} ({uploadedFiles.length}) {t('common.files', {}, 'Files')}
+              {isUploading ? (
+                <>
+                  <Upload className="mr-2 h-4 w-4 animate-spin" />
+                  Nahrávání...
+                </>
+              ) : (
+                <>
+                  {t('uploader.uploadBtn', {}, 'Upload')} ({uploadedFiles.length}) {t('common.files', {}, 'Files')}
+                </>
+              )}
             </Button>
           </div>
         </div>

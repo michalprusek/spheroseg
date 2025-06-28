@@ -1,7 +1,7 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import pool from '../db';
 import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
-import { triggerSegmentationTask, getSegmentationQueueStatus } from '../services/segmentationService';
+import { triggerSegmentationTask, getSegmentationQueueStatus, getProjectSegmentationQueueStatus } from '../services/segmentationService';
 import { validate } from '../middleware/validationMiddleware';
 import { z } from 'zod';
 import logger from '../utils/logger';
@@ -774,16 +774,19 @@ router.get(
         total_count: 0,
       };
 
-      // Získáme globální stav fronty
+      // Získáme globální stav fronty a projekt-specifický stav
       const globalQueueStatus = await getSegmentationQueueStatus();
+      const projectQueueStatus = await getProjectSegmentationQueueStatus(projectId);
 
       // Logujeme stav fronty pro debugging
       logger.debug('Project queue status response:', {
         projectId,
         queueStats,
         imageStats,
-        pendingTasksCount: globalQueueStatus.pendingTasks?.length || 0,
-        runningTasksCount: globalQueueStatus.runningTasks?.length || 0,
+        globalPendingTasksCount: globalQueueStatus.pendingTasks?.length || 0,
+        globalRunningTasksCount: globalQueueStatus.runningTasks?.length || 0,
+        projectPendingTasksCount: projectQueueStatus.pendingTasksCount || 0,
+        projectRunningTasksCount: projectQueueStatus.runningTasksCount || 0,
       });
 
       res.json({
@@ -792,6 +795,7 @@ router.get(
         queue: queueStats,
         images: imageStats,
         globalQueueStatus,
+        projectQueueStatus,
       });
     } catch (error) {
       console.error('Error fetching project queue status:', error);
@@ -937,5 +941,113 @@ router.delete('/:imageId/polygons', authMiddleware, async (req: AuthenticatedReq
   const { imageId } = req.params;
   // ... existing code ...
 });
+
+// POST /api/segmentations/batch - Alternative endpoint for batch segmentation
+router.post(
+  '/batch',
+  authMiddleware,
+  validate(triggerBatchWithPrioritySchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    logger.info('Batch segmentation via /api/segmentations/batch', { 
+      imageCount: req.body.imageIds?.length || 0 
+    });
+    return handleBatchSegmentation(req, res, next);
+  }
+);
+
+// POST /api/projects/:projectId/segmentations/batch - Project-specific batch segmentation
+router.post(
+  '/projects/:projectId/segmentations/batch',
+  authMiddleware,
+  validate(triggerProjectBatchSegmentationSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    const { projectId } = req.params as { projectId: string };
+    const { priority, model_type, imageIds: requestedImageIds, ...otherParams } = req.body;
+
+    logger.info('Project batch segmentation via /api/projects/:projectId/segmentations/batch', { 
+      projectId, 
+      imageCount: requestedImageIds?.length || 0 
+    });
+
+    if (!userId) {
+      res.status(401).json({ message: 'Authentication error' });
+      return;
+    }
+
+    try {
+      // Verify user has access to the project
+      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
+        projectId,
+        userId,
+      ]);
+
+      if (projectCheck.rows.length === 0) {
+        res.status(404).json({ message: 'Project not found or access denied' });
+        return;
+      }
+
+      let imageIds: string[] = [];
+
+      // If specific image IDs were provided, use those
+      if (requestedImageIds && Array.isArray(requestedImageIds) && requestedImageIds.length > 0) {
+        // Verify that all requested images belong to this project
+        const verifyImagesQuery = `
+          SELECT id
+          FROM images
+          WHERE project_id = $1 AND id = ANY($2)
+        `;
+        const verifyResult = await pool.query(verifyImagesQuery, [projectId, requestedImageIds]);
+
+        // Only use the image IDs that were verified to belong to this project
+        imageIds = verifyResult.rows.map((img) => img.id);
+
+        if (imageIds.length === 0) {
+          res.status(404).json({ message: 'No valid images found for segmentation' });
+          return;
+        }
+
+        if (imageIds.length < requestedImageIds.length) {
+          logger.warn('Some requested images were not found in the project', {
+            projectId,
+            requestedCount: requestedImageIds.length,
+            foundCount: imageIds.length,
+          });
+        }
+      } else {
+        // Get all images for this project
+        const imagesQuery = `
+          SELECT id
+          FROM images
+          WHERE project_id = $1
+          ORDER BY created_at DESC
+        `;
+        const imagesResult = await pool.query(imagesQuery, [projectId]);
+
+        if (imagesResult.rows.length === 0) {
+          res.status(404).json({ message: 'No images found in this project' });
+          return;
+        }
+
+        // Extract image IDs
+        imageIds = imagesResult.rows.map((img) => img.id);
+      }
+
+      // Update request body and call batch handler
+      req.body = {
+        imageIds,
+        priority,
+        model_type,
+        ...otherParams
+      };
+
+      // Call the batch segmentation handler
+      return handleBatchSegmentation(req, res, next);
+    } catch (error) {
+      logger.error('Error triggering project batch segmentation:', error);
+      next(error);
+    }
+  }
+);
 
 export default router;

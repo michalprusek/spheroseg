@@ -61,7 +61,16 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
 
   // Generate cropped image
   const generateCroppedImage = () => {
-    if (!imgRef.current || !completedCrop) return;
+    if (!imgRef.current) return;
+
+    // Use completedCrop if available, otherwise use default crop
+    const cropToUse = completedCrop || {
+      x: crop.x,
+      y: crop.y,
+      width: crop.width,
+      height: crop.height,
+      unit: 'px' as const
+    };
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -71,8 +80,20 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    canvas.width = completedCrop.width;
-    canvas.height = completedCrop.height;
+    // Calculate pixel crop values if crop is in percentage
+    let pixelCrop = cropToUse;
+    if (crop.unit === '%') {
+      pixelCrop = {
+        x: (crop.x / 100) * image.width,
+        y: (crop.y / 100) * image.height,
+        width: (crop.width / 100) * image.width,
+        height: (crop.height / 100) * image.height,
+        unit: 'px' as const
+      };
+    }
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
 
     // Apply rotation if needed
     if (rotation > 0) {
@@ -85,14 +106,14 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     // Draw the cropped image
     ctx.drawImage(
       image,
-      completedCrop.x * scaleX,
-      completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
+      pixelCrop.x * scaleX,
+      pixelCrop.y * scaleY,
+      pixelCrop.width * scaleX,
+      pixelCrop.height * scaleY,
       0,
       0,
-      completedCrop.width,
-      completedCrop.height,
+      pixelCrop.width,
+      pixelCrop.height,
     );
 
     if (rotation > 0) {
@@ -159,7 +180,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
 
           <Button type="button" onClick={generateCroppedImage} className="w-full">
             <Check className="mr-2 h-4 w-4" />
-            Apply Crop
+            Apply Changes
           </Button>
         </div>
       )}

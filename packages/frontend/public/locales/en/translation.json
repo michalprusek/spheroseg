@@ -185,6 +185,13 @@
     "saveError": "Failed to save segmentation",
     "loadError": "Failed to load segmentation",
     "resegmentSuccess": "Re-segmentation triggered successfully",
-    "resegmentError": "Failed to trigger re-segmentation"
+    "resegmentError": "Failed to trigger re-segmentation",
+    "queue": {
+      "statusReady": "Ready",
+      "statusProcessing": "Processing",
+      "statusCompleted": "Completed",
+      "statusFailed": "Failed",
+      "statusPending": "Pending"
+    }
   }
 }

@@ -21,6 +21,12 @@ The project uses a monorepo structure with Turborepo:
 
 ## Development Environment
 
+### Test Credentials
+
+For testing the application, use these credentials:
+- **Username:** prusemic@cvut.cz
+- **Password:** 82c17878
+
 ### Running the Application
 
 **Standard Mode:**

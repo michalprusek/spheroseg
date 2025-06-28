@@ -38,7 +38,7 @@ export const imageDetailSchema = z.object({
 // Schema for DELETE /api/images/:id params (legacy route)
 export const imageIdSchema = z.object({
   params: z.object({
-    id: z.string().uuid({ message: 'Invalid image ID format' }),
+    id: z.string().min(1, { message: 'Image ID is required' }),
   }),
 });
 
@@ -46,7 +46,7 @@ export const imageIdSchema = z.object({
 export const deleteImageSchema = z.object({
   params: z.object({
     projectId: z.string().uuid({ message: 'Invalid project ID format' }),
-    imageId: z.string().uuid({ message: 'Invalid image ID format' }),
+    imageId: z.string().min(1, { message: 'Image ID is required' }),
   }),
 });
 
@@ -57,7 +57,7 @@ export const batchDeleteImagesSchema = z.object({
   }),
   body: z.object({
     imageIds: z
-      .array(z.string().uuid({ message: 'Invalid image ID format' }))
+      .array(z.string().min(1, { message: 'Image ID is required' }))
       .min(1, { message: 'At least one image ID is required' }),
   }),
 });

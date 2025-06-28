@@ -20,6 +20,20 @@ export interface QueueStatusUpdate {
   queueLength: number;
   activeTasksCount: number;
   timestamp: string;
+  // V2 service specific fields
+  queuedTasksCount?: number;
+  pendingTasksCount?: number;
+  runningTasksCount?: number;
+  processingImages?: Array<{
+    id: string;
+    name: string;
+    projectId: string;
+  }>;
+  queuedImages?: Array<{
+    id: string;
+    name: string;
+    projectId: string;
+  }>;
 }
 
 interface UseSegmentationUpdatesOptions {
@@ -81,7 +95,7 @@ export const useSegmentationUpdates = (options: UseSegmentationUpdatesOptions = 
     try {
       // Try to fetch current queue status via API
       // First try the new endpoint
-      fetch('/api/queue-status')
+      fetch('/api/segmentation/queue-status')
         .then((response) => {
           if (response.ok) {
             return response.json();
@@ -185,7 +199,7 @@ export const useSegmentationUpdates = (options: UseSegmentationUpdatesOptions = 
 
         // Try to fetch current queue status via API (without generating mock updates)
         // First try the new endpoint
-        fetch('/api/queue-status')
+        fetch('/api/segmentation/queue-status')
           .then((response) => {
             if (response.ok) {
               return response.json();
