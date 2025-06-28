@@ -241,6 +241,27 @@ gh pr create --base dev --title "Your PR Title" --body "Description"
 - Verify functionality works as expected before considering the task complete
 - Run `npm run code:check` to ensure code quality standards are met
 
+### Browser Testing with Playwright MCP
+
+**Use Playwright MCP to test fixes in real browser:**
+1. Navigate to the application URL (https://spherosegapp.utia.cas.cz)
+2. Check browser console for errors using `mcp__playwright__browser_console_messages`
+3. Take screenshots to verify UI changes using `mcp__playwright__browser_take_screenshot`
+4. Interact with elements using `mcp__playwright__browser_click` and other interaction tools
+5. Monitor Docker logs simultaneously to correlate frontend and backend issues
+
+**Testing workflow after each fix:**
+```bash
+# 1. Check Docker logs for errors
+docker-compose logs -f frontend-dev --tail=50
+docker-compose logs -f backend --tail=50
+
+# 2. Use Playwright to test in browser
+# 3. Check console messages for JavaScript errors
+# 4. Take screenshots of problematic areas
+# 5. Verify fix resolves the issue
+```
+
 ### Error Investigation Process
 
 **When user reports browser console errors:**

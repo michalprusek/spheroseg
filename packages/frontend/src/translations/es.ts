@@ -1,35 +1,4 @@
 export default {
-  // Segmentation context menu
-  segmentation: {
-    contextMenu: {
-      editPolygon: 'Editar polígono',
-      splitPolygon: 'Dividir polígono',
-      deletePolygon: 'Eliminar polígono',
-      confirmDeleteTitle: '¿Está seguro de que desea eliminar el polígono?',
-      confirmDeleteMessage: 'Esta acción es irreversible. El polígono será eliminado permanentemente de la segmentación.',
-      duplicateVertex: 'Duplicar vértice',
-      deleteVertex: 'Eliminar vértice',
-    },
-  },
-  // Common UI elements  
-  common: {
-    cancel: 'Cancelar',
-    delete: 'Eliminar',
-    loadingApplication: 'Cargando aplicación...',
-    selectAll: 'Seleccionar todo',
-  },
-  // Error messages
-  errors: {
-    somethingWentWrong: 'Algo salió mal',
-    componentError: 'Ocurrió un error en este componente. Hemos sido notificados y solucionaremos el problema lo antes posible.',
-    errorDetails: 'Detalles del error',
-    tryAgain: 'Intentar de nuevo',
-    reloadPage: 'Recargar página',
-    goBack: 'Volver',
-    notFound: '404',
-    pageNotFoundMessage: '¡Oops! Página no encontrada',
-    returnToHome: 'Volver al inicio',
-  },
   project: {
     detail: {
       noImagesSelected: 'No hay imágenes seleccionadas',
@@ -57,13 +26,18 @@ export default {
       uploadButton: 'Subir imágenes',
     },
   },
+  // Common UI elements - merged from lines 15 and 60
   common: {
+    // From first common section
+    cancel: 'Cancelar',
+    delete: 'Eliminar',
+    loadingApplication: 'Cargando aplicación...',
+    selectAll: 'Seleccionar todo',
+    // From second common section
     appName: 'Segmentación de Esferoides',
     appNameShort: 'SpheroSeg',
     loading: 'Cargando...',
     save: 'Guardar',
-    cancel: 'Cancelar',
-    delete: 'Eliminar',
     edit: 'Editar',
     create: 'Crear',
     search: 'Buscar',
@@ -826,7 +800,19 @@ export default {
     noImage: 'Sin imagen',
     untitledImage: 'Imagen sin título',
   },
+  // Segmentation - merged from lines 3 and 829
   segmentation: {
+    // From first segmentation section
+    contextMenu: {
+      editPolygon: 'Editar polígono',
+      splitPolygon: 'Dividir polígono',
+      deletePolygon: 'Eliminar polígono',
+      confirmDeleteTitle: '¿Está seguro de que desea eliminar el polígono?',
+      confirmDeleteMessage: 'Esta acción es irreversible. El polígono será eliminado permanentemente de la segmentación.',
+      duplicateVertex: 'Duplicar vértice',
+      deleteVertex: 'Eliminar vértice',
+    },
+    // From second segmentation section
     resolution: 'Resolución',
     selectPolygonForSlice: 'Selecciona un polígono para cortar',
     selectPolygonForAddPoints: 'Selecciona un polígono para añadir puntos',
@@ -916,6 +902,7 @@ export default {
         exit: 'Presiona Esc para salir del modo de añadir puntos',
       },
     },
+  },
   termsPage: {
     title: 'Términos de Servicio',
     acceptance: {
@@ -1073,7 +1060,19 @@ export default {
     resegmentationError: 'Error al iniciar la resegmentación.',
     resegmentTooltip: 'Resegmentar',
   },
+  // Error messages - merged from lines 22 and 1076
   errors: {
+    // From first errors section
+    somethingWentWrong: 'Algo salió mal',
+    componentError: 'Ocurrió un error en este componente. Hemos sido notificados y solucionaremos el problema lo antes posible.',
+    errorDetails: 'Detalles del error',
+    tryAgain: 'Intentar de nuevo',
+    reloadPage: 'Recargar página',
+    goBack: 'Volver',
+    notFound: '404',
+    pageNotFoundMessage: '¡Oops! Página no encontrada',
+    returnToHome: 'Volver al inicio',
+    // From second errors section
     fetchSegmentationFailed: 'Error al cargar los datos de segmentación',
     fetchImageFailed: 'Error al cargar los datos de la imagen',
     saveSegmentationFailed: 'Error al guardar la segmentación',

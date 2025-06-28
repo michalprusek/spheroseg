@@ -1,62 +1,4 @@
 export default {
-  // Segmentation context menu
-  segmentation: {
-    contextMenu: {
-      editPolygon: 'Modifier le polygone',
-      splitPolygon: 'Diviser le polygone',
-      deletePolygon: 'Supprimer le polygone',
-      confirmDeleteTitle: 'Êtes-vous sûr de vouloir supprimer le polygone ?',
-      confirmDeleteMessage: 'Cette action est irréversible. Le polygone sera définitivement supprimé de la segmentation.',
-      duplicateVertex: 'Dupliquer le sommet',
-      deleteVertex: 'Supprimer le sommet',
-    },
-  },
-  // Common UI elements  
-  common: {
-    cancel: 'Annuler',
-    delete: 'Supprimer',
-    loadingApplication: 'Chargement de l\'application...',
-    selectAll: 'Tout sélectionner',
-  },
-  // Error messages
-  errors: {
-    somethingWentWrong: 'Quelque chose a mal tourné',
-    componentError: 'Une erreur s\'est produite dans ce composant. Nous avons été notifiés et corrigerons le problème dès que possible.',
-    errorDetails: 'Détails de l\'erreur',
-    tryAgain: 'Réessayer',
-    reloadPage: 'Recharger la page',
-    goBack: 'Retour',
-    notFound: '404',
-    pageNotFoundMessage: 'Oops ! Page introuvable',
-    returnToHome: 'Retour à l\'accueil',
-  },
-  project: {
-    detail: {
-      noImagesSelected: 'Aucune image sélectionnée',
-      triggeringResegmentation: 'Déclenchement de la re-segmentation pour {{count}} images...',
-      deleteConfirmation: 'Êtes-vous sûr de vouloir supprimer {{count}} images ? Cette action ne peut pas être annulée.',
-      deletingImages: 'Suppression de {{count}} images...',
-      deleteSuccess: '{{count}} images supprimées avec succès',
-      deleteFailed: 'Échec de la suppression de {{count}} images',
-      preparingExport: 'Préparation de l\'exportation de {{count}} images...'
-    },
-    segmentation: {
-      processingInBatches: 'Démarrage de la segmentation pour {{count}} images en {{batches}} lots...',
-      batchQueued: 'Lot {{current}}/{{total}} mis en file d\'attente avec succès',
-      batchQueuedFallback: 'Lot {{current}}/{{total}} mis en file d\'attente avec succès (endpoint de secours)',
-      batchError: 'Erreur lors du traitement du lot {{current}}/{{total}}',
-      partialSuccess: 'Segmentation : {{success}} images mises en file d\'attente avec succès, {{failed}} échecs',
-      allSuccess: 'Segmentation : Toutes les {{count}} images mises en file d\'attente avec succès',
-      allFailed: 'Segmentation : Toutes les {{count}} images ont échoué',
-      startedImages: 'Segmentation démarrée pour {{count}} images',
-      queuedLocallyWarning: 'Segmentation mise en file d\'attente localement pour {{count}} images. La connexion au serveur a échoué.'
-    },
-    noImages: {
-      title: 'Pas encore d\'images',
-      description: 'Ce projet n\'a pas encore d\'images. Téléchargez des images pour commencer la segmentation.',
-      uploadButton: 'Télécharger des images',
-    },
-  },
   common: {
     appName: 'Segmentation de Sphéroïdes',
     appNameShort: 'SpheroSeg',
@@ -829,7 +771,18 @@ export default {
     noImage: "Pas d'image",
     untitledImage: 'Image sans titre',
   },
+  // Segmentation - merged from multiple sections
   segmentation: {
+    // Context menu
+    contextMenu: {
+      editPolygon: 'Modifier le polygone',
+      splitPolygon: 'Diviser le polygone',
+      deletePolygon: 'Supprimer le polygone',
+      confirmDeleteTitle: 'Êtes-vous sûr de vouloir supprimer le polygone ?',
+      confirmDeleteMessage: 'Cette action est irréversible. Le polygone sera définitivement supprimé de la segmentation.',
+      duplicateVertex: 'Dupliquer le sommet',
+      deleteVertex: 'Supprimer le sommet',
+    },
     resolution: 'Résolution',
     selectPolygonForSlice: 'Sélectionnez un polygone à découper',
     selectPolygonForAddPoints: 'Sélectionnez un polygone pour ajouter des points',
@@ -1080,7 +1033,19 @@ export default {
     resegmentationError: 'Échec du démarrage de la resegmentation.',
     resegmentTooltip: 'Resegmenter',
   },
+  // Error messages - merged from multiple sections
   errors: {
+    // Basic error messages
+    somethingWentWrong: 'Quelque chose a mal tourné',
+    componentError: 'Une erreur s\'est produite dans ce composant. Nous avons été notifiés et corrigerons le problème dès que possible.',
+    errorDetails: 'Détails de l\'erreur',
+    tryAgain: 'Réessayer',
+    reloadPage: 'Recharger la page',
+    goBack: 'Retour',
+    notFound: '404',
+    pageNotFoundMessage: 'Oops ! Page introuvable',
+    returnToHome: 'Retour à l\'accueil',
+    // Extended error messages
     fetchSegmentationFailed: 'Échec du chargement des données de segmentation',
     fetchImageFailed: "Échec du chargement des données d'image",
     saveSegmentationFailed: "Échec de l'enregistrement de la segmentation",
@@ -1091,10 +1056,6 @@ export default {
     imageNotFoundDesc: "L'image que vous essayez d'accéder n'existe pas ou a été supprimée.",
     returnToProject: 'Retourner au projet',
     goToDashboard: 'Aller au tableau de bord',
-    somethingWentWrong: "Une erreur s'est produite",
-    componentError: "Une erreur s'est produite dans ce composant",
-    goBack: 'Retour',
-    tryAgain: 'Réessayer',
     notFound: 'Page non trouvée',
     unauthorized: 'Accès non autorisé',
     forbidden: 'Accès interdit',
@@ -1104,7 +1065,37 @@ export default {
     pageNotFoundMessage: "La page demandée n'a pas pu être trouvée",
     goHome: "Aller à la page d'accueil",
   },
+  // Project - merged from multiple sections
   project: {
+    // Project detail
+    detail: {
+      noImagesSelected: 'Aucune image sélectionnée',
+      triggeringResegmentation: 'Déclenchement de la re-segmentation pour {{count}} images...',
+      deleteConfirmation: 'Êtes-vous sûr de vouloir supprimer {{count}} images ? Cette action ne peut pas être annulée.',
+      deletingImages: 'Suppression de {{count}} images...',
+      deleteSuccess: '{{count}} images supprimées avec succès',
+      deleteFailed: 'Échec de la suppression de {{count}} images',
+      preparingExport: 'Préparation de l\'exportation de {{count}} images...'
+    },
+    // Project segmentation
+    segmentation: {
+      processingInBatches: 'Démarrage de la segmentation pour {{count}} images en {{batches}} lots...',
+      batchQueued: 'Lot {{current}}/{{total}} mis en file d\'attente avec succès',
+      batchQueuedFallback: 'Lot {{current}}/{{total}} mis en file d\'attente avec succès (endpoint de secours)',
+      batchError: 'Erreur lors du traitement du lot {{current}}/{{total}}',
+      partialSuccess: 'Segmentation : {{success}} images mises en file d\'attente avec succès, {{failed}} échecs',
+      allSuccess: 'Segmentation : Toutes les {{count}} images mises en file d\'attente avec succès',
+      allFailed: 'Segmentation : Toutes les {{count}} images ont échoué',
+      startedImages: 'Segmentation démarrée pour {{count}} images',
+      queuedLocallyWarning: 'Segmentation mise en file d\'attente localement pour {{count}} images. La connexion au serveur a échoué.'
+    },
+    // Project no images
+    noImages: {
+      title: 'Pas encore d\'images',
+      description: 'Ce projet n\'a pas encore d\'images. Téléchargez des images pour commencer la segmentation.',
+      uploadButton: 'Télécharger des images',
+    },
+    // Project loading and navigation
     loading: 'Chargement du projet...',
     notFound: 'Projet non trouvé',
     error: 'Erreur lors du chargement du projet',

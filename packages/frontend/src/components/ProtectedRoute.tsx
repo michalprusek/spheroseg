@@ -25,10 +25,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       authCheckTimeElapsed,
     });
 
-    // Reduce the wait time to prevent 404 errors
+    // Wait a bit longer to ensure auth is properly initialized
     const timer = setTimeout(() => {
       setAuthCheckTimeElapsed(true);
-    }, 500); // Reduced from 2000ms to 500ms
+    }, 1500); // Increased to 1500ms to give auth more time to initialize
 
     return () => clearTimeout(timer);
   }, [user, loading, location.pathname, isRedirecting, authCheckTimeElapsed]); // Added dependencies to useEffect
@@ -63,7 +63,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto" />
-          <p className="mt-4 text-gray-600">Načítání vašeho účtu...</p>
+          <p className="mt-4 text-gray-600">Loading your account...</p>
         </div>
       </div>
     );
@@ -71,27 +71,41 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // Pokud máme uživatele a nenačítá se, vykreslíme obsah
   if (user) {
+    logger.debug('User authenticated, rendering protected content');
     return <>{children}</>;
   }
 
-  // Pokud probíhá přesměrování nebo čekáme na autentizaci
-  if (isRedirecting || !authCheckTimeElapsed) {
+  // Pokud probíhá přesměrování
+  if (isRedirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto" />
-          <p className="mt-4 text-gray-600">Přesměrování...</p>
+          <p className="mt-4 text-gray-600">Redirecting...</p>
         </div>
       </div>
     );
   }
 
-  // Jako poslední možnost zobrazíme loading
+  // Pokud ještě čekáme na auth kontrolu, zobrazíme loading
+  if (!authCheckTimeElapsed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto" />
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Jako poslední možnost zobrazíme loading místo null
+  logger.debug('No user and not loading, showing loading screen');
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto" />
-        <p className="mt-4 text-gray-600">Kontrola přihlášení...</p>
+        <p className="mt-4 text-gray-600">Loading...</p>
       </div>
     </div>
   );

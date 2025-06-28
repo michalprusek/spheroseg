@@ -1,35 +1,4 @@
 export default {
-  // Segmentation context menu
-  segmentation: {
-    contextMenu: {
-      editPolygon: '编辑多边形',
-      splitPolygon: '分割多边形',
-      deletePolygon: '删除多边形',
-      confirmDeleteTitle: '您确定要删除多边形吗？',
-      confirmDeleteMessage: '此操作不可逆。多边形将从分割中永久删除。',
-      duplicateVertex: '复制顶点',
-      deleteVertex: '删除顶点',
-    },
-  },
-  // Common UI elements  
-  common: {
-    cancel: '取消',
-    delete: '删除',
-    loadingApplication: '正在加载应用程序...',
-    selectAll: '全选',
-  },
-  // Error messages
-  errors: {
-    somethingWentWrong: '出现了问题',
-    componentError: '此组件发生错误。我们已收到通知，将尽快解决问题。',
-    errorDetails: '错误详细信息',
-    tryAgain: '重试',
-    reloadPage: '重新加载页面',
-    goBack: '返回',
-    notFound: '404',
-    pageNotFoundMessage: '糟糕！页面未找到',
-    returnToHome: '返回首页',
-  },
   project: {
     detail: {
       noImagesSelected: '未选择图像',
@@ -56,14 +25,26 @@ export default {
       description: '此项目尚无图像。上传图像以开始分割。',
       uploadButton: '上传图像',
     },
+    // From second project section
+    loading: '正在加载项目...',
+    notFound: '未找到项目',
+    error: '加载项目时出错',
+    empty: '此项目为空',
+    noImagesFound: '此项目中未找到图像',
+    addImages: '添加图像以开始',
   },
+  // Common UI elements - merged from lines 15 and 60
   common: {
+    // From first common section
+    cancel: '取消',
+    delete: '删除',
+    loadingApplication: '正在加载应用程序...',
+    selectAll: '全选',
+    // From second common section
     appName: '类器官分割平台',
     appNameShort: 'SpheroSeg',
     loading: '加载中...',
     save: '保存',
-    cancel: '取消',
-    delete: '删除',
     edit: '编辑',
     create: '创建',
     search: '搜索',
@@ -849,7 +830,19 @@ export default {
     noImage: '无图片',
     untitledImage: '无标题图片',
   },
+  // Segmentation - merged from lines 3 and 852
   segmentation: {
+    // From first segmentation section
+    contextMenu: {
+      editPolygon: '编辑多边形',
+      splitPolygon: '分割多边形',
+      deletePolygon: '删除多边形',
+      confirmDeleteTitle: '您确定要删除多边形吗？',
+      confirmDeleteMessage: '此操作不可逆。多边形将从分割中永久删除。',
+      duplicateVertex: '复制顶点',
+      deleteVertex: '删除顶点',
+    },
+    // From second segmentation section
     resolution: '分辨率',
     selectPolygonForSlice: '选择一个多边形进行切片',
     selectPolygonForAddPoints: '选择一个多边形添加点',
@@ -1113,7 +1106,19 @@ export default {
     resegmentOptions: '重新分割选项',
     resegmentDefault: '默认（ResUNet）',
   },
+  // Error messages - merged from lines 22 and 1116
   errors: {
+    // From first errors section
+    somethingWentWrong: '出现了问题',
+    componentError: '此组件发生错误。我们已收到通知，将尽快解决问题。',
+    errorDetails: '错误详细信息',
+    tryAgain: '重试',
+    reloadPage: '重新加载页面',
+    goBack: '返回',
+    notFound: '404',
+    pageNotFoundMessage: '糟糕！页面未找到',
+    returnToHome: '返回首页',
+    // From second errors section
     fetchSegmentationFailed: '加载分割数据失败',
     fetchImageFailed: '加载图像数据失败',
     saveSegmentationFailed: '保存分割失败',
@@ -1167,14 +1172,6 @@ export default {
     cleared: '历史记录已清除',
     saved: '历史记录已保存',
     restored: '历史记录已恢复',
-  },
-  project: {
-    loading: '正在加载项目...',
-    notFound: '未找到项目',
-    error: '加载项目时出错',
-    empty: '此项目为空',
-    noImages: '此项目中未找到图像',
-    addImages: '添加图像以开始',
   },
   navigation: {
     home: '首页',
