@@ -1,7 +1,7 @@
 import pool from '../db';
 import config from '../config';
 import logger from '../utils/logger';
-import segmentationQueueService from './segmentationQueueServiceV2';
+import segmentationQueueService from './segmentationQueueService';
 
 /**
  * Function to add a segmentation task to the queue
@@ -21,10 +21,8 @@ export const triggerSegmentationTask = async (
   logger.info(`Queueing segmentation for imageId: ${imageId}, path: ${imagePath}, priority: ${priority}`);
 
   try {
-    // Use the centralized segmentation queue service V2
-    // Convert priority number to TaskPriority enum
-    const taskPriority = priority >= 10 ? 10 : priority >= 5 ? 5 : 1; // HIGH, NORMAL, LOW
-    return await segmentationQueueService.addTask(imageId, imagePath, parameters, taskPriority);
+    // Use the centralized segmentation queue service
+    return await segmentationQueueService.triggerSegmentationTask(imageId, imagePath, parameters, priority);
   } catch (error) {
     logger.error(`Error adding segmentation task for image ${imageId} to queue:`, { error });
     throw error; // Re-throw to allow caller to handle the error
@@ -37,17 +35,7 @@ export const triggerSegmentationTask = async (
  * @returns Queue status
  */
 export const getSegmentationQueueStatus = async (): Promise<any> => {
-  return segmentationQueueService.getQueueStatus();
-};
-
-/**
- * Function to get the status of the segmentation queue for a specific project
- *
- * @param projectId ID of the project
- * @returns Project-specific queue status
- */
-export const getProjectSegmentationQueueStatus = async (projectId: string): Promise<any> => {
-  return await segmentationQueueService.getProjectQueueStatus(projectId);
+  return await segmentationQueueService.getSegmentationQueueStatus();
 };
 
 /**
@@ -56,8 +44,8 @@ export const getProjectSegmentationQueueStatus = async (projectId: string): Prom
  * @param imageId ID of the image
  * @returns True if the task was cancelled, false otherwise
  */
-export const cancelSegmentationTask = async (imageId: string): Promise<boolean> => {
-  return await segmentationQueueService.cancelTask(imageId);
+export const cancelSegmentationTask = (imageId: string): boolean => {
+  return segmentationQueueService.cancelSegmentationTask(imageId);
 };
 
 // Optional: Add functions to get or update results if needed directly by service

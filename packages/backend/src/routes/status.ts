@@ -1,6 +1,6 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
-import { getSegmentationQueueStatus, getProjectSegmentationQueueStatus } from '../services/segmentationService';
+import { getSegmentationQueueStatus } from '../services/segmentationService';
 import pool from '../db';
 import logger from '../utils/logger';
 
@@ -103,12 +103,46 @@ router.get(
         return;
       }
 
-      // Get project-specific queue status from V2 service
-      const projectQueueStatus = await getProjectSegmentationQueueStatus(projectId);
+      // Get basic queue status from segmentation service
+      const queueStatus = await getSegmentationQueueStatus();
+      const { runningTasks, pendingTasks } = queueStatus;
 
-      // Return project-specific queue status with all required fields
+      // Get image details for running tasks, filtered by project
+      const imagesQuery = await pool.query(
+        `SELECT i.id, i.name
+       FROM images i
+       WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,
+        [runningTasks, projectId],
+      );
+
+      // Map the results to the expected format
+      const processingImages = imagesQuery.rows.map((image) => ({
+        id: image.id,
+        name: image.name,
+        projectId: projectId,
+      }));
+
+      // Get queued images for this project
+      // Since we don't have project info in the queue, we need to query the database
+      let projectQueuedTasks: string[] = [];
+      if (pendingTasks && pendingTasks.length > 0) {
+        const queuedImagesQuery = await pool.query(
+          `SELECT i.id
+         FROM images i
+         WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,
+          [pendingTasks, projectId],
+        );
+
+        projectQueuedTasks = queuedImagesQuery.rows.map((row) => row.id);
+      }
+
+      // Return project-specific queue status
       res.status(200).json({
-        ...projectQueueStatus,
+        queueLength: projectQueuedTasks.length,
+        runningTasks: processingImages.map((img) => img.id),
+        queuedTasks: projectQueuedTasks,
+        pendingTasks: projectQueuedTasks, // Include both for compatibility
+        processingImages,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

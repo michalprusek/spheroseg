@@ -4,7 +4,7 @@
  * Manages WebSocket connections to the backend for real-time updates.
  */
 import { io, Socket } from 'socket.io-client';
-import { getAuthToken } from './authService';
+import { getAccessToken as getAuthToken } from './authService';
 import logger from '../utils/logger';
 
 // Socket.IO instance

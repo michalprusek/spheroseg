@@ -134,27 +134,15 @@ const upload = multer({
   fileFilter: (_req, file, cb) => {
     const allowedMimeTypes = [
       'image/jpeg',
-      'image/jpg',
       'image/png',
       'image/tiff',
       'image/tif',
       'image/bmp',
-      'image/webp',
-      'image/avif',
-      'image/gif',
     ];
-
-    // Also check file extension as fallback for cases where MIME type detection fails
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp', '.webp', '.avif', '.gif'];
-    const fileExtension = file.originalname.toLowerCase().match(/\.[^.]+$/)?.[0];
-
-    const isMimeTypeAllowed = allowedMimeTypes.includes(file.mimetype);
-    const isExtensionAllowed = fileExtension && allowedExtensions.includes(fileExtension);
-
-    if (isMimeTypeAllowed || isExtensionAllowed) {
+    if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error(`Invalid file type. Only JPEG, PNG, TIFF, BMP, WebP, AVIF, and GIF are allowed. Received: ${file.mimetype} (${file.originalname})`));
+      cb(new Error('Invalid file type. Only JPEG, PNG, TIFF, and BMP are allowed.'));
     }
   },
 });

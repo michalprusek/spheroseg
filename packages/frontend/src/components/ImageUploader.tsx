@@ -32,17 +32,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   projectId,
   onUploadComplete,
   maxSize = 10 * 1024 * 1024,
-  accept = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/tiff',
-    'image/tif',
-    'image/bmp',
-    'image/webp',
-    'image/avif',
-    'image/gif'
-  ],
+  accept = ['image/jpeg', 'image/png', 'image/tiff', 'image/tif', 'image/bmp'],
   dropzoneText,
   className = '',
   segmentAfterUpload = true,
@@ -225,41 +215,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         setUploadProgress(Math.min(overallProgress, 100));
       };
 
-      // Použijeme uploadFilesWithFallback s progress callback a vylepšeným error handlingem
-      let allUploadedImages;
-      try {
-        allUploadedImages = await uploadFilesWithFallback(projectId, files, onProgress);
-      } catch (uploadError: any) {
-        // Enhanced error handling for different types of upload failures
-        console.error('Upload failed:', uploadError);
-
-        let errorMessage = 'An error occurred while uploading the files. Please try again.';
-
-        if (uploadError.response?.status === 413) {
-          errorMessage = 'Files are too large. Please reduce file sizes and try again.';
-        } else if (uploadError.response?.status === 415) {
-          errorMessage = 'Unsupported file format. Please check that all files are valid images.';
-        } else if (uploadError.response?.status >= 500) {
-          errorMessage = 'Server error. Please try again later or contact support if the problem persists.';
-        } else if (uploadError.code === 'ECONNABORTED' || uploadError.message?.includes('timeout')) {
-          errorMessage = 'Upload timeout. Please check your connection and try again with fewer files.';
-        } else if (!uploadError.response) {
-          errorMessage = 'Network error. Please check your internet connection and try again.';
-        }
-
-        setError(t('uploader.uploadError', {}, errorMessage));
-        toast.error(errorMessage);
-        throw uploadError; // Re-throw to be caught by outer catch block
-      }
+      // Použijeme uploadFilesWithFallback s progress callback
+      const allUploadedImages = await uploadFilesWithFallback(projectId, files, onProgress);
 
       // Log the number of images returned from the upload function
       console.log(`Received ${allUploadedImages.length} images from upload function`);
       console.log('Uploaded images:', allUploadedImages);
-
-      // Validate that we received images
-      if (!allUploadedImages || allUploadedImages.length === 0) {
-        throw new Error('No images were successfully uploaded');
-      }
 
       // Store the uploaded images in memory - použijeme IndexedDB místo localStorage
       try {
@@ -276,19 +237,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       clearAllFiles();
 
       // Informujeme uživatele o úspěšném nahrání
-      const successMessage = allUploadedImages.length === files.length
-        ? `Successfully uploaded ${allUploadedImages.length} images.`
-        : `Uploaded ${allUploadedImages.length} of ${files.length} images. Some files may have failed.`;
-
-      toast.success(successMessage);
-    } catch (error: any) {
+      toast.success(`Úspěšně nahráno ${allUploadedImages.length} obrázků.`);
+    } catch (error) {
       console.error('Error uploading files:', error);
-
-      // Only set error if it wasn't already set by the upload function
-      if (!error.response || !error.message?.includes('timeout')) {
-        setError(t('uploader.uploadError', {}, 'An unexpected error occurred. Please try again.'));
-        toast.error('An unexpected error occurred during upload. Please try again.');
-      }
+      setError(t('uploader.uploadError', {}, 'An error occurred while uploading the files. Please try again.'));
+      toast.error('Chyba při nahrávání obrázků. Zkuste to prosím znovu.');
     } finally {
       setIsUploading(false);
       setUploadProgress(0);

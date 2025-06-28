@@ -20,20 +20,6 @@ export interface QueueStatusUpdate {
   queueLength: number;
   activeTasksCount: number;
   timestamp: string;
-  // V2 service specific fields
-  queuedTasksCount?: number;
-  pendingTasksCount?: number;
-  runningTasksCount?: number;
-  processingImages?: Array<{
-    id: string;
-    name: string;
-    projectId: string;
-  }>;
-  queuedImages?: Array<{
-    id: string;
-    name: string;
-    projectId: string;
-  }>;
 }
 
 interface UseSegmentationUpdatesOptions {

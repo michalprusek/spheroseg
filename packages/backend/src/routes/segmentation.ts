@@ -1,7 +1,7 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import pool from '../db';
 import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
-import { triggerSegmentationTask, getSegmentationQueueStatus, getProjectSegmentationQueueStatus } from '../services/segmentationService';
+import { triggerSegmentationTask, getSegmentationQueueStatus } from '../services/segmentationService';
 import { validate } from '../middleware/validationMiddleware';
 import { z } from 'zod';
 import logger from '../utils/logger';
@@ -774,19 +774,16 @@ router.get(
         total_count: 0,
       };
 
-      // Získáme globální stav fronty a projekt-specifický stav
+      // Získáme globální stav fronty
       const globalQueueStatus = await getSegmentationQueueStatus();
-      const projectQueueStatus = await getProjectSegmentationQueueStatus(projectId);
 
       // Logujeme stav fronty pro debugging
       logger.debug('Project queue status response:', {
         projectId,
         queueStats,
         imageStats,
-        globalPendingTasksCount: globalQueueStatus.pendingTasks?.length || 0,
-        globalRunningTasksCount: globalQueueStatus.runningTasks?.length || 0,
-        projectPendingTasksCount: projectQueueStatus.pendingTasksCount || 0,
-        projectRunningTasksCount: projectQueueStatus.runningTasksCount || 0,
+        pendingTasksCount: globalQueueStatus.pendingTasks?.length || 0,
+        runningTasksCount: globalQueueStatus.runningTasks?.length || 0,
       });
 
       res.json({
@@ -795,7 +792,6 @@ router.get(
         queue: queueStats,
         images: imageStats,
         globalQueueStatus,
-        projectQueueStatus,
       });
     } catch (error) {
       console.error('Error fetching project queue status:', error);

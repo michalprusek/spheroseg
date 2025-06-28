@@ -9,7 +9,7 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-// import compression from 'compression';
+import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
@@ -68,19 +68,19 @@ export const configureSecurityMiddleware = (app: Application): void => {
  * Performance middleware configuration
  */
 export const configurePerformanceMiddleware = (app: Application): void => {
-  // Compression for response payloads - temporarily disabled
-  // app.use(compression({
-  //   level: 6, // Balance between compression ratio and CPU usage
-  //   threshold: 1024, // Only compress responses larger than 1KB
-  //   filter: (req: express.Request, res: express.Response) => {
-  //     // Don't compress if the request includes a Cache-Control no-transform directive
-  //     if (req.headers['cache-control'] && req.headers['cache-control'].includes('no-transform')) {
-  //       return false;
-  //     }
-  //     // Use compression filter function
-  //     return compression.filter(req, res);
-  //   },
-  // }));
+  // Compression for response payloads
+  app.use(compression({
+    level: 6, // Balance between compression ratio and CPU usage
+    threshold: 1024, // Only compress responses larger than 1KB
+    filter: (req: express.Request, res: express.Response) => {
+      // Don't compress if the request includes a Cache-Control no-transform directive
+      if (req.headers['cache-control'] && req.headers['cache-control'].includes('no-transform')) {
+        return false;
+      }
+      // Use compression filter function
+      return compression.filter(req, res);
+    },
+  }));
 };
 
 /**

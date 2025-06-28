@@ -27,7 +27,7 @@ import { ApiError } from '../middleware/errorMiddleware';
 import config from '../config';
 import tokenService from '../services/tokenService';
 import tutorialProjectService from '../services/tutorialProjectService';
-// import { sendPasswordReset } from '../services/emailService';
+import { sendPasswordReset } from '../services/emailService';
 
 const router: Router = express.Router();
 
@@ -313,18 +313,19 @@ router.post('/forgot-password', validate(forgotPasswordSchema), async (req: expr
       [userId]
     );
 
-    // Send password reset email - temporarily disabled
+    // Send password reset email
     try {
-      // const emailResult = await sendPasswordReset(email, name, newPassword);
-      logger.info('Password reset email would be sent (disabled)', {
-        userId,
-        email
+      const emailResult = await sendPasswordReset(email, name, newPassword);
+      logger.info('Password reset email sent', { 
+        userId, 
+        email, 
+        testUrl: emailResult.testUrl 
       });
-
+      
       res.json({
         message: 'If an account with that email exists, a new password has been sent to your email',
         // Include test URL for development/testing only
-        testUrl: process.env.NODE_ENV === 'development' ? 'email-disabled' : undefined,
+        testUrl: process.env.NODE_ENV === 'development' ? emailResult.testUrl : undefined,
       });
     } catch (emailError) {
       logger.error('Failed to send password reset email', { error: emailError, email, userId });

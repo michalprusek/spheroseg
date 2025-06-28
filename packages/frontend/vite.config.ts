@@ -113,9 +113,10 @@ export default defineConfig(({ mode }) => {
       strictPort: true, // Don't try other ports if 3000 is taken
       cors: true, // Enable CORS for all requests
       hmr: {
-        // For development, use standard HTTP/WS
-        clientPort: mode === 'development' ? 3000 : 443,
-        protocol: mode === 'development' ? 'ws' : 'wss',
+        // Always use secure WebSocket when served over HTTPS
+        clientPort: 443,
+        protocol: 'wss',
+        host: 'spherosegapp.utia.cas.cz',
         path: '/@hmr',
         timeout: 180000,
         overlay: true,

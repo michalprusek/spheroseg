@@ -590,17 +590,6 @@ const ProjectDetail = () => {
     exportSelectedImages();
   };
 
-  // Health check function to verify server connectivity
-  const checkServerHealth = async (): Promise<boolean> => {
-    try {
-      const response = await apiClient.get('/health', { timeout: 5000 });
-      return response.status === 200;
-    } catch (error) {
-      logger.warn('Server health check failed:', error);
-      return false;
-    }
-  };
-
   const handleUploadComplete = useCallback(
     async (projectId: string, uploadedImages: ProjectImage[] | ProjectImage) => {
       logger.debug('Upload complete:', projectId);
@@ -616,13 +605,6 @@ const ProjectDetail = () => {
       const { isValidImageId } = await import('@/api/projectImages');
 
       if (segmentAfterUpload && imagesArray.length > 0) {
-        // Check server health before attempting segmentation
-        const isServerHealthy = await checkServerHealth();
-        if (!isServerHealthy) {
-          logger.warn('Server health check failed, skipping automatic segmentation');
-          toast.warning('Server is not responding properly. Images uploaded but automatic segmentation skipped. You can manually trigger segmentation later.');
-          return;
-        }
         imagesArray.forEach((img, index) => {
           logger.debug(`Image ${index}:`, img);
           if (!img || !img.id) {
@@ -667,11 +649,9 @@ const ProjectDetail = () => {
           toast.info(t('project.segmentation.processingInBatches', { count: imageIdsForSegmentation.length, batches: batches.length }));
         }
 
-        // Postupné zpracování všech dávek s vylepšeným error handlingem
+        // Postupné zpracování všech dávek
         let successCount = 0;
         let failCount = 0;
-        let retryCount = 0;
-        const maxRetries = 2;
 
         for (let i = 0; i < batches.length; i++) {
             const batch = batches[i];
@@ -682,11 +662,7 @@ const ProjectDetail = () => {
               await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
-            let batchSuccess = false;
-            let currentRetry = 0;
-
-            while (!batchSuccess && currentRetry <= maxRetries) {
-              try {
+            try {
                 // Zkusit nejprve nový endpoint s validními parametry
                 const response = await apiClient.post(`/api/projects/${projectId}/segmentations/batch`, {
                     imageIds: batch,
@@ -697,20 +673,17 @@ const ProjectDetail = () => {
                       threshold: 0.5,
                       model: 'resunet'
                     }
-                }, {
-                  timeout: 30000, // 30 second timeout
                 });
                 logger.debug(`Batch ${i+1} trigger response (new endpoint):`, response);
                 successCount += batch.length;
                 apiSuccess = true;
-                batchSuccess = true;
 
                 // Informujeme uživatele o průběhu
                 if (batches.length > 1) {
                   toast.success(t('project.segmentation.batchQueued', { current: i+1, total: batches.length }));
                 }
-              } catch (newEndpointErr: any) {
-                logger.warn(`Batch ${i+1}: New endpoint failed (attempt ${currentRetry + 1}):`, newEndpointErr);
+            } catch (newEndpointErr: any) { // Cast error to any
+                logger.warn(`Batch ${i+1}: New endpoint failed, trying legacy endpoint:`, newEndpointErr);
 
                 try {
                     // Zkusit záložní endpoint s validními parametry
@@ -723,45 +696,24 @@ const ProjectDetail = () => {
                           threshold: 0.5,
                           model: 'resunet'
                         }
-                    }, {
-                      timeout: 30000, // 30 second timeout
                     });
                     logger.debug(`Batch ${i+1} trigger response (legacy endpoint):`, legacyResponse);
                     successCount += batch.length;
                     apiSuccess = true;
-                    batchSuccess = true;
 
                     // Informujeme uživatele o průběhu
                     if (batches.length > 1) {
                       toast.success(t('project.segmentation.batchQueuedFallback', { current: i+1, total: batches.length }));
                     }
-                } catch (legacyErr: any) {
-                    logger.error(`Batch ${i+1}: Both endpoints failed (attempt ${currentRetry + 1}):`, legacyErr);
+                } catch (legacyErr: any) { // Cast error to any
+                    logger.error(`Batch ${i+1}: Both endpoints failed:`, legacyErr);
+                    failCount += batch.length;
 
-                    // Check if it's a server error (502, 503, 504) and retry
-                    const isServerError = legacyErr.response?.status >= 500;
-                    const isNetworkError = !legacyErr.response;
-
-                    if ((isServerError || isNetworkError) && currentRetry < maxRetries) {
-                      currentRetry++;
-                      retryCount++;
-                      logger.info(`Retrying batch ${i+1} (attempt ${currentRetry + 1}/${maxRetries + 1})`);
-
-                      // Exponential backoff: wait longer between retries
-                      await new Promise(resolve => setTimeout(resolve, 2000 * currentRetry));
-                      continue;
-                    } else {
-                      // Final failure
-                      failCount += batch.length;
-                      batchSuccess = true; // Exit retry loop
-
-                      // Informujeme uživatele o chybě
-                      if (batches.length > 1) {
-                        toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
-                      }
+                    // Informujeme uživatele o chybě
+                    if (batches.length > 1) {
+                      toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
                     }
                 }
-              }
             }
         }
 
