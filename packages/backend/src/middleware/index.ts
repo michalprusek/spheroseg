@@ -6,62 +6,22 @@
  */
 
 import express, { Application } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
 
 import config from '../config';
 import logger from '../utils/logger';
 import { errorHandler } from './errorHandler';
+import { configureSecurity } from '../security';
+import { requestLoggerMiddleware } from '../monitoring/unified';
 
 /**
  * Security middleware configuration
  */
 export const configureSecurityMiddleware = (app: Application): void => {
-  // Helmet for security headers
-  app.use(helmet({
-    crossOriginEmbedderPolicy: false, // Disable for Socket.IO compatibility
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "ws:", "wss:"],
-      },
-    },
-  }));
-
-  // CORS configuration
-  app.use(cors({
-    origin: config.server.corsOrigins,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  }));
-
-  // Rate limiting - more lenient in development
-  const limiter = rateLimit({
-    windowMs: config.security.rateLimitWindow * 1000, // Convert to milliseconds
-    max: config.isDevelopment ? 1000 : config.security.rateLimitRequests, // Much higher limit in development
-    message: {
-      error: 'Too many requests',
-      message: 'Rate limit exceeded. Please try again later.',
-      retryAfter: config.security.rateLimitWindow,
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    // Skip rate limiting for health checks and static files
-    skip: (req: express.Request) => {
-      return req.path === '/health' || req.path.startsWith('/uploads/');
-    },
-  });
-  
-  app.use('/api', limiter);
+  configureSecurity(app);
 };
 
 /**
@@ -195,10 +155,13 @@ export const configureMiddleware = (app: Application): void => {
   // 3. Logging middleware
   configureLoggingMiddleware(app);
   
-  // 4. Body parsing middleware
+  // 4. Request monitoring middleware (unified monitoring system)
+  app.use(requestLoggerMiddleware);
+  
+  // 5. Body parsing middleware
   configureBodyParsingMiddleware(app);
   
-  // 5. Static files middleware
+  // 6. Static files middleware
   configureStaticFilesMiddleware(app);
   
   logger.info('All middleware configured successfully');

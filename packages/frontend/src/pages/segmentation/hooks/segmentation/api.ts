@@ -278,11 +278,7 @@ export const fetchSegmentationData = async (
 
   // Try multiple endpoint formats in sequence
   const endpointsToTry = [
-    // First try with project ID if available (new API format)
-    ...(projectId ? [`/api/projects/${projectId}/segmentations/${imageId}?${cacheBuster}`] : []),
-    // Then try the default endpoints
     `/api/images/${imageId}/segmentation?${cacheBuster}`,
-    `/api/segmentations/${imageId}?${cacheBuster}`,
   ];
 
   for (const endpoint of endpointsToTry) {
@@ -423,11 +419,7 @@ export const saveSegmentationData = async (
 
   // Try multiple endpoint formats in sequence
   const endpointsToTry = [
-    // First try the new API format with projectId
-    `/api/projects/${projectId}/segmentations/${saveId}`,
-    // Then try the default endpoints
     `/api/images/${saveId}/segmentation`,
-    `/api/projects/${projectId}/images/${saveId}/segmentation`,
   ];
 
   let savedSuccessfully = false;
@@ -460,11 +452,7 @@ export const deleteSegmentationData = async (projectId: string, imageId: string)
 
   // Try multiple endpoint formats in sequence
   const endpointsToTry = [
-    // First try the new API format with projectId
-    `/api/projects/${projectId}/segmentations/${imageId}`,
-    // Then try the default endpoints
     `/api/images/${imageId}/segmentation`,
-    `/api/projects/${projectId}/images/${imageId}/segmentation`,
   ];
 
   let deletedSuccessfully = false;
@@ -547,7 +535,7 @@ export const triggerSegmentation = async (imageId: string, parameters?: Record<s
       model_type: 'resunet',
     };
 
-    const response = await apiClient.post(`/api/segmentations/${imageId}/trigger`, {
+    const response = await apiClient.post(`/api/images/${imageId}/segmentation`, {
       parameters: segmentationParams,
     });
 
@@ -565,7 +553,7 @@ export const fetchSegmentationQueueStatus = async (): Promise<any> => {
   logger.info('Fetching segmentation queue status');
 
   try {
-    const response = await apiClient.get('/api/segmentations/queue/status');
+    const response = await apiClient.get('/api/segmentation/queue');
     return response.data;
   } catch (error) {
     logger.error(`Error fetching segmentation queue status: ${error instanceof Error ? error.message : String(error)}`);

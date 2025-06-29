@@ -33,87 +33,114 @@ const config = {
   isTest,
 
   server: {
-    port: parseInt(process.env.PORT || '5001', 10),
-    host: process.env.HOST || '0.0.0.0',
-    corsOrigins: process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(',')
+    port: parseInt(validatedEnv.PORT || '5001', 10),
+    host: validatedEnv.HOST || '0.0.0.0',
+    corsOrigins: validatedEnv.ALLOWED_ORIGINS
+      ? validatedEnv.ALLOWED_ORIGINS.split(',')
       : ['http://localhost:3000', 'http://frontend:3000'],
-    publicUrl: process.env.PUBLIC_URL || 'http://localhost:5001',
+    publicUrl: validatedEnv.APP_URL || 'http://localhost:5001',
   },
 
-  baseUrl: process.env.BASE_URL || 'http://localhost:5001',
+  baseUrl: validatedEnv.APP_URL || 'http://localhost:5001',
+  appUrl: validatedEnv.APP_URL || 'http://localhost:5001',
 
   db: {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    database: process.env.DB_NAME || 'spheroseg',
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
-    ssl: process.env.DB_SSL === 'true',
-    maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '10', 10),
+    host: validatedEnv.DB_HOST || 'localhost',
+    port: parseInt(validatedEnv.DB_PORT || '5432', 10),
+    database: validatedEnv.DB_NAME || 'spheroseg',
+    user: validatedEnv.DB_USER || 'postgres',
+    password: validatedEnv.DB_PASSWORD || 'postgres',
+    ssl: validatedEnv.DB_SSL === 'true',
+    maxConnections: parseInt(validatedEnv.DB_MAX_CONNECTIONS || '10', 10),
   },
 
   auth: {
-    jwtSecret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
-    accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY || '15m',
-    refreshTokenExpiry: process.env.REFRESH_TOKEN_EXPIRY || '7d',
-    saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10),
-    sessionTimeout: parseInt(process.env.SESSION_TIMEOUT || '3600', 10),
-    allowMockUser: process.env.ALLOW_MOCK_USER === 'true' || isDevelopment,
-    tokenSecurityMode: process.env.TOKEN_SECURITY_MODE || 'standard',
+    jwtSecret: validatedEnv.JWT_SECRET || 'your-secret-key-change-in-production',
+    jwtExpiresIn: validatedEnv.JWT_EXPIRES_IN || '1d',
+    accessTokenExpiry: validatedEnv.ACCESS_TOKEN_EXPIRY || '15m',
+    refreshTokenExpiry: validatedEnv.REFRESH_TOKEN_EXPIRY || '7d',
+    saltRounds: parseInt(validatedEnv.BCRYPT_SALT_ROUNDS || '10', 10),
+    sessionTimeout: parseInt(validatedEnv.SESSION_TIMEOUT || '3600', 10),
+    allowMockUser: validatedEnv.USE_MOCK_USER === 'true' || isDevelopment,
+    tokenSecurityMode: validatedEnv.TOKEN_SECURITY_MODE || 'standard',
   },
 
   storage: {
-    uploadDir: process.env.UPLOAD_DIR || path.join(ROOT_DIR, 'uploads'),
-    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '50000000', 10),
-    allowedFileTypes: (process.env.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/tiff,image/tif,image/bmp').split(','),
+    uploadDir: validatedEnv.UPLOAD_DIR || path.join(ROOT_DIR, 'uploads'),
+    maxFileSize: parseInt(validatedEnv.MAX_UPLOAD_SIZE || '50000000', 10),
+    allowedFileTypes: (validatedEnv.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/tiff,image/tif,image/bmp').split(','),
     // Storage limits and monitoring
-    defaultUserStorageLimit: parseInt(process.env.DEFAULT_USER_STORAGE_LIMIT || '10737418240', 10), // 10 GB
-    defaultUserLimitBytes: BigInt(process.env.DEFAULT_USER_STORAGE_LIMIT || '10737418240'), // 10 GB as BigInt
-    maxTotalStorageBytes: parseInt(process.env.MAX_TOTAL_STORAGE_BYTES || '107374182400', 10), // 100 GB
-    storageWarningThreshold: parseFloat(process.env.STORAGE_WARNING_THRESHOLD || '0.8'), // 80%
+    defaultUserStorageLimit: parseInt(validatedEnv.DEFAULT_USER_STORAGE_LIMIT || '10737418240', 10), // 10 GB
+    defaultUserLimitBytes: BigInt(validatedEnv.DEFAULT_USER_STORAGE_LIMIT || '10737418240'), // 10 GB as BigInt
+    maxTotalStorageBytes: parseInt(validatedEnv.MAX_TOTAL_STORAGE_BYTES || '107374182400', 10), // 100 GB
+    storageWarningThreshold: parseFloat(validatedEnv.STORAGE_WARNING_THRESHOLD || '0.8'), // 80%
     // File cleanup configuration
-    tempFileMaxAgeHours: parseInt(process.env.TEMP_FILE_MAX_AGE_HOURS || '24', 10),
-    cleanupScheduleHours: parseInt(process.env.CLEANUP_SCHEDULE_HOURS || '6', 10), // Run every 6 hours
-    enableOrphanedFileCleanup: process.env.ENABLE_ORPHANED_FILE_CLEANUP !== 'false',
+    tempFileMaxAgeHours: parseInt(validatedEnv.TEMP_FILE_MAX_AGE_HOURS || '24', 10),
+    cleanupScheduleHours: parseInt(validatedEnv.CLEANUP_SCHEDULE_HOURS || '6', 10), // Run every 6 hours
+    enableOrphanedFileCleanup: validatedEnv.ENABLE_ORPHANED_FILE_CLEANUP !== 'false',
     // Thumbnail configuration
-    thumbnailQuality: parseInt(process.env.THUMBNAIL_QUALITY || '80', 10),
-    thumbnailMaxWidth: parseInt(process.env.THUMBNAIL_MAX_WIDTH || '300', 10),
-    thumbnailMaxHeight: parseInt(process.env.THUMBNAIL_MAX_HEIGHT || '300', 10),
+    thumbnailQuality: parseInt(validatedEnv.THUMBNAIL_QUALITY || '80', 10),
+    thumbnailMaxWidth: parseInt(validatedEnv.THUMBNAIL_MAX_WIDTH || '300', 10),
+    thumbnailMaxHeight: parseInt(validatedEnv.THUMBNAIL_MAX_HEIGHT || '300', 10),
   },
 
   ml: {
-    serviceUrl: process.env.ML_SERVICE_URL || 'http://localhost:5002',
-    maxRetries: parseInt(process.env.ML_MAX_RETRIES || '3', 10),
-    retryDelay: parseInt(process.env.ML_RETRY_DELAY || '5000', 10),
-    maxConcurrentTasks: parseInt(process.env.ML_MAX_CONCURRENT_TASKS || '2', 10),
+    serviceUrl: validatedEnv.ML_SERVICE_URL || 'http://ml:5002',
+    maxRetries: parseInt(validatedEnv.ML_MAX_RETRIES || '3', 10),
+    retryDelay: parseInt(validatedEnv.ML_RETRY_DELAY || '5000', 10),
+    maxConcurrentTasks: parseInt(validatedEnv.ML_MAX_CONCURRENT_TASKS || '2', 10),
+    healthCheckInterval: parseInt(validatedEnv.ML_HEALTH_CHECK_INTERVAL || '60000', 10),
+    queueUpdateInterval: parseInt(validatedEnv.ML_QUEUE_UPDATE_INTERVAL || '5000', 10),
   },
 
   segmentation: {
-    maxConcurrentTasks: parseInt(process.env.SEGMENTATION_MAX_CONCURRENT_TASKS || '2', 10),
-    checkpointPath: process.env.SEGMENTATION_CHECKPOINT_PATH || '/app/models/resunet',
-    maxRetries: parseInt(process.env.SEGMENTATION_MAX_RETRIES || '3', 10),
-    retryDelay: parseInt(process.env.SEGMENTATION_RETRY_DELAY || '5000', 10),
+    maxConcurrentTasks: parseInt(validatedEnv.SEGMENTATION_MAX_CONCURRENT_TASKS || '2', 10),
+    checkpointPath: validatedEnv.SEGMENTATION_CHECKPOINT_PATH || '/app/models/resunet',
+    maxRetries: parseInt(validatedEnv.SEGMENTATION_MAX_RETRIES || '3', 10),
+    retryDelay: parseInt(validatedEnv.SEGMENTATION_RETRY_DELAY || '5000', 10),
   },
 
   logging: {
-    level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
-    logToFile: process.env.LOG_TO_FILE === 'true',
-    logDir: process.env.LOG_DIR || path.join(ROOT_DIR, 'logs'),
+    level: validatedEnv.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
+    logToFile: validatedEnv.LOG_TO_FILE === 'true',
+    logDir: validatedEnv.LOG_DIR || path.join(ROOT_DIR, 'logs'),
   },
 
   monitoring: {
-    metricsEnabled: process.env.METRICS_ENABLED !== 'false',
-    requestTimeoutMs: parseInt(process.env.REQUEST_TIMEOUT_MS || '30000', 10),
+    metricsEnabled: validatedEnv.METRICS_ENABLED !== 'false',
+    requestTimeoutMs: parseInt(validatedEnv.REQUEST_TIMEOUT_MS || '30000', 10),
   },
 
   security: {
-    rateLimitRequests: parseInt(process.env.RATE_LIMIT_REQUESTS || '100', 10),
-    rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '60', 10), // seconds
-    enableHelmet: process.env.ENABLE_HELMET !== 'false',
-    enableRateLimit: process.env.ENABLE_RATE_LIMIT !== 'false',
-    csrfEnabled: process.env.CSRF_ENABLED !== 'false',
+    rateLimitRequests: parseInt(validatedEnv.RATE_LIMIT_REQUESTS || '100', 10),
+    rateLimitWindow: parseInt(validatedEnv.RATE_LIMIT_WINDOW || '60', 10), // seconds
+    enableHelmet: validatedEnv.ENABLE_HELMET !== 'false',
+    enableRateLimit: validatedEnv.ENABLE_RATE_LIMIT !== 'false',
+    csrfEnabled: validatedEnv.CSRF_ENABLED !== 'false',
+    useRedis: validatedEnv.USE_REDIS_RATE_LIMIT === 'true',
+    ipWhitelist: validatedEnv.IP_WHITELIST ? validatedEnv.IP_WHITELIST.split(',') : [],
+  },
+
+  redis: {
+    url: validatedEnv.REDIS_URL || 'redis://localhost:6379',
+    host: validatedEnv.REDIS_HOST || 'localhost',
+    port: parseInt(validatedEnv.REDIS_PORT || '6379', 10),
+    password: validatedEnv.REDIS_PASSWORD,
+    db: parseInt(validatedEnv.REDIS_DB || '0', 10),
+  },
+
+  email: {
+    from: validatedEnv.EMAIL_FROM || 'spheroseg@utia.cas.cz',
+    host: validatedEnv.EMAIL_HOST,
+    port: parseInt(validatedEnv.EMAIL_PORT || '587', 10),
+    secure: validatedEnv.EMAIL_SECURE === 'true',
+    user: validatedEnv.EMAIL_USER,
+    pass: validatedEnv.EMAIL_PASS,
+  },
+
+  rabbitmq: {
+    url: validatedEnv.RABBITMQ_URL || 'amqp://guest:guest@rabbitmq:5672',
+    queue: validatedEnv.RABBITMQ_QUEUE || 'segmentation_tasks',
   },
 };
 

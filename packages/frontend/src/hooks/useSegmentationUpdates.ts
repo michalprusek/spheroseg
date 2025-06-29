@@ -5,6 +5,7 @@
  */
 import { useEffect, useState, useCallback } from 'react';
 import useSocketConnection from './useSocketConnection';
+import apiClient from '@/lib/apiClient';
 
 export interface SegmentationUpdate {
   imageId: string;
@@ -20,6 +21,7 @@ export interface QueueStatusUpdate {
   queueLength: number;
   activeTasksCount: number;
   timestamp: string;
+  processingImages: string[]; // Added this line
 }
 
 interface UseSegmentationUpdatesOptions {
@@ -77,95 +79,82 @@ export const useSegmentationUpdates = (options: UseSegmentationUpdatesOptions = 
   );
 
   // Check for queue data via API instead of unreliable localStorage
-  const checkLocalQueueData = useCallback(() => {
+  const checkLocalQueueData = useCallback(async () => {
     try {
-      // Try to fetch current queue status via API
-      // First try the new endpoint
-      fetch('/api/segmentation/queue-status')
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          }
-          // If that fails, try the legacy endpoint
-          return fetch('/api/segmentation/queue').then((legacyResponse) => {
-            if (legacyResponse.ok) {
-              return legacyResponse.json();
-            }
-            throw new Error('Failed to fetch queue status from both endpoints');
-          });
-        })
-        .then((data) => {
-          // Normalize the data structure regardless of which endpoint was used
-          const responseData = data.data || data;
+      let responseData: any;
+      try {
+        // First try the new endpoint
+        const response = await apiClient.get('/api/segmentation/queue-status');
+        responseData = response.data;
+      } catch (error) {
+        // If that fails, try the legacy endpoint
+        const legacyResponse = await apiClient.get('/api/segmentation/queue');
+        responseData = legacyResponse.data;
+      }
 
-          if (responseData) {
-            const queueData: QueueStatusUpdate = {
-              pendingTasks: responseData.pendingTasks || responseData.queuedTasks || [],
-              runningTasks: responseData.runningTasks || [],
-              queueLength: responseData.queueLength || 0,
-              activeTasksCount: responseData.activeTasksCount || responseData.runningTasks?.length || 0,
-              timestamp: responseData.timestamp || new Date().toISOString(),
-              processingImages: responseData.processingImages || [],
-            };
+      // Normalize the data structure regardless of which endpoint was used
+      const finalResponseData = responseData.data || responseData;
 
-            setQueueStatus(queueData);
+      if (finalResponseData) {
+        const queueData: QueueStatusUpdate = {
+          pendingTasks: finalResponseData.pendingTasks || finalResponseData.queuedTasks || [],
+          runningTasks: finalResponseData.runningTasks || [],
+          queueLength: finalResponseData.queueLength || 0,
+          activeTasksCount: finalResponseData.activeTasksCount || finalResponseData.runningTasks?.length || 0,
+          timestamp: finalResponseData.timestamp || new Date().toISOString(),
+          processingImages: finalResponseData.processingImages || [],
+        };
 
-            // Call the queue update callback if provided
-            if (onQueueUpdate) {
-              onQueueUpdate(queueData);
-            }
+        setQueueStatus(queueData);
 
-            // If tracking a specific image and it's in the processing queue, generate an update
-            if (
-              imageId &&
-              (queueData.pendingTasks.includes(imageId) ||
-                queueData.runningTasks.includes(imageId) ||
-                queueData.processingImages?.some((img) => img.id === imageId))
-            ) {
-              const statusUpdate: SegmentationUpdate = {
-                imageId,
-                status: queueData.runningTasks.includes(imageId) ? 'processing' : 'processing',
-                timestamp: new Date().toISOString(),
-              };
+        // Call the queue update callback if provided
+        if (onQueueUpdate) {
+          onQueueUpdate(queueData);
+        }
 
-              setLastUpdate(statusUpdate);
-
-              // Call the update callback if provided
-              if (onUpdate) {
-                onUpdate(statusUpdate);
-              }
-            }
-
-            return true;
-          }
-          return false;
-        })
-        .catch((error) => {
-          console.error('Error fetching segmentation queue status:', error);
-
-          // Create empty queue status on error
-          const emptyQueueData: QueueStatusUpdate = {
-            pendingTasks: [],
-            runningTasks: [],
-            queueLength: 0,
-            activeTasksCount: 0,
+        // If tracking a specific image and it's in the processing queue, generate an update
+        if (
+          imageId &&
+          (queueData.pendingTasks.includes(imageId) ||
+            queueData.runningTasks.includes(imageId) ||
+            queueData.processingImages?.some((img: any) => img.id === imageId)) // Added any for processingImages
+        ) {
+          const statusUpdate: SegmentationUpdate = {
+            imageId,
+            status: queueData.runningTasks.includes(imageId) ? 'processing' : 'processing',
             timestamp: new Date().toISOString(),
-            processingImages: [],
           };
 
-          setQueueStatus(emptyQueueData);
+          setLastUpdate(statusUpdate);
 
-          if (onQueueUpdate) {
-            onQueueUpdate(emptyQueueData);
+          // Call the update callback if provided
+          if (onUpdate) {
+            onUpdate(statusUpdate);
           }
+        }
 
-          return false;
-        });
-
-      // Assume we're fetching data - the fetch promise will handle the actual state update
-      return true;
+        return true;
+      }
+      return false;
     } catch (error) {
-      console.error('Error checking segmentation queue data:', error);
+      console.error('Error fetching segmentation queue status:', error);
+
+      // Create empty queue status on error
+      const emptyQueueData: QueueStatusUpdate = {
+        pendingTasks: [],
+        runningTasks: [],
+        queueLength: 0,
+        activeTasksCount: 0,
+        timestamp: new Date().toISOString(),
+        processingImages: [],
+      };
+
+      setQueueStatus(emptyQueueData);
+
+      if (onQueueUpdate) {
+        onQueueUpdate(emptyQueueData);
+      }
+
       return false;
     }
   }, [imageId, onQueueUpdate, onUpdate]);
@@ -184,32 +173,30 @@ export const useSegmentationUpdates = (options: UseSegmentationUpdatesOptions = 
         console.error('Failed to establish WebSocket connection for segmentation updates');
 
         // Try to fetch current queue status via API (without generating mock updates)
-        // First try the new endpoint
-        fetch('/api/segmentation/queue-status')
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
+        (async () => {
+          try {
+            let responseData: any;
+            try {
+              // First try the new endpoint
+              const response = await apiClient.get('/api/segmentation/queue-status');
+              responseData = response.data;
+            } catch (error) {
+              // If that fails, try the legacy endpoint
+              const legacyResponse = await apiClient.get('/api/segmentation/queue');
+              responseData = legacyResponse.data;
             }
-            // If that fails, try the legacy endpoint
-            return fetch('/api/segmentation/queue').then((legacyResponse) => {
-              if (legacyResponse.ok) {
-                return legacyResponse.json();
-              }
-              throw new Error('Failed to fetch queue status from both endpoints');
-            });
-          })
-          .then((data) => {
-            // Normalize the data structure regardless of which endpoint was used
-            const responseData = data.data || data;
 
-            if (responseData) {
+            // Normalize the data structure regardless of which endpoint was used
+            const finalResponseData = responseData.data || responseData;
+
+            if (finalResponseData) {
               const queueData: QueueStatusUpdate = {
-                pendingTasks: responseData.pendingTasks || responseData.queuedTasks || [],
-                runningTasks: responseData.runningTasks || [],
-                queueLength: responseData.queueLength || 0,
-                activeTasksCount: responseData.activeTasksCount || responseData.runningTasks?.length || 0,
-                timestamp: responseData.timestamp || new Date().toISOString(),
-                processingImages: responseData.processingImages || [],
+                pendingTasks: finalResponseData.pendingTasks || finalResponseData.queuedTasks || [],
+                runningTasks: finalResponseData.runningTasks || [],
+                queueLength: finalResponseData.queueLength || 0,
+                activeTasksCount: finalResponseData.activeTasksCount || finalResponseData.runningTasks?.length || 0,
+                timestamp: finalResponseData.timestamp || new Date().toISOString(),
+                processingImages: finalResponseData.processingImages || [],
               };
 
               setQueueStatus(queueData);
@@ -219,8 +206,7 @@ export const useSegmentationUpdates = (options: UseSegmentationUpdatesOptions = 
                 onQueueUpdate(queueData);
               }
             }
-          })
-          .catch((error) => {
+          } catch (error) {
             console.error('Error fetching segmentation queue status:', error);
 
             // Create empty queue status on error
@@ -238,7 +224,8 @@ export const useSegmentationUpdates = (options: UseSegmentationUpdatesOptions = 
             if (onQueueUpdate) {
               onQueueUpdate(emptyQueueData);
             }
-          });
+          }
+        })();
       }
 
       return () => {}; // Empty cleanup function

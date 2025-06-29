@@ -22,10 +22,11 @@ import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations'
 import { Polygon, Point } from '@/pages/segmentation/types';
 
 // Import polygon utility functions to test
-import { isPointInPolygon } from '@/pages/segmentation/utils/polygonUtils';
-import { slicePolygon } from '@/pages/segmentation/utils/polygonSlicing';
-import { simplifyPolygon } from '@/pages/segmentation/utils/polygonSimplification';
-import { createPolygonPath } from '@/pages/segmentation/utils/polygonRendering';
+import { 
+  isPointInPolygon, 
+  slicePolygonObject as slicePolygon,
+  simplifyPolygon 
+} from '@spheroseg/shared/utils/polygonUtils';
 
 // Define performance test thresholds
 const PERFORMANCE_THRESHOLDS = {
@@ -190,45 +191,7 @@ describe('Polygon Operations Performance Tests', () => {
     );
   });
 
-  test('polygon path generation performance', async () => {
-    // Generate paths for simple polygons
-    const simplePolygons = generateRandomPolygons(100, 10);
-
-    const result = await measurePerformance(
-      'Polygon path generation (100 simple polygons)',
-      (_, iteration) => {
-        for (const polygon of simplePolygons) {
-          createPolygonPath(polygon.points);
-        }
-      },
-      { iterations: 5, warmupIterations: 1 },
-    );
-
-    checkPerformance(
-      result.averageDuration || 0,
-      PERFORMANCE_THRESHOLDS.PATH_GENERATION.SIMPLE,
-      'Polygon path generation (simple)',
-    );
-
-    // Generate paths for complex polygons
-    const complexPolygons = generateRandomPolygons(100, 50);
-
-    const complexResult = await measurePerformance(
-      'Polygon path generation (100 complex polygons)',
-      (_, iteration) => {
-        for (const polygon of complexPolygons) {
-          createPolygonPath(polygon.points);
-        }
-      },
-      { iterations: 5, warmupIterations: 1 },
-    );
-
-    checkPerformance(
-      complexResult.averageDuration || 0,
-      PERFORMANCE_THRESHOLDS.PATH_GENERATION.COMPLEX,
-      'Polygon path generation (complex)',
-    );
-  });
+  // Path generation tests removed - createPolygonPath is not available in shared utilities
 
   test('polygon simplification performance', async () => {
     // Generate a very large polygon for simplification

@@ -4,7 +4,7 @@
  */
 import express from 'express';
 import logger from '../utils/logger';
-import { standardLimiter } from '../middleware/rateLimitMiddleware';
+import { standardLimiter } from '../security/middleware/rateLimitMiddleware';
 
 const router = express.Router();
 

@@ -9,7 +9,7 @@ import path from 'path';
 import userProfileService from '../services/userProfileService';
 import logger from '../utils/logger';
 import dbPool from '../db';
-import { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { AuthenticatedRequest } from '../security/middleware/auth';;
 
 // Multer configuration for avatar uploads
 const storage = multer.memoryStorage();

@@ -13,6 +13,7 @@ import ProjectsTab from '@/components/dashboard/ProjectsTab';
 import { useDashboardProjects } from '@/hooks/useDashboardProjects';
 import { useProjectDelete } from '@/hooks/useProjectDelete';
 import apiClient from '@/lib/apiClient';
+import { useCacheManager } from '@/hooks/useUnifiedCache';
 
 const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -22,23 +23,31 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
+  const { clearByTag } = useCacheManager();
 
   const { projects, loading, error, fetchProjects } = useDashboardProjects();
 
   // Force refresh statistics when dashboard is loaded
   useEffect(() => {
-    // Invalidate statistics cache to force a refresh
-    queryClient.invalidateQueries(['userStatistics']);
+    const refreshDashboardData = async () => {
+      // Clear all dashboard-related caches
+      await clearByTag('dashboard-data');
+      await clearByTag('user-statistics');
+      await clearByTag('project-data');
+      
+      // Invalidate React Query caches
+      queryClient.invalidateQueries(['userStatistics']);
+      queryClient.invalidateQueries(['projects']);
 
-    // Also invalidate projects cache
-    queryClient.invalidateQueries(['projects']);
+      // Log that we're refreshing data
+      console.log('Dashboard loaded - refreshing statistics and projects data');
 
-    // Log that we're refreshing data
-    console.log('Dashboard loaded - refreshing statistics and projects data');
-
-    // Fetch projects directly with current sort parameters
-    fetchProjects(10, 0, sortField, sortDirection);
-  }, [queryClient, fetchProjects, sortField, sortDirection]);
+      // Fetch projects directly with current sort parameters
+      fetchProjects(10, 0, sortField, sortDirection);
+    };
+    
+    refreshDashboardData();
+  }, [queryClient, clearByTag, fetchProjects, sortField, sortDirection]);
 
   useEffect(() => {
     // Poslouchej události pro aktualizaci seznamu projektů

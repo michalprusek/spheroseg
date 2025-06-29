@@ -1,11 +1,11 @@
 import { PoolClient } from 'pg';
-import pool from '../db';
+import { getPool } from '../db';
 import fs from 'fs';
 import path from 'path';
 import logger from '../utils/logger';
 import imageUtils from '../utils/imageUtils.unified';
 import config from '../config';
-import { ApiError } from '../middleware/errorMiddleware';
+import { ApiError } from '../utils/ApiError';
 
 // Type for delete image result
 interface DeleteImageResult {
@@ -49,6 +49,7 @@ export async function deleteImage(imageId: string, projectId: string, userId: st
     });
   }
   const UPLOAD_DIR = config.storage.uploadDir;
+  const pool = getPool();
   const client = await pool.connect();
   const result: DeleteImageResult = { imageId, success: false };
   let imageData: ImageFilePaths | null = null;
@@ -252,6 +253,7 @@ export async function deleteMultipleImages(
  */
 export async function canDeleteImage(imageId: string, projectId: string, userId: string): Promise<boolean> {
   try {
+    const pool = getPool();
     // Check if user owns the project and the image exists in it
     const imageCheck = await pool.query(
       `SELECT i.id

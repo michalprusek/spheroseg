@@ -1,21 +1,15 @@
-// packages/backend/src/utils/errors.ts
+/**
+ * Legacy error classes for backward compatibility
+ * 
+ * @deprecated Use ApiError from './ApiError' instead
+ * This file is kept for backward compatibility with existing code.
+ * New code should use the unified ApiError class.
+ */
 
-export class ApiError extends Error {
-  public statusCode: number;
-  public isOperational: boolean;
+import { ApiError as UnifiedApiError, ErrorCode } from './ApiError';
 
-  constructor(statusCode: number, message: string, isOperational = true, stack = '') {
-    super(message);
-    this.name = this.constructor.name; // Set the error name to the class name
-    this.statusCode = statusCode;
-    this.isOperational = isOperational; // To distinguish from unexpected programming errors
-    if (stack) {
-      this.stack = stack;
-    } else {
-      Error.captureStackTrace(this, this.constructor);
-    }
-  }
-}
+// Re-export the unified ApiError for consistency
+export { ApiError } from './ApiError';
 
 // Common HTTP status codes for errors
 export const HTTP_STATUS_CODES = {
@@ -32,39 +26,39 @@ export const HTTP_STATUS_CODES = {
   SERVICE_UNAVAILABLE: 503,
 };
 
-// Example of more specific error classes
-export class BadRequestError extends ApiError {
+// Legacy error classes that extend the unified ApiError
+export class BadRequestError extends UnifiedApiError {
   constructor(message = 'Bad Request') {
-    super(HTTP_STATUS_CODES.BAD_REQUEST, message);
+    super(message, HTTP_STATUS_CODES.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
   }
 }
 
-export class NotFoundError extends ApiError {
+export class NotFoundError extends UnifiedApiError {
   constructor(message = 'Resource Not Found') {
-    super(HTTP_STATUS_CODES.NOT_FOUND, message);
+    super(message, HTTP_STATUS_CODES.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND);
   }
 }
 
-export class UnauthorizedError extends ApiError {
+export class UnauthorizedError extends UnifiedApiError {
   constructor(message = 'Unauthorized') {
-    super(HTTP_STATUS_CODES.UNAUTHORIZED, message);
+    super(message, HTTP_STATUS_CODES.UNAUTHORIZED, ErrorCode.AUTHENTICATION_REQUIRED);
   }
 }
 
-export class ForbiddenError extends ApiError {
+export class ForbiddenError extends UnifiedApiError {
   constructor(message = 'Forbidden') {
-    super(HTTP_STATUS_CODES.FORBIDDEN, message);
+    super(message, HTTP_STATUS_CODES.FORBIDDEN, ErrorCode.INSUFFICIENT_PERMISSIONS);
   }
 }
 
-export class UnprocessableEntityError extends ApiError {
+export class UnprocessableEntityError extends UnifiedApiError {
   constructor(message = 'Unprocessable Entity') {
-    super(HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY, message);
+    super(message, HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY, ErrorCode.VALIDATION_ERROR);
   }
 }
 
-export class InternalServerError extends ApiError {
+export class InternalServerError extends UnifiedApiError {
   constructor(message = 'Internal Server Error') {
-    super(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, message);
+    super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR);
   }
 }

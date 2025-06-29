@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
-import { ApiError, ErrorCode } from '../utils/ApiError';
-import { sendError } from '../utils/apiResponse';
+import { ApiError } from '../utils/errors';
+import { ErrorCode } from '../utils/ApiError';
 import logger from '../utils/logger';
 import config from '../config';
 
@@ -17,6 +17,7 @@ export const errorHandler: ErrorRequestHandler = (
   if (res.headersSent) {
     return next(err);
   }
+
 
   let error = err;
 
@@ -57,16 +58,16 @@ export const errorHandler: ErrorRequestHandler = (
       message: error.message,
       code: error.code,
       statusCode: error.statusCode,
-      stack: error.stack,
+      stack: config.isDevelopment ? error.stack : undefined,
       isOperational: error.isOperational,
     },
     request: {
       method: req.method,
       url: req.url,
       headers: req.headers,
-      body: req.body,
-      params: req.params,
-      query: req.query,
+      body: req.body || {},
+      params: req.params || {},
+      query: req.query || {},
       ip: req.ip,
       userAgent: req.get('User-Agent'),
     },

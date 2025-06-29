@@ -6,7 +6,7 @@
 
 import express, { Response, Router, NextFunction } from 'express';
 import { z } from 'zod';
-import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
 import { validate } from '../middleware/validationMiddleware';
 import pool from '../db';
 import logger from '../utils/logger';

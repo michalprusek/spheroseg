@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { TFunction } from 'i18next';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
 import apiClient from '@/lib/apiClient';
-import { createLogger } from '@/lib/logger';
+import { createNamespacedLogger } from '@/utils/logger';
 
 // Create a logger for this module
-const logger = createLogger('useSegmentationV2');
+const logger = createNamespacedLogger('useSegmentationV2');
 
 import { EditMode, InteractionState, Point, SegmentationData, TransformState, ImageData } from './types';
 import { MIN_ZOOM, MAX_ZOOM } from './constants';
@@ -221,195 +221,225 @@ export const useSegmentationV2 = (
     console.log(`[useSegmentationV2] Reset state for new image: ${initialImageId}`);
   }, [initialImageId, setSegmentationDataWithHistory]);
 
-  // Fetch data when projectId or imageIdRef changes
-  useEffect(() => {
-    // Skip if no project ID or image ID
+  // Define fetchData as a useCallback at the top level of the hook
+  const fetchData = useCallback(async () => {
+    // Use a flag to track if the component is still mounted within this callback
+    const isMounted = true; // This flag is local to the useCallback scope
+
+    // Ensure projectId and imageIdRef.current are not null/undefined before proceeding
     if (!projectId || !imageIdRef.current) {
       setIsLoading(false);
       return;
     }
 
-    // Use a flag to track if the component is still mounted
-    let isMounted = true;
-
-    // Create a new abort controller for this effect instance
+    // Create a new abort controller for this fetch operation
     const controller = new AbortController();
-    abortControllerRef.current = controller;
+    abortControllerRef.current = controller; // Store it in the ref for cleanup
     const signal = controller.signal;
 
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        console.log(`[useSegmentationV2] Fetching data for Project: ${projectId}, Image: ${imageIdRef.current}`);
+      logger.debug(`Fetching data for Project: ${projectId}, Image: ${imageIdRef.current}`);
 
-        // Log cache stats
-        const cacheStats = getCacheStats();
-        console.log(`[useSegmentationV2] Cache stats: ${cacheStats.size} items cached`);
+      // Log cache stats
+      const cacheStats = getCacheStats();
+      logger.debug(`Cache stats: ${cacheStats.size} items cached`);
 
-        // Fetch image data
-        const fetchedImageData = await fetchImageData(projectId, imageIdRef.current, signal);
+      // Fetch image data
+      const fetchedImageData = await fetchImageData(projectId, imageIdRef.current, signal);
 
-        // Check if component is still mounted before updating state
-        if (!isMounted) return;
+      // Check if component is still mounted before updating state
+      if (!isMounted) return;
 
-        // Handle ID mismatch between requested and actual image
-        if (imageIdRef.current !== fetchedImageData.id) {
-          console.log(
-            `[useSegmentationV2] Found different image ID: ${fetchedImageData.id} (requested: ${imageIdRef.current})`,
-          );
-          // Store the actual ID for segmentation fetching
-          fetchedImageData.actualId = fetchedImageData.id;
-        }
-
-        // Set image data
-        setImageData(fetchedImageData);
-        console.log(`[useSegmentationV2] Fetched Image Data:`, fetchedImageData);
-
-        // Fetch segmentation data using the actual ID if available
-        const segmentationId = fetchedImageData.actualId || imageIdRef.current;
-
-        // Try to get segmentation data from cache first
-        const cachedSegmentation = getFromCache(segmentationId);
-
-        if (cachedSegmentation) {
-          // Use cached segmentation data
-          console.log(`[useSegmentationV2] Using cached segmentation data for: ${segmentationId}`);
-          setSegmentationDataWithHistory(cachedSegmentation, true);
-          setIsLoading(false);
-
-          // Optionally refresh cache in background
-          setTimeout(() => {
-            refreshSegmentationInBackground(segmentationId);
-          }, 2000);
-
-          return;
-        }
-
-        console.log(`[useSegmentationV2] No cached data, fetching segmentation from API: ${segmentationId}`);
-
-        try {
-          // Create a separate controller for segmentation fetch that won't be aborted by navigation
-          const segmentationController = new AbortController();
-          const segmentationSignal = segmentationController.signal;
-
-          // Fetch segmentation data with a timeout
-          const fetchSegmentationPromise = fetchSegmentationData(segmentationId, segmentationSignal);
-
-          // Create a timeout promise
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => {
-              reject(new Error('Segmentation fetch timeout'));
-              segmentationController.abort();
-            }, 5000); // 5 second timeout
-          });
-
-          // Race the fetch against the timeout
-          const fetchedSegmentation = (await Promise.race([
-            fetchSegmentationPromise,
-            timeoutPromise,
-          ])) as SegmentationData;
-
-          // Check if component is still mounted before updating state
-          if (!isMounted) return;
-
-          console.log('[useSegmentationV2] Received segmentation data:', fetchedSegmentation);
-
-          // Add to cache
-          addToCache(segmentationId, fetchedSegmentation);
-
-          // Set segmentation data with history (true = overwrite history)
-          setSegmentationDataWithHistory(fetchedSegmentation, true);
-          console.log(`[useSegmentationV2] Fetched Segmentation Data:`, fetchedSegmentation);
-        } catch (segError) {
-          // Check if component is still mounted before updating state
-          if (!isMounted) return;
-
-          console.error('[useSegmentationV2] Error fetching segmentation data:', segError);
-
-          // Log detailed error information
-          logger.error(`Error fetching segmentation data for imageId=${segmentationId}`, {
-            error: segError,
-            projectId,
-            imageId: segmentationId,
-          });
-
-          // Create empty segmentation data and reset history
-          const emptySegmentation = createEmptySegmentation(segmentationId);
-
-          // Add empty segmentation to cache
-          addToCache(segmentationId, emptySegmentation);
-
-          setSegmentationDataWithHistory(emptySegmentation, true);
-          console.log(`[useSegmentationV2] Created empty segmentation data for: ${segmentationId}`);
-        }
-
-        // Center the image in the canvas
-        if (canvasRef.current && fetchedImageData.width && fetchedImageData.height) {
-          const canvasWidth = canvasRef.current.clientWidth;
-          const canvasHeight = canvasRef.current.clientHeight;
-
-          const newTransform = calculateCenteringTransform(
-            fetchedImageData.width,
-            fetchedImageData.height,
-            canvasWidth,
-            canvasHeight,
-          );
-
-          setTransform(newTransform);
-        }
-
-        setIsLoading(false);
-      } catch (error) {
-        // Check if component is still mounted before updating state
-        if (!isMounted) return;
-
-        console.error('[useSegmentationV2] Error fetching data:', error);
-
-        // Check if this is a cancellation error (which we can ignore)
-        const isCancelled = error.name === 'AbortError' || (error.message && error.message.includes('cancel'));
-
-        if (!isCancelled) {
-          setError('Failed to load image data');
-
-          // Nepokračovat, pokud data nelze načíst
-          // Místo vytváření prázdného obrázku oznámit chybu
-          toast.error('Nepodařilo se načíst data obrázku. Zkuste to znovu nebo kontaktujte správce systému.');
-
-          // Nastavit loading na false, ale nechat imageData jako null
-          setImageData(null);
-
-          // Create empty segmentation
-          const emptySegmentation = createEmptySegmentation(imageIdRef.current || 'unknown');
-          setSegmentationDataWithHistory(emptySegmentation, true);
-        } else {
-          console.log('[useSegmentationV2] Request was cancelled, ignoring error');
-        }
-
-        setIsLoading(false);
+      // Handle ID mismatch between requested and actual image
+      if (imageIdRef.current !== fetchedImageData.id) {
+        logger.warn(
+          `Found different image ID: ${fetchedImageData.id} (requested: ${imageIdRef.current})`,
+        );
+        // Store the actual ID for segmentation fetching
+        fetchedImageData.actualId = fetchedImageData.id;
       }
-    };
+
+      // Set image data
+      setImageData(fetchedImageData);
+      logger.debug(`Fetched Image Data:`, fetchedImageData);
+
+      // Fetch segmentation data using the actual ID if available
+      const segmentationId = fetchedImageData.actualId || imageIdRef.current;
+
+      // Try to get segmentation data from cache first
+      const cachedSegmentation = getFromCache(segmentationId);
+
+      if (cachedSegmentation) {
+        // Use cached segmentation data
+        logger.debug(`Using cached segmentation data for: ${segmentationId}`);
+        setSegmentationDataWithHistory(cachedSegmentation, true);
+        setIsLoading(false);
+
+        // Optionally refresh cache in background
+        setTimeout(() => {
+          refreshSegmentationInBackground(segmentationId);
+        }, 2000);
+
+        return;
+      }
+
+      logger.debug(`No cached data, fetching segmentation from API: ${segmentationId}`);
+
+      try {
+        // Create a separate controller for segmentation fetch that won't be aborted by navigation
+        const segmentationController = new AbortController();
+        const segmentationSignal = segmentationController.signal;
+
+        // Fetch segmentation data with a timeout
+        const fetchSegmentationPromise = fetchSegmentationData(segmentationId, segmentationSignal);
+
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Segmentation fetch timeout'));
+            segmentationController.abort();
+          }, 5000); // 5 second timeout
+        });
+
+        // Race the fetch against the timeout
+        const fetchedSegmentation = (await Promise.race([
+          fetchSegmentationPromise,
+          timeoutPromise,
+        ])) as SegmentationData;
+
+        // Check if component is still mounted before updating state
+        if (!isMounted) return;
+
+        logger.debug('Received segmentation data:', fetchedSegmentation);
+
+        // Add to cache
+        addToCache(segmentationId, fetchedSegmentation);
+
+        // Set segmentation data with history (true = overwrite history)
+        setSegmentationDataWithHistory(fetchedSegmentation, true);
+        logger.debug(`Fetched Segmentation Data:`, fetchedSegmentation);
+      } catch (segError) {
+        // Check if component is still mounted before updating state
+        if (!isMounted) return;
+
+        logger.error('Error fetching segmentation data:', segError);
+
+        // Log detailed error information
+        logger.error(`Error fetching segmentation data for imageId=${segmentationId}`, {
+          error: segError,
+          projectId,
+          imageId: segmentationId,
+        });
+
+        // Create empty segmentation data and reset history
+        const emptySegmentation = createEmptySegmentation(segmentationId);
+
+        // Add empty segmentation to cache
+        addToCache(segmentationId, emptySegmentation);
+
+        setSegmentationDataWithHistory(emptySegmentation, true);
+        logger.debug(`Created empty segmentation data for: ${segmentationId}`);
+      }
+
+      // Center the image in the canvas
+      if (canvasRef.current && fetchedImageData.width && fetchedImageData.height) {
+        const canvasWidth = canvasRef.current.clientWidth;
+        const canvasHeight = canvasRef.current.clientHeight;
+
+        const newTransform = calculateCenteringTransform(
+          fetchedImageData.width,
+          fetchedImageData.height,
+          canvasWidth,
+          canvasHeight,
+        );
+
+        setTransform(newTransform);
+      }
+
+      setIsLoading(false);
+    } catch (error: any) { // Explicitly type error as any for now
+      // Check if component is still mounted before updating state
+      if (!isMounted) return;
+
+      logger.error('Error fetching data:', error);
+
+      // Check if this is a cancellation error (which we can ignore)
+      const isCancelled = error.name === 'AbortError' || (error.message && error.message.includes('cancel'));
+
+      if (!isCancelled) {
+        setError('Failed to load image data');
+
+        // Nepokračovat, pokud data nelze načíst
+        // Místo vytváření prázdného obrázku oznámit chybu
+        toast.error('Nepodařilo se načíst data obrázku. Zkuste to znovu nebo kontaktujte správce systému.');
+
+        // Nastavit loading na false, ale nechat imageData jako null
+        setImageData(null);
+
+        // Create empty segmentation
+        const emptySegmentation = createEmptySegmentation(imageIdRef.current || 'unknown');
+        setSegmentationDataWithHistory(emptySegmentation, true);
+      } else {
+        logger.info('Request was cancelled, ignoring error');
+      }
+
+      setIsLoading(false);
+    }
+  }, [projectId,
+    // Dependencies for `fetchData` that are external to this useCallback
+    // and whose changes should trigger a re-creation of this function.
+    // `imageIdRef.current` is not a dependency because it's a mutable ref
+    // and its changes are handled by the outer useEffect.
+    // However, `projectId` is a prop, so it should be a dependency.
+    // Other dependencies are state setters or refs which are stable.
+    setSegmentationDataWithHistory, setIsLoading, setError, getCacheStats,
+    fetchImageData, createEmptySegmentation, addToCache, refreshSegmentationInBackground,
+    setTransform, setImageData, canvasRef
+  ]);
+
+  // Fetch data when projectId or initialImageId changes
+  useEffect(() => {
+    // Use a flag to track if the component is still mounted for the useEffect cleanup
+    let isMounted = true;
+
+    // Skip if no project ID or image ID
+    if (!projectId || !initialImageId) { // Use initialImageId directly here
+      setIsLoading(false);
+      return () => { isMounted = false; }; // Cleanup for this case
+    }
+
+    // Store the requested ID in the ref
+    imageIdRef.current = initialImageId;
 
     // Start the fetch with a small delay to avoid race conditions
-    const timeoutId = setTimeout(fetchData, 50);
+    // This will call the `fetchData` useCallback function
+    const timeoutId = setTimeout(() => {
+      if (isMounted) { // Only call fetchData if component is mounted
+        fetchData();
+      }
+    }, 50);
 
-    // Cleanup function
+    // Cleanup function for this useEffect
     return () => {
-      isMounted = false;
+      isMounted = false; // Mark as unmounted
       clearTimeout(timeoutId);
 
+      // Abort any ongoing fetch that was started by this useEffect
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
       }
 
+      // Abort any ongoing background refresh
       if (backgroundRefreshControllerRef.current) {
         backgroundRefreshControllerRef.current.abort();
         backgroundRefreshControllerRef.current = null;
       }
     };
-  }, [projectId, initialImageId]);
+  }, [projectId, initialImageId, fetchData]); // fetchData is a dependency here
 
   // Set up keyboard event listeners
   useEffect(() => {
@@ -583,7 +613,7 @@ export const useSegmentationV2 = (
 
   // Function to handle wheel events for zooming
   const handleWheelEvent = useCallback(
-    (e: WheelEvent) => {
+    (e: React.WheelEvent<HTMLDivElement>) => { // Changed type to React.WheelEvent<HTMLDivElement>
       handleWheel(e, transform, canvasRef, setTransform);
     },
     [transform, canvasRef, setTransform],
@@ -595,7 +625,7 @@ export const useSegmentationV2 = (
     let lastWheelTimestamp = 0;
     const throttleDelay = 10; // 10ms throttling for smoother performance
 
-    const wheelEventHandler = (e: WheelEvent) => {
+    const wheelEventHandler = (e: React.WheelEvent<HTMLDivElement>) => { // Changed type to React.WheelEvent<HTMLDivElement>
       const now = performance.now();
 
       // Throttle events for smoother performance, especially on trackpads
@@ -805,15 +835,15 @@ export const useSegmentationV2 = (
     setSegmentationDataWithHistory,
     updateSegmentationWithoutHistory, // Přidáno pro potřeby přímé manipulace bez historie
     handleSave,
-    handleResegment,
     undo,
     redo,
+    fetchData,
 
     // Event handlers
     onMouseDown,
     onMouseMove,
     onMouseUp,
-    handleWheel: handleWheelEvent,
+    handleWheelEvent, // Ensure handleWheelEvent is returned
 
     // Canvas coordinates helper - directly use the imported function
     getCanvasCoordinates: (mouseX: number, mouseY: number) =>

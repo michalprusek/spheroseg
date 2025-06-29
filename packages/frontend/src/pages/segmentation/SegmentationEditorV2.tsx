@@ -7,7 +7,7 @@ import { ToolbarV2 } from './components/toolbar/ToolbarV2';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { API_BASE_URL } from '@/config';
+import apiClient from '@/lib/apiClient';
 
 interface SegmentationEditorV2Props {
   projectId?: string;
@@ -16,7 +16,7 @@ interface SegmentationEditorV2Props {
 
 export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ projectId, imageId }) => {
   // Create a ref for the canvas
-  const canvasRef = React.useRef<HTMLDivElement>(null);
+  const canvasRef = React.useRef<HTMLDivElement>(null); // Keep as null, ensure null checks
 
   // Use navigate for URL updates
   const navigate = useNavigate();
@@ -28,7 +28,6 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
   const [isResegmenting, setIsResegmenting] = useState(false);
 
   const {
-    // State
     imageData,
     segmentationData,
     transform,
@@ -41,35 +40,29 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
     isSaving,
     canUndo,
     canRedo,
-
-    // Setters & Actions
     setEditMode,
     setSelectedPolygonId,
     setTransform,
     setTempPoints,
     setInteractionState,
-
-    // Add fetchData function to reload segmentation data
-    fetchData as fetchSegmentationData,
+    setHoveredVertex,
+    fetchData: fetchSegmentationData,
     setSegmentationDataWithHistory,
     handleSave,
     undo,
     redo,
-
-    // Interaction Handlers
     onMouseDown: handleMouseDown,
     onMouseMove: handleMouseMove,
     onMouseUp: handleMouseUp,
-
-    // Coordinate helpers
     getCanvasCoordinates,
-  } = useSegmentationV2(projectId, imageId, canvasRef, t);
+    handleWheelEvent,
+  } = useSegmentationV2(projectId ?? '', imageId ?? null, canvasRef, t); // Pass projectId as string, imageId as string or null
 
   // Use the slicing hook with direct access to setSegmentationDataWithHistory
   const { handleSliceAction } = useSlicing({
     segmentationData,
     setSegmentationData: setSegmentationDataWithHistory,
-    selectedPolygonId,
+    selectedPolygonId, // Remove explicit cast
     setSelectedPolygonId,
     tempPoints,
     setTempPoints,
@@ -139,24 +132,13 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
       setIsResegmenting(true);
 
       // Call the API to trigger resegmentation
-      const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}/images/${imageId}/segment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          force: true, // Force resegmentation even if segmentation already exists
-        }),
+      const response = await apiClient.post(`/api/projects/${projectId}/images/${imageId}/segment`, {
+        force: true, // Force resegmentation even if segmentation already exists
       });
 
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
-      }
-
-      const data = await response.json();
-
+      // Axios throws an error for non-2xx responses, so no need to check response.ok
       // Check if the segmentation was successful
-      if (data.success) {
+      if (response.data.success) {
         toast.success(t('segmentation.resegment.success'));
 
         // Reload the segmentation data without refreshing the page
@@ -224,6 +206,13 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           canvasRef={canvasRef}
+          setHoveredVertex={setHoveredVertex}
+          interactionState={interactionState}
+          setSelectedPolygonId={setSelectedPolygonId}
+          setEditMode={setEditMode}
+          setTempPoints={setTempPoints}
+          setInteractionState={setInteractionState}
+          onWheel={handleWheelEvent}
         />
       </div>
     </div>

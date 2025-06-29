@@ -616,7 +616,7 @@ describe('CanvasV2 Component - Edge Cases', () => {
 
     // Find vertex circle
     let vertexCircle = document.querySelector('circle');
-    let radius1 = parseFloat(vertexCircle!.getAttribute('r') || '0');
+    const radius1 = parseFloat(vertexCircle!.getAttribute('r') || '0');
 
     // Test with high zoom - vertices should appear smaller relative to content
     rerender(
@@ -639,7 +639,7 @@ describe('CanvasV2 Component - Edge Cases', () => {
 
     // Find vertex circle again
     vertexCircle = document.querySelector('circle');
-    let radius2 = parseFloat(vertexCircle!.getAttribute('r') || '0');
+    const radius2 = parseFloat(vertexCircle!.getAttribute('r') || '0');
 
     // Radius should be smaller at higher zoom (r ∝ 1/zoom)
     expect(radius2).toBeLessThan(radius1);

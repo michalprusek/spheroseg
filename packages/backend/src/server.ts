@@ -15,8 +15,10 @@ import logger from './utils/logger';
 // Import services
 import socketService from './services/socketService';
 import scheduledTaskService from './services/scheduledTaskService';
+import segmentationQueueService from './services/segmentationQueueService';
 import dbPool from './db';
 import { startPerformanceMonitoring, stopPerformanceMonitoring } from './utils/performance';
+import { monitorQuery } from './monitoring/unified';
 
 /**
  * Create HTTP server
@@ -32,12 +34,16 @@ const initializeServices = async (): Promise<void> => {
     socketService.initializeSocketIO(server);
     logger.info('Socket.IO server initialized');
 
+    // Initialize segmentation queue service
+    await segmentationQueueService.init();
+    logger.info('Segmentation queue service initialized');
+
     // Initialize scheduled tasks
     scheduledTaskService.initialize(dbPool);
     logger.info('Scheduled task service initialized');
 
     // Test database connection
-    await dbPool.query('SELECT NOW()');
+    await monitorQuery('SELECT NOW()', [], () => dbPool.query('SELECT NOW()'));
     logger.info('Database connection verified');
 
     // Start performance monitoring

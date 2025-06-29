@@ -1,28 +1,29 @@
 import { z } from 'zod';
+import { emailSchema, nameSchema, optionalStringSchema } from './commonValidators';
 
 // Schema for updating user profile directly (not through body)
 export const updateUserProfileSchema = z
   .object({
     // User fields (optional)
-    email: z.string().email('Invalid email format').optional(),
-    name: z.string().min(1, 'Name cannot be empty').optional(),
+    email: emailSchema.optional(),
+    name: nameSchema.optional(),
 
     // Profile fields (optional)
     username: z.string().min(3, 'Username must be at least 3 characters').optional(),
-    full_name: z.string().optional(),
-    title: z.string().optional(),
-    organization: z.string().optional(),
-    bio: z.string().optional(),
-    location: z.string().optional(),
-    avatar_url: z.string().optional(), // Removed URL validation to allow relative paths
+    full_name: optionalStringSchema,
+    title: optionalStringSchema,
+    organization: optionalStringSchema,
+    bio: optionalStringSchema,
+    location: optionalStringSchema,
+    avatar_url: optionalStringSchema, // Removed URL validation to allow relative paths
     preferred_language: z.string().max(10, 'Language code too long').optional(),
-    institution: z.string().optional(), // Additional field
-    website: z.string().optional(), // Made URL validation optional
-    twitter: z.string().optional(), // Additional field
-    github: z.string().optional(), // Additional field
-    linkedin: z.string().optional(), // Additional field
-    orcid: z.string().optional(), // Additional field
-    research_interests: z.string().optional(), // Additional field
+    institution: optionalStringSchema, // Additional field
+    website: optionalStringSchema, // Made URL validation optional
+    twitter: optionalStringSchema, // Additional field
+    github: optionalStringSchema, // Additional field
+    linkedin: optionalStringSchema, // Additional field
+    orcid: optionalStringSchema, // Additional field
+    research_interests: optionalStringSchema, // Additional field
     theme_preference: z.enum(['light', 'dark', 'system']).optional(), // Theme preference
     notification_preferences: z
       .object({

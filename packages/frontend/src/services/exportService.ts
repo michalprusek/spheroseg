@@ -13,9 +13,9 @@
 import { utils, writeFile, WorkBook } from 'xlsx';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { createLogger } from '@/lib/logger';
+import { formatISODate } from '@/utils/dateUtils';
 import apiClient from '@/lib/apiClient';
 import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations';
 import type { ProjectImage, Polygon, SegmentationResult } from '@/pages/segmentation/types';
@@ -85,7 +85,7 @@ export async function exportMetricsAsXlsx(images: ProjectImage[], projectTitle: 
     utils.book_append_sheet(workbook, worksheet, 'Object Metrics');
 
     // Stažení souboru
-    const filename = `${projectTitle || 'project'}_metrics_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
+    const filename = `${projectTitle || 'project'}_metrics_${formatISODate(new Date())}.xlsx`;
     writeFile(workbook, filename);
 
     logger.info(`Metriky úspěšně exportovány do souboru ${filename}`);

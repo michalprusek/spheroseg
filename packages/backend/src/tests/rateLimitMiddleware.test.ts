@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { rateLimit } from '../middleware/rateLimitMiddleware';
-import { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { AuthenticatedRequest } from '../security/middleware/authMiddleware';
 
 // Use jest.Mock type for nextFunction to access mock methods
 type MockNextFunction = jest.Mock;

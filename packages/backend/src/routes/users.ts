@@ -4,7 +4,7 @@
  * This file contains routes for user-related operations.
  */
 import express, { Response, Router, Request } from 'express';
-import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
 import logger from '../utils/logger';
 import pool from '../db';
 import { v4 as uuidv4 } from 'uuid';

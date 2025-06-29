@@ -1,48 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import promClient from 'prom-client';
 import logger from '../utils/logger';
+import { unifiedRegistry } from '../monitoring/unified';
 
-// Initialize the Prometheus registry
-const register = new promClient.Registry();
+// Use the unified registry instead of creating a new one
+const register = unifiedRegistry;
 
-// Add default metrics (GC, memory usage, etc.)
-promClient.collectDefaultMetrics({ register });
-
-// Create HTTP request counter
-const httpRequestsTotal = new promClient.Counter({
-  name: 'http_requests_total',
-  help: 'Total number of HTTP requests',
-  labelNames: ['method', 'path', 'status'],
-  registers: [register],
-});
-
-// Create HTTP request duration histogram
-const httpRequestDurationSeconds = new promClient.Histogram({
-  name: 'http_request_duration_seconds',
-  help: 'Duration of HTTP requests in seconds',
-  labelNames: ['method', 'path', 'status'],
-  buckets: [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10],
-  registers: [register],
-});
-
-// Create active requests gauge
-const httpRequestsActive = new promClient.Gauge({
-  name: 'http_requests_active',
-  help: 'Number of active HTTP requests',
-  labelNames: ['method', 'path'],
-  registers: [register],
-});
-
+// Create segmentation-specific metrics (HTTP metrics are already in unified monitoring)
 // Create segmentation tasks gauge
 const segmentationTasksActive = new promClient.Gauge({
-  name: 'segmentation_tasks_active',
+  name: 'spheroseg_segmentation_tasks_active',
   help: 'Number of active segmentation tasks',
   registers: [register],
 });
 
 // Create segmentation tasks counter
 const segmentationTasksTotal = new promClient.Counter({
-  name: 'segmentation_tasks_total',
+  name: 'spheroseg_segmentation_tasks_total',
   help: 'Total number of segmentation tasks',
   labelNames: ['status'],
   registers: [register],
@@ -50,7 +24,7 @@ const segmentationTasksTotal = new promClient.Counter({
 
 // Create segmentation duration histogram
 const segmentationDurationSeconds = new promClient.Histogram({
-  name: 'segmentation_duration_seconds',
+  name: 'spheroseg_segmentation_duration_seconds',
   help: 'Duration of segmentation tasks in seconds',
   buckets: [0.1, 0.5, 1, 2, 5, 10, 30, 60, 120],
   registers: [register],
@@ -58,40 +32,12 @@ const segmentationDurationSeconds = new promClient.Histogram({
 
 /**
  * Middleware to collect metrics for each request
+ * Note: HTTP metrics are handled by unified monitoring system
+ * This middleware is kept for backwards compatibility but delegates to unified monitoring
  */
 export const metricsMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  // Skip metrics endpoint to avoid circular references
-  if (req.path === '/api/metrics') {
-    return next();
-  }
-
-  // Get the route path (normalize to avoid high cardinality)
-  const path = normalizePath(req.path);
-
-  // Increment active requests
-  httpRequestsActive.inc({ method: req.method, path });
-
-  // Record start time
-  const startTime = Date.now();
-
-  // Add response hook to record metrics after response is sent
-  res.on('finish', () => {
-    // Decrement active requests
-    httpRequestsActive.dec({ method: req.method, path });
-
-    // Calculate request duration
-    const duration = (Date.now() - startTime) / 1000;
-
-    // Record request count and duration
-    httpRequestsTotal.inc({ method: req.method, path, status: res.statusCode });
-    httpRequestDurationSeconds.observe({ method: req.method, path, status: res.statusCode }, duration);
-
-    // Log request for debugging (only in development)
-    if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`${req.method} ${path} ${res.statusCode} - ${duration.toFixed(3)}s`);
-    }
-  });
-
+  // All HTTP metrics are now handled by requestLoggerMiddleware in unified monitoring
+  // This middleware is kept for backwards compatibility
   next();
 };
 
@@ -110,12 +56,17 @@ function normalizePath(path: string): string {
 
 /**
  * Endpoint to expose metrics
+ * Uses unified registry that contains all application metrics
  */
-export const metricsEndpoint = (_req: Request, res: Response) => {
-  res.set('Content-Type', register.contentType);
-  register.metrics().then((metrics) => {
+export const metricsEndpoint = async (_req: Request, res: Response) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    const metrics = await register.metrics();
     res.end(metrics);
-  });
+  } catch (error) {
+    logger.error('Error getting metrics', error);
+    res.status(500).json({ error: 'Failed to get metrics' });
+  }
 };
 
 /**

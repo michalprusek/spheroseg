@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Point, Polygon, Intersection, SegmentationData } from './types';
-import polygonUtils from '@/utils/polygonUtils';
+import polygonUtils from '@spheroseg/shared/utils/polygonUtils';
 
 /**
  * Check if a point is inside a polygon

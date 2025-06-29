@@ -1,8 +1,8 @@
 import { usePolygonDetection } from './polygonInteraction/usePolygonDetection';
 import { usePolygonState } from './polygonInteraction/usePolygonState';
-import { useEditModeManager } from '@shared/utils/editModeManager';
+import { useEditModeManager } from '@spheroseg/shared/utils/editModeManager';
 import { usePolygonActions } from './polygonInteraction/usePolygonActions';
-import { usePolygonEventHandlers } from '@shared/utils/polygonEventHandlers';
+import { usePolygonEventHandlers } from '@spheroseg/shared/utils/polygonEventHandlers';
 import { useVertexDrag } from './polygonInteraction/useVertexDrag';
 import { useVertexDetection } from './polygonInteraction/useVertexDetection';
 import { SegmentationResult } from '@/lib/segmentation';

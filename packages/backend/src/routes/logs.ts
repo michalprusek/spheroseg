@@ -1,8 +1,9 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import { z } from 'zod';
 import logger from '../utils/logger';
-import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
 import pool from '../db';
+import { monitorQuery } from '../monitoring/unified';
 
 const router: Router = express.Router();
 
@@ -28,7 +29,7 @@ const batchLogsSchema = z.object({
  */
 async function ensureLogsTableExists() {
   try {
-    await pool.query(`
+    const createTableQuery = `
       CREATE TABLE IF NOT EXISTS logs (
         id SERIAL PRIMARY KEY,
         source VARCHAR(50) NOT NULL,
@@ -40,7 +41,13 @@ async function ensureLogsTableExists() {
         user_agent VARCHAR(500),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
-    `);
+    `;
+    
+    await monitorQuery(
+      createTableQuery,
+      [],
+      () => pool.query(createTableQuery)
+    );
     logger.info('Logs table created or already exists');
   } catch (error) {
     logger.error('Error creating logs table:', { error });

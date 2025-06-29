@@ -12,7 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Loader2, AlertTriangle, Lock, Trash2 } from 'lucide-react';
 import authApiService, { ChangePasswordRequest } from '@/services/authApiService';
 import { DeleteAccountDialog } from './DeleteAccountDialog';
-import logger from '@/lib/logger';
+import logger from '@/utils/logger';
 
 // Password change form schema - use a function to create schema with translated messages
 const createPasswordChangeSchema = (t: (key: string) => string) => z.object({

@@ -1,6 +1,6 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import pool from '../db';
-import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -15,7 +15,7 @@ import {
   batchDeleteImagesSchema,
 } from '../validators/imageValidators';
 import imageDeleteService from '../services/imageDeleteService';
-import { ApiError } from '../middleware/errorMiddleware';
+import { ApiError } from '../utils/ApiError';
 import logger from '../utils/logger';
 import imageUtils from '../utils/imageUtils.unified';
 import { ImageData } from '../utils/imageUtils';
@@ -673,7 +673,12 @@ router.delete(
       // Return success with no content
       res.status(204).send();
     } catch (error) {
-      logger.error('Error deleting image', { projectId, imageId, error });
+      logger.error('Error deleting image', { 
+        projectId, 
+        imageId, 
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       next(error);
     }
   },

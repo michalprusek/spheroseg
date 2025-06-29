@@ -1,22 +1,17 @@
 import express from 'express';
-import { client as prometheusClient } from '../lib/metrics/prometheusClient';
-import { MetricType, Metric } from '@spheroseg/shared';
-import { performanceMonitoring } from '../lib/monitoring';
+import { getMetrics, getMetricsContentType } from '../monitoring/unified';
 
 const router = express.Router();
 
 /**
  * GET /api/metrics
- * Returns Prometheus metrics
+ * Returns Prometheus metrics from unified monitoring system
  */
 router.get('/', async (req, res) => {
   try {
-    if (!prometheusClient) {
-      return res.status(404).send('Metrics not enabled');
-    }
-
-    res.set('Content-Type', prometheusClient.getContentType());
-    res.end(await prometheusClient.getMetrics());
+    const metrics = await getMetrics();
+    res.set('Content-Type', getMetricsContentType());
+    res.end(metrics);
   } catch (error) {
     console.error('Error getting metrics:', error);
     res.status(500).send('Error getting metrics');
@@ -26,6 +21,7 @@ router.get('/', async (req, res) => {
 /**
  * POST /api/metrics
  * Receives metrics from frontend
+ * Note: Frontend metrics are now handled by PrometheusMetricsService
  */
 router.post('/', (req, res) => {
   try {
@@ -35,45 +31,9 @@ router.post('/', (req, res) => {
       return res.status(400).json({ error: 'Invalid metrics format' });
     }
 
-    // Process each metric
-    metrics.forEach((metric: Metric) => {
-      switch (metric.type) {
-        case MetricType.PAGE_LOAD:
-          // Record to Prometheus if available
-          if (prometheusClient) {
-            const pageLoadHistogram = prometheusClient.getMetric('http_request_duration_ms');
-            if (pageLoadHistogram) {
-              pageLoadHistogram
-                .labels({
-                  method: 'GET',
-                  route: metric.route,
-                  status_code: '200',
-                })
-                .observe(metric.loadTime);
-            }
-          }
-          break;
-
-        case MetricType.API_REQUEST:
-          // Record to Prometheus if available
-          if (prometheusClient) {
-            const apiRequestHistogram = prometheusClient.getMetric('http_request_duration_ms');
-            if (apiRequestHistogram) {
-              apiRequestHistogram
-                .labels({
-                  method: metric.method,
-                  route: metric.endpoint,
-                  status_code: metric.status.toString(),
-                })
-                .observe(metric.duration);
-            }
-          }
-          break;
-
-        // Add other metric types as needed
-      }
-    });
-
+    // Frontend metrics are now processed by PrometheusMetricsService
+    // This endpoint is kept for backward compatibility
+    
     res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error processing metrics:', error);

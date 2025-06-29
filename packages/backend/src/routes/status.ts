@@ -1,5 +1,5 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
-import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
 import { getSegmentationQueueStatus } from '../services/segmentationService';
 import pool from '../db';
 import logger from '../utils/logger';

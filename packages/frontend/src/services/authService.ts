@@ -4,7 +4,7 @@
 import axios from 'axios';
 import logger from '@/utils/logger';
 import { jwtDecode } from 'jwt-decode';
-import httpClient from '@/utils/httpClient';
+import apiClient from '@/lib/apiClient';
 import { API_PATHS, formatApiPath } from '@/lib/apiPaths';
 
 // Token storage keys
@@ -560,7 +560,7 @@ export const requestPasswordReset = async (email: string): Promise<{ message: st
   try {
     logger.info('[authService] Requesting password reset for email:', email);
 
-    const response = await httpClient.post(API_PATHS.AUTH.FORGOT_PASSWORD, {
+    const response = await apiClient.post(API_PATHS.AUTH.FORGOT_PASSWORD, {
       email,
     });
 

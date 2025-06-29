@@ -1,10 +1,20 @@
-export * from './performanceMonitoring';
+/**
+ * Performance monitoring compatibility layer
+ * 
+ * This file maintains backward compatibility for lib/monitoring imports
+ * while using the unified monitoring system internally.
+ */
 
-// Initialize performance monitoring
-import { createPerformanceMonitoring } from './performanceMonitoring';
+import { performanceMonitoring } from '../../monitoring/unified';
 
-// Create and export the default instance
-export const performanceMonitoring = createPerformanceMonitoring({
-  enabled: process.env.NODE_ENV === 'production' || process.env.ENABLE_MONITORING === 'true',
-  consoleLogging: process.env.NODE_ENV === 'development' && process.env.ENABLE_MONITORING === 'true',
-});
+// Re-export performance monitoring
+export { performanceMonitoring };
+
+// Export the create function for compatibility
+export function createPerformanceMonitoring(options?: any) {
+  // The unified monitoring is already a singleton, so just return it
+  return performanceMonitoring;
+}
+
+// Re-export the BackendPerformanceMonitoring class for type compatibility
+export { performanceMonitoring as BackendPerformanceMonitoring };

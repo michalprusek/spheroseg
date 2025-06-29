@@ -9,26 +9,23 @@ import logger from '../utils/logger';
  */
 export const validate = (schema: AnyZodObject) => async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Log the request data for debugging
     const dataToValidate: { [key: string]: any } = {};
-    if (Object.keys(req.body).length > 0) dataToValidate.body = req.body;
-    if (Object.keys(req.query).length > 0) dataToValidate.query = req.query;
-    if (Object.keys(req.params).length > 0) dataToValidate.params = req.params;
+
+    // Dynamicky přidáme části požadavku, které jsou definovány ve schématu
+    if ('body' in schema.shape) {
+      dataToValidate.body = req.body;
+    }
+    if ('query' in schema.shape) {
+      dataToValidate.query = req.query;
+    }
+    if ('params' in schema.shape) {
+      dataToValidate.params = req.params;
+    }
 
     logger.debug('Validating request data:', { dataToValidate });
 
-    // Parse and validate the request data
-    // Ensure we are passing the correct parts of the request to the schema
-    // Zod schemas usually expect an object with body, query, params keys if they are to validate them.
-    // Or they can be simpler schemas for just one part.
-    // The current schema.parseAsync expects an object {body, query, params}.
-    await schema.parseAsync({
-      body: req.body,
-      query: req.query,
-      params: req.params,
-    });
+    await schema.parseAsync(dataToValidate);
 
-    // Log successful validation
     logger.debug('Validation successful for request data');
 
     return next();

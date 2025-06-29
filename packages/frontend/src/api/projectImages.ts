@@ -9,6 +9,7 @@ import { Image, ProjectImage, ImageStatus } from '@/types';
 import { constructUrl } from '@/lib/urlUtils';
 import { storeImageBlob } from '@/utils/indexedDBService';
 import apiClient from '@/lib/apiClient';
+import cacheService, { CacheLayer } from '@/services/unifiedCacheService';
 
 /**
  * Default illustration images to use when no real images are available
@@ -130,6 +131,7 @@ export const getDefaultProjectImages = (projectId: string): Image[] => {
   return DEFAULT_ILLUSTRATIONS.map((path) => createImageFromPath(path, projectId));
 };
 
+// Legacy cache for backward compatibility - will be removed
 export const projectImagesCache: Record<string, { data: ProjectImage[]; timestamp: number }> = {};
 
 const getLocalStorageKey = (projectId: string) => `spheroseg_images_${projectId}`;
@@ -305,6 +307,7 @@ export const saveImagesToStorage = (projectId: string, images: ProjectImage[]): 
 };
 
 const CACHE_EXPIRATION = 5 * 60 * 1000;
+const CACHE_KEY_PREFIX = 'project-images';
 
 export const cleanLocalStorageFromBlobUrls = (projectId: string): void => {
   const key = getLocalStorageKey(projectId);
@@ -347,7 +350,19 @@ export const cleanImageFromAllStorages = async (projectId: string, imageId: stri
   const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
 
   try {
-    // 1. Clean project images cache
+    // 1. Clean unified cache
+    const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
+    const cachedImages = await cacheService.get<ProjectImage[]>(cacheKey);
+    if (cachedImages) {
+      const updatedImages = cachedImages.filter(img => img.id !== imageId);
+      await cacheService.set(cacheKey, updatedImages, {
+        ttl: CACHE_EXPIRATION,
+        layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
+        tags: ['project-data', `project-${cleanProjectId}`, 'images']
+      });
+    }
+    
+    // 2. Clean legacy project images cache
     if (projectImagesCache && projectImagesCache[cleanProjectId]) {
       console.log(`Cleaning image ${imageId} from project images cache`);
       if (projectImagesCache[cleanProjectId].data) {
@@ -471,6 +486,17 @@ export const getProjectImages = async (projectId: string): Promise<ProjectImage[
   const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
   cleanLocalStorageFromBlobUrls(cleanProjectId);
 
+  // Try unified cache first
+  const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
+  const cachedImages = await cacheService.get<ProjectImage[]>(cacheKey, {
+    layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE]
+  });
+  
+  if (cachedImages) {
+    console.log(`Retrieved ${cachedImages.length} images from unified cache for project ${cleanProjectId}`);
+    return cachedImages;
+  }
+
   try {
     console.log(`Fetching images from API for project: ${cleanProjectId}`);
     const response = await apiClient.get(`/api/projects/${cleanProjectId}/images`);
@@ -490,6 +516,14 @@ export const getProjectImages = async (projectId: string): Promise<ProjectImage[
         return projectImage;
     });
 
+    // Store in unified cache
+    await cacheService.set(cacheKey, mappedImages, {
+      ttl: CACHE_EXPIRATION,
+      layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
+      tags: ['project-data', `project-${cleanProjectId}`, 'images']
+    });
+    
+    // Keep legacy cache for backward compatibility
     projectImagesCache[cleanProjectId] = { data: mappedImages, timestamp: Date.now() };
     saveImagesToStorage(cleanProjectId, mappedImages); // Save to local storage
     return mappedImages;

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ImageCard } from './ImageCard';
-import { ImageListItem } from './ImageListItem';
+import { ImageDisplay } from './ImageDisplay';
 import { ProjectImage } from '@spheroseg/types';
 import ImageDebugger from './ImageDebugger';
 import { Button } from '@/components/ui/button';
@@ -165,7 +164,7 @@ const ProjectImages = ({
             }
 
             return (
-              <ImageCard
+              <ImageDisplay
                 key={imageId}
                 image={{ ...image, id: imageId }} // Ensure image has an ID
                 onDelete={onDelete}
@@ -174,6 +173,7 @@ const ProjectImages = ({
                 selectionMode={selectionMode}
                 isSelected={!!selectedImages[imageId]}
                 onToggleSelection={(event) => onToggleSelection?.(imageId, event)}
+                viewMode="grid"
               />
             );
           })}
@@ -202,7 +202,7 @@ const ProjectImages = ({
           }
 
           return (
-            <ImageListItem
+            <ImageDisplay
               key={imageId}
               image={{ ...image, id: imageId }} // Ensure image has an ID
               onDelete={onDelete}
@@ -211,6 +211,7 @@ const ProjectImages = ({
               selectionMode={selectionMode}
               isSelected={!!selectedImages[imageId]}
               onToggleSelection={(event) => onToggleSelection?.(imageId, event)}
+              viewMode="list"
             />
           );
         })}

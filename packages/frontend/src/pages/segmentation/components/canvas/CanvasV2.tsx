@@ -1,14 +1,14 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Point } from '@/types';
 import { EditMode, InteractionState } from '@/pages/segmentation/hooks/segmentation'; // Import EditMode from refactored location
-import { debounce } from 'lodash';
-import useImageLoader from '@/hooks/useImageLoader';
-import { createLogger } from '@/lib/logger';
+import { useDebouncedCallback } from 'use-debounce';
+import { createNamespacedLogger } from '@/utils/logger';
 import filterVisiblePolygons from '../../utils/polygonVisibility';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
+import CanvasImageLayer from './CanvasImageLayer'; // Import the new component
 
 // Create a logger for this module
-const logger = createLogger('segmentation:canvas');
+const logger = createNamespacedLogger('segmentation:canvas');
 
 // --- Types ---
 interface TransformState {
@@ -21,6 +21,7 @@ interface ImageData {
   width: number;
   height: number;
   src: string;
+  alternativeUrls?: string[]; // Added this property
 }
 
 interface Polygon {
@@ -45,7 +46,7 @@ interface CanvasV2Props {
   setHoveredVertex: (vertex: { polygonId: string; vertexIndex: number } | null) => void;
   tempPoints: Point[]; // For drawing new polygons or slice lines
   editMode: EditMode;
-  canvasRef: React.RefObject<HTMLDivElement>; // Required canvasRef prop
+  canvasRef: React.RefObject<HTMLDivElement | null>; // Required canvasRef prop, allowing null
   interactionState: InteractionState; // Add interaction state for Add Points mode
   // Additional functions needed for vertex interactions
   setSelectedPolygonId: (id: string | null) => void;
@@ -56,7 +57,7 @@ interface CanvasV2Props {
   onMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void;
   onMouseMove: (event: React.MouseEvent<HTMLDivElement>) => void;
   onMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void;
-  onWheel: (e: React.WheelEvent<SVGSVGElement>) => void;
+  onWheel: (e: React.WheelEvent<HTMLDivElement>) => void; // Changed to HTMLDivElement
   // Potentially add onMouseLeave, onMouseEnter if needed
   onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void; // Optional context menu
 }
@@ -112,35 +113,6 @@ const CanvasV2: React.FC<CanvasV2Props> = ({
     };
   }, []);
 
-  // Use the image loader hook for optimized image loading
-  const {
-    image,
-    isLoading: isImageLoading,
-    error: imageError,
-  } = useImageLoader(imageData?.src || null, {
-    crossOrigin: 'anonymous',
-    cacheBuster: true,
-    maxRetries: 5, // Zvýšený počet pokusů
-    timeout: 60000, // Delší timeout
-    alternativeUrls: imageData?.alternativeUrls || [], // Předání alternativních URL
-  });
-
-  // Log image loading status
-  useEffect(() => {
-    if (!imageData) {
-      logger.debug('No image data provided');
-      return;
-    }
-
-    if (isImageLoading) {
-      logger.debug(`Loading image: ${imageData.src}`);
-    } else if (imageError) {
-      logger.error(`Failed to load image: ${imageData.src}`, imageError);
-    } else if (image) {
-      logger.info(`Image loaded successfully: ${imageData.src} (${image.width}x${image.height})`);
-    }
-  }, [imageData, image, isImageLoading, imageError]);
-
   // Calculate cursor position from mouse event
   const calculateCursorPosition = useCallback(
     (e: React.MouseEvent<HTMLDivElement>): Point | null => {
@@ -163,11 +135,12 @@ const CanvasV2: React.FC<CanvasV2Props> = ({
   );
 
   // Create debounced function for cursor position updates
-  const debouncedSetCursorPosition = useRef(
-    debounce((position: Point | null) => {
+  const debouncedSetCursorPosition = useDebouncedCallback(
+    (position: Point | null) => {
       if (position) setCursorPosition(position);
-    }, 50), // 50ms debounce delay - adjust as needed for performance vs responsiveness
-  ).current;
+    },
+    50 // 50ms debounce delay - adjust as needed for performance vs responsiveness
+  );
 
   // Last cursor position for threshold comparison
   const lastPositionRef = useRef<Point | null>(null);
@@ -406,488 +379,44 @@ const CanvasV2: React.FC<CanvasV2Props> = ({
       >
         <g transform={transformString}>
           {/* Render Image */}
-          {imageData && image && (
-            <image
-              href={image.src}
-              x="0"
-              y="0"
-              width={imageData.width}
-              height={imageData.height}
-              style={{ imageRendering: 'pixelated' }} // Preserve pixels on zoom
-            />
-          )}
-
-          {/* Show loading indicator if image is not loaded yet */}
-          {imageData && (isImageLoading || !image) && (
-            <g>
-              <rect x="0" y="0" width={imageData.width} height={imageData.height} fill="#333" />
-              <text
-                x={imageData.width / 2}
-                y={imageData.height / 2}
-                fill="white"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={20 / transform.zoom}
-              >
-                Načítání obrázku...
-              </text>
-            </g>
-          )}
-
-          {/* Show error indicator if image failed to load */}
-          {imageData && imageError && (
-            <g>
-              <rect x="0" y="0" width={imageData.width} height={imageData.height} fill="#500" opacity={0.7} />
-              <text
-                x={imageData.width / 2}
-                y={imageData.height / 2}
-                fill="white"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={20 / transform.zoom}
-              >
-                Chyba při načítání obrázku
-              </text>
-            </g>
-          )}
-
-          {/* Show error indicator when no image data is available */}
-          {!imageData && (
-            <g>
-              <rect x="0" y="0" width={800} height={600} fill="#333" />
-              <text
-                x="400"
-                y="300"
-                fill="white"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={20 / transform.zoom}
-              >
-                Nepodařilo se načíst data obrázku
-              </text>
-              <text
-                x="400"
-                y="330"
-                fill="white"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={16 / transform.zoom}
-              >
-                Zkuste to znovu nebo kontaktujte správce systému
-              </text>
-            </g>
-          )}
+          <CanvasImageLayer imageData={imageData} transform={transform} />
 
           {/* Render Polygons with virtualization */}
-          {useMemo(() => {
-            // Skip virtualization if there are few polygons
-            if (!segmentationData?.polygons || segmentationData.polygons.length < 50) {
-              return segmentationData?.polygons.map((polygon) => (
-                <polygon
-                  key={polygon.id}
-                  points={formatPoints(polygon.points)}
-                  style={getPolygonStyle(polygon)}
-                  vectorEffect="non-scaling-stroke"
-                  // Add onClick handler here if selection should happen directly on polygon click
-                  // onClick={(e) => { e.stopPropagation(); /* handle polygon click */ }}
-                />
-              ));
-            }
+          <CanvasPolygonLayer
+            segmentationData={segmentationData}
+            transform={transform}
+            selectedPolygonId={selectedPolygonId}
+            editMode={editMode}
+            canvasRef={canvasRef}
+          />
 
-            // Get canvas dimensions for viewport calculation
-            const canvasWidth = canvasRef.current?.clientWidth || 1000;
-            const canvasHeight = canvasRef.current?.clientHeight || 800;
-
-            // Filter visible polygons
-            const visiblePolygons = filterVisiblePolygons(
-              segmentationData.polygons,
-              canvasWidth,
-              canvasHeight,
-              transform,
-            );
-
-            logger.debug(`Rendering ${visiblePolygons.length} of ${segmentationData.polygons.length} polygons`);
-
-            // Render only visible polygons
-            return visiblePolygons.map((polygon) => (
-              <polygon
-                key={polygon.id}
-                points={formatPoints(polygon.points)}
-                style={getPolygonStyle(polygon)}
-                vectorEffect="non-scaling-stroke"
-                // Add onClick handler here if selection should happen directly on polygon click
-                // onClick={(e) => { e.stopPropagation(); /* handle polygon click */ }}
-              />
-            ));
-          }, [
-            segmentationData?.polygons,
-            transform,
-            selectedPolygonId,
-            canvasRef.current?.clientWidth,
-            canvasRef.current?.clientHeight,
-          ])}
-
-          {/* Render Vertices for Selected Polygon in edit vertices mode */}
-          {selectedPolygonId &&
-            editMode !== EditMode.Slice &&
-            editMode !== EditMode.AddPoints &&
-            (() => {
-              const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
-              if (!selectedPolygon) return null;
-
-              // Determine vertex fill color based on polygon type
-              const vertexFillColor = selectedPolygon.type === 'internal' ? 'blue' : 'red';
-
-              return selectedPolygon.points.map((point, index) => {
-                const isHovered =
-                  hoveredVertex?.polygonId === selectedPolygonId && hoveredVertex?.vertexIndex === index;
-                return (
-                  <circle
-                    key={`${selectedPolygonId}-vertex-${index}`}
-                    cx={point.x}
-                    cy={point.y}
-                    r={isHovered ? hoveredVertexRadius : vertexRadius}
-                    fill={isHovered ? 'yellow' : vertexFillColor} // Use polygon color for vertices
-                    stroke="black"
-                    strokeWidth={1 / transform.zoom}
-                    vectorEffect="non-scaling-stroke"
-                    style={{ cursor: isShiftPressed ? 'pointer' : 'default' }} // Change cursor based on Shift key
-                    onClick={(e) => {
-                      // Only handle click when Shift is pressed
-                      if (isShiftPressed) {
-                        e.stopPropagation();
-                        console.log(
-                          `[CanvasV2] Vertex clicked in Edit mode with Shift: polygon=${selectedPolygonId}, vertex=${index}`,
-                        );
-
-                        try {
-                          // Switch to Add Points mode and start adding points from this vertex
-                          setEditMode(EditMode.AddPoints);
-
-                          // Set the interaction state to start adding points
-                          setInteractionState({
-                            ...interactionState,
-                            isAddingPoints: true,
-                            addPointStartVertex: {
-                              polygonId: selectedPolygonId,
-                              vertexIndex: index,
-                            },
-                          });
-
-                          // Clear any existing temporary points
-                          setTempPoints([]);
-
-                          console.log(`[CanvasV2] Successfully started add points mode from vertex ${index}`);
-                        } catch (error) {
-                          console.error(`[CanvasV2] Error starting add points mode:`, error);
-                        }
-                      }
-                    }}
-                  />
-                );
-              });
-            })()}
-
-          {/* Removed: Render Vertices for ALL Polygons in View mode when Shift is pressed */}
-
-          {/* Render Vertices for ALL Polygons in Add Points mode */}
-          {editMode === EditMode.AddPoints && segmentationData?.polygons && (
-            <>
-              {segmentationData.polygons.map((polygon) =>
-                polygon.points.map((point, index) => {
-                  const isSelected = polygon.id === selectedPolygonId;
-                  const isStartVertex =
-                    isSelected &&
-                    interactionState?.addPointStartVertex?.polygonId === selectedPolygonId &&
-                    interactionState?.addPointStartVertex?.vertexIndex === index;
-                  const isHovered = hoveredVertex?.polygonId === polygon.id && hoveredVertex?.vertexIndex === index;
-
-                  // Determine vertex fill color based on polygon type
-                  const vertexFillColor = polygon.type === 'internal' ? 'blue' : 'red';
-
-                  // Choose fill color based on state
-                  let fillColor: string;
-                  if (isStartVertex) {
-                    fillColor = 'lime'; // Special color for start vertex
-                  } else if (isHovered) {
-                    fillColor = 'yellow'; // Hover color takes precedence
-                  } else if (isSelected) {
-                    fillColor = vertexFillColor; // Use polygon color for selected polygon
-                  } else {
-                    fillColor = '#aaa'; // Gray for unselected polygons
-                  }
-
-                  return (
-                    <circle
-                      key={`${polygon.id}-vertex-${index}`}
-                      cx={point.x}
-                      cy={point.y}
-                      r={isHovered ? hoveredVertexRadius : isStartVertex ? vertexRadius * 1.8 : vertexRadius}
-                      fill={fillColor}
-                      stroke="black"
-                      strokeWidth={1 / transform.zoom}
-                      vectorEffect="non-scaling-stroke"
-                      style={{ cursor: 'pointer' }}
-                      onMouseEnter={() =>
-                        setHoveredVertex({
-                          polygonId: polygon.id,
-                          vertexIndex: index,
-                        })
-                      }
-                      onMouseLeave={() => setHoveredVertex(null)}
-                      onClick={(e) => {
-                        // Stop propagation to prevent the canvas from handling this event
-                        e.stopPropagation();
-
-                        console.log(
-                          `[CanvasV2] Vertex clicked in AddPoints mode: polygon=${polygon.id}, vertex=${index}`,
-                        );
-
-                        try {
-                          // If we're not already adding points, start adding points from this vertex
-                          if (!interactionState.isAddingPoints) {
-                            // Set the selected polygon
-                            setSelectedPolygonId(polygon.id);
-
-                            // Set the interaction state to start adding points
-                            setInteractionState({
-                              ...interactionState,
-                              isAddingPoints: true,
-                              addPointStartVertex: {
-                                polygonId: polygon.id,
-                                vertexIndex: index,
-                              },
-                            });
-
-                            // Clear any existing temporary points
-                            setTempPoints([]);
-
-                            console.log(`[CanvasV2] Starting to add points from vertex ${index}`);
-                          } else if (interactionState.addPointStartVertex) {
-                            // We're already adding points, check if this is a different vertex to complete the sequence
-                            if (
-                              interactionState.addPointStartVertex.vertexIndex !== index ||
-                              interactionState.addPointStartVertex.polygonId !== polygon.id
-                            ) {
-                              console.log(`[CanvasV2] Completing add points sequence at vertex ${index}`);
-
-                              // Set the end vertex
-                              const endVertex = {
-                                polygonId: polygon.id,
-                                vertexIndex: index,
-                              };
-
-                              // Process the completed sequence - we'll use the original onMouseDown handler
-                              // Create a synthetic event that matches what the canvas expects
-                              const syntheticEvent = {
-                                ...e,
-                                clientX: e.clientX,
-                                clientY: e.clientY,
-                                currentTarget: canvasRef.current,
-                                target: canvasRef.current,
-                                button: 0, // Left click
-                              } as unknown as React.MouseEvent<HTMLDivElement>;
-
-                              // Let the original onMouseDown handler handle this event
-                              onMouseDown(syntheticEvent);
-                            }
-                          }
-                        } catch (error) {
-                          console.error(`[CanvasV2] Error handling vertex click in AddPoints mode:`, error);
-                        }
-                      }}
-                    />
-                  );
-                }),
-              )}
-            </>
-          )}
+          {/* Render Vertices */}
+          <CanvasVertexLayer
+            segmentationData={segmentationData}
+            transform={transform}
+            selectedPolygonId={selectedPolygonId}
+            hoveredVertex={hoveredVertex}
+            setHoveredVertex={setHoveredVertex}
+            editMode={editMode}
+            interactionState={interactionState}
+            isShiftPressed={isShiftPressed}
+            setSelectedPolygonId={setSelectedPolygonId}
+            setEditMode={setEditMode}
+            setTempPoints={setTempPoints}
+            setInteractionState={setInteractionState}
+            onMouseDown={onMouseDown}
+          />
 
           {/* Render Temporary Geometry (e.g., for CreatePolygon or Slice) */}
-          {editMode === EditMode.CreatePolygon && tempPoints.length > 0 && (
-            <>
-              {/* Render the polyline connecting all points */}
-              <polyline
-                points={formatPoints(tempPoints)}
-                fill="none"
-                stroke="cyan"
-                strokeWidth={2 / transform.zoom}
-                vectorEffect="non-scaling-stroke"
-                style={{ pointerEvents: 'none' }} // Prevent interaction with temp line
-              />
-
-              {/* Render vertices for each temporary point */}
-              {tempPoints.map((point, index) => (
-                <circle
-                  key={`temp-point-${index}`}
-                  cx={point.x}
-                  cy={point.y}
-                  r={index === 0 ? vertexRadius * 1.5 : vertexRadius} // Make first point larger
-                  fill={index === 0 ? 'yellow' : 'cyan'} // Make first point a different color
-                  stroke="black"
-                  strokeWidth={1 / transform.zoom}
-                  vectorEffect="non-scaling-stroke"
-                  style={{ pointerEvents: 'none' }}
-                />
-              ))}
-
-              {/* Draw line from last point to cursor */}
-              {tempPoints.length > 0 && cursorPosition && (
-                <line
-                  x1={tempPoints[tempPoints.length - 1].x}
-                  y1={tempPoints[tempPoints.length - 1].y}
-                  x2={cursorPosition.x}
-                  y2={cursorPosition.y}
-                  stroke="cyan"
-                  strokeWidth={1.5 / transform.zoom}
-                  vectorEffect="non-scaling-stroke"
-                  style={{ pointerEvents: 'none' }}
-                />
-              )}
-            </>
-          )}
-
-          {editMode === EditMode.Slice && (
-            <>
-              {/* Render the slice line */}
-              {tempPoints.length === 2 && (
-                <line
-                  x1={tempPoints[0].x}
-                  y1={tempPoints[0].y}
-                  x2={tempPoints[1].x}
-                  y2={tempPoints[1].y}
-                  stroke="magenta"
-                  strokeWidth={2 / transform.zoom}
-                  vectorEffect="non-scaling-stroke"
-                  style={{ pointerEvents: 'none' }} // Prevent interaction with temp line
-                />
-              )}
-
-              {/* Render vertices for each slice point */}
-              {tempPoints.map((point, index) => (
-                <circle
-                  key={`slice-point-${index}`}
-                  cx={point.x}
-                  cy={point.y}
-                  r={vertexRadius}
-                  fill="magenta"
-                  stroke="black"
-                  strokeWidth={1 / transform.zoom}
-                  vectorEffect="non-scaling-stroke"
-                  style={{ pointerEvents: 'none' }}
-                />
-              ))}
-
-              {/* Draw line from last point to cursor for slice mode */}
-              {tempPoints.length === 1 && cursorPosition && (
-                <line
-                  x1={tempPoints[0].x}
-                  y1={tempPoints[0].y}
-                  x2={cursorPosition.x}
-                  y2={cursorPosition.y}
-                  stroke="magenta"
-                  strokeWidth={1.5 / transform.zoom}
-                  vectorEffect="non-scaling-stroke"
-                  style={{ pointerEvents: 'none' }}
-                />
-              )}
-            </>
-          )}
-
-          {/* Render Add Points Mode UI */}
-          {editMode === EditMode.AddPoints && selectedPolygonId && (
-            <>
-              {/* Render the polyline connecting all temporary points */}
-              {interactionState?.isAddingPoints && tempPoints.length > 0 && (
-                <polyline
-                  points={formatPoints(tempPoints)}
-                  fill="none"
-                  stroke="cyan"
-                  strokeWidth={3 / transform.zoom}
-                  vectorEffect="non-scaling-stroke"
-                  style={{ pointerEvents: 'none' }}
-                />
-              )}
-
-              {/* Render vertices for each temporary point */}
-              {interactionState?.isAddingPoints &&
-                tempPoints.map((point, index) => (
-                  <circle
-                    key={`add-point-temp-${index}`}
-                    cx={point.x}
-                    cy={point.y}
-                    r={index === 0 ? vertexRadius * 1.5 : vertexRadius} // Make first point larger
-                    fill={index === 0 ? 'yellow' : 'cyan'} // Make first point a different color
-                    stroke="black"
-                    strokeWidth={1 / transform.zoom}
-                    vectorEffect="non-scaling-stroke"
-                    style={{ pointerEvents: 'none' }}
-                  />
-                ))}
-
-              {/* Draw line from start vertex to first temp point or cursor */}
-              {interactionState?.isAddingPoints &&
-                interactionState?.addPointStartVertex &&
-                segmentationData?.polygons &&
-                cursorPosition &&
-                (() => {
-                  const selectedPolygon = segmentationData.polygons.find((p) => p.id === selectedPolygonId);
-                  if (
-                    selectedPolygon &&
-                    interactionState.addPointStartVertex.vertexIndex < selectedPolygon.points.length
-                  ) {
-                    const startPoint = selectedPolygon.points[interactionState.addPointStartVertex.vertexIndex];
-
-                    // If we have temp points, draw from start vertex to first temp point
-                    if (tempPoints.length > 0) {
-                      return (
-                        <line
-                          x1={startPoint.x}
-                          y1={startPoint.y}
-                          x2={tempPoints[0].x}
-                          y2={tempPoints[0].y}
-                          stroke="cyan"
-                          strokeWidth={2.5 / transform.zoom}
-                          strokeDasharray={`${4 / transform.zoom},${4 / transform.zoom}`}
-                          vectorEffect="non-scaling-stroke"
-                          style={{ pointerEvents: 'none' }}
-                        />
-                      );
-                    } else {
-                      // Otherwise draw from start vertex to cursor
-                      return (
-                        <line
-                          x1={startPoint.x}
-                          y1={startPoint.y}
-                          x2={cursorPosition.x}
-                          y2={cursorPosition.y}
-                          stroke="cyan"
-                          strokeWidth={2.5 / transform.zoom}
-                          strokeDasharray={`${4 / transform.zoom},${4 / transform.zoom}`}
-                          vectorEffect="non-scaling-stroke"
-                          style={{ pointerEvents: 'none' }}
-                        />
-                      );
-                    }
-                  }
-                  return null;
-                })()}
-
-              {/* Draw line from last temp point to cursor */}
-              {interactionState?.isAddingPoints && tempPoints.length > 0 && cursorPosition && (
-                <line
-                  x1={tempPoints[tempPoints.length - 1].x}
-                  y1={tempPoints[tempPoints.length - 1].y}
-                  x2={cursorPosition.x}
-                  y2={cursorPosition.y}
-                  stroke="cyan"
-                  strokeWidth={2.5 / transform.zoom}
-                  vectorEffect="non-scaling-stroke"
-                  style={{ pointerEvents: 'none' }}
-                />
-              )}
-            </>
-          )}
+          <CanvasTemporaryGeometryLayer
+            transform={transform}
+            editMode={editMode}
+            tempPoints={tempPoints}
+            cursorPosition={cursorPosition}
+            interactionState={interactionState}
+            selectedPolygonId={selectedPolygonId}
+            segmentationData={segmentationData}
+          />
 
           {/* Add other rendering logic as needed (hover effects on segments, etc.) */}
         </g>

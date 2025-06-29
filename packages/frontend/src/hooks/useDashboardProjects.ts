@@ -62,7 +62,7 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
           }
 
           // Make API request with abort signal and increased timeout
-          const response = await apiClient.get<ProjectsApiResponse>('/api/projects', {
+          const response = await apiClient.get<ProjectsApiResponse>('/projects', {
             params,
             signal: controller.signal,
             timeout: 30000,

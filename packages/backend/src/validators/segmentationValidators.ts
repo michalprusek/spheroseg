@@ -1,9 +1,5 @@
 import { z } from 'zod';
-
-// Schema for image ID in params (used by GET, POST, PUT)
-const imageIdParams = z.object({
-  id: z.string().uuid('Invalid image ID format'),
-});
+import { imageIdParams, projectIdParams } from './commonValidators';
 
 // Schema for GET /api/images/:id/segmentation
 export const getSegmentationSchema = z.object({

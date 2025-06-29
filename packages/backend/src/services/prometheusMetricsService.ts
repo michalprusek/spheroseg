@@ -1,10 +1,15 @@
-import { collectDefaultMetrics, Registry, Summary, Counter, Gauge } from 'prom-client';
+/**
+ * Prometheus Metrics Service
+ * 
+ * This service provides compatibility for existing metrics code
+ * while using the unified monitoring registry internally.
+ */
 
-// Create a registry for Prometheus metrics
-const register = new Registry();
+import { Registry, Summary, Counter, Gauge } from 'prom-client';
+import { unifiedRegistry } from '../monitoring/unified';
 
-// Add default metrics
-collectDefaultMetrics({ register });
+// Use the unified registry instead of creating a new one
+const register = unifiedRegistry;
 
 // Create a client for easier metrics management
 class MetricsClient {
@@ -19,6 +24,13 @@ class MetricsClient {
     const key = `${name}:${labelNames.join(',')}`;
 
     if (!this.summaries.has(key)) {
+      // Check if metric already exists in registry
+      const existingMetric = register.getSingleMetric(name);
+      if (existingMetric) {
+        this.summaries.set(key, existingMetric as Summary<string>);
+        return existingMetric as Summary<string>;
+      }
+
       const summary = new Summary({
         name,
         help,
@@ -40,6 +52,13 @@ class MetricsClient {
     const key = `${name}:${labelNames.join(',')}`;
 
     if (!this.counters.has(key)) {
+      // Check if metric already exists in registry
+      const existingMetric = register.getSingleMetric(name);
+      if (existingMetric) {
+        this.counters.set(key, existingMetric as Counter<string>);
+        return existingMetric as Counter<string>;
+      }
+
       const counter = new Counter({
         name,
         help,
@@ -60,6 +79,13 @@ class MetricsClient {
     const key = `${name}:${labelNames.join(',')}`;
 
     if (!this.gauges.has(key)) {
+      // Check if metric already exists in registry
+      const existingMetric = register.getSingleMetric(name);
+      if (existingMetric) {
+        this.gauges.set(key, existingMetric as Gauge<string>);
+        return existingMetric as Gauge<string>;
+      }
+
       const gauge = new Gauge({
         name,
         help,
@@ -110,7 +136,7 @@ class MetricsClient {
 // Create client instance
 const client = new MetricsClient();
 
-// Initialize web vitals metrics
+// Initialize web vitals metrics if they don't already exist
 const webVitalsMetrics = [
   { name: 'web_vitals_cls', help: 'Cumulative Layout Shift' },
   { name: 'web_vitals_fcp', help: 'First Contentful Paint' },
@@ -120,15 +146,17 @@ const webVitalsMetrics = [
 ];
 
 webVitalsMetrics.forEach(({ name, help }) => {
-  new Summary({
-    name,
-    help,
-    percentiles: [0.5, 0.9, 0.99],
-    registers: [register],
-  });
+  if (!register.getSingleMetric(name)) {
+    new Summary({
+      name,
+      help,
+      percentiles: [0.5, 0.9, 0.99],
+      registers: [register],
+    });
+  }
 });
 
-// Initialize frontend performance metrics
+// Initialize frontend performance metrics if they don't already exist
 const frontendMetrics = [
   {
     name: 'frontend_component_render_time',
@@ -148,16 +176,18 @@ const frontendMetrics = [
 ];
 
 frontendMetrics.forEach(({ name, help, labelNames }) => {
-  new Summary({
-    name,
-    help,
-    labelNames,
-    percentiles: [0.5, 0.9, 0.99],
-    registers: [register],
-  });
+  if (!register.getSingleMetric(name)) {
+    new Summary({
+      name,
+      help,
+      labelNames,
+      percentiles: [0.5, 0.9, 0.99],
+      registers: [register],
+    });
+  }
 });
 
-// Initialize counter metrics
+// Initialize counter metrics if they don't already exist
 const counterMetrics = [
   {
     name: 'frontend_component_render_count',
@@ -177,15 +207,17 @@ const counterMetrics = [
 ];
 
 counterMetrics.forEach(({ name, help, labelNames }) => {
-  new Counter({
-    name,
-    help,
-    labelNames,
-    registers: [register],
-  });
+  if (!register.getSingleMetric(name)) {
+    new Counter({
+      name,
+      help,
+      labelNames,
+      registers: [register],
+    });
+  }
 });
 
-// Initialize gauge metrics
+// Initialize gauge metrics if they don't already exist
 const gaugeMetrics = [
   {
     name: 'frontend_api_success_rate',
@@ -195,12 +227,14 @@ const gaugeMetrics = [
 ];
 
 gaugeMetrics.forEach(({ name, help, labelNames }) => {
-  new Gauge({
-    name,
-    help,
-    labelNames,
-    registers: [register],
-  });
+  if (!register.getSingleMetric(name)) {
+    new Gauge({
+      name,
+      help,
+      labelNames,
+      registers: [register],
+    });
+  }
 });
 
 // Initialize ML metrics adapter

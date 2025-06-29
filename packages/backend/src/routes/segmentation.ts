@@ -1,6 +1,7 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
+import type { Request as ExpressRequest } from 'express';
 import pool from '../db';
-import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
 import { triggerSegmentationTask, getSegmentationQueueStatus } from '../services/segmentationService';
 import { validate } from '../middleware/validationMiddleware';
 import { z } from 'zod';
@@ -86,82 +87,7 @@ router.get(
   },
 );
 
-// GET /api/projects/:projectId/segmentations/:imageId - Get segmentation results for an image in a project
-// @ts-ignore // TS2769: No overload matches this call.
-router.get(
-  '/projects/:projectId/segmentations/:imageId',
-  authMiddleware,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-    const { projectId, imageId } = req.params;
-
-    if (!userId) {
-      res.status(401).json({ message: 'Authentication error' });
-      return;
-    }
-
-    try {
-      // Verify user has access to the project
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
-
-      if (projectCheck.rows.length === 0) {
-        res.status(404).json({ message: 'Project not found or access denied' });
-        return;
-      }
-
-      // Verify image belongs to the project using its UUID
-      const imageCheck = await pool.query('SELECT id FROM images WHERE id = $1 AND project_id = $2', [
-        imageId,
-        projectId,
-      ]);
-
-      if (imageCheck.rows.length === 0) {
-        res.status(404).json({ message: 'Image not found in this project' });
-        return;
-      }
-
-      // Use the actual image ID from the database for the segmentation lookup (which is just imageId now)
-      const actualImageId = imageId; // Directly use the validated imageId
-
-      // Fetch segmentation result
-      const result = await pool.query('SELECT * FROM segmentation_results WHERE image_id = $1', [actualImageId]);
-
-      if (result.rows.length === 0) {
-        // If no segmentation result found, return an empty result instead of 404
-        const emptyResult = {
-          image_id: actualImageId,
-          status: 'pending',
-          result_data: {
-            polygons: [],
-          },
-          polygons: [],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        res.status(200).json(emptyResult);
-        return;
-      }
-
-      // Format the result
-      const segmentationResult = result.rows[0];
-
-      // Ensure polygons are available in the expected format
-      if (segmentationResult.result_data && segmentationResult.result_data.polygons) {
-        segmentationResult.polygons = segmentationResult.result_data.polygons;
-      } else if (!segmentationResult.polygons) {
-        segmentationResult.polygons = [];
-      }
-
-      res.status(200).json(segmentationResult);
-    } catch (error) {
-      console.error('Error fetching segmentation results:', error);
-      next(error);
-    }
-  },
-);
+ 
 
 // --- Validation Schema for Single Image Segmentation with Priority ---
 const triggerSingleWithPrioritySchema = z.object({
@@ -258,29 +184,7 @@ const triggerBatchWithPrioritySchema = z.object({
     .passthrough(), // Povolíme další parametry pro segmentaci
 });
 
-// POST /api/segmentation/trigger-batch - Trigger segmentation for multiple images
-// @ts-ignore // TS2769: No overload matches this call.
-router.post(
-  '/segmentation/trigger-batch',
-  authMiddleware,
-  validate(triggerBatchWithPrioritySchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    // Main implementation
-    return handleBatchSegmentation(req, res, next);
-  },
-);
-
-// POST /api/images/segmentation/trigger-batch - Alternative URL for the same functionality
-// @ts-ignore // TS2769: No overload matches this call.
-router.post(
-  '/images/segmentation/trigger-batch',
-  authMiddleware,
-  validate(triggerBatchWithPrioritySchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    // Redirect to the main implementation
-    return handleBatchSegmentation(req, res, next);
-  },
-);
+ 
 
 // Shared handler function for batch segmentation
 async function handleBatchSegmentation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -393,16 +297,45 @@ async function handleBatchSegmentation(req: AuthenticatedRequest, res: Response,
 // @ts-ignore // TS2769: No overload matches this call.
 router.put(
   '/images/:id/segmentation',
-  authMiddleware,
-  validate(updateSegmentationSchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId; // Used for permission check
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Log incoming request first
+    logger.info('PUT /images/:id/segmentation raw request', {
+      params: req.params,
+      body: req.body,
+      headers: req.headers
+    });
+    
+    // Manual validation to catch the exact error
+    try {
+      updateSegmentationSchema.parse({ params: req.params, body: req.body });
+    } catch (validationError) {
+      logger.error('Validation error in PUT segmentation', {
+        error: validationError instanceof Error ? validationError.message : String(validationError),
+        body: req.body
+      });
+      res.status(400).json({ 
+        message: 'Validation error',
+        error: validationError instanceof Error ? validationError.message : String(validationError)
+      });
+      return;
+    }
     const imageId = req.params.id;
     const { result_data, status, parameters } = req.body; // Expecting segmentation result and status
-
-    if (!userId) {
-      res.status(401).json({ message: 'Authentication error' });
-      return;
+    
+    // Check if request is from ML service (internal) or user (needs auth)
+    const isInternalRequest = req.headers['user-agent']?.includes('python-requests') || 
+                             req.ip?.includes('172.') || // Docker network
+                             req.hostname === 'ml';
+    
+    let userId = null;
+    if (!isInternalRequest) {
+      // For non-internal requests, require authentication
+      const authReq = req as AuthenticatedRequest;
+      userId = authReq.user?.userId;
+      if (!userId) {
+        res.status(401).json({ message: 'Authentication error' });
+        return;
+      }
     }
     if (!status || !['completed', 'failed'].includes(status)) {
       res.status(400).json({
@@ -416,14 +349,33 @@ router.put(
     }
 
     try {
-      // Verify user has access to the image
-      const imageCheck = await pool.query(
-        'SELECT i.id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
-        [imageId, userId],
-      );
-      if (imageCheck.rows.length === 0) {
-        res.status(404).json({ message: 'Image not found or access denied' });
-        return;
+      logger.info('Processing segmentation update', {
+        imageId,
+        status,
+        isInternalRequest,
+        userId,
+        hasResultData: !!result_data,
+        resultDataKeys: result_data ? Object.keys(result_data) : []
+      });
+      
+      // Verify permissions
+      if (userId) {
+        // For user requests, verify user has access to the image
+        const imageCheck = await pool.query(
+          'SELECT i.id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
+          [imageId, userId],
+        );
+        if (imageCheck.rows.length === 0) {
+          res.status(404).json({ message: 'Image not found or access denied' });
+          return;
+        }
+      } else {
+        // For internal requests, just verify image exists
+        const imageCheck = await pool.query('SELECT id FROM images WHERE id = $1', [imageId]);
+        if (imageCheck.rows.length === 0) {
+          res.status(404).json({ message: 'Image not found' });
+          return;
+        }
       }
 
       // Update segmentation result and status
@@ -447,6 +399,13 @@ router.put(
 
       res.status(200).json(updateResult.rows[0]);
     } catch (error) {
+      logger.error('Error updating segmentation result:', { 
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        imageId,
+        status,
+        isInternalRequest
+      });
       console.error('Error updating segmentation result:', error);
       next(error);
     }
@@ -545,80 +504,7 @@ router.post(
   },
 );
 
-// PUT /api/projects/:projectId/images/:imageId/segmentations - Update segmentation results for an image in a project
-// @ts-ignore // TS2769: No overload matches this call.
-router.put(
-  '/projects/:projectId/images/:imageId/segmentations',
-  authMiddleware,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-    const { projectId, imageId } = req.params;
-    const segmentationData = req.body; // Expecting segmentation data with polygons
-
-    if (!userId) {
-      res.status(401).json({ message: 'Authentication error' });
-      return;
-    }
-
-    try {
-      // Verify user has access to the project
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
-
-      if (projectCheck.rows.length === 0) {
-        res.status(404).json({ message: 'Project not found or access denied' });
-        return;
-      }
-
-      // Verify image belongs to the project using its UUID
-      const imageCheck = await pool.query('SELECT id FROM images WHERE id = $1 AND project_id = $2', [
-        imageId,
-        projectId,
-      ]);
-
-      if (imageCheck.rows.length === 0) {
-        res.status(404).json({ message: 'Image not found in this project' });
-        return;
-      }
-
-      // Use the actual image ID from the database for the segmentation lookup (which is just imageId now)
-      const actualImageId = imageId; // Directly use the validated imageId
-
-      // Check if segmentation result exists
-      const checkResult = await pool.query('SELECT id FROM segmentation_results WHERE image_id = $1', [actualImageId]);
-
-      let result;
-      if (checkResult.rows.length === 0) {
-        // Create new segmentation result
-        result = await pool.query(
-          `INSERT INTO segmentation_results (image_id, status, result_data, updated_at)
-                 VALUES ($1, 'completed', $2, NOW())
-                 RETURNING *`,
-          [actualImageId, segmentationData],
-        );
-      } else {
-        // Update existing segmentation result
-        result = await pool.query(
-          `UPDATE segmentation_results
-                 SET result_data = $1, status = 'completed', updated_at = NOW()
-                 WHERE image_id = $2
-                 RETURNING *`,
-          [segmentationData, actualImageId],
-        );
-      }
-
-      // Update image status
-      await pool.query("UPDATE images SET status = 'completed', updated_at = NOW() WHERE id = $1", [actualImageId]);
-
-      res.status(200).json(result.rows[0]);
-    } catch (error) {
-      console.error('Error updating segmentation results:', error);
-      next(error);
-    }
-  },
-);
+ 
 
 // GET /api/segmentation/queue - Get current segmentation queue status
 // @ts-ignore // TS2769: No overload matches this call.
@@ -641,69 +527,7 @@ router.get('/queue', authMiddleware, async (req: AuthenticatedRequest, res: Resp
   }
 });
 
-// GET /api/queue-status - Get global segmentation queue status
-// @ts-ignore // TS2769: No overload matches this call.
-router.get('/queue-status', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const userId = req.user?.userId;
-
-  if (!userId) {
-    res.status(401).json({ message: 'Authentication error' });
-    return;
-  }
-
-  try {
-    // Get global queue status
-    const queueQuery = `
-            SELECT
-                COUNT(*) FILTER (WHERE status = 'pending') AS pending_count,
-                COUNT(*) FILTER (WHERE status = 'processing') AS processing_count,
-                COUNT(*) FILTER (WHERE status = 'completed') AS completed_count,
-                COUNT(*) FILTER (WHERE status = 'failed') AS failed_count,
-                COUNT(*) AS total_count
-            FROM segmentation_queue
-            WHERE user_id = $1
-        `;
-    const queueResult = await pool.query(queueQuery, [userId]);
-    const queueStats = queueResult.rows[0] || {
-      pending_count: 0,
-      processing_count: 0,
-      completed_count: 0,
-      failed_count: 0,
-      total_count: 0,
-    };
-
-    // Get global image segmentation status
-    const imageStatsQuery = `
-            SELECT
-                COUNT(*) FILTER (WHERE i.status = 'pending') AS pending_count,
-                COUNT(*) FILTER (WHERE i.status = 'processing') AS processing_count,
-                COUNT(*) FILTER (WHERE i.status = 'completed') AS completed_count,
-                COUNT(*) FILTER (WHERE i.status = 'failed') AS failed_count,
-                COUNT(*) AS total_count
-            FROM images i
-            JOIN projects p ON i.project_id = p.id
-            WHERE p.user_id = $1
-        `;
-    const imageStatsResult = await pool.query(imageStatsQuery, [userId]);
-    const imageStats = imageStatsResult.rows[0] || {
-      pending_count: 0,
-      processing_count: 0,
-      completed_count: 0,
-      failed_count: 0,
-      total_count: 0,
-    };
-
-    res.json({
-      status: 'success',
-      queue: queueStats,
-      images: imageStats,
-      globalQueueStatus: getSegmentationQueueStatus(),
-    });
-  } catch (error) {
-    console.error('Error fetching global queue status:', error);
-    next(error);
-  }
-});
+ 
 
 // GET /api/queue-status/:projectId - Get segmentation queue status for a specific project
 // @ts-ignore // TS2769: No overload matches this call.
@@ -1045,5 +869,180 @@ router.post(
     }
   }
 );
+
+// GET /api/segmentation/queue-status - Get the current status of the segmentation queue
+// @ts-ignore
+router.get('/queue-status', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  console.log('GET /api/segmentation/queue-status called');
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    res.status(401).json({ message: 'Authentication error' });
+    return;
+  }
+
+  try {
+    // Get basic queue status from segmentation service
+    const queueStatus = await getSegmentationQueueStatus();
+    const { queueLength, runningTasks } = queueStatus;
+
+    // Get image details for running tasks
+    const processingImages: {
+      id: string;
+      name: string;
+      projectId: string;
+    }[] = [];
+
+    if (runningTasks.length > 0) {
+      // Query database to get image names for the running tasks
+      const imagesQuery = await pool.query(
+        `SELECT i.id, i.name, i.project_id
+         FROM images i
+         JOIN projects p ON i.project_id = p.id
+         WHERE i.id = ANY($1::uuid[]) AND p.user_id = $2`,
+        [runningTasks, userId],
+      );
+
+      // Map the results to the expected format
+      for (const image of imagesQuery.rows) {
+        processingImages.push({
+          id: image.id,
+          name: image.name,
+          projectId: image.project_id,
+        });
+      }
+    }
+
+    // Return enhanced queue status
+    res.status(200).json({
+      queueLength,
+      runningTasks,
+      processingImages,
+    });
+  } catch (error) {
+    console.error('Error fetching queue status:', error);
+    next(error);
+  }
+});
+
+// GET /api/segmentation/queue-status/:projectId - Get queue status filtered by project
+// @ts-ignore
+router.get(
+  '/queue-status/:projectId',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    const projectId = req.params.projectId;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Authentication error' });
+      return;
+    }
+
+    try {
+      // Verify project access
+      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
+        projectId,
+        userId,
+      ]);
+
+      if (projectCheck.rows.length === 0) {
+        res.status(404).json({ message: 'Project not found or access denied' });
+        return;
+      }
+
+      // Get basic queue status from segmentation service
+      const queueStatus = await getSegmentationQueueStatus();
+      const { runningTasks, pendingTasks } = queueStatus;
+
+      // Get image details for running tasks, filtered by project
+      const imagesQuery = await pool.query(
+        `SELECT i.id, i.name
+       FROM images i
+       WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,
+        [runningTasks, projectId],
+      );
+
+      // Map the results to the expected format
+      const processingImages = imagesQuery.rows.map((image) => ({
+        id: image.id,
+        name: image.name,
+        projectId: projectId,
+      }));
+
+      // Get queued images for this project
+      // Since we don't have project info in the queue, we need to query the database
+      let projectQueuedTasks: string[] = [];
+      if (pendingTasks && pendingTasks.length > 0) {
+        const queuedImagesQuery = await pool.query(
+          `SELECT i.id
+         FROM images i
+         WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,
+          [pendingTasks, projectId],
+        );
+
+        projectQueuedTasks = queuedImagesQuery.rows.map((row) => row.id);
+      }
+
+      // Return project-specific queue status
+      res.status(200).json({
+        queueLength: projectQueuedTasks.length,
+        runningTasks: processingImages.map((img) => img.id),
+        queuedTasks: projectQueuedTasks,
+        pendingTasks: projectQueuedTasks, // Include both for compatibility
+        processingImages,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error(`Error fetching queue status for project ${projectId}:`, error);
+      // Return empty queue status instead of error to prevent frontend from crashing
+      res.status(200).json({
+        queueLength: 0,
+        runningTasks: [],
+        queuedTasks: [],
+        pendingTasks: [],
+        processingImages: [],
+        timestamp: new Date().toISOString(),
+      });
+    }
+  },
+);
+
+// GET /api/segmentation/queue - Get the current segmentation queue
+// @ts-ignore
+router.get('/queue', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  console.log('GET /api/segmentation/queue called');
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    res.status(401).json({ message: 'Authentication error' });
+    return;
+  }
+
+  try {
+    // Get basic queue status from segmentation service
+    const queueStatus = await getSegmentationQueueStatus();
+    
+    // Return queue status
+    res.status(200).json({
+      success: true,
+      data: queueStatus,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error getting segmentation queue status:', error);
+    res.status(200).json({
+      success: true,
+      data: {
+        queueLength: 0,
+        runningTasks: [],
+        pendingTasks: [],
+        mlServiceStatus: 'offline',
+        lastUpdated: new Date(),
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
 
 export default router;

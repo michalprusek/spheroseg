@@ -1,6 +1,6 @@
 import express, { Request, Response, Router } from 'express';
 import pool from '../db';
-import { AuthenticatedRequest } from '../middleware/authMiddleware'; // Optional: To link logged-in user
+import { AuthenticatedRequest } from '../security/middleware/auth';; // Optional: To link logged-in user
 import { validate } from '../middleware/validationMiddleware';
 import { createAccessRequestSchema } from '../validators/accessRequestValidators';
 import { createLogger } from '@/utils/logger';

@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
-import apiClient from '@/lib/apiClient';
-import logger from '@/utils/logger';
+import { useApiCache } from '@/hooks/useUnifiedCache';
+import { createLogger } from '@/utils/logging/unifiedLogger';
+import { CacheLayer } from '@/services/unifiedCacheService';
+
+const logger = createLogger('useUserStatistics');
 
 interface UserStatistics {
   totalProjects: number;
@@ -13,28 +15,44 @@ interface UserStatistics {
 }
 
 export const useUserStatistics = () => {
-  return useQuery<UserStatistics>({
-    queryKey: ['userStatistics'],
-    queryFn: async () => {
-      try {
-        const response = await apiClient.get('/api/users/me/statistics');
-        return response.data;
-      } catch (error) {
-        logger.error('Failed to fetch user statistics:', error);
-        // Return default statistics if API fails
-        return {
-          totalProjects: 0,
-          totalImages: 0,
-          segmentedImages: 0,
-          pendingImages: 0,
-          failedImages: 0,
-          storageUsed: 0,
-          lastActivity: new Date().toISOString(),
-        };
-      }
-    },
-    staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+  const {
+    data: statistics,
+    error,
+    isLoading,
+    isFetching,
+    isSuccess,
+    refetch,
+    invalidate
+  } = useApiCache<UserStatistics>('/api/users/me/statistics', {
+    ttl: 5 * 60 * 1000, // 5 minutes cache
+    layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
+    tags: ['user-data', 'user-statistics', 'dashboard-data'],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: 1,
+    onError: (error) => {
+      logger.error('Failed to fetch user statistics:', error);
+    }
   });
+  
+  // Return default statistics if API fails
+  const defaultStatistics: UserStatistics = {
+    totalProjects: 0,
+    totalImages: 0,
+    segmentedImages: 0,
+    pendingImages: 0,
+    failedImages: 0,
+    storageUsed: 0,
+    lastActivity: new Date().toISOString(),
+  };
+  
+  return {
+    data: statistics || defaultStatistics,
+    error,
+    isLoading,
+    isFetching,
+    isSuccess,
+    refetch,
+    invalidate
+  };
 };

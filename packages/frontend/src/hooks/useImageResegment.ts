@@ -249,7 +249,6 @@ export const useImageResegment = (options: UseImageResegmentOptions = {}): UseIm
             logger.info(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
 
             try {
-                // Zavolání API pro dávku
                 await apiClient.post('/api/segmentations/batch', {
                     imageIds: batch,
                     priority,

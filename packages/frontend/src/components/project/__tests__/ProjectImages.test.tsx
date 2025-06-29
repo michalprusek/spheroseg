@@ -11,60 +11,41 @@ vi.mock('framer-motion', () => ({
   },
 }));
 
-// Mock the ImageCard component
-vi.mock('../ImageCard', () => ({
-  ImageCard: ({ image, onDelete, onOpen, onResegment, selectionMode, isSelected, onToggleSelection }: any) => (
-    <div data-testid={`image-card-${image.id}`} className="image-card">
-      <div>{image.name}</div>
-      <button onClick={() => onDelete(image.id)} data-testid={`delete-${image.id}`}>
-        Delete
-      </button>
-      {onOpen && (
-        <button onClick={() => onOpen(image.id)} data-testid={`open-${image.id}`}>
-          Open
-        </button>
-      )}
-      <button onClick={() => onResegment(image.id)} data-testid={`resegment-${image.id}`}>
-        Resegment
-      </button>
-      {selectionMode && (
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggleSelection()}
-          data-testid={`select-${image.id}`}
-        />
-      )}
-    </div>
-  ),
-}));
+// Mock the ImageDisplay component
+vi.mock('../ImageDisplay', () => ({
+  ImageDisplay: ({ image, onDelete, onOpen, onResegment, selectionMode, isSelected, onToggleSelection, viewMode }: any) => {
+    const isGrid = viewMode === 'grid';
+    const testIdPrefix = isGrid ? 'image-card' : 'image-list-item';
+    const deleteTestId = isGrid ? `delete-${image.id}` : `delete-list-${image.id}`;
+    const openTestId = isGrid ? `open-${image.id}` : `open-list-${image.id}`;
+    const resegmentTestId = isGrid ? `resegment-${image.id}` : `resegment-list-${image.id}`;
+    const selectTestId = isGrid ? `select-${image.id}` : `select-list-${image.id}`;
 
-// Mock the ImageListItem component
-vi.mock('../ImageListItem', () => ({
-  ImageListItem: ({ image, onDelete, onOpen, onResegment, selectionMode, isSelected, onToggleSelection }: any) => (
-    <div data-testid={`image-list-item-${image.id}`} className="image-list-item">
-      <div>{image.name}</div>
-      <button onClick={() => onDelete(image.id)} data-testid={`delete-list-${image.id}`}>
-        Delete
-      </button>
-      {onOpen && (
-        <button onClick={() => onOpen(image.id)} data-testid={`open-list-${image.id}`}>
-          Open
+    return (
+      <div data-testid={`${testIdPrefix}-${image.id}`} className={isGrid ? 'image-card' : 'image-list-item'}>
+        <div>{image.name}</div>
+        <button onClick={() => onDelete(image.id)} data-testid={deleteTestId}>
+          Delete
         </button>
-      )}
-      <button onClick={() => onResegment(image.id)} data-testid={`resegment-list-${image.id}`}>
-        Resegment
-      </button>
-      {selectionMode && (
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggleSelection()}
-          data-testid={`select-list-${image.id}`}
-        />
-      )}
-    </div>
-  ),
+        {onOpen && (
+          <button onClick={() => onOpen(image.id)} data-testid={openTestId}>
+            Open
+          </button>
+        )}
+        <button onClick={() => onResegment(image.id)} data-testid={resegmentTestId}>
+          Resegment
+        </button>
+        {selectionMode && (
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelection()}
+            data-testid={selectTestId}
+          />
+        )}
+      </div>
+    );
+  },
 }));
 
 describe('ProjectImages Component', () => {

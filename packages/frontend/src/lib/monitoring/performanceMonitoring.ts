@@ -9,6 +9,7 @@ import {
   UserInteractionMetric,
   MemoryUsageMetric,
 } from '@spheroseg/shared';
+import apiClient from '@/lib/apiClient';
 
 /**
  * Frontend implementation of performance monitoring
@@ -280,17 +281,12 @@ export class FrontendPerformanceMonitoring extends PerformanceMonitoring {
     this.metricsQueue = [];
 
     try {
-      const response = await fetch(this.options.endpoint || '/api/metrics', {
-        method: 'POST',
+      await apiClient.post(this.options.endpoint || '/api/metrics', { metrics }, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ metrics }),
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to send metrics: ${response.status} ${response.statusText}`);
-      }
+      // Axios throws an error for non-2xx responses, so no need to check response.ok
     } catch (error) {
       console.error('Error sending metrics:', error);
       // Put metrics back in the queue to try again later

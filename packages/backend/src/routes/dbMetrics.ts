@@ -5,8 +5,7 @@
  */
 
 import express from 'express';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { administratorAccessMiddleware } from '../middleware/authorizationMiddleware';
+import { authenticate as authMiddleware, requireAdmin } from '../security/middleware/auth';
 import dbMonitoring from '../db/monitoring';
 import exportPatterns from '../db/monitoring/exportPatterns';
 import logger from '../utils/logger';
@@ -18,7 +17,7 @@ const router = express.Router();
  * Returns the top slow query patterns
  * Requires admin privileges
  */
-router.get('/top-slow', authMiddleware, administratorAccessMiddleware, (req, res) => {
+router.get('/top-slow', authMiddleware, requireAdmin, (req, res) => {
   try {
     // Get query parameter for limit (optional)
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
@@ -46,7 +45,7 @@ router.get('/top-slow', authMiddleware, administratorAccessMiddleware, (req, res
  * Returns query patterns for a specific table
  * Requires admin privileges
  */
-router.get('/by-table/:table', authMiddleware, administratorAccessMiddleware, (req, res) => {
+router.get('/by-table/:table', authMiddleware, requireAdmin, (req, res) => {
   try {
     const { table } = req.params;
 
@@ -77,7 +76,7 @@ router.get('/by-table/:table', authMiddleware, administratorAccessMiddleware, (r
  * Returns query frequency statistics
  * Requires admin privileges
  */
-router.get('/frequency', authMiddleware, administratorAccessMiddleware, (req, res) => {
+router.get('/frequency', authMiddleware, requireAdmin, (req, res) => {
   try {
     // Get query frequency stats
     const frequencyStats = dbMonitoring.getQueryFrequencyStats();
@@ -101,7 +100,7 @@ router.get('/frequency', authMiddleware, administratorAccessMiddleware, (req, re
  * Exports query patterns to a JSON file
  * Requires admin privileges
  */
-router.post('/export', authMiddleware, administratorAccessMiddleware, async (req, res) => {
+router.post('/export', authMiddleware, requireAdmin, async (req, res) => {
   try {
     const { path } = req.body;
 
@@ -131,7 +130,7 @@ router.post('/export', authMiddleware, administratorAccessMiddleware, async (req
  * Exports Grafana dashboard for query metrics
  * Requires admin privileges
  */
-router.post('/export-dashboard', authMiddleware, administratorAccessMiddleware, async (req, res) => {
+router.post('/export-dashboard', authMiddleware, requireAdmin, async (req, res) => {
   try {
     const { outputDir } = req.body;
 
@@ -157,7 +156,7 @@ router.post('/export-dashboard', authMiddleware, administratorAccessMiddleware, 
  * Resets query pattern statistics
  * Requires admin privileges
  */
-router.post('/reset', authMiddleware, administratorAccessMiddleware, (req, res) => {
+router.post('/reset', authMiddleware, requireAdmin, (req, res) => {
   try {
     // Reset pattern statistics
     dbMonitoring.resetPatternStats();

@@ -4,7 +4,7 @@ import i18n, { i18nInitializedPromise } from '../i18n';
 import apiClient from '@/lib/apiClient';
 import userProfileService from '../services/userProfileService';
 import { UserProfile } from '@/types/userProfile';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import logger from '@/utils/logger';
 
 export type Language = 'en' | 'cs' | 'de' | 'es' | 'fr' | 'zh';

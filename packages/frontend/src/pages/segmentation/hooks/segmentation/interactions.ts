@@ -329,8 +329,8 @@ export const handleMouseDown = (
 
                 // Calculate the distance between indices in both directions
                 const numPoints = selectedPolygon.points.length;
-                let forwardDistance = endIdx >= startIdx ? endIdx - startIdx : numPoints - startIdx + endIdx;
-                let backwardDistance = startIdx >= endIdx ? startIdx - endIdx : numPoints - endIdx + startIdx;
+                const forwardDistance = endIdx >= startIdx ? endIdx - startIdx : numPoints - startIdx + endIdx;
+                const backwardDistance = startIdx >= endIdx ? startIdx - endIdx : numPoints - endIdx + startIdx;
 
                 // Determine if we should go forward or backward based on the shortest path
                 // and the orientation of the polygon

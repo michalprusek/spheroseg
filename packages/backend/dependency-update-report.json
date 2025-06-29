@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-06-29T07:45:42.041Z",
+  "backupLocation": "/home/cvat/spheroseg/spheroseg/packages/backend/backups/2025-06-29T07-45-03-605Z",
+  "updates": {
+    "securityFixes": "Applied npm audit fix",
+    "deprecatedPackages": [
+      "Removed node-fetch (using axios instead)"
+    ],
+    "addedPackages": [
+      "express-validator",
+      "jwks-rsa"
+    ],
+    "scriptsAdded": [
+      "audit",
+      "audit:fix",
+      "deps:check",
+      "deps:update"
+    ]
+  }
+}

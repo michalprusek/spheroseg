@@ -5,7 +5,7 @@ import { useGeometryUtils } from './useGeometryUtils';
 import { intersectionUtils } from './utils/intersectionUtils';
 import { polygonSplitUtils, SliceOperation } from './utils/polygonSplitter';
 import { sliceValidator } from './utils/sliceValidator';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import polygonOperations from '@/utils/polygonOperations';
 
 // Helper function return type

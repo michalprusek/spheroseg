@@ -4,6 +4,7 @@
 
 import { Point, Polygon } from './segmentation/index';
 import { createNamespacedLogger } from '@/utils/logger';
+import { isPointInPolygon as isPointInPolygonUtil } from '@spheroseg/shared/utils/polygonUtils';
 
 const CLogger = createNamespacedLogger('svgUtils');
 
@@ -51,32 +52,13 @@ export function createSvgPath(points: Point[], holes: Point[][] = []): string {
 
 /**
  * Determines if a point is inside a polygon
+ * Re-exported from unified polygon utilities
  *
  * @param point The point to check
  * @param polygon Array of points defining the polygon
  * @returns True if the point is inside the polygon
  */
-export function isPointInPolygon(point: Point, polygon: Point[]): boolean {
-  if (!polygon || polygon.length < 3) {
-    return false;
-  }
-
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i].x;
-    const yi = polygon[i].y;
-    const xj = polygon[j].x;
-    const yj = polygon[j].y;
-
-    const intersect = yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
-
-    if (intersect) {
-      inside = !inside;
-    }
-  }
-
-  return inside;
-}
+export const isPointInPolygon = isPointInPolygonUtil;
 
 /**
  * Scales polygon points to fit within a target size while maintaining aspect ratio

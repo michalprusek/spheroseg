@@ -1,3 +1,5 @@
+import { SegmentationResultData } from '@/types';
+
 /**
  * Represents a 2D point
  */
@@ -20,10 +22,4 @@ export interface Polygon {
 /**
  * Represents the result of a segmentation operation
  */
-export interface SegmentationResult {
-  id?: string;
-  imageWidth: number;
-  imageHeight: number;
-  polygons: Polygon[];
-  metadata?: Record<string, any>;
-}
+export type SegmentationResult = SegmentationResultData;

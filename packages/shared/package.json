@@ -11,11 +11,12 @@
     "lint": "eslint --ext .ts,.tsx ."
   },
   "dependencies": {
-    "@spheroseg/types": "*",
+    "@spheroseg/types": "file:../types",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.1",
+    "@types/uuid": "^9.0.8",
+    "@types/node": "^18.11.9",
     "typescript": "^5.0.4"
   }
 }

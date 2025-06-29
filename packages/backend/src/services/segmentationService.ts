@@ -22,7 +22,7 @@ export const triggerSegmentationTask = async (
 
   try {
     // Use the centralized segmentation queue service
-    return await segmentationQueueService.triggerSegmentationTask(imageId, imagePath, parameters, priority);
+    return await segmentationQueueService.addTask(imageId, imagePath, parameters, priority);
   } catch (error) {
     logger.error(`Error adding segmentation task for image ${imageId} to queue:`, { error });
     throw error; // Re-throw to allow caller to handle the error
@@ -35,7 +35,7 @@ export const triggerSegmentationTask = async (
  * @returns Queue status
  */
 export const getSegmentationQueueStatus = async (): Promise<any> => {
-  return await segmentationQueueService.getSegmentationQueueStatus();
+  return segmentationQueueService.getQueueStatus();
 };
 
 /**
@@ -44,8 +44,8 @@ export const getSegmentationQueueStatus = async (): Promise<any> => {
  * @param imageId ID of the image
  * @returns True if the task was cancelled, false otherwise
  */
-export const cancelSegmentationTask = (imageId: string): boolean => {
-  return segmentationQueueService.cancelSegmentationTask(imageId);
+export const cancelSegmentationTask = async (imageId: string): Promise<boolean> => {
+  return await segmentationQueueService.cancelTask(imageId);
 };
 
 // Optional: Add functions to get or update results if needed directly by service

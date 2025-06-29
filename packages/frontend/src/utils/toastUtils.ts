@@ -1,4 +1,4 @@
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 /**
  * Show a success toast notification
@@ -8,12 +8,6 @@ import { toast } from 'react-hot-toast';
 export const showSuccess = (message: string, duration: number = 3000) => {
   toast.success(message, {
     duration,
-    style: {
-      padding: '16px',
-      borderRadius: '8px',
-      background: '#10B981',
-      color: '#FFFFFF',
-    },
   });
 };
 
@@ -25,12 +19,6 @@ export const showSuccess = (message: string, duration: number = 3000) => {
 export const showError = (message: string, duration: number = 4000) => {
   toast.error(message, {
     duration,
-    style: {
-      padding: '16px',
-      borderRadius: '8px',
-      background: '#EF4444',
-      color: '#FFFFFF',
-    },
   });
 };
 
@@ -40,14 +28,8 @@ export const showError = (message: string, duration: number = 4000) => {
  * @param duration Duration in milliseconds (default: 3000)
  */
 export const showInfo = (message: string, duration: number = 3000) => {
-  toast(message, {
+  toast.info(message, {
     duration,
-    style: {
-      padding: '16px',
-      borderRadius: '8px',
-      background: '#3B82F6',
-      color: '#FFFFFF',
-    },
   });
 };
 
@@ -57,15 +39,8 @@ export const showInfo = (message: string, duration: number = 3000) => {
  * @param duration Duration in milliseconds (default: 3500)
  */
 export const showWarning = (message: string, duration: number = 3500) => {
-  toast(message, {
+  toast.warning(message, {
     duration,
-    style: {
-      padding: '16px',
-      borderRadius: '8px',
-      background: '#F59E0B',
-      color: '#FFFFFF',
-    },
-    icon: '⚠️',
   });
 };
 

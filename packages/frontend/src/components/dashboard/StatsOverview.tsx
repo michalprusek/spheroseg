@@ -249,18 +249,31 @@ const StatsOverview: React.FC = () => {
   const { t } = useLanguage();
   const [showExtended, setShowExtended] = useState(false);
 
-  // Use the new useUserStatistics hook
+  // Use the updated useUserStatistics hook with unified cache
   const {
-    statistics: stats,
-    loading: isLoading,
+    data: rawStats,
+    isLoading,
     error,
-    fetchStatistics,
-    clearCache
-  } = useUserStatistics({
-    showToasts: true,
-    useCache: false, // Disable cache to always fetch fresh data
-    autoFetch: true,
-  });
+    refetch: fetchStatistics,
+    invalidate: clearCache
+  } = useUserStatistics();
+  
+  // Transform the data to match the expected format
+  const stats: UserStats | undefined = rawStats ? {
+    totalProjects: rawStats.totalProjects,
+    totalImages: rawStats.totalImages,
+    completedSegmentations: rawStats.segmentedImages,
+    storageUsedMB: rawStats.storageUsed,
+    recentActivity: [], // This would need to come from a separate endpoint
+    comparisons: {
+      projectsThisMonth: 0,
+      projectsLastMonth: 0,
+      projectsChange: 0,
+      imagesThisMonth: 0,
+      imagesLastMonth: 0,
+      imagesChange: 0,
+    }
+  } : undefined;
 
   // Listen for statistics update events
   useEffect(() => {

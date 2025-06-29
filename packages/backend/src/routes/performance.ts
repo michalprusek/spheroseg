@@ -2,7 +2,7 @@ import express from 'express';
 import { Request, Response } from 'express';
 import pool from '../db';
 import logger from '../utils/logger';
-import authMiddleware, { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
 
 const router = express.Router();
 

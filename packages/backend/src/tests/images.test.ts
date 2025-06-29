@@ -2,7 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import { jest } from '@jest/globals';
 import imagesRouter from '../routes/images';
-import authMiddleware from '../middleware/authMiddleware';
+import authMiddleware from '../security/middleware/authMiddleware';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';

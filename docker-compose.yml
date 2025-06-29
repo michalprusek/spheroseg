@@ -1,53 +1,94 @@
 services:
-  # Frontend development service with hot reload (commented out in favor of the static version)
-  # frontend-dev:
-  #   image: node:18-alpine
-  #   container_name: spheroseg-frontend-dev
-  #   restart: always
-  #   depends_on:
-  #     - backend
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     # Use backend service name for container-to-container communication
-  #     - VITE_API_URL=http://backend:5001
-  #     - VITE_API_BASE_URL=
-  #     - PORT=3000
-  #     - VITE_NODE_ENV=development
-  #     - HOST=0.0.0.0
-  #     # Add standardized API path environment variables
-  #     - VITE_API_AUTH_PREFIX=/auth
-  #     - VITE_API_USERS_PREFIX=/users
-  #     - VITE_API_PROXY_ENABLED=true
-  #     - VITE_DOCKER_ENV=true
-  #   volumes:
-  #     - ./packages/frontend:/app
-  #     - ./packages/shared:/app/shared
-  #     - ./packages/types:/app/types
-  #     - frontend_uploads:/app/public/uploads
-  #   networks:
-  #     - spheroseg-network
-  #   working_dir: /app
-  #   command: >
-  #     sh -c "
-  #       echo 'Starting frontend development server with hot reload...' &&
-  #       echo 'VITE_API_URL=http://backend:5001' > .env.local &&
-  #       echo 'VITE_API_BASE_URL=' >> .env.local &&
-  #       echo 'VITE_API_AUTH_PREFIX=/auth' >> .env.local &&
-  #       echo 'VITE_API_USERS_PREFIX=/users' >> .env.local &&
-  #       echo 'VITE_API_PROXY_ENABLED=true' >> .env.local &&
-  #       echo 'VITE_DOCKER_ENV=true' >> .env.local &&
-  #       mkdir -p node_modules/@spheroseg &&
-  #       rm -rf node_modules/@spheroseg/shared node_modules/@spheroseg/types &&
-  #       ln -sf /app/shared node_modules/@spheroseg/shared &&
-  #       ln -sf /app/types node_modules/@spheroseg/types &&
-  #       npm install -g vite &&
-  #       npm install --legacy-peer-deps &&
-  #       npm run dev
-  #     "
+
+  # Nginx for development environment
+  nginx-dev:
+    profiles: ["dev"]
+    container_name: spheroseg-nginx-dev
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.dev.conf:/etc/nginx/conf.d/default.conf
+      - ./letsencrypt/etc/letsencrypt:/etc/letsencrypt
+      - ./letsencrypt/var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./letsencrypt/webroot:/var/www/letsencrypt
+      - ./ssl/server.crt:/etc/nginx/ssl/server.crt
+      - ./ssl/server.key:/etc/nginx/ssl/server.key
+    command: >
+      sh -c "
+        mkdir -p /etc/nginx/ssl &&
+        nginx -g 'daemon off;'
+      "
+    depends_on:
+      - frontend-dev
+      - backend
+      - assets
+    networks:
+      - spheroseg-network
+
+  # Nginx for production environment
+  nginx-prod:
+    profiles: ["prod"]
+    container_name: spheroseg-nginx-prod
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.prod.conf:/etc/nginx/conf.d/default.conf
+      - ./letsencrypt/etc/letsencrypt:/etc/letsencrypt
+      - ./letsencrypt/var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./letsencrypt/webroot:/var/www/letsencrypt
+      - ./ssl/server.crt:/etc/nginx/ssl/server.crt
+      - ./ssl/server.key:/etc/nginx/ssl/server.key
+    command: >
+      sh -c "
+        mkdir -p /etc/nginx/ssl &&
+        nginx -g 'daemon off;'
+      "
+    depends_on:
+      - frontend-prod
+      - backend
+      - assets
+    networks:
+      - spheroseg-network
+
+  # Certbot for SSL certificates - dev profile
+  certbot-dev:
+    profiles: ["dev"]
+    image: certbot/certbot
+    container_name: spheroseg-certbot
+    volumes:
+      - ./letsencrypt/etc/letsencrypt:/etc/letsencrypt
+      - ./letsencrypt/var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./letsencrypt/webroot:/var/www/letsencrypt
+    depends_on:
+      - nginx-dev
+    command: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/letsencrypt --quiet; sleep 12h & wait $${!}; done;'"
+    networks:
+      - spheroseg-network
+
+  # Certbot for SSL certificates - prod profile
+  certbot-prod:
+    profiles: ["prod"]
+    image: certbot/certbot
+    container_name: spheroseg-certbot
+    volumes:
+      - ./letsencrypt/etc/letsencrypt:/etc/letsencrypt
+      - ./letsencrypt/var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./letsencrypt/webroot:/var/www/letsencrypt
+    depends_on:
+      - nginx-prod
+    command: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/letsencrypt --quiet; sleep 12h & wait $${!}; done;'"
+    networks:
+      - spheroseg-network
 
   # Database
   db:
+    profiles: ["dev", "prod"]
     image: postgres:14-alpine
     container_name: spheroseg-db
     restart: always
@@ -68,76 +109,76 @@ services:
       timeout: 5s
       retries: 5
 
+  # RabbitMQ
+  rabbitmq:
+    profiles: ["dev", "prod"]
+    image: rabbitmq:3-management-alpine
+    container_name: spheroseg-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672" # AMQP protocol port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - spheroseg-network
+
   # Backend API using TypeScript server
   backend:
-    image: python:3.9-slim
+    profiles: ["dev", "prod"]
+    build:
+      context: .
+      dockerfile: ./packages/backend/Dockerfile
     container_name: spheroseg-backend
     restart: always
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
     ports:
       - "5001:5001"
     environment:
-      - PORT=5001
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/spheroseg
-      - JWT_SECRET=development_secret_key_that_is_32_chars_long
-      - LOG_LEVEL=debug
-      - ALLOW_CORS=true
-      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3003,http://localhost:3005,http://frontend:3000,http://frontend:80,*
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=spheroseg
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - USE_MOCK_USER=false
-      - PYTHONUNBUFFERED=1
-      - MAX_UPLOAD_SIZE=100mb
-      - VALIDATION_STRICT=false
-      - DEBUG=true
-      # ML Service configuration
-      - ML_SERVICE_URL=http://ml:5002
-      # Email configuration
-      - EMAIL_FROM=spheroseg@utia.cas.cz
-      - APP_URL=http://localhost:3000
+      # Environment variables are now primarily managed in backend/src/config/index.ts
+      # Only critical overrides or Docker-specific settings should be here.
+      # Ensure APP_URL is set for callbacks from ML service
+      - APP_URL=http://backend:5001 # Use internal Docker network name
+      - NODE_ENV=${NODE_ENV:-production} # Allow overriding NODE_ENV from host
+      - LOG_LEVEL=${LOG_LEVEL:-info} # Allow overriding LOG_LEVEL from host
+      - JWT_SECRET=${JWT_SECRET:-development_secret_key_that_is_32_chars_long}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@${DB_HOST:-db}:${DB_PORT:-5432}/${DB_NAME:-spheroseg}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@${RABBITMQ_HOST:-rabbitmq}:${RABBITMQ_PORT:-5672}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE:-segmentation_tasks}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3003,http://localhost:3005,http://frontend:3000,http://frontend:80,*}
+      - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE:-100mb}
+      - EMAIL_FROM=${EMAIL_FROM:-spheroseg@utia.cas.cz}
+      - ML_API_URL=http://ml:5002 # Add ML_API_URL for ML service communication
     volumes:
-      - ./packages/backend:/app
+      - ./packages/backend/src:/app/src
+      - ./packages/backend/package.json:/app/package.json
+      - ./packages/backend/tsconfig.json:/app/tsconfig.json
       - uploads_data:/app/uploads
-      - ./packages/ml:/app/ML
-      - backend_node_modules:/app/node_modules
     networks:
       - spheroseg-network
     working_dir: /app
     command: >
       bash -c "
-        mkdir -p /app/uploads &&
-        echo 'Starting server with hot reload...' &&
-        apt-get update && apt-get install -y curl gnupg make g++ libpixman-1-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev libvips-dev &&
-        # Install OpenCV system dependencies
-        apt-get install -y libgl1-mesa-glx libglib2.0-0 libsm6 libxrender1 libxext6 &&
-        curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &&
-        apt-get install -y nodejs &&
-        # Install Python dependencies for ML
-        pip install --no-cache-dir torch torchvision numpy scikit-image opencv-python pillow tqdm &&
-        # Install Node.js dependencies
-        npm install --legacy-peer-deps --force &&
-        npm install -g nodemon ts-node &&
-        echo 'Initializing database schema...' &&
-        node -r ts-node/register src/db/initDb.ts &&
-        echo 'Creating test user...' &&
-        node src/scripts/create-test-user.js &&
+        echo 'Skipping database initialization (already initialized)...' &&
         echo 'Starting development server with hot reload using nodemon...' &&
-        nodemon --watch src --ext js,ts,json --exec 'node -r ts-node/register src/server.ts' --verbose
+        DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/spheroseg APP_URL=http://backend:5001 ML_API_URL=http://ml:5002 npm run dev
       "
 
   # ML Service
   ml:
+    profiles: ["dev", "prod"]
     build:
       context: ./packages/ml
       dockerfile: Dockerfile
     container_name: spheroseg-ml
     restart: always
+    depends_on:
+      - rabbitmq # ML service now depends on RabbitMQ
     volumes:
       - ./packages/ml:/ML
       - uploads_data:/ML/uploads
@@ -145,94 +186,18 @@ services:
       - PYTHONUNBUFFERED=1
       - MODEL_PATH=/ML/checkpoint_epoch_9.pth.tar
       - DEBUG=false
-      - ML_SERVICE_URL=http://ml:5002
-    ports:
-      - "5002:5002"
-    networks:
-      - spheroseg-network
-
-  # Frontend with fixed configuration (commented out in favor of the static version)
-  # frontend:
-  #   build:
-  #     context: ./packages/frontend
-  #     dockerfile: Dockerfile.dev
-  #   container_name: spheroseg-frontend
-  #   restart: always
-  #   depends_on:
-  #     - backend
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     # Use backend service name for container-to-container communication
-  #     - VITE_API_URL=http://backend:5001
-  #     - VITE_API_BASE_URL=
-  #     - PORT=3000
-  #     - VITE_NODE_ENV=development
-  #     - HOST=0.0.0.0
-  #     # Add standardized API path environment variables
-  #     - VITE_API_AUTH_PREFIX=/auth
-  #     - VITE_API_USERS_PREFIX=/users
-  #     - VITE_API_PROXY_ENABLED=true
-  #     - VITE_DOCKER_ENV=true
-  #   volumes:
-  #     - ./packages/frontend:/app
-  #     - ./packages/shared:/app/shared
-  #     - ./packages/types:/app/types
-  #     - frontend_uploads:/app/public/uploads
-  #     - frontend_node_modules:/app/node_modules
-  #   networks:
-  #     - spheroseg-network
-  #   healthcheck:
-  #     test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 40s
-
-  # NGINX reverse proxy for HTTPS
-  nginx:
-    image: nginx:alpine
-    container_name: spheroseg-nginx
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      # Let's Encrypt certificates
-      - ./letsencrypt/etc/letsencrypt:/etc/letsencrypt
-      - ./letsencrypt/var/lib/letsencrypt:/var/lib/letsencrypt
-      - ./letsencrypt/webroot:/var/www/letsencrypt
-      # Fallback to self-signed certificates
-      - ./ssl/server.crt:/etc/nginx/ssl/server.crt
-      - ./ssl/server.key:/etc/nginx/ssl/server.key
-    depends_on:
-      - frontend-dev
-      - backend
-    command: >
-      sh -c "
-        mkdir -p /etc/nginx/ssl &&
-        nginx -g 'daemon off;'
-      "
-    networks:
-      - spheroseg-network
-      
-  # Certbot for SSL certificates
-  certbot:
-    image: certbot/certbot
-    container_name: spheroseg-certbot
-    volumes:
-      - ./letsencrypt/etc/letsencrypt:/etc/letsencrypt
-      - ./letsencrypt/var/lib/letsencrypt:/var/lib/letsencrypt
-      - ./letsencrypt/webroot:/var/www/letsencrypt
-    depends_on:
-      - nginx
-    command: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/letsencrypt --quiet; if [ $? -eq 0 ]; then nginx -s reload; fi; sleep 12h & wait $${!}; done;'"
+      # RabbitMQ configuration for ML service
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+      - RABBITMQ_QUEUE=segmentation_tasks
     networks:
       - spheroseg-network
 
   # Frontend development service with Vite server
   frontend-dev:
+    profiles: ["dev"]
     build:
       context: ./packages/frontend
       dockerfile: Dockerfile.fixed
@@ -265,8 +230,30 @@ services:
       - spheroseg-network
     working_dir: /app
 
+  # Frontend production service (builds and serves static files)
+  frontend-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: ./packages/frontend/Dockerfile.prod
+    container_name: spheroseg-frontend-prod
+    restart: always
+    depends_on:
+      - backend
+      - assets
+    ports:
+      - "3000:80"
+    networks:
+      - spheroseg-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
   # Static assets server
   assets:
+    profiles: ["dev", "prod"]
     image: nginx:alpine
     container_name: spheroseg-assets
     restart: always
@@ -279,6 +266,7 @@ services:
 
   # Database management UI
   adminer:
+    profiles: ["dev"]
     image: adminer:latest
     container_name: spheroseg-adminer
     restart: always
@@ -295,6 +283,7 @@ volumes:
   frontend_uploads:
   frontend_node_modules:
   backend_node_modules:
+  frontend_build:
 
 networks:
   spheroseg-network:

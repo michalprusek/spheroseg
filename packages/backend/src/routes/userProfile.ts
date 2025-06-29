@@ -4,8 +4,8 @@
  */
 import { Router } from 'express';
 import userProfileController from '../controllers/userProfileController';
-import authMiddleware from '../middleware/authMiddleware';
-import { standardLimiter, sensitiveOperationsLimiter } from '../middleware/rateLimitMiddleware';
+import { authenticate as authMiddleware } from '../security/middleware/auth';
+import { standardLimiter, sensitiveOperationsLimiter } from '../security/middleware/rateLimitMiddleware';
 
 const router = Router();
 

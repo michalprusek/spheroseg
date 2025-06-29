@@ -1,12 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-// Import jwt-decode, který je nyní nainstalován
+// Import jwt-decode, which is now installed
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate, NavigateFunction, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient'; // Import apiClient
 import axios from 'axios'; // Import axios for direct requests and error checking
 import { Language } from './LanguageContext'; // Import Language type
-import httpClient from '@/utils/httpClient'; // Import centralized HTTP client
 import logger from '@/utils/logger'; // Import centralized logger
 import { safeAsync, NetworkErrorType, getErrorType, showEnhancedError } from '@/utils/enhancedErrorHandling'; // Import enhanced error handling
 import {
@@ -61,10 +60,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Helper functions to persist user data
 const saveUserToStorage = (user: User | null) => {
   if (user) {
-    // Uložíme do localStorage
+    // Save to localStorage
     localStorage.setItem('spheroseg_user', JSON.stringify(user));
 
-    // Také uložíme do cookie pro větší odolnost
+    // Also save to cookie for better resilience
     try {
       const userJson = JSON.stringify(user);
       const expirationDate = new Date();
@@ -79,7 +78,7 @@ const saveUserToStorage = (user: User | null) => {
       logger.error('Error setting user cookie:', error);
     }
   } else {
-    // Vymažeme z localStorage i cookie
+    // Clear from both localStorage and cookie
     localStorage.removeItem('spheroseg_user');
 
     try {
@@ -96,13 +95,13 @@ const saveUserToStorage = (user: User | null) => {
 
 const loadUserFromStorage = (): User | null => {
   try {
-    // Nejdříve zkusit načíst z localStorage
+    // First try to load from localStorage
     const userData = localStorage.getItem('spheroseg_user');
     if (userData) {
       return JSON.parse(userData);
     }
 
-    // Pokud není v localStorage, zkusit cookie
+    // If not in localStorage, try cookie
     const cookieStr = document.cookie;
     const userCookieMatch = cookieStr.match(/spheroseg_user=([^;]+)/);
     if (userCookieMatch && userCookieMatch[1]) {
@@ -303,16 +302,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Verify token by fetching user data using the centralized HTTP client
           const controller = new AbortController();
-          const fetchUserPromise = httpClient.withRetry(
-            async () => {
+          const fetchUserPromise = (async () => {
+            let retries = 4; // Zvýšeno na 4 pokusy
+            const retryDelay = 2000; // Zvýšeno na 2s mezi pokusy
+            
+            while (retries > 0) {
               try {
-                return await axios.get<User>(API_PATHS.USERS.ME, {
+                return await apiClient.get<User>(API_PATHS.USERS.ME, {
                   signal: controller.signal,
                   timeout: 10000, // Zvýšeno na 10 sekund pro větší toleranci
-                  headers: {
-                    Authorization: `Bearer ${getAccessToken()}`,
-                    'Content-Type': 'application/json',
-                  },
                   withCredentials: true, // Důležité pro přenos cookies
                 });
               } catch (error) {
@@ -322,13 +320,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   throw error;
                 }
 
-                logger.warn('User data fetch failed, will retry', { error });
-                throw error;
+                retries--;
+                if (retries === 0) {
+                  logger.warn('User data fetch failed after all retries', { error });
+                  throw error;
+                }
+                
+                logger.warn(`User data fetch failed, will retry. Retries left: ${retries}`, { error });
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
               }
-            },
-            4, // Zvýšeno na 4 pokusy
-            2000, // Zvýšeno na 2s mezi pokusy
-          );
+            }
+          })();
 
           // Použijeme Promise.race, abychom pokračovali, pokud nastane timeout
           const response = await Promise.race([fetchUserPromise, timeoutPromise]);
@@ -645,16 +647,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           try {
             // Use the centralized HTTP client with retry for actual API calls
-            const response = await httpClient.withRetry(
-              async () => {
+            const response = await (async () => {
+              let retries = 2; // 2 retries
+              const retryDelay = 1000; // 1 second delay between retries
+              
+              while (retries >= 0) {
                 try {
-                  // Use direct axios call to avoid any interceptor issues
-                  return await axios.post(API_PATHS.AUTH.REGISTER, userData, {
+                  // Use apiClient for consistent handling
+                  return await apiClient.post(API_PATHS.AUTH.REGISTER, userData, {
                     signal: new AbortController().signal,
                     timeout: 3000,
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
                   });
                 } catch (error: any) { // Cast error to any
                   // Don't retry if user already exists (409 Conflict)
@@ -663,15 +665,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     throw error;
                   }
 
-                  logger.warn('Auth signup attempt failed, will retry', {
-                    error,
-                  });
-                  throw error;
+                  retries--;
+                  if (retries < 0) {
+                    logger.warn('Auth signup attempt failed after all retries', { error });
+                    throw error;
+                  }
+                  
+                  logger.warn(`Auth signup attempt failed, will retry. Retries left: ${retries}`, { error });
+                  await new Promise(resolve => setTimeout(resolve, retryDelay));
                 }
-              },
-              2, // 2 retries
-              1000, // 1 second delay between retries
-            );
+              }
+            })();
 
             logger.info('Signup successful');
             // Don't show toast here - let the signup component handle success messages

@@ -1941,7 +1941,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         console.log('CSV soubor úspěšně přidán do ZIP');
 
         // Přidáme také HTML verzi pro lepší zobrazení
-        let htmlContent = `
+        const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
@@ -1960,7 +1960,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         <body>
           <div class="container">
             <h1>Metrics for ${projectTitle || 'project'}</h1>
-            <p>Generated on ${new Date().toLocaleString()}</p>
+            <p>Generated on ${formatDateTime(new Date())}</p>
             <table>
               <thead>
                 <tr>

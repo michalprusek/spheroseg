@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ApiError } from '../utils/errors';
 import { ProjectShareService } from '../services/projectShareService';
 import db from '../db';
-import { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { AuthenticatedRequest } from '../security/middleware/auth';;
 
 // Vytvoření instance service
 const projectShareService = new ProjectShareService(db);

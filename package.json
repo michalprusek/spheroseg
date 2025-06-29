@@ -8,10 +8,6 @@
     "packages/*"
   ],
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^7.1.0",
-    "@mui/material": "^7.0.2",
     "i18next": "^25.0.1",
     "jwt-decode": "^4.0.0",
     "pg": "^8.15.6",
@@ -62,7 +58,7 @@
     "clean": "turbo run clean",
     "dev:frontend": "turbo run dev --filter=frontend",
     "dev:backend": "turbo run dev --filter=backend",
-    "test:frontend": "turbo run test --filter=frontend",
+    "test:frontend": "turbo run test --filter=@spheroseg/frontend",
     "test:backend": "turbo run test --filter=backend",
     "test:ml": "turbo run test --filter=ml",
     "ml:segmentation": "turbo run segmentation --filter=ml",

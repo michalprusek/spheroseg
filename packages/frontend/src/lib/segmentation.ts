@@ -2,7 +2,7 @@
 // This simulates image segmentation with thresholding and contour finding
 // In a real app, this would use more advanced methods like WebAssembly or call a backend API
 
-import type { PolygonData, SegmentationData } from '@/types';
+import type { SegmentationResultData } from '@/types';
 
 export interface Point {
   x: number;
@@ -18,7 +18,7 @@ export interface Polygon {
   parentId?: string; // Reference to parent polygon for holes
 }
 
-export type SegmentationResult = SegmentationData;
+export type SegmentationResult = SegmentationResultData;
 
 // Apply a simple thresholding algorithm to create a binary mask
 export const applyThresholding = async (imageSrc: string, threshold: number = 127): Promise<ImageData> => {
@@ -113,7 +113,7 @@ export const findContours = (imageData: ImageData): Polygon[] => {
 };
 
 // Segment an image and return polygons
-export const segmentImage = async (imageSrc: string): Promise<SegmentationResult> => {
+export const segmentImage = async (imageSrc: string): Promise<SegmentationResultData> => {
   try {
     // Apply thresholding to get a binary mask
     const binaryMask = await applyThresholding(imageSrc);
@@ -122,7 +122,7 @@ export const segmentImage = async (imageSrc: string): Promise<SegmentationResult
     const basicPolygons = findContours(binaryMask);
 
     // Convert to PolygonData with required fields
-    const polygons: PolygonData[] = basicPolygons.map((poly) => ({
+    const polygons: Polygon[] = basicPolygons.map((poly) => ({
       id: poly.id,
       points: poly.points,
       type: poly.type || 'external',
@@ -130,20 +130,29 @@ export const segmentImage = async (imageSrc: string): Promise<SegmentationResult
     }));
 
     return {
-      id: `seg-${Date.now()}`,
-      imageSrc,
       polygons,
-      status: 'completed',
-      timestamp: new Date(),
+      imageWidth: binaryMask.width,
+      imageHeight: binaryMask.height,
+      contours: [], // Simulated, so empty
+      hierarchy: [], // Simulated, so empty
+      metadata: {
+        source: 'simulated',
+        timestamp: new Date().toISOString(),
+      },
     };
   } catch (error) {
     console.error('Segmentation failed:', error);
     return {
-      id: `seg-failed-${Date.now()}`,
-      imageSrc,
       polygons: [],
-      status: 'failed',
-      timestamp: new Date(),
+      imageWidth: 0,
+      imageHeight: 0,
+      contours: [],
+      hierarchy: [],
+      metadata: {
+        source: 'simulated-failed',
+        timestamp: new Date().toISOString(),
+        error: error.message,
+      },
     };
   }
 };

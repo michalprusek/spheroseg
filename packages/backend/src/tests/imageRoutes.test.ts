@@ -4,12 +4,12 @@ import { Server } from 'http';
 import jwt from 'jsonwebtoken';
 import pool from '../db';
 import imageRoutes from '../routes/images';
-import { errorHandler } from '../middleware/errorMiddleware';
+import { errorHandler } from '../middleware/errorHandler';
 import path from 'path';
 import fs from 'fs';
 
 // Import the AuthenticatedRequest interface
-import { AuthenticatedRequest } from '../middleware/authMiddleware';
+import { AuthenticatedRequest } from '../security/middleware/authMiddleware';
 
 // Mock dependencies
 jest.mock('../db', () => ({

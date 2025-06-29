@@ -1,4 +1,5 @@
-import { getCLS, getFCP, getFID, getLCP, getTTFB } from 'web-vitals';
+import { onCLS, onFCP, onFID, onLCP, onTTFB } from 'web-vitals';
+import apiClient from '@/lib/apiClient';
 
 /**
  * Service for collecting and reporting frontend performance metrics
@@ -35,11 +36,11 @@ class MetricsService {
    * Initialize web vitals collection
    */
   private initWebVitals(): void {
-    getCLS(this.handleWebVital);
-    getFCP(this.handleWebVital);
-    getFID(this.handleWebVital);
-    getLCP(this.handleWebVital);
-    getTTFB(this.handleWebVital);
+    onCLS(this.handleWebVital);
+    onFCP(this.handleWebVital);
+    onFID(this.handleWebVital);
+    onLCP(this.handleWebVital);
+    onTTFB(this.handleWebVital);
   }
 
   /**
@@ -130,13 +131,11 @@ class MetricsService {
       if (navigator.sendBeacon) {
         navigator.sendBeacon(this.metricsEndpoint, JSON.stringify(this.buffer));
       } else {
-        fetch(this.metricsEndpoint, {
-          method: 'POST',
+        apiClient.post(this.metricsEndpoint, this.buffer, {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(this.buffer),
-          keepalive: true,
+          // Axios handles keepalive implicitly for POST requests
         }).catch((error) => {
           console.error('Failed to send metrics:', error);
         });

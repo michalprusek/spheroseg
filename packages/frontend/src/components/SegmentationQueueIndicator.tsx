@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchQueueStatus, clearQueueStatusCache } from '@/api/segmentationQueue';
 import { useSocket } from '@/hooks/useSocketConnection';
+import { formatTime } from '@/utils/dateUtils';
 
 interface QueueStatusData {
   pendingTasks: string[];
@@ -357,7 +358,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
             <span>Celkem úloh: {(queueData?.pendingTasks?.length || 0) + (queueData?.runningTasks?.length || 0)}</span>
             {queueData?.timestamp && (
               <span className="ml-2 text-blue-400">
-                (Aktualizováno: {new Date(queueData.timestamp).toLocaleTimeString()})
+                (Aktualizováno: {formatTime(queueData.timestamp)})
               </span>
             )}
           </div>
@@ -374,7 +375,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
             <span>0 úloh celkem (0 zpracovávaných, 0 ve frontě)</span>
           </div>
           <div className="text-xs text-green-500 mt-1">
-            {queueData?.timestamp && <span>Aktualizováno: {new Date(queueData.timestamp).toLocaleTimeString()}</span>}
+            {queueData?.timestamp && <span>Aktualizováno: {formatTime(queueData.timestamp)}</span>}
           </div>
         </div>
       </div>

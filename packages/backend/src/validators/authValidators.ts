@@ -1,19 +1,20 @@
 import { z } from 'zod';
+import { emailSchema, passwordSchema, nameSchema, optionalStringSchema } from './commonValidators';
 
 // Schema for user registration
 export const registerSchema = z.object({
   body: z.object({
-    email: z.string().email('Invalid email format'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    name: z.string().min(2, 'Name must be at least 2 characters').optional(),
-    preferred_language: z.string().optional(),
+    email: emailSchema,
+    password: passwordSchema,
+    name: nameSchema.optional(),
+    preferred_language: optionalStringSchema,
   }),
 });
 
 // Schema for user login
 export const loginSchema = z.object({
   body: z.object({
-    email: z.string().email('Invalid email format'),
+    email: emailSchema,
     password: z.string().min(1, 'Password is required'),
     remember_me: z.boolean().optional(),
   }),
@@ -38,8 +39,8 @@ export const changePasswordSchema = z.object({
   body: z
     .object({
       current_password: z.string().min(1, 'Current password is required'),
-      new_password: z.string().min(8, 'New password must be at least 8 characters'),
-      confirm_password: z.string().min(8, 'Password confirmation is required'),
+      new_password: passwordSchema,
+      confirm_password: passwordSchema,
     })
     .refine((data) => data.new_password === data.confirm_password, {
       message: 'Passwords do not match',
@@ -50,7 +51,7 @@ export const changePasswordSchema = z.object({
 // Schema for password reset request
 export const forgotPasswordSchema = z.object({
   body: z.object({
-    email: z.string().email('Invalid email format'),
+    email: emailSchema,
   }),
 });
 
@@ -59,8 +60,8 @@ export const resetPasswordSchema = z.object({
   body: z
     .object({
       token: z.string().min(1, 'Reset token is required'),
-      password: z.string().min(8, 'Password must be at least 8 characters'),
-      confirm_password: z.string().min(8, 'Password confirmation is required'),
+      password: passwordSchema,
+      confirm_password: passwordSchema,
     })
     .refine((data) => data.password === data.confirm_password, {
       message: 'Passwords do not match',
@@ -71,7 +72,7 @@ export const resetPasswordSchema = z.object({
 // Schema for account deletion
 export const deleteAccountSchema = z.object({
   body: z.object({
-    username: z.string().email('Email confirmation is required'),
+    username: emailSchema, // Using emailSchema for username as it's email confirmation
     password: z.string().min(1, 'Password is required'),
   }),
 });

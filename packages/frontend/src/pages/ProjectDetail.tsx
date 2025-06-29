@@ -137,6 +137,16 @@ const ProjectDetail = () => {
 
       const socket = socketClient.getSocket();
 
+      if (!socket) {
+        logger.error('WebSocket not initialized');
+        return;
+      }
+
+      if (!socket) {
+        logger.error('WebSocket not initialized');
+        return;
+      }
+
       const handleSegmentationUpdate = (data: any) => {
         if (!isComponentMounted) return;
 
@@ -438,54 +448,30 @@ const ProjectDetail = () => {
           }
 
           try {
-              // Zkusit nejprve nový endpoint s validními parametry
-              const response = await apiClient.post(`/api/projects/${id}/segmentations/batch`, {
+              const response = await apiClient.post(`/api/segmentations/batch`, {
                   imageIds: batch,
                   priority: 5,
                   model_type: 'resunet',
-                  // Přidáme další parametry pro validaci
+                  projectId: id, // Add projectId here
                   parameters: {
                     threshold: 0.5,
                     model: 'resunet'
                   }
               });
-              logger.debug(`Batch ${i+1} trigger response (new endpoint):`, response);
+              logger.debug(`Batch ${i+1} trigger response:`, response);
               successCount += batch.length;
 
               // Informujeme uživatele o průběhu
               if (batches.length > 1) {
                 toast.success(t('project.segmentation.batchQueued', { current: i+1, total: batches.length }));
               }
-          } catch (newEndpointErr: any) { // Cast error to any
-              logger.warn(`Batch ${i+1}: New endpoint failed, trying legacy endpoint:`, newEndpointErr);
+          } catch (error: any) {
+              logger.error(`Batch ${i+1}: Failed to trigger segmentation:`, error);
+              failCount += batch.length;
 
-              try {
-                  // Zkusit záložní endpoint s validními parametry
-                  const legacyResponse = await apiClient.post(`/api/segmentations/batch`, {
-                      imageIds: batch,
-                      priority: 5,
-                      model_type: 'resunet',
-                      // Přidáme další parametry pro validaci
-                      parameters: {
-                        threshold: 0.5,
-                        model: 'resunet'
-                      }
-                  });
-                  logger.debug(`Batch ${i+1} trigger response (legacy endpoint):`, legacyResponse);
-                  successCount += batch.length;
-
-                  // Informujeme uživatele o průběhu
-                  if (batches.length > 1) {
-                    toast.success(t('project.segmentation.batchQueuedFallback', { current: i+1, total: batches.length }));
-                  }
-              } catch (legacyErr: any) { // Cast error to any
-                  logger.error(`Batch ${i+1}: Both endpoints failed:`, legacyErr);
-                  failCount += batch.length;
-
-                  // Informujeme uživatele o chybě
-                  if (batches.length > 1) {
-                    toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
-                  }
+              // Informujeme uživatele o chybě
+              if (batches.length > 1) {
+                toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
               }
           }
       }
@@ -663,18 +649,17 @@ const ProjectDetail = () => {
             }
 
             try {
-                // Zkusit nejprve nový endpoint s validními parametry
-                const response = await apiClient.post(`/api/projects/${projectId}/segmentations/batch`, {
+                const response = await apiClient.post(`/api/segmentations/batch`, {
                     imageIds: batch,
                     priority: 3,
                     model_type: 'resunet',
-                    // Přidáme další parametry pro validaci
+                    projectId: projectId, // Add projectId here
                     parameters: {
                       threshold: 0.5,
                       model: 'resunet'
                     }
                 });
-                logger.debug(`Batch ${i+1} trigger response (new endpoint):`, response);
+                logger.debug(`Batch ${i+1} trigger response:`, response);
                 successCount += batch.length;
                 apiSuccess = true;
 
@@ -682,37 +667,13 @@ const ProjectDetail = () => {
                 if (batches.length > 1) {
                   toast.success(t('project.segmentation.batchQueued', { current: i+1, total: batches.length }));
                 }
-            } catch (newEndpointErr: any) { // Cast error to any
-                logger.warn(`Batch ${i+1}: New endpoint failed, trying legacy endpoint:`, newEndpointErr);
+            } catch (error: any) {
+                logger.warn(`Batch ${i+1}: Failed to trigger segmentation:`, error);
+                failCount += batch.length;
 
-                try {
-                    // Zkusit záložní endpoint s validními parametry
-                    const legacyResponse = await apiClient.post(`/api/segmentations/batch`, {
-                        imageIds: batch,
-                        priority: 3,
-                        model_type: 'resunet',
-                        // Přidáme další parametry pro validaci
-                        parameters: {
-                          threshold: 0.5,
-                          model: 'resunet'
-                        }
-                    });
-                    logger.debug(`Batch ${i+1} trigger response (legacy endpoint):`, legacyResponse);
-                    successCount += batch.length;
-                    apiSuccess = true;
-
-                    // Informujeme uživatele o průběhu
-                    if (batches.length > 1) {
-                      toast.success(t('project.segmentation.batchQueuedFallback', { current: i+1, total: batches.length }));
-                    }
-                } catch (legacyErr: any) { // Cast error to any
-                    logger.error(`Batch ${i+1}: Both endpoints failed:`, legacyErr);
-                    failCount += batch.length;
-
-                    // Informujeme uživatele o chybě
-                    if (batches.length > 1) {
-                      toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
-                    }
+                // Informujeme uživatele o chybě
+                if (batches.length > 1) {
+                  toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
                 }
             }
         }

@@ -1,7 +1,15 @@
+/**
+ * Prometheus Client Compatibility Layer
+ * 
+ * This module provides backward compatibility for prometheusClient imports
+ * while using the unified monitoring registry internally.
+ */
+
 import promClient from 'prom-client';
+import { unifiedRegistry } from '../../monitoring/unified';
 
 /**
- * Prometheus client wrapper
+ * Prometheus client wrapper that uses the unified registry
  */
 class PrometheusClient {
   private client: typeof promClient;
@@ -11,7 +19,8 @@ class PrometheusClient {
 
   constructor() {
     this.client = promClient;
-    this.registry = new promClient.Registry();
+    // Use the unified registry instead of creating a new one
+    this.registry = unifiedRegistry;
     this.metrics = new Map();
   }
 
@@ -21,71 +30,8 @@ class PrometheusClient {
   public initialize(): void {
     if (this.initialized) return;
 
-    // Configure default metrics
-    this.client.collectDefaultMetrics({
-      register: this.registry,
-      prefix: 'spheroseg_',
-    });
-
-    // HTTP request duration histogram
-    this.registerHistogram('http_request_duration_ms', {
-      name: 'spheroseg_http_request_duration_ms',
-      help: 'Duration of HTTP requests in ms',
-      labelNames: ['method', 'route', 'status_code'],
-      buckets: [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
-    });
-
-    // Database query duration histogram
-    this.registerHistogram('db_query_duration_ms', {
-      name: 'spheroseg_db_query_duration_ms',
-      help: 'Duration of database queries in ms',
-      labelNames: ['operation', 'table'],
-      buckets: [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000],
-    });
-
-    // ML inference duration histogram
-    this.registerHistogram('ml_inference_duration_ms', {
-      name: 'spheroseg_ml_inference_duration_ms',
-      help: 'Duration of ML inference in ms',
-      labelNames: ['model'],
-      buckets: [10, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000],
-    });
-
-    // Memory usage gauges
-    this.registerGauge('node_memory_heap_total_bytes', {
-      name: 'spheroseg_node_memory_heap_total_bytes',
-      help: 'Node.js heap total size in bytes',
-    });
-
-    this.registerGauge('node_memory_heap_used_bytes', {
-      name: 'spheroseg_node_memory_heap_used_bytes',
-      help: 'Node.js heap used size in bytes',
-    });
-
-    this.registerGauge('node_memory_rss_bytes', {
-      name: 'spheroseg_node_memory_rss_bytes',
-      help: 'Node.js RSS memory usage in bytes',
-    });
-
-    // CPU usage gauge
-    this.registerGauge('node_cpu_usage_percent', {
-      name: 'spheroseg_node_cpu_usage_percent',
-      help: 'Node.js CPU usage percentage',
-    });
-
-    // Active connections gauge
-    this.registerGauge('active_connections', {
-      name: 'spheroseg_active_connections',
-      help: 'Number of active connections',
-    });
-
-    // API rate limiter gauge
-    this.registerGauge('rate_limiter_current', {
-      name: 'spheroseg_rate_limiter_current',
-      help: 'Current rate limiter count',
-      labelNames: ['ip', 'endpoint'],
-    });
-
+    // No need to configure default metrics as they're already configured in unified monitoring
+    // Just mark as initialized
     this.initialized = true;
   }
 
@@ -100,8 +46,17 @@ class PrometheusClient {
       return this.metrics.get(name) as promClient.Histogram<string>;
     }
 
-    const histogram = new this.client.Histogram(options);
-    this.registry.registerMetric(histogram);
+    // Check if metric already exists in registry
+    const existingMetric = this.registry.getSingleMetric(options.name);
+    if (existingMetric) {
+      this.metrics.set(name, existingMetric as promClient.Histogram<string>);
+      return existingMetric as promClient.Histogram<string>;
+    }
+
+    const histogram = new this.client.Histogram({
+      ...options,
+      registers: [this.registry],
+    });
     this.metrics.set(name, histogram);
     return histogram;
   }
@@ -114,8 +69,17 @@ class PrometheusClient {
       return this.metrics.get(name) as promClient.Counter<string>;
     }
 
-    const counter = new this.client.Counter(options);
-    this.registry.registerMetric(counter);
+    // Check if metric already exists in registry
+    const existingMetric = this.registry.getSingleMetric(options.name);
+    if (existingMetric) {
+      this.metrics.set(name, existingMetric as promClient.Counter<string>);
+      return existingMetric as promClient.Counter<string>;
+    }
+
+    const counter = new this.client.Counter({
+      ...options,
+      registers: [this.registry],
+    });
     this.metrics.set(name, counter);
     return counter;
   }
@@ -128,8 +92,17 @@ class PrometheusClient {
       return this.metrics.get(name) as promClient.Gauge<string>;
     }
 
-    const gauge = new this.client.Gauge(options);
-    this.registry.registerMetric(gauge);
+    // Check if metric already exists in registry
+    const existingMetric = this.registry.getSingleMetric(options.name);
+    if (existingMetric) {
+      this.metrics.set(name, existingMetric as promClient.Gauge<string>);
+      return existingMetric as promClient.Gauge<string>;
+    }
+
+    const gauge = new this.client.Gauge({
+      ...options,
+      registers: [this.registry],
+    });
     this.metrics.set(name, gauge);
     return gauge;
   }
@@ -142,8 +115,17 @@ class PrometheusClient {
       return this.metrics.get(name) as promClient.Summary<string>;
     }
 
-    const summary = new this.client.Summary(options);
-    this.registry.registerMetric(summary);
+    // Check if metric already exists in registry
+    const existingMetric = this.registry.getSingleMetric(options.name);
+    if (existingMetric) {
+      this.metrics.set(name, existingMetric as promClient.Summary<string>);
+      return existingMetric as promClient.Summary<string>;
+    }
+
+    const summary = new this.client.Summary({
+      ...options,
+      registers: [this.registry],
+    });
     this.metrics.set(name, summary);
     return summary;
   }
@@ -152,7 +134,15 @@ class PrometheusClient {
    * Get a metric by name
    */
   public getMetric(name: string): promClient.Metric<string> | undefined {
-    return this.metrics.get(name);
+    // First check our local cache
+    const localMetric = this.metrics.get(name);
+    if (localMetric) {
+      return localMetric;
+    }
+
+    // Then check the unified registry
+    const fullName = name.startsWith('spheroseg_') ? name : `spheroseg_${name}`;
+    return this.registry.getSingleMetric(fullName) || this.registry.getSingleMetric(name);
   }
 
   /**

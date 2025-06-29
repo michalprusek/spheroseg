@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import authMiddleware from '../middleware/authMiddleware';
+import { authenticate as authMiddleware } from '../security/middleware/auth';
 import {
   shareProject,
   removeProjectShare,

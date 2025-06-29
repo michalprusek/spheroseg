@@ -388,6 +388,16 @@ const routes = createRoutesFromElements(
       }
     />
     <Route
+      path="/images/:imageId/segmentation"
+      element={
+        <ProtectedRoute>
+          <ErrorBoundary componentName="SegmentationPage">
+            <SegmentationPage />
+          </ErrorBoundary>
+        </ProtectedRoute>
+      }
+    />
+    <Route
       path="/projects/:projectId/segmentation/:imageId"
       element={
         <ProtectedRoute>

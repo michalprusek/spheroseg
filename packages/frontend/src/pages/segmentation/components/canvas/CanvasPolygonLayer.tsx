@@ -1,103 +1,109 @@
-import React from 'react';
-import { SegmentationResult, Point } from '@/lib/segmentation';
-import CanvasSvgFilters from './CanvasSvgFilters';
-import CanvasPolygon from './CanvasPolygon';
-import TemporaryEditPath from './TemporaryEditPath';
-import SlicingModeVisualizer from './SlicingModeVisualizer';
-import PointAddingVisualizer from './PointAddingVisualizer';
-import EditModeBorder from './EditModeBorder';
-import { PolygonLayerProps, TempPointsState } from '@/pages/segmentation/types';
-import PolygonCollection from './PolygonCollection';
-import EditorModeVisualizations from './EditorModeVisualizations';
-import { EditMode } from '@/pages/segmentation/hooks/useSegmentationEditor';
+import React, { useMemo } from 'react';
+import { Point } from '@/types';
+import { EditMode } from '@/pages/segmentation/hooks/segmentation';
+import filterVisiblePolygons from '../../utils/polygonVisibility';
+import { createNamespacedLogger } from '@/utils/logger';
 
-/**
- * Layer component responsible for rendering polygons and edit mode visualizations within the main SVG.
- * It receives segmentation data and interaction state, but does NOT handle zoom/offset transformations directly.
- */
-const CanvasPolygonLayer = ({
-  segmentation,
-  imageSize,
+const logger = createNamespacedLogger('segmentation:canvas:polygonLayer');
+
+interface Polygon {
+  id: string;
+  points: Point[];
+  type?: 'external' | 'internal';
+  class?: string;
+  color?: string;
+  parentId?: string;
+}
+
+interface SegmentationData {
+  polygons: Polygon[];
+}
+
+interface CanvasPolygonLayerProps {
+  segmentationData: SegmentationData | null;
+  transform: { zoom: number; translateX: number; translateY: number };
+  selectedPolygonId: string | null;
+  editMode: EditMode;
+  canvasRef: React.RefObject<HTMLDivElement | null>;
+}
+
+const CanvasPolygonLayer: React.FC<CanvasPolygonLayerProps> = ({
+  segmentationData,
+  transform,
   selectedPolygonId,
-  hoveredVertex,
-  vertexDragState,
   editMode,
-  slicingMode,
-  pointAddingMode,
-  tempPoints,
-  cursorPosition,
-  sliceStartPoint,
-  hoveredSegment,
-  isShiftPressed,
-  onSelectPolygon,
-  onDeletePolygon,
-  onSlicePolygon,
-  onEditPolygon,
-  onDeleteVertex,
-  onDuplicateVertex,
-  pointAddingTempPoints,
-  selectedVertexIndex,
-  selectedPolygonPoints,
-  sourcePolygonId,
-}: Omit<PolygonLayerProps, 'hoveredPolygonId' | 'zoom' | 'offset' | 'canvasWidth' | 'canvasHeight'>) => {
-  // Always render with reasonable dimensions, even if imageSize is not provided
-  const effectiveImageSize = {
-    width: imageSize.width > 0 ? imageSize.width : 800,
-    height: imageSize.height > 0 ? imageSize.height : 600,
+  canvasRef,
+}) => {
+  const formatPoints = (points: Point[]): string => {
+    return points.map((p) => `${p.x},${p.y}`).join(' ');
   };
 
-  // Ensure we have polygons to render, even if empty
-  const polygonsToRender = segmentation?.polygons || [];
+  const getPolygonStyle = (polygon: Polygon) => {
+    const isSelected = polygon.id === selectedPolygonId;
+    const baseColor = polygon.type === 'internal' ? 'blue' : 'red';
+
+    const baseFillOpacity = isSelected ? 0.5 : 0.3;
+    const baseFill =
+      polygon.type === 'internal' ? `rgba(0, 0, 255, ${baseFillOpacity})` : `rgba(255, 0, 0, ${baseFillOpacity})`;
+
+    let strokeColor = baseColor;
+    if (isSelected && editMode === EditMode.Slice) {
+      strokeColor = '#00FF00';
+    }
+
+    return {
+      fill: baseFill,
+      stroke: strokeColor,
+      strokeWidth: isSelected ? 2 / transform.zoom : 1 / transform.zoom,
+      cursor: 'default',
+    };
+  };
 
   return (
-    <g className="polygon-layer">
-      {/* Filters might need to be defined once in the main SVG */}
-      {/* <CanvasSvgFilters /> */}
-      {/* We assume filters are defined in the parent SVG now */}
+    <>
+      {useMemo(() => {
+        if (!segmentationData?.polygons || segmentationData.polygons.length < 50) {
+          return segmentationData?.polygons.map((polygon) => (
+            <polygon
+              key={polygon.id}
+              points={formatPoints(polygon.points)}
+              style={getPolygonStyle(polygon)}
+              vectorEffect="non-scaling-stroke"
+            />
+          ));
+        }
 
-      {/* Vykreslení všech polygonů */}
-      <PolygonCollection
-        polygons={polygonsToRender}
-        selectedPolygonId={selectedPolygonId}
-        hoveredVertex={hoveredVertex}
-        vertexDragState={vertexDragState}
-        editMode={editMode}
-        onSelectPolygon={onSelectPolygon}
-        onDeletePolygon={onDeletePolygon}
-        onSlicePolygon={onSlicePolygon}
-        onEditPolygon={onEditPolygon}
-        onDeleteVertex={onDeleteVertex}
-        onDuplicateVertex={onDuplicateVertex}
-      />
+        const canvasWidth = canvasRef.current?.clientWidth || 1000;
+        const canvasHeight = canvasRef.current?.clientHeight || 800;
 
-      {/* Vizualizace režimů editace */}
-      <EditorModeVisualizations
-        editMode={editMode === EditMode.CreatePolygon}
-        slicingMode={slicingMode}
-        pointAddingMode={pointAddingMode.isActive}
-        tempPoints={tempPoints}
-        cursorPosition={cursorPosition}
-        sliceStartPoint={sliceStartPoint}
-        hoveredSegment={hoveredSegment}
-        isShiftPressed={isShiftPressed}
-        pointAddingTempPoints={pointAddingTempPoints}
-        selectedVertexIndex={selectedVertexIndex}
-        sourcePolygonId={sourcePolygonId}
-        selectedPolygonPoints={selectedPolygonPoints}
-      />
+        const visiblePolygons = filterVisiblePolygons(
+          segmentationData.polygons,
+          canvasWidth,
+          canvasHeight,
+          transform,
+        );
 
-      {/* Indikátor okraje editačního režimu - Needs imageSize, might need rework if layer doesn't own SVG */}
-      {/* This component might need to be moved up or receive coordinates differently */}
-      {/* <EditModeBorder
-        editMode={editMode}
-        slicingMode={slicingMode}
-        pointAddingMode={pointAddingMode.isActive}
-        imageSize={effectiveImageSize} // Pass image size
-        zoom={zoom}
-      /> */}
-      {/* Temporarily commented out EditModeBorder as its positioning relies on the layer's SVG bounds */}
-    </g>
+        logger.debug(`Rendering ${visiblePolygons.length} of ${segmentationData.polygons.length} polygons`);
+
+        return visiblePolygons.map((polygon) => (
+          <polygon
+            key={polygon.id}
+            points={formatPoints(polygon.points)}
+            style={getPolygonStyle(polygon)}
+            vectorEffect="non-scaling-stroke"
+          />
+        ));
+      }, [
+        segmentationData?.polygons,
+        transform,
+        selectedPolygonId,
+        canvasRef.current?.clientWidth,
+        canvasRef.current?.clientHeight,
+      ])}
+    </>
   );
 };
+
+CanvasPolygonLayer.displayName = 'CanvasPolygonLayer';
 
 export default CanvasPolygonLayer;

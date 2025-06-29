@@ -8,11 +8,8 @@ import express, { Router } from 'express';
 import authRoutes from '../auth';
 import userRoutes from '../users';
 import projectRoutes from '../projects';
-import imageRoutes from '../images';
 import segmentationRoutes from '../segmentation';
 import statusRoute from '../status';
-import projectDuplicationRoutes from '../projectDuplicationRoutes';
-import testRoute from '../test';
 import logsRoutes from '../logs';
 import performanceRoutes from '../performance';
 import userStatsRoutes from '../userStats';
@@ -30,14 +27,11 @@ router.use((req, res, next) => {
 // Register v1 routes
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
-router.use('/users', userStatsRoutes);
+router.use('/user-stats', userStatsRoutes);
 router.use('/user-profile', userProfileRoutes);
 router.use('/projects', projectRoutes);
-router.use('/images', imageRoutes);
-router.use('/segmentations', segmentationRoutes);
+router.use('/segmentation', segmentationRoutes);
 router.use('/status', statusRoute);
-router.use('/project-duplication', projectDuplicationRoutes);
-router.use('/test', testRoute);
 router.use('/logs', logsRoutes);
 router.use('/performance', performanceRoutes);
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ImageUploader from '@/components/ImageUploaderNew';
+import ImageUploader from '@/components/ImageUploader';
 import ProjectSelector from '@/components/ProjectSelector';
 import { useDashboardProjects } from '@/hooks/useDashboardProjects';
 import { useLanguage } from '@/contexts/LanguageContext';

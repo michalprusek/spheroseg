@@ -5,6 +5,7 @@ import type { ProjectImage, ImageStatus } from '@/types'; // Import ImageStatus
 import apiClient from '@/lib/apiClient';
 import axios from 'axios';
 import { deleteImageFromDB } from '@/utils/indexedDBService';
+import cacheService from '@/services/unifiedCacheService';
 
 interface UseProjectImageActionsProps {
   projectId?: string;
@@ -202,18 +203,29 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
 
           // Garantovaně vyčistit všechna úložiště a cache
           try {
-            // Vyčistíme projectImagesCache
+            // Vyčistíme unified cache
+            const cleanedId = projectId?.startsWith('project-') ? projectId.substring(8) : projectId;
+            if (cleanedId) {
+              // Invalidate project images cache in unified cache service
+              await cacheService.delete(`project-images:${cleanedId}`);
+              
+              // Also clear by tags
+              await cacheService.deleteByTag(`project-${cleanedId}`);
+              
+              console.log(`Invalidated unified cache for project ${cleanedId}`);
+            }
+            
+            // Vyčistíme legacy projectImagesCache
             try {
               // Dynamický import pro vyhnutí se cyklickým závislostem
               const { projectImagesCache } = await import('@/api/projectImages');
-              const cleanedId = projectId?.startsWith('project-') ? projectId.substring(8) : projectId;
 
               if (cleanedId && projectImagesCache && projectImagesCache[cleanedId]) {
-                console.log(`Invalidating project images cache for project ${cleanedId}`);
+                console.log(`Invalidating legacy project images cache for project ${cleanedId}`);
                 delete projectImagesCache[cleanedId]; // Kompletně vymažeme cache pro tento projekt
               }
             } catch (cacheError) {
-              console.error('Error invalidating project images cache:', cacheError);
+              console.error('Error invalidating legacy project images cache:', cacheError);
             }
 
             // Vyčistíme localStorage
@@ -341,7 +353,8 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         toast.error('Cannot open editor: Project context missing.');
         return;
       }
-      navigate(`/projects/${projectId}/segmentation/${imageId}`);
+      const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
+      navigate(`/projects/${cleanProjectId}/segmentation/${imageId}`);
     },
     [navigate, projectId],
   );

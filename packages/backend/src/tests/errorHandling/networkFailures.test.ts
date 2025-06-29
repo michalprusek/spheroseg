@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+import axios from 'axios';
 import { createServer, Server } from 'http';
 import { AddressInfo } from 'net';
 // Importing but using dynamic require later for mocking
@@ -97,10 +97,10 @@ describe('Network Failure Tests', () => {
   // Helper function to test API calls with network failures
   async function testNetworkFailure(endpoint: string): Promise<Record<string, unknown>> {
     try {
-      const response = await fetch(`${mockServerUrl}${endpoint}`);
+      const response = await axios.get(`${mockServerUrl}${endpoint}`);
       return {
         status: response.status,
-        body: await response.json().catch(() => 'Invalid JSON'),
+        body: response.data,
       };
     } catch (error) {
       return { error };
@@ -170,11 +170,11 @@ describe('Network Failure Tests', () => {
         ...original,
         // Override fetch in the service to use our mock server
         _callMlService: jest.fn().mockImplementation(async (endpoint) => {
-          const response = await fetch(`${mockServerUrl}${endpoint}`);
-            if (!response.ok) {
+          const response = await axios.get(`${mockServerUrl}${endpoint}`);
+            if (response.status >= 400) {
               throw new Error(`HTTP error: ${response.status}`);
             }
-            return await response.json();
+            return response.data;
         }),
       };
     });
@@ -190,11 +190,11 @@ describe('Network Failure Tests', () => {
       // Ensure we're using our mock service
       segmentationService._callMlService = jest.fn().mockImplementation(async (endpoint) => {
         // Call our test endpoint
-        const response = await fetch(`${mockServerUrl}${endpoint}`);
-        if (!response.ok) {
+        const response = await axios.get(`${mockServerUrl}${endpoint}`);
+        if (response.status >= 400) {
           throw new Error(`HTTP error: ${response.status}`);
         }
-        return await response.json();
+        return response.data;
       });
 
       // Call segmentation with retries

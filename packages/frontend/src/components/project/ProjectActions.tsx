@@ -11,8 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ProjectDuplicationDialog from './ProjectDuplicationDialog';
-import DeleteProjectDialog from './DeleteProjectDialog';
+import { ProjectDuplicationDialog } from './ProjectDuplicationDialog';
+import { DeleteProjectDialog } from './DeleteProjectDialog';
 
 interface ProjectActionsProps {
   /**
@@ -176,19 +176,18 @@ export function ProjectActions({
       {/* Duplication Dialog */}
       <ProjectDuplicationDialog
         projectId={projectId}
-        projectTitle={projectTitle}
-        open={duplicationDialogOpen}
+        projectName={projectTitle}
+        isOpen={duplicationDialogOpen}
         onClose={() => setDuplicationDialogOpen(false)}
-        onDuplicate={handleDuplicationSuccess}
       />
 
       {/* Delete Dialog */}
       <DeleteProjectDialog
         projectId={projectId}
-        projectTitle={projectTitle}
-        open={deleteDialogOpen}
+        projectName={projectTitle}
+        isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
-        onDelete={handleDeleteSuccess}
+        onDeleteSuccess={handleDeleteSuccess}
       />
     </>
   );
