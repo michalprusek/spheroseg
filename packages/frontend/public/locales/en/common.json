@@ -1,0 +1,10 @@
+{
+  "test": {
+    "title": "Translation Test",
+    "message": "If you see this message, translations are loaded correctly!",
+    "status": "Status: {{status}}",
+    "language": "Current Language: {{language}}"
+  },
+  "and": "and",
+  "or": "or"
+}

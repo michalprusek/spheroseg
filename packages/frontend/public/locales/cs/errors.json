@@ -1,0 +1,5 @@
+{
+  "notFound": "Zdroj nenalezen",
+  "serverError": "Došlo k chybě serveru",
+  "unauthorized": "Neautorizovaný přístup"
+}

@@ -1,0 +1,10 @@
+{
+  "test": {
+    "title": "Test překladu",
+    "message": "Pokud vidíte tuto zprávu, překlady jsou načteny správně!",
+    "status": "Stav: {{status}}",
+    "language": "Aktuální jazyk: {{language}}"
+  },
+  "and": "a",
+  "or": "nebo"
+}

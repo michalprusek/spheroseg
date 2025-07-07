@@ -4,185 +4,186 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SpherosegV4 is a cell segmentation application that uses computer vision and deep learning to identify and analyze cells in microscopic images. The application consists of:
-
-- **Frontend**: React application with TypeScript, Vite, and Material UI components
-- **Backend**: Node.js API server with Express and TypeScript, with PostgreSQL database
-- **ML Service**: Python-based machine learning service using PyTorch for cell segmentation
-- **Assets Server**: Static file server for images and resources
-- **NGINX**: Reverse proxy for routing requests and handling SSL
+SpherosegV4 is a cell segmentation application that uses computer vision and deep learning to identify and analyze cells in microscopic images. This is a monorepo managed by Turborepo with microservices architecture deployed via Docker Compose.
 
 ## Repository Structure
 
-This project uses a monorepo structure with Turborepo:
-
-- `packages/frontend`: React frontend application 
-- `packages/backend`: Node.js/Express backend API
-- `packages/ml`: Python ML service with PyTorch model for cell segmentation
-- `packages/shared`: Shared utilities and code between packages
-- `packages/types`: TypeScript type definitions
-- `packages/frontend-static`: Static assets for the frontend
-
-## Development Environment
-
-### Running the Application
-
-**Standard Mode:**
-```bash
-docker-compose up -d
 ```
-The application will be available at http://localhost
-
-**Development Mode with Hot Reload:**
-```bash
-docker-compose up -d frontend-dev
-```
-The development server will be available at http://localhost:3000
-
-### Viewing Container Logs
-
-```bash
-docker-compose logs -f frontend-dev  # Frontend development logs
-docker-compose logs -f backend       # Backend logs
-docker-compose logs -f ml            # ML service logs
-docker-compose logs -f db            # Database logs
+spheroseg/
+├── packages/
+│   ├── frontend/         # React + TypeScript + Vite + Material UI
+│   ├── backend/          # Node.js + Express + TypeScript + PostgreSQL
+│   ├── ml/               # Python + Flask + PyTorch (ResUNet model)
+│   ├── shared/           # Shared utilities between packages
+│   ├── types/            # TypeScript type definitions
+│   └── frontend-static/  # Static assets
+├── docs/                 # Architecture and consolidation documentation
+├── docker-compose.yml    # Container orchestration
+└── turbo.json           # Turborepo pipeline configuration
 ```
 
-### Accessing Containers
+## Essential Commands
+
+### Development Workflow
 
 ```bash
-docker-compose exec frontend-dev sh  # Access frontend dev container
-docker-compose exec backend sh       # Access backend container
-docker-compose exec ml sh            # Access ML service container
-docker-compose exec db psql -U postgres -d spheroseg  # Access database
+# Start development with hot reload
+docker-compose --profile dev up -d
+
+# Start production mode
+docker-compose --profile prod up -d
+
+# View logs
+docker-compose logs -f [frontend-dev|backend|ml|db]
+
+# Access containers
+docker-compose exec [service-name] sh
+docker-compose exec db psql -U postgres -d spheroseg
 ```
 
-## Common Development Commands
-
-### Turborepo Commands
+### Monorepo Commands
 
 ```bash
-npm run dev              # Run development servers for all packages
-npm run dev:frontend     # Run only frontend development server
-npm run dev:backend      # Run only backend development server
+# Development
+npm run dev              # Run all services in dev mode
+npm run dev:frontend     # Run only frontend
+npm run dev:backend      # Run only backend
+
+# Code Quality (ALWAYS run before committing)
+npm run lint             # Check linting
+npm run lint:fix         # Fix linting issues
+npm run format           # Format code
+npm run code:check       # Run all checks
+npm run code:fix         # Fix all issues
+
+# Testing
+npm run test             # Run all tests
+npm run test:frontend    # Test frontend only
+npm run test:backend     # Test backend only
+npm run test:ml          # Test ML service
+npm run test:coverage    # Generate coverage reports
+
+# Build & Deploy
 npm run build            # Build all packages
-npm run preview          # Preview built applications
-npm run lint             # Lint all packages
-npm run lint:fix         # Fix linting issues in all packages
-npm run format           # Format code in all packages
-npm run format:check     # Check code formatting in all packages
-npm run test             # Run tests for all packages
-npm run test:coverage    # Run tests with coverage reports
-npm run test:ci          # Run tests in CI mode
-npm run test:frontend    # Run only frontend tests
-npm run test:backend     # Run only backend tests
-npm run test:ml          # Run ML service tests
-npm run code:check       # Run all code quality checks
-npm run code:fix         # Fix all code quality issues
-npm run clean            # Clean build artifacts
-npm run duplicates       # Check for duplicate code with jscpd
+npm run preview          # Preview production build
+
+# Database
+npm run init:db          # Initialize database
+npm run db:migrate       # Run migrations
+npm run db:create-test-user  # Create test user (dev only)
 ```
 
-### Database Commands
+### Running Individual Tests
 
 ```bash
-npm run init:db          # Initialize the database
-npm run init:db:docker   # Initialize the database in Docker
-npm run db:migrate       # Run database migrations
-npm run db:create-test-user  # Create a test user for development
+# Frontend (Vitest)
+cd packages/frontend
+npm run test -- path/to/test.spec.ts
+npm run test -- --watch  # Watch mode
+
+# Backend (Jest)
+cd packages/backend
+npm run test -- path/to/test.spec.ts
+npm run test -- --watch  # Watch mode
 ```
 
-### ML Service Commands
+## Architecture & Key Patterns
 
+### Frontend Architecture
+- **Unified Services Pattern**: All API calls go through centralized services in `packages/frontend/src/services/`
+- **State Management**: React Context for global state, local state for components
+- **Routing**: React Router v6 with protected routes
+- **Real-time Updates**: Socket.IO integration for live notifications
+- **Error Handling**: Unified error boundary and toast notifications
+
+### Backend Architecture
+- **Modular Routes**: Routes organized by feature in `packages/backend/src/routes/`
+- **Authentication**: JWT with refresh tokens, middleware in `packages/backend/src/middleware/auth.ts`
+- **Database**: PostgreSQL with raw SQL queries (no ORM)
+- **File Processing**: Integration with ML service via HTTP calls
+- **WebSocket**: Socket.IO for real-time events
+
+### ML Service Architecture
+- **Model**: ResUNet for cell segmentation in `packages/ml/app/model/`
+- **API**: Flask endpoints for segmentation and feature extraction
+- **Processing Pipeline**: Image → Preprocessing → Model → Polygon Extraction → Features
+- **Model Checkpoint**: `packages/ml/checkpoint_epoch_9.pth.tar`
+
+### Cross-Service Communication
+```
+Frontend <-> NGINX <-> Backend <-> ML Service
+                   \-> Assets Server
+```
+
+## Service URLs
+
+- **Frontend Dev**: http://localhost:3000
+- **Frontend Prod**: http://localhost
+- **Backend API**: http://localhost:5001
+- **ML Service**: http://localhost:5002
+- **Database**: localhost:5432
+- **Adminer**: http://localhost:8081
+
+## Critical Configuration
+
+### Environment Variables
 ```bash
-npm run ml:segmentation  # Run cell segmentation algorithm
-npm run ml:extract       # Extract features from segmented cells
+# Frontend (.env)
+VITE_API_URL=http://localhost:5001
+VITE_API_BASE_URL=/api
+VITE_ASSETS_URL=http://localhost:8080
+
+# Backend (.env)
+DATABASE_URL=postgresql://postgres:postgres@db:5432/spheroseg
+JWT_SECRET=your-secret-key
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost
+
+# ML Service
+MODEL_PATH=/app/checkpoint_epoch_9.pth.tar
 ```
 
-### End-to-End Testing
+### TypeScript Configuration
+- Strict mode enabled
+- Path aliases configured in tsconfig.json
+- Shared types in `packages/types/`
 
-```bash
-npm run cypress:open     # Open Cypress test runner
-npm run cypress:run      # Run Cypress tests in headless mode
-npm run e2e              # Run all end-to-end tests
-npm run e2e:open         # Open end-to-end test runner
-```
+### Testing Setup
+- Frontend: Vitest + React Testing Library
+- Backend: Jest + Supertest
+- ML: Pytest
+- E2E: Cypress (configuration in root)
 
-## Services Architecture
+## Database Schema
 
-### Frontend
+Key tables:
+- `users`: User authentication and profile
+- `images`: Uploaded image metadata
+- `segmentation_results`: ML processing results
+- `cells`: Individual cell data and features
 
-- React application with TypeScript
-- Material UI for components
-- Vite for build and development
-- Socket.IO for real-time updates
-- i18next for internationalization
+## Unified Systems
 
-### Backend
+The codebase has undergone consolidation efforts documented in `/docs/consolidation/`:
 
-- Node.js with Express and TypeScript
-- JWT authentication
-- PostgreSQL database
-- RESTful API endpoints
-- Python integration for ML processing
+1. **Toast Notifications**: Centralized in `ToastService`
+2. **API Clients**: Unified service pattern
+3. **Error Handling**: Global error boundaries and handlers
+4. **Logging**: Centralized logger utility
+5. **Form Validation**: Consistent validation patterns
+6. **Date Utilities**: Unified date formatting
+7. **Export Functions**: Centralized export logic
+8. **WebSocket Management**: Single connection manager
 
-### ML Service
+## Development Tips
 
-- Python Flask application
-- PyTorch for deep learning
-- ResUNet architecture for segmentation
-- Cell polygon extraction algorithm
-- Pre-trained model in `checkpoint_epoch_9.pth.tar`
+1. **Before Making Changes**: Run `npm run code:check` to ensure clean baseline
+2. **After Changes**: Always run `npm run code:fix` before committing
+3. **Testing**: Write tests for new features, run existing tests before pushing
+4. **Database Changes**: Create migration files, don't modify schema directly
+5. **API Changes**: Update both backend routes and frontend services
+6. **ML Model Updates**: Test with sample images before deploying
+7. **Using Context7**: Frequently use the Context7 MCP tool to get up-to-date documentation for libraries and frameworks
 
-### Database
+## System Credentials
 
-- PostgreSQL 14
-- User authentication tables
-- Image metadata storage
-- Cell analysis results
-
-## Key Environment Variables
-
-Frontend:
-- `VITE_API_URL`: Backend API URL
-- `VITE_API_BASE_URL`: Base URL for API requests
-- `VITE_API_AUTH_PREFIX`: Auth API path prefix
-- `VITE_API_USERS_PREFIX`: Users API path prefix
-- `VITE_ASSETS_URL`: URL for the assets server
-
-Backend:
-- `DATABASE_URL`: PostgreSQL connection string
-- `JWT_SECRET`: Secret for JWT tokens
-- `ALLOWED_ORIGINS`: CORS allowed origins
-- `MAX_UPLOAD_SIZE`: Maximum file upload size
-
-ML Service:
-- `MODEL_PATH`: Path to the ML model checkpoint
-- `DEBUG`: Enable debug mode for development
-
-## Authentication
-
-The application uses JWT-based authentication with tokens stored in localStorage. The backend provides `/auth/login` and `/auth/register` endpoints for authentication.
-
-## Database Access
-
-The PostgreSQL database runs in a Docker container and is accessible at localhost:5432 with:
-- Database: spheroseg
-- Username: postgres
-- Password: postgres
-
-You can also use Adminer at http://localhost:8081 for database management.
-
-## Troubleshooting
-
-If you encounter issues, try restarting the Docker environment:
-
-```bash
-docker-compose down && docker-compose up -d
-```
-
-For more detailed logs:
-
-```bash
-docker-compose logs -f
-```
+- **Sudo Password**: Cinoykty

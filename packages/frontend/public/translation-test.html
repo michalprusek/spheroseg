@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>i18next Translation Test</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/i18next@23.7.6/i18next.min.js"></script>
+    <script src="https://unpkg.com/react-i18next@13.5.0/react-i18next.min.js"></script>
+    <script src="https://unpkg.com/i18next-http-backend@2.4.2/i18nextHttpBackend.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.loading {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 400px;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .section {
+            margin: 20px 0;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { useTranslation } = ReactI18next;
+
+        // Initialize i18next
+        i18next
+            .use(i18nextHttpBackend)
+            .use(ReactI18next.initReactI18next)
+            .init({
+                lng: 'en',
+                fallbackLng: 'en',
+                ns: ['common', 'errors'],
+                defaultNS: 'common',
+                backend: {
+                    loadPath: '/locales/{{lng}}/{{ns}}.json',
+                },
+                interpolation: {
+                    escapeValue: false,
+                },
+                react: {
+                    useSuspense: false,
+                },
+                debug: true, // Enable debug mode
+            });
+
+        function TranslationTest() {
+            const { t, i18n, ready } = useTranslation(['common', 'errors']);
+            const [status, setStatus] = useState('loading');
+            const [debugInfo, setDebugInfo] = useState({});
+            const [testResults, setTestResults] = useState([]);
+
+            useEffect(() => {
+                // Check i18n status when ready
+                if (ready) {
+                    const info = {
+                        ready: ready,
+                        language: i18n.language,
+                        languages: i18n.languages,
+                        hasLoadedNamespaces: i18n.hasLoadedNamespaces,
+                        loadedNamespaces: Object.keys(i18n.store.data[i18n.language] || {}),
+                        resourcesLoaded: Object.keys(i18n.store.data).map(lng => ({
+                            language: lng,
+                            namespaces: Object.keys(i18n.store.data[lng] || {})
+                        })),
+                        backendOptions: i18n.options.backend,
+                    };
+
+                    setDebugInfo(info);
+
+                    // Run translation tests
+                    const results = [];
+                    
+                    // Test 1: Basic translation
+                    const testMessage = t('test.message');
+                    results.push({
+                        test: 'Basic translation',
+                        key: 'test.message',
+                        result: testMessage,
+                        success: testMessage !== 'test.message'
+                    });
+
+                    // Test 2: Translation with interpolation
+                    const statusMessage = t('test.status', { status: 'OK' });
+                    results.push({
+                        test: 'Translation with interpolation',
+                        key: 'test.status',
+                        result: statusMessage,
+                        success: statusMessage.includes('OK')
+                    });
+
+                    // Test 3: Namespace translation
+                    const errorMessage = t('errors:notFound');
+                    results.push({
+                        test: 'Namespace translation',
+                        key: 'errors:notFound',
+                        result: errorMessage,
+                        success: errorMessage !== 'errors:notFound'
+                    });
+
+                    // Test 4: Check if key exists
+                    const keyExists = i18n.exists('test.message');
+                    results.push({
+                        test: 'Key existence check',
+                        key: 'test.message',
+                        result: keyExists.toString(),
+                        success: keyExists
+                    });
+
+                    setTestResults(results);
+                    
+                    // Set overall status
+                    const allSuccess = results.every(r => r.success);
+                    setStatus(allSuccess ? 'success' : 'error');
+
+                    // Log to console
+                    console.log('i18next initialized:', info);
+                    console.log('Translation test results:', results);
+                    console.log('Store data:', i18n.store.data);
+                }
+            }, [ready, i18n, t]);
+
+            const handleLanguageChange = (lng) => {
+                i18n.changeLanguage(lng);
+            };
+
+            const handleReload = () => {
+                window.location.reload();
+            };
+
+            const getStatusClass = () => {
+                if (status === 'loading') return 'status loading';
+                if (status === 'success') return 'status success';
+                return 'status error';
+            };
+
+            return (
+                <div className="container">
+                    <h1>i18next Translation Test</h1>
+                    
+                    <div className={getStatusClass()}>
+                        {status === 'loading' && 'Loading translations...'}
+                        {status === 'success' && '✓ All translations loaded successfully!'}
+                        {status === 'error' && '✗ Some translations failed to load. Check the test results below.'}
+                    </div>
+
+                    <div className="section">
+                        <h2>Translation Tests</h2>
+                        {testResults.map((result, index) => (
+                            <div key={index} style={{
+                                padding: '10px',
+                                margin: '5px 0',
+                                backgroundColor: result.success ? '#e8f5e9' : '#ffebee',
+                                border: `1px solid ${result.success ? '#4caf50' : '#f44336'}`,
+                                borderRadius: '4px'
+                            }}>
+                                <strong>{result.test}:</strong> {result.success ? '✓' : '✗'}
+                                <br />
+                                <small>Key: {result.key}</small>
+                                <br />
+                                <small>Result: "{result.result}"</small>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="section">
+                        <h2>Language Switcher</h2>
+                        <button onClick={() => handleLanguageChange('en')}>English</button>
+                        <button onClick={() => handleLanguageChange('cs')}>Czech</button>
+                        <button onClick={() => handleLanguageChange('de')}>German</button>
+                        <button onClick={handleReload}>Reload Page</button>
+                    </div>
+
+                    <div className="section">
+                        <h2>Current Translations</h2>
+                        <div>
+                            <p><strong>Direct translations:</strong></p>
+                            <ul>
+                                <li>test.message: "{t('test.message')}"</li>
+                                <li>test.title: "{t('test.title')}"</li>
+                                <li>test.status: "{t('test.status', { status: 'Active' })}"</li>
+                                <li>test.language: "{t('test.language', { language: i18n.language })}"</li>
+                                <li>errors:notFound: "{t('errors:notFound')}"</li>
+                                <li>errors:serverError: "{t('errors:serverError')}"</li>
+                                <li>errors:unauthorized: "{t('errors:unauthorized')}"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="section">
+                        <h2>Debug Information</h2>
+                        <div className="debug-info">
+                            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+                        </div>
+                    </div>
+
+                    <div className="section">
+                        <h2>Instructions</h2>
+                        <ul>
+                            <li>Open Developer Console (F12) to see detailed i18n logs</li>
+                            <li>Check Network tab to verify translation files are being loaded</li>
+                            <li>Look for requests to /locales/en/common.json and /locales/en/errors.json</li>
+                            <li>If files return 404, translations won't load</li>
+                        </ul>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<TranslationTest />);
+    </script>
+</body>
+</html>
