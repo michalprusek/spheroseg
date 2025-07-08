@@ -979,6 +979,7 @@ router.get(
     });
 
     try {
+      const pool = getPool();
       const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
         projectId,
         userId,
@@ -1048,7 +1049,7 @@ router.get(
         }
       }
 
-      res.status(200).json(processedImages);
+      res.status(200).json({ images: processedImages });
     } catch (error) {
       logger.error('Error fetching images', {
         projectId,
