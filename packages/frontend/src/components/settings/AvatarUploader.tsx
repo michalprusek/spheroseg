@@ -238,7 +238,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
       </div>
 
       {/* Hidden file input */}
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,.tiff,.tif" className="hidden" />
 
       <p className="text-xs text-muted-foreground">
         {t('profile.avatarHelp') || 'Click the camera icon to upload a profile picture'}
@@ -262,7 +262,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
                   aspectRatio={1}
                   cropShape="round"
                   showControls={true}
-                  showZoom={true}
+                  showZoom={false}
                   showRotation={true}
                   onComplete={handleCropComplete}
                 />
