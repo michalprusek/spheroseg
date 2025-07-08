@@ -155,7 +155,7 @@ export function getSocketIO(): SocketIOServer | null {
 export function broadcastSegmentationUpdate(
   projectId: string,
   imageId: string,
-  status: 'pending' | 'processing' | 'completed' | 'failed',
+  status: 'queued' | 'processing' | 'completed' | 'failed' | 'without_segmentation',
   resultPath?: string,
   error?: string,
 ): void {
