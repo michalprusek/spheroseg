@@ -43,5 +43,8 @@ COPY packages/backend/. .
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
+# Set Node.js memory optimization flags
+ENV NODE_OPTIONS="--max-old-space-size=384 --expose-gc"
+
 # Start command will be provided by docker-compose
 CMD ["npm", "run", "dev"]

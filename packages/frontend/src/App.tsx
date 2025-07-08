@@ -1,4 +1,5 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
+import { createLazyComponent, lazy } from '@/types/lazyComponents';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -70,11 +71,9 @@ const ProjectDetail = lazy(() =>
     return import('./pages/NotFound');
   }),
 );
-const SegmentationPage = lazy(() =>
-  import('./pages/segmentation/SegmentationPage').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
+const SegmentationPage = createLazyComponent(
+  () => import('./pages/segmentation/SegmentationPage'),
+  () => import('./pages/NotFound')
 );
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Settings = lazy(() =>
@@ -127,17 +126,13 @@ const ForgotPassword = lazy(() =>
       return import('./pages/NotFound');
     }),
 );
-const SegmentationEditorRedirect = lazy(() =>
-  import('./pages/segmentation/SegmentationEditorRedirect').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
+const SegmentationEditorRedirect = createLazyComponent(
+  () => import('./pages/segmentation/SegmentationEditorRedirect'),
+  () => import('./pages/NotFound')
 );
-const AcceptInvitation = lazy(() =>
-  import('./pages/AcceptInvitation').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
+const AcceptInvitation = createLazyComponent(
+  () => import('./pages/AcceptInvitation'),
+  () => import('./pages/NotFound')
 );
 
 // Create a client for React Query
@@ -514,7 +509,6 @@ const router = createBrowserRouter(routes, {
     v7_fetcherPersist: true,
     v7_partialHydration: true,
     v7_skipActionErrorRevalidation: true,
-    v7_startTransition: true,
   },
 });
 

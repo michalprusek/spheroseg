@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { RotateCw, ZoomIn, ZoomOut, Check } from 'lucide-react';
+import { RotateCw, Check } from 'lucide-react';
 
 interface ImageCropperProps {
   src: string;
@@ -37,7 +36,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     y: 10,
   });
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
-  const [zoom, setZoom] = useState<number>(1);
   const [rotation, setRotation] = useState<number>(0);
 
   // Set aspect ratio
@@ -48,11 +46,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       aspect: ratio,
     }));
   }, [aspectRatio]);
-
-  // Handle zoom change
-  const handleZoomChange = (value: number[]) => {
-    setZoom(value[0]);
-  };
 
   // Handle rotation
   const handleRotate = () => {
@@ -130,10 +123,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       <div className="relative">
         <div
           className="relative max-w-full overflow-hidden"
-          style={{
-            transform: `scale(${zoom})`,
-            transition: 'transform 0.3s ease',
-          }}
         >
           <ReactCrop
             crop={crop}
@@ -171,22 +160,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       </div>
 
       {showControls && (
-        <div className="w-full space-y-4">
-          {showZoom && (
-            <div className="flex items-center space-x-4">
-              <ZoomOut className="h-4 w-4 text-gray-500" />
-              <Slider
-                value={[zoom]}
-                min={minZoom}
-                max={maxZoom}
-                step={0.1}
-                onValueChange={handleZoomChange}
-                className="flex-1"
-              />
-              <ZoomIn className="h-4 w-4 text-gray-500" />
-            </div>
-          )}
-
+        <div className="w-full">
           <Button type="button" onClick={generateCroppedImage} className="w-full">
             <Check className="mr-2 h-4 w-4" />
             Apply Changes

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trash2, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface ImageActionsProps {
   onDelete: () => void;
@@ -8,6 +9,8 @@ interface ImageActionsProps {
 }
 
 const ImageActions = ({ onDelete, onResegment }: ImageActionsProps) => {
+  const { t } = useTranslations();
+  
   return (
     <div className="absolute top-2 right-2 z-10 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
       {onResegment && (
@@ -19,7 +22,7 @@ const ImageActions = ({ onDelete, onResegment }: ImageActionsProps) => {
             e.stopPropagation();
             onResegment();
           }}
-          title="Opětovná segmentace"
+          title={t('project.resegmentImage')}
         >
           <RefreshCcw className="h-4 w-4" />
         </Button>
@@ -32,7 +35,7 @@ const ImageActions = ({ onDelete, onResegment }: ImageActionsProps) => {
           e.stopPropagation();
           onDelete();
         }}
-        title="Smazat obrázek"
+        title={t('project.deleteImage')}
       >
         <Trash2 className="h-4 w-4" />
       </Button>

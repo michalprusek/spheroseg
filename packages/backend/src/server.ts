@@ -7,6 +7,7 @@
 
 import http from 'http';
 import { AddressInfo } from 'net';
+import v8 from 'v8';
 
 import app from './app';
 import config from './config';
@@ -19,6 +20,65 @@ import segmentationQueueService from './services/segmentationQueueService';
 import dbPool from './db';
 import { startPerformanceMonitoring, stopPerformanceMonitoring } from './utils/performance';
 import { monitorQuery } from './monitoring/unified';
+import performanceConfig from './config/performance';
+
+// Memory optimization settings
+// Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized
+// Only enable in specific scenarios where memory usage patterns are well understood
+const isProduction = process.env.NODE_ENV === 'production';
+const manualGcEnabled = process.env.ENABLE_MANUAL_GC === 'true';
+
+if (isProduction && manualGcEnabled) {
+  logger.warn('Manual GC is enabled in production! This should only be used for debugging specific memory issues.');
+}
+
+if (global.gc && performanceConfig.memory.gcIntervalMs > 0 && manualGcEnabled && !isProduction) {
+  logger.info('Manual garbage collection enabled with interval:', performanceConfig.memory.gcIntervalMs);
+  
+  // Track GC performance
+  let gcCount = 0;
+  let totalGcTime = 0;
+  
+  setInterval(() => {
+    if (global.gc) {
+      const startTime = process.hrtime.bigint();
+      const memBefore = process.memoryUsage();
+      
+      global.gc();
+      
+      const endTime = process.hrtime.bigint();
+      const memAfter = process.memoryUsage();
+      const gcTime = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+      
+      gcCount++;
+      totalGcTime += gcTime;
+      
+      const freedMemory = (memBefore.heapUsed - memAfter.heapUsed) / 1024 / 1024;
+      
+      logger.debug('Manual GC completed', {
+        gcNumber: gcCount,
+        duration: `${gcTime.toFixed(2)}ms`,
+        avgDuration: `${(totalGcTime / gcCount).toFixed(2)}ms`,
+        freedMemory: `${freedMemory.toFixed(2)}MB`,
+        heapUsed: `${(memAfter.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+      });
+      
+      // Warn if GC is taking too long
+      if (gcTime > 100) {
+        logger.warn('Manual GC took longer than 100ms', { duration: gcTime });
+      }
+    }
+  }, performanceConfig.memory.gcIntervalMs);
+} else if (global.gc) {
+  if (isProduction) {
+    logger.info('Manual GC available but disabled in production');
+  } else {
+    logger.info('Manual GC available but disabled. Enable with ENABLE_MANUAL_GC=true (development only)');
+  }
+}
+
+// Set memory limits for V8
+v8.setFlagsFromString(`--max-old-space-size=${performanceConfig.memory.v8MaxOldSpaceMB}`);
 
 /**
  * Create HTTP server

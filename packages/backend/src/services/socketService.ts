@@ -155,7 +155,7 @@ export function getSocketIO(): SocketIOServer | null {
 export function broadcastSegmentationUpdate(
   projectId: string,
   imageId: string,
-  status: 'pending' | 'processing' | 'completed' | 'failed',
+  status: 'queued' | 'processing' | 'completed' | 'failed' | 'without_segmentation',
   resultPath?: string,
   error?: string,
 ): void {
@@ -180,8 +180,23 @@ export function broadcastSegmentationUpdate(
       status,
     });
 
+    // Map new statuses to old ones for backward compatibility
+    const backwardCompatibleStatus = status === 'queued' ? 'pending' : 
+                                    status === 'without_segmentation' ? 'pending' : 
+                                    status;
+    
+    const backwardCompatibleData = {
+      ...updateData,
+      status: backwardCompatibleStatus,
+      // Include new status in a separate field for updated clients
+      newStatus: status
+    };
+
     // Broadcast to all clients in the project room
     io.to(roomName).emit('segmentation_update', updateData);
+    
+    // Also send backward compatible version
+    io.to(roomName).emit('segmentation_update_legacy', backwardCompatibleData);
   } catch (error) {
     logger.error('Error broadcasting segmentation update', {
       projectId,

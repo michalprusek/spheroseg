@@ -15,6 +15,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { showSuccess, showError } from '@/utils/toastUtils';
 import { tryCatch } from '@/utils/errorUtils';
 import ImageCropper from '@/components/ui/image-cropper';
+import { generateTiffPreview } from '@/utils/tiffPreview';
 
 interface AvatarUploaderProps {
   currentAvatarUrl: string | null;
@@ -42,7 +43,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
   };
 
   // Handle file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -61,9 +62,16 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
     // Store the original file
     setOriginalFile(file);
 
-    // Create a URL for the cropper
-    const objectUrl = URL.createObjectURL(file);
-    setCropperImageSrc(objectUrl);
+    // Create a preview URL for the cropper
+    // Use generateTiffPreview which handles TIFF/BMP conversion
+    const previewUrl = await generateTiffPreview(file);
+    
+    if (!previewUrl) {
+      showError(t('profile.previewError') || 'Failed to generate image preview');
+      return;
+    }
+
+    setCropperImageSrc(previewUrl);
 
     // Open the cropper modal
     setIsCropperOpen(true);
@@ -188,7 +196,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
   // Clean up object URLs when component unmounts
   useEffect(() => {
     return () => {
-      if (cropperImageSrc) {
+      if (cropperImageSrc && cropperImageSrc.startsWith('blob:')) {
         URL.revokeObjectURL(cropperImageSrc);
       }
     };
@@ -238,7 +246,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
       </div>
 
       {/* Hidden file input */}
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,.tiff,.tif" className="hidden" />
 
       <p className="text-xs text-muted-foreground">
         {t('profile.avatarHelp') || 'Click the camera icon to upload a profile picture'}
@@ -262,7 +270,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
                   aspectRatio={1}
                   cropShape="round"
                   showControls={true}
-                  showZoom={true}
+                  showZoom={false}
                   showRotation={true}
                   onComplete={handleCropComplete}
                 />

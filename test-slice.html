@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Polygon Slicing</title>
+</head>
+<body>
+    <h1>Test Polygon Slicing</h1>
+    <p>Check the browser console for slicing test results.</p>
+    
+    <script type="module">
+        // Import the polygon utilities
+        import { slicePolygon } from './packages/shared/src/utils/polygonUtils.unified.ts';
+        
+        // Test polygon (a simple square)
+        const testPolygon = [
+            { x: 100, y: 100 },
+            { x: 200, y: 100 },
+            { x: 200, y: 200 },
+            { x: 100, y: 200 }
+        ];
+        
+        // Test slice line (horizontal line through the middle)
+        const sliceStart = { x: 50, y: 150 };
+        const sliceEnd = { x: 250, y: 150 };
+        
+        console.log('Testing polygon slicing...');
+        console.log('Test polygon:', testPolygon);
+        console.log('Slice line:', sliceStart, 'to', sliceEnd);
+        
+        // Run the slice
+        const result = slicePolygon(testPolygon, sliceStart, sliceEnd);
+        
+        console.log('Slice result:', result);
+        console.log('Number of resulting polygons:', result.length);
+        
+        if (result.length === 2) {
+            console.log('SUCCESS: Polygon was sliced into 2 parts!');
+            console.log('Polygon 1:', result[0]);
+            console.log('Polygon 2:', result[1]);
+        } else {
+            console.error('FAILED: Expected 2 polygons, got', result.length);
+        }
+    </script>
+</body>
+</html>

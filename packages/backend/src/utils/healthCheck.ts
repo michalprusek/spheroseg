@@ -7,6 +7,8 @@
 
 import dbPool from '../db';
 import config from '../config';
+import performanceConfig from '../config/performance';
+import { getEffectiveMemoryLimit } from './containerInfo';
 import fs from 'fs';
 
 export interface HealthStatus {
@@ -40,7 +42,7 @@ export const checkDatabaseHealth = async (): Promise<HealthStatus> => {
     const result = await dbPool.query('SELECT NOW() as current_time, version() as version');
     const responseTime = Date.now() - startTime;
     
-    if (responseTime > 5000) {
+    if (responseTime > performanceConfig.healthCheck.slowResponseMs) {
       return {
         status: 'degraded',
         message: `Slow response time: ${responseTime}ms`,
@@ -125,29 +127,37 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
  */
 export const checkMemoryHealth = (): HealthStatus => {
   const memUsage = process.memoryUsage();
-  const totalMemory = memUsage.heapTotal;
-  const usedMemory = memUsage.heapUsed;
-  const memoryUsagePercent = (usedMemory / totalMemory) * 100;
+  const usedMemory = memUsage.rss; // Resident Set Size - total memory allocated for the process
+  const usedMemoryMB = usedMemory / 1024 / 1024;
   
-  if (memoryUsagePercent > 90) {
+  // Get effective container limit (detected or configured)
+  const containerLimit = getEffectiveMemoryLimit(performanceConfig.memory.containerLimitMB);
+  const memoryUsagePercent = (usedMemoryMB / containerLimit) * 100;
+  
+  // Also check heap usage
+  const heapUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+  
+  if (memoryUsagePercent > performanceConfig.memory.thresholds.unhealthy || 
+      heapUsagePercent > performanceConfig.memory.thresholds.heapUnhealthy) {
     return {
       status: 'unhealthy',
-      message: `High memory usage: ${memoryUsagePercent.toFixed(1)}%`,
+      message: `High memory usage: ${usedMemoryMB.toFixed(0)}MB / ${containerLimit}MB (${memoryUsagePercent.toFixed(1)}%), Heap: ${heapUsagePercent.toFixed(1)}%`,
       lastChecked: new Date().toISOString(),
     };
   }
   
-  if (memoryUsagePercent > 75) {
+  if (memoryUsagePercent > performanceConfig.memory.thresholds.degraded || 
+      heapUsagePercent > performanceConfig.memory.thresholds.heapDegraded) {
     return {
       status: 'degraded',
-      message: `Elevated memory usage: ${memoryUsagePercent.toFixed(1)}%`,
+      message: `Elevated memory usage: ${usedMemoryMB.toFixed(0)}MB / ${containerLimit}MB (${memoryUsagePercent.toFixed(1)}%), Heap: ${heapUsagePercent.toFixed(1)}%`,
       lastChecked: new Date().toISOString(),
     };
   }
   
   return {
     status: 'healthy',
-    message: `Memory usage: ${memoryUsagePercent.toFixed(1)}%`,
+    message: `Memory usage: ${usedMemoryMB.toFixed(0)}MB / ${containerLimit}MB (${memoryUsagePercent.toFixed(1)}%), Heap: ${heapUsagePercent.toFixed(1)}%`,
     lastChecked: new Date().toISOString(),
   };
 };

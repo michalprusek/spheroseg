@@ -8,7 +8,7 @@ import logger from './logger';
  */
 export function setupUploadDirectories(): void {
   // Define base upload directory
-  const uploadDir = config.uploads?.path || path.join(process.cwd(), 'uploads');
+  const uploadDir = config.storage.uploadDir;
 
   // Create main upload directory if it doesn't exist
   if (!fs.existsSync(uploadDir)) {

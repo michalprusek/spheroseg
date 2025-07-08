@@ -4,6 +4,7 @@ import { useSegmentationV2, EditMode } from './hooks/segmentation';
 import { useSlicing } from './hooks/useSlicing';
 import CanvasV2 from './components/canvas/CanvasV2';
 import { ToolbarV2 } from './components/toolbar/ToolbarV2';
+import { SegmentationErrorBoundary } from './components/SegmentationErrorBoundary';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +15,7 @@ interface SegmentationEditorV2Props {
   imageId?: string;
 }
 
-export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ projectId, imageId }) => {
+const SegmentationEditorV2Inner: React.FC<SegmentationEditorV2Props> = ({ projectId, imageId }) => {
   // Create a ref for the canvas
   const canvasRef = React.useRef<HTMLDivElement>(null); // Keep as null, ensure null checks
 
@@ -89,19 +90,41 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
     }
   }, [imageId, imageData, projectId, navigate]);
 
+  // Configurable delay for slice action (can be overridden via env variable)
+  const SLICE_ACTION_DELAY = parseInt(import.meta.env.VITE_SLICE_ACTION_DELAY || '50', 10);
+
   // Watch for slice completion - when we have 2 points in Slice mode
   useEffect(() => {
+    console.log('[SegmentationEditorV2] Slice mode check:', {
+      editMode,
+      tempPointsLength: tempPoints.length,
+      selectedPolygonId,
+      tempPoints
+    });
+    
     if (editMode === EditMode.Slice && tempPoints.length === 2 && selectedPolygonId) {
       console.log('[SegmentationEditorV2] Slice points ready, triggering slice action');
       
-      // Trigger the slice action
-      const success = handleSliceAction();
+      // Add a configurable delay to ensure state is properly updated
+      const timeoutId = setTimeout(() => {
+        try {
+          // Trigger the slice action with error handling
+          const success = handleSliceAction();
+          
+          if (success) {
+            console.log('[SegmentationEditorV2] Slice action completed successfully');
+          } else {
+            console.log('[SegmentationEditorV2] Slice action failed');
+          }
+        } catch (error) {
+          console.error('[SegmentationEditorV2] Error during slice action:', error);
+          toast.error(t('segmentation.sliceError') || 'An error occurred while slicing the polygon');
+        }
+      }, SLICE_ACTION_DELAY);
       
-      if (success) {
-        console.log('[SegmentationEditorV2] Slice action completed successfully');
-      }
+      return () => clearTimeout(timeoutId);
     }
-  }, [editMode, tempPoints, selectedPolygonId, handleSliceAction]);
+  }, [editMode, tempPoints, selectedPolygonId, handleSliceAction, SLICE_ACTION_DELAY]);
 
   // Zoom handlers
   const handleZoomIn = () => {
@@ -191,5 +214,14 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
         />
       </div>
     </div>
+  );
+};
+
+// Export the component wrapped with error boundary
+export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = (props) => {
+  return (
+    <SegmentationErrorBoundary>
+      <SegmentationEditorV2Inner {...props} />
+    </SegmentationErrorBoundary>
   );
 };

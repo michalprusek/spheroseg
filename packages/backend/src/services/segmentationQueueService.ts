@@ -35,7 +35,7 @@ const QUEUE_UPDATE_INTERVAL = config.ml.queueUpdateInterval || 5000; // ms
 
 // Typy a rozhraní
 export enum TaskStatus {
-  PENDING = 'pending',
+  QUEUED = 'queued',
   PROCESSING = 'processing',
   COMPLETED = 'completed',
   FAILED = 'failed',
@@ -137,7 +137,7 @@ class SegmentationQueueService extends EventEmitter {
       if (typeCheck.rows.length === 0) {
         await client.query(`
           CREATE TYPE task_status AS ENUM (
-            'pending', 'processing', 'completed', 'failed', 'cancelled'
+            'queued', 'processing', 'completed', 'failed', 'cancelled'
           );
         `);
       }
@@ -150,7 +150,7 @@ class SegmentationQueueService extends EventEmitter {
           image_path TEXT NOT NULL,
           parameters JSONB DEFAULT '{}',
           priority INTEGER DEFAULT 5,
-          status task_status DEFAULT 'pending',
+          status task_status DEFAULT 'queued',
           retries INTEGER DEFAULT 0,
           error TEXT,
           result JSONB,
@@ -287,7 +287,7 @@ class SegmentationQueueService extends EventEmitter {
         // Získání počtu úloh podle stavu
         const pendingResult = await client.query(`
           SELECT id FROM segmentation_tasks 
-          WHERE status = 'pending'
+          WHERE status = 'queued'
           ORDER BY priority DESC, created_at ASC
         `);
 
@@ -346,7 +346,7 @@ class SegmentationQueueService extends EventEmitter {
           `
           SELECT id, image_id, image_path, parameters, priority, retries
           FROM segmentation_tasks
-          WHERE status = 'pending'
+          WHERE status = 'queued'
           ORDER BY priority DESC, created_at ASC
           LIMIT $1
         `,
@@ -587,7 +587,7 @@ class SegmentationQueueService extends EventEmitter {
       const checkResult = await client.query(
         `
         SELECT id, status FROM segmentation_tasks
-        WHERE image_id = $1 AND status IN ('pending', 'processing')
+        WHERE image_id = $1 AND status IN ('queued', 'processing')
       `,
         [imageId],
       );
@@ -596,7 +596,7 @@ class SegmentationQueueService extends EventEmitter {
         const existingTask = checkResult.rows[0];
 
         // Pokud je úloha již ve frontě nebo se zpracovává, aktualizujeme prioritu
-        if (existingTask.status === 'pending') {
+        if (existingTask.status === 'queued') {
           await client.query(
             `
             UPDATE segmentation_tasks
@@ -630,7 +630,7 @@ class SegmentationQueueService extends EventEmitter {
         INSERT INTO segmentation_tasks (
           id, image_id, image_path, parameters, priority, status, created_at, updated_at
         )
-        VALUES ($1, $2, $3, $4, $5, 'pending', NOW(), NOW())
+        VALUES ($1, $2, $3, $4, $5, 'queued', NOW(), NOW())
       `,
         [taskId, imageId, imagePath, parameters, priority],
       );
@@ -673,7 +673,7 @@ class SegmentationQueueService extends EventEmitter {
         `
         UPDATE segmentation_tasks
         SET status = 'cancelled', updated_at = NOW()
-        WHERE image_id = $1 AND status IN ('pending', 'processing')
+        WHERE image_id = $1 AND status IN ('queued', 'processing')
         RETURNING id
       `,
         [imageId],

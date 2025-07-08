@@ -118,14 +118,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         });
         
         if (hasTiffOrBmp) {
-          toast.info('Generování náhledů pro TIFF/BMP soubory...');
+          toast.info(t('uploader.generatingPreviews', {}, 'Generating previews for TIFF/BMP files...'));
         }
 
         const newFiles: UploadedFile[] = await Promise.all(acceptedFiles.map(async (file) => {
-          const isTiffOrBmp = file.type === 'image/tiff' || file.type === 'image/tif' || 
-                              file.name.toLowerCase().endsWith('.tiff') || 
-                              file.name.toLowerCase().endsWith('.tif') ||
-                              file.name.toLowerCase().endsWith('.bmp');
+          const ext = file.name.toLowerCase();
+          const isTiffOrBmp = file.type === 'image/tiff' || file.type === 'image/bmp' || 
+                              ext.endsWith('.tiff') || 
+                              ext.endsWith('.tif') ||
+                              ext.endsWith('.bmp');
           
           let previewUrl: string;
           
@@ -154,7 +155,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         setUploadedFiles((prevFiles) => [...prevFiles, ...newFiles]);
         
         if (hasTiffOrBmp) {
-          toast.success('Náhledy vygenerovány');
+          toast.success(t('uploader.previewsGenerated', {}, 'Previews generated'));
         }
       }
     },
@@ -204,14 +205,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       // Log the number of files being uploaded
       console.log(`Uploading ${files.length} files to project ${projectId}`);
 
-      // Informujeme uživatele o začátku nahrávání
-      toast.info(`Nahrávání ${files.length} obrázků...`);
+      // Inform user about upload start
+      toast.info(t('uploader.uploadingImages', { count: files.length }, `Uploading ${files.length} images...`));
 
       // Create a progress callback function
       const onProgress = (fileName: string, progress: number, fileIndex: number, totalFiles: number) => {
         setCurrentFileName(fileName);
         // Calculate overall progress: each file contributes equally to total progress
-        const overallProgress = ((fileIndex) / totalFiles * 100) + (progress / totalFiles);
+        // When a file is completed (progress = 100), we count it as fully completed
+        const completedFiles = progress === 100 ? fileIndex + 1 : fileIndex;
+        const currentFileProgress = progress === 100 ? 0 : progress;
+        const overallProgress = (completedFiles / totalFiles * 100) + (currentFileProgress / totalFiles);
         setUploadProgress(Math.min(overallProgress, 100));
       };
 
@@ -236,12 +240,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       // Clear the uploaded files after successful upload
       clearAllFiles();
 
-      // Informujeme uživatele o úspěšném nahrání
-      toast.success(`Úspěšně nahráno ${allUploadedImages.length} obrázků.`);
+      // Inform user about successful upload
+      toast.success(t('uploader.uploadSuccess', { count: allUploadedImages.length }, `Successfully uploaded ${allUploadedImages.length} images.`));
     } catch (error) {
       console.error('Error uploading files:', error);
       setError(t('uploader.uploadError', {}, 'An error occurred while uploading the files. Please try again.'));
-      toast.error('Chyba při nahrávání obrázků. Zkuste to prosím znovu.');
+      toast.error(t('uploader.uploadErrorGeneral', {}, 'Error uploading images. Please try again.'));
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -367,7 +371,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         <div className="upload-progress mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-              Nahrávání obrázků...
+              {t('uploader.uploadingImages', {}, 'Uploading images...')}
             </span>
             <span className="text-sm text-blue-600 dark:text-blue-400">
               {Math.round(uploadProgress)}%
@@ -385,7 +389,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           {/* Current File Name */}
           {currentFileName && (
             <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
-              Zpracovávám: {currentFileName}
+              {t('uploader.processing', {}, 'Processing')}: {currentFileName}
             </div>
           )}
         </div>

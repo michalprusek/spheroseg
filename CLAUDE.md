@@ -4,347 +4,228 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SpherosegV4 is a cell segmentation application that uses computer vision and deep learning to identify and analyze cells in microscopic images. The application consists of:
-
-- **Frontend**: React application with TypeScript, Vite, and Material UI components
-- **Backend**: Node.js API server with Express and TypeScript, with PostgreSQL database
-- **ML Service**: Python-based machine learning service using PyTorch for cell segmentation
-- **Assets Server**: Static file server for images and resources
-- **NGINX**: Reverse proxy for routing requests and handling SSL
+SpherosegV4 is a cell segmentation application that uses computer vision and deep learning to identify and analyze cells in microscopic images. This is a monorepo managed by Turborepo with microservices architecture deployed via Docker Compose.
 
 ## Repository Structure
 
-This project uses a monorepo structure with Turborepo:
-
-- `packages/frontend`: React frontend application 
-- `packages/backend`: Node.js/Express backend API
-- `packages/ml`: Python ML service with PyTorch model for cell segmentation
-- `packages/shared`: Shared utilities and code between packages
-- `packages/types`: TypeScript type definitions
-- `packages/frontend-static`: Static assets for the frontend
-
-## Development Environment
-
-### Running the Application
-
-**Standard Mode:**
-```bash
-docker-compose up -d
 ```
-The application will be available at http://localhost
-
-**Development Mode with Hot Reload:**
-```bash
-docker-compose up -d frontend-dev
-```
-The development server will be available at http://localhost:3000
-
-### Viewing Container Logs
-
-```bash
-docker-compose logs -f frontend-dev  # Frontend development logs
-docker-compose logs -f backend       # Backend logs
-docker-compose logs -f ml            # ML service logs
-docker-compose logs -f db            # Database logs
+spheroseg/
+├── packages/
+│   ├── frontend/         # React + TypeScript + Vite + Material UI
+│   ├── backend/          # Node.js + Express + TypeScript + PostgreSQL
+│   ├── ml/               # Python + Flask + PyTorch (ResUNet model)
+│   ├── shared/           # Shared utilities between packages
+│   ├── types/            # TypeScript type definitions
+│   └── frontend-static/  # Static assets
+├── docs/                 # Architecture and consolidation documentation
+├── docker-compose.yml    # Container orchestration
+└── turbo.json           # Turborepo pipeline configuration
 ```
 
-### Accessing Containers
+## Essential Commands
+
+### Development Workflow
 
 ```bash
-docker-compose exec frontend-dev sh  # Access frontend dev container
-docker-compose exec backend sh       # Access backend container
-docker-compose exec ml sh            # Access ML service container
-docker-compose exec db psql -U postgres -d spheroseg  # Access database
+# Start development with hot reload
+docker-compose --profile dev up -d
+
+# Start production mode
+docker-compose --profile prod up -d
+
+# View logs
+docker-compose logs -f [frontend-dev|backend|ml|db]
+
+# Access containers
+docker-compose exec [service-name] sh
+docker-compose exec db psql -U postgres -d spheroseg
 ```
 
-## Common Development Commands
-
-### Turborepo Commands
+### Monorepo Commands
 
 ```bash
-npm run dev              # Run development servers for all packages
-npm run dev:frontend     # Run only frontend development server
-npm run dev:backend      # Run only backend development server
+# Development
+npm run dev              # Run all services in dev mode
+npm run dev:frontend     # Run only frontend
+npm run dev:backend      # Run only backend
+
+# Code Quality (ALWAYS run before committing)
+npm run lint             # Check linting
+npm run lint:fix         # Fix linting issues
+npm run format           # Format code
+npm run code:check       # Run all checks
+npm run code:fix         # Fix all issues
+
+# Testing
+npm run test             # Run all tests
+npm run test:frontend    # Test frontend only
+npm run test:backend     # Test backend only
+npm run test:ml          # Test ML service
+npm run test:coverage    # Generate coverage reports
+
+# Build & Deploy
 npm run build            # Build all packages
-npm run preview          # Preview built applications
-npm run lint             # Lint all packages
-npm run lint:fix         # Fix linting issues in all packages
-npm run format           # Format code in all packages
-npm run format:check     # Check code formatting in all packages
-npm run test             # Run tests for all packages
-npm run test:coverage    # Run tests with coverage reports
-npm run test:ci          # Run tests in CI mode
-npm run test:frontend    # Run only frontend tests
-npm run test:backend     # Run only backend tests
-npm run test:ml          # Run ML service tests
-npm run code:check       # Run all code quality checks
-npm run code:fix         # Fix all code quality issues
-npm run clean            # Clean build artifacts
-npm run duplicates       # Check for duplicate code with jscpd
+npm run preview          # Preview production build
+
+# Database
+npm run init:db          # Initialize database
+npm run db:migrate       # Run migrations
+npm run db:create-test-user  # Create test user (dev only)
 ```
 
-### Database Commands
+### Running Individual Tests
 
 ```bash
-npm run init:db          # Initialize the database
-npm run init:db:docker   # Initialize the database in Docker
-npm run db:migrate       # Run database migrations
-npm run db:create-test-user  # Create a test user for development
+# Frontend (Vitest)
+cd packages/frontend
+npm run test -- path/to/test.spec.ts
+npm run test -- --watch  # Watch mode
+
+# Backend (Jest)
+cd packages/backend
+npm run test -- path/to/test.spec.ts
+npm run test -- --watch  # Watch mode
 ```
 
-### ML Service Commands
+## Architecture & Key Patterns
 
+### Frontend Architecture
+- **Unified Services Pattern**: All API calls go through centralized services in `packages/frontend/src/services/`
+- **State Management**: React Context for global state, local state for components
+- **Routing**: React Router v6 with protected routes
+- **Real-time Updates**: Socket.IO integration for live notifications
+- **Error Handling**: Unified error boundary and toast notifications
+
+### Backend Architecture
+- **Modular Routes**: Routes organized by feature in `packages/backend/src/routes/`
+- **Authentication**: JWT with refresh tokens, middleware in `packages/backend/src/middleware/auth.ts`
+- **Database**: PostgreSQL with raw SQL queries (no ORM)
+- **File Processing**: Integration with ML service via HTTP calls
+- **WebSocket**: Socket.IO for real-time events
+
+### ML Service Architecture
+- **Model**: ResUNet for cell segmentation in `packages/ml/app/model/`
+- **API**: Flask endpoints for segmentation and feature extraction
+- **Processing Pipeline**: Image → Preprocessing → Model → Polygon Extraction → Features
+- **Model Checkpoint**: `packages/ml/checkpoint_epoch_9.pth.tar`
+
+### Cross-Service Communication
+```
+Frontend <-> NGINX <-> Backend <-> ML Service
+                   \-> Assets Server
+```
+
+## Service URLs
+
+- **Frontend Dev**: http://localhost:3000
+- **Frontend Prod**: http://localhost
+- **Backend API**: http://localhost:5001
+- **ML Service**: http://localhost:5002
+- **Database**: localhost:5432
+- **Adminer**: http://localhost:8081
+
+## Critical Configuration
+
+### Environment Variables
 ```bash
-npm run ml:segmentation  # Run cell segmentation algorithm
-npm run ml:extract       # Extract features from segmented cells
+# Frontend (.env)
+VITE_API_URL=http://localhost:5001
+VITE_API_BASE_URL=/api
+VITE_ASSETS_URL=http://localhost:8080
+
+# Backend (.env)
+DATABASE_URL=postgresql://postgres:postgres@db:5432/spheroseg
+JWT_SECRET=your-secret-key
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost
+
+# ML Service
+MODEL_PATH=/app/checkpoint_epoch_9.pth.tar
 ```
 
-### End-to-End Testing
+### TypeScript Configuration
+- Strict mode enabled
+- Path aliases configured in tsconfig.json
+- Shared types in `packages/types/`
 
-```bash
-npm run cypress:open     # Open Cypress test runner
-npm run cypress:run      # Run Cypress tests in headless mode
-npm run e2e              # Run all end-to-end tests
-npm run e2e:open         # Open end-to-end test runner
-```
+### Testing Setup
+- Frontend: Vitest + React Testing Library
+- Backend: Jest + Supertest
+- ML: Pytest
+- E2E: Cypress (configuration in root)
 
-## Services Architecture
+## Database Schema
 
-### Frontend (Port 3000)
+Key tables:
+- `users`: User authentication and profile
+- `images`: Uploaded image metadata
+  - `status`: General image lifecycle state ('pending', 'queued', 'completed') - tracks upload/processing
+  - `segmentation_status`: ML segmentation state ('without_segmentation', 'queued', 'processing', 'completed', 'failed') - tracks AI analysis
+- `segmentation_results`: ML processing results
+- `cells`: Individual cell data and features
 
-- **Core**: React 18 with TypeScript and Vite
-- **UI Stack**: Material UI + Radix UI + TailwindCSS
-- **State Management**: React Query (@tanstack/react-query)
-- **Routing**: React Router DOM
-- **Real-time**: Socket.IO client for live updates
-- **Forms**: React Hook Form with Zod validation
-- **File Upload**: React Dropzone with image cropping support
-- **Internationalization**: i18next + react-i18next
+**Important**: When checking for completed segmentations, use `segmentation_status = 'completed'`, not `status = 'completed'`
+- `segmentation_queue`: Queue for segmentation tasks (uses 'queued' status, not 'pending')
+- `segmentation_tasks`: Task tracking (uses 'queued' status, not 'pending')
 
-### Backend (Port 5001)
+## Unified Systems
 
-- **Runtime**: Node.js 18 with Express and TypeScript
-- **Authentication**: JWT tokens with bcrypt password hashing
-- **Database**: PostgreSQL with custom SQL migrations
-- **File Processing**: Multer for uploads, Sharp for image processing
-- **Real-time**: Socket.IO server
-- **Security**: Helmet, CORS, rate limiting
-- **Logging**: Winston for structured logging
-- **Email**: Nodemailer integration
+The codebase has undergone consolidation efforts documented in `/docs/consolidation/`:
 
-### ML Service (Port 5002)
+1. **Toast Notifications**: Centralized in `ToastService`
+2. **API Clients**: Unified service pattern
+3. **Error Handling**: Global error boundaries and handlers
+4. **Logging**: Centralized logger utility
+5. **Form Validation**: Consistent validation patterns
+6. **Date Utilities**: Unified date formatting
+7. **Export Functions**: Centralized export logic
+8. **WebSocket Management**: Single connection manager
 
-- **Framework**: Python 3.9 with Flask
-- **Deep Learning**: PyTorch with ResUNet architecture
-- **Image Processing**: OpenCV, scikit-image, Pillow
-- **Model**: Pre-trained checkpoint in `checkpoint_epoch_9.pth.tar`
-- **Algorithm**: Custom polygon extraction for cell boundary detection
+## Development Tips
 
-### Database (Port 5432)
+1. **Before Making Changes**: Run `npm run code:check` to ensure clean baseline
+2. **After Changes**: Always run `npm run code:fix` before committing
+3. **Testing**: Write tests for new features, run existing tests before pushing
+4. **Database Changes**: Create migration files, don't modify schema directly
+5. **API Changes**: Update both backend routes and frontend services
+6. **ML Model Updates**: Test with sample images before deploying
+7. **Using Context7**: Frequently use the Context7 MCP tool to get up-to-date documentation for libraries and frameworks
 
-- **Engine**: PostgreSQL 14 with Alpine Linux
-- **Schema**: User authentication, project management, image metadata
-- **Admin Interface**: Adminer available at http://localhost:8081
-- **Access**: Default credentials (postgres/postgres)
+## System Credentials
 
-### NGINX Reverse Proxy (Ports 80/443)
+- **Sudo Password**: Cinoykty
+- **Test User**: testuser3@test.com / password123
 
-- **SSL/HTTPS**: Let's Encrypt certificates with auto-renewal
-- **Routing**: Frontend, API, assets, and WebSocket proxying
-- **Security**: HSTS, XSS protection, content type validation
-- **File Upload**: Large file support (200MB max for segmentation)
+## Git Workflow & Checkpointing
 
-## Key Environment Variables
+- **ALWAYS work in the `dev` branch** - never commit directly to `main`
+- **Commit to `dev` after EVERY completed action** - use the dev branch as a checkpointing system
+- **Commit frequently** - after each feature, fix, or significant change
+- **Pull requests** - create PR from `dev` to `main` only when ready for production
+- **Commit message format**: Use clear, descriptive messages for each checkpoint
 
-Frontend:
-- `VITE_API_URL`: Backend API URL
-- `VITE_API_BASE_URL`: Base URL for API requests
-- `VITE_API_AUTH_PREFIX`: Auth API path prefix
-- `VITE_API_USERS_PREFIX`: Users API path prefix
-- `VITE_ASSETS_URL`: URL for the assets server
+## Known Issues & Recent Fixes
 
-Backend:
-- `DATABASE_URL`: PostgreSQL connection string
-- `JWT_SECRET`: Secret for JWT tokens
-- `ALLOWED_ORIGINS`: CORS allowed origins
-- `MAX_UPLOAD_SIZE`: Maximum file upload size
+### Recently Fixed (2025-07-08)
+1. **Segmentation Queue Enum Mismatch**: Fixed issue where code used 'pending' but database expected 'queued' status
+   - Updated `segmentationQueueService.ts` and `segmentation.ts` routes
+2. **Image Status System Overhaul**: Complete refactor of image status system
+   - Changed from 'pending' to: 'queued', 'processing', 'completed', 'without_segmentation'
+   - Fixed TIFF/BMP thumbnail generation using Sharp
+   - Implemented real-time status updates via WebSocket
+   - Fixed progress bar updates during image upload
+3. **Internationalization**: Replaced Czech hardcoded messages with English
+   - Fixed messages in polygon slicing, image actions, and status displays
+   - Updated all user-facing text to use i18n translations
+4. **Polygon Slicing**: Fixed functionality that was stuck at step 3
+   - Created missing `polygonOperations.ts` module
+   - Fixed polygon splitting algorithm implementation
+   - Replaced Czech error messages with English
 
-ML Service:
-- `MODEL_PATH`: Path to the ML model checkpoint
-- `DEBUG`: Enable debug mode for development
-
-## Authentication
-
-The application uses JWT-based authentication with tokens stored in localStorage. The backend provides `/auth/login` and `/auth/register` endpoints for authentication.
-
-## Database Access
-
-The PostgreSQL database runs in a Docker container and is accessible at localhost:5432 with:
-- Database: spheroseg
-- Username: postgres
-- Password: postgres
-
-You can also use Adminer at http://localhost:8081 for database management.
-
-## Git Workflow
-
-### Development Branch Strategy
-
-This project uses a feature branch workflow with the `dev` branch as the main development branch:
-
-- **`master`**: Production-ready code
-- **`dev`**: Main development branch for integration
-- **Feature branches**: Created from `dev` for specific features/fixes
-
-### Claude Code Workflow
-
-When working with Claude Code instances:
-
-1. **Development Instance**: Creates feature branches and submits pull requests to `dev`
-2. **Review Instance**: Reviews pull requests and merges approved changes into `dev`
-
-### Pull Request Process
-
-**For Development (this Claude instance):**
-- Always create pull requests targeting the `dev` branch
-- Include clear descriptions of changes
-- Ensure all tests pass before requesting review
-- Use descriptive commit messages
-
-**For Review (second Claude instance):**
-- Review pull requests submitted to `dev`
-- Check code quality, test coverage, and functionality
-- Merge approved pull requests into `dev`
-- Reject or request changes for pull requests that need improvement
-
-### Git Configuration
-
-```bash
-# Set pull strategy to merge (already configured)
-git config pull.rebase false
-
-# Create and push feature branch
-git checkout -b feature/your-feature-name
-git push -u origin feature/your-feature-name
-
-# Create pull request to dev branch
-gh pr create --base dev --title "Your PR Title" --body "Description"
-```
-
-## Development Best Practices
-
-### Testing Requirements
-
-**ALWAYS test every new implementation:**
-- After implementing any new feature or fix, run appropriate tests
-- Use `npm run test` for unit tests or specific test commands for the affected package
-- Verify functionality works as expected before considering the task complete
-- Run `npm run code:check` to ensure code quality standards are met
-
-### Container Restart After Changes
-
-**IMPORTANT: Always restart the affected containers after making changes:**
-- **Frontend changes**: Run `docker-compose restart frontend-dev`
-- **Backend changes**: Run `docker-compose restart backend`
-- **ML service changes**: Run `docker-compose restart ml`
-- **Database migrations**: Run the SQL file directly or restart backend
-
-Changes will NOT be visible at https://spherosegapp.utia.cas.cz/ until containers are restarted!
-
-### Testing Every Fix with Playwright MCP
-
-**MANDATORY: Test every fix using Playwright MCP:**
-1. After implementing a fix and restarting containers, navigate to the affected page
-2. Use `mcp__playwright__browser_console_messages` to check for JavaScript errors
-3. Use `mcp__playwright__browser_snapshot` to verify UI state
-4. Use `mcp__playwright__browser_click` and other interaction tools to test functionality
-5. Document the test results and confirm the fix works
-
-Example workflow:
-```bash
-# 1. Make code changes
-# 2. Restart containers
-docker-compose restart frontend-dev backend
-# 3. Wait for containers to be ready
-sleep 10
-# 4. Test with Playwright MCP
-# 5. Check console for errors
-# 6. Verify fix is working
-```
-
-### Browser Testing with Playwright MCP
-
-**Use Playwright MCP to test fixes in real browser:**
-1. Navigate to the application URL (https://spherosegapp.utia.cas.cz)
-2. Check browser console for errors using `mcp__playwright__browser_console_messages`
-3. Take screenshots to verify UI changes using `mcp__playwright__browser_take_screenshot`
-4. Interact with elements using `mcp__playwright__browser_click` and other interaction tools
-5. Monitor Docker logs simultaneously to correlate frontend and backend issues
-
-**Testing workflow after each fix:**
-```bash
-# 1. Check Docker logs for errors
-docker-compose logs -f frontend-dev --tail=50
-docker-compose logs -f backend --tail=50
-
-# 2. Use Playwright to test in browser
-# 3. Check console messages for JavaScript errors
-# 4. Take screenshots of problematic areas
-# 5. Verify fix resolves the issue
-```
-
-### Error Investigation Process
-
-**When user reports browser console errors:**
-1. **First**: Check Docker container logs for detailed error information:
-   ```bash
-   docker-compose logs -f frontend-dev  # For frontend errors
-   docker-compose logs -f backend       # For backend/API errors
-   docker-compose logs -f ml            # For ML service errors
-   ```
-2. **Analyze**: Gather maximum information from both browser console and Docker logs
-3. **Plan**: Create a comprehensive fix plan based on all available error information
-4. **Implement**: Only then proceed with the actual fix
-5. **Test**: Verify the fix resolves the issue completely
-
-### Monorepo Development Patterns
-
-**Package Dependencies:**
-- Packages reference each other via `file:../package-name` in package.json
-- Shared types centralized in `@spheroseg/types` package
-- Common utilities in `@spheroseg/shared` package
-- Turborepo handles intelligent build caching and parallelization
-
-**Code Quality:**
-- ESLint configuration shared across all packages
-- Prettier formatting with consistent rules
-- TypeScript strict mode enabled
-- Zod schemas for runtime validation
-
-### Container Development Workflow
-
-**Service Communication:**
-- Services communicate via Docker service names (not localhost)
-- Frontend dev mode proxies API calls through NGINX
-- Hot Module Replacement works through NGINX proxy
-- WebSocket connections handled by Socket.IO
-
-**File Uploads & Processing:**
-- Large file uploads (up to 200MB) supported for segmentation
-- Images processed through Sharp in backend
-- ML service receives files via shared Docker volumes
-- Results returned via REST API with progress updates
-
-## Troubleshooting
-
-If you encounter issues, try restarting the Docker environment:
-
-```bash
-docker-compose down && docker-compose up -d
-```
-
-For more detailed logs:
-
-```bash
-docker-compose logs -f
-```
+### Current Issues
+1. **High Memory Usage**: Backend showing 92.5% memory utilization
+   - May need container memory limit increase or optimization
+2. **TypeScript Errors**: Multiple type errors in test files and some components
+   - `toastService.ts` had to be renamed to `.tsx` due to JSX usage
+   - Various test files have outdated type definitions
+3. **ESLint Configuration**: Backend ESLint config missing dependencies
+   - `@typescript-eslint/recommended` config not found

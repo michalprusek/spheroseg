@@ -1,3 +1,4 @@
+import React from 'react';
 import { toast as sonnerToast, ExternalToast } from 'sonner';
 import { IconType } from 'react-icons';
 import { FiCheckCircle, FiXCircle, FiInfo, FiAlertTriangle } from 'react-icons/fi';

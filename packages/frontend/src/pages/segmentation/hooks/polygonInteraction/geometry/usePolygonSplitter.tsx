@@ -35,7 +35,7 @@ export const usePolygonSplitter = (
           isValid: false,
           polygon: null,
           intersections: null,
-          message: 'Segmentace není k dispozici.',
+          message: 'Segmentation not available.',
         };
       }
 
@@ -45,7 +45,7 @@ export const usePolygonSplitter = (
           isValid: false,
           polygon: null,
           intersections: null,
-          message: 'Polygon nebyl nalezen.',
+          message: 'Polygon not found.',
         };
       }
 
@@ -118,7 +118,7 @@ export const usePolygonSplitter = (
 
       // Ensure the resulting polygon has at least 3 points
       if (newPolygonPoints.length < 3) {
-        toast.error('Výsledný polygon by byl příliš malý');
+        toast.error('Resulting polygon would be too small');
         return false;
       }
 
@@ -152,7 +152,7 @@ export const usePolygonSplitter = (
       const { polygonId, startPoint, endPoint } = operation;
 
       if (!segmentation) {
-        toast.error('Segmentace není k dispozici.');
+        toast.error('Segmentation not available.');
         return false;
       }
 
@@ -161,7 +161,7 @@ export const usePolygonSplitter = (
         const result = polygonOperations.splitPolygon(segmentation, polygonId, [startPoint, endPoint]);
 
         if (!result) {
-          toast.error('Nepodařilo se rozdělit polygon.');
+          toast.error('Failed to split polygon.');
           return false;
         }
 
@@ -169,7 +169,7 @@ export const usePolygonSplitter = (
         return true;
       } catch (error) {
         console.error('[POLYGON SPLITTER] Error splitting polygon:', error);
-        toast.error('Chyba při rozdělování polygonu.');
+        toast.error('Error splitting polygon.');
         return false;
       }
     },

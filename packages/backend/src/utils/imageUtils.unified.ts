@@ -250,7 +250,7 @@ const pathUtils = {
   generateThumbnailPath: (projectId: string, originalFilename: string): string => {
     const uniqueFilename = pathUtils.generateUniqueFilename(
       pathUtils.extractBaseName(originalFilename),
-      'jpg', // Always use jpg extension for thumbnails since they're saved as JPEG
+      'png', // Always use png extension for thumbnails since they're saved as PNG
       'thumb',
     );
     return path.join('uploads', projectId, uniqueFilename);
@@ -397,6 +397,11 @@ export const createThumbnail = async (
 ): Promise<void> => {
   try {
     const { width = 300, height = 300, fit = 'inside' } = options;
+    
+    // Validate that target path has .png extension
+    if (!targetPath.toLowerCase().endsWith('.png')) {
+      throw new Error(`Thumbnail target path must have .png extension, got: ${targetPath}`);
+    }
     const ext = path.extname(sourcePath).toLowerCase();
 
     // Special handling for BMP files using Python PIL

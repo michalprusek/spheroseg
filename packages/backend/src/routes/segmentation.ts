@@ -69,7 +69,7 @@ router.get(
         // If no segmentation result found, return an empty result instead of 404
         const emptyResult = {
           image_id: imageId,
-          status: 'pending',
+          status: 'without_segmentation',
           result_data: {
             polygons: [],
           },
@@ -617,7 +617,7 @@ router.get(
       // Get queue status for this project
       const queueQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE st.status = 'pending') AS pending_count,
+                COUNT(*) FILTER (WHERE st.status = 'queued') AS pending_count,
                 COUNT(*) FILTER (WHERE st.status = 'processing') AS processing_count,
                 COUNT(*) FILTER (WHERE st.status = 'completed') AS completed_count,
                 COUNT(*) FILTER (WHERE st.status = 'failed') AS failed_count,
@@ -638,7 +638,7 @@ router.get(
       // Get image segmentation status for this project
       const imageStatsQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE segmentation_status = 'pending') AS pending_count,
+                COUNT(*) FILTER (WHERE segmentation_status = 'queued') AS pending_count,
                 COUNT(*) FILTER (WHERE segmentation_status = 'processing') AS processing_count,
                 COUNT(*) FILTER (WHERE segmentation_status = 'completed') AS completed_count,
                 COUNT(*) FILTER (WHERE segmentation_status = 'failed') AS failed_count,
@@ -746,7 +746,7 @@ router.post(
     try {
       // Verify that the image exists and user has access to it
       const imageQuery = `
-            SELECT i.id, i.file_path, i.project_id
+            SELECT i.id, i.storage_path, i.project_id
             FROM images i
             JOIN projects p ON i.project_id = p.id
             WHERE i.id = $1 AND (p.user_id = $2 OR p.is_public = true)
@@ -766,6 +766,35 @@ router.post(
         return;
       }
 
+      logger.info(`Starting resegmentation for image ${imageId}`);
+
+      // First, delete old segmentation results and cells
+      await pool.query('BEGIN');
+      try {
+        // Delete associated cells first (foreign key constraint)
+        const deleteCellsResult = await pool.query('DELETE FROM cells WHERE segmentation_result_id IN (SELECT id FROM segmentation_results WHERE image_id = $1)', [imageId]);
+        logger.info(`Deleted ${deleteCellsResult.rowCount} cells for image ${imageId}`);
+
+        // Delete old segmentation results
+        const deleteSegmentationResult = await pool.query('DELETE FROM segmentation_results WHERE image_id = $1', [imageId]);
+        logger.info(`Deleted ${deleteSegmentationResult.rowCount} segmentation results for image ${imageId}`);
+
+        // Update image status to queued
+        await pool.query("UPDATE images SET segmentation_status = 'queued', updated_at = NOW() WHERE id = $1", [imageId]);
+
+        // Create new segmentation result entry with queued status
+        await pool.query(
+          `INSERT INTO segmentation_results (image_id, status, parameters)
+           VALUES ($1, 'queued', $2)`,
+          [imageId, { model_type: 'resunet', force_resegment: true }]
+        );
+
+        await pool.query('COMMIT');
+      } catch (error) {
+        await pool.query('ROLLBACK');
+        throw error;
+      }
+
       // Set high priority for resegmentation (5 out of 10)
       const priority = 5;
 
@@ -777,7 +806,7 @@ router.post(
       };
 
       // Trigger the segmentation task with high priority
-      await triggerSegmentationTask(imageId, image.file_path, parameters, priority);
+      await triggerSegmentationTask(imageId, image.storage_path, parameters, priority);
 
       // Return success response
       res.status(200).json({

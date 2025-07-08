@@ -368,6 +368,66 @@ export const calculateIntersection = (
 };
 
 /**
+ * Calculate the intersection point of an infinite line with a line segment
+ * Used for polygon slicing where the slice line extends infinitely
+ * @param lineStart Start point of the infinite line
+ * @param lineEnd End point of the infinite line (defines direction)
+ * @param segStart Start point of the line segment
+ * @param segEnd End point of the line segment
+ * @returns Intersection point or null if the lines don't intersect
+ */
+export const calculateLineSegmentIntersection = (
+  lineStart: Point,
+  lineEnd: Point,
+  segStart: Point,
+  segEnd: Point
+): Point | null => {
+  const x1 = lineStart.x, y1 = lineStart.y;
+  const x2 = lineEnd.x, y2 = lineEnd.y;
+  const x3 = segStart.x, y3 = segStart.y;
+  const x4 = segEnd.x, y4 = segEnd.y;
+
+  const denominator = ((y4 - y3) * (x2 - x1)) - ((x4 - x3) * (y2 - y1));
+
+  if (denominator === 0) {
+    return null; // Lines are parallel
+  }
+
+  const ua = (((x4 - x3) * (y1 - y3)) - ((y4 - y3) * (x1 - x3))) / denominator;
+  const ub = (((x2 - x1) * (y1 - y3)) - ((y2 - y1) * (x1 - x3))) / denominator;
+
+  // Only check if intersection is within the polygon edge segment (ub)
+  // We treat the slice line as infinite, so we don't check ua
+  if (ub >= 0 && ub <= 1) {
+    const intersection = {
+      x: x1 + ua * (x2 - x1),
+      y: y1 + ua * (y2 - y1)
+    };
+    console.log('[calculateLineSegmentIntersection] Intersection found:', {
+      ua,
+      ub,
+      intersection,
+      lineStart,
+      lineEnd,
+      segStart,
+      segEnd
+    });
+    return intersection;
+  }
+  
+  console.log('[calculateLineSegmentIntersection] No intersection:', {
+    ua,
+    ub,
+    lineStart,
+    lineEnd,
+    segStart,
+    segEnd
+  });
+
+  return null;
+};
+
+/**
  * Calculate all intersection points between a line and a polygon
  * @param lineStart Start point of the line
  * @param lineEnd End point of the line
@@ -379,15 +439,29 @@ export const calculateLinePolygonIntersections = (
   lineEnd: Point, 
   polygon: Point[]
 ): Intersection[] => {
+  console.log('[calculateLinePolygonIntersections] Called with:', {
+    lineStart,
+    lineEnd,
+    polygonPoints: polygon.length,
+    polygonBounds: polygon.length > 0 ? {
+      minX: Math.min(...polygon.map(p => p.x)),
+      maxX: Math.max(...polygon.map(p => p.x)),
+      minY: Math.min(...polygon.map(p => p.y)),
+      maxY: Math.max(...polygon.map(p => p.y))
+    } : null
+  });
+  
   const intersections: Intersection[] = [];
 
   for (let i = 0; i < polygon.length; i++) {
     const j = (i + 1) % polygon.length;
-    const intersection = calculateIntersection(
+    // Use the new function that treats the slice line as infinite
+    const intersection = calculateLineSegmentIntersection(
       lineStart, lineEnd, polygon[i], polygon[j]
     );
 
     if (intersection) {
+      console.log(`[calculateLinePolygonIntersections] Found intersection at edge ${i}:`, intersection);
       // Calculate distance from line start for sorting
       const dist = distance(lineStart, intersection);
 
@@ -551,12 +625,21 @@ export const slicePolygon = (
   sliceStart: Point, 
   sliceEnd: Point
 ): Point[][] => {
+  console.log('[slicePolygon unified] Called with:', {
+    polygonPoints: polygon.length,
+    sliceStart,
+    sliceEnd
+  });
+  
   const intersections = calculateLinePolygonIntersections(
     sliceStart, sliceEnd, polygon
   );
 
+  console.log('[slicePolygon unified] Found intersections:', intersections.length, intersections);
+
   // Need exactly 2 intersections to slice properly
   if (intersections.length !== 2) {
+    console.log('[slicePolygon unified] Wrong number of intersections, returning original polygon');
     return [polygon]; // Return original polygon
   }
 

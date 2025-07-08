@@ -13,32 +13,35 @@ export async function generateTiffPreview(file: File): Promise<string | null> {
   try {
     // Check if it's a TIFF or BMP file
     const ext = file.name.toLowerCase();
-    if (!ext.endsWith('.tiff') && !ext.endsWith('.tif') && !ext.endsWith('.bmp')) {
+    const isTiff = ext.endsWith('.tiff') || ext.endsWith('.tif');
+    const isBmp = ext.endsWith('.bmp');
+    
+    if (!isTiff && !isBmp) {
       // For other formats, use regular blob URL
       return URL.createObjectURL(file);
     }
 
-    // DISABLED: Preview endpoint doesn't exist in backend
-    // For now, use canvas preview for TIFF/BMP files
-    return generateCanvasPreview(file);
-
-    /* TODO: Implement preview endpoint in backend
-    // Create FormData with the file
+    // For TIFF files, we need server-side conversion
+    // Send to backend for conversion
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('avatar', file); // Backend expects 'avatar' field name
 
-    // Send to preview endpoint
-    const response = await apiClient.post('/api/preview/generate', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      responseType: 'blob', // Get response as blob
-    });
+    try {
+      // Use the avatar preview endpoint which handles TIFF conversion
+      const response = await apiClient.post('/api/user-profile/avatar/preview', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        responseType: 'blob',
+      });
 
-    // Create blob URL from response
-    const blob = response.data;
-    return URL.createObjectURL(blob);
-    */
+      // Create blob URL from response
+      return URL.createObjectURL(response.data);
+    } catch (error) {
+      console.warn('Server-side TIFF conversion failed, using fallback preview', error);
+      // Fall back to canvas preview
+      return generateCanvasPreview(file);
+    }
   } catch (error) {
     console.error('Failed to generate TIFF/BMP preview:', error);
     return null;

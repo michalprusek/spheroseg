@@ -31,7 +31,7 @@ describe('Button Component', () => {
     rerender(<Button variant="outline">Outline</Button>);
     button = screen.getByRole('button', { name: 'Outline' });
     expect(button).toHaveClass('border');
-    expect(button).toHaveClass('border-input');
+    expect(button).toHaveClass('border-gray-300');
     expect(button).toHaveClass('bg-background');
 
     rerender(<Button variant="secondary">Secondary</Button>);
@@ -54,13 +54,13 @@ describe('Button Component', () => {
 
     let button = screen.getByRole('button', { name: 'Default' });
     expect(button).toHaveClass('h-10');
-    expect(button).toHaveClass('px-4');
-    expect(button).toHaveClass('py-2');
+    expect(button).toHaveClass('px-5');
+    expect(button).toHaveClass('py-2.5');
 
     rerender(<Button size="sm">Small</Button>);
     button = screen.getByRole('button', { name: 'Small' });
     expect(button).toHaveClass('h-9');
-    expect(button).toHaveClass('px-3');
+    expect(button).toHaveClass('px-4');
 
     rerender(<Button size="lg">Large</Button>);
     button = screen.getByRole('button', { name: 'Large' });

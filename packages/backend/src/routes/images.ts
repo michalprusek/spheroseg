@@ -919,7 +919,7 @@ router.get(
       const imageResult = await pool.query(
         `SELECT 
           i.*,
-          COALESCE(sr.status, i.segmentation_status, 'pending') as segmentationStatus,
+          COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
           sr.id as segmentation_id
         FROM images i
         LEFT JOIN segmentation_results sr ON i.id = sr.image_id
@@ -999,7 +999,7 @@ router.get(
         name
           ? `SELECT 
               i.*,
-              COALESCE(sr.status, i.segmentation_status, 'pending') as "segmentationStatus",
+              COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as "segmentationStatus",
               sr.id as segmentation_id
             FROM images i
             LEFT JOIN segmentation_results sr ON i.id = sr.image_id
@@ -1007,7 +1007,7 @@ router.get(
             ORDER BY i.created_at DESC`
           : `SELECT 
               i.*,
-              COALESCE(sr.status, i.segmentation_status, 'pending') as "segmentationStatus",
+              COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as "segmentationStatus",
               sr.id as segmentation_id
             FROM images i
             LEFT JOIN segmentation_results sr ON i.id = sr.image_id
@@ -1208,7 +1208,7 @@ router.get(
           `SELECT 
             i.*, 
             p.user_id,
-            COALESCE(sr.status, i.segmentation_status, 'pending') as segmentationStatus,
+            COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
             sr.id as segmentation_id
           FROM images i 
           JOIN projects p ON i.project_id = p.id 
@@ -1222,7 +1222,7 @@ router.get(
           `SELECT 
             i.*, 
             p.user_id,
-            COALESCE(sr.status, i.segmentation_status, 'pending') as segmentationStatus,
+            COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
             sr.id as segmentation_id
           FROM images i 
           JOIN projects p ON i.project_id = p.id 

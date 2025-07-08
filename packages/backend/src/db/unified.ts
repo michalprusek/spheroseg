@@ -8,6 +8,7 @@
 import { Pool, PoolClient, QueryResult } from 'pg';
 import NodeCache from 'node-cache';
 import config from '../config';
+import performanceConfig from '../config/performance';
 import logger from '../utils/logger';
 import { monitorQuery } from '../monitoring/unified';
 
@@ -47,10 +48,11 @@ export function getPool(): Pool {
       ? {
           connectionString: databaseUrl,
           ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined,
-          max: 20,
-          idleTimeoutMillis: 30000,
-          connectionTimeoutMillis: 5000,
-          allowExitOnIdle: false,
+          max: performanceConfig.database.poolMax,
+          min: performanceConfig.database.poolMin,
+          idleTimeoutMillis: performanceConfig.database.idleTimeoutMs,
+          connectionTimeoutMillis: performanceConfig.database.connectionTimeoutMs,
+          allowExitOnIdle: performanceConfig.database.allowExitOnIdle
         }
       : {
           host: config.db.host,
@@ -59,10 +61,11 @@ export function getPool(): Pool {
           user: config.db.user,
           password: config.db.password,
           ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined,
-          max: 20,
-          idleTimeoutMillis: 30000,
-          connectionTimeoutMillis: 5000,
-          allowExitOnIdle: false,
+          max: performanceConfig.database.poolMax,
+          min: performanceConfig.database.poolMin,
+          idleTimeoutMillis: performanceConfig.database.idleTimeoutMs,
+          connectionTimeoutMillis: performanceConfig.database.connectionTimeoutMs,
+          allowExitOnIdle: performanceConfig.database.allowExitOnIdle
         };
 
     pool = new Pool(poolConfig);

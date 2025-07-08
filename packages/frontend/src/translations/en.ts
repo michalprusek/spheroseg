@@ -75,6 +75,7 @@ export default {
       completed: 'Completed',
       failed: 'Failed',
       pending: 'Pending',
+      withoutSegmentation: 'No Segmentation',
     },
     autoSave: {
       enabled: 'Auto-save: Enabled',
@@ -184,6 +185,8 @@ export default {
     newProjectName: 'New Project Name',
     enterProjectName: 'Enter the new project name',
     duplicate: 'Duplicate',
+    resegmentImage: 'Re-segment image',
+    deleteImage: 'Delete image',
   },
   projectsPage: {
     title: 'Projects',

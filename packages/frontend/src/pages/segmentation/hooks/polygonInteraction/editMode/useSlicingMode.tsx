@@ -104,13 +104,13 @@ export const useSlicingMode = (
 
       if (success) {
         console.log(`[SLICE DEBUG] Slice operation successful!`);
-        toast.success('Polygon byl úspěšně rozdělen na dva');
+        toast.success('Polygon successfully split into two');
         // Reset state and exit slicing mode automatically
         setSliceStartPoint(null);
         setSlicingMode(false);
       } else {
         console.error(`[SLICE DEBUG] Slice operation failed!`);
-        toast.error('Rozdělení polygonu selhalo');
+        toast.error('Failed to split polygon');
         setSliceStartPoint(null);
       }
 

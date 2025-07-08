@@ -233,10 +233,15 @@ class UnifiedFileUploadService {
     if (!this.config.generatePreviews) return undefined;
     
     try {
+      // Check file extension for better detection (MIME types can be unreliable)
+      const ext = file.name.toLowerCase();
+      const isTiff = ext.endsWith('.tiff') || ext.endsWith('.tif');
+      const isBmp = ext.endsWith('.bmp');
+      
       // Handle different file types
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith('image/') || isTiff || isBmp) {
         // Special handling for TIFF/BMP
-        if (file.type === 'image/tiff' || file.type === 'image/bmp') {
+        if (file.type === 'image/tiff' || file.type === 'image/bmp' || isTiff || isBmp) {
           return await this.generateSpecialPreview(file);
         }
         
@@ -635,17 +640,55 @@ class UnifiedFileUploadService {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await apiClient.post('/images/preview', formData, {
+      const response = await apiClient.post('/preview/generate', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         responseType: 'blob',
       });
       
       return URL.createObjectURL(response.data);
     } catch (error) {
-      logger.warn('Server preview generation failed, using fallback');
-      // Fallback to basic preview
-      return this.generateImagePreview(file);
+      logger.warn('Server preview generation failed, using fallback:', error);
+      // Fallback to canvas-based preview with file info
+      return this.generateCanvasPreview(file);
     }
+  }
+  
+  private generateCanvasPreview(file: File): string {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 200;
+    canvas.height = 200;
+
+    if (ctx) {
+      // Draw background
+      ctx.fillStyle = '#f3f4f6';
+      ctx.fillRect(0, 0, 200, 200);
+
+      // Draw file icon
+      ctx.fillStyle = '#9ca3af';
+      ctx.fillRect(60, 40, 80, 100);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(65, 45, 70, 90);
+
+      // Add file type text
+      ctx.fillStyle = '#374151';
+      ctx.font = 'bold 20px Arial';
+      ctx.textAlign = 'center';
+      const ext = file.name.split('.').pop()?.toUpperCase() || 'FILE';
+      ctx.fillText(ext, 100, 90);
+
+      // Add file name
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#6b7280';
+      const fileName = file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name;
+      ctx.fillText(fileName, 100, 160);
+
+      // Add file size
+      const fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+      ctx.fillText(fileSize, 100, 175);
+    }
+
+    return canvas.toDataURL('image/png');
   }
   
   private async createLocalImage(file: File, projectId?: string): Promise<ProjectImage> {

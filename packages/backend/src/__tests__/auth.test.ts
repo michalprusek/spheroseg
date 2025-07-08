@@ -8,7 +8,7 @@ import request from 'supertest';
 import { app } from '../server';
 import jwt from 'jsonwebtoken';
 import config from '../config';
-import { pool } from '../db';
+import db from '../db';
 
 // Mock database queries
 jest.mock('../db', () => {

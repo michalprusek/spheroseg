@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { isAdmin, isUserApproved } from './authorizationMiddleware';
-import { AuthenticatedRequest } from './authMiddleware';
-import pool from '../db';
+import { isAdmin, isUserApproved, AuthenticatedRequest } from '../auth';
+import pool from '../../../db';
 
 // Mock the database pool
-jest.mock('../db', () => ({
+jest.mock('../../../db', () => ({
   query: jest.fn(),
 }));
 

@@ -326,10 +326,12 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
   // Mini version for compact display in headers
   if (mini) {
     if (hasActiveJobs) {
+      const processing = queueData?.runningTasks?.length || 0;
+      const queued = queueData?.pendingTasks?.length || 0;
       return (
         <div className="inline-flex items-center gap-2 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
           <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></div>
-          <span>{(queueData?.pendingTasks?.length || 0) + (queueData?.runningTasks?.length || 0)}</span>
+          <span>{processing} / {queued}</span>
         </div>
       );
     } else {
@@ -348,20 +350,23 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
       <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-800">
         <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
         <div className="flex-1">
-          <div className="font-medium">Probíhá segmentace obrázků</div>
-          <div className="text-sm flex items-center gap-2">
-            <span>Čeká: {queueData?.pendingTasks?.length || 0}</span>
+          <div className="font-medium">Image Segmentation Status</div>
+          <div className="text-sm flex items-center gap-4">
+            <span className="flex items-center gap-1">
+              <span className="font-semibold">{queueData?.runningTasks?.length || 0}</span>
+              <span>processing</span>
+            </span>
             <span className="text-gray-400">•</span>
-            <span>Zpracovává se: {queueData?.runningTasks?.length || 0}</span>
+            <span className="flex items-center gap-1">
+              <span className="font-semibold">{queueData?.pendingTasks?.length || 0}</span>
+              <span>queued</span>
+            </span>
           </div>
-          <div className="text-xs text-blue-500 mt-1">
-            <span>Celkem úloh: {(queueData?.pendingTasks?.length || 0) + (queueData?.runningTasks?.length || 0)}</span>
-            {queueData?.timestamp && (
-              <span className="ml-2 text-blue-400">
-                (Aktualizováno: {formatTime(queueData.timestamp)})
-              </span>
-            )}
-          </div>
+          {queueData?.timestamp && (
+            <div className="text-xs text-blue-400 mt-1">
+              Last updated: {formatTime(queueData.timestamp)}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -370,13 +375,15 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
       <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-800">
         <div className="h-3 w-3 rounded-full bg-green-500"></div>
         <div className="flex-1">
-          <div className="font-medium">Segmentace: Ready</div>
+          <div className="font-medium">Image Segmentation Status</div>
           <div className="text-sm">
-            <span>0 úloh celkem (0 zpracovávaných, 0 ve frontě)</span>
+            <span>No images in queue</span>
           </div>
-          <div className="text-xs text-green-500 mt-1">
-            {queueData?.timestamp && <span>Aktualizováno: {formatTime(queueData.timestamp)}</span>}
-          </div>
+          {queueData?.timestamp && (
+            <div className="text-xs text-green-500 mt-1">
+              Last updated: {formatTime(queueData.timestamp)}
+            </div>
+          )}
         </div>
       </div>
     );

@@ -7,7 +7,10 @@ module.exports = {
   plugins: ['@typescript-eslint'],
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
+    // Note: To enable TypeScript linting, install:
+    // npm install --save-dev @typescript-eslint/eslint-plugin @typescript-eslint/parser
+    // Then uncomment the line below:
+    // '@typescript-eslint/recommended',
   ],
   root: true,
   env: {

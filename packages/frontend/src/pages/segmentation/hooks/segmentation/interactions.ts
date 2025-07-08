@@ -573,8 +573,18 @@ export const handleMouseDown = (
         const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
         
         if (selectedPolygon) {
+          console.log('[Slice Mode] Selected polygon bounds:', {
+            id: selectedPolygonId,
+            points: selectedPolygon.points.length,
+            minX: Math.min(...selectedPolygon.points.map(p => p.x)),
+            maxX: Math.max(...selectedPolygon.points.map(p => p.x)),
+            minY: Math.min(...selectedPolygon.points.map(p => p.y)),
+            maxY: Math.max(...selectedPolygon.points.map(p => p.y))
+          });
+          
           if (!interactionState.sliceStartPoint) {
             // First click - set slice start point
+            console.log('[Slice Mode] Setting first slice point:', { x: imageX, y: imageY });
             setInteractionState({
               ...interactionState,
               sliceStartPoint: { x: imageX, y: imageY },
@@ -582,6 +592,11 @@ export const handleMouseDown = (
             setTempPoints([{ x: imageX, y: imageY }]);
           } else {
             // Second click - complete the slice by setting the end point
+            console.log('[Slice Mode] Setting second slice point:', { x: imageX, y: imageY });
+            console.log('[Slice Mode] Complete slice line:', {
+              start: interactionState.sliceStartPoint,
+              end: { x: imageX, y: imageY }
+            });
             // The actual slicing will be handled by the component that has access to handleSliceAction
             setTempPoints([interactionState.sliceStartPoint, { x: imageX, y: imageY }]);
             

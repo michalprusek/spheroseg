@@ -1075,37 +1075,6 @@ export default {
         'Diese Bedingungen unterliegen den Gesetzen des Landes, in dem der Dienst gehostet wird, und werden nach diesen ausgelegt. Sie unterwerfen sich unwiderruflich der ausschließlichen Gerichtsbarkeit der Gerichte an diesem Ort.',
     },
     lastUpdated: 'Zuletzt aktualisiert: 7. Januar 2025',
-    title: 'Nutzungsbedingungen',
-    acceptance: {
-      title: '1. Annahme der Bedingungen',
-      paragraph1:
-        'Durch den Zugriff auf oder die Nutzung von SpheroSeg erklären Sie sich mit diesen Nutzungsbedingungen und allen geltenden Gesetzen und Vorschriften einverstanden. Wenn Sie mit einer dieser Bedingungen nicht einverstanden sind, ist Ihnen die Nutzung dieses Dienstes untersagt.',
-    },
-    useLicense: {
-      title: '2. Nutzungslizenz',
-      paragraph1:
-        'Die Erlaubnis wird erteilt, SpheroSeg vorübergehend für persönliche, nicht-kommerzielle oder akademische Forschungszwecke zu nutzen. Dies ist die Gewährung einer Lizenz, keine Eigentumsübertragung.',
-    },
-    dataUsage: {
-      title: '3. Datennutzung',
-      paragraph1:
-        'Alle auf SpheroSeg hochgeladenen Daten bleiben Ihr Eigentum. Wir beanspruchen kein Eigentum an Ihren Inhalten, benötigen jedoch bestimmte Berechtigungen, um den Dienst bereitzustellen.',
-    },
-    limitations: {
-      title: '4. Einschränkungen',
-      paragraph1:
-        'SpheroSeg haftet in keinem Fall für Schäden, die sich aus der Nutzung oder Unfähigkeit zur Nutzung der Plattform ergeben, selbst wenn wir auf die Möglichkeit solcher Schäden hingewiesen wurden.',
-    },
-    revisions: {
-      title: '5. Überarbeitungen und Fehler',
-      paragraph1:
-        'Die auf SpheroSeg erscheinenden Materialien können technische, typografische oder fotografische Fehler enthalten. Wir garantieren nicht, dass die Materialien genau, vollständig oder aktuell sind.',
-    },
-    governingLaw: {
-      title: '6. Geltendes Recht',
-      paragraph1:
-        'Diese Bedingungen unterliegen den Gesetzen des Landes, in dem der Dienst gehostet wird, und Sie unterwerfen sich unwiderruflich der ausschließlichen Gerichtsbarkeit der Gerichte an diesem Ort.',
-    },
   },
   privacyPage: {
     title: 'Datenschutzrichtlinie',
@@ -1164,62 +1133,6 @@ export default {
       paragraph1: 'Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns bitte unter privacy@spheroseg.com.',
     },
     lastUpdated: 'Zuletzt aktualisiert: 7. Januar 2025',
-    title: 'Datenschutzrichtlinie',
-    introduction: {
-      title: '1. Einführung',
-      paragraph1:
-        'Diese Datenschutzrichtlinie erklärt, wie SpheroSeg ("wir", "uns", "unser") Ihre Informationen sammelt, verwendet und teilt, wenn Sie unsere Sphäroid-Segmentierungs- und Analyseplattform nutzen.',
-    },
-    informationWeCollect: {
-      title: '2. Informationen, die wir sammeln',
-      paragraph1:
-        'Wir sammeln Informationen, die Sie uns direkt zur Verfügung stellen, wenn Sie ein Konto erstellen, Bilder hochladen, Projekte erstellen und anderweitig mit unseren Diensten interagieren.',
-    },
-    personalInformation: {
-      title: '2.1 Persönliche Informationen',
-      paragraph1:
-        'Dazu gehören Ihr Name, Ihre E-Mail-Adresse, Institution/Organisation und andere Informationen, die Sie bei der Erstellung eines Kontos oder der Anforderung des Zugangs zu unseren Diensten angeben.',
-    },
-    researchData: {
-      title: '2.2 Forschungsdaten',
-      paragraph1:
-        'Dazu gehören Bilder, die Sie hochladen, Projektdetails, Analyseergebnisse und andere forschungsbezogene Daten, die Sie auf unserer Plattform erstellen oder hochladen.',
-    },
-    usageInformation: {
-      title: '2.3 Nutzungsinformationen',
-      paragraph1:
-        'Wir sammeln Informationen darüber, wie Sie unsere Plattform nutzen, einschließlich Protokolldaten, Geräteinformationen und Nutzungsmuster.',
-    },
-    howWeUse: {
-      title: '3. Wie wir Ihre Informationen verwenden',
-      paragraph1:
-        'Wir verwenden die von uns gesammelten Informationen, um unsere Dienste bereitzustellen, zu warten und zu verbessern, mit Ihnen zu kommunizieren und unseren rechtlichen Verpflichtungen nachzukommen.',
-    },
-    dataSecurity: {
-      title: '4. Datensicherheit',
-      paragraph1:
-        'Wir implementieren angemessene Sicherheitsmaßnahmen, um Ihre persönlichen Informationen und Forschungsdaten vor unbefugtem Zugriff, Änderung, Offenlegung oder Zerstörung zu schützen.',
-    },
-    dataSharing: {
-      title: '5. Datenweitergabe',
-      paragraph1:
-        'Wir verkaufen Ihre persönlichen Informationen oder Forschungsdaten nicht. Wir können Ihre Informationen unter begrenzten Umständen teilen, z.B. mit Ihrer Zustimmung, zur Erfüllung rechtlicher Verpflichtungen oder mit Dienstleistern, die uns beim Betrieb unserer Plattform helfen.',
-    },
-    yourChoices: {
-      title: '6. Ihre Wahlmöglichkeiten',
-      paragraph1:
-        'Sie können auf Ihre Kontoinformationen und Forschungsdaten über Ihre Kontoeinstellungen zugreifen, sie aktualisieren oder löschen. Sie können uns auch kontaktieren, um Zugang, Korrektur oder Löschung persönlicher Informationen zu beantragen, die wir über Sie haben.',
-    },
-    changes: {
-      title: '7. Änderungen dieser Richtlinie',
-      paragraph1:
-        'Wir können diese Datenschutzrichtlinie von Zeit zu Zeit aktualisieren. Wir werden Sie über Änderungen informieren, indem wir die neue Datenschutzrichtlinie auf dieser Seite veröffentlichen und das Datum "Zuletzt aktualisiert" aktualisieren.',
-    },
-    contactUs: {
-      title: '8. Kontaktieren Sie uns',
-      paragraph1: 'Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns bitte unter privacy@spheroseg.com.',
-    },
-    lastUpdated: 'Zuletzt aktualisiert: 1. Juli 2023',
   },
   shortcuts: {
     button: 'Tastenkürzel',
