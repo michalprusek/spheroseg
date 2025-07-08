@@ -165,13 +165,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   logger.debug('Initial user from storage (with persistence):', initialUser);
 
   const [user, setUser] = useState<User | null>(initialUser);
-  // Initialize token from storage with better error handling
+  // Initialize token from storage with better error handling and expiration check
   const getInitialToken = (): string | null => {
     try {
       // First try to get from authService (checks localStorage and cookies)
       const accessToken = getAccessToken();
       if (accessToken) {
         logger.debug('Found access token from authService:', { tokenLength: accessToken.length });
+        
+        // Check if token is expired
+        if (isAccessTokenExpired()) {
+          logger.warn('Found token but it is expired, will need to refresh');
+          // Still return it so we can try to refresh it
+          return accessToken;
+        }
+        
         return accessToken;
       }
       
@@ -266,19 +274,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       setLoading(true);
 
-      // KRITICKÁ OPTIMALIZACE: Pokud máme uživatele a jsme na chráněné stránce,
-      // nebo pokud jsme na přihlašovací stránce, nemusíme inicializovat auth
-      // Toto zabrání zbytečnému ověřování a ztrátě přihlášení při navigaci mezi stránkami
+      // Skip auth initialization only on sign-in/sign-up pages
       if (location.pathname === '/sign-in' || location.pathname === '/sign-up') {
         logger.debug('Skipping auth initialization on auth page');
-        setLoading(false);
-        return;
-      }
-
-      // DŮLEŽITÉ: Pokud už máme platného uživatele, neresetujeme proces inicializace
-      // Tím zabráníme ztrátě přihlášení při refreshi stránky
-      if (user && !location.pathname.startsWith('/sign-')) {
-        logger.debug('Skipping auth re-initialization on protected page with valid user');
         setLoading(false);
         return;
       }
@@ -800,24 +798,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // }
     };
 
-    const handleBeforeUnload = () => {
-      // When window is about to close, clear session if remember me is not checked
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // IMPORTANT: We need to distinguish between page refresh and actual window/tab close
+      // Unfortunately, there's no reliable way to detect this in modern browsers
+      // So we'll use a different approach:
+      
+      // Don't clear tokens on page refresh - only clear them when:
+      // 1. User explicitly logs out
+      // 2. Tokens expire
+      // 3. Server returns 401 unauthorized
+      
+      // For now, we'll disable automatic token clearing on beforeunload
+      // This prevents the issue where tokens are cleared on page refresh
+      
+      // OLD LOGIC (disabled to fix refresh issue):
+      // if (!shouldPersistSession()) {
+      //   logger.info('Remember me not checked, clearing session on window close');
+      //   removeTokens();
+      //   sessionStorage.removeItem('spheroseg_persisted_user');
+      // }
+      
+      // NEW LOGIC: Mark that we're unloading, but don't clear tokens
       if (!shouldPersistSession()) {
-        logger.info('Remember me not checked, clearing session on window close');
-        removeTokens();
-        sessionStorage.removeItem('spheroseg_persisted_user');
+        // Just log that we're in non-persistent mode, but don't clear tokens
+        logger.debug('Page unloading in non-persistent session mode');
+        // We'll rely on token expiration and server validation instead
       }
     };
 
     const handleVisibilityChange = () => {
       // When tab becomes visible again
-      if (document.visibilityState === 'visible' && !shouldPersistSession() && user) {
-        // Check if tokens still exist
-        const token = getAccessToken();
-        if (!token) {
-          logger.info('No token found when tab became visible, logging out');
-          setUserWithStorage(null);
-          setToken(null);
+      if (document.visibilityState === 'visible' && user) {
+        // Only check token validity if we're in non-persistent mode
+        if (!shouldPersistSession()) {
+          const token = getAccessToken();
+          if (!token) {
+            logger.info('No token found when tab became visible, logging out');
+            setUserWithStorage(null);
+            setToken(null);
+          } else if (isAccessTokenExpired()) {
+            // Token expired while tab was hidden
+            logger.info('Token expired while tab was hidden, attempting refresh');
+            refreshAccessToken().then((success) => {
+              if (!success) {
+                logger.info('Token refresh failed, logging out');
+                setUserWithStorage(null);
+                setToken(null);
+              }
+            });
+          }
         }
       }
     };

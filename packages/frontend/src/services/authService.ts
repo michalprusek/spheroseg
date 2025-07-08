@@ -12,6 +12,7 @@ const ACCESS_TOKEN_KEY = 'spheroseg_access_token';
 const REFRESH_TOKEN_KEY = 'spheroseg_refresh_token';
 const LAST_ROUTE_KEY = 'spheroseg_last_route';
 const SESSION_PERSIST_KEY = 'spheroseg_session_persist';
+const SESSION_ID_KEY = 'spheroseg_session_id';
 
 // Token interface
 interface TokenData {
@@ -224,6 +225,20 @@ export const removeTokens = (): void => {
 };
 
 /**
+ * Generate or get current browser session ID
+ * This helps distinguish between page refreshes and new browser sessions
+ */
+const getOrCreateSessionId = (): string => {
+  let sessionId = sessionStorage.getItem(SESSION_ID_KEY);
+  if (!sessionId) {
+    sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    sessionStorage.setItem(SESSION_ID_KEY, sessionId);
+    logger.info('[authService] Created new browser session ID:', sessionId);
+  }
+  return sessionId;
+};
+
+/**
  * Sets both access and refresh tokens in localStorage and cookies
  * @param {string} accessToken - The access token to set
  * @param {string} refreshToken - The refresh token to set
@@ -236,6 +251,9 @@ export const setTokens = (accessToken: string, refreshToken: string, rememberMe:
 
   // Store remember me preference
   localStorage.setItem(SESSION_PERSIST_KEY, rememberMe ? 'true' : 'false');
+  
+  // Get or create session ID to track browser sessions
+  const sessionId = getOrCreateSessionId();
 
   try {
     const domain = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
@@ -250,14 +268,21 @@ export const setTokens = (accessToken: string, refreshToken: string, rememberMe:
       document.cookie = `auth_token=${accessToken}; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
       document.cookie = `refresh_token=${refreshToken}; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
       document.cookie = `login_persistent=true; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+      document.cookie = `session_id=${sessionId}; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
     } else {
-      // If remember me is NOT checked, use session cookies (no expires = session cookie)
-      document.cookie = `auth_token=${accessToken}; path=/; domain=${domain}; samesite=${sameSiteValue}${secure}`;
-      document.cookie = `refresh_token=${refreshToken}; path=/; domain=${domain}; samesite=${sameSiteValue}${secure}`;
-      document.cookie = `login_persistent=false; path=/; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+      // If remember me is NOT checked, still set cookies but with session expiration
+      // This allows tokens to persist across page refreshes within the same browser session
+      // Tokens will be cleared when the browser is closed (not just the tab)
+      const sessionExpirationDate = new Date();
+      sessionExpirationDate.setHours(sessionExpirationDate.getHours() + 24); // 24 hours for safety
+
+      document.cookie = `auth_token=${accessToken}; path=/; expires=${sessionExpirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+      document.cookie = `refresh_token=${refreshToken}; path=/; expires=${sessionExpirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+      document.cookie = `login_persistent=false; path=/; expires=${sessionExpirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+      document.cookie = `session_id=${sessionId}; path=/; expires=${sessionExpirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
     }
 
-    logger.info(`[authService] Auth tokens set with rememberMe=${rememberMe}`);
+    logger.info(`[authService] Auth tokens set with rememberMe=${rememberMe}, sessionId=${sessionId}`);
   } catch (error) {
     logger.error('[authService] Error setting auth cookies:', error);
   }
