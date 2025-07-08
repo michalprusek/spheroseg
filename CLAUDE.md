@@ -204,9 +204,24 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 ### Recently Fixed (2025-07-08)
 1. **Segmentation Queue Enum Mismatch**: Fixed issue where code used 'pending' but database expected 'queued' status
    - Updated `segmentationQueueService.ts` and `segmentation.ts` routes
+2. **Image Status System Overhaul**: Complete refactor of image status system
+   - Changed from 'pending' to: 'queued', 'processing', 'completed', 'without_segmentation'
+   - Fixed TIFF/BMP thumbnail generation using Sharp
+   - Implemented real-time status updates via WebSocket
+   - Fixed progress bar updates during image upload
+3. **Internationalization**: Replaced Czech hardcoded messages with English
+   - Fixed messages in polygon slicing, image actions, and status displays
+   - Updated all user-facing text to use i18n translations
+4. **Polygon Slicing**: Fixed functionality that was stuck at step 3
+   - Created missing `polygonOperations.ts` module
+   - Fixed polygon splitting algorithm implementation
+   - Replaced Czech error messages with English
 
 ### Current Issues
-1. **High Memory Usage**: Backend showing 89% memory utilization, may need container memory limit increase
-2. **Authentication Flow**: Some API endpoints returning 401 even after successful login
-3. **Project Creation**: Validation errors when creating new projects via UI
-4. **Polygon Slicing**: Feature reportedly stuck at step 3 (cutting polygon) - needs investigation
+1. **High Memory Usage**: Backend showing 92.5% memory utilization
+   - May need container memory limit increase or optimization
+2. **TypeScript Errors**: Multiple type errors in test files and some components
+   - `toastService.ts` had to be renamed to `.tsx` due to JSX usage
+   - Various test files have outdated type definitions
+3. **ESLint Configuration**: Backend ESLint config missing dependencies
+   - `@typescript-eslint/recommended` config not found
