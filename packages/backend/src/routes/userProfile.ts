@@ -25,6 +25,11 @@ router.post('/avatar',
   userProfileController.uploadAvatarHandler
 );
 router.delete('/avatar', sensitiveOperationsLimiter, userProfileController.deleteAvatar);
+router.post('/avatar/preview',
+  standardLimiter,
+  userProfileController.uploadAvatar,
+  userProfileController.generateAvatarPreview
+);
 
 // Settings routes
 router.get('/settings', standardLimiter, userProfileController.getUserSettings);

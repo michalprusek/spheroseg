@@ -91,6 +91,13 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
 
   // Watch for slice completion - when we have 2 points in Slice mode
   useEffect(() => {
+    console.log('[SegmentationEditorV2] Slice mode check:', {
+      editMode,
+      tempPointsLength: tempPoints.length,
+      selectedPolygonId,
+      tempPoints
+    });
+    
     if (editMode === EditMode.Slice && tempPoints.length === 2 && selectedPolygonId) {
       console.log('[SegmentationEditorV2] Slice points ready, triggering slice action');
       
@@ -99,6 +106,8 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
       
       if (success) {
         console.log('[SegmentationEditorV2] Slice action completed successfully');
+      } else {
+        console.log('[SegmentationEditorV2] Slice action failed');
       }
     }
   }, [editMode, tempPoints, selectedPolygonId, handleSliceAction]);

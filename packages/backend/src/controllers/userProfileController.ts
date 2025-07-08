@@ -6,6 +6,7 @@ import { Response } from 'express';
 import { Pool } from 'pg';
 import multer from 'multer';
 import path from 'path';
+import sharp from 'sharp';
 import userProfileService from '../services/userProfileService';
 import logger from '../utils/logger';
 import db from '../db';
@@ -326,6 +327,33 @@ export const batchUpdateUserSettings = async (req: AuthenticatedRequest, res: Re
   }
 };
 
+/**
+ * Generate preview for avatar (handles TIFF conversion)
+ */
+export const generateAvatarPreview = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Convert TIFF/BMP to PNG using sharp
+    const convertedBuffer = await sharp(req.file.buffer)
+      .png()
+      .resize(400, 400, { fit: 'inside', withoutEnlargement: true })
+      .toBuffer();
+
+    // Set appropriate headers
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'private, max-age=3600');
+    
+    // Send the converted image
+    res.send(convertedBuffer);
+  } catch (error) {
+    logger.error('Error generating avatar preview:', error);
+    res.status(500).json({ error: 'Failed to generate preview' });
+  }
+};
+
 export default {
   getUserProfile,
   getUserProfileWithSettings,
@@ -338,5 +366,6 @@ export default {
   setUserSetting,
   deleteUserSetting,
   batchUpdateUserSettings,
-  uploadAvatar
+  uploadAvatar,
+  generateAvatarPreview
 };

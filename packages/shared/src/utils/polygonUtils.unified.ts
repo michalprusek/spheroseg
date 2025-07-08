@@ -397,11 +397,19 @@ export const calculateLineSegmentIntersection = (
   const ub = (((x2 - x1) * (y1 - y3)) - ((y2 - y1) * (x1 - x3))) / denominator;
 
   // Only check if intersection is within the line segment (not the infinite line)
+  // BUT we should treat the slice line as infinite for proper slicing
+  // So we only check ub (parameter for the polygon edge)
   if (ub >= 0 && ub <= 1) {
-    return {
+    const intersection = {
       x: x1 + ua * (x2 - x1),
       y: y1 + ua * (y2 - y1)
     };
+    console.log('[calculateLineSegmentIntersection] Intersection found:', {
+      ua,
+      ub,
+      intersection
+    });
+    return intersection;
   }
 
   return null;
@@ -419,6 +427,12 @@ export const calculateLinePolygonIntersections = (
   lineEnd: Point, 
   polygon: Point[]
 ): Intersection[] => {
+  console.log('[calculateLinePolygonIntersections] Called with:', {
+    lineStart,
+    lineEnd,
+    polygonPoints: polygon.length
+  });
+  
   const intersections: Intersection[] = [];
 
   for (let i = 0; i < polygon.length; i++) {
@@ -429,6 +443,7 @@ export const calculateLinePolygonIntersections = (
     );
 
     if (intersection) {
+      console.log(`[calculateLinePolygonIntersections] Found intersection at edge ${i}:`, intersection);
       // Calculate distance from line start for sorting
       const dist = distance(lineStart, intersection);
 
@@ -592,12 +607,21 @@ export const slicePolygon = (
   sliceStart: Point, 
   sliceEnd: Point
 ): Point[][] => {
+  console.log('[slicePolygon unified] Called with:', {
+    polygonPoints: polygon.length,
+    sliceStart,
+    sliceEnd
+  });
+  
   const intersections = calculateLinePolygonIntersections(
     sliceStart, sliceEnd, polygon
   );
 
+  console.log('[slicePolygon unified] Found intersections:', intersections.length, intersections);
+
   // Need exactly 2 intersections to slice properly
   if (intersections.length !== 2) {
+    console.log('[slicePolygon unified] Wrong number of intersections, returning original polygon');
     return [polygon]; // Return original polygon
   }
 
