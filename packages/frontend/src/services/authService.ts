@@ -55,6 +55,13 @@ export const getAccessToken = (validate = false, removeIfInvalid = false): strin
 
     // Try to get token from localStorage first
     let token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    
+    // Log what we found in localStorage for debugging
+    if (token) {
+      logger.debug('[authService] Found token in localStorage:', { tokenLength: token.length, tokenPrefix: token.substring(0, 20) + '...' });
+    } else {
+      logger.debug('[authService] No token found in localStorage');
+    }
 
     // If no token in localStorage, try to get from cookie
     if (!token) {
@@ -68,7 +75,10 @@ export const getAccessToken = (validate = false, removeIfInvalid = false): strin
     }
 
     // If still no token found, return null
-    if (!token) return null;
+    if (!token) {
+      logger.debug('[authService] No token found in localStorage or cookies');
+      return null;
+    }
 
     // If validation is requested, check token format
     if (validate) {

@@ -16,7 +16,7 @@ export interface ApiResponse {
 }
 
 class AuthApiService {
-  private baseUrl = '/api/auth';
+  private baseUrl = '/auth';
 
   async changePassword(data: ChangePasswordRequest): Promise<ApiResponse> {
     try {

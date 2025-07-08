@@ -978,6 +978,7 @@ export default {
     accountDeleteSuccess: 'Account deleted successfully',
     accountDeleteError: 'Error deleting account',
     passwordChanged: 'Password changed',
+    changingPassword: 'Changing Password...',
     confirmPasswordLabel: 'Confirm Password',
     changePasswordDescription: 'Change your password to keep your account secure',
     dangerZoneDescription: 'These actions are irreversible and will permanently remove your data',

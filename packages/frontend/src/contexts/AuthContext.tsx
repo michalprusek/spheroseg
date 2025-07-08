@@ -165,9 +165,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   logger.debug('Initial user from storage (with persistence):', initialUser);
 
   const [user, setUser] = useState<User | null>(initialUser);
-  const [token, setToken] = useState<string | null>(
-    getAccessToken() || document.cookie.match(/auth_token=([^;]+)/)?.[1] || null,
-  );
+  // Initialize token from storage with better error handling
+  const getInitialToken = (): string | null => {
+    try {
+      // First try to get from authService (checks localStorage and cookies)
+      const accessToken = getAccessToken();
+      if (accessToken) {
+        logger.debug('Found access token from authService:', { tokenLength: accessToken.length });
+        return accessToken;
+      }
+      
+      // Fallback to direct cookie check
+      const cookieToken = document.cookie.match(/auth_token=([^;]+)/)?.[1];
+      if (cookieToken) {
+        logger.debug('Found access token from cookie:', { tokenLength: cookieToken.length });
+        return cookieToken;
+      }
+      
+      logger.warn('No access token found during initialization');
+      return null;
+    } catch (error) {
+      logger.error('Error getting initial token:', error);
+      return null;
+    }
+  };
+  
+  const [token, setToken] = useState<string | null>(getInitialToken());
   const [loading, setLoading] = useState(true);
 
   // Log auth state changes for debugging
@@ -266,6 +289,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (currentToken) {
         logger.info('Found authentication tokens, verifying...');
+        
+        // IMPORTANT: Set the token state immediately to ensure it's available for API calls
+        setToken(currentToken);
 
         // Check if access token is expired and refresh token is available
         if (isAccessTokenExpired() && currentRefreshToken) {
@@ -282,7 +308,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           // Update token state with newly refreshed token
-          setToken(getAccessToken());
+          const newToken = getAccessToken();
+          setToken(newToken);
         }
 
         try {

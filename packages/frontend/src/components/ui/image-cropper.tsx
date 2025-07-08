@@ -31,10 +31,10 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   const imgRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
-    width: 90,
-    height: 90,
-    x: 5,
-    y: 5,
+    width: 80,
+    height: 80,
+    x: 10,
+    y: 10,
   });
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
   const [zoom, setZoom] = useState<number>(1);
@@ -127,31 +127,47 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
 
   return (
     <div className="flex flex-col items-center space-y-4">
-      <div
-        className="relative max-w-full overflow-hidden"
-        style={{
-          transform: `scale(${zoom})`,
-          transition: 'transform 0.3s ease',
-        }}
-      >
-        <ReactCrop
-          crop={crop}
-          onChange={(c) => setCrop(c)}
-          onComplete={(c) => setCompletedCrop(c)}
-          aspect={aspectRatio === 'square' ? 1 : aspectRatio}
-          circularCrop={cropShape === 'round'}
+      <div className="relative">
+        <div
+          className="relative max-w-full overflow-hidden"
+          style={{
+            transform: `scale(${zoom})`,
+            transition: 'transform 0.3s ease',
+          }}
         >
-          <img
-            ref={imgRef}
-            src={src}
-            alt="Crop preview"
-            style={{
-              transform: `rotate(${rotation}deg)`,
-              maxWidth: '100%',
-              transition: 'transform 0.3s ease',
-            }}
-          />
-        </ReactCrop>
+          <ReactCrop
+            crop={crop}
+            onChange={(c) => setCrop(c)}
+            onComplete={(c) => setCompletedCrop(c)}
+            aspect={aspectRatio === 'square' ? 1 : aspectRatio}
+            circularCrop={cropShape === 'round'}
+          >
+            <img
+              ref={imgRef}
+              src={src}
+              alt="Crop preview"
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                maxWidth: '100%',
+                transition: 'transform 0.3s ease',
+              }}
+            />
+          </ReactCrop>
+        </div>
+        
+        {/* Rotate button positioned absolutely in top-right corner */}
+        {showRotation && (
+          <Button 
+            type="button" 
+            variant="secondary" 
+            size="icon" 
+            onClick={handleRotate} 
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white/90 backdrop-blur-sm shadow-md"
+            title="Rotate image"
+          >
+            <RotateCw className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {showControls && (
@@ -169,13 +185,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
               />
               <ZoomIn className="h-4 w-4 text-gray-500" />
             </div>
-          )}
-
-          {showRotation && (
-            <Button type="button" variant="outline" size="sm" onClick={handleRotate} className="flex items-center">
-              <RotateCw className="mr-2 h-4 w-4" />
-              Rotate
-            </Button>
           )}
 
           <Button type="button" onClick={generateCroppedImage} className="w-full">

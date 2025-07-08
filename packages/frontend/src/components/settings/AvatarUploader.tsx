@@ -137,7 +137,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
     if (onUploadRequest && previewUrl) {
       onUploadRequest(() => uploadAvatar());
     }
-  }, [previewUrl, onUploadRequest]);
+  }, [previewUrl]); // Remove onUploadRequest from dependencies to avoid infinite loop
 
   // Handle avatar removal
   const handleRemoveAvatar = async () => {
@@ -183,7 +183,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
         onAvatarChange(storedAvatarUrl, false);
       }
     }
-  }, [currentAvatarUrl, previewUrl, onAvatarChange]);
+  }, [currentAvatarUrl]); // Remove dependencies that can cause loops
 
   // Clean up object URLs when component unmounts
   useEffect(() => {
@@ -259,9 +259,11 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
               <div className="max-h-[500px] overflow-auto">
                 <ImageCropper
                   src={cropperImageSrc}
-                  aspectRatio="square"
+                  aspectRatio={1}
                   cropShape="round"
                   showControls={true}
+                  showZoom={true}
+                  showRotation={true}
                   onComplete={handleCropComplete}
                 />
               </div>

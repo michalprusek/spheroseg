@@ -113,6 +113,14 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    // Log all headers for debugging
+    logger.debug('Request headers received:', {
+      authorization: req.headers.authorization,
+      allHeaders: Object.keys(req.headers),
+      url: req.url,
+      method: req.method
+    });
+    
     const { user, metadata } = await extractAndVerifyToken(
       req.headers.authorization,
       TokenType.ACCESS

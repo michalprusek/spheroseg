@@ -6,6 +6,7 @@ import { Pool, PoolClient } from 'pg';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import sharp from 'sharp';
 import logger from '../utils/logger';
 
 export interface UserProfile {
@@ -271,13 +272,27 @@ export const saveAvatarFile = async (
     const avatarsDir = path.join(uploadsDir, 'avatars');
     await fs.mkdir(avatarsDir, { recursive: true });
 
-    // Generate unique filename
-    const fileExtension = path.extname(file.originalname);
-    const filename = `${userId}_${Date.now()}${fileExtension}`;
+    // Generate unique filename - always use .jpg for processed avatars
+    const filename = `${userId}_${Date.now()}.jpg`;
     const filePath = path.join(avatarsDir, filename);
 
-    // Save file to disk
-    await fs.writeFile(filePath, file.buffer);
+    // Process and optimize image with Sharp
+    try {
+      await sharp(file.buffer)
+        .resize(512, 512, {
+          fit: 'cover',
+          position: 'center'
+        })
+        .jpeg({
+          quality: 90,
+          progressive: true
+        })
+        .toFile(filePath);
+    } catch (sharpError) {
+      logger.error('Error processing avatar image with Sharp:', { error: sharpError });
+      // Fallback - save original file
+      await fs.writeFile(filePath, file.buffer);
+    }
 
     // Remove old avatar file if exists
     const oldAvatarResult = await client.query(

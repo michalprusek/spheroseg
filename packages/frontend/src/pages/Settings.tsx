@@ -53,7 +53,7 @@ const Settings = () => {
         console.log('Making API request to /users/me');
 
         // Fetch profile using apiClient with explicit error handling
-        const response = await apiClient.get<UserProfile>('/api/users/me');
+        const response = await apiClient.get<UserProfile>('/users/me');
 
         console.log('Profile fetch successful:', response.status);
         setProfile(response.data);
