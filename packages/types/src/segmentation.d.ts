@@ -2,13 +2,14 @@
  * Segmentation specific types
  */
 import { Polygon } from './polygon';
-export type ImageStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'saving';
+export type ImageStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'saving' | 'without_segmentation';
 export declare enum SegmentationStatus {
-    PENDING = "pending",
+    QUEUED = "queued",
     PROCESSING = "processing",
     COMPLETED = "completed",
     FAILED = "failed",
-    SAVING = "saving"
+    SAVING = "saving",
+    WITHOUT_SEGMENTATION = "without_segmentation"
 }
 export interface SegmentationData {
     id: string;

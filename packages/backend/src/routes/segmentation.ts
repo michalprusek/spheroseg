@@ -69,7 +69,7 @@ router.get(
         // If no segmentation result found, return an empty result instead of 404
         const emptyResult = {
           image_id: imageId,
-          status: 'pending',
+          status: 'without_segmentation',
           result_data: {
             polygons: [],
           },
