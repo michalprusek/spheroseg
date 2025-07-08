@@ -50,15 +50,17 @@ router.get(
     }
 
     try {
-      // Verify user has access to the image via project ownership
+      // Verify user has access to the image via project ownership and fetch image dimensions
       const imageCheck = await pool.query(
-        'SELECT i.id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
+        'SELECT i.id, i.width, i.height FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
         [imageId, userId],
       );
       if (imageCheck.rows.length === 0) {
         res.status(404).json({ message: 'Image not found or access denied' });
         return;
       }
+
+      const imageInfo = imageCheck.rows[0];
 
       // Fetch segmentation result
       const result = await pool.query('SELECT * FROM segmentation_results WHERE image_id = $1', [imageId]);
@@ -72,6 +74,8 @@ router.get(
             polygons: [],
           },
           polygons: [],
+          imageWidth: imageInfo.width,
+          imageHeight: imageInfo.height,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -88,6 +92,10 @@ router.get(
       } else if (!segmentationResult.polygons) {
         segmentationResult.polygons = [];
       }
+
+      // Add image dimensions to the result
+      segmentationResult.imageWidth = imageInfo.width;
+      segmentationResult.imageHeight = imageInfo.height;
 
       res.status(200).json(segmentationResult);
     } catch (error) {
