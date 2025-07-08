@@ -587,7 +587,7 @@ class SegmentationQueueService extends EventEmitter {
       const checkResult = await client.query(
         `
         SELECT id, status FROM segmentation_tasks
-        WHERE image_id = $1 AND status IN ('pending', 'processing')
+        WHERE image_id = $1 AND status IN ('queued', 'processing')
       `,
         [imageId],
       );
@@ -673,7 +673,7 @@ class SegmentationQueueService extends EventEmitter {
         `
         UPDATE segmentation_tasks
         SET status = 'cancelled', updated_at = NOW()
-        WHERE image_id = $1 AND status IN ('pending', 'processing')
+        WHERE image_id = $1 AND status IN ('queued', 'processing')
         RETURNING id
       `,
         [imageId],
