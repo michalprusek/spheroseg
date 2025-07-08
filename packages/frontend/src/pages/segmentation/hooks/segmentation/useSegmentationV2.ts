@@ -151,6 +151,24 @@ export const useSegmentationV2 = (
   const abortControllerRef = useRef<AbortController | null>(null);
   const backgroundRefreshControllerRef = useRef<AbortController | null>(null);
   const hasFetchedRef = useRef<Set<string>>(new Set());
+  
+  // Refs for frequently changing values to prevent re-render loops
+  const segmentationDataRef = useRef<SegmentationData | null>(segmentationData);
+  const interactionStateRef = useRef<InteractionState>(interactionState);
+  const transformRef = useRef<TransformState>(transform);
+  
+  // Update refs when state changes
+  useEffect(() => {
+    segmentationDataRef.current = segmentationData;
+  }, [segmentationData]);
+  
+  useEffect(() => {
+    interactionStateRef.current = interactionState;
+  }, [interactionState]);
+  
+  useEffect(() => {
+    transformRef.current = transform;
+  }, [transform]);
 
   // Function to refresh segmentation data in the background
   const refreshSegmentationInBackground = async (segmentationId: string) => {
@@ -561,24 +579,29 @@ export const useSegmentationV2 = (
     ],
   );
 
-  // Function to handle mouse move
+  // Function to handle mouse move - optimized to prevent re-render loops
   const onMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
+      // Use refs for frequently changing values to prevent callback recreation
+      const currentSegmentationData = segmentationDataRef.current;
+      const currentInteractionState = interactionStateRef.current;
+      const currentTransform = transformRef.current;
+      
       // If we're dragging a vertex, use updateDuringDrag for the new dragging system
       // Otherwise use setSegmentationDataWithHistory for normal operations
-      const updateFn = interactionState.isDraggingVertex
-        ? setSegmentationDataWithHistory   // Normal case - still needed for non-drag operations
+      const updateFn = currentInteractionState.isDraggingVertex
+        ? updateDuringDrag
         : setSegmentationDataWithHistory;
 
-      // Call the main mouse move handler with all dependencies
+      // Call the main mouse move handler with current values from refs
       handleMouseMove(
         e,
         editMode,
-        interactionState,
-        segmentationData,
+        currentInteractionState,
+        currentSegmentationData,
         selectedPolygonId,
         tempPoints,
-        transform,
+        currentTransform,
         canvasRef,
         isShiftPressed,
         lastAutoAddedPoint,
@@ -592,12 +615,10 @@ export const useSegmentationV2 = (
       );
     },
     [
+      // Only include stable dependencies that don't change frequently
       editMode,
-      interactionState,
-      segmentationData,
       selectedPolygonId,
       tempPoints,
-      transform,
       canvasRef,
       isShiftPressed,
       lastAutoAddedPoint,

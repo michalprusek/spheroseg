@@ -20,7 +20,7 @@ export const SegmentationPage: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   
-  console.log('SegmentationPage rendering with:', { projectId, imageId });
+  // Remove console.log to reduce noise
 
   // Create a ref for the canvas
   const canvasRef = useRef<HTMLDivElement>(null);
