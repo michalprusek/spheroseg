@@ -389,7 +389,10 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       });
 
       newSocket.on('disconnect', (reason) => {
-        console.warn('WebSocket disconnected:', reason);
+        // Only log disconnect if it's not a normal client disconnect
+        if (reason !== 'io client disconnect' && reason !== 'io server disconnect') {
+          console.warn('WebSocket disconnected:', reason);
+        }
         // Pokud se odpojíme, aktualizujeme data z API
         updateQueueStatus();
       });

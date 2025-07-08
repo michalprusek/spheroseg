@@ -38,6 +38,95 @@ class UserProfileService {
   private readonly baseUrl = '/api/user-profile';
 
   /**
+   * Safely set item in localStorage with quota error handling
+   */
+  private safeSetLocalStorage(key: string, value: string): boolean {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (error) {
+      if (error instanceof DOMException && 
+          (error.name === 'QuotaExceededError' || error.code === 22)) {
+        console.warn(`[UserProfileService] localStorage quota exceeded for key: ${key}. Attempting cleanup...`);
+        
+        // Try to clean up old data
+        this.cleanupLocalStorage();
+        
+        // Try one more time after cleanup
+        try {
+          localStorage.setItem(key, value);
+          return true;
+        } catch (retryError) {
+          console.error(`[UserProfileService] Failed to set ${key} even after cleanup:`, retryError);
+          return false;
+        }
+      }
+      console.error(`[UserProfileService] Error setting localStorage item ${key}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Clean up localStorage to free space
+   */
+  private cleanupLocalStorage(): void {
+    try {
+      // Remove old cached data
+      const keysToCheck = Object.keys(localStorage);
+      const now = Date.now();
+      
+      keysToCheck.forEach(key => {
+        // Remove old image cache entries (older than 24 hours)
+        if (key.startsWith('image-cache-')) {
+          try {
+            const data = localStorage.getItem(key);
+            if (data) {
+              const parsed = JSON.parse(data);
+              if (!parsed.timestamp || now - parsed.timestamp > 24 * 60 * 60 * 1000) {
+                localStorage.removeItem(key);
+                console.log(`[UserProfileService] Removed old cache entry: ${key}`);
+              }
+            }
+          } catch (e) {
+            // If we can't parse it, remove it
+            localStorage.removeItem(key);
+          }
+        }
+        
+        // Remove old uploaded images (older than 7 days)
+        if (key.startsWith('spheroseg_uploaded_images_')) {
+          try {
+            const data = localStorage.getItem(key);
+            if (data) {
+              const images = JSON.parse(data);
+              const filteredImages = images.filter((img: any) => {
+                const createdAt = img.createdAt || img.uploadedAt;
+                if (!createdAt) return true; // Keep if no timestamp
+                return now - new Date(createdAt).getTime() < 7 * 24 * 60 * 60 * 1000;
+              });
+              
+              if (filteredImages.length < images.length) {
+                try {
+                  localStorage.setItem(key, JSON.stringify(filteredImages));
+                  console.log(`[UserProfileService] Cleaned up ${images.length - filteredImages.length} old images from ${key}`);
+                } catch (e) {
+                  // If we can't save the filtered list, remove the whole key
+                  localStorage.removeItem(key);
+                  console.log(`[UserProfileService] Removed entire key ${key} due to quota issues`);
+                }
+              }
+            }
+          } catch (e) {
+            console.error(`[UserProfileService] Error cleaning up ${key}:`, e);
+          }
+        }
+      });
+    } catch (error) {
+      console.error('[UserProfileService] Error during localStorage cleanup:', error);
+    }
+  }
+
+  /**
    * Get user profile
    */
   async getUserProfile(): Promise<UserProfile | null> {
@@ -234,8 +323,9 @@ class UserProfileService {
         const dbValueStr = JSON.stringify(setting.value);
         
         if (currentLocalValue !== dbValueStr) {
-          localStorage.setItem(localStorageKey, dbValueStr);
-          console.log(`[UserProfileService] Updated localStorage ${localStorageKey} with DB value:`, setting.value);
+          if (this.safeSetLocalStorage(localStorageKey, dbValueStr)) {
+            console.log(`[UserProfileService] Updated localStorage ${localStorageKey} with DB value:`, setting.value);
+          }
         }
         
         return setting.value;
@@ -243,8 +333,9 @@ class UserProfileService {
         // Check if localStorage already has a value before setting default
         const existingValue = localStorage.getItem(localStorageKey);
         if (!existingValue) {
-          localStorage.setItem(localStorageKey, JSON.stringify(defaultValue));
-          console.log(`[UserProfileService] Set default value for ${localStorageKey}:`, defaultValue);
+          if (this.safeSetLocalStorage(localStorageKey, JSON.stringify(defaultValue))) {
+            console.log(`[UserProfileService] Set default value for ${localStorageKey}:`, defaultValue);
+          }
         }
         
         // Try to set default in database but don't fail if it doesn't work

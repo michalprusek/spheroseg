@@ -514,8 +514,7 @@ const router = createBrowserRouter(routes, {
     v7_fetcherPersist: true,
     v7_partialHydration: true,
     v7_skipActionErrorRevalidation: true,
-    // Disable v7_startTransition until we upgrade to React Router v7
-    // v7_startTransition: true,
+    v7_startTransition: true,
   },
 });
 
