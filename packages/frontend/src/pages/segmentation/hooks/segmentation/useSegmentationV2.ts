@@ -880,6 +880,7 @@ export const useSegmentationV2 = (
     setSegmentationDataWithHistory,
     updateSegmentationWithoutHistory, // Přidáno pro potřeby přímé manipulace bez historie
     handleSave,
+    handleResegment,
     undo,
     redo,
     fetchData,

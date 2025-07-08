@@ -984,41 +984,54 @@ router.get(
       const { runningTasks, pendingTasks } = queueStatus;
 
       // Get image details for running tasks, filtered by project
-      const imagesQuery = await pool.query(
-        `SELECT i.id, i.name
-       FROM images i
-       WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,
+      // Note: runningTasks contains segmentation_task IDs, not image IDs
+      const runningImagesQuery = await pool.query(
+        `SELECT DISTINCT i.id, i.name, st.id as task_id
+         FROM segmentation_tasks st
+         INNER JOIN images i ON st.image_id = i.id
+         WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2`,
         [runningTasks, projectId],
       );
 
       // Map the results to the expected format
-      const processingImages = imagesQuery.rows.map((image) => ({
-        id: image.id,
-        name: image.name,
+      const processingImages = runningImagesQuery.rows.map((row) => ({
+        id: row.id,
+        name: row.name,
         projectId: projectId,
       }));
 
+      // Get the actual running task IDs for this project
+      const projectRunningTasks = runningImagesQuery.rows.map((row) => row.task_id);
+
       // Get queued images for this project
-      // Since we don't have project info in the queue, we need to query the database
+      // Note: pendingTasks contains segmentation_task IDs, not image IDs
       let projectQueuedTasks: string[] = [];
+      let queuedImageDetails: any[] = [];
       if (pendingTasks && pendingTasks.length > 0) {
-        const queuedImagesQuery = await pool.query(
-          `SELECT i.id
-         FROM images i
-         WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,
+        const queuedQuery = await pool.query(
+          `SELECT DISTINCT i.id, i.name, st.id as task_id
+           FROM segmentation_tasks st
+           INNER JOIN images i ON st.image_id = i.id
+           WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2`,
           [pendingTasks, projectId],
         );
 
-        projectQueuedTasks = queuedImagesQuery.rows.map((row) => row.id);
+        projectQueuedTasks = queuedQuery.rows.map((row) => row.task_id);
+        queuedImageDetails = queuedQuery.rows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          projectId: projectId,
+        }));
       }
 
       // Return project-specific queue status
       res.status(200).json({
         queueLength: projectQueuedTasks.length,
-        runningTasks: processingImages.map((img) => img.id),
+        runningTasks: projectRunningTasks, // Use the filtered task IDs
         queuedTasks: projectQueuedTasks,
         pendingTasks: projectQueuedTasks, // Include both for compatibility
         processingImages,
+        queuedImages: queuedImageDetails, // Include queued image details
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

@@ -24,9 +24,6 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
   // Use translation
   const { t } = useTranslation();
 
-  // State for resegmentation
-  const [isResegmenting, setIsResegmenting] = useState(false);
-
   const {
     imageData,
     segmentationData,
@@ -38,6 +35,7 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
     interactionState,
     isLoading,
     isSaving,
+    isResegmenting,
     canUndo,
     canRedo,
     setEditMode,
@@ -49,6 +47,7 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
     fetchData: fetchSegmentationData,
     setSegmentationDataWithHistory,
     handleSave,
+    handleResegment,
     undo,
     redo,
     onMouseDown: handleMouseDown,
@@ -121,46 +120,8 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
     });
   };
 
-  // Handle resegmentation with neural network
-  const handleResegment = async () => {
-    if (!projectId || !imageId || !imageData) {
-      toast.error(t('segmentation.resegment.error.missingData'));
-      return;
-    }
-
-    try {
-      setIsResegmenting(true);
-
-      // Call the API to trigger resegmentation
-      const response = await apiClient.post(`/api/projects/${projectId}/images/${imageId}/segment`, {
-        force: true, // Force resegmentation even if segmentation already exists
-      });
-
-      // Axios throws an error for non-2xx responses, so no need to check response.ok
-      // Check if the segmentation was successful
-      if (response.data.success) {
-        toast.success(t('segmentation.resegment.success'));
-
-        // Reload the segmentation data without refreshing the page
-        // We'll use a small delay to allow the server to process the segmentation
-        setTimeout(() => {
-          // Fetch the updated segmentation data
-          fetchSegmentationData();
-        }, 1000);
-      } else {
-        toast.error(t('segmentation.resegment.error.failed'));
-      }
-    } catch (error) {
-      console.error('Error during resegmentation:', error);
-      toast.error(
-        t('segmentation.resegment.error.exception', {
-          error: (error as Error).message,
-        }),
-      );
-    } finally {
-      setIsResegmenting(false);
-    }
-  };
+  // Note: handleResegment is now provided by the useSegmentationV2 hook
+  // We don't need to define it here anymore
 
   if (isLoading) {
     return (

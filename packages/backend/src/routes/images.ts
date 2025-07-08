@@ -1336,4 +1336,146 @@ router.get(
   }
 );
 
+// PUT /api/images/:imageId/segmentation - Receive segmentation results from ML service
+router.put(
+  '/:imageId/segmentation',
+  async (req: Request, res: Response, next: NextFunction) => {
+    const imageId = req.params.imageId;
+    const { status, result_data, error, parameters } = req.body;
+
+    logger.info('Received segmentation result from ML service', { 
+      imageId, 
+      status,
+      hasResult: !!result_data,
+      hasError: !!error
+    });
+
+    try {
+      // Begin transaction for atomic updates
+      const client = await pool.connect();
+      
+      try {
+        await client.query('BEGIN');
+
+        // Update image status
+        await client.query(
+          'UPDATE images SET segmentation_status = $1, updated_at = NOW() WHERE id = $2',
+          [status, imageId]
+        );
+
+        if (status === 'completed' && result_data) {
+          // Check if segmentation_results record exists
+          const existingResult = await client.query(
+            'SELECT id FROM segmentation_results WHERE image_id = $1',
+            [imageId]
+          );
+
+          if (existingResult.rows.length > 0) {
+            // Update existing record
+            await client.query(
+              `UPDATE segmentation_results 
+               SET status = $1, result_data = $2, error = NULL, updated_at = NOW()
+               WHERE image_id = $3`,
+              [status, result_data, imageId]
+            );
+          } else {
+            // Insert new record
+            await client.query(
+              `INSERT INTO segmentation_results (image_id, status, result_data, created_at, updated_at)
+               VALUES ($1, $2, $3, NOW(), NOW())`,
+              [imageId, status, result_data]
+            );
+          }
+
+          // Extract cells data if present
+          if (result_data.polygons && Array.isArray(result_data.polygons)) {
+            // Delete existing cells for this image
+            await client.query('DELETE FROM cells WHERE image_id = $1', [imageId]);
+
+            // Insert new cells
+            for (const polygon of result_data.polygons) {
+              await client.query(
+                `INSERT INTO cells (image_id, polygon_data, features, created_at)
+                 VALUES ($1, $2, $3, NOW())`,
+                [imageId, JSON.stringify(polygon.points || polygon), polygon.features || {}]
+              );
+            }
+          }
+        } else if (status === 'failed') {
+          // Update or insert failed status
+          const existingResult = await client.query(
+            'SELECT id FROM segmentation_results WHERE image_id = $1',
+            [imageId]
+          );
+
+          if (existingResult.rows.length > 0) {
+            await client.query(
+              `UPDATE segmentation_results 
+               SET status = $1, error = $2, updated_at = NOW()
+               WHERE image_id = $3`,
+              [status, error || 'Unknown error', imageId]
+            );
+          } else {
+            await client.query(
+              `INSERT INTO segmentation_results (image_id, status, error, created_at, updated_at)
+               VALUES ($1, $2, $3, NOW(), NOW())`,
+              [imageId, status, error || 'Unknown error']
+            );
+          }
+        }
+
+        // Get project info for WebSocket notification
+        const imageInfo = await client.query(
+          'SELECT project_id FROM images WHERE id = $1',
+          [imageId]
+        );
+
+        await client.query('COMMIT');
+
+        // Send WebSocket notification
+        const io = getIO();
+        if (imageInfo.rows.length > 0) {
+          const projectId = imageInfo.rows[0].project_id;
+          
+          // Emit to project room
+          io.to(`project-${projectId}`).emit('segmentation_update', {
+            imageId,
+            status,
+            resultPath: status === 'completed' ? `/api/images/${imageId}/segmentation` : null,
+            error: status === 'failed' ? error : null,
+            timestamp: new Date().toISOString()
+          });
+
+          // Also emit generic update
+          io.emit('image-status-update', {
+            imageId,
+            status,
+            projectId,
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        logger.info('Successfully processed segmentation result', { imageId, status });
+        res.status(200).json({ 
+          message: 'Segmentation result processed successfully',
+          imageId,
+          status
+        });
+
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      logger.error('Error processing segmentation result', { 
+        imageId, 
+        error: error instanceof Error ? error.message : String(error)
+      });
+      next(error);
+    }
+  }
+);
+
 export default router;

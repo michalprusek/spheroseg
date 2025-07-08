@@ -472,74 +472,15 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
 
           // Pokud jsme v projektovém pohledu, filtrujeme data, aby zobrazovala pouze úlohy pro tento projekt
           if (projectId) {
-            // 1. Filtrujeme obrázky podle projektu
-            const filteredImages = updatedData.processingImages.filter(
-              (img: any) => img.projectId === projectId || img.project_id === projectId
-            );
-
-            // 2. Aktualizujeme runningTasks, aby odpovídaly filtrovaným processingImages
-            const filteredRunning = filteredImages.map((img: any) => img.id);
-
-            // 3. Filtrujeme queuedTasks podle projektu, pokud je to možné
-            // Toto je best-effort přístup, protože většinou nemáme v queue info o projektu
-
-            // 4. Počítáme novou queueLength - používáme buď filtrované úlohy nebo odhadujeme
-            const newQueueLength = updatedData.queueLength > 0 ?
-              Math.max(1, Math.floor(updatedData.queueLength / 2)) : 0;
-
-            // Aktualizujeme data pro tento projekt
-            const projectFilteredData = {
-              ...updatedData,
-              processingImages: filteredImages,
-              runningTasks: filteredRunning,
-              queueLength: newQueueLength,
-              // Zachováme původní queuedTasks a pendingTasks, protože nemáme lepší informace
-              pendingTasks: updatedData.pendingTasks || [],
-            };
-
-            // 5. Pokud máme aktivní úlohy v queuedTasks, pokusíme se získat specifičtější data
-            if (updatedData.queuedTasks.length > 0) {
-              // Zkusíme všechny tři endpointy postupně
-              const endpoints = [
-                `/api/segmentation/queue-status/${projectId}`,
-                `/api/segmentation/queue-status/${projectId}`,
-                `/api/segmentations/queue/status/${projectId}`
-              ];
-
-              // Funkce pro získání dat z konkrétního endpointu
-              const fetchFromEndpoint = async (endpoint: string) => {
-                try {
-                  const response = await apiClient.get(endpoint);
-                  if (response.data && isComponentMounted) {
-                    // Normalizujeme projektová data
-                    const projectData = normalizeQueueStatusData(response.data);
-                    // Aktualizujeme stav s projektovými daty
-                    setQueueStatus({
-                      ...projectFilteredData,
-                      queuedTasks: projectData.queuedTasks || [],
-                      pendingTasks: projectData.pendingTasks || [],
-                      queueLength: projectData.queueLength || projectData.queuedTasks?.length || projectData.pendingTasks?.length || 0,
-                    });
-                    return true;
-                  }
-                  return false;
-                } catch {
-                  return false;
-                }
-              };
-
-              // Postupně zkoušíme endpointy a končíme po prvním úspěšném
-              (async () => {
-                for (const endpoint of endpoints) {
-                  if (await fetchFromEndpoint(endpoint)) {
-                    break;
-                  }
-                }
-              })();
-            }
-
-            // Nastavíme filtrovaná data jako mezistav
-            setQueueStatus(projectFilteredData);
+            // IMPORTANT: WebSocket sends global queue data without project info
+            // We cannot reliably filter it, so we should fetch project-specific data from the API
+            console.log('WebSocket data received for project view, fetching project-specific data from API');
+            
+            // Trigger API call to get accurate project-specific queue status
+            updateQueueStatus();
+            
+            // For now, return without updating the state to avoid showing incorrect global data
+            return;
           } else {
             // Pro globální pohled použijeme všechna data
             setQueueStatus(updatedData);

@@ -492,7 +492,9 @@ export const getProjectImages = async (projectId: string): Promise<ProjectImage[
     layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE]
   });
   
-  if (cachedImages) {
+  // Only return cached data if it's not an empty array
+  // This ensures we always try to fetch from API when there are no images in cache
+  if (cachedImages && cachedImages.length > 0) {
     console.log(`Retrieved ${cachedImages.length} images from unified cache for project ${cleanProjectId}`);
     return cachedImages;
   }
