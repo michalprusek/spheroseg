@@ -901,6 +901,7 @@ router.get(
     });
 
     try {
+      const pool = getPool();
       const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
         projectId,
         userId,
@@ -1095,6 +1096,7 @@ router.get(
     });
 
     try {
+      const pool = getPool();
       const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
         projectId,
         userId,
@@ -1155,6 +1157,7 @@ router.get('/verify/:id', authMiddleware, async (req: AuthenticatedRequest, res:
   });
 
   try {
+    const pool = getPool();
     const imageResult = await pool.query(
       'SELECT i.id, i.project_id, i.storage_path FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
       [imageId, userId],
