@@ -576,14 +576,27 @@ const ProjectDetail = () => {
   const handleUploadComplete = useCallback(
     async (projectId: string, uploadedImages: ProjectImage[] | ProjectImage) => {
       logger.debug('Upload complete:', projectId);
+      
+      // Immediately add new images to the gallery
+      const imagesArray = Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages];
+      logger.debug('Handling upload complete with images:', imagesArray);
+      
+      // Update local state immediately to show images in gallery
+      if (imagesArray.length > 0) {
+        onImagesChange(prevImages => {
+          // Filter out any duplicates based on ID
+          const existingIds = new Set(prevImages.map(img => img.id));
+          const newImages = imagesArray.filter(img => img && img.id && !existingIds.has(img.id));
+          return [...prevImages, ...newImages];
+        });
+      }
+      
+      // Refresh data after a delay to get any server-side updates
       setTimeout(() => {
         refreshData();
       }, 2000);
+      
       setShowUploader(false);
-
-      const imagesArray = Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages];
-
-      logger.debug('Handling upload complete with images:', imagesArray);
 
       const { isValidImageId } = await import('@/api/projectImages');
 

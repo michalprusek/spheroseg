@@ -122,10 +122,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         }
 
         const newFiles: UploadedFile[] = await Promise.all(acceptedFiles.map(async (file) => {
-          const isTiffOrBmp = file.type === 'image/tiff' || file.type === 'image/tif' || 
-                              file.name.toLowerCase().endsWith('.tiff') || 
-                              file.name.toLowerCase().endsWith('.tif') ||
-                              file.name.toLowerCase().endsWith('.bmp');
+          const ext = file.name.toLowerCase();
+          const isTiffOrBmp = file.type === 'image/tiff' || file.type === 'image/bmp' || 
+                              ext.endsWith('.tiff') || 
+                              ext.endsWith('.tif') ||
+                              ext.endsWith('.bmp');
           
           let previewUrl: string;
           
