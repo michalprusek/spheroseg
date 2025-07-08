@@ -24,7 +24,7 @@ export const loadImageDirectly = async (
           return cachedData;
         }
       } catch (e) {
-        logger.error(`Error parsing cached image data: ${e.message}`);
+        logger.warn(`Failed to parse cached image data: ${e.message}`);
       }
     }
 
@@ -59,7 +59,7 @@ export const loadImageDirectly = async (
     logger.warn(`Could not load image directly for projectId=${projectId}, imageId=${imageId}`);
     return null;
   } catch (error) {
-    logger.error(`Error in loadImageDirectly: ${error.message}`);
+    logger.warn(`Failed to load image directly: ${error.message}`);
     return null;
   }
 };

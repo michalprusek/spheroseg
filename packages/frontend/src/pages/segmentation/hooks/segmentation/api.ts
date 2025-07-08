@@ -82,7 +82,10 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
       }
     }
   } catch (error) {
-    logger.error(`Error fetching all project images: ${error instanceof Error ? error.message : String(error)}`);
+    // Only log if it's not a cancellation error
+    if (error instanceof Error && error.message !== 'canceled') {
+      logger.error(`Error fetching all project images: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   // If not found in all images, try direct fetch by ID
@@ -99,7 +102,10 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
       return processImageUrl(imageResponse.data);
     }
   } catch (idError) {
-    logger.error(`Error fetching image by ID: ${idError instanceof Error ? idError.message : String(idError)}`);
+    // Only log if it's not a cancellation error
+    if (idError instanceof Error && idError.message !== 'canceled' && idError.name !== 'AbortError') {
+      logger.error(`Error fetching image by ID: ${idError instanceof Error ? idError.message : String(idError)}`);
+    }
   }
 
   // If still not found, try to load directly from filesystem
@@ -128,9 +134,12 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
       return processImageUrl(directImageData);
     }
   } catch (directError) {
-    logger.error(
-      `Error loading image directly: ${directError instanceof Error ? directError.message : String(directError)}`,
-    );
+    // Only log if it's not a cancellation error
+    if (directError instanceof Error && directError.message !== 'canceled' && directError.name !== 'AbortError') {
+      logger.error(
+        `Error loading image directly: ${directError instanceof Error ? directError.message : String(directError)}`,
+      );
+    }
   }
 
   // If all attempts fail, create a placeholder (for any image, not just local ones)
@@ -372,9 +381,12 @@ export const fetchSegmentationData = async (
 
       return fetchedSegmentation;
     } catch (error) {
-      logger.error(
-        `Error fetching from ${endpoint} for imageId=${imageId}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      // Only log if it's not a cancellation error
+      if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
+        logger.error(
+          `Error fetching from ${endpoint} for imageId=${imageId}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
       // Continue to the next endpoint
     }
   }
@@ -457,7 +469,10 @@ export const saveSegmentationData = async (
       savedSuccessfully = true;
       break; // Exit the loop on success
     } catch (error) {
-      logger.error(`Error saving to ${endpoint}: ${error instanceof Error ? error.message : String(error)}`);
+      // Only log if it's not a cancellation error
+      if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
+        logger.error(`Error saving to ${endpoint}: ${error instanceof Error ? error.message : String(error)}`);
+      }
       // Continue to the next endpoint
     }
   }
@@ -490,7 +505,10 @@ export const deleteSegmentationData = async (projectId: string, imageId: string)
       deletedSuccessfully = true;
       break; // Exit the loop on success
     } catch (error) {
-      logger.error(`Error deleting from ${endpoint}: ${error instanceof Error ? error.message : String(error)}`);
+      // Only log if it's not a cancellation error
+      if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
+        logger.error(`Error deleting from ${endpoint}: ${error instanceof Error ? error.message : String(error)}`);
+      }
       // Continue to the next endpoint
     }
   }
@@ -511,7 +529,10 @@ export const fetchProjectData = async (projectId: string): Promise<any> => {
     const response = await apiClient.get(`/api/projects/${projectId}`);
     return response.data;
   } catch (error) {
-    logger.error(`Error fetching project data: ${error instanceof Error ? error.message : String(error)}`);
+    // Only log if it's not a cancellation error
+    if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
+      logger.error(`Error fetching project data: ${error instanceof Error ? error.message : String(error)}`);
+    }
     throw error;
   }
 };
@@ -526,7 +547,10 @@ export const fetchProjectImages = async (projectId: string): Promise<any[]> => {
     const response = await apiClient.get(`/api/projects/${projectId}/images`);
     return response.data;
   } catch (error) {
-    logger.error(`Error fetching project images: ${error instanceof Error ? error.message : String(error)}`);
+    // Only log if it's not a cancellation error
+    if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
+      logger.error(`Error fetching project images: ${error instanceof Error ? error.message : String(error)}`);
+    }
     throw error;
   }
 };
@@ -541,7 +565,10 @@ export const fetchImageSegmentationStatus = async (imageId: string): Promise<str
     const response = await apiClient.get(`/api/images/${imageId}/segmentation/status`);
     return response.data.status;
   } catch (error) {
-    logger.error(`Error fetching segmentation status: ${error instanceof Error ? error.message : String(error)}`);
+    // Only log if it's not a cancellation error
+    if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
+      logger.error(`Error fetching segmentation status: ${error instanceof Error ? error.message : String(error)}`);
+    }
     return 'unknown';
   }
 };
@@ -565,7 +592,10 @@ export const triggerSegmentation = async (imageId: string, parameters?: Record<s
 
     return response.data;
   } catch (error) {
-    logger.error(`Error triggering segmentation: ${error instanceof Error ? error.message : String(error)}`);
+    // Only log if it's not a cancellation error
+    if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
+      logger.error(`Error triggering segmentation: ${error instanceof Error ? error.message : String(error)}`);
+    }
     throw error;
   }
 };
@@ -580,7 +610,10 @@ export const fetchSegmentationQueueStatus = async (): Promise<any> => {
     const response = await apiClient.get('/api/segmentation/queue');
     return response.data;
   } catch (error) {
-    logger.error(`Error fetching segmentation queue status: ${error instanceof Error ? error.message : String(error)}`);
+    // Only log if it's not a cancellation error
+    if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
+      logger.error(`Error fetching segmentation queue status: ${error instanceof Error ? error.message : String(error)}`);
+    }
     throw error;
   }
 };
@@ -626,7 +659,10 @@ export const getPolygonsForImage = async (imageId: string, projectId: string): P
 
     return validPolygons;
   } catch (error) {
-    logger.error(`Error fetching polygons for image ${imageId}:`, error);
+    // Only log if it's not a cancellation error
+    if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
+      logger.error(`Error fetching polygons for image ${imageId}:`, error);
+    }
     return [];
   }
 };

@@ -210,7 +210,6 @@ const EditorContainer = ({
       toast.error(t('export.noImageSelectedError') || 'Cannot export mask: Image ID or name is missing.');
       return;
     }
-    console.log(`Requesting mask export for image ID: ${imageId}`);
     toast.info(t('export.maskExportStarted') || `Exporting mask for ${imageName}...`);
     try {
       const exportUrl = `/api/images/${imageId}/export/mask`;
@@ -225,9 +224,7 @@ const EditorContainer = ({
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error exporting segmentation mask:', error);
       if (axios.isAxiosError(error)) {
-        console.error('Axios error details:', error.response?.data || error.message);
         toast.error(
           `${t('export.maskExportError') || 'Failed to export segmentation mask.'} Status: ${error.response?.status || 'N/A'}`,
         );
@@ -353,13 +350,8 @@ const EditorContainer = ({
             <button
               className="flex items-center gap-1.5 bg-gray-800/80 hover:bg-gray-700/90 text-white rounded-full shadow-lg backdrop-blur-sm px-3 py-2"
               onClick={() => {
-                console.log('[EditorContainer Debug] Shortcut button clicked. Ref:', keyboardShortcutsRef.current);
                 if (keyboardShortcutsRef.current?.open) {
                   keyboardShortcutsRef.current.open();
-                } else {
-                  console.error(
-                    '[EditorContainer Debug] keyboardShortcutsRef.current.open is not available or ref is null/undefined.',
-                  );
                 }
               }}
               data-testid="keyboard-shortcuts-icon"

@@ -133,12 +133,12 @@ export const SegmentationPage: React.FC = () => {
       // Use navigate to change the URL without a full page reload
       navigate(`/projects/${projectId}/segmentation/${nextImageId}?t=${timestamp}`);
 
-      console.log(`Navigation to image: ${nextImageId} with timestamp: ${timestamp}`);
+      // Navigation to new image will trigger data reload
 
       // Force a refresh of the image data and segmentation data
       // This will be handled by the useEffect in useSegmentationV2 when imageId changes
     } else {
-      console.warn(`Invalid image index: ${index}, projectImages length: ${projectImages.length}`);
+      // Invalid image index - navigation not possible
     }
   };
 
