@@ -617,7 +617,7 @@ router.get(
       // Get queue status for this project
       const queueQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE st.status = 'pending') AS pending_count,
+                COUNT(*) FILTER (WHERE st.status = 'queued') AS pending_count,
                 COUNT(*) FILTER (WHERE st.status = 'processing') AS processing_count,
                 COUNT(*) FILTER (WHERE st.status = 'completed') AS completed_count,
                 COUNT(*) FILTER (WHERE st.status = 'failed') AS failed_count,
@@ -638,7 +638,7 @@ router.get(
       // Get image segmentation status for this project
       const imageStatsQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE segmentation_status = 'pending') AS pending_count,
+                COUNT(*) FILTER (WHERE segmentation_status = 'queued') AS pending_count,
                 COUNT(*) FILTER (WHERE segmentation_status = 'processing') AS processing_count,
                 COUNT(*) FILTER (WHERE segmentation_status = 'completed') AS completed_count,
                 COUNT(*) FILTER (WHERE segmentation_status = 'failed') AS failed_count,
