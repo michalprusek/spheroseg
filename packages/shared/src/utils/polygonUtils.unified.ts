@@ -396,9 +396,8 @@ export const calculateLineSegmentIntersection = (
   const ua = (((x4 - x3) * (y1 - y3)) - ((y4 - y3) * (x1 - x3))) / denominator;
   const ub = (((x2 - x1) * (y1 - y3)) - ((y2 - y1) * (x1 - x3))) / denominator;
 
-  // Only check if intersection is within the line segment (not the infinite line)
-  // BUT we should treat the slice line as infinite for proper slicing
-  // So we only check ub (parameter for the polygon edge)
+  // Only check if intersection is within the polygon edge segment (ub)
+  // We treat the slice line as infinite, so we don't check ua
   if (ub >= 0 && ub <= 1) {
     const intersection = {
       x: x1 + ua * (x2 - x1),
@@ -407,10 +406,23 @@ export const calculateLineSegmentIntersection = (
     console.log('[calculateLineSegmentIntersection] Intersection found:', {
       ua,
       ub,
-      intersection
+      intersection,
+      lineStart,
+      lineEnd,
+      segStart,
+      segEnd
     });
     return intersection;
   }
+  
+  console.log('[calculateLineSegmentIntersection] No intersection:', {
+    ua,
+    ub,
+    lineStart,
+    lineEnd,
+    segStart,
+    segEnd
+  });
 
   return null;
 };
@@ -430,7 +442,13 @@ export const calculateLinePolygonIntersections = (
   console.log('[calculateLinePolygonIntersections] Called with:', {
     lineStart,
     lineEnd,
-    polygonPoints: polygon.length
+    polygonPoints: polygon.length,
+    polygonBounds: polygon.length > 0 ? {
+      minX: Math.min(...polygon.map(p => p.x)),
+      maxX: Math.max(...polygon.map(p => p.x)),
+      minY: Math.min(...polygon.map(p => p.y)),
+      maxY: Math.max(...polygon.map(p => p.y))
+    } : null
   });
   
   const intersections: Intersection[] = [];
