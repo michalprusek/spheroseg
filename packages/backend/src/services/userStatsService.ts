@@ -84,9 +84,9 @@ export class UserStatsService {
       );
       stats.totalImages = parseInt(imagesCountRes.rows[0].count, 10);
 
-      // Fetch completed segmentations
+      // Fetch completed segmentations (using segmentation_status, not status)
       const completedSegmentationsRes = await pool.query(
-        'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.status = $2',
+        'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.segmentation_status = $2',
         [userId, 'completed'],
       );
       stats.completedSegmentations = parseInt(completedSegmentationsRes.rows[0].count, 10);
@@ -205,7 +205,7 @@ export class UserStatsService {
           p.created_at,
           p.updated_at,
           (SELECT COUNT(*) FROM images WHERE project_id = p.id) as image_count,
-          (SELECT COUNT(*) FROM images WHERE project_id = p.id AND status = 'completed') as completed_count
+          (SELECT COUNT(*) FROM images WHERE project_id = p.id AND segmentation_status = 'completed') as completed_count
         FROM projects p
         WHERE p.user_id = $1
         ORDER BY p.updated_at DESC

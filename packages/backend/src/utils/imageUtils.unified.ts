@@ -250,7 +250,7 @@ const pathUtils = {
   generateThumbnailPath: (projectId: string, originalFilename: string): string => {
     const uniqueFilename = pathUtils.generateUniqueFilename(
       pathUtils.extractBaseName(originalFilename),
-      'jpg', // Always use jpg extension for thumbnails since they're saved as JPEG
+      'png', // Always use png extension for thumbnails since they're saved as PNG
       'thumb',
     );
     return path.join('uploads', projectId, uniqueFilename);
