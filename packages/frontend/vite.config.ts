@@ -99,8 +99,6 @@ export default defineConfig(({ mode }) => {
         ],
         usePolling: true, // Use polling for Docker volumes
       },
-      // Allow external access from any host
-      allowedHosts: ['localhost', 'spherosegapp.utia.cas.cz', '.utia.cas.cz'],
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
@@ -152,7 +150,7 @@ export default defineConfig(({ mode }) => {
           secure: false,
         },
       },
-      host: '0.0.0.0',
+      host: true, // This allows access from any host
       port: 3000,
       strictPort: true, // Don't try other ports if 3000 is taken
       cors: true, // Enable CORS for all requests
@@ -165,8 +163,6 @@ export default defineConfig(({ mode }) => {
         timeout: 180000,
         overlay: true,
       },
-      // Allow all hosts
-      origin: '*',
     },
     // Optimize build
     build: {
