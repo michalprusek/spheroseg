@@ -158,8 +158,12 @@ MODEL_PATH=/app/checkpoint_epoch_9.pth.tar
 Key tables:
 - `users`: User authentication and profile
 - `images`: Uploaded image metadata
+  - `status`: General image lifecycle state ('pending', 'queued', 'completed') - tracks upload/processing
+  - `segmentation_status`: ML segmentation state ('without_segmentation', 'queued', 'processing', 'completed', 'failed') - tracks AI analysis
 - `segmentation_results`: ML processing results
 - `cells`: Individual cell data and features
+
+**Important**: When checking for completed segmentations, use `segmentation_status = 'completed'`, not `status = 'completed'`
 - `segmentation_queue`: Queue for segmentation tasks (uses 'queued' status, not 'pending')
 - `segmentation_tasks`: Task tracking (uses 'queued' status, not 'pending')
 

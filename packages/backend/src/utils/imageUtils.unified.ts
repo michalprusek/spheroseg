@@ -397,6 +397,11 @@ export const createThumbnail = async (
 ): Promise<void> => {
   try {
     const { width = 300, height = 300, fit = 'inside' } = options;
+    
+    // Validate that target path has .png extension
+    if (!targetPath.toLowerCase().endsWith('.png')) {
+      throw new Error(`Thumbnail target path must have .png extension, got: ${targetPath}`);
+    }
     const ext = path.extname(sourcePath).toLowerCase();
 
     // Special handling for BMP files using Python PIL

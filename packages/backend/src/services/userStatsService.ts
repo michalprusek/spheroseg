@@ -84,12 +84,40 @@ export class UserStatsService {
       );
       stats.totalImages = parseInt(imagesCountRes.rows[0].count, 10);
 
-      // Fetch completed segmentations (using segmentation_status, not status)
-      const completedSegmentationsRes = await pool.query(
-        'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.segmentation_status = $2',
-        [userId, 'completed'],
-      );
-      stats.completedSegmentations = parseInt(completedSegmentationsRes.rows[0].count, 10);
+      // Fetch completed segmentations 
+      // Note: We use 'segmentation_status' field which tracks ML processing state ('without_segmentation', 'queued', 'processing', 'completed', 'failed')
+      // This is different from 'status' field which tracks general image state ('pending', 'queued', 'completed')
+      try {
+        // First check if segmentation_status column exists
+        const columnCheck = await pool.query(`
+          SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = 'images'
+            AND column_name = 'segmentation_status'
+          )
+        `);
+
+        if (columnCheck.rows[0].exists) {
+          const completedSegmentationsRes = await pool.query(
+            'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.segmentation_status = $2',
+            [userId, 'completed'],
+          );
+          stats.completedSegmentations = parseInt(completedSegmentationsRes.rows[0].count, 10);
+        } else {
+          // Fallback to status column if segmentation_status doesn't exist
+          logger.warn('segmentation_status column not found, falling back to status column');
+          const completedSegmentationsRes = await pool.query(
+            'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.status = $2',
+            [userId, 'completed'],
+          );
+          stats.completedSegmentations = parseInt(completedSegmentationsRes.rows[0].count, 10);
+        }
+      } catch (error) {
+        logger.error('Error fetching completed segmentations', { error, userId });
+        stats.completedSegmentations = 0;
+      }
 
       // Calculate storage usage - first try from users table, then from images
       try {
@@ -205,7 +233,13 @@ export class UserStatsService {
           p.created_at,
           p.updated_at,
           (SELECT COUNT(*) FROM images WHERE project_id = p.id) as image_count,
-          (SELECT COUNT(*) FROM images WHERE project_id = p.id AND segmentation_status = 'completed') as completed_count
+          (SELECT COUNT(*) FROM images WHERE project_id = p.id AND 
+            CASE 
+              WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'images' AND column_name = 'segmentation_status')
+              THEN segmentation_status = 'completed'
+              ELSE status = 'completed'
+            END
+          ) as completed_count
         FROM projects p
         WHERE p.user_id = $1
         ORDER BY p.updated_at DESC
