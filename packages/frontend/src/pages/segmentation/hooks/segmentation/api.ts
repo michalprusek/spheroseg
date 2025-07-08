@@ -75,6 +75,7 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
 
       if (matchingImage) {
         logger.info(`Found matching image by ID in project images: ${matchingImage.id}`);
+        logger.debug('Raw image data from API:', JSON.stringify(matchingImage));
         return processImageUrl(matchingImage);
       } else {
         logger.warn(`No image with ID ${imageId} found in project images`);
@@ -166,6 +167,8 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
  * Process image URL to ensure it's absolute and attempts multiple URL formats
  */
 const processImageUrl = (imageData: ImageData): ImageData => {
+  logger.debug(`Processing image URL for image ${imageData.id}, storage_path: ${imageData.storage_path}, src: ${imageData.src}`);
+  
   // First try to use storage_path_full which should be a complete URL
   if (imageData.storage_path_full) {
     imageData.src = imageData.storage_path_full;
@@ -249,12 +252,22 @@ const processImageUrl = (imageData: ImageData): ImageData => {
     imageData.src = imageData.src.includes('?') ? `${imageData.src}&${cacheBuster}` : `${imageData.src}?${cacheBuster}`;
   }
 
-  // Generate comprehensive alternative URLs using the utility function
-  if (imageData.project_id && imageData.id) {
-    const generatedUrls = generateAlternativeUrls(imageData.src, imageData.project_id, imageData.id);
+  // Generate comprehensive alternative URLs, but only use storage_path based URLs
+  // Don't generate URLs based on image ID as they won't match the actual storage structure
+  if (imageData.storage_path) {
+    const baseUrl = window.location.origin;
+    const storagePath = imageData.storage_path.replace(/^\//, ''); // Remove leading slash if present
+    
+    // Add properly formed alternative URLs based on actual storage path
+    const additionalUrls = [
+      `${baseUrl}/${storagePath}`,
+      `${baseUrl}/api/${storagePath}`, 
+      `/${storagePath}`,
+      `/api/${storagePath}`
+    ];
     
     // Merge with existing alternatives, removing duplicates
-    const allUrls = [...(imageData.alternativeUrls || []), ...generatedUrls];
+    const allUrls = [...(imageData.alternativeUrls || []), ...additionalUrls];
     imageData.alternativeUrls = [...new Set(allUrls)];
   }
 

@@ -308,6 +308,11 @@ const EditorContainer = ({
                       src: imageSrc,
                       width: segmentation?.imageWidth ?? 0,
                       height: segmentation?.imageHeight ?? 0,
+                      // Add alternativeUrls based on the storage path structure
+                      alternativeUrls: [
+                        imageSrc, // Original URL
+                        imageSrc.replace(/\?.*$/, ''), // Without cache buster
+                      ],
                     }
                   : null
               } // Renamed from imageSrc and constructing ImageData
