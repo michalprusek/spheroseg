@@ -101,14 +101,19 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
     if (editMode === EditMode.Slice && tempPoints.length === 2 && selectedPolygonId) {
       console.log('[SegmentationEditorV2] Slice points ready, triggering slice action');
       
-      // Trigger the slice action
-      const success = handleSliceAction();
+      // Add a small delay to ensure state is properly updated
+      const timeoutId = setTimeout(() => {
+        // Trigger the slice action
+        const success = handleSliceAction();
+        
+        if (success) {
+          console.log('[SegmentationEditorV2] Slice action completed successfully');
+        } else {
+          console.log('[SegmentationEditorV2] Slice action failed');
+        }
+      }, 50);
       
-      if (success) {
-        console.log('[SegmentationEditorV2] Slice action completed successfully');
-      } else {
-        console.log('[SegmentationEditorV2] Slice action failed');
-      }
+      return () => clearTimeout(timeoutId);
     }
   }, [editMode, tempPoints, selectedPolygonId, handleSliceAction]);
 
