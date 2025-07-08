@@ -1,7 +1,7 @@
 import { RefObject } from 'react';
 import { EditMode, InteractionState, Point, Polygon, SegmentationData, TransformState } from './types';
 import { distanceToSegment, createPolygon, updateSegmentationWithPolygons } from './geometry';
-import { isPointInPolygonSync, slicePolygonSync } from './geometry.worker';
+import { isPointInPolygonSync } from './geometry.worker';
 import { getCanvasCoordinates } from './coordinates';
 import { CLOSE_POLYGON_DISTANCE, VERTEX_HIT_RADIUS } from './constants';
 import { createLogger } from '@/lib/logger';
@@ -568,11 +568,10 @@ export const handleMouseDown = (
         return;
       }
 
-      // Step 2: If polygon is selected, allow placing slice points anywhere
+      // Step 2: If polygon is selected, handle slice point placement
       if (selectedPolygonId) {
         const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
-
-        // Allow slicing anywhere, not just inside the polygon
+        
         if (selectedPolygon) {
           if (!interactionState.sliceStartPoint) {
             // First click - set slice start point
@@ -582,45 +581,17 @@ export const handleMouseDown = (
             });
             setTempPoints([{ x: imageX, y: imageY }]);
           } else {
-            // Second click - complete the slice
-            const newPoints = [...tempPoints, { x: imageX, y: imageY }];
-
-            // Set the temp points first
-            setTempPoints(newPoints);
-
-            // Then automatically trigger the slice action
-            // We use a small timeout to ensure the UI updates first
-            setTimeout(() => {
-              // Find the selected polygon
-              const polygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
-              if (!polygon || !segmentationData) return;
-
-              // Call the slice function with the selected polygon and slice points
-              const result = slicePolygonSync(polygon, newPoints[0], newPoints[1]);
-
-              if (result.success) {
-                // Replace the original polygon with the two new ones
-                const updatedPolygons = segmentationData.polygons.filter((p) => p.id !== selectedPolygonId);
-                updatedPolygons.push(...result.polygons);
-
-                setSegmentationDataWithHistory(
-                  {
-                    ...segmentationData,
-                    polygons: updatedPolygons,
-                  },
-                  false,
-                );
-              }
-
-              // Reset state after slicing
-              setTempPoints([]);
-              setInteractionState({
-                ...interactionState,
-                sliceStartPoint: null,
-              });
-              setSelectedPolygonId(null);
-              setEditMode(EditMode.View);
-            }, 50);
+            // Second click - complete the slice by setting the end point
+            // The actual slicing will be handled by the component that has access to handleSliceAction
+            setTempPoints([interactionState.sliceStartPoint, { x: imageX, y: imageY }]);
+            
+            // Reset the slice start point after setting both points
+            setInteractionState({
+              ...interactionState,
+              sliceStartPoint: null,
+            });
+            
+            // The component will detect that we have 2 points and trigger the slice
           }
         }
       }
