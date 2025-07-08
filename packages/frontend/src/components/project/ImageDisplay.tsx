@@ -354,7 +354,9 @@ export const ImageDisplay = ({
               ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
               : currentStatus === 'failed'
                 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100',
+                : currentStatus === 'without_segmentation'
+                  ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
+                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100',
       )}
       title={image.error ? `${t('common.error')}: ${image.error}` : undefined}
     >
@@ -372,6 +374,8 @@ export const ImageDisplay = ({
         <span className="flex items-center">
           <span className="mr-1">⚠️</span> {t('segmentation.status.failed')}
         </span>
+      ) : currentStatus === 'without_segmentation' ? (
+        t('segmentation.status.withoutSegmentation')
       ) : (
         t('segmentation.status.pending')
       )}

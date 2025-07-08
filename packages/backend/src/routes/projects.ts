@@ -579,7 +579,7 @@ router.get(
           i.id, i.project_id, i.name, i.storage_path, i.thumbnail_path, i.status, 
           i.created_at, i.updated_at, i.file_size, i.width, i.height, i.storage_filename,
           i.metadata,
-          COALESCE(i.segmentation_status, 'pending') as "segmentationStatus",
+          COALESCE(i.segmentation_status, 'without_segmentation') as "segmentationStatus",
           sr.id as segmentation_id
         FROM images i
         LEFT JOIN segmentation_results sr ON i.id = sr.image_id
