@@ -2,7 +2,7 @@
  * Performance optimization utilities for React components
  */
 
-import { ComponentType, memo } from 'react';
+import React, { ComponentType, memo, useState, useEffect, useRef } from 'react';
 
 /**
  * Custom memo comparison function that performs deep equality check
@@ -156,5 +156,3 @@ export function useIntersectionObserver(
   return isIntersecting;
 }
 
-// Import React for hooks
-import * as React from 'react';

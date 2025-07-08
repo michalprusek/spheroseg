@@ -8,6 +8,7 @@
 import { Pool, PoolClient, QueryResult } from 'pg';
 import NodeCache from 'node-cache';
 import config from '../config';
+import performanceConfig from '../config/performance';
 import logger from '../utils/logger';
 import { monitorQuery } from '../monitoring/unified';
 
@@ -47,11 +48,11 @@ export function getPool(): Pool {
       ? {
           connectionString: databaseUrl,
           ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined,
-          max: 10, // Reduced from 20 to save memory
-          min: 2, // Minimum connections to maintain
-          idleTimeoutMillis: 10000, // Reduced from 30s to 10s
-          connectionTimeoutMillis: 5000,
-          allowExitOnIdle: true, // Allow pool to exit when idle to save memory
+          max: performanceConfig.database.poolMax,
+          min: performanceConfig.database.poolMin,
+          idleTimeoutMillis: performanceConfig.database.idleTimeoutMs,
+          connectionTimeoutMillis: performanceConfig.database.connectionTimeoutMs,
+          allowExitOnIdle: performanceConfig.database.allowExitOnIdle
         }
       : {
           host: config.db.host,
@@ -60,11 +61,11 @@ export function getPool(): Pool {
           user: config.db.user,
           password: config.db.password,
           ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined,
-          max: 10, // Reduced from 20 to save memory
-          min: 2, // Minimum connections to maintain
-          idleTimeoutMillis: 10000, // Reduced from 30s to 10s
-          connectionTimeoutMillis: 5000,
-          allowExitOnIdle: true, // Allow pool to exit when idle to save memory
+          max: performanceConfig.database.poolMax,
+          min: performanceConfig.database.poolMin,
+          idleTimeoutMillis: performanceConfig.database.idleTimeoutMs,
+          connectionTimeoutMillis: performanceConfig.database.connectionTimeoutMs,
+          allowExitOnIdle: performanceConfig.database.allowExitOnIdle
         };
 
     pool = new Pool(poolConfig);

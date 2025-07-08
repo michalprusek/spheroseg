@@ -19,21 +19,55 @@ import segmentationQueueService from './services/segmentationQueueService';
 import dbPool from './db';
 import { startPerformanceMonitoring, stopPerformanceMonitoring } from './utils/performance';
 import { monitorQuery } from './monitoring/unified';
+import performanceConfig from './config/performance';
 
 // Memory optimization settings
-if (global.gc) {
-  // Force garbage collection every 30 seconds if available
+// Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized
+// Only enable in specific scenarios where memory usage patterns are well understood
+if (global.gc && performanceConfig.memory.gcIntervalMs > 0 && process.env.ENABLE_MANUAL_GC === 'true') {
+  logger.info('Manual garbage collection enabled with interval:', performanceConfig.memory.gcIntervalMs);
+  
+  // Track GC performance
+  let gcCount = 0;
+  let totalGcTime = 0;
+  
   setInterval(() => {
     if (global.gc) {
-      logger.debug('Running manual garbage collection');
+      const startTime = process.hrtime.bigint();
+      const memBefore = process.memoryUsage();
+      
       global.gc();
+      
+      const endTime = process.hrtime.bigint();
+      const memAfter = process.memoryUsage();
+      const gcTime = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+      
+      gcCount++;
+      totalGcTime += gcTime;
+      
+      const freedMemory = (memBefore.heapUsed - memAfter.heapUsed) / 1024 / 1024;
+      
+      logger.debug('Manual GC completed', {
+        gcNumber: gcCount,
+        duration: `${gcTime.toFixed(2)}ms`,
+        avgDuration: `${(totalGcTime / gcCount).toFixed(2)}ms`,
+        freedMemory: `${freedMemory.toFixed(2)}MB`,
+        heapUsed: `${(memAfter.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+      });
+      
+      // Warn if GC is taking too long
+      if (gcTime > 100) {
+        logger.warn('Manual GC took longer than 100ms', { duration: gcTime });
+      }
     }
-  }, 30000);
+  }, performanceConfig.memory.gcIntervalMs);
+} else if (global.gc) {
+  logger.info('Manual GC available but disabled. Enable with ENABLE_MANUAL_GC=true');
 }
 
 // Set memory limits for V8
 const v8 = require('v8');
-v8.setFlagsFromString('--max-old-space-size=400'); // Limit to 400MB for old space
+v8.setFlagsFromString(`--max-old-space-size=${performanceConfig.memory.v8MaxOldSpaceMB}`);
 
 /**
  * Create HTTP server
