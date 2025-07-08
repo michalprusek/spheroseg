@@ -89,6 +89,20 @@ export const SegmentationEditorV2: React.FC<SegmentationEditorV2Props> = ({ proj
     }
   }, [imageId, imageData, projectId, navigate]);
 
+  // Watch for slice completion - when we have 2 points in Slice mode
+  useEffect(() => {
+    if (editMode === EditMode.Slice && tempPoints.length === 2 && selectedPolygonId) {
+      console.log('[SegmentationEditorV2] Slice points ready, triggering slice action');
+      
+      // Trigger the slice action
+      const success = handleSliceAction();
+      
+      if (success) {
+        console.log('[SegmentationEditorV2] Slice action completed successfully');
+      }
+    }
+  }, [editMode, tempPoints, selectedPolygonId, handleSliceAction]);
+
   // Zoom handlers
   const handleZoomIn = () => {
     setTransform((prev) => ({

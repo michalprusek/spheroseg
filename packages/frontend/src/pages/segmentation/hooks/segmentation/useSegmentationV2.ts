@@ -151,11 +151,13 @@ export const useSegmentationV2 = (
   const abortControllerRef = useRef<AbortController | null>(null);
   const backgroundRefreshControllerRef = useRef<AbortController | null>(null);
   const hasFetchedRef = useRef<Set<string>>(new Set());
+  const isSavingRef = useRef<boolean>(false);
   
   // Refs for frequently changing values to prevent re-render loops
   const segmentationDataRef = useRef<SegmentationData | null>(segmentationData);
   const interactionStateRef = useRef<InteractionState>(interactionState);
   const transformRef = useRef<TransformState>(transform);
+  const fetchDataRef = useRef<() => Promise<void>>();
   
   // Update refs when state changes
   useEffect(() => {
@@ -252,6 +254,18 @@ export const useSegmentationV2 = (
     // Ensure projectId and imageIdRef.current are not null/undefined before proceeding
     if (!projectId || !imageIdRef.current) {
       setIsLoading(false);
+      return;
+    }
+
+    // Skip fetching if we're currently saving
+    if (isSavingRef.current) {
+      logger.debug(`Currently saving, skipping fetch for ${imageIdRef.current}`);
+      return;
+    }
+
+    // Check if we already have data loaded
+    if (imageData && imageData.id === imageIdRef.current && segmentationData) {
+      logger.debug(`Data already loaded for ${imageIdRef.current}, skipping fetch`);
       return;
     }
 
@@ -430,17 +444,12 @@ export const useSegmentationV2 = (
 
       setIsLoading(false);
     }
-  }, [projectId,
-    // Dependencies for `fetchData` that are external to this useCallback
-    // and whose changes should trigger a re-creation of this function.
-    // `imageIdRef.current` is not a dependency because it's a mutable ref
-    // and its changes are handled by the outer useEffect.
-    // However, `projectId` is a prop, so it should be a dependency.
-    // Other dependencies are state setters or refs which are stable.
-    setSegmentationDataWithHistory, setIsLoading, setError, getCacheStats,
-    fetchImageData, createEmptySegmentation, addToCache, refreshSegmentationInBackground,
-    setTransform, setImageData, canvasRef
-  ]);
+  }, [projectId, addToCache, getFromCache, imageData, segmentationData]); // Added imageData and segmentationData for proper checks
+
+  // Update fetchData ref when fetchData changes
+  useEffect(() => {
+    fetchDataRef.current = fetchData;
+  }, [fetchData]);
 
   // Fetch data when projectId or initialImageId changes
   useEffect(() => {
@@ -453,14 +462,15 @@ export const useSegmentationV2 = (
       return () => { isMounted = false; }; // Cleanup for this case
     }
 
+
     // Store the requested ID in the ref
     imageIdRef.current = initialImageId;
 
     // Start the fetch with a small delay to avoid race conditions
     // This will call the `fetchData` useCallback function
     const timeoutId = setTimeout(() => {
-      if (isMounted) { // Only call fetchData if component is mounted
-        fetchData();
+      if (isMounted && fetchDataRef.current) { // Only call fetchData if component is mounted
+        fetchDataRef.current();
       }
     }, 50);
 
@@ -481,7 +491,7 @@ export const useSegmentationV2 = (
         backgroundRefreshControllerRef.current = null;
       }
     };
-  }, [projectId, initialImageId, fetchData]); // fetchData is a dependency here
+  }, [projectId, initialImageId]); // Removed fetchData to prevent re-renders on edit mode changes
 
   // Set up keyboard event listeners
   useEffect(() => {
@@ -809,6 +819,7 @@ export const useSegmentationV2 = (
 
     try {
       setIsLoading(true);
+      isSavingRef.current = true;
 
       // Get the actual ID to use for saving
       const saveId = imageData.actualId || imageIdRef.current;
@@ -844,12 +855,14 @@ export const useSegmentationV2 = (
       }
 
       setIsLoading(false);
+      isSavingRef.current = false;
     } catch (error) {
       console.error('Error saving segmentation data:', error);
       toast.error(t('segmentation.saveError') || 'Failed to save segmentation');
       setIsLoading(false);
+      isSavingRef.current = false;
     }
-  }, [segmentationData, imageData, projectId, t, setSegmentationDataWithHistory, setIsLoading]);
+  }, [segmentationData, imageData, projectId, t, setSegmentationDataWithHistory]);
 
   // Return all the necessary state and functions
   return {

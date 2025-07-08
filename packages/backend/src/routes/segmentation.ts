@@ -320,12 +320,42 @@ async function handleBatchSegmentation(req: AuthenticatedRequest, res: Response,
   }
 }
 
+// Middleware that allows internal requests from ML service
+const authOrInternalMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  // Log request details for debugging
+  logger.info('Auth middleware check', {
+    ip: req.ip,
+    hostname: req.hostname,
+    userAgent: req.headers['user-agent'],
+    xForwardedFor: req.headers['x-forwarded-for'],
+    xRealIp: req.headers['x-real-ip']
+  });
+  
+  // Check if request is from ML service (internal)
+  const isInternalRequest = req.headers['user-agent']?.includes('python-requests') || 
+                           req.ip?.includes('172.') || // Docker network
+                           req.hostname === 'ml' ||
+                           req.ip === '172.22.0.5' || // ML service IP
+                           req.ip === '::ffff:172.22.0.5' ||
+                           req.headers['x-forwarded-for']?.includes('172.22.0.5');
+  
+  if (isInternalRequest) {
+    logger.info('Internal request detected, skipping auth');
+    // Skip auth for internal requests
+    next();
+  } else {
+    // Use normal auth for external requests
+    authMiddleware(req, res, next);
+  }
+};
+
 // PUT /api/images/:id/segmentation - Update segmentation result (e.g., after manual edit or completion)
 // This might be called by the segmentation service itself upon completion, or by the frontend after editing.
 // @ts-ignore // TS2769: No overload matches this call.
 router.put(
   '/images/:id/segmentation',
-  async (req: Request, res: Response, next: NextFunction) => {
+  authOrInternalMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Log incoming request first
     logger.info('PUT /images/:id/segmentation raw request', {
       params: req.params,
@@ -355,15 +385,13 @@ router.put(
                              req.ip?.includes('172.') || // Docker network
                              req.hostname === 'ml';
     
-    let userId = null;
-    if (!isInternalRequest) {
-      // For non-internal requests, require authentication
-      const authReq = req as AuthenticatedRequest;
-      userId = authReq.user?.userId;
-      if (!userId) {
-        res.status(401).json({ message: 'Authentication error' });
-        return;
-      }
+    // Get userId from authenticated request
+    const userId = req.user?.userId;
+    
+    // For non-internal requests, require authentication
+    if (!isInternalRequest && !userId) {
+      res.status(401).json({ message: 'Authentication error' });
+      return;
     }
     if (!status || !['completed', 'failed'].includes(status)) {
       res.status(400).json({
@@ -416,7 +444,7 @@ router.put(
       );
 
       // Also update the main image status
-      await pool.query('UPDATE images SET status = $1, updated_at = NOW() WHERE id = $2', [status, imageId]);
+      await pool.query('UPDATE images SET segmentation_status = $1, updated_at = NOW() WHERE id = $2', [status, imageId]);
 
       if (updateResult.rows.length === 0) {
         // This might happen if the segmentation_results record didn't exist yet for some reason
@@ -589,13 +617,14 @@ router.get(
       // Get queue status for this project
       const queueQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE status = 'pending') AS pending_count,
-                COUNT(*) FILTER (WHERE status = 'processing') AS processing_count,
-                COUNT(*) FILTER (WHERE status = 'completed') AS completed_count,
-                COUNT(*) FILTER (WHERE status = 'failed') AS failed_count,
+                COUNT(*) FILTER (WHERE st.status = 'pending') AS pending_count,
+                COUNT(*) FILTER (WHERE st.status = 'processing') AS processing_count,
+                COUNT(*) FILTER (WHERE st.status = 'completed') AS completed_count,
+                COUNT(*) FILTER (WHERE st.status = 'failed') AS failed_count,
                 COUNT(*) AS total_count
-            FROM segmentation_queue
-            WHERE project_id = $1
+            FROM segmentation_tasks st
+            JOIN images i ON st.image_id = i.id
+            WHERE i.project_id = $1
         `;
       const queueResult = await pool.query(queueQuery, [projectId]);
       const queueStats = queueResult.rows[0] || {
@@ -609,10 +638,10 @@ router.get(
       // Get image segmentation status for this project
       const imageStatsQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE status = 'pending') AS pending_count,
-                COUNT(*) FILTER (WHERE status = 'processing') AS processing_count,
-                COUNT(*) FILTER (WHERE status = 'completed') AS completed_count,
-                COUNT(*) FILTER (WHERE status = 'failed') AS failed_count,
+                COUNT(*) FILTER (WHERE segmentation_status = 'pending') AS pending_count,
+                COUNT(*) FILTER (WHERE segmentation_status = 'processing') AS processing_count,
+                COUNT(*) FILTER (WHERE segmentation_status = 'completed') AS completed_count,
+                COUNT(*) FILTER (WHERE segmentation_status = 'failed') AS failed_count,
                 COUNT(*) AS total_count
             FROM images
             WHERE project_id = $1
