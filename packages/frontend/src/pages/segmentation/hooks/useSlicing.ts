@@ -51,6 +51,19 @@ export function useSlicing({
       return false;
     }
 
+    console.log('[handleSliceAction] Attempting to slice polygon:', {
+      polygonId: polygon.id,
+      polygonPoints: polygon.points.length,
+      sliceStart: tempPoints[0],
+      sliceEnd: tempPoints[1],
+      polygonBounds: {
+        minX: Math.min(...polygon.points.map(p => p.x)),
+        maxX: Math.max(...polygon.points.map(p => p.x)),
+        minY: Math.min(...polygon.points.map(p => p.y)),
+        maxY: Math.max(...polygon.points.map(p => p.y))
+      }
+    });
+
     // Call the slice function with the selected polygon and slice points
     const result = slicePolygonUtil(polygon, tempPoints[0], tempPoints[1]);
 
