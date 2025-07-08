@@ -109,6 +109,7 @@ const config = {
   monitoring: {
     metricsEnabled: validatedEnv.METRICS_ENABLED !== 'false',
     requestTimeoutMs: parseInt(validatedEnv.REQUEST_TIMEOUT_MS || '30000', 10), // 30 seconds
+    metricsPrefix: validatedEnv.METRICS_PREFIX || 'spheroseg_',
   },
 
   security: {

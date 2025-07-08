@@ -7,6 +7,7 @@
 
 import http from 'http';
 import { AddressInfo } from 'net';
+import v8 from 'v8';
 
 import app from './app';
 import config from './config';
@@ -24,7 +25,14 @@ import performanceConfig from './config/performance';
 // Memory optimization settings
 // Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized
 // Only enable in specific scenarios where memory usage patterns are well understood
-if (global.gc && performanceConfig.memory.gcIntervalMs > 0 && process.env.ENABLE_MANUAL_GC === 'true') {
+const isProduction = process.env.NODE_ENV === 'production';
+const manualGcEnabled = process.env.ENABLE_MANUAL_GC === 'true';
+
+if (isProduction && manualGcEnabled) {
+  logger.warn('Manual GC is enabled in production! This should only be used for debugging specific memory issues.');
+}
+
+if (global.gc && performanceConfig.memory.gcIntervalMs > 0 && manualGcEnabled && !isProduction) {
   logger.info('Manual garbage collection enabled with interval:', performanceConfig.memory.gcIntervalMs);
   
   // Track GC performance
@@ -62,11 +70,14 @@ if (global.gc && performanceConfig.memory.gcIntervalMs > 0 && process.env.ENABLE
     }
   }, performanceConfig.memory.gcIntervalMs);
 } else if (global.gc) {
-  logger.info('Manual GC available but disabled. Enable with ENABLE_MANUAL_GC=true');
+  if (isProduction) {
+    logger.info('Manual GC available but disabled in production');
+  } else {
+    logger.info('Manual GC available but disabled. Enable with ENABLE_MANUAL_GC=true (development only)');
+  }
 }
 
 // Set memory limits for V8
-const v8 = require('v8');
 v8.setFlagsFromString(`--max-old-space-size=${performanceConfig.memory.v8MaxOldSpaceMB}`);
 
 /**

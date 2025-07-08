@@ -16,9 +16,17 @@ import '@testing-library/jest-dom';
 // Mock the Radix UI Dialog components
 vi.mock('@radix-ui/react-dialog', () => {
   const React = require('react');
+  
+  // Create a context to share state between components
+  const DialogContext = React.createContext({
+    isOpen: false,
+    setIsOpen: () => {},
+  });
+  
   return {
     Root: ({ children, open, onOpenChange, modal = true }) => {
       const [isOpen, setIsOpen] = React.useState(open ?? false);
+      
       React.useEffect(() => {
         if (open !== undefined) {
           setIsOpen(open);
@@ -31,33 +39,53 @@ vi.mock('@radix-ui/react-dialog', () => {
       };
 
       return (
-        <div data-testid="dialog-root" data-state={isOpen ? 'open' : 'closed'}>
-          {typeof children === 'function' ? children({ open: isOpen }) : children}
-          {isOpen && <div data-testid="dialog-backdrop" />}
-        </div>
+        <DialogContext.Provider value={{ isOpen, setIsOpen: handleOpenChange }}>
+          <div data-testid="dialog-root" data-state={isOpen ? 'open' : 'closed'}>
+            {children}
+            {isOpen && <div data-testid="dialog-backdrop" />}
+          </div>
+        </DialogContext.Provider>
       );
     },
-    Trigger: ({ children, ...props }) => (
-      <button data-testid="dialog-trigger" {...props}>
-        {children}
-      </button>
-    ),
-    Portal: ({ children }) => <div data-testid="dialog-portal">{children}</div>,
-    Overlay: React.forwardRef(({ children, className, ...props }, ref) => (
-      <div ref={ref} data-testid="dialog-overlay" className={className} {...props}>
-        {children}
-      </div>
-    )),
-    Content: React.forwardRef(({ children, className, ...props }, ref) => (
-      <div ref={ref} data-testid="dialog-content" role="dialog" aria-modal="true" className={className} {...props}>
-        {children}
-      </div>
-    )),
-    Close: ({ children, className, ...props }) => (
-      <button data-testid="dialog-close" className={className} {...props}>
-        {children}
-      </button>
-    ),
+    Trigger: ({ children, ...props }) => {
+      const { setIsOpen } = React.useContext(DialogContext);
+      return (
+        <button data-testid="dialog-trigger" onClick={() => setIsOpen(true)} {...props}>
+          {children}
+        </button>
+      );
+    },
+    Portal: ({ children }) => {
+      const { isOpen } = React.useContext(DialogContext);
+      if (!isOpen) return null;
+      return <div data-testid="dialog-portal">{children}</div>;
+    },
+    Overlay: React.forwardRef(({ children, className, ...props }, ref) => {
+      const { isOpen } = React.useContext(DialogContext);
+      if (!isOpen) return null;
+      return (
+        <div ref={ref} data-testid="dialog-overlay" className={className} {...props}>
+          {children}
+        </div>
+      );
+    }),
+    Content: React.forwardRef(({ children, className, ...props }, ref) => {
+      const { isOpen } = React.useContext(DialogContext);
+      if (!isOpen) return null;
+      return (
+        <div ref={ref} data-testid="dialog-content" role="dialog" aria-modal="true" className={className} {...props}>
+          {children}
+        </div>
+      );
+    }),
+    Close: ({ children, className, ...props }) => {
+      const { setIsOpen } = React.useContext(DialogContext);
+      return (
+        <button data-testid="dialog-close" onClick={() => setIsOpen(false)} className={className} {...props}>
+          {children}
+        </button>
+      );
+    },
     Title: React.forwardRef(({ children, className, ...props }, ref) => (
       <h2 ref={ref} data-testid="dialog-title" className={className} {...props}>
         {children}
@@ -134,8 +162,9 @@ describe('Dialog Component', () => {
     // Initially dialog content should be visible
     expect(screen.getByTestId('dialog-content')).toBeInTheDocument();
 
-    // Click the close button
-    fireEvent.click(screen.getByTestId('dialog-close'));
+    // Click the close button (get the first one if multiple exist)
+    const closeButtons = screen.getAllByTestId('dialog-close');
+    fireEvent.click(closeButtons[0]);
 
     // Dialog content should be removed
     await waitFor(() => {

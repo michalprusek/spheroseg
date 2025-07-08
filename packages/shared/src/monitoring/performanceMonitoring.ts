@@ -15,6 +15,8 @@ export interface PerformanceMonitoringOptions {
   flushInterval?: number;
   /** Maximum number of metrics to batch before sending */
   maxBatchSize?: number;
+  /** Maximum number of metrics to keep in queue */
+  maxMetricsInQueue?: number;
   /** Whether to log metrics to console */
   consoleLogging?: boolean;
   /** Additional global labels to add to all metrics */

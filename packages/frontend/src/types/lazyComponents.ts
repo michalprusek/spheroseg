@@ -3,7 +3,7 @@
  * Ensures type safety for React.lazy imports
  */
 
-import { ComponentType, LazyExoticComponent } from 'react';
+import { ComponentType, LazyExoticComponent, lazy } from 'react';
 
 /**
  * Type for a module with a default export of a React component

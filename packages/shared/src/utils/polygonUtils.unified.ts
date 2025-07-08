@@ -368,6 +368,46 @@ export const calculateIntersection = (
 };
 
 /**
+ * Calculate the intersection point of an infinite line with a line segment
+ * Used for polygon slicing where the slice line extends infinitely
+ * @param lineStart Start point of the infinite line
+ * @param lineEnd End point of the infinite line (defines direction)
+ * @param segStart Start point of the line segment
+ * @param segEnd End point of the line segment
+ * @returns Intersection point or null if the lines don't intersect
+ */
+export const calculateLineSegmentIntersection = (
+  lineStart: Point,
+  lineEnd: Point,
+  segStart: Point,
+  segEnd: Point
+): Point | null => {
+  const x1 = lineStart.x, y1 = lineStart.y;
+  const x2 = lineEnd.x, y2 = lineEnd.y;
+  const x3 = segStart.x, y3 = segStart.y;
+  const x4 = segEnd.x, y4 = segEnd.y;
+
+  const denominator = ((y4 - y3) * (x2 - x1)) - ((x4 - x3) * (y2 - y1));
+
+  if (denominator === 0) {
+    return null; // Lines are parallel
+  }
+
+  const ua = (((x4 - x3) * (y1 - y3)) - ((y4 - y3) * (x1 - x3))) / denominator;
+  const ub = (((x2 - x1) * (y1 - y3)) - ((y2 - y1) * (x1 - x3))) / denominator;
+
+  // Only check if intersection is within the line segment (not the infinite line)
+  if (ub >= 0 && ub <= 1) {
+    return {
+      x: x1 + ua * (x2 - x1),
+      y: y1 + ua * (y2 - y1)
+    };
+  }
+
+  return null;
+};
+
+/**
  * Calculate all intersection points between a line and a polygon
  * @param lineStart Start point of the line
  * @param lineEnd End point of the line
@@ -383,7 +423,8 @@ export const calculateLinePolygonIntersections = (
 
   for (let i = 0; i < polygon.length; i++) {
     const j = (i + 1) % polygon.length;
-    const intersection = calculateIntersection(
+    // Use the new function that treats the slice line as infinite
+    const intersection = calculateLineSegmentIntersection(
       lineStart, lineEnd, polygon[i], polygon[j]
     );
 
