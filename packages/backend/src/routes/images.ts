@@ -358,6 +358,9 @@ router.post(
     next();
   },
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    // Get database pool at the beginning
+    const pool = getPool();
+    
     // Validate user ID
     const requestingUserId = req.user?.userId;
     if (!requestingUserId || typeof requestingUserId !== 'string') {
@@ -463,7 +466,6 @@ router.post(
         return;
       }
 
-      const pool = getPool();
       const client = await pool.connect();
 
       try {
