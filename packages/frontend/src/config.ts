@@ -3,6 +3,8 @@
  * Centralizes environment variables and configuration settings
  */
 
+import logger from '@/utils/logger';
+
 // API configuration
 // In Docker, we need to use relative URLs for API calls from the browser
 // We use environment variables if available, otherwise fallback to defaults
@@ -15,18 +17,20 @@ const apiUsersPrefix = import.meta.env.VITE_API_USERS_PREFIX || '/api/users'; //
 const isDevelopment = import.meta.env.MODE === 'development';
 const isProduction = import.meta.env.MODE === 'production';
 
-// Log configuration in development
+// Log configuration once during initialization
 if (isDevelopment) {
-  console.log('[config] Environment:', import.meta.env.MODE);
-  console.log('[config] API URL:', apiUrl);
-  console.log('[config] API Base URL:', apiBaseUrl);
-  console.log('[config] API Auth Prefix:', apiAuthPrefix);
-  console.log('[config] API Users Prefix:', apiUsersPrefix);
-  console.log('[config] Environment Variables:', {
-    VITE_API_URL: import.meta.env.VITE_API_URL,
-    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-    VITE_API_AUTH_PREFIX: import.meta.env.VITE_API_AUTH_PREFIX,
-    VITE_API_USERS_PREFIX: import.meta.env.VITE_API_USERS_PREFIX,
+  logger.debug('[config] Application configuration:', {
+    environment: import.meta.env.MODE,
+    apiUrl,
+    apiBaseUrl,
+    apiAuthPrefix,
+    apiUsersPrefix,
+    envVariables: {
+      VITE_API_URL: import.meta.env.VITE_API_URL,
+      VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+      VITE_API_AUTH_PREFIX: import.meta.env.VITE_API_AUTH_PREFIX,
+      VITE_API_USERS_PREFIX: import.meta.env.VITE_API_USERS_PREFIX,
+    },
   });
 }
 

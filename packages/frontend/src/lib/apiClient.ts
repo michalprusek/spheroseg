@@ -18,15 +18,18 @@ const DOCKER_ENV = import.meta.env.VITE_DOCKER_ENV === 'true'; // Read from envi
 // For local development, we want to use the API_BASE_URL
 const EFFECTIVE_BASE_URL = '';
 
-// Log the API base URL to help with debugging
-console.log('[apiClient] Environment:', import.meta.env.MODE);
-console.log('[apiClient] API_BASE_URL from env:', import.meta.env.VITE_API_BASE_URL);
-console.log('[apiClient] Configured API_BASE_URL:', API_BASE_URL);
-console.log('[apiClient] EFFECTIVE_BASE_URL:', EFFECTIVE_BASE_URL);
-console.log('[apiClient] Config from config.ts:', {
-  apiUrl: config.apiUrl,
-  apiBaseUrl: config.apiBaseUrl,
-});
+// Log the API base URL configuration once during initialization
+if (process.env.NODE_ENV !== 'production') {
+  logger.debug('[apiClient] Configuration:', {
+    environment: import.meta.env.MODE,
+    apiBaseUrl: API_BASE_URL,
+    effectiveBaseUrl: EFFECTIVE_BASE_URL,
+    config: {
+      apiUrl: config.apiUrl,
+      apiBaseUrl: config.apiBaseUrl,
+    },
+  });
+}
 
 // Create an Axios instance
 const apiClient: AxiosInstance = axios.create({

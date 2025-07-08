@@ -64,9 +64,17 @@ const Dashboard = lazy(() =>
     return import('./pages/NotFound');
   }),
 );
-const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
+const ProjectDetail = lazy(() =>
+  import('./pages/ProjectDetail').catch(() => {
+    // Error handled by returning NotFound page
+    return import('./pages/NotFound');
+  }),
+);
 const SegmentationPage = lazy(() =>
-  import('./pages/segmentation/SegmentationPage')
+  import('./pages/segmentation/SegmentationPage').catch(() => {
+    // Error handled by returning NotFound page
+    return import('./pages/NotFound');
+  }),
 );
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Settings = lazy(() =>
