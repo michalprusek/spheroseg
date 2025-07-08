@@ -7,6 +7,10 @@ import logger from '../utils/logger';
 
 const router = express.Router();
 
+// Preview configuration
+const PREVIEW_MAX_SIZE = parseInt(process.env.PREVIEW_MAX_SIZE || '800', 10);
+const PREVIEW_QUALITY = parseInt(process.env.PREVIEW_QUALITY || '6', 10);
+
 // Configure multer for temporary file uploads
 const upload = multer({
   dest: '/tmp/preview-uploads/',
@@ -48,12 +52,12 @@ router.post('/generate', upload.single('file'), async (req: Request, res: Respon
     // Convert to PNG for preview using Sharp for both TIFF and BMP
     try {
       await sharp(tempPath)
-        .resize(800, 800, { 
+        .resize(PREVIEW_MAX_SIZE, PREVIEW_MAX_SIZE, { 
           fit: 'inside',
           withoutEnlargement: true 
         })
         .png({ 
-          compressionLevel: 6, // Faster compression for preview
+          compressionLevel: PREVIEW_QUALITY, // Configurable compression for preview
           adaptiveFiltering: true 
         })
         .toFile(outputPath);
