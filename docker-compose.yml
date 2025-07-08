@@ -139,6 +139,12 @@ services:
         condition: service_started
     ports:
       - "5001:5001"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
     environment:
       # Environment variables are now primarily managed in backend/src/config/index.ts
       # Only critical overrides or Docker-specific settings should be here.
@@ -174,7 +180,7 @@ services:
       bash -c "
         echo 'Skipping database initialization (already initialized)...' &&
         echo 'Starting development server with hot reload using nodemon...' &&
-        DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/spheroseg APP_URL=http://backend:5001 ML_API_URL=http://ml:5002 npm run dev
+        NODE_OPTIONS='--max-old-space-size=384' DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/spheroseg APP_URL=http://backend:5001 ML_API_URL=http://ml:5002 npm run dev
       "
 
   # ML Service

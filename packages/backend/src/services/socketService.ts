@@ -7,6 +7,7 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import logger from '../utils/logger';
+import { initializeSocketIO as initSocket, getIO } from '../socket';
 
 // Socket.IO server instance
 let io: SocketIOServer | null = null;
@@ -18,20 +19,12 @@ let io: SocketIOServer | null = null;
  * @returns The initialized Socket.IO server instance
  */
 export function initializeSocketIO(server: HttpServer): SocketIOServer {
-  if (io) {
-    logger.warn('Socket.IO server already initialized');
-    return io;
+  // Use the shared socket initialization from socket.ts
+  io = initSocket(server);
+  
+  if (!io) {
+    throw new Error('Failed to initialize Socket.IO server');
   }
-
-  // Create Socket.IO server with CORS configuration
-  io = new SocketIOServer(server, {
-    cors: {
-      origin: '*', // In production, this should be restricted to your frontend domain
-      methods: ['GET', 'POST'],
-      credentials: true,
-    },
-    path: '/socket.io',
-  });
 
   // Connection event handler
   io.on('connection', (socket) => {
