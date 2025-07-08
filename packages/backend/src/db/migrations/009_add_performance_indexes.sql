@@ -1,11 +1,24 @@
 -- Add performance indexes for frequently queried columns
 -- This migration adds indexes to improve query performance
 
+-- Enable timing to monitor index creation
+\timing on
+
+-- Log index creation start
+DO $$ BEGIN RAISE NOTICE 'Starting performance index creation at %', NOW(); END $$;
+
 -- Images table indexes
 CREATE INDEX IF NOT EXISTS idx_images_user_id ON images(user_id);
+DO $$ BEGIN RAISE NOTICE 'Created index idx_images_user_id'; END $$;
+
 CREATE INDEX IF NOT EXISTS idx_images_project_id ON images(project_id);
+DO $$ BEGIN RAISE NOTICE 'Created index idx_images_project_id'; END $$;
+
 CREATE INDEX IF NOT EXISTS idx_images_created_at ON images(created_at DESC);
+DO $$ BEGIN RAISE NOTICE 'Created index idx_images_created_at'; END $$;
+
 CREATE INDEX IF NOT EXISTS idx_images_segmentation_status ON images(segmentation_status);
+DO $$ BEGIN RAISE NOTICE 'Created index idx_images_segmentation_status'; END $$;
 
 -- Composite index for common query pattern
 CREATE INDEX IF NOT EXISTS idx_images_project_status ON images(project_id, segmentation_status);
@@ -45,9 +58,26 @@ CREATE INDEX IF NOT EXISTS idx_segmentation_queue_pending ON segmentation_queue(
 WHERE status IN ('queued', 'processing');
 
 -- Analyze tables to update statistics
+DO $$ BEGIN RAISE NOTICE 'Analyzing tables to update statistics...'; END $$;
 ANALYZE images;
 ANALYZE projects;
 ANALYZE segmentation_results;
 ANALYZE cells;
 ANALYZE segmentation_queue;
 ANALYZE project_shares;
+
+-- Log completion
+DO $$ BEGIN RAISE NOTICE 'Performance index creation completed at %', NOW(); END $$;
+
+-- Check index usage (for monitoring)
+DO $$
+DECLARE
+    index_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO index_count
+    FROM pg_indexes
+    WHERE schemaname = 'public'
+    AND tablename IN ('images', 'projects', 'segmentation_results', 'cells', 'segmentation_queue', 'project_shares');
+    
+    RAISE NOTICE 'Total indexes on performance-critical tables: %', index_count;
+END $$;

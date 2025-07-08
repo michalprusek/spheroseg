@@ -4,14 +4,14 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import fs from 'fs';
+import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
 // Cache for ETags to avoid repeated file stats
 const etagCache = new Map<string, { etag: string; mtime: number }>();
 
-export const staticCacheMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const staticCacheMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const urlPath = req.path.toLowerCase();
   
   // Set cache headers based on file type
@@ -34,30 +34,37 @@ export const staticCacheMiddleware = (req: Request, res: Response, next: NextFun
   // This is a fallback for development
   if (process.env.NODE_ENV === 'development') {
     try {
-      // Construct the file path (assuming static files are served from a known directory)
-      const staticRoot = path.join(process.cwd(), 'public');
+      // Construct the file path (configurable static root)
+      const staticRoot = process.env.STATIC_ROOT || path.join(process.cwd(), 'public');
       const filePath = path.join(staticRoot, req.path);
       
       // Check cache first
       const cached = etagCache.get(filePath);
       if (cached) {
-        const stats = fs.statSync(filePath);
-        if (stats.mtime.getTime() === cached.mtime) {
-          res.setHeader('ETag', cached.etag);
-          next();
-          return;
+        try {
+          const stats = await fs.stat(filePath);
+          if (stats.mtime.getTime() === cached.mtime) {
+            res.setHeader('ETag', cached.etag);
+            next();
+            return;
+          }
+        } catch {
+          // File might have been deleted
+          etagCache.delete(filePath);
         }
       }
       
       // Generate ETag based on file stats
-      if (fs.existsSync(filePath)) {
-        const stats = fs.statSync(filePath);
+      try {
+        const stats = await fs.stat(filePath);
         const etag = `"${stats.size}-${stats.mtime.getTime()}"`;
         
         // Cache the ETag
         etagCache.set(filePath, { etag, mtime: stats.mtime.getTime() });
         
         res.setHeader('ETag', etag);
+      } catch {
+        // File doesn't exist - no ETag
       }
     } catch (error) {
       // Silently ignore errors - ETag is optional
