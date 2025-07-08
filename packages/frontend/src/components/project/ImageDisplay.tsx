@@ -239,7 +239,7 @@ export const ImageDisplay = ({
             // Create a new blob URL from the stored blob
             const url = URL.createObjectURL(blob);
             setImageSrc(url);
-            console.log(`Loaded image ${image.id} from IndexedDB`);
+            console.debug(`Loaded image ${image.id} from IndexedDB`);
           } else {
             // Use the provided URL if available
             setImageSrc(image.thumbnail_url || image.url || null);
@@ -292,7 +292,7 @@ export const ImageDisplay = ({
             // Create a new blob URL from the stored blob
             const url = URL.createObjectURL(blob);
             e.currentTarget.src = url;
-            console.log(`Loaded image ${image.id} from IndexedDB after error`);
+            console.debug(`Loaded image ${image.id} from IndexedDB after error`);
             return;
           }
 

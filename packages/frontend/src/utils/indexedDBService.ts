@@ -68,7 +68,7 @@ export const storeImageBlob = async (imageId: string, projectId: string, blob: B
 
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        console.log(`Stored image ${imageId} in IndexedDB`);
+        console.debug(`Stored image ${imageId} in IndexedDB`);
         resolve();
       };
 
@@ -103,10 +103,11 @@ export const getImageBlob = async (imageId: string): Promise<Blob | null> => {
       request.onsuccess = () => {
         const result = request.result as ImageData | undefined;
         if (result) {
-          console.log(`Retrieved image ${imageId} from IndexedDB`);
+          console.debug(`Retrieved image ${imageId} from IndexedDB`);
           resolve(result.blob);
         } else {
-          console.log(`Image ${imageId} not found in IndexedDB`);
+          // This is normal behavior when image hasn't been cached yet
+          console.debug(`Image ${imageId} not found in IndexedDB cache`);
           resolve(null);
         }
       };

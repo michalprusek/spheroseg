@@ -274,20 +274,40 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
       let height = 0;
 
       try {
-        // Create an image element to get dimensions
-        const img = new Image();
-        img.src = base64String;
+        // Only try to get dimensions for image types that can be loaded in browser
+        const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+        const fileType = file.type.toLowerCase();
+        
+        if (imageTypes.includes(fileType)) {
+          // Create an image element to get dimensions
+          const img = new Image();
+          img.src = base64String;
 
-        // Wait for the image to load
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-        });
+          // Wait for the image to load with timeout
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Image load timeout'));
+            }, 5000); // 5 second timeout
+            
+            img.onload = () => {
+              clearTimeout(timeout);
+              resolve(undefined);
+            };
+            img.onerror = () => {
+              clearTimeout(timeout);
+              reject(new Error('Image failed to load'));
+            };
+          });
 
-        width = img.width;
-        height = img.height;
+          width = img.width;
+          height = img.height;
+        } else {
+          // For unsupported types like TIFF/BMP, dimensions will remain 0
+          console.log(`Skipping dimension extraction for unsupported type: ${fileType}`);
+        }
       } catch (dimensionError) {
-        console.warn('Could not get image dimensions:', dimensionError);
+        // This is expected for certain file types, so use debug level logging
+        console.debug(`Could not get image dimensions for ${file.name}:`, dimensionError);
       }
 
       // Create a thumbnail from the base64 string
