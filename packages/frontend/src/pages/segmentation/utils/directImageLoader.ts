@@ -28,63 +28,14 @@ export const loadImageDirectly = async (
       }
     }
 
-    // No cached data found, try to derive a URL from known patterns
-    const potentialUrls = [
-      // Try direct URLs with common patterns - with original filename
-      `/uploads/${imageId}`,
-      `/uploads/${imageId}.jpg`,
-      `/uploads/${imageId}.png`,
-      `/uploads/images/${imageId}`,
-      `/uploads/images/${imageId}.jpg`,
-      `/uploads/images/${imageId}.png`,
-
-      // Try with project ID in path
-      `/uploads/${projectId}/${imageId}`,
-      `/uploads/${projectId}/${imageId}.jpg`,
-      `/uploads/${projectId}/${imageId}.png`,
-
-      // Try with API prefix
-      `/api/uploads/${imageId}`,
-      `/api/uploads/${imageId}.jpg`,
-      `/api/uploads/${imageId}.png`,
-      `/api/uploads/${projectId}/${imageId}`,
-      `/api/uploads/${projectId}/${imageId}.jpg`,
-      `/api/uploads/${projectId}/${imageId}.png`,
-
-      // Try with backend URL - because backend is mapped to port 5001
-      `http://localhost:5001/uploads/${imageId}`,
-      `http://localhost:5001/uploads/${imageId}.jpg`,
-      `http://localhost:5001/uploads/${imageId}.png`,
-      `http://localhost:5001/uploads/${projectId}/${imageId}`,
-      `http://localhost:5001/uploads/${projectId}/${imageId}.jpg`,
-      `http://localhost:5001/uploads/${projectId}/${imageId}.png`,
-
-      // Try with Docker service name
-      `http://backend:5001/uploads/${imageId}`,
-      `http://backend:5001/uploads/${imageId}.jpg`,
-      `http://backend:5001/uploads/${imageId}.png`,
-      `http://backend:5001/uploads/${projectId}/${imageId}`,
-      `http://backend:5001/uploads/${projectId}/${imageId}.jpg`,
-      `http://backend:5001/uploads/${projectId}/${imageId}.png`,
-
-      // Try public URLs
-      `/public/uploads/${imageId}`,
-      `/public/uploads/${imageId}.jpg`,
-      `/public/uploads/${imageId}.png`,
-      `/public/uploads/${projectId}/${imageId}`,
-      `/public/uploads/${projectId}/${imageId}.jpg`,
-      `/public/uploads/${projectId}/${imageId}.png`,
-
-      // Try with project subfolder and images subfolder
-      `/uploads/${projectId}/images/${imageId}`,
-      `/uploads/${projectId}/images/${imageId}.jpg`,
-      `/uploads/${projectId}/images/${imageId}.png`,
-
-      // Try with field name prefix (from multer)
-      `/uploads/${projectId}/images-${imageId}`,
-      `/uploads/${projectId}/images-${imageId}.jpg`,
-      `/uploads/${projectId}/images-${imageId}.png`,
-    ];
+    // No cached data found
+    // Since we don't have the actual storage path here, we can't generate proper URLs
+    // The directImageLoader should only be used as a last resort, and ideally
+    // we should have the storage path from the API
+    const potentialUrls: string[] = [];
+    
+    // Add a log to indicate this fallback shouldn't normally be used
+    logger.warn(`DirectImageLoader being used as fallback - this indicates API communication issues`);
 
     // Try each potential URL
     for (const url of potentialUrls) {

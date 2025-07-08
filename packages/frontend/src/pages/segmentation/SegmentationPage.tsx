@@ -258,7 +258,6 @@ export const SegmentationPage: React.FC = () => {
           </div>
 
           <div ref={canvasRef} className="flex-1 relative overflow-hidden bg-gray-900">
-            {imageData && console.log('[SegmentationPage] imageData:', JSON.stringify(imageData))}
             <CanvasV2
               canvasRef={canvasRef}
               imageData={imageData}
