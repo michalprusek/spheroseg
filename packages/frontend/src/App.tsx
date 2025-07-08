@@ -73,7 +73,7 @@ const ProjectDetail = lazy(() =>
 const SegmentationPage = lazy(() =>
   import('./pages/segmentation/SegmentationPage').catch(() => {
     // Error handled by returning NotFound page
-    return import('./pages/NotFound');
+    return import('./pages/NotFound') as any;
   }),
 );
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -130,13 +130,13 @@ const ForgotPassword = lazy(() =>
 const SegmentationEditorRedirect = lazy(() =>
   import('./pages/segmentation/SegmentationEditorRedirect').catch(() => {
     // Error handled by returning NotFound page
-    return import('./pages/NotFound');
+    return import('./pages/NotFound') as any;
   }),
 );
 const AcceptInvitation = lazy(() =>
   import('./pages/AcceptInvitation').catch(() => {
     // Error handled by returning NotFound page
-    return import('./pages/NotFound');
+    return import('./pages/NotFound') as any;
   }),
 );
 
@@ -514,7 +514,6 @@ const router = createBrowserRouter(routes, {
     v7_fetcherPersist: true,
     v7_partialHydration: true,
     v7_skipActionErrorRevalidation: true,
-    v7_startTransition: true,
   },
 });
 

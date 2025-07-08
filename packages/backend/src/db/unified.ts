@@ -47,10 +47,11 @@ export function getPool(): Pool {
       ? {
           connectionString: databaseUrl,
           ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined,
-          max: 20,
-          idleTimeoutMillis: 30000,
+          max: 10, // Reduced from 20 to save memory
+          min: 2, // Minimum connections to maintain
+          idleTimeoutMillis: 10000, // Reduced from 30s to 10s
           connectionTimeoutMillis: 5000,
-          allowExitOnIdle: false,
+          allowExitOnIdle: true, // Allow pool to exit when idle to save memory
         }
       : {
           host: config.db.host,
@@ -59,10 +60,11 @@ export function getPool(): Pool {
           user: config.db.user,
           password: config.db.password,
           ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined,
-          max: 20,
-          idleTimeoutMillis: 30000,
+          max: 10, // Reduced from 20 to save memory
+          min: 2, // Minimum connections to maintain
+          idleTimeoutMillis: 10000, // Reduced from 30s to 10s
           connectionTimeoutMillis: 5000,
-          allowExitOnIdle: false,
+          allowExitOnIdle: true, // Allow pool to exit when idle to save memory
         };
 
     pool = new Pool(poolConfig);

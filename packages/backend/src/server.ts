@@ -20,6 +20,21 @@ import dbPool from './db';
 import { startPerformanceMonitoring, stopPerformanceMonitoring } from './utils/performance';
 import { monitorQuery } from './monitoring/unified';
 
+// Memory optimization settings
+if (global.gc) {
+  // Force garbage collection every 30 seconds if available
+  setInterval(() => {
+    if (global.gc) {
+      logger.debug('Running manual garbage collection');
+      global.gc();
+    }
+  }, 30000);
+}
+
+// Set memory limits for V8
+const v8 = require('v8');
+v8.setFlagsFromString('--max-old-space-size=400'); // Limit to 400MB for old space
+
 /**
  * Create HTTP server
  */

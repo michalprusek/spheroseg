@@ -125,29 +125,35 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
  */
 export const checkMemoryHealth = (): HealthStatus => {
   const memUsage = process.memoryUsage();
-  const totalMemory = memUsage.heapTotal;
-  const usedMemory = memUsage.heapUsed;
-  const memoryUsagePercent = (usedMemory / totalMemory) * 100;
+  const usedMemory = memUsage.rss; // Resident Set Size - total memory allocated for the process
+  const usedMemoryMB = usedMemory / 1024 / 1024;
   
-  if (memoryUsagePercent > 90) {
+  // Container has 512MB limit as per docker-compose.yml
+  const containerLimit = 512; // MB
+  const memoryUsagePercent = (usedMemoryMB / containerLimit) * 100;
+  
+  // Also check heap usage
+  const heapUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+  
+  if (memoryUsagePercent > 90 || heapUsagePercent > 95) {
     return {
       status: 'unhealthy',
-      message: `High memory usage: ${memoryUsagePercent.toFixed(1)}%`,
+      message: `High memory usage: ${usedMemoryMB.toFixed(0)}MB / ${containerLimit}MB (${memoryUsagePercent.toFixed(1)}%), Heap: ${heapUsagePercent.toFixed(1)}%`,
       lastChecked: new Date().toISOString(),
     };
   }
   
-  if (memoryUsagePercent > 75) {
+  if (memoryUsagePercent > 75 || heapUsagePercent > 85) {
     return {
       status: 'degraded',
-      message: `Elevated memory usage: ${memoryUsagePercent.toFixed(1)}%`,
+      message: `Elevated memory usage: ${usedMemoryMB.toFixed(0)}MB / ${containerLimit}MB (${memoryUsagePercent.toFixed(1)}%), Heap: ${heapUsagePercent.toFixed(1)}%`,
       lastChecked: new Date().toISOString(),
     };
   }
   
   return {
     status: 'healthy',
-    message: `Memory usage: ${memoryUsagePercent.toFixed(1)}%`,
+    message: `Memory usage: ${usedMemoryMB.toFixed(0)}MB / ${containerLimit}MB (${memoryUsagePercent.toFixed(1)}%), Heap: ${heapUsagePercent.toFixed(1)}%`,
     lastChecked: new Date().toISOString(),
   };
 };
