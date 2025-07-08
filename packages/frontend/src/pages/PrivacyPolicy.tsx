@@ -18,35 +18,52 @@ const PrivacyPolicy = () => {
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.introduction.title')}</h2>
             <p className="mb-4">{t('privacyPage.introduction.paragraph1')}</p>
 
-            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.informationWeCollect.title')}</h2>
-            <p className="mb-4">{t('privacyPage.informationWeCollect.paragraph1')}</p>
+            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.dataCollection.title')}</h2>
+            <p className="mb-4">{t('privacyPage.dataCollection.paragraph1')}</p>
+            {t('privacyPage.dataCollection.list') && Array.isArray(t('privacyPage.dataCollection.list')) && (
+              <ul className="list-disc list-inside mb-4">
+                {(t('privacyPage.dataCollection.list') as string[]).map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            )}
 
-            <h3 className="text-xl font-semibold mt-4 mb-3">{t('privacyPage.personalInformation.title')}</h3>
-            <p className="mb-4">{t('privacyPage.personalInformation.paragraph1')}</p>
+            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.dataUsage.title')}</h2>
+            <p className="mb-4">{t('privacyPage.dataUsage.paragraph1')}</p>
+            {t('privacyPage.dataUsage.list') && Array.isArray(t('privacyPage.dataUsage.list')) && (
+              <ul className="list-disc list-inside mb-4">
+                {(t('privacyPage.dataUsage.list') as string[]).map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            )}
 
-            <h3 className="text-xl font-semibold mt-4 mb-3">{t('privacyPage.researchData.title')}</h3>
-            <p className="mb-4">{t('privacyPage.researchData.paragraph1')}</p>
-
-            <h3 className="text-xl font-semibold mt-4 mb-3">{t('privacyPage.usageInformation.title')}</h3>
-            <p className="mb-4">{t('privacyPage.usageInformation.paragraph1')}</p>
-
-            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.howWeUse.title')}</h2>
-            <p className="mb-4">{t('privacyPage.howWeUse.paragraph1')}</p>
-
-            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.dataSecurity.title')}</h2>
-            <p className="mb-4">{t('privacyPage.dataSecurity.paragraph1')}</p>
+            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.dataStorage.title')}</h2>
+            <p className="mb-4">{t('privacyPage.dataStorage.paragraph1')}</p>
+            <p className="mb-4">{t('privacyPage.dataStorage.paragraph2')}</p>
 
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.dataSharing.title')}</h2>
             <p className="mb-4">{t('privacyPage.dataSharing.paragraph1')}</p>
 
-            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.yourChoices.title')}</h2>
-            <p className="mb-4">{t('privacyPage.yourChoices.paragraph1')}</p>
+            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.userRights.title')}</h2>
+            <p className="mb-4">{t('privacyPage.userRights.paragraph1')}</p>
+            {t('privacyPage.userRights.list') && Array.isArray(t('privacyPage.userRights.list')) && (
+              <ul className="list-disc list-inside mb-4">
+                {(t('privacyPage.userRights.list') as string[]).map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            )}
+
+            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.cookies.title')}</h2>
+            <p className="mb-4">{t('privacyPage.cookies.paragraph1')}</p>
 
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.changes.title')}</h2>
             <p className="mb-4">{t('privacyPage.changes.paragraph1')}</p>
 
-            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.contactUs.title')}</h2>
-            <p className="mb-4">{t('privacyPage.contactUs.paragraph1')}</p>
+            <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.contact.title')}</h2>
+            <p className="mb-4">{t('privacyPage.contact.paragraph1')}</p>
+            <p className="mb-4"><a href={`mailto:${t('privacyPage.contact.email')}`} className="text-blue-600 hover:underline">{t('privacyPage.contact.email')}</a></p>
 
             <p className="text-sm text-gray-500 mt-8 mb-4">{t('privacyPage.lastUpdated')}</p>
           </div>

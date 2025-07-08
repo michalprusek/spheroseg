@@ -4,6 +4,7 @@
  * This module provides functions for uploading images to the server
  */
 import apiClient from '@/lib/apiClient';
+import uploadClient from '@/lib/uploadClient';
 import { Image as ApiImageType, ProjectImage } from '@/types';
 import { mapApiImageToProjectImage } from './projectImages';
 
@@ -21,15 +22,13 @@ export const uploadFile = async (projectId: string, file: File): Promise<Project
     formData.append('images', file); // Backend expects an array under 'images' key
     // projectId is in the URL, no need to append to formData unless backend specifically requires it.
 
-    const config = {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    };
+    // Don't set Content-Type header explicitly for FormData
+    // axios will automatically set it with the correct boundary
+    const config = {};
 
     // Explicitly state that we expect an array of Image-like objects from the backend
     // even for a single file upload, as per the new unified spec.
-    const response = await apiClient.post<ApiImageType[]>(UNIFIED_UPLOAD_ENDPOINT(projectId), formData, config);
+    const response = await uploadClient.post<ApiImageType[]>(UNIFIED_UPLOAD_ENDPOINT(projectId), formData, config);
 
     // Assuming backend returns an array even for a single file upload as per new spec
     if (Array.isArray(response.data) && response.data.length > 0) {
@@ -70,14 +69,12 @@ export const uploadFiles = async (projectId: string, files: File[]): Promise<Pro
     });
     // projectId is in the URL
 
-    const config = {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    };
+    // Don't set Content-Type header explicitly for FormData
+    // axios will automatically set it with the correct boundary
+    const config = {};
 
     // Explicitly state that we expect an array of Image-like objects from the backend.
-    const response = await apiClient.post<ApiImageType[]>(UNIFIED_UPLOAD_ENDPOINT(projectId), formData, config);
+    const response = await uploadClient.post<ApiImageType[]>(UNIFIED_UPLOAD_ENDPOINT(projectId), formData, config);
 
     if (Array.isArray(response.data)) {
       // Explicitly cast response.data to ApiImageType[] to ensure TypeScript understands the shape
@@ -296,22 +293,31 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
       // Create a thumbnail from the base64 string
       let thumbnailBase64 = base64String;
       try {
-        // Simple thumbnail creation by loading the image and drawing it to a smaller canvas
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        if (!ctx) {
-          console.warn('Could not get 2D context for thumbnail generation');
-          thumbnailBase64 = base64String; // Use original if context fails
+        // For TIFF/BMP files, use canvas preview
+        const ext = file.name.toLowerCase();
+        if (ext.endsWith('.tiff') || ext.endsWith('.tif') || ext.endsWith('.bmp')) {
+          const { generateCanvasPreview } = await import('../utils/tiffPreview');
+          thumbnailBase64 = generateCanvasPreview(file);
         } else {
-          // Create an image element to get dimensions
-          const tempImg = new Image();
-          tempImg.src = base64String;
+          // Simple thumbnail creation by loading the image and drawing it to a smaller canvas
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
 
-          await new Promise<void>((resolveLoad, rejectLoad) => {
-            tempImg.onload = () => resolveLoad();
-            tempImg.onerror = (e) => rejectLoad(new Error(`Temp image for thumbnail failed to load: ${e}`));
-          });
+          if (!ctx) {
+            console.warn('Could not get 2D context for thumbnail generation');
+            thumbnailBase64 = base64String; // Use original if context fails
+          } else {
+            // Create an image element to get dimensions
+            const tempImg = new Image();
+            tempImg.src = base64String;
+
+            await new Promise<void>((resolveLoad, rejectLoad) => {
+              tempImg.onload = () => resolveLoad();
+              tempImg.onerror = (e) => {
+                console.warn(`Image failed to load for thumbnail: ${file.name}`);
+                rejectLoad(new Error(`Temp image for thumbnail failed to load: ${e}`));
+              };
+            });
 
           const MAX_THUMB_WIDTH = 150;
           const MAX_THUMB_HEIGHT = 150;
@@ -331,6 +337,7 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
           canvas.height = thumbHeight;
           ctx.drawImage(tempImg, 0, 0, thumbWidth, thumbHeight);
           thumbnailBase64 = canvas.toDataURL(file.type); // Use original file type if possible
+          }
         }
       } catch (thumbError) {
         console.warn('Could not create thumbnail:', thumbError);

@@ -7,11 +7,14 @@
  * @deprecated Import directly from @spheroseg/shared/utils/polygonUtils for new code
  */
 
+// Import types from @spheroseg/types
+export type { Point } from '@spheroseg/types';
+
+// Re-export everything else from shared utils
 export {
-  // Types
-  Point,
-  Polygon,
-  BoundingBox,
+  // Types (except Point)
+  type Polygon,
+  type BoundingBox,
   
   // Functions
   isValidPolygon,

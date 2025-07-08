@@ -6,6 +6,9 @@ import { createNamespacedLogger } from '@/utils/logger';
 import filterVisiblePolygons from '../../utils/polygonVisibility';
 import { toast } from 'sonner';
 import CanvasImageLayer from './CanvasImageLayer'; // Import the new component
+import CanvasPolygonLayer from './CanvasPolygonLayer'; // Import the polygon layer component
+import CanvasVertexLayer from './CanvasVertexLayer'; // Import the vertex layer component
+import CanvasTemporaryGeometryLayer from './CanvasTemporaryGeometryLayer'; // Import the temporary geometry layer component
 
 // Create a logger for this module
 const logger = createNamespacedLogger('segmentation:canvas');

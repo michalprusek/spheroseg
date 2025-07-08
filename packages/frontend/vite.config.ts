@@ -25,12 +25,7 @@ export default defineConfig(({ mode }) => {
   console.log(`Users Prefix: ${apiUsersPrefix}`);
 
   const plugins: PluginOption[] = [
-    react({
-      // Optimize React for production
-      babel: {
-        plugins: isProduction ? ['@babel/plugin-transform-react-inline-elements'] : [],
-      },
-    }),
+    react(),
     staticAssetsPlugin(),
   ];
 
@@ -79,8 +74,10 @@ export default defineConfig(({ mode }) => {
         'react-hook-form',
         'zod',
         '@hookform/resolvers',
+        '@spheroseg/types',
+        '@spheroseg/shared',
       ],
-      exclude: ['@spheroseg/shared'],
+      exclude: [],
       esbuildOptions: {
         target: 'es2020',
       },
@@ -90,6 +87,7 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
         '@shared': path.resolve(__dirname, './src/shared'),
         '@spheroseg/shared': path.resolve(__dirname, '../shared/src'),
+        '@spheroseg/types': path.resolve(__dirname, '../types/src'),
       },
     },
     server: {

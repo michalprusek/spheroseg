@@ -220,6 +220,12 @@ export const createCSRFMiddleware = (options: SecurityOptions = {}) => {
     if (req.headers.authorization) {
       return next();
     }
+    
+    // Skip CSRF for public endpoints
+    const publicEndpoints = ['/api/access-requests'];
+    if (publicEndpoints.some(endpoint => req.path.startsWith(endpoint))) {
+      return next();
+    }
 
     const token = req.headers['x-xsrf-token'] as string || req.body?._csrf;
     const sessionToken = req.session?.csrfToken;

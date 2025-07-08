@@ -21,6 +21,9 @@ import projectSharesRoutes from './projectShares';
 import metricsRoutes from './metricsRoutes';
 import statusRoutes from './status';
 import previewRoutes from './preview';
+import logsRoutes from './logs';
+import performanceRoutes from './performance';
+import accessRequestsRoutes from './accessRequests';
 
 // Create main router
 const router: Router = express.Router();
@@ -49,12 +52,19 @@ router.use('/', segmentationRoutes); // Mount at root for /images/:id/segmentati
 
 // Monitoring routes
 router.use('/metrics', metricsRoutes);
+router.use('/metrics/performance', performanceRoutes);
+
+// Logs routes
+router.use('/logs', logsRoutes);
 
 // Status routes (for queue status)
 router.use('/', statusRoutes);
 
 // Preview routes (for TIFF/BMP preview generation)
 router.use('/preview', previewRoutes);
+
+// Access requests routes
+router.use('/access-requests', accessRequestsRoutes);
 
 // Add a default route for root
 router.get('/', (req, res) => {

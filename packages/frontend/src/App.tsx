@@ -25,7 +25,7 @@ import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
 import { SkipLink } from './components/a11y';
 import ThemedFooter from './components/ThemedFooter';
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 
 // Import IndexedDB service for cleanup
 import { cleanupOldData, getDBStats, clearEntireDatabase } from './utils/indexedDBService';
@@ -52,6 +52,12 @@ const SignUp = lazy(() =>
     return import('./pages/NotFound');
   }),
 );
+const VerifyEmail = lazy(() =>
+  import('./pages/VerifyEmail').catch(() => {
+    // Error handled by returning NotFound page
+    return import('./pages/NotFound');
+  }),
+);
 const Dashboard = lazy(() =>
   import('./pages/Dashboard').catch(() => {
     // Error handled by returning NotFound page
@@ -61,11 +67,6 @@ const Dashboard = lazy(() =>
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
 const SegmentationPage = lazy(() =>
   import('./pages/segmentation/SegmentationPage')
-    .then((module) => ({ default: module.SegmentationPage }))
-    .catch(() => {
-      // Error handled by returning NotFound page
-      return import('./pages/NotFound');
-    }),
 );
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Settings = lazy(() =>
@@ -278,6 +279,21 @@ const AppLayout = () => {
                 </main>
                 {shouldShowFooter && <ThemedFooter />}
               </div>
+              <Toaster
+                richColors
+                position="bottom-right"
+                closeButton
+                expand={true}
+                duration={4000}
+                visibleToasts={3}
+                toastOptions={{
+                  className: 'custom-toast',
+                  style: {
+                    padding: 'var(--toast-padding)',
+                    borderRadius: 'var(--toast-border-radius)',
+                  },
+                }}
+              />
             </SocketProvider>
           </ProfileProvider>
         </ThemeProvider>
@@ -310,6 +326,14 @@ const routes = createRoutesFromElements(
       element={
         <ErrorBoundary componentName="SignUpPage">
           <SignUp />
+        </ErrorBoundary>
+      }
+    />
+    <Route
+      path="/verify-email"
+      element={
+        <ErrorBoundary componentName="VerifyEmailPage">
+          <VerifyEmail />
         </ErrorBoundary>
       }
     />

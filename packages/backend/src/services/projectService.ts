@@ -173,7 +173,15 @@ export async function createProject(pool: Pool, params: CreateProjectParams): Pr
       throw error;
     }
 
-    logger.error('Error creating project', { error, title, userId });
+    logger.error('Error creating project', { 
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      } : error,
+      title, 
+      userId 
+    });
     throw new ApiError(500, 'Failed to create project');
   } finally {
     client.release();

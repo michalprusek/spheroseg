@@ -41,7 +41,17 @@ export const triggerProjectBatchSegmentationSchema = z.object({
   body: z
     .object({
       imageIds: z
-        .array(z.string().uuid('Invalid image ID format in array'))
+        .array(
+          z.string().refine(
+            (id) => {
+              // Accept either UUID format or frontend-generated format (img-timestamp-random)
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+              const frontendIdRegex = /^img-\d+-\d{4}$/;
+              return uuidRegex.test(id) || frontendIdRegex.test(id);
+            },
+            { message: 'Invalid image ID format in array' }
+          )
+        )
         .min(1, 'At least one image ID is required')
         .max(100, 'Maximum 100 image IDs allowed per batch'), // Zvýšeno z 10 na 100
       priority: z.number().int().min(0).max(10).optional(),

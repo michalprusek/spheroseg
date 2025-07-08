@@ -18,7 +18,7 @@ export const API_PATHS = {
     ME: '/api/users/me',
     PROFILE: '/api/users/me/profile',
     SETTINGS: '/api/users/me/settings',
-    STATS: '/api/users/me/statistics',
+    STATS: '/api/user-stats/me/statistics',
     BY_ID: (id: string) => `/api/users/${id}`,
   },
   PROJECTS: {

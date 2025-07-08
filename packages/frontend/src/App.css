@@ -46,6 +46,13 @@ body,
   opacity: 1 !important;
 }
 
+/* Ensure toast container is visible */
+[data-sonner-toaster] {
+  position: fixed !important;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}
+
 /* Custom toast class */
 .custom-toast {
   font-family: 'Inter', sans-serif !important;

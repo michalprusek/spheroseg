@@ -7,6 +7,9 @@
  * @module @spheroseg/shared/utils/polygonUtils
  */
 
+// Re-export Point type explicitly
+export type { Point } from '@spheroseg/types';
+
 // Re-export everything from the unified module
 export * from './polygonUtils.unified';
 export { default } from './polygonUtils.unified';

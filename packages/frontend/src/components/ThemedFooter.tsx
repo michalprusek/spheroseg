@@ -132,18 +132,24 @@ const ThemedFooter = () => {
               <span className="text-xl font-bold">SpheroSeg</span>
             </div>
             <p className={`${getMutedTextClasses()} mb-6 max-w-md`}>{getTranslation('footer.description')}</p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <a
                 href="https://github.com/michalprusek/spheroseg"
                 target="_blank"
                 rel="noopener noreferrer"
-                className={getLinkHoverClasses()}
-                aria-label="GitHub Repository"
+                className={`${getLinkHoverClasses()} flex items-center gap-2`}
+                aria-label={getTranslation('footer.githubRepository') || 'GitHub Repository'}
               >
                 <Github className="w-5 h-5" />
+                <span className="text-sm">{getTranslation('footer.githubRepository') || 'GitHub Repository'}</span>
               </a>
-              <a href="mailto:spheroseg@utia.cas.cz" className={getLinkHoverClasses()} aria-label="Contact Email">
+              <a 
+                href="mailto:spheroseg@utia.cas.cz" 
+                className={`${getLinkHoverClasses()} flex items-center gap-2`} 
+                aria-label={getTranslation('footer.contactEmail') || 'Contact Email'}
+              >
                 <Mail className="w-5 h-5" />
+                <span className="text-sm">{getTranslation('footer.contactEmail') || 'Contact Email'}</span>
               </a>
             </div>
           </div>

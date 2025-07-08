@@ -241,6 +241,37 @@ gh pr create --base dev --title "Your PR Title" --body "Description"
 - Verify functionality works as expected before considering the task complete
 - Run `npm run code:check` to ensure code quality standards are met
 
+### Container Restart After Changes
+
+**IMPORTANT: Always restart the affected containers after making changes:**
+- **Frontend changes**: Run `docker-compose restart frontend-dev`
+- **Backend changes**: Run `docker-compose restart backend`
+- **ML service changes**: Run `docker-compose restart ml`
+- **Database migrations**: Run the SQL file directly or restart backend
+
+Changes will NOT be visible at https://spherosegapp.utia.cas.cz/ until containers are restarted!
+
+### Testing Every Fix with Playwright MCP
+
+**MANDATORY: Test every fix using Playwright MCP:**
+1. After implementing a fix and restarting containers, navigate to the affected page
+2. Use `mcp__playwright__browser_console_messages` to check for JavaScript errors
+3. Use `mcp__playwright__browser_snapshot` to verify UI state
+4. Use `mcp__playwright__browser_click` and other interaction tools to test functionality
+5. Document the test results and confirm the fix works
+
+Example workflow:
+```bash
+# 1. Make code changes
+# 2. Restart containers
+docker-compose restart frontend-dev backend
+# 3. Wait for containers to be ready
+sleep 10
+# 4. Test with Playwright MCP
+# 5. Check console for errors
+# 6. Verify fix is working
+```
+
 ### Browser Testing with Playwright MCP
 
 **Use Playwright MCP to test fixes in real browser:**

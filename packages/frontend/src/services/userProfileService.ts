@@ -4,6 +4,7 @@
  */
 
 import apiClient from '@/lib/apiClient';
+import uploadClient from '@/lib/uploadClient';
 
 export interface UserProfile {
   id: string;
@@ -98,11 +99,8 @@ class UserProfileService {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await apiClient.post(`${this.baseUrl}/avatar`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      // Use uploadClient for file uploads - no explicit Content-Type needed
+      const response = await uploadClient.post(`${this.baseUrl}/avatar`, formData);
       return response.data;
     } catch (error) {
       console.error('Error uploading avatar:', error);

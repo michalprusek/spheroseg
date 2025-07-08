@@ -57,7 +57,17 @@ const extractAndVerifyToken = async (
   authHeader: string | undefined,
   tokenType: TokenType = TokenType.ACCESS
 ): Promise<{ user: UserPayload; metadata: TokenMetadata }> => {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader) {
+    throw new Error('Authorization header missing');
+  }
+  
+  if (!authHeader.startsWith('Bearer ')) {
+    logger.warn('Invalid authorization header format', {
+      headerLength: authHeader.length,
+      headerPrefix: authHeader.substring(0, 20),
+      startsWithBearer: authHeader.startsWith('Bearer '),
+      headerValue: authHeader
+    });
     throw new Error('Invalid authorization header format');
   }
 

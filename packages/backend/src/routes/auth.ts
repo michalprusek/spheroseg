@@ -12,11 +12,15 @@ import {
   refreshTokenSchema,
   changePasswordSchema,
   deleteAccountSchema,
+  sendVerificationEmailSchema,
+  verifyEmailSchema,
   RegisterRequest,
   LoginRequest,
   RefreshTokenRequest,
   ChangePasswordRequest,
   DeleteAccountRequest,
+  SendVerificationEmailRequest,
+  VerifyEmailRequest,
 } from '../validators/authValidators';
 import { authenticate as authMiddleware, AuthenticatedRequest, optionalAuthenticate as optionalAuthMiddleware } from '../security/middleware/auth';
 import logger from '../utils/logger';
@@ -87,7 +91,8 @@ router.post('/forgot-password', validate(forgotPasswordSchema), async (req: expr
   try {
     await authService.forgotPassword(email);
     res.json({
-      message: 'If an account with that email exists, a new password has been sent to your email',
+      message: 'A new password has been sent to your email',
+      success: true
     });
   } catch (error) {
     logger.error('Forgot password error', { error, email });
@@ -239,6 +244,38 @@ router.delete('/account', authMiddleware, validate(deleteAccountSchema), async (
       return res.status(error.statusCode).json({ message: error.message, code: error.code });
     }
     res.status(500).json({ message: 'Failed to delete account' });
+  }
+});
+
+// POST /api/auth/send-verification-email - Send verification email
+router.post('/send-verification-email', validate(sendVerificationEmailSchema), async (req: express.Request, res: Response) => {
+  const { email } = req.body as SendVerificationEmailRequest;
+
+  try {
+    await authService.sendVerificationEmail(email);
+    res.json({ message: 'Verification email sent successfully' });
+  } catch (error) {
+    logger.error('Error sending verification email', { error, email });
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({ message: error.message, code: error.code });
+    }
+    res.status(500).json({ message: 'Failed to send verification email' });
+  }
+});
+
+// GET /api/auth/verify-email - Verify email with token
+router.get('/verify-email', validate(verifyEmailSchema), async (req: express.Request, res: Response) => {
+  const { token } = req.query as VerifyEmailRequest;
+
+  try {
+    await authService.verifyEmail(token);
+    res.json({ message: 'Email verified successfully' });
+  } catch (error) {
+    logger.error('Error verifying email', { error });
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({ message: error.message, code: error.code });
+    }
+    res.status(500).json({ message: 'Failed to verify email' });
   }
 });
 

@@ -150,6 +150,7 @@ export const useSegmentationV2 = (
   const imageIdRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const backgroundRefreshControllerRef = useRef<AbortController | null>(null);
+  const hasFetchedRef = useRef<Set<string>>(new Set());
 
   // Function to refresh segmentation data in the background
   const refreshSegmentationInBackground = async (segmentationId: string) => {
@@ -174,10 +175,11 @@ export const useSegmentationV2 = (
       console.log(`[useSegmentationV2] Background refresh completed for: ${segmentationId}`);
 
       // If this is the current segmentation, update it
-      if (segmentationData && segmentationData.image_id === segmentationId) {
-        console.log(`[useSegmentationV2] Updating current segmentation with refreshed data`);
-        setSegmentationDataWithHistory(refreshedSegmentation, true);
-      }
+      // Commented out to prevent update loops
+      // if (segmentationData && segmentationData.image_id === segmentationId) {
+      //   console.log(`[useSegmentationV2] Updating current segmentation with refreshed data`);
+      //   setSegmentationDataWithHistory(refreshedSegmentation, true);
+      // }
     } catch (error) {
       // Ignore errors in background refresh
       console.log(`[useSegmentationV2] Background refresh failed for: ${segmentationId}`, error);
@@ -212,6 +214,9 @@ export const useSegmentationV2 = (
     // Clear segmentation data to avoid showing old data while loading
     setSegmentationDataWithHistory(null, true);
 
+    // Clear the fetch tracker to allow fetching the new image
+    hasFetchedRef.current.clear();
+
     // Abort any ongoing fetch
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -231,6 +236,16 @@ export const useSegmentationV2 = (
       setIsLoading(false);
       return;
     }
+
+    // Check if we've already fetched this image ID recently
+    const fetchKey = `${projectId}-${imageIdRef.current}`;
+    if (hasFetchedRef.current.has(fetchKey)) {
+      logger.debug(`Already fetching/fetched data for ${fetchKey}, skipping duplicate request`);
+      return;
+    }
+
+    // Mark this fetch as in progress
+    hasFetchedRef.current.add(fetchKey);
 
     // Create a new abort controller for this fetch operation
     const controller = new AbortController();
@@ -278,10 +293,11 @@ export const useSegmentationV2 = (
         setSegmentationDataWithHistory(cachedSegmentation, true);
         setIsLoading(false);
 
-        // Optionally refresh cache in background
-        setTimeout(() => {
-          refreshSegmentationInBackground(segmentationId);
-        }, 2000);
+        // Disable background refresh for now to prevent repeated loading
+        // TODO: Implement proper background refresh with proper debouncing
+        // setTimeout(() => {
+        //   refreshSegmentationInBackground(segmentationId);
+        // }, 2000);
 
         return;
       }
@@ -360,9 +376,17 @@ export const useSegmentationV2 = (
       }
 
       setIsLoading(false);
+      
+      // Clear the fetch key after successful completion
+      setTimeout(() => {
+        hasFetchedRef.current.delete(fetchKey);
+      }, 5000); // Keep it for 5 seconds to prevent rapid re-fetches
     } catch (error: any) { // Explicitly type error as any for now
       // Check if component is still mounted before updating state
       if (!isMounted) return;
+      
+      // Clear the fetch key on error too
+      hasFetchedRef.current.delete(fetchKey);
 
       logger.error('Error fetching data:', error);
 

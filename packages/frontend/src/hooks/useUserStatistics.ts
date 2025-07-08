@@ -1,6 +1,7 @@
 import { useApiCache } from '@/hooks/useUnifiedCache';
 import { createLogger } from '@/utils/logging/unifiedLogger';
 import { CacheLayer } from '@/services/unifiedCacheService';
+import { API_PATHS } from '@/lib/apiPaths';
 
 const logger = createLogger('useUserStatistics');
 
@@ -23,7 +24,7 @@ export const useUserStatistics = () => {
     isSuccess,
     refetch,
     invalidate
-  } = useApiCache<UserStatistics>('/api/users/me/statistics', {
+  } = useApiCache<UserStatistics>(API_PATHS.USERS.STATS, {
     ttl: 5 * 60 * 1000, // 5 minutes cache
     layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
     tags: ['user-data', 'user-statistics', 'dashboard-data'],

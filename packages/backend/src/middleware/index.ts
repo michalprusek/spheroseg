@@ -73,20 +73,9 @@ export const configureLoggingMiddleware = (app: Application): void => {
  * Body parsing middleware configuration
  */
 export const configureBodyParsingMiddleware = (app: Application): void => {
-  // JSON body parser with configurable size limit
-  app.use(express.json({ 
-    limit: config.storage.maxFileSize || '10mb',
-    verify: (req: express.Request, res: express.Response, buf: Buffer) => {
-      // Store raw body for webhook verification if needed
-      (req as any).rawBody = buf;
-    },
-  }));
-
-  // URL-encoded body parser
-  app.use(express.urlencoded({ 
-    extended: true, 
-    limit: config.storage.maxFileSize || '10mb',
-  }));
+  // Body parsing is now handled in app.ts BEFORE any other middleware
+  // This ensures security checks have access to parsed body
+  logger.info('Body parsing configured in app.ts');
 };
 
 /**
@@ -146,20 +135,20 @@ export const configureErrorHandlingMiddleware = (app: Application): void => {
  * Configure all middleware in the correct order
  */
 export const configureMiddleware = (app: Application): void => {
-  // 1. Security middleware (should be first)
-  configureSecurityMiddleware(app);
-  
-  // 2. Performance middleware
+  // 1. Performance middleware (compression should be early)
   configurePerformanceMiddleware(app);
   
-  // 3. Logging middleware
+  // 2. Logging middleware (log raw requests)
   configureLoggingMiddleware(app);
   
-  // 4. Request monitoring middleware (unified monitoring system)
-  app.use(requestLoggerMiddleware);
-  
-  // 5. Body parsing middleware
+  // 3. Body parsing middleware (MUST be before security checks that need body)
   configureBodyParsingMiddleware(app);
+  
+  // 4. Security middleware (needs parsed body for suspicious pattern detection)
+  configureSecurityMiddleware(app);
+  
+  // 5. Request monitoring middleware (unified monitoring system)
+  app.use(requestLoggerMiddleware);
   
   // 6. Static files middleware
   configureStaticFilesMiddleware(app);

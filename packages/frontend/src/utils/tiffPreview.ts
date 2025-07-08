@@ -18,6 +18,11 @@ export async function generateTiffPreview(file: File): Promise<string | null> {
       return URL.createObjectURL(file);
     }
 
+    // DISABLED: Preview endpoint doesn't exist in backend
+    // For now, use canvas preview for TIFF/BMP files
+    return generateCanvasPreview(file);
+
+    /* TODO: Implement preview endpoint in backend
     // Create FormData with the file
     const formData = new FormData();
     formData.append('file', file);
@@ -33,6 +38,7 @@ export async function generateTiffPreview(file: File): Promise<string | null> {
     // Create blob URL from response
     const blob = response.data;
     return URL.createObjectURL(blob);
+    */
   } catch (error) {
     console.error('Failed to generate TIFF/BMP preview:', error);
     return null;

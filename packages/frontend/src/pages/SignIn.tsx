@@ -15,6 +15,7 @@ import { ArrowLeft } from 'lucide-react'; // Import ArrowLeft
 const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, user } = useAuth();
@@ -30,52 +31,11 @@ const SignIn = () => {
 
     setIsLoading(true);
 
-    try {
-      await signIn(email, password);
-    } catch (error: unknown) {
-      console.error('Sign in error:', error);
-
-      // Default error message with fallbacks
-      let errorMessage =
-        t('auth.signInError') ||
-        t('auth.signInFailed') ||
-        'Sign in failed. Please check your credentials and try again.';
-
-      // Handle server errors more gracefully
-      if (typeof error === 'object' && error !== null) {
-        const errObj = error as {
-          response?: { data?: { message?: string }; status?: number };
-          message?: string;
-        };
-
-        // Handle specific HTTP status codes
-        if (errObj.response?.status === 500) {
-          errorMessage = t('auth.serverError') || 'The server encountered an error. Please try again later.';
-        } else if (errObj.response?.status === 401) {
-          errorMessage = t('auth.invalidCredentials') || 'Invalid email or password. Please try again.';
-        } else if (errObj.response?.status === 403) {
-          errorMessage = t('auth.accountLocked') || 'Your account has been locked. Please contact support.';
-        } else if (errObj.response?.status === 404) {
-          // User not found - show the specific message from backend
-          errorMessage = errObj.response?.data?.message || 'This email address is not registered. Please check your email or sign up for a new account.';
-        } else if (errObj.response?.data?.message && typeof errObj.response.data.message === 'string') {
-          errorMessage = errObj.response.data.message;
-        } else if (errObj.message && typeof errObj.message === 'string') {
-          errorMessage = errObj.message;
-        }
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-
-      // Show error toast with improved styling
-      toast.error(errorMessage, {
-        duration: 5000, // Show error for longer
-        className: 'error-toast',
-        description: 'Please check your credentials or try again later.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    const success = await signIn(email, password, rememberMe);
+    setIsLoading(false);
+    
+    // signIn function already handles error toasts in AuthContext
+    // No need to show additional toasts here
   };
 
   // If already logged in, show a message instead of the form
@@ -147,7 +107,11 @@ const SignIn = () => {
 
             <div className="flex items-center space-x-2">
               <div className="flex items-center h-5">
-                <Checkbox id="remember" />
+                <Checkbox 
+                  id="remember" 
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                />
               </div>
               <div className="ml-2">
                 <Label

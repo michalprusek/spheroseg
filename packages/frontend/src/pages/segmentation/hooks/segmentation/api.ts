@@ -3,6 +3,7 @@ import { ImageData, SegmentationData, Polygon } from './types';
 import { loadImageDirectly } from '@/pages/segmentation/utils/directImageLoader';
 import { generateAlternativeUrls } from '@/pages/segmentation/utils/imageLoader';
 import { createLogger } from '@/lib/logger';
+import { requestDeduplicator } from '@/utils/requestDeduplicator';
 
 // Create a logger for this module
 const logger = createLogger('segmentation:api');
@@ -60,7 +61,11 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
   // First try to get all images in the project and find the one with matching ID
   try {
     logger.debug(`Fetching all images in project ${projectId}`);
-    const allImagesResponse = await apiClient.get(`/api/projects/${projectId}/images?${cacheBuster}`, { signal });
+    const allImagesResponse = await requestDeduplicator.execute(
+      `/api/projects/${projectId}/images`,
+      () => apiClient.get(`/api/projects/${projectId}/images?${cacheBuster}`, { signal }),
+      { method: 'GET' }
+    );
 
     if (allImagesResponse.data && Array.isArray(allImagesResponse.data)) {
       logger.debug(`Found ${allImagesResponse.data.length} images in project`);
@@ -82,9 +87,11 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
   // If not found in all images, try direct fetch by ID
   try {
     logger.debug(`Trying direct fetch by ID: /api/projects/${projectId}/images/${imageId}?${cacheBuster}`);
-    const imageResponse = await apiClient.get(`/api/projects/${projectId}/images/${imageId}?${cacheBuster}`, {
-      signal,
-    });
+    const imageResponse = await requestDeduplicator.execute(
+      `/api/projects/${projectId}/images/${imageId}`,
+      () => apiClient.get(`/api/projects/${projectId}/images/${imageId}?${cacheBuster}`, { signal }),
+      { method: 'GET' }
+    );
 
     if (imageResponse.data) {
       logger.info(`Successfully fetched image by ID: ${imageResponse.data.id}`);
@@ -284,7 +291,11 @@ export const fetchSegmentationData = async (
   for (const endpoint of endpointsToTry) {
     try {
       logger.debug(`Fetching from: ${endpoint}`);
-      const segmentationResponse = await apiClient.get(endpoint, { signal });
+      const segmentationResponse = await requestDeduplicator.execute(
+        endpoint.split('?')[0], // Use endpoint without cache buster as key
+        () => apiClient.get(endpoint, { signal }),
+        { method: 'GET' }
+      );
       const fetchedSegmentation = segmentationResponse.data;
 
       logger.debug(`Received segmentation data from ${endpoint} for imageId=${imageId}`);

@@ -1,5 +1,5 @@
 import express, { Response, Router, NextFunction } from 'express';
-import pool from '../db';
+import { getPool } from '../db';
 import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
 import { validate } from '../middleware/validationMiddleware';
 import {
@@ -10,6 +10,7 @@ import {
   duplicateProjectSchema,
 } from '../validators/projectValidators';
 import logger from '../utils/logger';
+import * as projectService from '../services/projectService';
 
 const router: Router = express.Router();
 
@@ -42,7 +43,7 @@ router.get(
       });
 
       // First check if the projects table exists
-      const projectsTableCheck = await pool.query(`
+      const projectsTableCheck = await getPool().query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -60,11 +61,8 @@ router.get(
         });
       }
 
-      // Import and use projectService
-      const projectService = await import('../services/projectService');
-
       // Get projects using the service
-      const result = await projectService.getUserProjects(pool, userId, limit, offset, includeShared);
+      const result = await projectService.getUserProjects(getPool(), userId, limit, offset, includeShared);
 
       logger.info('Projects fetched successfully', {
         count: result.projects.length,
@@ -98,7 +96,7 @@ router.post(
       logger.info('Processing create project request', { userId, title });
 
       // First check if the projects table exists
-      const projectsTableCheck = await pool.query(`
+      const projectsTableCheck = await getPool().query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -121,7 +119,7 @@ router.post(
       const missingColumns = [];
 
       for (const column of requiredColumns) {
-        const columnCheck = await pool.query(
+        const columnCheck = await getPool().query(
           `
                 SELECT EXISTS (
                     SELECT 1
@@ -149,8 +147,6 @@ router.post(
         });
       }
 
-      // Import and use projectService
-      const projectService = await import('../services/projectService');
 
       // Extract optional fields from request body
       const { tags, public: isPublic } = req.body;
@@ -169,7 +165,7 @@ router.post(
         tags,
         isPublic,
       });
-      const newProject = await projectService.createProject(pool, {
+      const newProject = await projectService.createProject(getPool(), {
         title,
         description,
         userId,
@@ -188,7 +184,15 @@ router.post(
 
       res.status(201).json(newProject);
     } catch (error) {
-      logger.error('Error creating project', { error, title, userId });
+      logger.error('Error creating project', { 
+        error: error instanceof Error ? {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        } : error,
+        title, 
+        userId 
+      });
       next(error);
     }
   },
@@ -226,7 +230,7 @@ router.get(
       }
 
       // First check if the projects table exists
-      const projectsTableCheck = await pool.query(`
+      const projectsTableCheck = await getPool().query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -244,11 +248,9 @@ router.get(
         });
       }
 
-      // Import and use projectService
-      const projectService = await import('../services/projectService');
 
       // Get project using the service
-      const project = await projectService.getProjectById(pool, projectId, userId);
+      const project = await projectService.getProjectById(getPool(), projectId, userId);
 
       if (!project) {
         logger.info('Project not found or access denied', {
@@ -288,7 +290,7 @@ router.delete(
       logger.info('Processing delete project request', { userId, projectId });
 
       // First check if the projects table exists
-      const projectsTableCheck = await pool.query(`
+      const projectsTableCheck = await getPool().query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -306,11 +308,9 @@ router.delete(
         });
       }
 
-      // Import and use projectService
-      const projectService = await import('../services/projectService');
 
       // Delete the project using the service
-      await projectService.deleteProject(pool, projectId, userId);
+      await projectService.deleteProject(getPool(), projectId, userId);
 
       logger.info('Project deleted successfully', { projectId });
 
@@ -353,7 +353,7 @@ router.post(
       });
 
       // First check if the projects table exists
-      const projectsTableCheck = await pool.query(`
+      const projectsTableCheck = await getPool().query(`
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
@@ -372,7 +372,7 @@ router.post(
       }
 
       // Verify the source project exists and belongs to the user
-      const projectCheck = await pool.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
+      const projectCheck = await getPool().query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
         originalProjectId,
         userId,
       ]);
@@ -388,7 +388,7 @@ router.post(
       // If async is true and duplication tasks table exists, process asynchronously
       if (async) {
         // Check if the duplication tasks table exists
-        const tasksTableCheck = await pool.query(`
+        const tasksTableCheck = await getPool().query(`
                 SELECT EXISTS (
                     SELECT 1
                     FROM information_schema.tables
@@ -405,7 +405,7 @@ router.post(
 
             // Trigger an asynchronous duplication
             const taskId = await projectDuplicationQueueService.default.triggerProjectDuplication(
-              pool,
+              getPool(),
               originalProjectId,
               userId,
               {
@@ -452,7 +452,7 @@ router.post(
         const projectDuplicationService = await import('../services/projectDuplicationService');
 
         // Duplicate the project using the centralized service
-        const newProject = await projectDuplicationService.duplicateProject(pool, originalProjectId, userId, {
+        const newProject = await projectDuplicationService.duplicateProject(getPool(), originalProjectId, userId, {
           newTitle,
           copyFiles,
           copySegmentations,
@@ -484,7 +484,7 @@ router.post(
           logger.warn('Duplication service not found, using fallback method');
 
           // Basic duplicate without files - just create new project with same title
-          const newProjectResult = await pool.query(
+          const newProjectResult = await getPool().query(
             'INSERT INTO projects (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
             [userId, newTitle || `Copy of ${projectCheck.rows[0].title}`, projectCheck.rows[0].description],
           );
@@ -525,7 +525,7 @@ router.get(
       logger.info('Processing get project images request', { userId, projectId });
 
       // First check if the projects table exists
-      const projectsTableCheck = await pool.query(`
+      const projectsTableCheck = await getPool().query(`
         SELECT EXISTS (
           SELECT 1
           FROM information_schema.tables
@@ -544,7 +544,7 @@ router.get(
       }
 
       // Verify user has access to the project
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
+      const projectCheck = await getPool().query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
         projectId,
         userId,
       ]);
@@ -555,7 +555,7 @@ router.get(
       }
 
       // Check if images table exists
-      const imagesTableCheck = await pool.query(`
+      const imagesTableCheck = await getPool().query(`
         SELECT EXISTS (
           SELECT 1
           FROM information_schema.tables
@@ -586,7 +586,7 @@ router.get(
         WHERE i.project_id = $1
         ORDER BY i.created_at DESC
       `;
-      const imagesResult = await pool.query(imagesQuery, [projectId]);
+      const imagesResult = await getPool().query(imagesQuery, [projectId]);
 
       logger.info('Project images fetched successfully', {
         projectId,

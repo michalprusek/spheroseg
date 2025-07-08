@@ -8,8 +8,11 @@ import multer from 'multer';
 import path from 'path';
 import userProfileService from '../services/userProfileService';
 import logger from '../utils/logger';
-import dbPool from '../db';
+import db from '../db';
 import { AuthenticatedRequest } from '../security/middleware/auth';;
+
+// Get the actual pool instance
+const dbPool = db.getPool();
 
 // Multer configuration for avatar uploads
 const storage = multer.memoryStorage();
@@ -93,7 +96,13 @@ export const createUserProfile = async (req: AuthenticatedRequest, res: Response
     
     res.status(201).json(profile);
   } catch (error) {
-    logger.error('Error creating user profile:', error);
+    logger.error('Error creating user profile:', { 
+      error, 
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      userId: req.user?.userId,
+      body: req.body 
+    });
     res.status(500).json({ error: 'Internal server error' });
   }
 };

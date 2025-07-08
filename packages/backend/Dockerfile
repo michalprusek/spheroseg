@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     make \
     g++ \
     python3 \
+    python3-pip \
+    python3-pil \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 

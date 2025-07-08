@@ -12,6 +12,8 @@ COPY packages/frontend/package*.json ./
 COPY packages/frontend/tsconfig*.json ./
 COPY packages/frontend/vite.config.ts ./
 COPY packages/frontend/vite-static-fix.js ./
+COPY packages/frontend/postcss.config.cjs ./
+COPY packages/frontend/tailwind.config.js ./
 COPY packages/frontend/index.html ./
 COPY packages/frontend/.env.production ./
 

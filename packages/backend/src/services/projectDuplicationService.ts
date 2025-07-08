@@ -97,7 +97,7 @@ export async function duplicateProject(
 
     // 1. Fetch original project data
     const projectRes = await client.query(
-      'SELECT title, description, thumbnail_url FROM projects WHERE id = $1 AND user_id = $2',
+      'SELECT title, description FROM projects WHERE id = $1 AND user_id = $2',
       [originalProjectId, userId],
     );
 
@@ -110,8 +110,8 @@ export async function duplicateProject(
     // 2. Create new project entry
     const newProjectTitle = mergedOptions.newTitle || `${originalProject.title} (Copy)`;
     const newProjectRes = await client.query(
-      'INSERT INTO projects (user_id, title, description, thumbnail_url) VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, newProjectTitle, originalProject.description, originalProject.thumbnail_url],
+      'INSERT INTO projects (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
+      [userId, newProjectTitle, originalProject.description],
     );
 
     const newProject = newProjectRes.rows[0];

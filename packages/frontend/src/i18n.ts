@@ -17,6 +17,7 @@ export const i18nInitializedPromise = (async () => {
       interpolation: {
         escapeValue: false, 
       },
+      returnObjects: true, // Allow returning arrays and objects
       debug: process.env.NODE_ENV === 'development',
     });
     logger.info('[i18n] i18next initialized successfully. Loaded languages:', Object.keys(i18nInstance.services.resourceStore.data));

@@ -29,7 +29,7 @@ const ForgotPassword = () => {
       const response = await requestPasswordReset(email);
       setIsSubmitted(true);
       toast.success(
-        response.message || t('auth.passwordResetLinkSent') || 'If an account exists for this email, a new password has been sent.',
+        response.message || 'A new password has been sent to your email',
       );
       
       // In development mode, show test URL if available
@@ -37,9 +37,17 @@ const ForgotPassword = () => {
         console.log('Email test URL:', response.testUrl);
         toast.info(`Development: Check email at ${response.testUrl}`, { duration: 10000 });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Password reset request error:', error);
-      toast.error(t('auth.passwordResetFailed') || 'Failed to process password reset request. Please try again.');
+      
+      // Handle specific error codes
+      if (error.response?.status === 404) {
+        toast.error(error.response?.data?.message || 'No account found with this email address', {
+          duration: 5000,
+        });
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to process password reset request. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -67,14 +75,14 @@ const ForgotPassword = () => {
           </div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{t('auth.forgotPasswordTitle')}</h2>
           <p className="text-gray-500 dark:text-gray-400">
-            {isSubmitted ? t('auth.checkYourEmail') : t('auth.enterEmailForReset')}
+            {isSubmitted ? 'Check your email for your new password' : t('auth.enterEmailForReset')}
           </p>
         </CardHeader>
 
         <CardContent className="p-6 space-y-4">
           {isSubmitted ? (
             <div className="text-center">
-              <p className="text-green-600 dark:text-green-400 mb-4">{t('auth.passwordResetLinkSent')}</p>
+              <p className="text-green-600 dark:text-green-400 mb-4">A new password has been sent to your email</p>
               <Button asChild variant="outline" className="rounded-md">
                 <Link to="/sign-in">{t('auth.backToSignIn')}</Link>
               </Button>

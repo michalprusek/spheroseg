@@ -77,6 +77,20 @@ export const deleteAccountSchema = z.object({
   }),
 });
 
+// Schema for email verification request
+export const sendVerificationEmailSchema = z.object({
+  body: z.object({
+    email: emailSchema,
+  }),
+});
+
+// Schema for email verification with token
+export const verifyEmailSchema = z.object({
+  query: z.object({
+    token: z.string().min(1, 'Verification token is required'),
+  }),
+});
+
 // Export types based on the schemas
 export type RegisterRequest = z.infer<typeof registerSchema>['body'];
 export type LoginRequest = z.infer<typeof loginSchema>['body'];
@@ -86,3 +100,5 @@ export type ChangePasswordRequest = z.infer<typeof changePasswordSchema>['body']
 export type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>['body'];
 export type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>['body'];
 export type DeleteAccountRequest = z.infer<typeof deleteAccountSchema>['body'];
+export type SendVerificationEmailRequest = z.infer<typeof sendVerificationEmailSchema>['body'];
+export type VerifyEmailRequest = z.infer<typeof verifyEmailSchema>['query'];

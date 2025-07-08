@@ -19,7 +19,17 @@ const router: Router = express.Router();
 // --- Validation Schema for Batch Trigger ---
 const triggerBatchSchema = z.object({
   body: z.object({
-    imageIds: z.array(z.string().uuid('Invalid image ID format in array')).min(1, 'At least one image ID is required'),
+    imageIds: z.array(
+      z.string().refine(
+        (id) => {
+          // Accept either UUID format or frontend-generated format (img-timestamp-random)
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          const frontendIdRegex = /^img-\d+-\d+$/;
+          return uuidRegex.test(id) || frontendIdRegex.test(id);
+        },
+        { message: 'Invalid image ID format in array' }
+      )
+    ).min(1, 'At least one image ID is required'),
   }),
 });
 // -----------------------------------------

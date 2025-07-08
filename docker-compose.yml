@@ -143,7 +143,7 @@ services:
       # Environment variables are now primarily managed in backend/src/config/index.ts
       # Only critical overrides or Docker-specific settings should be here.
       # Ensure APP_URL is set for callbacks from ML service
-      - APP_URL=http://backend:5001 # Use internal Docker network name
+      - APP_URL=https://spherosegapp.utia.cas.cz # Public URL for emails
       - NODE_ENV=${NODE_ENV:-production} # Allow overriding NODE_ENV from host
       - LOG_LEVEL=${LOG_LEVEL:-info} # Allow overriding LOG_LEVEL from host
       - JWT_SECRET=${JWT_SECRET:-development_secret_key_that_is_32_chars_long}
@@ -153,7 +153,15 @@ services:
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3003,http://localhost:3005,http://frontend:3000,http://frontend:80,*}
       - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE:-100mb}
       - EMAIL_FROM=${EMAIL_FROM:-spheroseg@utia.cas.cz}
+      - EMAIL_HOST=${EMAIL_HOST:-mail.utia.cas.cz}
+      - EMAIL_PORT=${EMAIL_PORT:-25}
+      - EMAIL_USER=${EMAIL_USER:-}
+      - EMAIL_PASS=${EMAIL_PASS:-}
+      - APP_URL=${FRONTEND_URL:-https://spherosegapp.utia.cas.cz}
       - ML_API_URL=http://ml:5002 # Add ML_API_URL for ML service communication
+      - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-500}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-60}
+      - ENABLE_RATE_LIMIT=${ENABLE_RATE_LIMIT:-true}
     volumes:
       - ./packages/backend/src:/app/src
       - ./packages/backend/package.json:/app/package.json

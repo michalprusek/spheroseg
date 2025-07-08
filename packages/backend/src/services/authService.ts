@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
 import tokenService from './tokenService';
-import tutorialProjectService from './tutorialProjectService';
 import { sendPasswordReset } from './emailService';
 import config from '../config';
 
@@ -81,25 +80,17 @@ class AuthService {
         email: userEmail,
       });
 
-      // Create tutorial project for the new user
-      try {
-        logger.debug('Attempting to create tutorial project with userId', {
-          userIdFromRegistration: userId,
-          email: userEmail,
-        });
-        await tutorialProjectService.createTutorialProject(db.getPool(), userId);
-        logger.info('Tutorial project creation initiated/completed for new user', { userId });
-      } catch (tutorialError) {
-        logger.warn('Failed to create tutorial project (non-critical), continuing with registration', {
-          error: tutorialError,
-          userId,
-        });
-      }
-
       // Generate tokens
       const tokenResponse = await tokenService.createTokenResponse(userId, userEmail);
 
       logger.info('User registered successfully', { userId, email: userEmail });
+      
+      // Send verification email asynchronously
+      this.sendVerificationEmail(userEmail).catch((error) => {
+        logger.error('Failed to send verification email after registration', { error, email: userEmail });
+        // Don't throw error here - user is already registered
+      });
+      
       return {
         user: {
           id: userId,
@@ -146,7 +137,7 @@ class AuthService {
       const passwordMatch = await bcryptjs.compare(password, user.password_hash);
       if (!passwordMatch) {
         logger.warn('Login attempt with incorrect password', { email });
-        throw new ApiError('Invalid email or password', 401);
+        throw new ApiError('Incorrect password. Please check your password and try again.', 401);
       }
 
       // Generate tokens with longer expiry if remember_me is true
@@ -256,11 +247,10 @@ class AuthService {
       // Check if user exists
       const result = await client.query('SELECT id, name FROM users WHERE email = $1', [email]);
       if (result.rows.length === 0) {
-        // Don't reveal that email doesn't exist for security
         logger.info('Forgot password request for non-existent email', {
           email,
         });
-        return; // Return success to not reveal if email exists
+        throw new ApiError('No account found with this email address', 404, 'USER_NOT_FOUND');
       }
 
       const { id: userId, name } = result.rows[0];
@@ -647,6 +637,114 @@ class AuthService {
     }
     
     return password;
+  }
+
+  /**
+   * Sends a verification email to the user
+   * @param email User's email
+   * @returns Success status
+   */
+  public async sendVerificationEmail(email: string): Promise<void> {
+    logger.info('Sending verification email', { email });
+
+    const client = await db.getPool().connect();
+    try {
+      // Check if user exists
+      const userResult = await client.query('SELECT id, email_verified FROM users WHERE email = $1', [email]);
+      
+      if (userResult.rows.length === 0) {
+        throw new ApiError('User not found', 404);
+      }
+
+      const user = userResult.rows[0];
+      
+      if (user.email_verified) {
+        throw new ApiError('Email already verified', 400);
+      }
+
+      // Generate verification token
+      const crypto = require('crypto');
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours expiry
+
+      // Store verification token
+      await client.query(
+        'INSERT INTO email_verifications (user_id, token, expires_at) VALUES ($1, $2, $3)',
+        [user.id, token, expiresAt]
+      );
+
+      // Send email with verification link
+      const verificationUrl = `${config.server.frontendUrl}/verify-email?token=${token}`;
+      
+      // Import email service
+      const { sendVerificationEmail } = await import('./emailService');
+      
+      // Send verification email
+      await sendVerificationEmail(email, verificationUrl);
+      
+      logger.info('Verification email sent successfully', { email, verificationUrl })
+    } catch (error) {
+      logger.error('Error sending verification email', { error, email });
+      if (error instanceof ApiError) throw error;
+      throw new ApiError('Failed to send verification email', 500, error instanceof Error ? error.message : String(error));
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Verifies user's email with token
+   * @param token Verification token
+   * @returns Success status
+   */
+  public async verifyEmail(token: string): Promise<void> {
+    logger.info('Verifying email with token');
+
+    const client = await db.getPool().connect();
+    try {
+      await client.query('BEGIN');
+
+      // Find valid token
+      const tokenResult = await client.query(
+        `SELECT ev.*, u.email 
+         FROM email_verifications ev
+         JOIN users u ON ev.user_id = u.id
+         WHERE ev.token = $1 
+         AND ev.expires_at > NOW() 
+         AND ev.used_at IS NULL`,
+        [token]
+      );
+
+      if (tokenResult.rows.length === 0) {
+        throw new ApiError('Invalid or expired verification token', 400);
+      }
+
+      const verification = tokenResult.rows[0];
+
+      // Mark token as used
+      await client.query(
+        'UPDATE email_verifications SET used_at = NOW() WHERE id = $1',
+        [verification.id]
+      );
+
+      // Mark user as verified
+      await client.query(
+        'UPDATE users SET email_verified = true, email_verified_at = NOW() WHERE id = $1',
+        [verification.user_id]
+      );
+
+      await client.query('COMMIT');
+
+      logger.info('Email verified successfully', { email: verification.email });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      logger.error('Error verifying email', { error });
+      if (error instanceof ApiError) throw error;
+      throw new ApiError('Failed to verify email', 500, error instanceof Error ? error.message : String(error));
+    } finally {
+      client.release();
+    }
   }
 }
 

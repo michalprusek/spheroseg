@@ -48,7 +48,7 @@ const DEFAULT_CONFIG: LoggerConfig = {
   level: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
   enableConsole: true,
   enableMemoryStorage: true,
-  enableServerShipping: process.env.NODE_ENV === 'production',
+  enableServerShipping: false, // Temporarily disabled due to backend issues
   maxMemoryLogs: 1000,
   serverEndpoint: '/api/logs',
   shipInterval: 30000, // 30 seconds
@@ -173,6 +173,27 @@ class UnifiedLogger {
     const logsToShip = [...this.memoryLogs];
     this.memoryLogs = [];
 
+    // Map LogLevel to levelName for backend compatibility
+    const levelNames = {
+      [LogLevel.DEBUG]: 'DEBUG',
+      [LogLevel.INFO]: 'INFO',
+      [LogLevel.WARN]: 'WARN',
+      [LogLevel.ERROR]: 'ERROR',
+    };
+
+    // Transform logs to match backend schema
+    const transformedLogs = logsToShip.map(log => ({
+      timestamp: log.timestamp,
+      level: log.level,
+      levelName: levelNames[log.level] || 'INFO',
+      message: `[${log.namespace}] ${log.message}`,
+      data: {
+        ...log.data,
+        context: log.context,
+        namespace: log.namespace,
+      },
+    }));
+
     // Use safeAsync to handle errors gracefully
     await safeAsync(async () => {
       const response = await fetch(this.config.serverEndpoint, {
@@ -180,7 +201,12 @@ class UnifiedLogger {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ logs: logsToShip }),
+        body: JSON.stringify({ 
+          logs: transformedLogs,
+          source: 'frontend',
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+          timestamp: new Date().toISOString(),
+        }),
         // Use keepalive for immediate shipping on page unload
         keepalive: immediate,
       });

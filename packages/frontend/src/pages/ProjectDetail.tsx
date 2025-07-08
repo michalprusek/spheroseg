@@ -16,7 +16,8 @@ import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 import { Project, ProjectImage, ImageStatus } from '@/types';
 import axios from 'axios';
-import socketClient from '@/services/socketClient';
+import { useSocket } from '@/contexts/SocketContext';
+import * as socketClient from '@/services/socketClient';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { useTranslation } from 'react-i18next';
 import logger from '@/utils/logger'; // Import logger
@@ -40,6 +41,7 @@ const ProjectDetail = () => {
 
   logger.debug('ProjectDetail: Received projectId from URL:', id);
   useAuth();
+  const { socket, isConnected } = useSocket();
 
   const [showUploader, setShowUploader] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -100,6 +102,12 @@ const ProjectDetail = () => {
 
     let isComponentMounted = true;
 
+    // Skip WebSocket setup if socket is not connected
+    if (!socket || !isConnected) {
+      logger.debug('WebSocket not ready, skipping setup');
+      return;
+    }
+
     try {
       logger.debug('Setting up WebSocket connection for project updates');
 
@@ -135,17 +143,6 @@ const ProjectDetail = () => {
           logger.warn('Error verifying project:', err);
         });
 
-      const socket = socketClient.getSocket();
-
-      if (!socket) {
-        logger.error('WebSocket not initialized');
-        return;
-      }
-
-      if (!socket) {
-        logger.error('WebSocket not initialized');
-        return;
-      }
 
       const handleSegmentationUpdate = (data: any) => {
         if (!isComponentMounted) return;
@@ -233,7 +230,7 @@ const ProjectDetail = () => {
         isComponentMounted = false;
       };
     }
-  }, [id, updateImageStatus, updateProjectStatistics, navigate]);
+  }, [id, updateImageStatus, updateProjectStatistics, navigate, socket, isConnected]);
 
   const { filteredImages, searchTerm, sortField, sortDirection, handleSearch, handleSort } = useImageFilter(images);
 

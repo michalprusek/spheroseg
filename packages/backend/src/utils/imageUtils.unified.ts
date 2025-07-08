@@ -406,15 +406,23 @@ export const createThumbnail = async (
       const execAsync = util.promisify(exec);
       
       const pythonScript = `
+import sys
 from PIL import Image
-img = Image.open('${sourcePath}')
+img = Image.open(sys.argv[1])
 img.thumbnail((${width}, ${height}), Image.Resampling.LANCZOS)
 # Save as PNG for lossless compression
-img.save('${targetPath}', 'PNG', optimize=True)
+img.save(sys.argv[2], 'PNG', optimize=True)
 `;
       
       try {
-        await execAsync(`python3 -c "${pythonScript}"`);
+        // Escape single quotes in paths and use single quotes for the script
+        const escapedScript = pythonScript.replace(/'/g, "'\"'\"'");
+        const escapedSource = sourcePath.replace(/'/g, "'\"'\"'");
+        const escapedTarget = targetPath.replace(/'/g, "'\"'\"'");
+        const result = await execAsync(`python3 -c '${escapedScript}' '${escapedSource}' '${escapedTarget}'`);
+        if (result.stderr) {
+          logger.warn(`Python thumbnail creation had stderr output`, { stderr: result.stderr });
+        }
         logger.debug(`Created BMP thumbnail using PIL: ${sourcePath} -> ${targetPath}`);
       } catch (pilError) {
         logger.error(`BMP thumbnail creation failed`, { sourcePath, error: pilError });
@@ -523,22 +531,54 @@ export const formatImageForApi = (image: Record<string, unknown>, baseUrl: strin
   }
 
   if (image.storage_path && typeof image.storage_path === 'string') {
-    // If the storage_path is already a full URL, don't modify it
-    if (image.storage_path.startsWith('http://') || image.storage_path.startsWith('https://')) {
+    // If the storage_path is already a full URL with internal Docker hostname, extract the path
+    if (image.storage_path.includes('://backend:') || image.storage_path.includes('://spheroseg-backend:')) {
+      try {
+        const url = new URL(image.storage_path);
+        // Extract just the pathname part
+        const pathname = url.pathname;
+        // If pathname starts with /app, remove it since nginx doesn't expect it
+        const cleanPath = pathname.startsWith('/app/') ? pathname.substring(4) : pathname;
+        result.storage_path = cleanPath;
+        logger.debug('Extracted path from internal URL', {
+          original: image.storage_path,
+          extracted: cleanPath,
+        });
+      } catch (error) {
+        logger.warn('Failed to parse internal URL, using as-is', { path: image.storage_path, error });
+        result.storage_path = image.storage_path;
+      }
+    } else if (image.storage_path.startsWith('http://') || image.storage_path.startsWith('https://')) {
+      // For other full URLs, keep them as-is
       result.storage_path = image.storage_path;
     } else {
-      // Otherwise, combine with the base URL
-      result.storage_path = pathUtils.combineUrl(baseUrl, image.storage_path);
+      // For relative paths, ensure they start with /
+      const cleanPath = image.storage_path.startsWith('/') ? image.storage_path : `/${image.storage_path}`;
+      result.storage_path = cleanPath;
     }
   }
 
   if (image.thumbnail_path && typeof image.thumbnail_path === 'string') {
-    // If the thumbnail_path is already a full URL, don't modify it
-    if (image.thumbnail_path.startsWith('http://') || image.thumbnail_path.startsWith('https://')) {
+    // Apply same logic for thumbnail_path
+    if (image.thumbnail_path.includes('://backend:') || image.thumbnail_path.includes('://spheroseg-backend:')) {
+      try {
+        const url = new URL(image.thumbnail_path);
+        const pathname = url.pathname;
+        const cleanPath = pathname.startsWith('/app/') ? pathname.substring(4) : pathname;
+        result.thumbnail_path = cleanPath;
+        logger.debug('Extracted thumbnail path from internal URL', {
+          original: image.thumbnail_path,
+          extracted: cleanPath,
+        });
+      } catch (error) {
+        logger.warn('Failed to parse internal thumbnail URL, using as-is', { path: image.thumbnail_path, error });
+        result.thumbnail_path = image.thumbnail_path;
+      }
+    } else if (image.thumbnail_path.startsWith('http://') || image.thumbnail_path.startsWith('https://')) {
       result.thumbnail_path = image.thumbnail_path;
     } else {
-      // Otherwise, combine with the base URL
-      result.thumbnail_path = pathUtils.combineUrl(baseUrl, image.thumbnail_path);
+      const cleanPath = image.thumbnail_path.startsWith('/') ? image.thumbnail_path : `/${image.thumbnail_path}`;
+      result.thumbnail_path = cleanPath;
     }
   }
 
@@ -700,13 +740,21 @@ export const convertTiffToWebFriendly = async (
       const execAsync = util.promisify(exec);
       
       const pythonScript = `
+import sys
 from PIL import Image
-img = Image.open('${sourcePath}')
+img = Image.open(sys.argv[1])
 # Save as PNG for lossless compression
-img.save('${targetPath}', 'PNG', optimize=True)
+img.save(sys.argv[2], 'PNG', optimize=True)
 `;
       
-      await execAsync(`python3 -c "${pythonScript}"`);
+      // Escape single quotes in paths and use single quotes for the script
+      const escapedScript = pythonScript.replace(/'/g, "'\"'\"'");
+      const escapedSource = sourcePath.replace(/'/g, "'\"'\"'");
+      const escapedTarget = targetPath.replace(/'/g, "'\"'\"'");
+      const result = await execAsync(`python3 -c '${escapedScript}' '${escapedSource}' '${escapedTarget}'`);
+      if (result.stderr) {
+        logger.warn(`Python conversion had stderr output`, { stderr: result.stderr });
+      }
       logger.debug(`Converted ${formatName} to web-friendly PNG using PIL: ${sourcePath} -> ${targetPath}`);
     } else {
       // For TIFF and other formats, use Sharp directly

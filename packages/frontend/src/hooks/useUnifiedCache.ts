@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import cacheService, { CacheOptions, CacheLayer, CacheStats } from '@/services/unifiedCacheService';
 import { createLogger } from '@/utils/logging/unifiedLogger';
+import apiClient from '@/lib/apiClient';
 
 const logger = createLogger('useUnifiedCache');
 
@@ -203,11 +204,13 @@ export function useApiCache<T = any>(
   return useUnifiedCache<T>({
     key: ['api', endpoint],
     fetcher: async () => {
-      const response = await fetch(endpoint);
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
+      try {
+        const response = await apiClient.get<T>(endpoint);
+        return response.data;
+      } catch (error: any) {
+        logger.error(`API error for ${endpoint}:`, error);
+        throw new Error(error.response?.data?.message || error.message || 'API request failed');
       }
-      return response.json();
     },
     ttl: 5 * 60 * 1000, // 5 minutes
     layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],

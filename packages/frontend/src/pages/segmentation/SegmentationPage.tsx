@@ -53,7 +53,7 @@ export const SegmentationPage: React.FC = () => {
     onMouseDown: handleMouseDown,
     onMouseMove: handleMouseMove,
     onMouseUp: handleMouseUp,
-    handleWheel,
+    handleWheelEvent,
     undo,
     redo,
     handleDeletePolygon,
@@ -278,10 +278,7 @@ export const SegmentationPage: React.FC = () => {
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
-              onWheel={(e) => {
-                // Convert React.WheelEvent to native WheelEvent
-                handleWheel(e.nativeEvent);
-              }}
+              onWheel={handleWheelEvent}
               onContextMenu={(e) => e.preventDefault()}
             />
             <Button
@@ -315,3 +312,4 @@ export const SegmentationPage: React.FC = () => {
     </div>
   );
 };
+export default SegmentationPage;

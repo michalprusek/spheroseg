@@ -31,7 +31,7 @@ console.log('[apiClient] Config from config.ts:', {
 // Create an Axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: EFFECTIVE_BASE_URL, // Use the effective base URL that handles Docker environment
-  timeout: 30000, // Increased timeout to 30 seconds for larger image operations
+  timeout: 30000, // 30 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
@@ -43,13 +43,53 @@ const apiClient: AxiosInstance = axios.create({
 // Add authorization token to headers if available
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Check if the request data is FormData
+    const isFormData = config.data instanceof FormData;
+    
+    // If it's FormData, remove the default Content-Type header
+    // to let axios set it with the proper boundary
+    if (isFormData) {
+      if (config.headers['Content-Type']) {
+        delete config.headers['Content-Type'];
+        logger.debug('Removed Content-Type header for FormData request');
+      }
+      
+      // Log FormData details for debugging
+      const formDataInfo: any = {};
+      if (config.data instanceof FormData) {
+        const entries = Array.from(config.data.entries());
+        formDataInfo.fields = entries.length;
+        formDataInfo.files = entries.filter(([key, value]) => value instanceof File).length;
+      }
+      
+      logger.debug('Processing FormData request', {
+        url: config.url,
+        method: config.method,
+        formDataInfo,
+        headers: Object.keys(config.headers)
+      });
+    }
+    
     // Get token from authService with validation and auto-removal if invalid
     const token = getAccessToken(true, true);
 
     // Only add token if it exists and is valid (validation already happened in getAccessToken)
     if (token && isValidToken(token, false)) {
       config.headers.Authorization = `Bearer ${token}`;
-      logger.debug('Added Authorization header with valid token');
+      logger.debug('Added Authorization header with valid token', {
+        tokenLength: token.length,
+        tokenPrefix: token.substring(0, 20) + '...',
+        headerValue: config.headers.Authorization?.substring(0, 30) + '...'
+      });
+      
+      // Extra logging for FormData requests
+      if (isFormData) {
+        logger.info('Authorization header set for FormData request', {
+          url: config.url,
+          authHeaderLength: config.headers.Authorization?.length,
+          authHeaderPrefix: config.headers.Authorization?.substring(0, 20) + '...'
+        });
+      }
     } else if (token) {
       // If token exists but is invalid, remove it
       logger.warn('Token exists but is invalid, removing from storage');

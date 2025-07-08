@@ -33,7 +33,7 @@ const TermsOfService = () => {
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('termsPage.governingLaw.title')}</h2>
             <p className="mb-4">{t('termsPage.governingLaw.paragraph1')}</p>
 
-            <p className="text-sm text-gray-500 mt-8 mb-4">Last Updated: July 1, 2023</p>
+            <p className="text-sm text-gray-500 mt-8 mb-4">{t('termsPage.lastUpdated')}</p>
           </div>
 
           <div className="mt-8 flex justify-between">

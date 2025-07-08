@@ -1,5 +1,5 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
-import pool from '../db';
+import { getPool } from '../db';
 import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
 import multer from 'multer';
 import path from 'path';
@@ -230,8 +230,15 @@ async function processAndStoreImage(
     const processError = error as Error;
     logger.error('Failed to process image or generate thumbnail', {
       filename: file.originalname,
-      error: processError,
-      stack: processError.stack,
+      error: {
+        message: processError.message,
+        name: processError.name,
+        stack: processError.stack,
+      },
+      mimetype: file.mimetype,
+      fileSize: file.size,
+      filePath: file.path,
+      ext: path.extname(file.originalname).toLowerCase(),
     });
 
     // Clean up any created files
@@ -334,7 +341,22 @@ router.post(
   '/:projectId/images',
   authMiddleware,
   validate(uploadImagesSchema),
+  (req: any, res: any, next: any) => {
+    logger.info('Upload endpoint hit - before multer', {
+      projectId: req.params.projectId,
+      contentType: req.headers['content-type'],
+      contentLength: req.headers['content-length'],
+    });
+    next();
+  },
   upload.array('images', 20), // Zvýšíme limit na 20 obrázků najednou
+  (req: any, res: any, next: any) => {
+    logger.info('Upload endpoint - after multer', {
+      filesReceived: req.files?.length || 0,
+      files: req.files?.map((f: any) => ({ name: f.originalname, size: f.size })),
+    });
+    next();
+  },
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Validate user ID
     const requestingUserId = req.user?.userId;
@@ -441,6 +463,7 @@ router.post(
         return;
       }
 
+      const pool = getPool();
       const client = await pool.connect();
 
       try {
@@ -526,7 +549,16 @@ router.post(
         logger.debug('Database client released', { projectId });
       }
     } catch (error) {
-      logger.error('Error uploading images', { error });
+      logger.error('Error uploading images', { 
+        error: error instanceof Error ? {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        } : error,
+        projectId,
+        filesCount: files?.length || 0,
+        userId: requestingUserId
+      });
       allUploadedFilePaths.forEach((filePath) => {
         if (fs.existsSync(filePath)) {
           try {

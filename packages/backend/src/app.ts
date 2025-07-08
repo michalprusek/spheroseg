@@ -20,6 +20,20 @@ export const createApp = (): Application => {
 
   // Enable trust proxy for proper IP detection behind nginx/docker
   app.set('trust proxy', true);
+  
+  // CRITICAL: Add body parser FIRST before any other middleware
+  // This ensures the body is parsed before security checks
+  app.use(express.json({ 
+    limit: '10mb',
+    verify: (req: express.Request, res: express.Response, buf: Buffer) => {
+      // Store raw body for debugging
+      (req as any).rawBody = buf;
+    },
+  }));
+  app.use(express.urlencoded({ 
+    extended: true, 
+    limit: '10mb',
+  }));
 
   // Configure all middleware in the correct order
   configureMiddleware(app);
@@ -45,6 +59,7 @@ export const createApp = (): Application => {
       });
     }
   });
+  
 
   // API routes
   app.use('/api', apiRouter);

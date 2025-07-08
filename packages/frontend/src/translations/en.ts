@@ -170,7 +170,7 @@ export default {
     notFound: 'Project not found',
     error: 'Error loading project',
     empty: 'This project is empty',
-    noImages: 'No images found in this project',
+    noImagesText: 'No images found in this project',
     addImages: 'Add images to get started',
     noImages: {
       title: 'No Images Yet',
@@ -463,6 +463,7 @@ export default {
     creatingAccount: 'Creating Account...',
     emailAlreadyExists: 'This email is already registered. Please use a different email or sign in.',
     emailHasPendingRequest: 'This email already has a pending access request. Please wait for approval.',
+    signUpSuccess: 'Successfully registered!',
     signUpSuccessEmail: 'Registration successful! Please check your email or wait for admin approval.',
     signUpFailed: 'Registration failed. Please try again.',
     alreadyHaveAccess: 'Already have access?',
@@ -834,6 +835,8 @@ export default {
     madeWith: 'Made with',
     by: 'by',
     requestAccessLink: 'Request Access',
+    githubRepository: 'GitHub Repository',
+    contactEmail: 'Contact Email',
   },
   features: {
     tag: 'Features',
@@ -1071,6 +1074,7 @@ export default {
       paragraph1:
         'These terms shall be governed and construed in accordance with the laws of the country in which the service is hosted, and you irrevocably submit to the exclusive jurisdiction of the courts in that location.',
     },
+    lastUpdated: 'Last Updated: January 7, 2025',
   },
   privacyPage: {
     title: 'Privacy Policy',
@@ -1128,7 +1132,7 @@ export default {
       title: '8. Contact Us',
       paragraph1: 'If you have any questions about this Privacy Policy, please contact us at privacy@spheroseg.com.',
     },
-    lastUpdated: 'Last updated: July 1, 2023',
+    lastUpdated: 'Last updated: January 7, 2025',
   },
   shortcuts: {
     button: 'Shortcuts',
@@ -1365,5 +1369,95 @@ export default {
     userEmail: 'User email',
     view: 'View',
     viewOnly: 'View only',
+  },
+  termsPage: {
+    title: 'Terms of Service',
+    acceptance: {
+      title: '1. Acceptance of Terms',
+      paragraph1: 'By accessing or using SpheroSeg, you agree to be bound by these Terms of Service. If you do not agree with these terms, please do not use our service.',
+    },
+    useLicense: {
+      title: '2. Use License',
+      paragraph1: 'SpheroSeg grants you a limited, non-exclusive, non-transferable license to use the service for research and educational purposes. Commercial use requires a separate license agreement.',
+    },
+    dataUsage: {
+      title: '3. Data Usage',
+      paragraph1: 'You retain all rights to your uploaded images and data. We do not share your data with third parties without your explicit consent. Your data is used solely to provide and improve our segmentation services.',
+    },
+    limitations: {
+      title: '4. Service Limitations',
+      paragraph1: 'SpheroSeg is provided "as is" without any warranties, express or implied. We do not guarantee 100% availability, accuracy, or reliability. Users are responsible for validating results for their specific applications.',
+    },
+    revisions: {
+      title: '5. Revisions',
+      paragraph1: 'We reserve the right to modify these terms at any time. Changes will take effect immediately upon posting. Your continued use of the service constitutes acceptance of the revised terms.',
+    },
+    governingLaw: {
+      title: '6. Governing Law',
+      paragraph1: 'These terms are governed by the laws of the Czech Republic. Any disputes will be resolved by the competent courts in Prague.',
+    },
+    lastUpdated: 'Last Updated: January 7, 2025',
+  },
+  privacyPage: {
+    title: 'Privacy Policy',
+    introduction: {
+      title: '1. Introduction',
+      paragraph1: 'At SpheroSeg, we are committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and what rights you have regarding your information.',
+    },
+    dataCollection: {
+      title: '2. Information We Collect',
+      paragraph1: 'We collect information you provide directly to us, including:',
+      list: [
+        'Account information (email, name, institution)',
+        'Uploaded images and data for segmentation',
+        'Project metadata and analysis results',
+        'Usage data and activity logs',
+      ],
+    },
+    dataUsage: {
+      title: '3. How We Use Your Information',
+      paragraph1: 'We use the collected information to:',
+      list: [
+        'Provide and maintain our services',
+        'Process your image segmentation requests',
+        'Improve our algorithms and services',
+        'Communicate with you about your account',
+        'Ensure security and prevent abuse',
+      ],
+    },
+    dataStorage: {
+      title: '4. Data Storage and Security',
+      paragraph1: 'We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.',
+      paragraph2: 'Your data is stored on secure servers and is deleted according to our data retention policy.',
+    },
+    dataSharing: {
+      title: '5. Data Sharing',
+      paragraph1: 'We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy or as required by law.',
+    },
+    userRights: {
+      title: '6. Your Rights',
+      paragraph1: 'You have the right to:',
+      list: [
+        'Access your personal information',
+        'Correct inaccurate information',
+        'Request deletion of your data',
+        'Export your data',
+        'Object to processing of your data',
+      ],
+    },
+    cookies: {
+      title: '7. Cookies and Tracking Technologies',
+      paragraph1: 'We use cookies and similar technologies to enhance your experience, analyze site usage, and personalize content.',
+    },
+    changes: {
+      title: '8. Changes to This Policy',
+      paragraph1: 'We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.',
+    },
+    contact: {
+      title: '9. Contact Us',
+      paragraph1: 'If you have any questions about this Privacy Policy, please contact us at:',
+      email: 'privacy@spheroseg.com',
+    },
+    lastUpdated: 'Last Updated: January 7, 2025',
   }
 }

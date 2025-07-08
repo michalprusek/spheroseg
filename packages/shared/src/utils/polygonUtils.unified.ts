@@ -23,6 +23,9 @@
 import { Point } from '@spheroseg/types';
 import { v4 as uuidv4 } from 'uuid';
 
+// Re-export Point type for convenience
+export type { Point } from '@spheroseg/types';
+
 // =============================================================================
 // INTERFACES AND TYPES
 // =============================================================================

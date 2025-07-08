@@ -217,33 +217,53 @@ export const removeTokens = (): void => {
  * Sets both access and refresh tokens in localStorage and cookies
  * @param {string} accessToken - The access token to set
  * @param {string} refreshToken - The refresh token to set
+ * @param {boolean} rememberMe - Whether to persist the session after browser closes
  */
-export const setTokens = (accessToken: string, refreshToken: string): void => {
+export const setTokens = (accessToken: string, refreshToken: string, rememberMe: boolean = false): void => {
   // Set tokens in localStorage
   setAccessToken(accessToken);
   setRefreshToken(refreshToken);
 
-  // Nastavíme session persistence na true - uživatel zůstane přihlášen
-  localStorage.setItem(SESSION_PERSIST_KEY, 'true');
+  // Store remember me preference
+  localStorage.setItem(SESSION_PERSIST_KEY, rememberMe ? 'true' : 'false');
 
-  // Nastavíme cookies s delší platností (7 dní) pro udržení přihlášení
   try {
-    const expirationDate = new Date();
-    expirationDate.setDate(expirationDate.getDate() + 7); // 7 dní
-
-    // Získáme doménu pro cookie
     const domain = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
     const sameSiteValue = process.env.NODE_ENV === 'production' ? 'lax' : 'lax';
     const secure = window.location.protocol === 'https:' ? '; secure' : '';
 
-    // Nastavení cookies s upravenými parametry pro lepší kompatibilitu
-    document.cookie = `auth_token=${accessToken}; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
-    document.cookie = `refresh_token=${refreshToken}; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
-    document.cookie = `login_persistent=true; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+    if (rememberMe) {
+      // If remember me is checked, set cookies with long expiration (30 days)
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 30); // 30 days
 
-    logger.info('[authService] Auth tokens set in both localStorage and cookies');
+      document.cookie = `auth_token=${accessToken}; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+      document.cookie = `refresh_token=${refreshToken}; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+      document.cookie = `login_persistent=true; path=/; expires=${expirationDate.toUTCString()}; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+    } else {
+      // If remember me is NOT checked, use session cookies (no expires = session cookie)
+      document.cookie = `auth_token=${accessToken}; path=/; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+      document.cookie = `refresh_token=${refreshToken}; path=/; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+      document.cookie = `login_persistent=false; path=/; domain=${domain}; samesite=${sameSiteValue}${secure}`;
+    }
+
+    logger.info(`[authService] Auth tokens set with rememberMe=${rememberMe}`);
   } catch (error) {
     logger.error('[authService] Error setting auth cookies:', error);
+  }
+};
+
+/**
+ * Checks if the session should persist based on remember me preference
+ * @returns {boolean} True if session should persist, false otherwise
+ */
+export const shouldPersistSession = (): boolean => {
+  try {
+    const persistValue = localStorage.getItem(SESSION_PERSIST_KEY);
+    return persistValue === 'true';
+  } catch (error) {
+    logger.error('[authService] Error checking session persistence:', error);
+    return false;
   }
 };
 
@@ -372,10 +392,8 @@ export const refreshAccessToken = async (): Promise<boolean> => {
 
           // Update tokens in localStorage
           const { accessToken, refreshToken } = response.data;
-          setTokens(accessToken, refreshToken);
-
-          // Set up cookie as well
-          document.cookie = `auth_token=${accessToken}; path=/; samesite=strict; max-age=3600`;
+          const rememberMe = shouldPersistSession();
+          setTokens(accessToken, refreshToken, rememberMe);
 
           logger.info('[authService] Development mode login successful');
           return true;
@@ -416,14 +434,10 @@ export const refreshAccessToken = async (): Promise<boolean> => {
         withCredentials: true,
       });
 
-      // Update tokens in localStorage
+      // Update tokens in localStorage with the same remember me preference
       const { accessToken, refreshToken: newRefreshToken } = response.data;
-      setTokens(accessToken, newRefreshToken);
-
-      // Set up cookie with longer expiration
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 7); // 7 dní
-      document.cookie = `auth_token=${accessToken}; path=/; expires=${expirationDate.toUTCString()}; samesite=strict`;
+      const rememberMe = shouldPersistSession();
+      setTokens(accessToken, newRefreshToken, rememberMe);
 
       logger.info('[authService] Token refresh successful');
       return true;
@@ -466,10 +480,8 @@ export const refreshAccessToken = async (): Promise<boolean> => {
 
           // Update tokens in localStorage
           const { accessToken, refreshToken } = response.data;
-          setTokens(accessToken, refreshToken);
-
-          // Set up cookie as well
-          document.cookie = `auth_token=${accessToken}; path=/; samesite=strict; max-age=3600`;
+          const rememberMe = shouldPersistSession();
+          setTokens(accessToken, refreshToken, rememberMe);
 
           logger.info('[authService] Development mode login successful');
           return true;

@@ -51,10 +51,9 @@ const RequestAccess = () => {
       name,
       organization: organization || null,
       reason,
-      timestamp: new Date().toISOString(),
     };
 
-    console.log('Simulating sending access request email to spheroseg@utia.cas.cz with data:', requestData);
+    console.log('Sending access request email to spheroseg@utia.cas.cz with data:', requestData);
 
     try {
       await apiClient.post('/api/access-requests', requestData);

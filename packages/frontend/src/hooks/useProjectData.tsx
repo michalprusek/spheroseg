@@ -9,6 +9,7 @@ import { Socket } from 'socket.io-client';
 import socketClient from '@/services/socketClient';
 import config from '@/config';
 import { getProjectImages, mapApiImageToProjectImage } from '@/api/projectImages';
+import { requestDeduplicator } from '@/utils/requestDeduplicator';
 
 // The mapApiImageToProjectImage function is now imported from @/api/projectImages
 
@@ -85,7 +86,11 @@ export const useProjectData = (projectId: string | undefined) => {
       for (const endpoint of projectEndpoints) {
         try {
           console.log(`Trying to fetch project data from endpoint: ${endpoint}`);
-          projectResponse = await apiClient.get<Project>(endpoint);
+          projectResponse = await requestDeduplicator.execute(
+            endpoint,
+            () => apiClient.get<Project>(endpoint),
+            { method: 'GET' }
+          );
           console.log(`Successfully retrieved project data from API endpoint ${endpoint}`, projectResponse.data);
           break; // Exit the loop if successful
         } catch (endpointError) {

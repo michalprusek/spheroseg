@@ -155,7 +155,13 @@ export class SecurityManager {
       // Check if IP is suspicious
       if (this.suspiciousIPs.has(clientIp)) {
         this.metrics.blockedRequests++;
-        logger.warn('Blocked request from suspicious IP', { ip: clientIp });
+        logger.warn('Blocked request from suspicious IP', { 
+          ip: clientIp,
+          url: req.url,
+          method: req.method,
+          body: req.body,
+          suspiciousIPs: Array.from(this.suspiciousIPs),
+        });
         return res.status(403).json({ error: 'Access denied' });
       }
 
@@ -206,27 +212,70 @@ export class SecurityManager {
    * Detect suspicious activity patterns
    */
   private detectSuspiciousActivity(req: Request): void {
+    // Skip suspicious pattern detection for certain safe endpoints
+    const safeEndpoints = [
+      '/api/access-requests',
+      '/api/auth/register',
+      '/api/auth/reset-password',
+    ];
+    
+    if (safeEndpoints.some(endpoint => req.url.startsWith(endpoint))) {
+      return;
+    }
+    
     const suspiciousPatterns = [
       /\.\.\//, // Directory traversal
       /<script/i, // XSS attempt
       /union.*select/i, // SQL injection
-      /\bor\b.*=.*--/i, // SQL injection
+      /\bor\b\s+\d+\s*=\s*\d+/, // SQL injection (more specific pattern)
       /\balert\s*\(/i, // XSS attempt
       /\beval\s*\(/i, // Code injection
     ];
 
-    const url = req.url + JSON.stringify(req.body || {});
+    // Check URL separately from body to avoid false positives
+    const urlToCheck = req.url;
+    const bodyToCheck = req.body ? JSON.stringify(req.body) : '';
     
+    // Check URL patterns
     for (const pattern of suspiciousPatterns) {
-      if (pattern.test(url)) {
+      if (pattern.test(urlToCheck)) {
         const clientIp = securityHelpers.getClientIp(req);
-        logger.warn('Suspicious pattern detected', {
+        logger.warn('Suspicious pattern detected in URL', {
           ip: clientIp,
           pattern: pattern.toString(),
           url: req.url,
+          matchedPart: urlToCheck.match(pattern)?.[0],
         });
         this.markAsSuspicious(clientIp);
-        break;
+        return;
+      }
+    }
+    
+    // For body, use more intelligent checking to avoid false positives
+    if (bodyToCheck) {
+      // Check for actual SQL injection attempts, not just field names
+      const bodySqlPatterns = [
+        /<script[^>]*>.*?<\/script>/gi, // Script tags
+        /\bUNION\s+SELECT\b/i, // SQL UNION SELECT
+        /\bDROP\s+TABLE\b/i, // SQL DROP TABLE
+        /\bINSERT\s+INTO\b.*\bVALUES\s*\(/i, // SQL INSERT
+        /\bDELETE\s+FROM\b/i, // SQL DELETE
+        /\b(OR|AND)\s+\d+\s*=\s*\d+/i, // SQL injection with numeric comparison
+        /['"]\s*(OR|AND)\s+['"]\w+['"]\s*=\s*['"]\w+['"]/i, // SQL injection with string comparison
+      ];
+      
+      for (const pattern of bodySqlPatterns) {
+        if (pattern.test(bodyToCheck)) {
+          const clientIp = securityHelpers.getClientIp(req);
+          logger.warn('Suspicious pattern detected in body', {
+            ip: clientIp,
+            pattern: pattern.toString(),
+            body: req.body,
+            matchedPart: bodyToCheck.match(pattern)?.[0],
+          });
+          this.markAsSuspicious(clientIp);
+          return;
+        }
       }
     }
   }

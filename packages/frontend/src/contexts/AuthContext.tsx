@@ -18,6 +18,7 @@ import {
   saveCurrentRoute,
   getLastRoute,
   clearLastRoute,
+  shouldPersistSession,
 } from '@/services/authService'; // Import token services
 import { API_PATHS, formatApiPath } from '@/lib/apiPaths'; // Import centralized API paths
 import userProfileService from '../services/userProfileService';
@@ -462,9 +463,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []); // Run only once on mount
 
   const handleAuthSuccess = useCallback(
-    (data: AuthResponse) => {
-      // Store both access and refresh tokens
-      setTokens(data.accessToken, data.refreshToken);
+    (data: AuthResponse, rememberMe: boolean = false) => {
+      // Store both access and refresh tokens with remember me preference
+      setTokens(data.accessToken, data.refreshToken, rememberMe);
       setToken(data.accessToken);
       setUserWithStorage(data.user);
       toast.success(data.message || 'Success!');
@@ -512,112 +513,123 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signIn = useCallback(
-    async (email: string, password: string): Promise<boolean> => {
+    async (email: string, password: string, rememberMe: boolean = false): Promise<boolean> => {
       setLoading(true);
 
-      // Use safeAsync for better error handling
-      const result = await safeAsync(
-        async () => {
-          // Log the attempt
-          logger.info(`Attempting to sign in with email: ${email}`);
+      try {
+        // Log the attempt
+        logger.info(`Attempting to sign in with email: ${email}, rememberMe: ${rememberMe}`);
 
-          // Set up timeout for the entire sign-in process
-          const loginTimeoutPromise = new Promise<boolean>((_, reject) => {
-            setTimeout(() => {
-              logger.warn('[authContext] Sign-in operation timed out');
-              reject(new Error('Sign-in timed out. Please try again.'));
-            }, 8000); // Further reduced timeout for quicker failure
-          });
+        // Set up timeout for the entire sign-in process
+        const loginTimeoutPromise = new Promise<boolean>((_, reject) => {
+          setTimeout(() => {
+            logger.warn('[authContext] Sign-in operation timed out');
+            reject(new Error('Sign-in timed out. Please try again.'));
+          }, 8000); // Further reduced timeout for quicker failure
+        });
 
-          // In production mode, try real authentication
+        // Create a promise for the login process with direct axios call
+        const loginProcess = (async () => {
+          // Set up abort controller for the login request
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => {
+            logger.warn('[authContext] Login request timed out');
+            controller.abort();
+          }, 3000); // 3 second timeout for the request
+
           try {
-            // Create a promise for the login process with direct axios call
-            const loginProcess = (async () => {
-              // Set up abort controller for the login request
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => {
-                logger.warn('[authContext] Login request timed out');
-                controller.abort();
-              }, 3000); // 3 second timeout for the request
+            // Use axios directly to completely bypass httpClient and all interceptors
+            // The vite proxy rewrites '/api' to '', so we need to use '/api/auth/login' directly
+            const response = await axios.post(
+              API_PATHS.AUTH.LOGIN,
+              { email, password, remember_me: rememberMe },
+              {
+                signal: controller.signal,
+                timeout: 3000, // 3 second request timeout
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              },
+            );
 
-              try {
-                // Use axios directly to completely bypass httpClient and all interceptors
-                // The vite proxy rewrites '/api' to '', so we need to use '/api/auth/login' directly
-                const response = await axios.post(
-                  API_PATHS.AUTH.LOGIN,
-                  { email, password },
-                  {
-                    signal: controller.signal,
-                    timeout: 3000, // 3 second request timeout
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                  },
-                );
+            logger.info('Login successful');
+            handleAuthSuccess(response.data, rememberMe);
 
-                logger.info('Login successful');
-                handleAuthSuccess(response.data);
-
-                if (navigate) {
-                  navigate('/dashboard');
-                }
-                return true;
-              } catch (error: any) { // Cast error to any
-                if (error.name === 'AbortError') {
-                  logger.error('[authContext] Login request aborted due to timeout');
-                  throw new Error('Login request timed out. Please try again.');
-                }
-
-                if (axios.isAxiosError(error) && error.response?.status === 401) {
-                  logger.warn('Invalid credentials provided');
-                  throw error;
-                }
-
-                logger.error('Login attempt failed', { error });
-                throw error;
-              } finally {
-                clearTimeout(timeoutId);
-              }
-            })();
-
-            // Race the login process against the timeout
-            return await Promise.race([loginProcess, loginTimeoutPromise]);
-          } catch (error) {
-            throw error;
-          }
-        },
-        {
-          // Custom error handler
-          onError: (error: any) => { // Cast error to any
-            logger.error('Error signing in:', { error });
-
-            // Use enhanced error handling
-            const errorType = getErrorType(error);
-
-            // Special handling for auth errors (bad credentials)
-            if (errorType === NetworkErrorType.AUTH_ERROR) {
-              toast.error('Invalid credentials', {
-                duration: 5000,
-                description: 'Please check your email and password and try again.',
-              });
-            } else {
-              // Use enhanced error display for other errors
-              showEnhancedError(error);
+            if (navigate) {
+              navigate('/dashboard');
+            }
+            return true;
+          } catch (error: any) { // Cast error to any
+            if (error.name === 'AbortError') {
+              logger.error('[authContext] Login request aborted due to timeout');
+              throw new Error('Login request timed out. Please try again.');
             }
 
-            setUserWithStorage(null);
-            setToken(null);
-            localStorage.removeItem('authToken');
-          },
-          showToast: false, // We're handling toasts manually
-          defaultValue: false, // Return false on error
-        },
-      );
+            if (axios.isAxiosError(error) && error.response?.status === 401) {
+              logger.warn('Invalid credentials provided');
+              throw error;
+            }
 
-      setLoading(false);
-      return result || false;
+            logger.error('Login attempt failed', { error });
+            throw error;
+          } finally {
+            clearTimeout(timeoutId);
+          }
+        })();
+
+        // Race the login process against the timeout
+        const success = await Promise.race([loginProcess, loginTimeoutPromise]);
+        setLoading(false);
+        return success;
+      } catch (error: any) {
+        logger.error('Error signing in:', { error });
+
+        // Special handling for auth errors
+        if (axios.isAxiosError(error)) {
+          const status = error.response?.status;
+          const errorMessage = error.response?.data?.message || error.message;
+          
+          if (status === 401) {
+            // Invalid credentials (wrong password)
+            toast.error('Invalid password', {
+              duration: 5000,
+              description: 'Please check your password and try again.',
+            });
+          } else if (status === 404) {
+            // Email not found
+            toast.error('Invalid email/username', {
+              duration: 5000,
+              description: errorMessage || 'This email address is not registered. Please check your email or sign up for a new account.',
+            });
+          } else if (status === 400) {
+            // Bad request - usually invalid email format or missing credentials
+            toast.error('Invalid email/username', {
+              duration: 5000,
+              description: errorMessage || 'Please check your email address and try again.',
+            });
+          } else {
+            // Other errors
+            toast.error('Login failed', {
+              duration: 5000,
+              description: errorMessage || 'An error occurred during login. Please try again.',
+            });
+          }
+        } else {
+          // Non-axios errors
+          toast.error('Connection error', {
+            duration: 5000,
+            description: error.message || 'Unable to connect to the server. Please try again.',
+          });
+        }
+
+        setUserWithStorage(null);
+        setToken(null);
+        localStorage.removeItem('authToken');
+        setLoading(false);
+        return false;
+      }
     },
-    [navigate],
+    [navigate, handleAuthSuccess],
   );
 
   const signUp = useCallback(
@@ -749,6 +761,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     toast.success('Signed out successfully');
   }, [navigate]);
+
+  // Handle window events for session persistence
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      // DISABLED: This was causing users to be logged out when opening file dialogs
+      // File dialogs cause the window to lose and regain focus, which shouldn't log users out
+      // if (!shouldPersistSession() && user) {
+      //   logger.info('Session should not persist and window gained focus, logging out');
+      //   signOut();
+      // }
+    };
+
+    const handleBeforeUnload = () => {
+      // When window is about to close, clear session if remember me is not checked
+      if (!shouldPersistSession()) {
+        logger.info('Remember me not checked, clearing session on window close');
+        removeTokens();
+        sessionStorage.removeItem('spheroseg_persisted_user');
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      // When tab becomes visible again
+      if (document.visibilityState === 'visible' && !shouldPersistSession() && user) {
+        // Check if tokens still exist
+        const token = getAccessToken();
+        if (!token) {
+          logger.info('No token found when tab became visible, logging out');
+          setUserWithStorage(null);
+          setToken(null);
+        }
+      }
+    };
+
+    // Add event listeners
+    // Removed focus event listener - it was causing logout when opening file dialogs
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, signOut]);
 
   // The context value that will be supplied to consuming components
   const value = {

@@ -4,67 +4,73 @@ import { createLogger } from '../utils/logger';
 const logger = createLogger('emailService');
 
 // Načtení konfigurace z proměnných prostředí
-const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.ethereal.email';
-const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '587', 10);
+const EMAIL_HOST = process.env.EMAIL_HOST || 'mail.utia.cas.cz';
+const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '25', 10);
 const EMAIL_USER = process.env.EMAIL_USER || '';
 const EMAIL_PASS = process.env.EMAIL_PASS || '';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'spheroseg@utia.cas.cz';
-const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.APP_URL || 'https://spherosegapp.utia.cas.cz';
 
-// Konfigurace pro vývojové prostředí, pokud nejsou k dispozici reálné SMTP údaje
-let testAccount: nodemailer.TestAccount | undefined;
+// Vždy používáme mail.utia.cas.cz
 
 /**
  * Vytvoří transportér pro odesílání emailů
  */
 async function createTransporter() {
-  // Pokud nejsou zadány SMTP údaje, vytvoříme testovací účet
-  if (!EMAIL_USER || !EMAIL_PASS) {
-    if (!testAccount) {
-      try {
-        logger.info('Creating Ethereal test account for email testing');
-        // Přidáme timeout pro vytvoření testovacího účtu
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Ethereal account creation timeout')), 10000);
-        });
-        
-        testAccount = await Promise.race([
-          nodemailer.createTestAccount(),
-          timeoutPromise
-        ]) as nodemailer.TestAccount;
-        
-        logger.info(`Test account created: ${testAccount.user}`);
-      } catch (error) {
-        logger.error('Failed to create test email account', { error });
-        throw new Error('Failed to create email transporter');
-      }
-    }
-
-    return nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false,
+  logger.info('Creating email transporter', {
+    EMAIL_HOST,
+    EMAIL_PORT,
+    EMAIL_FROM,
+    hasAuth: !!(EMAIL_USER && EMAIL_PASS)
+  });
+  
+  // Pokud je nastaven EMAIL_HOST, použijeme ho (bez ohledu na přihlašovací údaje)
+  if (EMAIL_HOST && EMAIL_HOST !== 'smtp.ethereal.email') {
+    logger.info(`Using SMTP server: ${EMAIL_HOST}:${EMAIL_PORT}`);
+    
+    const transportConfig: any = {
+      host: EMAIL_HOST,
+      port: EMAIL_PORT,
+      secure: false, // Port 25 používá STARTTLS, ne přímé SSL
+      opportunisticTLS: true, // Použít TLS pokud server nabízí STARTTLS
       connectionTimeout: 10000,
       greetingTimeout: 5000,
       socketTimeout: 10000,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
+      tls: {
+        rejectUnauthorized: false, // Povolení self-signed certifikátů
+        servername: EMAIL_HOST // Explicitně nastavit server name pro TLS
       },
-    });
+    };
+
+    // Přidáme autentizaci pouze pokud jsou zadány přihlašovací údaje
+    if (EMAIL_USER && EMAIL_PASS) {
+      transportConfig.auth = {
+        user: EMAIL_USER,
+        pass: EMAIL_PASS,
+      };
+      logger.info('Using SMTP authentication');
+    } else {
+      logger.info('Using SMTP without authentication');
+    }
+
+    return nodemailer.createTransport(transportConfig);
   }
 
-  // Použití reálných SMTP údajů
+  // Vždy použít výchozí SMTP server
+
+  // Vždy použít mail.utia.cas.cz místo Ethereal
+  logger.info('Using fallback SMTP configuration for mail.utia.cas.cz');
   return nodemailer.createTransport({
-    host: EMAIL_HOST,
-    port: EMAIL_PORT,
-    secure: EMAIL_PORT === 465, // true pro port 465, false pro ostatní porty
+    host: 'mail.utia.cas.cz',
+    port: 25,
+    secure: false,
+    opportunisticTLS: true,
     connectionTimeout: 10000,
     greetingTimeout: 5000,
     socketTimeout: 10000,
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASS,
+    tls: {
+      rejectUnauthorized: false,
+      servername: 'mail.utia.cas.cz'
     },
   });
 }
@@ -102,22 +108,28 @@ export async function sendEmail({
       timeoutPromise
     ]) as any;
 
-    // Pokud používáme testovací účet, vypíšeme URL pro zobrazení emailu
-    if (testAccount) {
-      logger.info(`Email sent: ${nodemailer.getTestMessageUrl(result)}`);
-    } else {
-      logger.info(`Email sent to ${to}: ${result.messageId}`);
-    }
+    logger.info(`Email sent to ${to}: ${result.messageId}`);
 
     return result;
   } catch (error) {
-    logger.error('Failed to send email', { error, to, subject });
+    logger.error('Failed to send email', {
+      error: error instanceof Error ? {
+        message: error.message,
+        code: (error as any).code,
+        command: (error as any).command,
+        response: (error as any).response,
+        responseCode: (error as any).responseCode,
+        stack: error.stack
+      } : error,
+      to,
+      subject,
+    });
     throw new Error(`Failed to send email: ${(error as Error).message}`);
   }
 }
 
 /**
- * Odešle pozvánku ke sdílení projektu
+ * Sends project invitation email
  */
 export async function sendProjectInvitation({
   to,
@@ -132,25 +144,25 @@ export async function sendProjectInvitation({
   invitationToken: string;
   permission: string;
 }) {
-  // Vytvoříme odkaz pro přijetí pozvánky
+  // Create invitation link
   const invitationLink = `${APP_URL}/project/invitation/${invitationToken}`;
 
-  const subject = `Pozvánka ke spolupráci na projektu "${projectTitle}"`;
+  const subject = `Invitation to collaborate on project "${projectTitle}"`;
 
   const text = `
-Dobrý den,
+Hello,
 
-uživatel ${ownerName} vás pozval ke spolupráci na projektu "${projectTitle}" na platformě SpheroSeg.
+${ownerName} has invited you to collaborate on the project "${projectTitle}" on the SpheroSeg platform.
 
-Typ přístupu: ${permission === 'view' ? 'Zobrazení' : 'Úpravy'}
+Access level: ${permission === 'view' ? 'View only' : 'Edit'}
 
-Pro přijetí pozvánky klikněte na následující odkaz:
+To accept the invitation, please click the following link:
 ${invitationLink}
 
-Pokud nemáte účet, budete moci vytvořit nový po kliknutí na odkaz.
+If you don't have an account, you'll be able to create one after clicking the link.
 
-S pozdravem,
-Tým SpheroSeg
+Best regards,
+SpheroSeg Team
   `;
 
   const html = `
@@ -170,23 +182,23 @@ Tým SpheroSeg
 <body>
   <div class="container">
     <div class="header">
-      <h2>Pozvánka ke spolupráci</h2>
+      <h2>Project Collaboration Invitation</h2>
     </div>
     <div class="content">
-      <p>Dobrý den,</p>
-      <p>uživatel <strong>${ownerName}</strong> vás pozval ke spolupráci na projektu <strong>"${projectTitle}"</strong> na platformě SpheroSeg.</p>
+      <p>Hello,</p>
+      <p><strong>${ownerName}</strong> has invited you to collaborate on the project <strong>"${projectTitle}"</strong> on the SpheroSeg platform.</p>
 
-      <p>Typ přístupu: <strong>${permission === 'view' ? 'Zobrazení' : 'Úpravy'}</strong></p>
+      <p>Access level: <strong>${permission === 'view' ? 'View only' : 'Edit'}</strong></p>
 
-      <p>Pro přijetí pozvánky klikněte na následující tlačítko:</p>
-      <a href="${invitationLink}" class="button">Přijmout pozvánku</a>
+      <p>To accept the invitation, please click the following button:</p>
+      <a href="${invitationLink}" class="button">Accept Invitation</a>
 
-      <p>Pokud nemáte účet, budete moci vytvořit nový po kliknutí na odkaz.</p>
+      <p>If you don't have an account, you'll be able to create one after clicking the link.</p>
 
-      <p>S pozdravem,<br>Tým SpheroSeg</p>
+      <p>Best regards,<br>SpheroSeg Team</p>
     </div>
     <div class="footer">
-      <p>Toto je automaticky generovaný email. Neodpovídejte na něj.</p>
+      <p>This is an automated email. Please do not reply.</p>
     </div>
   </div>
 </body>
@@ -202,7 +214,7 @@ Tým SpheroSeg
 }
 
 /**
- * Odešle email s žádostí o přístup
+ * Sends access request notification email
  */
 export async function sendAccessRequest({
   email,
@@ -215,18 +227,16 @@ export async function sendAccessRequest({
   organization: string | null;
   reason: string;
 }) {
-  const subject = `SpheroSeg - Nová žádost o přístup od ${name}`;
+  const subject = `SpheroSeg - New Access Request from ${name}`;
 
-  const text = `
-Nová žádost o přístup do aplikace SpheroSeg:
+  const text = `New Access Request
 
-Jméno: ${name}
+Name: ${name}
 Email: ${email}
-Organizace: ${organization || 'Neuvedeno'}
-Důvod: ${reason}
+Organization: ${organization || 'Not specified'}
+Reason: ${reason}
 
-Datum žádosti: ${new Date().toLocaleString('cs-CZ')}
-`;
+Request Date: ${new Date().toLocaleString('en-US')}`;
 
   const html = `
 <!DOCTYPE html>
@@ -246,11 +256,11 @@ Datum žádosti: ${new Date().toLocaleString('cs-CZ')}
 <body>
   <div class="container">
     <div class="header">
-      <h2>Nová žádost o přístup do aplikace SpheroSeg</h2>
+      <h2>New Access Request for SpheroSeg</h2>
     </div>
     <div class="content">
       <div class="field">
-        <div class="field-name">Jméno:</div>
+        <div class="field-name">Name:</div>
         <div class="field-value">${name}</div>
       </div>
       <div class="field">
@@ -258,20 +268,20 @@ Datum žádosti: ${new Date().toLocaleString('cs-CZ')}
         <div class="field-value">${email}</div>
       </div>
       <div class="field">
-        <div class="field-name">Organizace:</div>
-        <div class="field-value">${organization || 'Neuvedeno'}</div>
+        <div class="field-name">Organization:</div>
+        <div class="field-value">${organization || 'Not specified'}</div>
       </div>
       <div class="field">
-        <div class="field-name">Důvod:</div>
+        <div class="field-name">Reason:</div>
         <div class="field-value">${reason}</div>
       </div>
       <div class="field">
-        <div class="field-name">Datum žádosti:</div>
-        <div class="field-value">${new Date().toLocaleString('cs-CZ')}</div>
+        <div class="field-name">Request Date:</div>
+        <div class="field-value">${new Date().toLocaleString('en-US')}</div>
       </div>
     </div>
     <div class="footer">
-      <p>Toto je automaticky generovaný email. Pro odpověď použijte email žadatele.</p>
+      <p>This is an automated email. To reply, please use the applicant's email address.</p>
     </div>
   </div>
 </body>
@@ -295,22 +305,18 @@ export async function sendPasswordReset(
   newPassword: string,
 ): Promise<{ success: boolean; testUrl?: string }> {
 
-  const subject = 'SpheroSeg - New Password';
+  const subject = 'SpheroSeg - Password Reset';
   
-  const text = `
-Hello ${name || 'User'},
+  const text = `Password Reset
 
-Your password has been reset as requested. Here is your new password:
+Hello,
 
-New Password: ${newPassword}
+Your new password is: ${newPassword}
 
-Please use this password to log in to your account. For security reasons, we recommend changing this password after logging in.
-
-If you did not request this password reset, please contact us immediately at spheroseg@utia.cas.cz.
+Please change it after logging in.
 
 Best regards,
-The SpheroSeg Team
-`;
+SpheroSeg Team`;
 
   const html = `
 <!DOCTYPE html>
@@ -337,30 +343,22 @@ The SpheroSeg Team
   </div>
   
   <div class="content">
-    <p>Hello <strong>${name || 'User'}</strong>,</p>
+    <p>Hello,</p>
     
-    <p>Your password has been reset as requested. Here is your new password:</p>
+    <p>Your new password is:</p>
     
     <div class="password-box">
-      <p><strong>New Password:</strong></p>
       <div class="password">${newPassword}</div>
     </div>
     
-    <div class="warning">
-      <strong>⚠️ Security Recommendation:</strong>
-      For your account security, please change this password after logging in.
-    </div>
+    <p>Please change it after logging in.</p>
     
-    <p>You can now log in to your account using this new password.</p>
-    
-    <a href="${APP_URL}/signin" class="button">Log In to SpheroSeg</a>
+    <a href="${APP_URL}/sign-in" class="button">Log In to SpheroSeg</a>
     
     <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
     
-    <p style="font-size: 14px; color: #666;">
-      If you did not request this password reset, please contact us immediately at 
-      <a href="mailto:spheroseg@utia.cas.cz">spheroseg@utia.cas.cz</a>.
-    </p>
+    <p>Best regards,<br>
+    SpheroSeg Team</p>
   </div>
   
   <div class="footer">
@@ -380,8 +378,90 @@ The SpheroSeg Team
 
   return {
     success: true,
-    testUrl: testAccount ? (nodemailer.getTestMessageUrl(result as any) || undefined) : undefined,
+    testUrl: undefined,
   };
+}
+
+/**
+ * Sends email verification link
+ */
+export async function sendVerificationEmail(
+  email: string,
+  verificationUrl: string,
+): Promise<void> {
+  const subject = 'SpheroSeg - Email Verification';
+  
+  const text = `
+Hello,
+
+Thank you for registering with SpheroSeg.
+
+To complete your registration, please verify your email address by clicking the following link:
+${verificationUrl}
+
+This link is valid for 24 hours.
+
+If you did not register with SpheroSeg, you can safely ignore this email.
+
+Best regards,
+SpheroSeg Team
+`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #4a76a8; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+    .content { padding: 30px; border: 1px solid #ddd; border-radius: 0 0 5px 5px; background-color: #ffffff; }
+    .button { display: inline-block; background-color: #4a76a8; color: white; padding: 14px 28px;
+      text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+    .button:hover { background-color: #3a5f91; }
+    .footer { margin-top: 30px; font-size: 12px; color: #666; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Email Verification</h2>
+    </div>
+    <div class="content">
+      <p>Hello,</p>
+      <p>Thank you for registering with <strong>SpheroSeg</strong>.</p>
+      
+      <p>To complete your registration, please verify your email address by clicking the following button:</p>
+      
+      <div style="text-align: center;">
+        <a href="${verificationUrl}" class="button">Verify Email Address</a>
+      </div>
+      
+      <p style="font-size: 14px; color: #666;">Or copy and paste the following link into your browser:<br>
+      <span style="word-break: break-all;">${verificationUrl}</span></p>
+      
+      <p><strong>This link is valid for 24 hours.</strong></p>
+      
+      <p>If you did not register with SpheroSeg, you can safely ignore this email.</p>
+      
+      <p>Best regards,<br>SpheroSeg Team</p>
+    </div>
+    <div class="footer">
+      <p>This is an automated email. Please do not reply.</p>
+      <p>© 2025 SpheroSeg. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+  await sendEmail({
+    to: email,
+    subject,
+    text,
+    html,
+  });
 }
 
 export default {
@@ -389,4 +469,5 @@ export default {
   sendProjectInvitation,
   sendAccessRequest,
   sendPasswordReset,
+  sendVerificationEmail,
 };

@@ -35,7 +35,13 @@ const SignUp = () => {
     password: z.string().min(8, 'Password must be at least 8 characters long'),
     confirmPassword: z.string().min(8, 'Password must be at least 8 characters long'),
     agreeTerms: z.boolean().refine((val) => val, 'You must agree to the terms and conditions'),
-  });
+  }).refine(
+    (data) => data.password === data.confirmPassword,
+    {
+      message: "Passwords don't match",
+      path: ["confirmPassword"],
+    }
+  );
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(formSchema),
@@ -49,8 +55,13 @@ const SignUp = () => {
     },
   });
 
-  // Watch email field to trigger validation
+  // Watch all form fields for real-time validation and button activation
   const emailValue = form.watch('email');
+  const passwordValue = form.watch('password');
+  const confirmPasswordValue = form.watch('confirmPassword');
+  const firstNameValue = form.watch('firstName');
+  const lastNameValue = form.watch('lastName');
+  const agreeTermsValue = form.watch('agreeTerms');
 
   // Trigger email validation when email changes
   useEffect(() => {
@@ -58,10 +69,33 @@ const SignUp = () => {
       emailValidation.checkEmail(emailValue);
     }
   }, [emailValue, emailValidation.checkEmail]);
+  
+  // Trigger password confirmation validation when either password changes
+  useEffect(() => {
+    if (confirmPasswordValue && passwordValue !== confirmPasswordValue) {
+      form.setError('confirmPassword', {
+        type: 'manual',
+        message: "Passwords don't match",
+      });
+    } else if (confirmPasswordValue && passwordValue === confirmPasswordValue) {
+      form.clearErrors('confirmPassword');
+    }
+  }, [passwordValue, confirmPasswordValue, form]);
 
   // Determine if form can be submitted
-  // If email validation fails/errors, don't block submission - just check basic form validity
-  const canSubmit = !emailValidation.exists && !emailValidation.hasAccessRequest && !emailValidation.isValidating;
+  const passwordsMatch = passwordValue === confirmPasswordValue;
+  const hasValidEmail = emailValue && emailValue.includes('@') && emailValue.includes('.');
+  const hasMinPasswordLength = passwordValue && passwordValue.length >= 8;
+  const allFieldsFilled = firstNameValue && lastNameValue && emailValue && 
+                         passwordValue && confirmPasswordValue && agreeTermsValue;
+  
+  const canSubmit = !emailValidation.exists && 
+                   !emailValidation.hasAccessRequest && 
+                   !emailValidation.isValidating && 
+                   passwordsMatch && 
+                   hasValidEmail &&
+                   hasMinPasswordLength &&
+                   allFieldsFilled;
 
   const navigate = useNavigate();
   const { signUp, user } = useAuth();
@@ -70,12 +104,19 @@ const SignUp = () => {
     setError(null);
     setIsLoading(true);
 
+    // Double-check password match before submission
+    if (data.password !== data.confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const name = `${data.firstName} ${data.lastName}`;
       const success = await signUp(data.email, data.password, name);
       
       if (success) {
-        toast.success(t('auth.signUpSuccessEmail') || 'Registration successful! Please check your email.');
+        toast.success(t('auth.signUpSuccess') || 'Registration successful!');
         navigate('/sign-in');
       }
     } catch (error: unknown) {
@@ -277,21 +318,44 @@ const SignUp = () => {
               <FormField
                 control={form.control}
                 name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('common.passwordConfirm')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder={t('auth.passwordConfirmPlaceholder') || t('auth.passwordPlaceholder')}
-                        {...field}
-                        className="h-10 bg-gray-50 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 rounded-md"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const passwordsMatch = passwordValue === confirmPasswordValue && confirmPasswordValue;
+                  const passwordsDontMatch = passwordValue !== confirmPasswordValue && confirmPasswordValue;
+                  
+                  const inputClassName = `h-10 bg-gray-50 dark:bg-gray-700/50 rounded-md transition-colors ${
+                    passwordsDontMatch
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : passwordsMatch
+                      ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`;
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel>{t('common.passwordConfirm')}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type="password"
+                            placeholder={t('auth.passwordConfirmPlaceholder') || t('auth.passwordPlaceholder')}
+                            {...field}
+                            className={inputClassName}
+                          />
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                            {passwordsDontMatch && (
+                              <AlertCircle className="h-4 w-4 text-red-500" />
+                            )}
+                            {passwordsMatch && (
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            )}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               <FormField
                 control={form.control}

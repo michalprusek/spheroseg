@@ -6,7 +6,6 @@ import App from './App.tsx';
 import './index.css';
 import './styles/tailwind.css';
 import './App.css';
-import { Toaster } from 'sonner';
 import { initPerformanceMonitoring, markPerformance } from './utils/performance';
 import logger from './utils/logger';
 
@@ -40,26 +39,14 @@ try {
   logger.error('Failed to initialize performance monitoring', { error });
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+// Disable StrictMode in production to avoid double rendering and duplicate API calls
+const app = import.meta.env.MODE === 'production' ? <App /> : (
   <React.StrictMode>
     <App />
-    <Toaster
-      richColors
-      position="bottom-right"
-      closeButton
-      expand={true}
-      duration={4000}
-      visibleToasts={3}
-      toastOptions={{
-        className: 'custom-toast',
-        style: {
-          padding: 'var(--toast-padding)',
-          borderRadius: 'var(--toast-border-radius)',
-        },
-      }}
-    />
-  </React.StrictMode>,
+  </React.StrictMode>
 );
+
+ReactDOM.createRoot(document.getElementById('root')!).render(app);
 
 // Mark application rendered
 markPerformance('app-init-end');

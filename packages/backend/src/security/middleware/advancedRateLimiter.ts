@@ -52,10 +52,10 @@ export const RATE_LIMIT_TIERS = {
     burst: { name: 'public-burst', points: 20, duration: 60 }, // 20 req/min
   },
   
-  // Authenticated user endpoints
+  // Authenticated user endpoints - Increased limits for segmentation editor
   authenticated: {
-    default: { name: 'auth-default', points: 300, duration: 900 }, // 300 req/15min
-    burst: { name: 'auth-burst', points: 50, duration: 60 }, // 50 req/min
+    default: { name: 'auth-default', points: 1000, duration: 900 }, // 1000 req/15min
+    burst: { name: 'auth-burst', points: 200, duration: 60 }, // 200 req/min
   },
   
   // Premium user endpoints
