@@ -37,7 +37,7 @@ export interface FileCleanupResult {
 export async function cleanupProjectFiles(
   pool: Pool,
   projectId: string,
-  options: FileCleanupOptions = {},
+  options: FileCleanupOptions = {}
 ): Promise<FileCleanupResult> {
   const { transactionClient, dryRun = false } = options;
   const client = transactionClient || pool;
@@ -114,7 +114,7 @@ export async function cleanupProjectFiles(
         {
           projectId,
           fileCount: filesToDelete.length,
-        },
+        }
       );
       return {
         success: true,
@@ -142,7 +142,9 @@ export async function cleanupProjectFiles(
     if (projectDirExists) {
       try {
         // Get remaining files in directory first
-        const remainingFiles = await imageUtils.getFilesInDirectory(projectDir, { recursive: true });
+        const remainingFiles = await imageUtils.getFilesInDirectory(projectDir, {
+          recursive: true,
+        });
 
         // Delete any remaining files
         for (const filePath of remainingFiles) {
@@ -194,7 +196,7 @@ export async function cleanupProjectFiles(
  */
 export async function cleanupTemporaryFiles(
   maxAgeHours: number = 24,
-  options: FileCleanupOptions = {},
+  options: FileCleanupOptions = {}
 ): Promise<FileCleanupResult> {
   const { dryRun = false } = options;
   const result: FileCleanupResult = {
@@ -204,9 +206,12 @@ export async function cleanupTemporaryFiles(
     dryRun,
   };
 
-  logger.info(`Starting temporary file cleanup (files older than ${maxAgeHours} hours)`, { maxAgeHours, dryRun });
+  logger.info(`Starting temporary file cleanup (files older than ${maxAgeHours} hours)`, {
+    maxAgeHours,
+    dryRun,
+  });
 
-  const cutoffTime = Date.now() - (maxAgeHours * 60 * 60 * 1000);
+  const cutoffTime = Date.now() - maxAgeHours * 60 * 60 * 1000;
   const tempDirs = [
     path.join(config.storage.uploadDir, 'temp'),
     path.join(config.storage.uploadDir, 'processing'),
@@ -220,13 +225,13 @@ export async function cleanupTemporaryFiles(
 
     try {
       const files = fs.readdirSync(tempDir, { withFileTypes: true });
-      
+
       for (const file of files) {
         const filePath = path.join(tempDir, file.name);
-        
+
         try {
           const stats = fs.statSync(filePath);
-          
+
           if (stats.mtime.getTime() < cutoffTime) {
             if (dryRun) {
               result.deletedFiles.push(filePath);
@@ -267,7 +272,7 @@ export async function cleanupTemporaryFiles(
  */
 export async function cleanupOrphanedFiles(
   pool: Pool,
-  options: FileCleanupOptions = {},
+  options: FileCleanupOptions = {}
 ): Promise<FileCleanupResult> {
   const { transactionClient, dryRun = false } = options;
   const client = transactionClient || pool;
@@ -283,10 +288,12 @@ export async function cleanupOrphanedFiles(
   try {
     // Get all files referenced in database
     const referencedFiles = new Set<string>();
-    
+
     // Images
-    const imagesResult = await client.query('SELECT storage_path, thumbnail_path FROM images WHERE storage_path IS NOT NULL');
-    imagesResult.rows.forEach(row => {
+    const imagesResult = await client.query(
+      'SELECT storage_path, thumbnail_path FROM images WHERE storage_path IS NOT NULL'
+    );
+    imagesResult.rows.forEach((row) => {
       if (row.storage_path) referencedFiles.add(row.storage_path);
       if (row.thumbnail_path) referencedFiles.add(row.thumbnail_path);
     });
@@ -298,7 +305,7 @@ export async function cleanupOrphanedFiles(
       FROM segmentation_results 
       WHERE result_data IS NOT NULL
     `);
-    segmentationResult.rows.forEach(row => {
+    segmentationResult.rows.forEach((row) => {
       if (row.mask_path) referencedFiles.add(row.mask_path);
       if (row.visualization_path) referencedFiles.add(row.visualization_path);
     });
@@ -311,12 +318,12 @@ export async function cleanupOrphanedFiles(
     for (const filePath of actualFiles) {
       const relativePath = path.relative(uploadDir, filePath);
       const dbPath = imageUtils.normalizePathForDb(relativePath, uploadDir);
-      
+
       if (!referencedFiles.has(dbPath)) {
         // Skip certain directories/files that should not be cleaned
         const skipPatterns = ['/temp/', '/processing/', '/logs/', '/backups/'];
-        const shouldSkip = skipPatterns.some(pattern => filePath.includes(pattern));
-        
+        const shouldSkip = skipPatterns.some((pattern) => filePath.includes(pattern));
+
         if (!shouldSkip) {
           if (dryRun) {
             result.deletedFiles.push(filePath);
@@ -342,7 +349,6 @@ export async function cleanupOrphanedFiles(
       failedCount: result.failedFiles.length,
       dryRun,
     });
-
   } catch (error) {
     logger.error('Error during orphaned file cleanup', { error });
     result.success = false;
@@ -356,21 +362,21 @@ export async function cleanupOrphanedFiles(
  */
 async function getAllFilesRecursively(dir: string): Promise<string[]> {
   const files: string[] = [];
-  
+
   if (!fs.existsSync(dir)) return files;
-  
+
   const entries = fs.readdirSync(dir, { withFileTypes: true });
-  
+
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
-    
+
     if (entry.isDirectory()) {
-      files.push(...await getAllFilesRecursively(fullPath));
+      files.push(...(await getAllFilesRecursively(fullPath)));
     } else {
       files.push(fullPath);
     }
   }
-  
+
   return files;
 }
 
@@ -385,13 +391,9 @@ export async function runScheduledCleanup(
     tempFileMaxAgeHours?: number;
     cleanupOrphaned?: boolean;
     dryRun?: boolean;
-  } = {},
+  } = {}
 ): Promise<void> {
-  const {
-    tempFileMaxAgeHours = 24,
-    cleanupOrphaned = true,
-    dryRun = false,
-  } = options;
+  const { tempFileMaxAgeHours = 24, cleanupOrphaned = true, dryRun = false } = options;
 
   logger.info('Starting scheduled file cleanup', { options });
 

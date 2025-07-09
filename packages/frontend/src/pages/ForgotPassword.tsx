@@ -28,10 +28,8 @@ const ForgotPassword = () => {
     try {
       const response = await requestPasswordReset(email);
       setIsSubmitted(true);
-      toast.success(
-        response.message || 'A new password has been sent to your email',
-      );
-      
+      toast.success(response.message || 'A new password has been sent to your email');
+
       // In development mode, show test URL if available
       if (response.testUrl && process.env.NODE_ENV === 'development') {
         console.log('Email test URL:', response.testUrl);
@@ -39,7 +37,7 @@ const ForgotPassword = () => {
       }
     } catch (error: any) {
       console.error('Password reset request error:', error);
-      
+
       // Handle specific error codes
       if (error.response?.status === 404) {
         toast.error(error.response?.data?.message || 'No account found with this email address', {

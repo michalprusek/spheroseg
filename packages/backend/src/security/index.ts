@@ -44,11 +44,11 @@ export const configureSecurity = (app: Application): void => {
 export * from './middleware/auth';
 
 // Export rate limiting middleware for use in specific routes
-export { 
-  standardLimiter, 
-  authLimiter, 
+export {
+  standardLimiter,
+  authLimiter,
   sensitiveOperationsLimiter,
-  createRateLimiter 
+  createRateLimiter,
 } from './middleware/rateLimitMiddleware';
 
 // Export advanced rate limiting features
@@ -64,7 +64,7 @@ export {
   authenticatedRateLimit,
   authRateLimit,
   sensitiveRateLimit,
-  uploadRateLimit
+  uploadRateLimit,
 } from './middleware/advancedRateLimiter';
 
 // Export SecurityManager for advanced security features

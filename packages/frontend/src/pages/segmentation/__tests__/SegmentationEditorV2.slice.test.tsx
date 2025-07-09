@@ -92,14 +92,15 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
   });
 
   it('should trigger slice action after delay when 2 points are set', async () => {
-    const { rerender } = render(
-      <SegmentationEditorV2 projectId="test-project" imageId="test-image" />
-    );
+    const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
     jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
       ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
-      tempPoints: [{ x: 100, y: 100 }, { x: 200, y: 200 }],
+      tempPoints: [
+        { x: 100, y: 100 },
+        { x: 200, y: 200 },
+      ],
     });
 
     mockHandleSliceAction.mockReturnValue(true);
@@ -111,9 +112,12 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     expect(mockHandleSliceAction).not.toHaveBeenCalled();
 
     // Wait for the delay (default 50ms)
-    await waitFor(() => {
-      expect(mockHandleSliceAction).toHaveBeenCalled();
-    }, { timeout: 100 });
+    await waitFor(
+      () => {
+        expect(mockHandleSliceAction).toHaveBeenCalled();
+      },
+      { timeout: 100 },
+    );
 
     expect(mockHandleSliceAction).toHaveBeenCalledTimes(1);
   });
@@ -124,14 +128,15 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
       VITE_SLICE_ACTION_DELAY: '100',
     };
 
-    const { rerender } = render(
-      <SegmentationEditorV2 projectId="test-project" imageId="test-image" />
-    );
+    const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
     jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
       ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
-      tempPoints: [{ x: 100, y: 100 }, { x: 200, y: 200 }],
+      tempPoints: [
+        { x: 100, y: 100 },
+        { x: 200, y: 200 },
+      ],
     });
 
     mockHandleSliceAction.mockReturnValue(true);
@@ -140,24 +145,28 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     rerender(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Slice action should not be called after 50ms
-    await new Promise(resolve => setTimeout(resolve, 60));
+    await new Promise((resolve) => setTimeout(resolve, 60));
     expect(mockHandleSliceAction).not.toHaveBeenCalled();
 
     // But should be called after 100ms
-    await waitFor(() => {
-      expect(mockHandleSliceAction).toHaveBeenCalled();
-    }, { timeout: 150 });
+    await waitFor(
+      () => {
+        expect(mockHandleSliceAction).toHaveBeenCalled();
+      },
+      { timeout: 150 },
+    );
   });
 
   it('should handle slice action errors gracefully', async () => {
-    const { rerender } = render(
-      <SegmentationEditorV2 projectId="test-project" imageId="test-image" />
-    );
+    const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
     jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
       ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
-      tempPoints: [{ x: 100, y: 100 }, { x: 200, y: 200 }],
+      tempPoints: [
+        { x: 100, y: 100 },
+        { x: 200, y: 200 },
+      ],
     });
 
     // Make handleSliceAction throw an error
@@ -169,30 +178,34 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     rerender(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Wait for the delay and error handling
-    await waitFor(() => {
-      expect(mockHandleSliceAction).toHaveBeenCalled();
-    }, { timeout: 100 });
+    await waitFor(
+      () => {
+        expect(mockHandleSliceAction).toHaveBeenCalled();
+      },
+      { timeout: 100 },
+    );
 
     // Error should be logged and toast shown
     expect(toast.error).toHaveBeenCalledWith('segmentation.sliceError');
   });
 
   it('should cancel slice action if component unmounts', async () => {
-    const { unmount } = render(
-      <SegmentationEditorV2 projectId="test-project" imageId="test-image" />
-    );
+    const { unmount } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
     jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
       ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
-      tempPoints: [{ x: 100, y: 100 }, { x: 200, y: 200 }],
+      tempPoints: [
+        { x: 100, y: 100 },
+        { x: 200, y: 200 },
+      ],
     });
 
     // Unmount before the delay completes
     setTimeout(() => unmount(), 25);
 
     // Wait longer than the delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Slice action should not have been called
     expect(mockHandleSliceAction).not.toHaveBeenCalled();
@@ -203,13 +216,16 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
       ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
       selectedPolygonId: null,
-      tempPoints: [{ x: 100, y: 100 }, { x: 200, y: 200 }],
+      tempPoints: [
+        { x: 100, y: 100 },
+        { x: 200, y: 200 },
+      ],
     });
 
     render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Wait longer than the delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Slice action should not have been called
     expect(mockHandleSliceAction).not.toHaveBeenCalled();

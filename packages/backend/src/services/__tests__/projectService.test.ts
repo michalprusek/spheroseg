@@ -99,15 +99,16 @@ describe('Project Service', () => {
       expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
 
       // Check that the project was created in the database
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO projects'), [
-        mockUserId,
-        'Test Project',
-        'A test project',
-      ]);
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO projects'),
+        [mockUserId, 'Test Project', 'A test project']
+      );
 
       // Check that project directories were created
       expect(fs.mkdirSync).toHaveBeenCalledTimes(5);
-      expect(fs.mkdirSync).toHaveBeenCalledWith(expect.stringContaining(mockProjectId), { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith(expect.stringContaining(mockProjectId), {
+        recursive: true,
+      });
 
       // Check that the result includes the project data with is_owner flag
       expect(result).toEqual(
@@ -117,7 +118,7 @@ describe('Project Service', () => {
           description: 'A test project',
           user_id: mockUserId,
           is_owner: true,
-        }),
+        })
       );
 
       // Check that client was released
@@ -141,7 +142,7 @@ describe('Project Service', () => {
           title: 'Existing Project',
           description: 'This title already exists',
           userId: mockUserId,
-        }),
+        })
       ).rejects.toThrow(ApiError);
 
       // Transaction should be rolled back
@@ -187,7 +188,7 @@ describe('Project Service', () => {
           title: 'Test Project',
           description: 'A test project',
           userId: mockUserId,
-        }),
+        })
       ).rejects.toThrow(ApiError);
 
       // Transaction should be rolled back
@@ -229,7 +230,7 @@ describe('Project Service', () => {
           description: 'A test project',
           user_id: mockUserId,
           is_owner: true,
-        }),
+        })
       );
     });
 
@@ -270,7 +271,7 @@ describe('Project Service', () => {
           title: 'Shared Project',
           permission: 'edit',
           is_owner: false,
-        }),
+        })
       );
     });
 
@@ -351,7 +352,7 @@ describe('Project Service', () => {
           title: 'Owned Project',
           is_owner: true,
           image_count: 5,
-        }),
+        })
       );
 
       // Check that shared project data is correct
@@ -361,7 +362,7 @@ describe('Project Service', () => {
           title: 'Shared Project',
           is_owner: false,
           permission: 'view',
-        }),
+        })
       );
     });
 
@@ -436,13 +437,16 @@ describe('Project Service', () => {
       expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
 
       // Check that project directory was deleted
-      expect(fs.rmSync).toHaveBeenCalledWith(expect.stringContaining(mockProjectId), { recursive: true, force: true });
+      expect(fs.rmSync).toHaveBeenCalledWith(expect.stringContaining(mockProjectId), {
+        recursive: true,
+        force: true,
+      });
 
       // Check that database deletion was performed
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('DELETE FROM projects'), [
-        mockProjectId,
-        mockUserId,
-      ]);
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM projects'),
+        [mockProjectId, mockUserId]
+      );
 
       // Check result is true
       expect(result).toBe(true);
@@ -461,7 +465,9 @@ describe('Project Service', () => {
       });
 
       // Expect the service to throw an ApiError
-      await expect(projectService.deleteProject(pool, mockProjectId, mockUserId)).rejects.toThrow(ApiError);
+      await expect(projectService.deleteProject(pool, mockProjectId, mockUserId)).rejects.toThrow(
+        ApiError
+      );
 
       // Transaction should be rolled back
       expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');

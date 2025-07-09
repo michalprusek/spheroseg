@@ -56,10 +56,13 @@ export const getAccessToken = (validate = false, removeIfInvalid = false): strin
 
     // Try to get token from localStorage first
     let token = localStorage.getItem(ACCESS_TOKEN_KEY);
-    
+
     // Log what we found in localStorage for debugging
     if (token) {
-      logger.debug('[authService] Found token in localStorage:', { tokenLength: token.length, tokenPrefix: token.substring(0, 20) + '...' });
+      logger.debug('[authService] Found token in localStorage:', {
+        tokenLength: token.length,
+        tokenPrefix: token.substring(0, 20) + '...',
+      });
     } else {
       logger.debug('[authService] No token found in localStorage');
     }
@@ -251,7 +254,7 @@ export const setTokens = (accessToken: string, refreshToken: string, rememberMe:
 
   // Store remember me preference
   localStorage.setItem(SESSION_PERSIST_KEY, rememberMe ? 'true' : 'false');
-  
+
   // Get or create session ID to track browser sessions
   const sessionId = getOrCreateSessionId();
 

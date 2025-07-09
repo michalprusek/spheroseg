@@ -56,7 +56,11 @@ export const updateSecurityIssue = async (req: Request, res: Response, next: Nex
       throw new ApiError(403, 'Only admin users can update security issues');
     }
 
-    const updatedIssue = await securityService.updateSecurityIssue(req.params.id, req.body, req.user.id);
+    const updatedIssue = await securityService.updateSecurityIssue(
+      req.params.id,
+      req.body,
+      req.user.id
+    );
 
     res.status(200).json(updatedIssue);
   } catch (error) {

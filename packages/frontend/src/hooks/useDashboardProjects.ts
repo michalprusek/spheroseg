@@ -42,7 +42,9 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
       setError(null);
 
       try {
-        console.log(`Fetching projects for user ${user.id}, limit: ${limit}, offset: ${offset}, sortField: ${sortField}, sortDirection: ${sortDirection}`);
+        console.log(
+          `Fetching projects for user ${user.id}, limit: ${limit}, offset: ${offset}, sortField: ${sortField}, sortDirection: ${sortDirection}`,
+        );
 
         // Create the API request with a timeout
         const controller = new AbortController();
@@ -164,7 +166,7 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
               console.log('Projects after client-side sorting:', {
                 sortField,
                 sortDirection,
-                projects: processedProjects
+                projects: processedProjects,
               });
             }
 
@@ -214,7 +216,7 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
         setLoading(false);
       }
     },
-    [user?.id, /* sortField and sortDirection are provided when the function is called */],
+    [user?.id /* sortField and sortDirection are provided when the function is called */],
   );
 
   // Remove fetchTotalProjects function

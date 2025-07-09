@@ -331,7 +331,9 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
       return (
         <div className="inline-flex items-center gap-2 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
           <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></div>
-          <span>{processing} / {queued}</span>
+          <span>
+            {processing} / {queued}
+          </span>
         </div>
       );
     } else {
@@ -363,9 +365,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
             </span>
           </div>
           {queueData?.timestamp && (
-            <div className="text-xs text-blue-400 mt-1">
-              Last updated: {formatTime(queueData.timestamp)}
-            </div>
+            <div className="text-xs text-blue-400 mt-1">Last updated: {formatTime(queueData.timestamp)}</div>
           )}
         </div>
       </div>
@@ -380,9 +380,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
             <span>No images in queue</span>
           </div>
           {queueData?.timestamp && (
-            <div className="text-xs text-green-500 mt-1">
-              Last updated: {formatTime(queueData.timestamp)}
-            </div>
+            <div className="text-xs text-green-500 mt-1">Last updated: {formatTime(queueData.timestamp)}</div>
           )}
         </div>
       </div>

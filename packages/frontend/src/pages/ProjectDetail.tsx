@@ -143,7 +143,6 @@ const ProjectDetail = () => {
           logger.warn('Error verifying project:', err);
         });
 
-
       const handleSegmentationUpdate = (data: any) => {
         if (!isComponentMounted) return;
 
@@ -185,7 +184,8 @@ const ProjectDetail = () => {
           socket.emit('join', `project-${cleanedId}`);
           socket.emit('join', `project:${cleanedId}`);
           logger.info(`Joined WebSocket room for project ${cleanedId} in multiple formats`);
-        } catch (joinErr: any) { // Cast joinErr to any
+        } catch (joinErr: any) {
+          // Cast joinErr to any
           logger.error('Failed to join project room:', joinErr);
         }
       };
@@ -213,7 +213,8 @@ const ProjectDetail = () => {
         try {
           socket.emit('leave_project', { projectId: cleanedId });
           logger.info(`Left WebSocket room for project ${cleanedId}`);
-        } catch (leaveErr: any) { // Cast leaveErr to any
+        } catch (leaveErr: any) {
+          // Cast leaveErr to any
           logger.error('Error leaving project room:', leaveErr);
         }
 
@@ -222,7 +223,8 @@ const ProjectDetail = () => {
 
         logger.info('Cleaned up WebSocket event listeners');
       };
-    } catch (error: any) { // Cast error to any
+    } catch (error: any) {
+      // Cast error to any
       logger.error('Error setting up WebSocket:', error);
       toast.error('Failed to connect to real-time updates. Some features may be limited.');
 
@@ -255,9 +257,11 @@ const ProjectDetail = () => {
         logger.debug(`ProjectDetail: Received image-deleted event for image ${imageId}, forceRefresh: ${forceRefresh}`);
 
         // Okamžitě aktualizujeme UI odebráním smazaného obrázku
-        onImagesChange(prevImages => {
-          const updatedImages = prevImages.filter(img => img.id !== imageId);
-          logger.debug(`ProjectDetail: Filtered out deleted image. Before: ${prevImages.length}, After: ${updatedImages.length}`);
+        onImagesChange((prevImages) => {
+          const updatedImages = prevImages.filter((img) => img.id !== imageId);
+          logger.debug(
+            `ProjectDetail: Filtered out deleted image. Before: ${prevImages.length}, After: ${updatedImages.length}`,
+          );
           return updatedImages;
         });
 
@@ -421,14 +425,16 @@ const ProjectDetail = () => {
 
       // Rozdělení ID na menší dávky
       for (let i = 0; i < selectedImageIds.length; i += batchSize) {
-          batches.push(selectedImageIds.slice(i, i + batchSize));
+        batches.push(selectedImageIds.slice(i, i + batchSize));
       }
 
       logger.debug(`Rozdělení ${selectedImageIds.length} obrázků do ${batches.length} dávek po max ${batchSize}`);
 
       // Zobrazíme informaci o zpracování
       if (batches.length > 1) {
-        toast.info(t('project.segmentation.processingInBatches', { count: selectedImageIds.length, batches: batches.length }));
+        toast.info(
+          t('project.segmentation.processingInBatches', { count: selectedImageIds.length, batches: batches.length }),
+        );
       }
 
       // Postupné zpracování všech dávek
@@ -436,41 +442,41 @@ const ProjectDetail = () => {
       let failCount = 0;
 
       for (let i = 0; i < batches.length; i++) {
-          const batch = batches[i];
-          logger.debug(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
+        const batch = batches[i];
+        logger.debug(`Zpracování dávky ${i + 1}/${batches.length} s ${batch.length} obrázky`);
 
-          // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
-          if (i > 0) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+        // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
+        if (i > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+
+        try {
+          const response = await apiClient.post(`/api/segmentations/batch`, {
+            imageIds: batch,
+            priority: 5,
+            model_type: 'resunet',
+            projectId: id, // Add projectId here
+            parameters: {
+              threshold: 0.5,
+              model: 'resunet',
+            },
+          });
+          logger.debug(`Batch ${i + 1} trigger response:`, response);
+          successCount += batch.length;
+
+          // Informujeme uživatele o průběhu
+          if (batches.length > 1) {
+            toast.success(t('project.segmentation.batchQueued', { current: i + 1, total: batches.length }));
           }
+        } catch (error: any) {
+          logger.error(`Batch ${i + 1}: Failed to trigger segmentation:`, error);
+          failCount += batch.length;
 
-          try {
-              const response = await apiClient.post(`/api/segmentations/batch`, {
-                  imageIds: batch,
-                  priority: 5,
-                  model_type: 'resunet',
-                  projectId: id, // Add projectId here
-                  parameters: {
-                    threshold: 0.5,
-                    model: 'resunet'
-                  }
-              });
-              logger.debug(`Batch ${i+1} trigger response:`, response);
-              successCount += batch.length;
-
-              // Informujeme uživatele o průběhu
-              if (batches.length > 1) {
-                toast.success(t('project.segmentation.batchQueued', { current: i+1, total: batches.length }));
-              }
-          } catch (error: any) {
-              logger.error(`Batch ${i+1}: Failed to trigger segmentation:`, error);
-              failCount += batch.length;
-
-              // Informujeme uživatele o chybě
-              if (batches.length > 1) {
-                toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
-              }
+          // Informujeme uživatele o chybě
+          if (batches.length > 1) {
+            toast.error(t('project.segmentation.batchError', { current: i + 1, total: batches.length }));
           }
+        }
       }
 
       logger.info(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
@@ -501,9 +507,7 @@ const ProjectDetail = () => {
       return;
     }
 
-    if (
-      window.confirm(t('project.detail.deleteConfirmation', { count: selectedImageIds.length }))
-    ) {
+    if (window.confirm(t('project.detail.deleteConfirmation', { count: selectedImageIds.length }))) {
       toast.info(t('project.detail.deletingImages', { count: selectedImageIds.length }));
 
       const remainingImages = images.filter((img) => !selectedImageIds.includes(img.id));
@@ -515,13 +519,15 @@ const ProjectDetail = () => {
             try {
               await apiClient.delete(`/api/projects/${id}/images/${imageId}`);
               return { success: true, imageId };
-            } catch (newEndpointErr: any) { // Cast error to any
+            } catch (newEndpointErr: any) {
+              // Cast error to any
               logger.warn(`Failed to delete with new endpoint: ${imageId}`, newEndpointErr);
 
               try {
                 await apiClient.delete(`/api/images/${imageId}`);
                 return { success: true, imageId };
-              } catch (legacyErr: any) { // Cast error to any
+              } catch (legacyErr: any) {
+                // Cast error to any
                 logger.error(`Failed to delete with both endpoints: ${imageId}`, legacyErr);
                 return { success: false, imageId, error: legacyErr };
               }
@@ -576,26 +582,26 @@ const ProjectDetail = () => {
   const handleUploadComplete = useCallback(
     async (projectId: string, uploadedImages: ProjectImage[] | ProjectImage) => {
       logger.debug('Upload complete:', projectId);
-      
+
       // Immediately add new images to the gallery
       const imagesArray = Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages];
       logger.debug('Handling upload complete with images:', imagesArray);
-      
+
       // Update local state immediately to show images in gallery
       if (imagesArray.length > 0) {
-        onImagesChange(prevImages => {
+        onImagesChange((prevImages) => {
           // Filter out any duplicates based on ID
-          const existingIds = new Set(prevImages.map(img => img.id));
-          const newImages = imagesArray.filter(img => img && img.id && !existingIds.has(img.id));
+          const existingIds = new Set(prevImages.map((img) => img.id));
+          const newImages = imagesArray.filter((img) => img && img.id && !existingIds.has(img.id));
           return [...prevImages, ...newImages];
         });
       }
-      
+
       // Refresh data after a delay to get any server-side updates
       setTimeout(() => {
         refreshData();
       }, 2000);
-      
+
       setShowUploader(false);
 
       const { isValidImageId } = await import('@/api/projectImages');
@@ -635,14 +641,21 @@ const ProjectDetail = () => {
 
         // Rozdělení ID na menší dávky
         for (let i = 0; i < imageIdsForSegmentation.length; i += batchSize) {
-            batches.push(imageIdsForSegmentation.slice(i, i + batchSize));
+          batches.push(imageIdsForSegmentation.slice(i, i + batchSize));
         }
 
-        logger.debug(`Rozdělení ${imageIdsForSegmentation.length} obrázků do ${batches.length} dávek po max ${batchSize}`);
+        logger.debug(
+          `Rozdělení ${imageIdsForSegmentation.length} obrázků do ${batches.length} dávek po max ${batchSize}`,
+        );
 
         // Zobrazíme informaci o zpracování
         if (batches.length > 1) {
-          toast.info(t('project.segmentation.processingInBatches', { count: imageIdsForSegmentation.length, batches: batches.length }));
+          toast.info(
+            t('project.segmentation.processingInBatches', {
+              count: imageIdsForSegmentation.length,
+              batches: batches.length,
+            }),
+          );
         }
 
         // Postupné zpracování všech dávek
@@ -650,42 +663,42 @@ const ProjectDetail = () => {
         let failCount = 0;
 
         for (let i = 0; i < batches.length; i++) {
-            const batch = batches[i];
-            logger.debug(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
+          const batch = batches[i];
+          logger.debug(`Zpracování dávky ${i + 1}/${batches.length} s ${batch.length} obrázky`);
 
-            // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
-            if (i > 0) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
+          // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
+          if (i > 0) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+
+          try {
+            const response = await apiClient.post(`/api/segmentations/batch`, {
+              imageIds: batch,
+              priority: 3,
+              model_type: 'resunet',
+              projectId: projectId, // Add projectId here
+              parameters: {
+                threshold: 0.5,
+                model: 'resunet',
+              },
+            });
+            logger.debug(`Batch ${i + 1} trigger response:`, response);
+            successCount += batch.length;
+            apiSuccess = true;
+
+            // Informujeme uživatele o průběhu
+            if (batches.length > 1) {
+              toast.success(t('project.segmentation.batchQueued', { current: i + 1, total: batches.length }));
             }
+          } catch (error: any) {
+            logger.warn(`Batch ${i + 1}: Failed to trigger segmentation:`, error);
+            failCount += batch.length;
 
-            try {
-                const response = await apiClient.post(`/api/segmentations/batch`, {
-                    imageIds: batch,
-                    priority: 3,
-                    model_type: 'resunet',
-                    projectId: projectId, // Add projectId here
-                    parameters: {
-                      threshold: 0.5,
-                      model: 'resunet'
-                    }
-                });
-                logger.debug(`Batch ${i+1} trigger response:`, response);
-                successCount += batch.length;
-                apiSuccess = true;
-
-                // Informujeme uživatele o průběhu
-                if (batches.length > 1) {
-                  toast.success(t('project.segmentation.batchQueued', { current: i+1, total: batches.length }));
-                }
-            } catch (error: any) {
-                logger.warn(`Batch ${i+1}: Failed to trigger segmentation:`, error);
-                failCount += batch.length;
-
-                // Informujeme uživatele o chybě
-                if (batches.length > 1) {
-                  toast.error(t('project.segmentation.batchError', { current: i+1, total: batches.length }));
-                }
+            // Informujeme uživatele o chybě
+            if (batches.length > 1) {
+              toast.error(t('project.segmentation.batchError', { current: i + 1, total: batches.length }));
             }
+          }
         }
 
         logger.info(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
@@ -703,9 +716,7 @@ const ProjectDetail = () => {
         if (apiSuccess) {
           toast.success(t('project.segmentation.startedImages', { count: imageIdsForSegmentation.length }));
         } else {
-          toast.warning(
-            t('project.segmentation.queuedLocallyWarning', { count: imageIdsForSegmentation.length }),
-          );
+          toast.warning(t('project.segmentation.queuedLocallyWarning', { count: imageIdsForSegmentation.length }));
         }
 
         setTimeout(() => {

@@ -1,4 +1,8 @@
-import { triggerSegmentationTask, getSegmentationQueueStatus, cancelSegmentationTask } from '../segmentationService';
+import {
+  triggerSegmentationTask,
+  getSegmentationQueueStatus,
+  cancelSegmentationTask,
+} from '../segmentationService';
 import segmentationQueueService from '../segmentationQueueService';
 import logger from '../../utils/logger';
 
@@ -41,7 +45,7 @@ describe('Segmentation Service', () => {
         mockImageId,
         mockImagePath,
         mockParameters,
-        1, // default priority
+        1 // default priority
       );
       expect(logger.info).toHaveBeenCalled();
     });
@@ -54,14 +58,18 @@ describe('Segmentation Service', () => {
         .mockRejectedValue(new Error('Queue error'));
 
       // Act & Assert
-      await expect(triggerSegmentationTask(mockImageId, mockImagePath, mockParameters)).rejects.toThrow('Queue error');
+      await expect(
+        triggerSegmentationTask(mockImageId, mockImagePath, mockParameters)
+      ).rejects.toThrow('Queue error');
 
       expect(logger.error).toHaveBeenCalled();
     });
 
     it('should accept a custom priority', async () => {
       // Arrange - Reset the mock to prevent interference from previous test
-      (segmentationQueueService.triggerSegmentationTask as jest.Mock).mockReset().mockResolvedValue('task-id-123');
+      (segmentationQueueService.triggerSegmentationTask as jest.Mock)
+        .mockReset()
+        .mockResolvedValue('task-id-123');
 
       // Act
       const priority = 10;
@@ -72,7 +80,7 @@ describe('Segmentation Service', () => {
         mockImageId,
         mockImagePath,
         mockParameters,
-        priority,
+        priority
       );
     });
   });

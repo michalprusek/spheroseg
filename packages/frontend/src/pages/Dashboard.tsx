@@ -34,7 +34,7 @@ const Dashboard = () => {
       await clearByTag('dashboard-data');
       await clearByTag('user-statistics');
       await clearByTag('project-data');
-      
+
       // Invalidate React Query caches
       queryClient.invalidateQueries(['userStatistics']);
       queryClient.invalidateQueries(['projects']);
@@ -45,7 +45,7 @@ const Dashboard = () => {
       // Fetch projects directly with current sort parameters
       fetchProjects(10, 0, sortField, sortDirection);
     };
-    
+
     refreshDashboardData();
   }, [queryClient, clearByTag, fetchProjects, sortField, sortDirection]);
 
@@ -173,7 +173,7 @@ const Dashboard = () => {
     originalProjects: projects,
     sortedProjects,
     sortField,
-    sortDirection
+    sortDirection,
   });
 
   return (

@@ -1,6 +1,6 @@
 /**
  * Unified Error Handling System
- * 
+ *
  * Consolidates all error handling approaches into a single, consistent system.
  * This module combines the best features from errorHandling.ts, enhancedErrorHandling.ts, and errorUtils.ts
  */
@@ -75,7 +75,7 @@ export class AppError extends Error {
     severity: ErrorSeverity = ErrorSeverity.ERROR,
     code?: string,
     details?: any,
-    statusCode?: number
+    statusCode?: number,
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -152,11 +152,11 @@ export function getErrorType(error: unknown): ErrorType {
 
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
-    
+
     if (!error.response) {
       return error.code === 'ECONNABORTED' ? ErrorType.TIMEOUT : ErrorType.NETWORK;
     }
-    
+
     switch (status) {
       case 400:
         return ErrorType.VALIDATION;
@@ -190,7 +190,7 @@ export function getErrorSeverity(error: unknown): ErrorSeverity {
   }
 
   const type = getErrorType(error);
-  
+
   switch (type) {
     case ErrorType.VALIDATION:
     case ErrorType.NOT_FOUND:
@@ -219,10 +219,7 @@ export function getErrorMessage(error: unknown, defaultMessage = 'An unexpected 
   // Axios errors
   if (axios.isAxiosError(error)) {
     const response = error.response?.data as ApiErrorResponse;
-    return response?.message || 
-           response?.error || 
-           error.message || 
-           defaultMessage;
+    return response?.message || response?.error || error.message || defaultMessage;
   }
 
   // Standard Error
@@ -245,7 +242,7 @@ export function createErrorInfo(error: unknown, context?: Record<string, any>): 
   const type = getErrorType(error);
   const severity = getErrorSeverity(error);
   const message = getErrorMessage(error);
-  
+
   let code: string | undefined;
   let details: any;
   let statusCode: number | undefined;
@@ -285,14 +282,14 @@ const toastIds = new Map<string, string>();
  */
 function showErrorToast(errorInfo: ErrorInfo): void {
   const toastKey = `${errorInfo.type}-${errorInfo.message}`;
-  
+
   // Check if similar toast is already shown
   if (toastIds.has(toastKey)) {
     return;
   }
 
   let duration = 4000; // Default duration
-  
+
   // Adjust duration based on severity
   switch (errorInfo.severity) {
     case ErrorSeverity.INFO:
@@ -310,9 +307,12 @@ function showErrorToast(errorInfo: ErrorInfo): void {
   }
 
   // Show toast based on severity
-  const toastFn = errorInfo.severity === ErrorSeverity.INFO ? toast.info :
-                  errorInfo.severity === ErrorSeverity.WARNING ? toast.warning :
-                  toast.error;
+  const toastFn =
+    errorInfo.severity === ErrorSeverity.INFO
+      ? toast.info
+      : errorInfo.severity === ErrorSeverity.WARNING
+        ? toast.warning
+        : toast.error;
 
   const toastId = toastFn(errorInfo.message, {
     duration,
@@ -321,7 +321,7 @@ function showErrorToast(errorInfo: ErrorInfo): void {
 
   // Track toast ID
   toastIds.set(toastKey, toastId as string);
-  
+
   // Remove from tracking after duration
   setTimeout(() => {
     toastIds.delete(toastKey);
@@ -342,18 +342,13 @@ export function handleError(
     logError?: boolean;
     context?: Record<string, any>;
     customMessage?: string;
-  } = {}
+  } = {},
 ): ErrorInfo {
-  const {
-    showToast = true,
-    logError = true,
-    context,
-    customMessage,
-  } = options;
+  const { showToast = true, logError = true, context, customMessage } = options;
 
   // Create structured error info
   const errorInfo = createErrorInfo(error, context);
-  
+
   // Override message if custom message provided
   if (customMessage) {
     errorInfo.message = customMessage;
@@ -409,7 +404,7 @@ export function handleError(
  */
 export async function safeAsync<T>(
   fn: () => Promise<T>,
-  options?: Parameters<typeof handleError>[1]
+  options?: Parameters<typeof handleError>[1],
 ): Promise<{ data?: T; error?: ErrorInfo }> {
   try {
     const data = await fn();
@@ -423,10 +418,7 @@ export async function safeAsync<T>(
 /**
  * Try-catch wrapper for async functions
  */
-export async function tryCatch<T>(
-  fn: () => Promise<T>,
-  defaultValue?: T
-): Promise<T | undefined> {
+export async function tryCatch<T>(fn: () => Promise<T>, defaultValue?: T): Promise<T | undefined> {
   try {
     return await fn();
   } catch (error) {
@@ -474,7 +466,7 @@ export default {
   formatValidationErrors,
   isErrorType,
   isAuthError,
-  
+
   // Error classes
   AppError,
   NetworkError,
@@ -485,7 +477,7 @@ export default {
   NotFoundError,
   ServerError,
   TimeoutError,
-  
+
   // Enums
   ErrorType,
   ErrorSeverity,

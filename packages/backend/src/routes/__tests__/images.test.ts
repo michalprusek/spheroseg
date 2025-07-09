@@ -38,7 +38,9 @@ jest.mock('fs', () => ({
       emit: jest.fn((event: string, ...args: any[]) => {
         // Helper to call listeners
         if (stream.listeners && stream.listeners[event]) {
-          stream.listeners[event].forEach((listener: (...args: any[]) => void) => listener(...args));
+          stream.listeners[event].forEach((listener: (...args: any[]) => void) =>
+            listener(...args)
+          );
         }
       }),
       pause: jest.fn(), // Add pause method
@@ -69,7 +71,7 @@ const {
 // Define a type for the specific query overload we are mocking
 type SimpleQuery = <R extends QueryResultRow = any, I extends any[] = any[]>(
   queryTextOrConfig: string | QueryConfig<I>,
-  values?: QueryConfigValues<I>,
+  values?: QueryConfigValues<I>
 ) => Promise<QueryResult<R>>;
 
 // --- Mock Multer to work with supertest.attach() ---
@@ -274,7 +276,9 @@ describe('Image Routes', () => {
       fs.writeFileSync(dummyFilePath, 'dummy image data invalid');
 
       try {
-        const res = await request(app).post(`/api/projects/${invalidProjectId}/images`).attach('images', dummyFilePath); // Attach file even for invalid project ID test
+        const res = await request(app)
+          .post(`/api/projects/${invalidProjectId}/images`)
+          .attach('images', dummyFilePath); // Attach file even for invalid project ID test
         // .set('x-test-simulate-files', 'true') // Removed
 
         expect(res.statusCode).toEqual(404);
@@ -291,7 +295,9 @@ describe('Image Routes', () => {
       fs.writeFileSync(dummyFilePath, 'dummy image data invalid format');
 
       try {
-        const res = await request(app).post('/api/projects/invalid-uuid-format/images').attach('images', dummyFilePath); // Attach file even for invalid format test
+        const res = await request(app)
+          .post('/api/projects/invalid-uuid-format/images')
+          .attach('images', dummyFilePath); // Attach file even for invalid format test
         // .set('x-test-simulate-files', 'true') // Removed
 
         expect(res.statusCode).toEqual(400);

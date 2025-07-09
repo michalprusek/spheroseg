@@ -4,7 +4,7 @@ export default {
   common: {
     appName: 'Spheroid Segmentation',
     appNameShort: 'SpheroSeg',
-    
+
     actions: {
       save: 'Save',
       cancel: 'Cancel',
@@ -39,7 +39,7 @@ export default {
       enable: 'Enable',
       disable: 'Disable',
     },
-    
+
     status: {
       loading: 'Loading...',
       processing: 'Processing...',
@@ -57,7 +57,7 @@ export default {
       loadingAccount: 'Loading your account...',
       loadingApplication: 'Loading application...',
     },
-    
+
     form: {
       email: 'Email',
       password: 'Password',
@@ -76,7 +76,7 @@ export default {
       department: 'Department',
       passwordConfirm: 'Confirm Password',
     },
-    
+
     placeholders: {
       email: 'Enter your email',
       password: 'Enter your password',
@@ -91,7 +91,7 @@ export default {
       title: 'e.g. Researcher, Professor',
       department: 'Enter your department',
     },
-    
+
     messages: {
       saveSuccess: 'Changes saved successfully',
       deleteSuccess: 'Successfully deleted',
@@ -107,7 +107,7 @@ export default {
       notSpecified: 'Not Specified',
       notProvided: 'Not provided',
     },
-    
+
     labels: {
       yes: 'Yes',
       no: 'No',
@@ -151,7 +151,7 @@ export default {
       requestAccess: 'Request Access',
       alreadyLoggedIn: "You're already logged in",
     },
-    
+
     actions: {
       signIn: 'Sign In',
       signUp: 'Sign Up',
@@ -166,7 +166,7 @@ export default {
       sendResetLink: 'Send New Password',
       backToSignIn: 'Back to Sign In',
     },
-    
+
     labels: {
       email: 'Email address',
       password: 'Password',
@@ -175,7 +175,7 @@ export default {
       confirmPassword: 'Confirm password',
       rememberMe: 'Remember me',
     },
-    
+
     messages: {
       signingIn: 'Signing In...',
       signInSuccess: 'Signed in successfully',
@@ -207,7 +207,7 @@ export default {
       alreadyLoggedInMessage: 'You are already logged in to your account',
       goToDashboardLink: 'Go to Dashboard',
     },
-    
+
     descriptions: {
       signIn: 'Sign in to your account',
       signUp: 'Sign up for a new account',
@@ -216,14 +216,14 @@ export default {
       enterInfoCreateAccount: 'Enter your information to create an account',
       termsAndPrivacy: 'By signing up, you agree to our Terms of Service and Privacy Policy.',
     },
-    
+
     questions: {
       dontHaveAccount: "Don't have an account?",
       alreadyHaveAccount: 'Already have an account?',
       alreadyHaveAccess: 'Already have access?',
       noAccount: "Don't have an account?",
     },
-    
+
     placeholders: {
       email: 'Enter your email',
       password: 'Enter your password',
@@ -240,21 +240,22 @@ export default {
       main: 'Request Access to Spheroid Segmentation Platform',
       thankYou: 'Thank you for your interest',
     },
-    
+
     labels: {
       email: 'Your Email Address',
       name: 'Your Name',
       institution: 'Institution/Company',
       reason: 'Reason for Access',
     },
-    
+
     actions: {
       submit: 'Submit Request',
       signIn: 'Sign In',
     },
-    
+
     messages: {
-      description: 'Fill out the following form to request access to our platform. We will review your request and contact you soon.',
+      description:
+        'Fill out the following form to request access to our platform. We will review your request and contact you soon.',
       requestReceived: 'Request Received',
       weWillContact: 'We will review your request and contact you soon',
       submitSuccess: 'Request submitted successfully!',
@@ -265,14 +266,14 @@ export default {
       agreeToTerms: 'By submitting this request, you agree to our',
       and: 'and',
     },
-    
+
     placeholders: {
       email: 'Enter your email address',
       name: 'Enter your full name',
       institution: 'Enter your institution or company name',
       reason: 'Please describe how you plan to use the platform',
     },
-    
+
     prompts: {
       signIn: 'Already have an account?',
     },
@@ -291,7 +292,7 @@ export default {
       duplicateProgress: 'Duplication Progress',
       duplicating: 'Duplicating Project',
     },
-    
+
     labels: {
       name: 'Project Name',
       description: 'Project Description',
@@ -309,7 +310,7 @@ export default {
       activeTasks: 'Active',
       allTasks: 'All',
     },
-    
+
     actions: {
       create: 'Create project',
       createNew: 'Create new project',
@@ -324,7 +325,7 @@ export default {
       sort: 'Sort projects',
       retry: 'Retry',
     },
-    
+
     messages: {
       loading: 'Loading projects...',
       creatingProject: 'Creating project...',
@@ -336,7 +337,8 @@ export default {
       noProjects: 'No projects found',
       createFirst: 'Create your first project to get started',
       confirmDelete: 'Are you sure you want to delete this project?',
-      confirmDeleteDescription: 'This action cannot be undone. All data associated with this project will be permanently deleted.',
+      confirmDeleteDescription:
+        'This action cannot be undone. All data associated with this project will be permanently deleted.',
       creationFailed: 'Failed to create project',
       deletionFailed: 'Failed to delete project',
       updateFailed: 'Failed to update project',
@@ -351,7 +353,8 @@ export default {
       deleteWarning: 'You are about to delete the following project:',
       duplicating: 'Duplicating project...',
       duplicatingDescription: 'Your project is being duplicated. This may take a few moments.',
-      duplicateProgressDescription: 'Your project is being duplicated. This process may take some time for large projects.',
+      duplicateProgressDescription:
+        'Your project is being duplicated. This process may take some time for large projects.',
       duplicationSuccessMessage: 'Project duplicated successfully! You can now access the new project.',
       duplicationCancelled: 'Project duplication cancelled',
       duplicationTaskFetchError: 'Error fetching task data',
@@ -360,7 +363,7 @@ export default {
       noActiveDuplications: 'No active duplications',
       noDuplications: 'No duplication tasks found',
     },
-    
+
     descriptions: {
       page: 'Manage your research projects',
       create: 'Start a new research project',
@@ -368,13 +371,13 @@ export default {
       delete: 'This action will permanently delete the project and all associated data.',
       createDesc: 'Create a new project to start working with images and segmentation.',
     },
-    
+
     placeholders: {
       name: 'Enter project name',
       description: 'Enter project description',
       search: 'Search projects...',
     },
-    
+
     status: {
       active: 'Active',
       archived: 'Archived',
@@ -385,7 +388,7 @@ export default {
       failed: 'Failed',
       cancelled: 'Cancelled',
     },
-    
+
     duplication: {
       pending: 'Pending',
       processing: 'Processing',
@@ -394,7 +397,7 @@ export default {
       cancelled: 'Cancelled',
       complete: 'Project duplication completed',
     },
-    
+
     detail: {
       noImagesSelected: 'No images selected',
       triggeringResegmentation: 'Triggering re-segmentation for {{count}} images...',
@@ -410,9 +413,11 @@ export default {
       noImages: 'No images found in this project',
       addImages: 'Add images to get started',
       deleteProject: 'Delete Project',
-      deleteConfirmation: 'Are you sure you want to delete the project "{{projectName}}"? This action cannot be undone.',
+      deleteConfirmation:
+        'Are you sure you want to delete the project "{{projectName}}"? This action cannot be undone.',
       duplicateProject: 'Duplicate Project',
-      duplicateDescription: 'Create a copy of this project. The new project will be created with the name you provide below.',
+      duplicateDescription:
+        'Create a copy of this project. The new project will be created with the name you provide below.',
       newProjectName: 'New Project Name',
       enterProjectName: 'Enter the new project name',
       duplicate: 'Duplicate',
@@ -420,7 +425,7 @@ export default {
       noImagesDescription: "This project doesn't have any images yet. Upload images to get started.",
       uploadButton: 'Upload Images',
     },
-    
+
     segmentation: {
       processingInBatches: 'Starting segmentation for {{count}} images in {{batches}} batches...',
       batchQueued: 'Batch {{current}}/{{total}} successfully queued',
@@ -430,7 +435,7 @@ export default {
       allSuccess: 'Segmentation: All {{count}} images successfully queued',
       allFailed: 'Segmentation: All {{count}} images failed',
       startedImages: 'Segmentation started for {{count}} images',
-      queuedLocallyWarning: 'Segmentation queued locally for {{count}} images. Server connection failed.'
+      queuedLocallyWarning: 'Segmentation queued locally for {{count}} images. Server connection failed.',
     },
   },
 
@@ -442,7 +447,7 @@ export default {
       shortcuts: 'Keyboard Shortcuts',
       tips: 'Tips:',
     },
-    
+
     contextMenu: {
       editPolygon: 'Edit polygon',
       splitPolygon: 'Split polygon',
@@ -452,7 +457,7 @@ export default {
       confirmDeleteTitle: 'Are you sure you want to delete polygon?',
       confirmDeleteMessage: 'This action is irreversible. The polygon will be permanently removed from segmentation.',
     },
-    
+
     modes: {
       view: 'View Mode',
       edit: 'Edit Mode',
@@ -466,7 +471,7 @@ export default {
       slicingMode: 'Slicing Mode',
       pointAddingMode: 'Point Adding Mode',
     },
-    
+
     status: {
       processing: 'Processing',
       queued: 'Queued',
@@ -475,7 +480,7 @@ export default {
       pending: 'Pending',
       ready: 'Ready',
     },
-    
+
     queue: {
       summary: '{{total}} tasks total ({{running}} processing, {{queued}} queued)',
       noRunningTasks: 'No running tasks',
@@ -489,7 +494,7 @@ export default {
       statusProcessing: 'Segmentation: {{count}} processing',
       tasksTotal: '{{total}} tasks total ({{running}} processing, {{queued}} queued)',
     },
-    
+
     autoSave: {
       enabled: 'Auto-save: Enabled',
       disabled: 'Auto-save: Disabled',
@@ -499,7 +504,7 @@ export default {
       success: 'Saved',
       error: 'Error',
     },
-    
+
     messages: {
       loading: 'Loading segmentation...',
       saveSuccess: 'Segmentation saved successfully',
@@ -521,7 +526,7 @@ export default {
       backToProject: 'Back to project',
       completedSegmentation: 'Completed',
     },
-    
+
     labels: {
       resolution: '{width}x{height}',
       totalPolygons: 'Total Polygons',
@@ -537,7 +542,7 @@ export default {
       position: 'Position',
       unsavedChanges: 'Unsaved changes',
     },
-    
+
     actions: {
       previousImage: 'Previous image',
       nextImage: 'Next image',
@@ -545,7 +550,7 @@ export default {
       resegmentButton: 'Resegment',
       resegmentButtonTooltip: 'Resegment with Neural Network',
     },
-    
+
     modes: {
       polygonCreationMode: 'Polygon Creation Mode',
       polygonEditMode: 'Polygon Edit Mode',
@@ -553,7 +558,7 @@ export default {
       polygonAddPointsMode: 'Add Points Mode',
       viewMode: 'View Mode',
     },
-    
+
     helpTips: {
       edit: {
         createPoint: 'Click to create a new point',
@@ -580,7 +585,7 @@ export default {
       tag: 'User Guide',
       sections: 'Sections',
     },
-    
+
     sections: {
       introduction: 'Introduction',
       gettingStarted: 'Getting Started',
@@ -588,23 +593,27 @@ export default {
       segmentationProcess: 'Segmentation Process',
       apiReference: 'API Reference',
     },
-    
+
     introduction: {
       title: 'Introduction',
       imageAlt: 'Illustration of spheroid analysis workflow',
       whatIs: {
         title: 'What is SpheroSeg?',
-        paragraph1: 'SpheroSeg is a cutting-edge platform designed for the segmentation and analysis of cell spheroids in microscopic images. Our tool provides researchers with precise detection and analytical capabilities.',
-        paragraph2: 'It utilizes advanced AI algorithms based on deep learning to automatically identify and segment spheroids in your images with high accuracy and consistency.',
-        paragraph3: 'This documentation will guide you through all aspects of using the platform, from getting started to advanced features and API integration.',
+        paragraph1:
+          'SpheroSeg is a cutting-edge platform designed for the segmentation and analysis of cell spheroids in microscopic images. Our tool provides researchers with precise detection and analytical capabilities.',
+        paragraph2:
+          'It utilizes advanced AI algorithms based on deep learning to automatically identify and segment spheroids in your images with high accuracy and consistency.',
+        paragraph3:
+          'This documentation will guide you through all aspects of using the platform, from getting started to advanced features and API integration.',
       },
     },
-    
+
     gettingStarted: {
       title: 'Getting Started',
       accountCreation: {
         title: 'Account Creation',
-        paragraph1: 'To use SpheroSeg, you need to create an account. This allows us to securely store your projects and images.',
+        paragraph1:
+          'To use SpheroSeg, you need to create an account. This allows us to securely store your projects and images.',
         step1Prefix: 'Visit the',
         step1Link: 'sign-up page',
         step2: 'Enter your institutional email address and create a password',
@@ -613,17 +622,19 @@ export default {
       },
       creatingProject: {
         title: 'Creating Your First Project',
-        paragraph1: 'Projects help you organize your work. Each project can contain multiple images and their corresponding segmentation results.',
+        paragraph1:
+          'Projects help you organize your work. Each project can contain multiple images and their corresponding segmentation results.',
         step1: 'On your dashboard, click on "New Project"',
         step2: 'Enter a project name and description',
         step3: 'Select project type (default: Spheroid Analysis)',
         step4: 'Click "Create Project" to continue',
       },
     },
-    
+
     uploadingImages: {
       title: 'Uploading Images',
-      paragraph1: 'SpheroSeg supports various image formats commonly used in microscopy, including TIFF, PNG, and JPEG.',
+      paragraph1:
+        'SpheroSeg supports various image formats commonly used in microscopy, including TIFF, PNG, and JPEG.',
       methods: {
         title: 'Upload Methods',
         paragraph1: 'There are several ways to upload images:',
@@ -636,10 +647,11 @@ export default {
         text: 'For optimal results, ensure your microscopy images have good contrast between the spheroid and background.',
       },
     },
-    
+
     segmentationProcess: {
       title: 'Segmentation Process',
-      paragraph1: 'The segmentation process identifies the boundaries of spheroids in your images, allowing for precise analysis of their morphology.',
+      paragraph1:
+        'The segmentation process identifies the boundaries of spheroids in your images, allowing for precise analysis of their morphology.',
       automatic: {
         title: 'Automatic Segmentation',
         paragraph1: 'Our AI-powered automatic segmentation can detect spheroid boundaries with high accuracy:',
@@ -657,21 +669,22 @@ export default {
         step4: 'Adding or removing holes within spheroids',
       },
     },
-    
+
     apiReference: {
       title: 'API Reference',
-      paragraph1: "SpheroSeg offers a RESTful API for programmatic access to the platform's features. This is ideal for integration with your existing workflows or batch processing.",
+      paragraph1:
+        "SpheroSeg offers a RESTful API for programmatic access to the platform's features. This is ideal for integration with your existing workflows or batch processing.",
       endpoint1Desc: 'Retrieves a list of all your projects',
       endpoint2Desc: 'Retrieves all images within a specific project',
       endpoint3Desc: 'Initiates segmentation for a specific image',
       contactPrefix: 'For full API documentation and authentication details, please contact us at',
     },
-    
+
     navigation: {
       backToHome: 'Back to Home',
       backToTop: 'Back to Top',
     },
-    
+
     subtitle: 'Learn how to use the Spheroid Segmentation Platform effectively.',
   },
 
@@ -691,7 +704,7 @@ export default {
       display: 'Display Settings',
       preference: 'Preference Settings',
     },
-    
+
     labels: {
       language: 'Language',
       theme: 'Theme',
@@ -717,7 +730,7 @@ export default {
       confirmUsername: 'Confirm your email',
       personal: 'Personal Information',
     },
-    
+
     actions: {
       save: 'Save Changes',
       updateProfile: 'Update Profile',
@@ -730,7 +743,7 @@ export default {
       savePreferences: 'Save Preferences',
       toggleTheme: 'Toggle theme',
     },
-    
+
     messages: {
       saved: 'Settings saved successfully',
       profileUpdated: 'Profile updated successfully',
@@ -746,7 +759,7 @@ export default {
       accountDeleteError: 'Error deleting account',
       deletingAccount: 'Deleting account...',
     },
-    
+
     descriptions: {
       appearance: 'Customize the appearance of the application',
       language: 'Choose your preferred language',
@@ -754,14 +767,15 @@ export default {
       passwordSettings: 'Password Settings',
       changePassword: 'Change your password to keep your account secure',
       deleteAccount: 'This action is irreversible. All your data will be permanently deleted.',
-      deleteAccountWarning: 'Once you delete your account, there is no going back. All your data will be permanently deleted.',
+      deleteAccountWarning:
+        'Once you delete your account, there is no going back. All your data will be permanently deleted.',
       dangerZone: 'These actions are irreversible and will permanently remove your data',
     },
-    
+
     placeholders: {
       enterPassword: 'Enter your password',
     },
-    
+
     theme: {
       light: 'Light',
       dark: 'Dark',
@@ -779,7 +793,7 @@ export default {
       server: 'Server error',
       componentError: 'An error occurred in this component',
     },
-    
+
     messages: {
       generic: 'An error occurred',
       notFound: 'The page you requested could not be found',
@@ -797,7 +811,7 @@ export default {
       resourceNotFound: 'Resource not found',
       componentError: 'An error occurred in this component',
     },
-    
+
     actions: {
       tryAgain: 'Try again',
       goBack: 'Go back',
@@ -805,7 +819,7 @@ export default {
       reloadPage: 'Reload Page',
       returnToHome: 'Return to Home',
     },
-    
+
     labels: {
       errorDetails: 'Error Details',
     },
@@ -834,7 +848,7 @@ export default {
       statsOverview: 'Stats Overview',
       recentActivity: 'Recent Activity',
     },
-    
+
     labels: {
       totalProjects: 'Total Projects',
       activeProjects: 'Active Projects',
@@ -853,47 +867,47 @@ export default {
       name: 'Name',
       sortBy: 'Sort by',
     },
-    
+
     actions: {
       createNew: 'Create New Project',
       moreStats: 'View Detailed Statistics',
       hide: 'Hide',
       selectImages: 'Select Images',
     },
-    
+
     messages: {
       manageProjects: 'Manage and organize your research projects',
       noProjects: 'No projects found',
       createFirst: 'Create your first project to get started',
-      noProjectsDescription: 'You haven\'t created any projects yet. Create your first project to get started.',
+      noProjectsDescription: "You haven't created any projects yet. Create your first project to get started.",
       noImagesDescription: 'No images match your search criteria',
       fetchError: 'Failed to load statistics',
       noActivity: 'No recent activity',
     },
-    
+
     placeholders: {
       searchProjects: 'Search projects by name...',
       searchImages: 'Search images...',
     },
-    
+
     viewMode: {
       grid: 'Grid View',
       list: 'List View',
     },
-    
+
     sort: {
       name: 'Name',
       updatedAt: 'Last Updated',
       segmentationStatus: 'Status',
     },
-    
+
     status: {
       completed: 'Completed',
       processing: 'Processing',
       pending: 'Pending',
       failed: 'Failed',
     },
-    
+
     activityTypes: {
       project_created: 'Created project',
       image_uploaded: 'Uploaded image',
@@ -909,25 +923,26 @@ export default {
       features: 'Powerful Features',
       cta: 'Ready to transform your cell analysis workflow?',
     },
-    
+
     labels: {
       platformTag: 'Advanced Spheroid Segmentation Platform',
       featuresSubtitle: 'Advanced tools for biomedical research',
       ctaSubtitle: 'Join leading researchers already using our platform to accelerate their discoveries.',
       welcomeSubtitle: 'Advanced platform for cell spheroid segmentation and analysis',
     },
-    
+
     actions: {
       getStarted: 'Get Started',
       learnMore: 'Learn More',
       createAccount: 'Create Account',
     },
-    
+
     descriptions: {
       main: 'Elevate your microscopic cell image analysis with our cutting-edge spheroid segmentation platform. Designed for researchers seeking precision and efficiency.',
-      welcome: 'Our platform combines cutting-edge artificial intelligence algorithms with an intuitive interface for precise detection and analysis of cell spheroids in microscopic images.',
+      welcome:
+        'Our platform combines cutting-edge artificial intelligence algorithms with an intuitive interface for precise detection and analysis of cell spheroids in microscopic images.',
     },
-    
+
     features: {
       aiSegmentation: 'Advanced Segmentation',
       aiSegmentationDesc: 'Precise spheroid detection with boundary analysis for accurate cell measurements.',
@@ -938,7 +953,7 @@ export default {
       export: 'Statistical Insights',
       exportDesc: 'Comprehensive metrics and visualizations for extracting meaningful data patterns.',
     },
-    
+
     imageAlts: {
       hero1: 'Spheroid microscopy image',
       hero2: 'Spheroid microscopy image with analysis',
@@ -951,11 +966,11 @@ export default {
       main: 'Discover Our Platform Capabilities',
       tag: 'Features',
     },
-    
+
     labels: {
       subtitle: 'Advanced tools for biomedical research',
     },
-    
+
     cards: {
       segmentation: {
         title: 'Advanced Segmentation',
@@ -990,9 +1005,12 @@ export default {
       tag: 'About the Platform',
       title: 'What is SpheroSeg?',
       imageAlt: 'Spheroid segmentation example',
-      paragraph1: 'SpheroSeg is an advanced platform specifically designed for the segmentation and analysis of cell spheroids in microscopic images.',
-      paragraph2: 'Our tool combines cutting-edge artificial intelligence algorithms with an intuitive interface to provide researchers with precise spheroid boundary detection and analytical capabilities.',
-      paragraph3: 'The platform was developed by Michal Průšek from FNSPE CTU in Prague under the supervision of Adam Novozámský from UTIA CAS, in collaboration with researchers from the Department of Biochemistry and Microbiology at UCT Prague.',
+      paragraph1:
+        'SpheroSeg is an advanced platform specifically designed for the segmentation and analysis of cell spheroids in microscopic images.',
+      paragraph2:
+        'Our tool combines cutting-edge artificial intelligence algorithms with an intuitive interface to provide researchers with precise spheroid boundary detection and analytical capabilities.',
+      paragraph3:
+        'The platform was developed by Michal Průšek from FNSPE CTU in Prague under the supervision of Adam Novozámský from UTIA CAS, in collaboration with researchers from the Department of Biochemistry and Microbiology at UCT Prague.',
       contactPrefix: 'spheroseg@utia.cas.cz',
     },
     cta: {
@@ -1017,14 +1035,14 @@ export default {
       madeWith: 'Made with',
       by: 'by',
     },
-    
+
     sections: {
       resources: 'Resources',
       legal: 'Legal Information',
       information: 'Information',
       contact: 'Contact',
     },
-    
+
     links: {
       documentation: 'Documentation',
       features: 'Features',
@@ -1070,7 +1088,7 @@ export default {
       recentActivity: 'Recent Activity',
       aboutMe: 'About Me',
     },
-    
+
     labels: {
       title: 'Title',
       accountType: 'Account Type',
@@ -1091,7 +1109,7 @@ export default {
       location: 'Location',
       notProvided: 'Not provided',
     },
-    
+
     actions: {
       editProfile: 'Edit Profile',
       saveProfile: 'Save Profile',
@@ -1099,7 +1117,7 @@ export default {
       removeAvatar: 'Remove Profile Picture',
       cropAvatar: 'Crop Profile Picture',
     },
-    
+
     messages: {
       noRecentActivity: 'No recent activity',
       fetchError: 'Failed to load profile data',
@@ -1113,13 +1131,13 @@ export default {
       avatarRemoveError: 'Failed to remove profile picture',
       activityDescription: 'System activity',
     },
-    
+
     descriptions: {
       page: 'Update your personal information and profile picture',
       cropAvatar: 'Adjust the cropping area to set your profile picture',
       bio: 'A brief description about you that will be visible on your profile',
     },
-    
+
     placeholders: {
       username: 'Enter your username',
       fullName: 'Enter your full name',
@@ -1135,27 +1153,33 @@ export default {
     title: 'Terms of Service',
     acceptance: {
       title: '1. Acceptance of Terms',
-      paragraph1: 'By accessing or using SpheroSeg, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using this service.',
+      paragraph1:
+        'By accessing or using SpheroSeg, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using this service.',
     },
     useLicense: {
       title: '2. Use License',
-      paragraph1: 'Permission is granted to temporarily use SpheroSeg for personal, non-commercial, or academic research purposes only. This is the grant of a license, not a transfer of title.',
+      paragraph1:
+        'Permission is granted to temporarily use SpheroSeg for personal, non-commercial, or academic research purposes only. This is the grant of a license, not a transfer of title.',
     },
     dataUsage: {
       title: '3. Data Usage',
-      paragraph1: 'All data uploaded to SpheroSeg remains your property. We do not claim ownership of your content, but we require certain permissions to provide the service.',
+      paragraph1:
+        'All data uploaded to SpheroSeg remains your property. We do not claim ownership of your content, but we require certain permissions to provide the service.',
     },
     limitations: {
       title: '4. Limitations',
-      paragraph1: 'In no event shall SpheroSeg be liable for any damages arising from the use or inability to use the platform, even if we have been advised of the possibility of such damage.',
+      paragraph1:
+        'In no event shall SpheroSeg be liable for any damages arising from the use or inability to use the platform, even if we have been advised of the possibility of such damage.',
     },
     revisions: {
       title: '5. Revisions and Errors',
-      paragraph1: 'The materials appearing on SpheroSeg could include technical, typographical, or photographic errors. We do not warrant that any of the materials are accurate, complete or current.',
+      paragraph1:
+        'The materials appearing on SpheroSeg could include technical, typographical, or photographic errors. We do not warrant that any of the materials are accurate, complete or current.',
     },
     governingLaw: {
       title: '6. Governing Law',
-      paragraph1: 'These terms shall be governed and construed in accordance with the laws of the country in which the service is hosted, and you irrevocably submit to the exclusive jurisdiction of the courts in that location.',
+      paragraph1:
+        'These terms shall be governed and construed in accordance with the laws of the country in which the service is hosted, and you irrevocably submit to the exclusive jurisdiction of the courts in that location.',
     },
   },
 
@@ -1165,43 +1189,53 @@ export default {
     lastUpdated: 'Last updated: July 1, 2023',
     introduction: {
       title: '1. Introduction',
-      paragraph1: 'This Privacy Policy explains how SpheroSeg ("we", "us", "our") collects, uses, and shares your information when you use our spheroid segmentation and analysis platform.',
+      paragraph1:
+        'This Privacy Policy explains how SpheroSeg ("we", "us", "our") collects, uses, and shares your information when you use our spheroid segmentation and analysis platform.',
     },
     informationWeCollect: {
       title: '2. Information We Collect',
-      paragraph1: 'We collect information that you directly provide to us when you create an account, upload images, create projects, and otherwise interact with our services.',
+      paragraph1:
+        'We collect information that you directly provide to us when you create an account, upload images, create projects, and otherwise interact with our services.',
     },
     personalInformation: {
       title: '2.1 Personal Information',
-      paragraph1: 'This includes your name, email address, institution/organization, and other information you provide when creating an account or requesting access to our services.',
+      paragraph1:
+        'This includes your name, email address, institution/organization, and other information you provide when creating an account or requesting access to our services.',
     },
     researchData: {
       title: '2.2 Research Data',
-      paragraph1: 'This includes images you upload, project details, analysis results, and other research-related data that you create or upload to our platform.',
+      paragraph1:
+        'This includes images you upload, project details, analysis results, and other research-related data that you create or upload to our platform.',
     },
     usageInformation: {
       title: '2.3 Usage Information',
-      paragraph1: 'We collect information about how you use our platform, including log data, device information, and usage patterns.',
+      paragraph1:
+        'We collect information about how you use our platform, including log data, device information, and usage patterns.',
     },
     howWeUse: {
       title: '3. How We Use Your Information',
-      paragraph1: 'We use the information we collect to provide, maintain, and improve our services, to communicate with you, and to fulfill our legal obligations.',
+      paragraph1:
+        'We use the information we collect to provide, maintain, and improve our services, to communicate with you, and to fulfill our legal obligations.',
     },
     dataSecurity: {
       title: '4. Data Security',
-      paragraph1: 'We implement appropriate security measures to protect your personal information and research data from unauthorized access, alteration, disclosure, or destruction.',
+      paragraph1:
+        'We implement appropriate security measures to protect your personal information and research data from unauthorized access, alteration, disclosure, or destruction.',
     },
     dataSharing: {
       title: '5. Data Sharing',
-      paragraph1: 'We do not sell your personal information or research data. We may share your information under limited circumstances, such as with your consent, to fulfill legal obligations, or with service providers who help us operate our platform.',
+      paragraph1:
+        'We do not sell your personal information or research data. We may share your information under limited circumstances, such as with your consent, to fulfill legal obligations, or with service providers who help us operate our platform.',
     },
     yourChoices: {
       title: '6. Your Choices',
-      paragraph1: 'You can access, update, or delete your account information and research data through your account settings. You may also contact us to request access, correction, or deletion of any personal information that we have about you.',
+      paragraph1:
+        'You can access, update, or delete your account information and research data through your account settings. You may also contact us to request access, correction, or deletion of any personal information that we have about you.',
     },
     changes: {
       title: '7. Changes to this Policy',
-      paragraph1: 'We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.',
+      paragraph1:
+        'We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.',
     },
     contactUs: {
       title: '8. Contact Us',
@@ -1215,7 +1249,7 @@ export default {
       main: 'Keyboard Shortcuts',
       button: 'Shortcuts',
     },
-    
+
     labels: {
       viewMode: 'View Mode',
       editMode: 'Edit Mode',
@@ -1225,7 +1259,7 @@ export default {
       createPolygonMode: 'Create Polygon Mode',
       holdShift: 'Hold Shift to auto-add points (in Edit Mode)',
     },
-    
+
     actions: {
       editMode: 'Switch to Edit Mode',
       sliceMode: 'Switch to Slice Mode',
@@ -1239,7 +1273,7 @@ export default {
       resetView: 'Reset view',
       save: 'Save',
     },
-    
+
     description: 'These shortcuts work within the segmentation editor for faster and more comfortable work.',
   },
 
@@ -1248,7 +1282,7 @@ export default {
     messages: {
       segmentationStarted: 'Segmentation process has started...',
     },
-    
+
     tooltips: {
       startSegmentation: 'Start Segmentation',
       processing: 'Processing...',
@@ -1263,7 +1297,7 @@ export default {
     titles: {
       uploadImages: 'Upload Images',
     },
-    
+
     labels: {
       dragDrop: 'Drag and drop images here or click to select files',
       dropFiles: 'Drop files here...',
@@ -1275,14 +1309,14 @@ export default {
       currentProject: 'Current Project',
       autoSegment: 'Automatically segment images after upload',
     },
-    
+
     actions: {
       upload: 'Upload',
       clickToUpload: 'Click to browse files',
       clickToSelect: 'Click to select files',
       uploadBtn: 'Upload {{count}} images',
     },
-    
+
     messages: {
       uploadError: 'An error occurred during upload. Please try again.',
       noProjectsFound: 'No projects found. Create a new one first.',
@@ -1304,7 +1338,7 @@ export default {
       noProjectsToUpload: 'No projects available. Create a project first.',
       notFound: 'Project "{{projectName}}" not found. It may have been deleted.',
     },
-    
+
     placeholders: {
       selectProject: 'Select project...',
     },
@@ -1317,7 +1351,7 @@ export default {
       runAnalysis: 'Run Analysis',
       viewResults: 'View Results',
     },
-    
+
     messages: {
       noAnalysesYet: 'No analyses yet',
     },
@@ -1330,22 +1364,22 @@ export default {
       spheroidMetrics: 'Spheroid Metrics',
       visualization: 'Visualization',
     },
-    
+
     labels: {
       cocoFormat: 'COCO Format',
       selectImagesForExport: 'Select images for export',
     },
-    
+
     actions: {
       close: 'Close',
     },
-    
+
     messages: {
       exportCompleted: 'Export completed',
       exportFailed: 'Export failed',
       metricsExported: 'Metrics exported successfully',
     },
-    
+
     options: {
       includeMetadata: 'Include metadata',
       includeSegmentation: 'Include segmentation',
@@ -1360,21 +1394,21 @@ export default {
         CSV: 'CSV file (.csv)',
       },
     },
-    
+
     formats: {
-      COCO: "COCO JSON",
-      YOLO: "YOLO TXT",
+      COCO: 'COCO JSON',
+      YOLO: 'YOLO TXT',
       MASK: 'Mask (TIFF)',
       POLYGONS: 'Polygons (JSON)',
     },
-    
+
     formatDescriptions: {
-      COCO: "Common Objects in Context (COCO) JSON format for object detection",
-      YOLO: "You Only Look Once (YOLO) text format for object detection",
-      MASK: "Binary mask images for each segmented object",
-      POLYGONS: "Polygon coordinates in JSON format"
+      COCO: 'Common Objects in Context (COCO) JSON format for object detection',
+      YOLO: 'You Only Look Once (YOLO) text format for object detection',
+      MASK: 'Binary mask images for each segmented object',
+      POLYGONS: 'Polygon coordinates in JSON format',
     },
-    
+
     metricsFormats: {
       EXCEL: 'Excel (.xlsx)',
       CSV: 'CSV (.csv)',
@@ -1392,20 +1426,20 @@ export default {
       compactness: 'Compactness',
       convexity: 'Convexity',
     },
-    
+
     titles: {
       visualization: 'Metrics Visualization',
       keyMetricsComparison: 'Key Metrics Comparison',
       areaDistribution: 'Area Distribution',
       shapeMetricsComparison: 'Shape Metrics Comparison',
     },
-    
+
     charts: {
       bar: 'Bar Chart',
       pie: 'Pie Chart',
       comparison: 'Comparison Chart',
     },
-    
+
     messages: {
       visualizationHelp: 'Visual representation of metrics for all spheroids in this image',
       noPolygonsFound: 'No polygons found for analysis',
@@ -1432,7 +1466,7 @@ export default {
       share: 'Share project',
       download: 'Download project',
     },
-    
+
     messages: {
       deleteConfirmTitle: 'Are you sure?',
       deleteConfirmDesc: 'Are you sure you want to delete the project "{{projectName}}"? This action cannot be undone.',
@@ -1454,7 +1488,7 @@ export default {
       exportMask: 'Export segmentation mask for this image',
       saving: 'Saving...',
     },
-    
+
     labels: {
       image: 'Image',
       error: 'Error',
@@ -1462,7 +1496,7 @@ export default {
       edit: 'Edit',
       create: 'Create',
     },
-    
+
     actions: {
       previousImage: 'Previous image',
       nextImage: 'Next image',
@@ -1472,7 +1506,7 @@ export default {
       export: 'Export',
       save: 'Save',
     },
-    
+
     messages: {
       loadingProject: 'Loading project...',
       loadingImage: 'Loading image...',
@@ -1495,7 +1529,7 @@ export default {
       resegmentationTimeout: 'Resegmentation timed out. Check queue status.',
       resegmentationError: 'Failed to start resegmentation.',
     },
-    
+
     tooltips: {
       resegment: 'Resegment',
     },
@@ -1507,7 +1541,7 @@ export default {
       main: 'Share Project',
       shareProject: 'Share project "{{projectName}}"',
     },
-    
+
     labels: {
       accepted: 'Accepted',
       alreadyShared: 'Already shared with this user',
@@ -1524,7 +1558,7 @@ export default {
       edit: 'Edit',
       sharedWith: 'Shared with',
     },
-    
+
     actions: {
       copyToClipboard: 'Copy to clipboard',
       generateLink: 'Generate link',
@@ -1533,7 +1567,7 @@ export default {
       removeShare: 'Remove share',
       selectAccessLevel: 'Select access level',
     },
-    
+
     messages: {
       failedToCopy: 'Failed to copy link',
       failedToGenerateLink: 'Failed to generate share link',
@@ -1554,7 +1588,7 @@ export default {
       sharedSuccess: 'Project "{{projectName}}" has been shared with {{email}}',
       removedSuccess: 'Share with {{email}} has been removed',
     },
-    
+
     sections: {
       inviteByEmail: 'Invite by email',
       inviteByLink: 'Invite by link',

@@ -112,48 +112,52 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       if (acceptedFiles.length > 0) {
         // Show loading toast for TIFF/BMP preview generation
-        const hasTiffOrBmp = acceptedFiles.some(file => {
+        const hasTiffOrBmp = acceptedFiles.some((file) => {
           const ext = file.name.toLowerCase();
           return ext.endsWith('.tiff') || ext.endsWith('.tif') || ext.endsWith('.bmp');
         });
-        
+
         if (hasTiffOrBmp) {
           toast.info(t('uploader.generatingPreviews', {}, 'Generating previews for TIFF/BMP files...'));
         }
 
-        const newFiles: UploadedFile[] = await Promise.all(acceptedFiles.map(async (file) => {
-          const ext = file.name.toLowerCase();
-          const isTiffOrBmp = file.type === 'image/tiff' || file.type === 'image/bmp' || 
-                              ext.endsWith('.tiff') || 
-                              ext.endsWith('.tif') ||
-                              ext.endsWith('.bmp');
-          
-          let previewUrl: string;
-          
-          if (isTiffOrBmp) {
-            // Try to generate server-side preview first
-            const serverPreview = await generateTiffPreview(file);
-            
-            if (serverPreview) {
-              previewUrl = serverPreview;
+        const newFiles: UploadedFile[] = await Promise.all(
+          acceptedFiles.map(async (file) => {
+            const ext = file.name.toLowerCase();
+            const isTiffOrBmp =
+              file.type === 'image/tiff' ||
+              file.type === 'image/bmp' ||
+              ext.endsWith('.tiff') ||
+              ext.endsWith('.tif') ||
+              ext.endsWith('.bmp');
+
+            let previewUrl: string;
+
+            if (isTiffOrBmp) {
+              // Try to generate server-side preview first
+              const serverPreview = await generateTiffPreview(file);
+
+              if (serverPreview) {
+                previewUrl = serverPreview;
+              } else {
+                // Fallback to canvas preview
+                previewUrl = generateCanvasPreview(file);
+              }
             } else {
-              // Fallback to canvas preview
-              previewUrl = generateCanvasPreview(file);
+              // For other formats, use regular blob URL
+              previewUrl = URL.createObjectURL(file);
             }
-          } else {
-            // For other formats, use regular blob URL
-            previewUrl = URL.createObjectURL(file);
-          }
-          
-          return {
-            id: `${file.name}-${file.lastModified}-${Math.random().toString(36).substring(2, 9)}`,
-            file,
-            previewUrl,
-          };
-        }));
-        
+
+            return {
+              id: `${file.name}-${file.lastModified}-${Math.random().toString(36).substring(2, 9)}`,
+              file,
+              previewUrl,
+            };
+          }),
+        );
+
         setUploadedFiles((prevFiles) => [...prevFiles, ...newFiles]);
-        
+
         if (hasTiffOrBmp) {
           toast.success(t('uploader.previewsGenerated', {}, 'Previews generated'));
         }
@@ -215,7 +219,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         // When a file is completed (progress = 100), we count it as fully completed
         const completedFiles = progress === 100 ? fileIndex + 1 : fileIndex;
         const currentFileProgress = progress === 100 ? 0 : progress;
-        const overallProgress = (completedFiles / totalFiles * 100) + (currentFileProgress / totalFiles);
+        const overallProgress = (completedFiles / totalFiles) * 100 + currentFileProgress / totalFiles;
         setUploadProgress(Math.min(overallProgress, 100));
       };
 
@@ -241,7 +245,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       clearAllFiles();
 
       // Inform user about successful upload
-      toast.success(t('uploader.uploadSuccess', { count: allUploadedImages.length }, `Successfully uploaded ${allUploadedImages.length} images.`));
+      toast.success(
+        t(
+          'uploader.uploadSuccess',
+          { count: allUploadedImages.length },
+          `Successfully uploaded ${allUploadedImages.length} images.`,
+        ),
+      );
     } catch (error) {
       console.error('Error uploading files:', error);
       setError(t('uploader.uploadError', {}, 'An error occurred while uploading the files. Please try again.'));
@@ -373,19 +383,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
               {t('uploader.uploadingImages', {}, 'Uploading images...')}
             </span>
-            <span className="text-sm text-blue-600 dark:text-blue-400">
-              {Math.round(uploadProgress)}%
-            </span>
+            <span className="text-sm text-blue-600 dark:text-blue-400">{Math.round(uploadProgress)}%</span>
           </div>
-          
+
           {/* Progress Bar */}
           <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5 mb-2">
-            <div 
+            <div
               className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>
-          
+
           {/* Current File Name */}
           {currentFileName && (
             <div className="text-xs text-blue-600 dark:text-blue-400 truncate">

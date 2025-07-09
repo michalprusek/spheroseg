@@ -1,6 +1,6 @@
 /**
  * Enhanced Request Logger Middleware
- * 
+ *
  * Provides detailed request/response logging with performance metrics
  * and error tracking for better observability.
  */
@@ -39,25 +39,26 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
   };
 
   // Override res.end to capture response details
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function (chunk?: any, encoding?: any) {
     res.end = originalEnd;
     const responseTime = Date.now() - startTime;
-    
+
     requestMetrics.statusCode = res.statusCode;
     requestMetrics.responseTime = responseTime;
-    requestMetrics.contentLength = res.get('Content-Length') ? 
-      parseInt(res.get('Content-Length')!) : undefined;
+    requestMetrics.contentLength = res.get('Content-Length')
+      ? parseInt(res.get('Content-Length')!)
+      : undefined;
 
     // Log the request based on status code
     logRequest(requestMetrics);
-    
+
     return originalEnd.call(this, chunk, encoding);
   };
 
   // Override res.json to capture JSON responses
-  res.json = function(obj?: any) {
+  res.json = function (obj?: any) {
     res.json = originalJson;
-    
+
     // Capture error details if it's an error response
     if (res.statusCode >= 400 && obj?.error) {
       requestMetrics.error = {
@@ -65,7 +66,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
         message: obj.message,
       };
     }
-    
+
     return originalJson.call(this, obj);
   };
 
@@ -77,7 +78,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
  */
 function logRequest(metrics: RequestMetrics) {
   const { statusCode, responseTime, method, url, error } = metrics;
-  
+
   // Skip health check logging in production unless there's an error
   if (!config.isDevelopment && url === '/health' && statusCode! < 400) {
     return;
@@ -106,7 +107,7 @@ function logRequest(metrics: RequestMetrics) {
   } else {
     logger.info('Request Completed', baseLog);
   }
-  
+
   // Log performance metrics for monitoring
   if (config.monitoring?.metricsEnabled) {
     logger.debug('Performance Metrics', {
@@ -127,15 +128,15 @@ function sanitizeUrl(url: string): string {
   try {
     // Remove query parameters that might contain sensitive data
     const urlObj = new URL(url, 'http://localhost');
-    
+
     // Remove sensitive query parameters
     const sensitiveParams = ['token', 'key', 'secret', 'password', 'auth'];
-    sensitiveParams.forEach(param => {
+    sensitiveParams.forEach((param) => {
       if (urlObj.searchParams.has(param)) {
         urlObj.searchParams.set(param, '[REDACTED]');
       }
     });
-    
+
     return urlObj.pathname + urlObj.search;
   } catch {
     // Fallback for invalid URLs

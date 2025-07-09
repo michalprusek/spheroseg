@@ -1,8 +1,11 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import type { Request as ExpressRequest } from 'express';
 import pool from '../db';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
-import { triggerSegmentationTask, getSegmentationQueueStatus } from '../services/segmentationService';
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
+import {
+  triggerSegmentationTask,
+  getSegmentationQueueStatus,
+} from '../services/segmentationService';
 import { validate } from '../middleware/validationMiddleware';
 import { z } from 'zod';
 import logger from '../utils/logger';
@@ -19,17 +22,19 @@ const router: Router = express.Router();
 // --- Validation Schema for Batch Trigger ---
 const triggerBatchSchema = z.object({
   body: z.object({
-    imageIds: z.array(
-      z.string().refine(
-        (id) => {
-          // Accept either UUID format or frontend-generated format (img-timestamp-random)
-          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-          const frontendIdRegex = /^img-\d+-\d+$/;
-          return uuidRegex.test(id) || frontendIdRegex.test(id);
-        },
-        { message: 'Invalid image ID format in array' }
+    imageIds: z
+      .array(
+        z.string().refine(
+          (id) => {
+            // Accept either UUID format or frontend-generated format (img-timestamp-random)
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            const frontendIdRegex = /^img-\d+-\d+$/;
+            return uuidRegex.test(id) || frontendIdRegex.test(id);
+          },
+          { message: 'Invalid image ID format in array' }
+        )
       )
-    ).min(1, 'At least one image ID is required'),
+      .min(1, 'At least one image ID is required'),
   }),
 });
 // -----------------------------------------
@@ -53,7 +58,7 @@ router.get(
       // Verify user has access to the image via project ownership and fetch image dimensions
       const imageCheck = await pool.query(
         'SELECT i.id, i.width, i.height FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
-        [imageId, userId],
+        [imageId, userId]
       );
       if (imageCheck.rows.length === 0) {
         res.status(404).json({ message: 'Image not found or access denied' });
@@ -63,7 +68,9 @@ router.get(
       const imageInfo = imageCheck.rows[0];
 
       // Fetch segmentation result
-      const result = await pool.query('SELECT * FROM segmentation_results WHERE image_id = $1', [imageId]);
+      const result = await pool.query('SELECT * FROM segmentation_results WHERE image_id = $1', [
+        imageId,
+      ]);
 
       if (result.rows.length === 0) {
         // If no segmentation result found, return an empty result instead of 404
@@ -102,10 +109,8 @@ router.get(
       console.error('Error fetching segmentation result:', error);
       next(error);
     }
-  },
+  }
 );
-
- 
 
 // --- Validation Schema for Single Image Segmentation with Priority ---
 const triggerSingleWithPrioritySchema = z.object({
@@ -137,7 +142,7 @@ router.post(
       // Verify user has access to the image
       const imageCheck = await pool.query(
         'SELECT i.id, i.storage_path, p.user_id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
-        [imageId, userId],
+        [imageId, userId]
       );
       if (imageCheck.rows.length === 0) {
         res.status(404).json({ message: 'Image not found or access denied' });
@@ -151,13 +156,15 @@ router.post(
       }
 
       // Update image status to 'queued' in the database
-      await pool.query("UPDATE images SET status = 'queued', updated_at = NOW() WHERE id = $1", [imageId]);
+      await pool.query("UPDATE images SET status = 'queued', updated_at = NOW() WHERE id = $1", [
+        imageId,
+      ]);
       // Also update or create segmentation_results entry
       await pool.query(
         `INSERT INTO segmentation_results (image_id, status, parameters)
               VALUES ($1, 'queued', $2)
               ON CONFLICT (image_id) DO UPDATE SET status = 'queued', parameters = $2, updated_at = NOW()`,
-        [imageId, { ...segmentationParams, priority }],
+        [imageId, { ...segmentationParams, priority }]
       );
 
       // Trigger the actual segmentation task asynchronously with priority
@@ -175,16 +182,19 @@ router.post(
       console.error('Error triggering segmentation:', error);
       // Attempt to revert status if triggering failed
       try {
-        await pool.query("UPDATE images SET status = 'failed', updated_at = NOW() WHERE id = $1", [imageId]);
-        await pool.query("UPDATE segmentation_results SET status = 'failed', updated_at = NOW() WHERE image_id = $1", [
+        await pool.query("UPDATE images SET status = 'failed', updated_at = NOW() WHERE id = $1", [
           imageId,
         ]);
+        await pool.query(
+          "UPDATE segmentation_results SET status = 'failed', updated_at = NOW() WHERE image_id = $1",
+          [imageId]
+        );
       } catch (revertError) {
         console.error('Failed to revert status after trigger error:', revertError);
       }
       next(error);
     }
-  },
+  }
 );
 
 // --- Validation Schema for Batch Trigger with Priority ---
@@ -212,10 +222,12 @@ const triggerBatchWithPrioritySchema = z.object({
     .passthrough(), // Povolíme další parametry pro segmentaci
 });
 
- 
-
 // Shared handler function for batch segmentation
-async function handleBatchSegmentation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+async function handleBatchSegmentation(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
   const userId = req.user?.userId;
   // Extrahujeme všechny parametry z těla požadavku
   const { imageIds, priority = 1, model_type, parameters = {}, ...otherParams } = req.body;
@@ -255,7 +267,9 @@ async function handleBatchSegmentation(req: AuthenticatedRequest, res: Response,
     });
 
     const foundImagesMap = new Map<string, { storage_path: string }>();
-    imagesCheckResult.rows.forEach((row) => foundImagesMap.set(row.id, { storage_path: row.storage_path }));
+    imagesCheckResult.rows.forEach((row) =>
+      foundImagesMap.set(row.id, { storage_path: row.storage_path })
+    );
 
     const segmentationPromises: Promise<any>[] = [];
 
@@ -276,14 +290,16 @@ async function handleBatchSegmentation(req: AuthenticatedRequest, res: Response,
       if (imageData) {
         // Update status in DB
         segmentationPromises.push(
-          pool.query("UPDATE images SET status = 'queued', updated_at = NOW() WHERE id = $1", [imageId]),
+          pool.query("UPDATE images SET status = 'queued', updated_at = NOW() WHERE id = $1", [
+            imageId,
+          ])
         );
         segmentationPromises.push(
           pool.query(
             `INSERT INTO segmentation_results (image_id, status, parameters) VALUES ($1, 'queued', $2)
                           ON CONFLICT (image_id) DO UPDATE SET status = 'queued', parameters = $2, updated_at = NOW()`,
-            [imageId, combinedParameters], // Použijeme kompletní parametry
-          ),
+            [imageId, combinedParameters] // Použijeme kompletní parametry
+          )
         );
         // Trigger task asynchronously with priority and other parameters
         triggerSegmentationTask(imageId, imageData.storage_path, combinedParameters, priority);
@@ -321,24 +337,29 @@ async function handleBatchSegmentation(req: AuthenticatedRequest, res: Response,
 }
 
 // Middleware that allows internal requests from ML service
-const authOrInternalMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const authOrInternalMiddleware = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   // Log request details for debugging
   logger.info('Auth middleware check', {
     ip: req.ip,
     hostname: req.hostname,
     userAgent: req.headers['user-agent'],
     xForwardedFor: req.headers['x-forwarded-for'],
-    xRealIp: req.headers['x-real-ip']
+    xRealIp: req.headers['x-real-ip'],
   });
-  
+
   // Check if request is from ML service (internal)
-  const isInternalRequest = req.headers['user-agent']?.includes('python-requests') || 
-                           req.ip?.includes('172.') || // Docker network
-                           req.hostname === 'ml' ||
-                           req.ip === '172.22.0.5' || // ML service IP
-                           req.ip === '::ffff:172.22.0.5' ||
-                           req.headers['x-forwarded-for']?.includes('172.22.0.5');
-  
+  const isInternalRequest =
+    req.headers['user-agent']?.includes('python-requests') ||
+    req.ip?.includes('172.') || // Docker network
+    req.hostname === 'ml' ||
+    req.ip === '172.22.0.5' || // ML service IP
+    req.ip === '::ffff:172.22.0.5' ||
+    req.headers['x-forwarded-for']?.includes('172.22.0.5');
+
   if (isInternalRequest) {
     logger.info('Internal request detected, skipping auth');
     // Skip auth for internal requests
@@ -360,34 +381,35 @@ router.put(
     logger.info('PUT /images/:id/segmentation raw request', {
       params: req.params,
       body: req.body,
-      headers: req.headers
+      headers: req.headers,
     });
-    
+
     // Manual validation to catch the exact error
     try {
       updateSegmentationSchema.parse({ params: req.params, body: req.body });
     } catch (validationError) {
       logger.error('Validation error in PUT segmentation', {
         error: validationError instanceof Error ? validationError.message : String(validationError),
-        body: req.body
+        body: req.body,
       });
-      res.status(400).json({ 
+      res.status(400).json({
         message: 'Validation error',
-        error: validationError instanceof Error ? validationError.message : String(validationError)
+        error: validationError instanceof Error ? validationError.message : String(validationError),
       });
       return;
     }
     const imageId = req.params.id;
     const { result_data, status, parameters } = req.body; // Expecting segmentation result and status
-    
+
     // Check if request is from ML service (internal) or user (needs auth)
-    const isInternalRequest = req.headers['user-agent']?.includes('python-requests') || 
-                             req.ip?.includes('172.') || // Docker network
-                             req.hostname === 'ml';
-    
+    const isInternalRequest =
+      req.headers['user-agent']?.includes('python-requests') ||
+      req.ip?.includes('172.') || // Docker network
+      req.hostname === 'ml';
+
     // Get userId from authenticated request
     const userId = req.user?.userId;
-    
+
     // For non-internal requests, require authentication
     if (!isInternalRequest && !userId) {
       res.status(401).json({ message: 'Authentication error' });
@@ -411,15 +433,15 @@ router.put(
         isInternalRequest,
         userId,
         hasResultData: !!result_data,
-        resultDataKeys: result_data ? Object.keys(result_data) : []
+        resultDataKeys: result_data ? Object.keys(result_data) : [],
       });
-      
+
       // Verify permissions
       if (userId) {
         // For user requests, verify user has access to the image
         const imageCheck = await pool.query(
           'SELECT i.id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
-          [imageId, userId],
+          [imageId, userId]
         );
         if (imageCheck.rows.length === 0) {
           res.status(404).json({ message: 'Image not found or access denied' });
@@ -440,11 +462,14 @@ router.put(
              SET result_data = $1, status = $2, parameters = COALESCE($3, parameters), updated_at = NOW()
              WHERE image_id = $4
              RETURNING *`,
-        [result_data || null, status, parameters, imageId],
+        [result_data || null, status, parameters, imageId]
       );
 
       // Also update the main image status
-      await pool.query('UPDATE images SET segmentation_status = $1, updated_at = NOW() WHERE id = $2', [status, imageId]);
+      await pool.query(
+        'UPDATE images SET segmentation_status = $1, updated_at = NOW() WHERE id = $2',
+        [status, imageId]
+      );
 
       if (updateResult.rows.length === 0) {
         // This might happen if the segmentation_results record didn't exist yet for some reason
@@ -455,17 +480,17 @@ router.put(
 
       res.status(200).json(updateResult.rows[0]);
     } catch (error) {
-      logger.error('Error updating segmentation result:', { 
+      logger.error('Error updating segmentation result:', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         imageId,
         status,
-        isInternalRequest
+        isInternalRequest,
       });
       console.error('Error updating segmentation result:', error);
       next(error);
     }
-  },
+  }
 );
 
 // POST /api/projects/:projectId/segmentation/batch-trigger - Trigger segmentation for all images in a project
@@ -488,10 +513,10 @@ router.post(
 
     try {
       // Verify user has access to the project
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         res.status(404).json({ message: 'Project not found or access denied' });
@@ -557,33 +582,33 @@ router.post(
       console.error('Error triggering batch segmentation for project:', error);
       next(error);
     }
-  },
+  }
 );
-
- 
 
 // GET /api/segmentation/queue - Get current segmentation queue status
 // @ts-ignore // TS2769: No overload matches this call.
-router.get('/queue', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const queueStatus = await getSegmentationQueueStatus();
+router.get(
+  '/queue',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const queueStatus = await getSegmentationQueueStatus();
 
-    // Logujeme stav fronty pro debugging
-    logger.debug('Segmentation queue status endpoint response:', {
-      pendingTasksCount: queueStatus.pendingTasks?.length || 0,
-      runningTasksCount: queueStatus.runningTasks?.length || 0,
-      queueLength: queueStatus.queueLength || 0,
-      activeTasksCount: queueStatus.activeTasksCount || 0,
-    });
+      // Logujeme stav fronty pro debugging
+      logger.debug('Segmentation queue status endpoint response:', {
+        pendingTasksCount: queueStatus.pendingTasks?.length || 0,
+        runningTasksCount: queueStatus.runningTasks?.length || 0,
+        queueLength: queueStatus.queueLength || 0,
+        activeTasksCount: queueStatus.activeTasksCount || 0,
+      });
 
-    res.json(queueStatus);
-  } catch (error) {
-    logger.error('Error getting segmentation queue status:', error);
-    next(error);
+      res.json(queueStatus);
+    } catch (error) {
+      logger.error('Error getting segmentation queue status:', error);
+      next(error);
+    }
   }
-});
-
- 
+);
 
 // GET /api/queue-status/:projectId - Get segmentation queue status for a specific project
 // @ts-ignore // TS2769: No overload matches this call.
@@ -604,10 +629,10 @@ router.get(
 
     try {
       // Verify user has access to the project
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         res.status(404).json({ message: 'Project not found or access denied' });
@@ -678,7 +703,7 @@ router.get(
       console.error('Error fetching project queue status:', error);
       next(error);
     }
-  },
+  }
 );
 
 // Removed mock-queue-status endpoint - Instead, use the real queue status endpoint at /api/segmentation/queue
@@ -695,19 +720,23 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 // GET /api/segmentation/job/:jobId - Get details of a specific segmentation job
 // @ts-ignore // TS2769: No overload matches this call.
-router.get('/job/:jobId', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    // TODO: Implement logic - verify job access, query job details
-    res.json({ message: 'Placeholder: Get job details' });
-  } catch (error) {
-    next(error);
+router.get(
+  '/job/:jobId',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      // TODO: Implement logic - verify job access, query job details
+      res.json({ message: 'Placeholder: Get job details' });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /* // Commented out route due to missing schema import
 // POST /api/segmentation/job - Create a new segmentation job
@@ -725,7 +754,7 @@ router.delete(
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // ... handler code ...
-  },
+  }
 );
 
 // POST /api/segmentation/:imageId/resegment - Trigger resegmentation for an image
@@ -772,15 +801,26 @@ router.post(
       await pool.query('BEGIN');
       try {
         // Delete associated cells first (foreign key constraint)
-        const deleteCellsResult = await pool.query('DELETE FROM cells WHERE segmentation_result_id IN (SELECT id FROM segmentation_results WHERE image_id = $1)', [imageId]);
+        const deleteCellsResult = await pool.query(
+          'DELETE FROM cells WHERE segmentation_result_id IN (SELECT id FROM segmentation_results WHERE image_id = $1)',
+          [imageId]
+        );
         logger.info(`Deleted ${deleteCellsResult.rowCount} cells for image ${imageId}`);
 
         // Delete old segmentation results
-        const deleteSegmentationResult = await pool.query('DELETE FROM segmentation_results WHERE image_id = $1', [imageId]);
-        logger.info(`Deleted ${deleteSegmentationResult.rowCount} segmentation results for image ${imageId}`);
+        const deleteSegmentationResult = await pool.query(
+          'DELETE FROM segmentation_results WHERE image_id = $1',
+          [imageId]
+        );
+        logger.info(
+          `Deleted ${deleteSegmentationResult.rowCount} segmentation results for image ${imageId}`
+        );
 
         // Update image status to queued
-        await pool.query("UPDATE images SET segmentation_status = 'queued', updated_at = NOW() WHERE id = $1", [imageId]);
+        await pool.query(
+          "UPDATE images SET segmentation_status = 'queued', updated_at = NOW() WHERE id = $1",
+          [imageId]
+        );
 
         // Create new segmentation result entry with queued status
         await pool.query(
@@ -818,15 +858,19 @@ router.post(
       console.error('Error triggering resegmentation:', error);
       next(error);
     }
-  },
+  }
 );
 
 // Fetch all polygons for a specific image
 // @ts-ignore // TS2769
-router.get('/:imageId/polygons', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  const { imageId } = req.params;
-  // ... existing code ...
-});
+router.get(
+  '/:imageId/polygons',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { imageId } = req.params;
+    // ... existing code ...
+  }
+);
 
 // Save or update polygons for a specific image
 // @ts-ignore // TS2769
@@ -838,15 +882,19 @@ router.post(
     const { imageId } = req.params;
     const { polygons } = req.body;
     // ... existing code ...
-  },
+  }
 );
 
 // Clear all polygons for a specific image
 // @ts-ignore // TS2769
-router.delete('/:imageId/polygons', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  const { imageId } = req.params;
-  // ... existing code ...
-});
+router.delete(
+  '/:imageId/polygons',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { imageId } = req.params;
+    // ... existing code ...
+  }
+);
 
 // POST /api/segmentations/batch - Alternative endpoint for batch segmentation
 router.post(
@@ -854,8 +902,8 @@ router.post(
   authMiddleware,
   validate(triggerBatchWithPrioritySchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    logger.info('Batch segmentation via /api/segmentations/batch', { 
-      imageCount: req.body.imageIds?.length || 0 
+    logger.info('Batch segmentation via /api/segmentations/batch', {
+      imageCount: req.body.imageIds?.length || 0,
     });
     return handleBatchSegmentation(req, res, next);
   }
@@ -871,9 +919,9 @@ router.post(
     const { projectId } = req.params as { projectId: string };
     const { priority, model_type, imageIds: requestedImageIds, ...otherParams } = req.body;
 
-    logger.info('Project batch segmentation via /api/projects/:projectId/segmentations/batch', { 
-      projectId, 
-      imageCount: requestedImageIds?.length || 0 
+    logger.info('Project batch segmentation via /api/projects/:projectId/segmentations/batch', {
+      projectId,
+      imageCount: requestedImageIds?.length || 0,
     });
 
     if (!userId) {
@@ -883,10 +931,10 @@ router.post(
 
     try {
       // Verify user has access to the project
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         res.status(404).json({ message: 'Project not found or access denied' });
@@ -944,7 +992,7 @@ router.post(
         imageIds,
         priority,
         model_type,
-        ...otherParams
+        ...otherParams,
       };
 
       // Call the batch segmentation handler
@@ -958,58 +1006,62 @@ router.post(
 
 // GET /api/segmentation/queue-status - Get the current status of the segmentation queue
 // @ts-ignore
-router.get('/queue-status', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  console.log('GET /api/segmentation/queue-status called');
-  const userId = req.user?.userId;
+router.get(
+  '/queue-status',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    console.log('GET /api/segmentation/queue-status called');
+    const userId = req.user?.userId;
 
-  if (!userId) {
-    res.status(401).json({ message: 'Authentication error' });
-    return;
-  }
+    if (!userId) {
+      res.status(401).json({ message: 'Authentication error' });
+      return;
+    }
 
-  try {
-    // Get basic queue status from segmentation service
-    const queueStatus = await getSegmentationQueueStatus();
-    const { queueLength, runningTasks } = queueStatus;
+    try {
+      // Get basic queue status from segmentation service
+      const queueStatus = await getSegmentationQueueStatus();
+      const { queueLength, runningTasks } = queueStatus;
 
-    // Get image details for running tasks
-    const processingImages: {
-      id: string;
-      name: string;
-      projectId: string;
-    }[] = [];
+      // Get image details for running tasks
+      const processingImages: {
+        id: string;
+        name: string;
+        projectId: string;
+      }[] = [];
 
-    if (runningTasks.length > 0) {
-      // Query database to get image names for the running tasks
-      const imagesQuery = await pool.query(
-        `SELECT i.id, i.name, i.project_id
+      if (runningTasks.length > 0) {
+        // Query database to get image names for the running tasks
+        const imagesQuery = await pool.query(
+          `SELECT i.id, i.name, i.project_id
          FROM images i
          JOIN projects p ON i.project_id = p.id
          WHERE i.id = ANY($1::uuid[]) AND p.user_id = $2`,
-        [runningTasks, userId],
-      );
+          [runningTasks, userId]
+        );
 
-      // Map the results to the expected format
-      for (const image of imagesQuery.rows) {
-        processingImages.push({
-          id: image.id,
-          name: image.name,
-          projectId: image.project_id,
-        });
+        // Map the results to the expected format
+        for (const image of imagesQuery.rows) {
+          processingImages.push({
+            id: image.id,
+            name: image.name,
+            projectId: image.project_id,
+          });
+        }
       }
-    }
 
-    // Return enhanced queue status
-    res.status(200).json({
-      queueLength,
-      runningTasks,
-      processingImages,
-    });
-  } catch (error) {
-    console.error('Error fetching queue status:', error);
-    next(error);
+      // Return enhanced queue status
+      res.status(200).json({
+        queueLength,
+        runningTasks,
+        processingImages,
+      });
+    } catch (error) {
+      console.error('Error fetching queue status:', error);
+      next(error);
+    }
   }
-});
+);
 
 // GET /api/segmentation/queue-status/:projectId - Get queue status filtered by project
 // @ts-ignore
@@ -1027,10 +1079,10 @@ router.get(
 
     try {
       // Verify project access
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         res.status(404).json({ message: 'Project not found or access denied' });
@@ -1048,7 +1100,7 @@ router.get(
          FROM segmentation_tasks st
          INNER JOIN images i ON st.image_id = i.id
          WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2`,
-        [runningTasks, projectId],
+        [runningTasks, projectId]
       );
 
       // Map the results to the expected format
@@ -1071,7 +1123,7 @@ router.get(
            FROM segmentation_tasks st
            INNER JOIN images i ON st.image_id = i.id
            WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2`,
-          [pendingTasks, projectId],
+          [pendingTasks, projectId]
         );
 
         projectQueuedTasks = queuedQuery.rows.map((row) => row.task_id);
@@ -1104,44 +1156,48 @@ router.get(
         timestamp: new Date().toISOString(),
       });
     }
-  },
+  }
 );
 
 // GET /api/segmentation/queue - Get the current segmentation queue
 // @ts-ignore
-router.get('/queue', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  console.log('GET /api/segmentation/queue called');
-  const userId = req.user?.userId;
+router.get(
+  '/queue',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    console.log('GET /api/segmentation/queue called');
+    const userId = req.user?.userId;
 
-  if (!userId) {
-    res.status(401).json({ message: 'Authentication error' });
-    return;
-  }
+    if (!userId) {
+      res.status(401).json({ message: 'Authentication error' });
+      return;
+    }
 
-  try {
-    // Get basic queue status from segmentation service
-    const queueStatus = await getSegmentationQueueStatus();
-    
-    // Return queue status
-    res.status(200).json({
-      success: true,
-      data: queueStatus,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error('Error getting segmentation queue status:', error);
-    res.status(200).json({
-      success: true,
-      data: {
-        queueLength: 0,
-        runningTasks: [],
-        pendingTasks: [],
-        mlServiceStatus: 'offline',
-        lastUpdated: new Date(),
-      },
-      timestamp: new Date().toISOString(),
-    });
+    try {
+      // Get basic queue status from segmentation service
+      const queueStatus = await getSegmentationQueueStatus();
+
+      // Return queue status
+      res.status(200).json({
+        success: true,
+        data: queueStatus,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error getting segmentation queue status:', error);
+      res.status(200).json({
+        success: true,
+        data: {
+          queueLength: 0,
+          runningTasks: [],
+          pendingTasks: [],
+          mlServiceStatus: 'offline',
+          lastUpdated: new Date(),
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
-});
+);
 
 export default router;

@@ -45,13 +45,12 @@ class UserProfileService {
       localStorage.setItem(key, value);
       return true;
     } catch (error) {
-      if (error instanceof DOMException && 
-          (error.name === 'QuotaExceededError' || error.code === 22)) {
+      if (error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22)) {
         console.warn(`[UserProfileService] localStorage quota exceeded for key: ${key}. Attempting cleanup...`);
-        
+
         // Try to clean up old data
         this.cleanupLocalStorage();
-        
+
         // Try one more time after cleanup
         try {
           localStorage.setItem(key, value);
@@ -74,8 +73,8 @@ class UserProfileService {
       // Remove old cached data
       const keysToCheck = Object.keys(localStorage);
       const now = Date.now();
-      
-      keysToCheck.forEach(key => {
+
+      keysToCheck.forEach((key) => {
         // Remove old image cache entries (older than 24 hours)
         if (key.startsWith('image-cache-')) {
           try {
@@ -92,7 +91,7 @@ class UserProfileService {
             localStorage.removeItem(key);
           }
         }
-        
+
         // Remove old uploaded images (older than 7 days)
         if (key.startsWith('spheroseg_uploaded_images_')) {
           try {
@@ -104,11 +103,13 @@ class UserProfileService {
                 if (!createdAt) return true; // Keep if no timestamp
                 return now - new Date(createdAt).getTime() < 7 * 24 * 60 * 60 * 1000;
               });
-              
+
               if (filteredImages.length < images.length) {
                 try {
                   localStorage.setItem(key, JSON.stringify(filteredImages));
-                  console.log(`[UserProfileService] Cleaned up ${images.length - filteredImages.length} old images from ${key}`);
+                  console.log(
+                    `[UserProfileService] Cleaned up ${images.length - filteredImages.length} old images from ${key}`,
+                  );
                 } catch (e) {
                   // If we can't save the filtered list, remove the whole key
                   localStorage.removeItem(key);
@@ -281,7 +282,9 @@ class UserProfileService {
   /**
    * Batch update user settings
    */
-  async batchUpdateUserSettings(settings: Record<string, { value: any; category?: string }>): Promise<Record<string, UserSetting>> {
+  async batchUpdateUserSettings(
+    settings: Record<string, { value: any; category?: string }>,
+  ): Promise<Record<string, UserSetting>> {
     try {
       const response = await apiClient.post(`${this.baseUrl}/settings/batch`, { settings });
       return response.data;
@@ -321,13 +324,13 @@ class UserProfileService {
         // Only update localStorage if the DB value is different from current localStorage
         const currentLocalValue = localStorage.getItem(localStorageKey);
         const dbValueStr = JSON.stringify(setting.value);
-        
+
         if (currentLocalValue !== dbValueStr) {
           if (this.safeSetLocalStorage(localStorageKey, dbValueStr)) {
             console.log(`[UserProfileService] Updated localStorage ${localStorageKey} with DB value:`, setting.value);
           }
         }
-        
+
         return setting.value;
       } else if (defaultValue !== undefined) {
         // Check if localStorage already has a value before setting default
@@ -337,20 +340,20 @@ class UserProfileService {
             console.log(`[UserProfileService] Set default value for ${localStorageKey}:`, defaultValue);
           }
         }
-        
+
         // Try to set default in database but don't fail if it doesn't work
         try {
           await this.setUserSetting(key, defaultValue, 'ui');
         } catch (dbError) {
           console.warn(`[UserProfileService] Failed to set default ${key} in database:`, dbError);
         }
-        
+
         return defaultValue;
       }
       return null;
     } catch (error) {
       console.warn(`[UserProfileService] Error loading ${key} from database, using localStorage fallback:`, error);
-      
+
       // Try to get from localStorage first
       const localValue = localStorage.getItem(localStorageKey);
       if (localValue) {
@@ -358,7 +361,10 @@ class UserProfileService {
           // First try to parse as JSON
           return JSON.parse(localValue);
         } catch (parseError) {
-          console.warn(`[UserProfileService] Failed to parse localStorage ${localStorageKey} as JSON, treating as plain string:`, parseError);
+          console.warn(
+            `[UserProfileService] Failed to parse localStorage ${localStorageKey} as JSON, treating as plain string:`,
+            parseError,
+          );
           // If it's a valid non-JSON value (like 'system', 'light', 'dark' for theme), return as-is
           if (['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(localValue)) {
             console.log(`[UserProfileService] Using plain string value for ${localStorageKey}:`, localValue);
@@ -370,14 +376,17 @@ class UserProfileService {
           return localValue;
         }
       }
-      
+
       // If nothing in localStorage and we have a default, use it
       if (defaultValue !== undefined) {
         localStorage.setItem(localStorageKey, JSON.stringify(defaultValue));
-        console.log(`[UserProfileService] Using default value for ${localStorageKey} due to API failure:`, defaultValue);
+        console.log(
+          `[UserProfileService] Using default value for ${localStorageKey} due to API failure:`,
+          defaultValue,
+        );
         return defaultValue;
       }
-      
+
       return null;
     }
   }
@@ -427,7 +436,7 @@ class UserProfileService {
   async initializeUserSettings(): Promise<void> {
     try {
       const settings = await this.getUserSettings();
-      
+
       // Update localStorage with database values
       Object.entries(settings).forEach(([key, setting]) => {
         const localStorageKey = this.getLocalStorageKey(key);

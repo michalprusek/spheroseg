@@ -16,13 +16,10 @@ interface CanvasImageLayerProps {
   transform: { zoom: number };
 }
 
-const CanvasImageLayer: React.FC<CanvasImageLayerProps> = ({
-  imageData,
-  transform,
-}) => {
+const CanvasImageLayer: React.FC<CanvasImageLayerProps> = ({ imageData, transform }) => {
   // Use a stable cache buster based on image data, not current time
   const [stableCacheBuster] = React.useState(() => Date.now());
-  
+
   const {
     image,
     isLoading: isImageLoading,

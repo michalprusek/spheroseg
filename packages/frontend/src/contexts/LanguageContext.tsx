@@ -67,7 +67,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const detectBrowserLanguage = useCallback((): Language => {
     if (!isI18nReady || availableLanguages.length === 0) {
-      logger.debug('[LanguageContext] detectBrowserLanguage: i18n not ready or no available languages, defaulting to en.'); // Changed to debug
+      logger.debug(
+        '[LanguageContext] detectBrowserLanguage: i18n not ready or no available languages, defaulting to en.',
+      ); // Changed to debug
       return 'en';
     }
     try {
@@ -92,12 +94,21 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       );
 
       if (matchingLanguage) {
-        logger.debug('[LanguageContext] Found matching language ' + matchingLanguage + ' for browser language ' + fullBrowserLanguage);
+        logger.debug(
+          '[LanguageContext] Found matching language ' +
+            matchingLanguage +
+            ' for browser language ' +
+            fullBrowserLanguage,
+        );
         return matchingLanguage;
       }
 
       logger.debug(
-        '[LanguageContext] Neither full (' + fullBrowserLanguage + ') nor base (' + baseLanguage + ') language is supported, using default: en',
+        '[LanguageContext] Neither full (' +
+          fullBrowserLanguage +
+          ') nor base (' +
+          baseLanguage +
+          ') language is supported, using default: en',
       );
       return 'en';
     } catch (error) {
@@ -106,58 +117,61 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [isI18nReady, availableLanguages]);
 
+  const fetchLanguagePreference = useCallback(
+    async (userId: string) => {
+      if (!isI18nReady) {
+        logger.debug('[LanguageContext] fetchLanguagePreference: i18n not ready, skipping.'); // Changed to debug
+        return 'en';
+      }
+      logger.debug('[LanguageContext] Fetching language preference for user: ' + userId);
 
-  const fetchLanguagePreference = useCallback(async (userId: string) => {
-    if (!isI18nReady) {
-      logger.debug('[LanguageContext] fetchLanguagePreference: i18n not ready, skipping.'); // Changed to debug
-      return 'en';
-    }
-    logger.debug('[LanguageContext] Fetching language preference for user: ' + userId);
-    
-    // Always try localStorage first as it's the most reliable
-    const localStorageLanguage = localStorage.getItem('language') as Language | null;
-    const validLocalLanguage = localStorageLanguage && availableLanguages.includes(localStorageLanguage) ? localStorageLanguage : null;
-    
-    try {
-      // Try to load from database using the same method as ThemeContext
-      const dbLanguage = await userProfileService.loadSettingFromDatabase('language', 'language', 'en');
-      
-      if (dbLanguage && availableLanguages.includes(dbLanguage as Language)) {
-        const validDbLanguage = dbLanguage as Language;
-        
-        // Update localStorage with DB value if different
-        if (validLocalLanguage !== validDbLanguage) {
-          localStorage.setItem('language', validDbLanguage);
-          logger.debug('[LanguageContext] Updated localStorage with DB language: ' + validDbLanguage); // Changed to debug
+      // Always try localStorage first as it's the most reliable
+      const localStorageLanguage = localStorage.getItem('language') as Language | null;
+      const validLocalLanguage =
+        localStorageLanguage && availableLanguages.includes(localStorageLanguage) ? localStorageLanguage : null;
+
+      try {
+        // Try to load from database using the same method as ThemeContext
+        const dbLanguage = await userProfileService.loadSettingFromDatabase('language', 'language', 'en');
+
+        if (dbLanguage && availableLanguages.includes(dbLanguage as Language)) {
+          const validDbLanguage = dbLanguage as Language;
+
+          // Update localStorage with DB value if different
+          if (validLocalLanguage !== validDbLanguage) {
+            localStorage.setItem('language', validDbLanguage);
+            logger.debug('[LanguageContext] Updated localStorage with DB language: ' + validDbLanguage); // Changed to debug
+          }
+          return validDbLanguage;
         }
-        return validDbLanguage;
+
+        // If no valid DB language, use localStorage or browser detection
+        if (validLocalLanguage) {
+          logger.debug('[LanguageContext] No valid DB language, using localStorage: ' + validLocalLanguage); // Changed to debug
+          return validLocalLanguage;
+        } else {
+          const detectedLanguage = detectBrowserLanguage();
+          localStorage.setItem('language', detectedLanguage);
+          logger.debug('[LanguageContext] No localStorage, using detected language: ' + detectedLanguage); // Changed to debug
+          return detectedLanguage;
+        }
+      } catch (error: unknown) {
+        logger.warn('[LanguageContext] Error fetching language preference from database, using fallback:', error);
+
+        // Return localStorage value if valid, otherwise detect browser language
+        if (validLocalLanguage) {
+          logger.debug('[LanguageContext] Using localStorage fallback: ' + validLocalLanguage); // Changed to debug
+          return validLocalLanguage;
+        } else {
+          const detectedLanguage = detectBrowserLanguage();
+          localStorage.setItem('language', detectedLanguage);
+          logger.debug('[LanguageContext] Using browser detection fallback: ' + detectedLanguage); // Changed to debug
+          return detectedLanguage;
+        }
       }
-      
-      // If no valid DB language, use localStorage or browser detection
-      if (validLocalLanguage) {
-        logger.debug('[LanguageContext] No valid DB language, using localStorage: ' + validLocalLanguage); // Changed to debug
-        return validLocalLanguage;
-      } else {
-        const detectedLanguage = detectBrowserLanguage();
-        localStorage.setItem('language', detectedLanguage);
-        logger.debug('[LanguageContext] No localStorage, using detected language: ' + detectedLanguage); // Changed to debug
-        return detectedLanguage;
-      }
-    } catch (error: unknown) {
-      logger.warn('[LanguageContext] Error fetching language preference from database, using fallback:', error);
-      
-      // Return localStorage value if valid, otherwise detect browser language
-      if (validLocalLanguage) {
-        logger.debug('[LanguageContext] Using localStorage fallback: ' + validLocalLanguage); // Changed to debug
-        return validLocalLanguage;
-      } else {
-        const detectedLanguage = detectBrowserLanguage();
-        localStorage.setItem('language', detectedLanguage);
-        logger.debug('[LanguageContext] Using browser detection fallback: ' + detectedLanguage); // Changed to debug
-        return detectedLanguage;
-      }
-    }
-  }, [isI18nReady, availableLanguages, detectBrowserLanguage]);
+    },
+    [isI18nReady, availableLanguages, detectBrowserLanguage],
+  );
 
   useEffect(() => {
     if (!isI18nReady || availableLanguages.length === 0) {
@@ -168,30 +182,39 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     const loadLanguage = async () => {
       // Always check localStorage first as it's the most reliable fallback
       const localStorageLanguage = localStorage.getItem('language') as Language | null;
-      const validLocalLanguage = localStorageLanguage && availableLanguages.includes(localStorageLanguage) ? localStorageLanguage : null;
-      
+      const validLocalLanguage =
+        localStorageLanguage && availableLanguages.includes(localStorageLanguage) ? localStorageLanguage : null;
+
       if (user?.id) {
         // Prevent multiple concurrent API calls for the same user
         const lastUserId = window.sessionStorage.getItem('spheroseg_language_last_user');
         if (lastUserId === user.id) {
-          logger.debug('[LanguageContext] Language already loaded for user ' + user.id + ', using localStorage:', validLocalLanguage || 'en'); // Changed to debug
+          logger.debug(
+            '[LanguageContext] Language already loaded for user ' + user.id + ', using localStorage:',
+            validLocalLanguage || 'en',
+          ); // Changed to debug
           setLanguageState(validLocalLanguage || 'en');
           return;
         }
 
         try {
           logger.debug('[LanguageContext] User logged in (' + user.id + '), checking language preference from API...');
-          
+
           // Mark this user as processed
           window.sessionStorage.setItem('spheroseg_language_last_user', user.id);
-          
+
           const dbLanguage = (await fetchLanguagePreference(user.id)) as Language;
 
           if (dbLanguage && availableLanguages.includes(dbLanguage)) {
             logger.debug('[LanguageContext] Found valid language preference in API: ' + dbLanguage);
             setLanguageState(dbLanguage);
           } else {
-            logger.warn('[LanguageContext] API language preference \'' + dbLanguage + '\' not in available: ' + availableLanguages.join(', '));
+            logger.warn(
+              "[LanguageContext] API language preference '" +
+                dbLanguage +
+                "' not in available: " +
+                availableLanguages.join(', '),
+            );
             // Use localStorage fallback if DB language is invalid
             if (validLocalLanguage) {
               setLanguageState(validLocalLanguage);
@@ -202,7 +225,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
           window.sessionStorage.removeItem('spheroseg_language_last_user');
           logger.error('[LanguageContext] Error loading language preference from API:', error);
           logger.debug('[LanguageContext] Using localStorage fallback due to API error'); // Changed to debug
-          
+
           // Use localStorage fallback
           if (validLocalLanguage) {
             setLanguageState(validLocalLanguage);
@@ -251,8 +274,13 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         return;
       }
       if (!availableLanguages.includes(newLanguage)) {
-        logger.warn('[LanguageContext] Attempted to set unsupported language: ' + newLanguage + '. Available: ' + availableLanguages.join(', '));
-        toast('Language \'' + newLanguage + '\' is not available.');
+        logger.warn(
+          '[LanguageContext] Attempted to set unsupported language: ' +
+            newLanguage +
+            '. Available: ' +
+            availableLanguages.join(', '),
+        );
+        toast("Language '" + newLanguage + "' is not available.");
         return;
       }
 
@@ -261,19 +289,23 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       localStorage.setItem('language', newLanguage);
 
       if (auth.user && auth.user.id) {
-        logger.debug('[LanguageContext] Updating language preference on backend for user ' + auth.user.id + ' to ' + newLanguage);
-        userProfileService
-          .setUserSetting('language', newLanguage, 'ui')
-          .catch((err) => {
-            logger.warn('[LanguageContext] Failed to update language preference in database (continuing with localStorage):', err);
-            // Fallback to old API method
-            apiClient
-              .put('/api/users/me', { preferred_language: newLanguage })
-              .catch((fallbackErr) => {
-                logger.warn('[LanguageContext] Fallback API update also failed (language saved in localStorage):', fallbackErr);
-                // Language is already saved in localStorage above, so this is not critical
-              });
+        logger.debug(
+          '[LanguageContext] Updating language preference on backend for user ' + auth.user.id + ' to ' + newLanguage,
+        );
+        userProfileService.setUserSetting('language', newLanguage, 'ui').catch((err) => {
+          logger.warn(
+            '[LanguageContext] Failed to update language preference in database (continuing with localStorage):',
+            err,
+          );
+          // Fallback to old API method
+          apiClient.put('/api/users/me', { preferred_language: newLanguage }).catch((fallbackErr) => {
+            logger.warn(
+              '[LanguageContext] Fallback API update also failed (language saved in localStorage):',
+              fallbackErr,
+            );
+            // Language is already saved in localStorage above, so this is not critical
           });
+        });
       }
     },
     [isI18nReady, availableLanguages, auth.user],
@@ -290,13 +322,18 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   );
 
   if (!isI18nReady || !isContextInitialized) {
-    logger.debug('[LanguageContext] LanguageProvider: i18next not ready or context language not set, rendering null/loader.'); // Changed to debug
+    logger.debug(
+      '[LanguageContext] LanguageProvider: i18next not ready or context language not set, rendering null/loader.',
+    ); // Changed to debug
     return null;
   }
 
   logger.debug('[LanguageContext] LanguageProvider fully initialized, rendering children.');
   return (
-    <LanguageContext.Provider key={language} value={{ language, setLanguage, t, availableLanguages, isLanguageReady: isContextInitialized }}>
+    <LanguageContext.Provider
+      key={language}
+      value={{ language, setLanguage, t, availableLanguages, isLanguageReady: isContextInitialized }}
+    >
       {children}
     </LanguageContext.Provider>
   );

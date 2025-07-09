@@ -16,9 +16,11 @@ export const triggerSegmentationTask = async (
   imageId: string,
   imagePath: string,
   parameters: any,
-  priority: number = 1,
+  priority: number = 1
 ): Promise<string> => {
-  logger.info(`Queueing segmentation for imageId: ${imageId}, path: ${imagePath}, priority: ${priority}`);
+  logger.info(
+    `Queueing segmentation for imageId: ${imageId}, path: ${imagePath}, priority: ${priority}`
+  );
 
   try {
     // Use the centralized segmentation queue service

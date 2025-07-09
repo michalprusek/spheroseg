@@ -76,12 +76,7 @@ const CanvasPolygonLayer: React.FC<CanvasPolygonLayerProps> = ({
         const canvasWidth = canvasRef.current?.clientWidth || 1000;
         const canvasHeight = canvasRef.current?.clientHeight || 800;
 
-        const visiblePolygons = filterVisiblePolygons(
-          segmentationData.polygons,
-          canvasWidth,
-          canvasHeight,
-          transform,
-        );
+        const visiblePolygons = filterVisiblePolygons(segmentationData.polygons, canvasWidth, canvasHeight, transform);
 
         logger.debug(`Rendering ${visiblePolygons.length} of ${segmentationData.polygons.length} polygons`);
 

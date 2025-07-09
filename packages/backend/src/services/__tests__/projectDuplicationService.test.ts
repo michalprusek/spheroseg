@@ -12,7 +12,8 @@ jest.mock('axios');
 
 // Import the module under test (after mocks are set up)
 import projectDuplicationService from '../projectDuplicationService';
-const { duplicateProject, duplicateProjectViaApi, generateNewFilePaths, copyImageFiles } = projectDuplicationService;
+const { duplicateProject, duplicateProjectViaApi, generateNewFilePaths, copyImageFiles } =
+  projectDuplicationService;
 
 // Setup mocks before each test
 beforeEach(() => {
@@ -98,12 +99,14 @@ describe('projectDuplicationService', () => {
       const result = generateNewFilePaths(
         '/uploads/original-project/image.jpg',
         '/uploads/original-project/thumb-image.jpg',
-        'new-project-id',
+        'new-project-id'
       );
 
       // Assert
       expect(result.newStoragePath).toBe('/uploads/new-project-id/image-copy-12345-500000.jpg');
-      expect(result.newThumbnailPath).toBe('/uploads/new-project-id/thumb-thumb-image-copy-12345-500000.jpg');
+      expect(result.newThumbnailPath).toBe(
+        '/uploads/new-project-id/thumb-thumb-image-copy-12345-500000.jpg'
+      );
 
       // Restore spies
       dateSpy.mockRestore();
@@ -116,7 +119,11 @@ describe('projectDuplicationService', () => {
       const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
       // Act
-      const result = generateNewFilePaths('/uploads/original-project/image.jpg', undefined, 'new-project-id');
+      const result = generateNewFilePaths(
+        '/uploads/original-project/image.jpg',
+        undefined,
+        'new-project-id'
+      );
 
       // Assert
       expect(result.newStoragePath).toBe('/uploads/new-project-id/image-copy-12345-500000.jpg');
@@ -136,13 +143,15 @@ describe('projectDuplicationService', () => {
       const result = generateNewFilePaths(
         '/uploads/original-project/complex.file.name.jpg',
         '/uploads/original-project/thumb-complex.file.name.jpg',
-        'new-project-id',
+        'new-project-id'
       );
 
       // Assert
-      expect(result.newStoragePath).toBe('/uploads/new-project-id/complex.file.name-copy-12345-500000.jpg');
+      expect(result.newStoragePath).toBe(
+        '/uploads/new-project-id/complex.file.name-copy-12345-500000.jpg'
+      );
       expect(result.newThumbnailPath).toBe(
-        '/uploads/new-project-id/thumb-thumb-complex.file.name-copy-12345-500000.jpg',
+        '/uploads/new-project-id/thumb-thumb-complex.file.name-copy-12345-500000.jpg'
       );
 
       // Restore spies
@@ -154,7 +163,11 @@ describe('projectDuplicationService', () => {
   describe('copyImageFiles', () => {
     it('should copy files from source to target', async () => {
       // Act
-      await copyImageFiles('/uploads/original-project/image.jpg', '/uploads/new-project/image-copy.jpg', '/base/dir');
+      await copyImageFiles(
+        '/uploads/original-project/image.jpg',
+        '/uploads/new-project/image-copy.jpg',
+        '/base/dir'
+      );
 
       // Assert
       expect(path.join).toHaveBeenCalledWith('/base/dir', 'uploads/original-project/image.jpg');
@@ -171,7 +184,11 @@ describe('projectDuplicationService', () => {
       });
 
       // Act
-      await copyImageFiles('/uploads/original-project/image.jpg', '/uploads/new-project/image-copy.jpg', '/base/dir');
+      await copyImageFiles(
+        '/uploads/original-project/image.jpg',
+        '/uploads/new-project/image-copy.jpg',
+        '/base/dir'
+      );
 
       // Assert
       expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), {
@@ -188,7 +205,7 @@ describe('projectDuplicationService', () => {
       await copyImageFiles(
         '/uploads/original-project/missing.jpg',
         '/uploads/new-project/missing-copy.jpg',
-        '/base/dir',
+        '/base/dir'
       );
 
       // Assert
@@ -203,7 +220,11 @@ describe('projectDuplicationService', () => {
 
       // Act & Assert
       await expect(
-        copyImageFiles('/uploads/original-project/image.jpg', '/uploads/new-project/image-copy.jpg', '/base/dir'),
+        copyImageFiles(
+          '/uploads/original-project/image.jpg',
+          '/uploads/new-project/image-copy.jpg',
+          '/base/dir'
+        )
       ).rejects.toThrow('File system error');
     });
   });
@@ -301,10 +322,22 @@ describe('projectDuplicationService', () => {
       // Assert
       expect(mockPool.connect).toHaveBeenCalled();
       expect(mockClient.query).toHaveBeenCalledWith('BEGIN');
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('SELECT title'), expect.any(Array));
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO projects'), expect.any(Array));
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('SELECT * FROM images'), expect.any(Array));
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO images'), expect.any(Array));
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT title'),
+        expect.any(Array)
+      );
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO projects'),
+        expect.any(Array)
+      );
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT * FROM images'),
+        expect.any(Array)
+      );
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO images'),
+        expect.any(Array)
+      );
       expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
       expect(mockClient.release).toHaveBeenCalled();
 
@@ -331,13 +364,13 @@ describe('projectDuplicationService', () => {
       // Verify correct title was used
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO projects'),
-        expect.arrayContaining(['test-user', 'Custom Project Name']),
+        expect.arrayContaining(['test-user', 'Custom Project Name'])
       );
 
       expect(result).toEqual(
         expect.objectContaining({
           title: 'Original Project (Copy)', // From mock implementation
-        }),
+        })
       );
     });
 
@@ -368,7 +401,7 @@ describe('projectDuplicationService', () => {
 
       // Verify the INSERT INTO images included segmentation data
       const insertImageCalls = (mockClient.query as jest.Mock).mock.calls.filter(
-        (call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO images'),
+        (call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO images')
       );
 
       expect(insertImageCalls.length).toBe(1);
@@ -388,7 +421,9 @@ describe('projectDuplicationService', () => {
       });
 
       // Act & Assert
-      await expect(duplicateProject(mockPool, 'original-project-id', 'test-user')).rejects.toThrow('Database error');
+      await expect(duplicateProject(mockPool, 'original-project-id', 'test-user')).rejects.toThrow(
+        'Database error'
+      );
 
       // Verify transaction was rolled back
       expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
@@ -406,7 +441,7 @@ describe('projectDuplicationService', () => {
 
       // Act & Assert
       await expect(duplicateProject(mockPool, 'original-project-id', 'test-user')).rejects.toThrow(
-        'Original project not found or access denied',
+        'Original project not found or access denied'
       );
 
       // Verify transaction was rolled back
@@ -420,7 +455,9 @@ describe('projectDuplicationService', () => {
       });
 
       // Act & Assert
-      await expect(duplicateProject(mockPool, 'original-project-id', 'test-user')).rejects.toThrow('File system error');
+      await expect(duplicateProject(mockPool, 'original-project-id', 'test-user')).rejects.toThrow(
+        'File system error'
+      );
 
       // Verify transaction was rolled back
       expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
@@ -430,14 +467,18 @@ describe('projectDuplicationService', () => {
   describe('duplicateProjectViaApi', () => {
     it('should duplicate a project via API', async () => {
       // Act
-      const result = await duplicateProjectViaApi('https://api.example.com', 'original-project-id', 'test-token');
+      const result = await duplicateProjectViaApi(
+        'https://api.example.com',
+        'original-project-id',
+        'test-token'
+      );
 
       // Assert
       expect(axios.get).toHaveBeenCalledWith(
         'https://api.example.com/projects/original-project-id',
         expect.objectContaining({
           headers: { Authorization: 'Bearer test-token' },
-        }),
+        })
       );
 
       expect(axios.post).toHaveBeenCalledWith(
@@ -448,14 +489,14 @@ describe('projectDuplicationService', () => {
         }),
         expect.objectContaining({
           headers: { Authorization: 'Bearer test-token' },
-        }),
+        })
       );
 
       expect(axios.get).toHaveBeenCalledWith(
         'https://api.example.com/projects/original-project-id/images',
         expect.objectContaining({
           headers: { Authorization: 'Bearer test-token' },
-        }),
+        })
       );
 
       expect(axios.post).toHaveBeenCalledWith(
@@ -465,7 +506,7 @@ describe('projectDuplicationService', () => {
         }),
         expect.objectContaining({
           headers: { Authorization: 'Bearer test-token' },
-        }),
+        })
       );
 
       expect(result).toEqual({
@@ -494,7 +535,7 @@ describe('projectDuplicationService', () => {
         expect.objectContaining({
           title: 'Custom API Title',
         }),
-        expect.any(Object),
+        expect.any(Object)
       );
 
       // Verify file operations were NOT performed
@@ -507,7 +548,7 @@ describe('projectDuplicationService', () => {
           status: 'complete',
           segmentation_status: 'completed',
         }),
-        expect.any(Object),
+        expect.any(Object)
       );
     });
 
@@ -517,7 +558,7 @@ describe('projectDuplicationService', () => {
 
       // Act & Assert
       await expect(
-        duplicateProjectViaApi('https://api.example.com', 'original-project-id', 'test-token'),
+        duplicateProjectViaApi('https://api.example.com', 'original-project-id', 'test-token')
       ).rejects.toThrow('API error');
     });
 
@@ -529,7 +570,11 @@ describe('projectDuplicationService', () => {
 
       // Act
       // This should still complete because individual image errors are caught
-      const result = await duplicateProjectViaApi('https://api.example.com', 'original-project-id', 'test-token');
+      const result = await duplicateProjectViaApi(
+        'https://api.example.com',
+        'original-project-id',
+        'test-token'
+      );
 
       // Assert
       expect(result).toEqual({
@@ -558,7 +603,11 @@ describe('projectDuplicationService', () => {
 
       // Act
       // This should still complete because individual image errors are caught
-      const result = await duplicateProjectViaApi('https://api.example.com', 'original-project-id', 'test-token');
+      const result = await duplicateProjectViaApi(
+        'https://api.example.com',
+        'original-project-id',
+        'test-token'
+      );
 
       // Assert
       expect(result).toEqual({

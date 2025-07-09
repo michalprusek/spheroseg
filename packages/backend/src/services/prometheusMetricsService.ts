@@ -1,6 +1,6 @@
 /**
  * Prometheus Metrics Service
- * 
+ *
  * This service provides compatibility for existing metrics code
  * while using the unified monitoring registry internally.
  */

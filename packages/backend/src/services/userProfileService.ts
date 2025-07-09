@@ -80,7 +80,7 @@ export const getUserProfile = async (pool: Pool, userId: string): Promise<UserPr
     }
 
     const profile = result.rows[0];
-    
+
     // Construct avatar URL if avatar file exists
     if (profile.avatar_filename) {
       profile.avatar_url = `/uploads/avatars/${profile.avatar_filename}`;
@@ -97,20 +97,19 @@ export const getUserProfile = async (pool: Pool, userId: string): Promise<UserPr
  * Create user profile
  */
 export const createUserProfile = async (
-  pool: Pool, 
-  userId: string, 
+  pool: Pool,
+  userId: string,
   profileData: CreateProfileData
 ): Promise<UserProfile> => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
     // Check if a profile already exists for this user
-    const existingProfile = await client.query(
-      'SELECT * FROM user_profiles WHERE user_id = $1',
-      [userId]
-    );
+    const existingProfile = await client.query('SELECT * FROM user_profiles WHERE user_id = $1', [
+      userId,
+    ]);
 
     if (existingProfile.rows.length > 0) {
       await client.query('COMMIT');
@@ -132,36 +131,36 @@ export const createUserProfile = async (
         // Generate a unique username by appending a number
         let counter = 1;
         let uniqueUsername = `${username}${counter}`;
-        
+
         while (true) {
           const check = await client.query(
             'SELECT COUNT(*) FROM user_profiles WHERE username = $1',
             [uniqueUsername]
           );
-          
+
           if (parseInt(check.rows[0].count) === 0) {
             username = uniqueUsername;
             break;
           }
-          
+
           counter++;
           uniqueUsername = `${username}${counter}`;
-          
+
           // Safety check to prevent infinite loop
           if (counter > 1000) {
             username = `${username}_${profileId.substring(0, 8)}`;
             break;
           }
         }
-        
-        logger.info('Username conflict resolved', { 
-          originalUsername: profileData.username, 
+
+        logger.info('Username conflict resolved', {
+          originalUsername: profileData.username,
           newUsername: username,
-          userId 
+          userId,
         });
       }
     }
-    
+
     const result = await client.query(
       `INSERT INTO user_profiles (
         id, user_id, username, full_name, title, organization, 
@@ -178,12 +177,12 @@ export const createUserProfile = async (
         profileData.bio,
         profileData.location,
         profileData.preferred_language,
-        profileData.theme_preference
+        profileData.theme_preference,
       ]
     );
 
     await client.query('COMMIT');
-    
+
     logger.info('User profile created successfully', { userId, profileId, username });
     return result.rows[0];
   } catch (error) {
@@ -204,7 +203,7 @@ export const updateUserProfile = async (
   profileData: UpdateProfileData
 ): Promise<UserProfile> => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
@@ -242,7 +241,7 @@ export const updateUserProfile = async (
     }
 
     await client.query('COMMIT');
-    
+
     logger.info('User profile updated successfully', { userId });
     return result.rows[0];
   } catch (error) {
@@ -264,7 +263,7 @@ export const saveAvatarFile = async (
   uploadsDir: string
 ): Promise<AvatarFile> => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
@@ -281,11 +280,11 @@ export const saveAvatarFile = async (
       await sharp(file.buffer)
         .resize(512, 512, {
           fit: 'cover',
-          position: 'center'
+          position: 'center',
         })
         .jpeg({
           quality: 90,
-          progressive: true
+          progressive: true,
         })
         .toFile(filePath);
     } catch (sharpError) {
@@ -295,10 +294,9 @@ export const saveAvatarFile = async (
     }
 
     // Remove old avatar file if exists
-    const oldAvatarResult = await client.query(
-      'SELECT * FROM avatar_files WHERE user_id = $1',
-      [userId]
-    );
+    const oldAvatarResult = await client.query('SELECT * FROM avatar_files WHERE user_id = $1', [
+      userId,
+    ]);
 
     if (oldAvatarResult.rows.length > 0) {
       const oldAvatar = oldAvatarResult.rows[0];
@@ -307,7 +305,7 @@ export const saveAvatarFile = async (
       } catch (error) {
         logger.warn('Failed to delete old avatar file:', { error, filePath: oldAvatar.file_path });
       }
-      
+
       // Delete old avatar record
       await client.query('DELETE FROM avatar_files WHERE user_id = $1', [userId]);
     }
@@ -320,15 +318,7 @@ export const saveAvatarFile = async (
         file_size, file_path
       ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *`,
-      [
-        avatarId,
-        userId,
-        filename,
-        file.originalname,
-        file.mimetype,
-        file.size,
-        filePath
-      ]
+      [avatarId, userId, filename, file.originalname, file.mimetype, file.size, filePath]
     );
 
     // Update user profile with avatar URL
@@ -340,7 +330,7 @@ export const saveAvatarFile = async (
     );
 
     await client.query('COMMIT');
-    
+
     logger.info('Avatar file saved successfully', { userId, filename });
     return avatarResult.rows[0];
   } catch (error) {
@@ -357,24 +347,26 @@ export const saveAvatarFile = async (
  */
 export const deleteAvatarFile = async (pool: Pool, userId: string): Promise<void> => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
     // Get avatar file info
-    const avatarResult = await client.query(
-      'SELECT * FROM avatar_files WHERE user_id = $1',
-      [userId]
-    );
+    const avatarResult = await client.query('SELECT * FROM avatar_files WHERE user_id = $1', [
+      userId,
+    ]);
 
     if (avatarResult.rows.length > 0) {
       const avatar = avatarResult.rows[0];
-      
+
       // Delete file from disk
       try {
         await fs.unlink(avatar.file_path);
       } catch (error) {
-        logger.warn('Failed to delete avatar file from disk:', { error, filePath: avatar.file_path });
+        logger.warn('Failed to delete avatar file from disk:', {
+          error,
+          filePath: avatar.file_path,
+        });
       }
 
       // Remove avatar record from database
@@ -390,7 +382,7 @@ export const deleteAvatarFile = async (pool: Pool, userId: string): Promise<void
     );
 
     await client.query('COMMIT');
-    
+
     logger.info('Avatar file deleted successfully', { userId });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -405,26 +397,26 @@ export const deleteAvatarFile = async (pool: Pool, userId: string): Promise<void
  * Get user profile with fallback creation
  */
 export const getOrCreateUserProfile = async (
-  pool: Pool, 
-  userId: string, 
+  pool: Pool,
+  userId: string,
   userEmail: string,
   userName?: string
 ): Promise<UserProfile> => {
   try {
     // Try to get existing profile
     let profile = await getUserProfile(pool, userId);
-    
+
     if (!profile) {
       // Create profile with basic data
       const defaultUsername = userName || userEmail.split('@')[0];
-      
+
       profile = await createUserProfile(pool, userId, {
         username: defaultUsername,
         full_name: userName || 'User',
-        preferred_language: 'en'
+        preferred_language: 'en',
       });
     }
-    
+
     return profile;
   } catch (error) {
     logger.error('Error getting or creating user profile:', { error, userId });
@@ -435,13 +427,17 @@ export const getOrCreateUserProfile = async (
 /**
  * Get user setting by key
  */
-export const getUserSetting = async (pool: Pool, userId: string, settingKey: string): Promise<UserSetting | null> => {
+export const getUserSetting = async (
+  pool: Pool,
+  userId: string,
+  settingKey: string
+): Promise<UserSetting | null> => {
   try {
     const result = await pool.query(
       'SELECT * FROM user_settings WHERE user_id = $1 AND setting_key = $2',
       [userId, settingKey]
     );
-    
+
     return result.rows[0] || null;
   } catch (error) {
     logger.error('Error fetching user setting:', { error, userId, settingKey });
@@ -458,7 +454,7 @@ export const getUserSettings = async (pool: Pool, userId: string): Promise<UserS
       'SELECT * FROM user_settings WHERE user_id = $1 ORDER BY setting_key',
       [userId]
     );
-    
+
     return result.rows;
   } catch (error) {
     logger.error('Error fetching user settings:', { error, userId });
@@ -488,7 +484,7 @@ export const setUserSetting = async (
        RETURNING *`,
       [settingId, userId, settingKey, JSON.stringify(settingValue), category]
     );
-    
+
     logger.info('User setting updated successfully', { userId, settingKey, category });
     return result.rows[0];
   } catch (error) {
@@ -500,13 +496,17 @@ export const setUserSetting = async (
 /**
  * Delete user setting
  */
-export const deleteUserSetting = async (pool: Pool, userId: string, settingKey: string): Promise<void> => {
+export const deleteUserSetting = async (
+  pool: Pool,
+  userId: string,
+  settingKey: string
+): Promise<void> => {
   try {
-    await pool.query(
-      'DELETE FROM user_settings WHERE user_id = $1 AND setting_key = $2',
-      [userId, settingKey]
-    );
-    
+    await pool.query('DELETE FROM user_settings WHERE user_id = $1 AND setting_key = $2', [
+      userId,
+      settingKey,
+    ]);
+
     logger.info('User setting deleted successfully', { userId, settingKey });
   } catch (error) {
     logger.error('Error deleting user setting:', { error, userId, settingKey });
@@ -517,14 +517,17 @@ export const deleteUserSetting = async (pool: Pool, userId: string, settingKey: 
 /**
  * Get user profile with settings
  */
-export const getUserProfileWithSettings = async (pool: Pool, userId: string): Promise<{
+export const getUserProfileWithSettings = async (
+  pool: Pool,
+  userId: string
+): Promise<{
   profile: UserProfile | null;
   settings: UserSetting[];
 }> => {
   try {
     const [profile, settings] = await Promise.all([
       getUserProfile(pool, userId),
-      getUserSettings(pool, userId)
+      getUserSettings(pool, userId),
     ]);
 
     return { profile, settings };
@@ -545,5 +548,5 @@ export default {
   getUserSettings,
   setUserSetting,
   deleteUserSetting,
-  getUserProfileWithSettings
+  getUserProfileWithSettings,
 };

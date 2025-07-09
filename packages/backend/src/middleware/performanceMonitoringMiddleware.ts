@@ -27,7 +27,13 @@ export function performanceMonitoringMiddleware() {
       const userId = (req.user as any)?.id;
 
       // Record metric
-      performanceMonitoring.recordApiResponseTimeMetric(route, req.method, res.statusCode, duration, userId);
+      performanceMonitoring.recordApiResponseTimeMetric(
+        route,
+        req.method,
+        res.statusCode,
+        duration,
+        userId
+      );
 
       // Call original end method
       return originalEnd.apply(this, args);

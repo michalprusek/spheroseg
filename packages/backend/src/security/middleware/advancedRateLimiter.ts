@@ -1,6 +1,6 @@
 /**
  * Advanced Rate Limiting Middleware
- * 
+ *
  * Provides hierarchical rate limiting with support for:
  * - Multiple rate limit tiers
  * - Redis backend for distributed systems
@@ -11,7 +11,12 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { RateLimiterMemory, RateLimiterRedis, RateLimiterRes, RateLimiterAbstract } from 'rate-limiter-flexible';
+import {
+  RateLimiterMemory,
+  RateLimiterRedis,
+  RateLimiterRes,
+  RateLimiterAbstract,
+} from 'rate-limiter-flexible';
 import Redis from 'ioredis';
 import logger from '../../utils/logger';
 import config from '../../config';
@@ -51,43 +56,43 @@ export const RATE_LIMIT_TIERS = {
     default: { name: 'public-default', points: 100, duration: 900 }, // 100 req/15min
     burst: { name: 'public-burst', points: 20, duration: 60 }, // 20 req/min
   },
-  
+
   // Authenticated user endpoints - Increased limits for segmentation editor
   authenticated: {
     default: { name: 'auth-default', points: 1000, duration: 900 }, // 1000 req/15min
     burst: { name: 'auth-burst', points: 200, duration: 60 }, // 200 req/min
   },
-  
+
   // Premium user endpoints
   premium: {
     default: { name: 'premium-default', points: 1000, duration: 900 }, // 1000 req/15min
     burst: { name: 'premium-burst', points: 100, duration: 60 }, // 100 req/min
   },
-  
+
   // Admin endpoints
   admin: {
     default: { name: 'admin-default', points: 10000, duration: 900 }, // 10000 req/15min
     burst: { name: 'admin-burst', points: 500, duration: 60 }, // 500 req/min
   },
-  
+
   // Auth endpoints (login, register)
   auth: {
     default: { name: 'auth-endpoint', points: 10, duration: 900, blockDuration: 900 }, // 10 attempts/15min
     strict: { name: 'auth-strict', points: 3, duration: 300, blockDuration: 3600 }, // 3 attempts/5min
   },
-  
+
   // Sensitive operations (password reset, account deletion)
   sensitive: {
     default: { name: 'sensitive-default', points: 5, duration: 3600, blockDuration: 3600 }, // 5 req/hour
     strict: { name: 'sensitive-strict', points: 1, duration: 300, blockDuration: 7200 }, // 1 req/5min
   },
-  
+
   // File upload endpoints
   upload: {
     default: { name: 'upload-default', points: 20, duration: 3600 }, // 20 uploads/hour
     large: { name: 'upload-large', points: 5, duration: 3600, blockDuration: 1800 }, // 5 large uploads/hour
   },
-  
+
   // API key based access
   api: {
     basic: { name: 'api-basic', points: 1000, duration: 3600 }, // 1000 req/hour
@@ -109,11 +114,11 @@ export class HierarchicalRateLimiter {
     this.config = config;
     this.whitelistedIPs = new Set(config.whitelistedIPs || []);
     this.whitelistedPaths = new Set(config.whitelistedPaths || []);
-    
+
     // Add default whitelisted IPs
     this.whitelistedIPs.add('127.0.0.1');
     this.whitelistedIPs.add('::1');
-    
+
     this.initializeLimiters();
   }
 
@@ -131,7 +136,7 @@ export class HierarchicalRateLimiter {
       };
 
       let limiter: RateLimiterAbstract;
-      
+
       if (this.config.useRedis && this.config.redisClient) {
         limiter = new RateLimiterRedis({
           ...limiterOptions,
@@ -145,7 +150,7 @@ export class HierarchicalRateLimiter {
     }
 
     logger.info('Hierarchical rate limiters initialized', {
-      tiers: this.config.tiers.map(t => t.name),
+      tiers: this.config.tiers.map((t) => t.name),
       backend: this.config.useRedis ? 'redis' : 'memory',
     });
   }
@@ -188,7 +193,9 @@ export class HierarchicalRateLimiter {
   /**
    * Create middleware for specific tiers
    */
-  public middleware(tierNames: string[]): (req: Request, res: Response, next: NextFunction) => Promise<void> {
+  public middleware(
+    tierNames: string[]
+  ): (req: Request, res: Response, next: NextFunction) => Promise<void> {
     return async (req: Request, res: Response, next: NextFunction) => {
       // Skip rate limiting if disabled
       if (config.security?.enableRateLimit === false) {
@@ -206,7 +213,7 @@ export class HierarchicalRateLimiter {
       // Check each tier
       for (const tierName of tierNames) {
         const limiter = this.limiters.get(tierName);
-        
+
         if (!limiter) {
           logger.warn(`Rate limiter tier not found: ${tierName}`);
           continue;
@@ -227,11 +234,13 @@ export class HierarchicalRateLimiter {
       // If any tier failed, return rate limit error
       if (errors.length > 0) {
         const primaryError = errors[0];
-        const retryAfter = Math.ceil(primaryError.retriesAfter.getTime() / 1000 - Date.now() / 1000);
+        const retryAfter = Math.ceil(
+          primaryError.retriesAfter.getTime() / 1000 - Date.now() / 1000
+        );
 
         logger.warn('Rate limit exceeded', {
           key,
-          tiers: errors.map(e => e.tier),
+          tiers: errors.map((e) => e.tier),
           ip: getClientIp(req),
           path: req.path,
           method: req.method,
@@ -244,8 +253,8 @@ export class HierarchicalRateLimiter {
         }
 
         res.set('Retry-After', String(retryAfter));
-        res.set('X-RateLimit-Limit', String(errors.map(e => e.tier).join(', ')));
-        
+        res.set('X-RateLimit-Limit', String(errors.map((e) => e.tier).join(', ')));
+
         return res.status(429).json({
           error: {
             code: 'RATE_LIMIT_EXCEEDED',
@@ -260,7 +269,7 @@ export class HierarchicalRateLimiter {
       // Add rate limit headers for successful requests
       try {
         const headers: any = {};
-        
+
         for (const tierName of tierNames) {
           const limiter = this.limiters.get(tierName);
           if (limiter) {
@@ -268,7 +277,9 @@ export class HierarchicalRateLimiter {
             if (limiterRes) {
               headers[`X-RateLimit-${tierName}-Limit`] = limiter.points;
               headers[`X-RateLimit-${tierName}-Remaining`] = limiterRes.remainingPoints || 0;
-              headers[`X-RateLimit-${tierName}-Reset`] = new Date(Date.now() + limiterRes.msBeforeNext).toISOString();
+              headers[`X-RateLimit-${tierName}-Reset`] = new Date(
+                Date.now() + limiterRes.msBeforeNext
+              ).toISOString();
             }
           }
         }
@@ -358,10 +369,7 @@ if (config.security?.useRedis && config.redis?.url) {
 
 // Standard rate limiter for public endpoints
 export const publicRateLimiter = new HierarchicalRateLimiter({
-  tiers: [
-    RATE_LIMIT_TIERS.public.default,
-    RATE_LIMIT_TIERS.public.burst,
-  ],
+  tiers: [RATE_LIMIT_TIERS.public.default, RATE_LIMIT_TIERS.public.burst],
   useRedis: !!redisClient,
   redisClient,
   keyPrefix: 'rl:public',
@@ -370,10 +378,7 @@ export const publicRateLimiter = new HierarchicalRateLimiter({
 
 // Rate limiter for authenticated endpoints
 export const authenticatedRateLimiter = new HierarchicalRateLimiter({
-  tiers: [
-    RATE_LIMIT_TIERS.authenticated.default,
-    RATE_LIMIT_TIERS.authenticated.burst,
-  ],
+  tiers: [RATE_LIMIT_TIERS.authenticated.default, RATE_LIMIT_TIERS.authenticated.burst],
   useRedis: !!redisClient,
   redisClient,
   keyPrefix: 'rl:auth',
@@ -381,10 +386,7 @@ export const authenticatedRateLimiter = new HierarchicalRateLimiter({
 
 // Rate limiter for auth endpoints
 export const authEndpointRateLimiter = new HierarchicalRateLimiter({
-  tiers: [
-    RATE_LIMIT_TIERS.auth.default,
-    RATE_LIMIT_TIERS.auth.strict,
-  ],
+  tiers: [RATE_LIMIT_TIERS.auth.default, RATE_LIMIT_TIERS.auth.strict],
   useRedis: !!redisClient,
   redisClient,
   keyPrefix: 'rl:auth-endpoint',
@@ -396,10 +398,7 @@ export const authEndpointRateLimiter = new HierarchicalRateLimiter({
 
 // Rate limiter for sensitive operations
 export const sensitiveRateLimiter = new HierarchicalRateLimiter({
-  tiers: [
-    RATE_LIMIT_TIERS.sensitive.default,
-    RATE_LIMIT_TIERS.sensitive.strict,
-  ],
+  tiers: [RATE_LIMIT_TIERS.sensitive.default, RATE_LIMIT_TIERS.sensitive.strict],
   useRedis: !!redisClient,
   redisClient,
   keyPrefix: 'rl:sensitive',
@@ -407,9 +406,7 @@ export const sensitiveRateLimiter = new HierarchicalRateLimiter({
 
 // Rate limiter for file uploads
 export const uploadRateLimiter = new HierarchicalRateLimiter({
-  tiers: [
-    RATE_LIMIT_TIERS.upload.default,
-  ],
+  tiers: [RATE_LIMIT_TIERS.upload.default],
   useRedis: !!redisClient,
   redisClient,
   keyPrefix: 'rl:upload',
@@ -417,7 +414,13 @@ export const uploadRateLimiter = new HierarchicalRateLimiter({
 
 // Export middleware shortcuts
 export const publicRateLimit = publicRateLimiter.middleware(['public-default', 'public-burst']);
-export const authenticatedRateLimit = authenticatedRateLimiter.middleware(['auth-default', 'auth-burst']);
+export const authenticatedRateLimit = authenticatedRateLimiter.middleware([
+  'auth-default',
+  'auth-burst',
+]);
 export const authRateLimit = authEndpointRateLimiter.middleware(['auth-endpoint', 'auth-strict']);
-export const sensitiveRateLimit = sensitiveRateLimiter.middleware(['sensitive-default', 'sensitive-strict']);
+export const sensitiveRateLimit = sensitiveRateLimiter.middleware([
+  'sensitive-default',
+  'sensitive-strict',
+]);
 export const uploadRateLimit = uploadRateLimiter.middleware(['upload-default']);

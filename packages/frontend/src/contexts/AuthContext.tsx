@@ -132,7 +132,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (sessionUserData) {
         return JSON.parse(sessionUserData);
       }
-    } catch (e: any) { // Cast e to any
+    } catch (e: any) {
+      // Cast e to any
       logger.error('Error reading persisted user from session storage:', e);
     }
     return null;
@@ -146,7 +147,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Pokud máme uživatele, uložíme ho do session pro případ ztráty
       try {
         sessionStorage.setItem('spheroseg_persisted_user', JSON.stringify(loadedUser));
-      } catch (e: any) { // Cast e to any
+      } catch (e: any) {
+        // Cast e to any
         logger.error('Error saving user to session storage:', e);
       }
       return loadedUser;
@@ -172,24 +174,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const accessToken = getAccessToken();
       if (accessToken) {
         logger.debug('Found access token from authService:', { tokenLength: accessToken.length });
-        
+
         // Check if token is expired
         if (isAccessTokenExpired()) {
           logger.warn('Found token but it is expired, will need to refresh');
           // Still return it so we can try to refresh it
           return accessToken;
         }
-        
+
         return accessToken;
       }
-      
+
       // Fallback to direct cookie check
       const cookieToken = document.cookie.match(/auth_token=([^;]+)/)?.[1];
       if (cookieToken) {
         logger.debug('Found access token from cookie:', { tokenLength: cookieToken.length });
         return cookieToken;
       }
-      
+
       logger.warn('No access token found during initialization');
       return null;
     } catch (error) {
@@ -197,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
   };
-  
+
   const [token, setToken] = useState<string | null>(getInitialToken());
   const [loading, setLoading] = useState(true);
 
@@ -228,7 +230,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (newUser) {
       try {
         sessionStorage.setItem('spheroseg_persisted_user', JSON.stringify(newUser));
-      } catch (e: any) { // Cast e to any
+      } catch (e: any) {
+        // Cast e to any
         logger.error('Error saving user to session storage:', e);
       }
     } else {
@@ -287,7 +290,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (currentToken) {
         logger.info('Found authentication tokens, verifying...');
-        
+
         // IMPORTANT: Set the token state immediately to ensure it's available for API calls
         setToken(currentToken);
 
@@ -331,7 +334,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const fetchUserPromise = (async () => {
             let retries = 4; // Zvýšeno na 4 pokusy
             const retryDelay = 2000; // Zvýšeno na 2s mezi pokusy
-            
+
             while (retries > 0) {
               try {
                 return await apiClient.get<User>(API_PATHS.USERS.ME, {
@@ -351,9 +354,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   logger.warn('User data fetch failed after all retries', { error });
                   throw error;
                 }
-                
+
                 logger.warn(`User data fetch failed, will retry. Retries left: ${retries}`, { error });
-                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                await new Promise((resolve) => setTimeout(resolve, retryDelay));
               }
             }
           })();
@@ -404,7 +407,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setTimeout(() => navigate(savedRoute), 100);
             }
           }
-        } catch (error: any) { // Cast error to any
+        } catch (error: any) {
+          // Cast error to any
           logger.error('Token verification failed:', { error });
 
           // Try to use stored user data as fallback
@@ -500,17 +504,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           logger.info(`Migrating localStorage data to database for user ${data.user.id}`);
           await userProfileService.migrateLocalStorageToDatabase();
-          
+
           // Also initialize user settings from database
           await userProfileService.initializeUserSettings();
-          
+
           logger.info(`Data migration completed for user ${data.user.id}`);
-        } catch (error: any) { // Cast error to any
+        } catch (error: any) {
+          // Cast error to any
           logger.error('Error during data migration:', {
             error,
             userId: data.user.id,
           });
-          
+
           // Fallback to legacy language update
           const currentLanguage = localStorage.getItem('language') as Language | null;
           if (currentLanguage) {
@@ -527,7 +532,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 },
               );
               logger.info(`Language preference updated via fallback for user ${data.user.id}`);
-            } catch (fallbackErr: any) { // Cast fallbackErr to any
+            } catch (fallbackErr: any) {
+              // Cast fallbackErr to any
               logger.error('Fallback language update also failed:', fallbackErr);
             }
           }
@@ -584,7 +590,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               navigate('/dashboard');
             }
             return true;
-          } catch (error: any) { // Cast error to any
+          } catch (error: any) {
+            // Cast error to any
             if (error.name === 'AbortError') {
               logger.error('[authContext] Login request aborted due to timeout');
               throw new Error('Login request timed out. Please try again.');
@@ -613,7 +620,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (axios.isAxiosError(error)) {
           const status = error.response?.status;
           const errorMessage = error.response?.data?.message || error.message;
-          
+
           if (status === 401) {
             // Invalid credentials (wrong password)
             toast.error('Invalid password', {
@@ -624,7 +631,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Email not found
             toast.error('Invalid email/username', {
               duration: 5000,
-              description: errorMessage || 'This email address is not registered. Please check your email or sign up for a new account.',
+              description:
+                errorMessage ||
+                'This email address is not registered. Please check your email or sign up for a new account.',
             });
           } else if (status === 400) {
             // Bad request - usually invalid email format or missing credentials
@@ -687,7 +696,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const response = await (async () => {
               let retries = 2; // 2 retries
               const retryDelay = 1000; // 1 second delay between retries
-              
+
               while (retries >= 0) {
                 try {
                   // Use apiClient for consistent handling
@@ -695,7 +704,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     signal: new AbortController().signal,
                     timeout: 3000,
                   });
-                } catch (error: any) { // Cast error to any
+                } catch (error: any) {
+                  // Cast error to any
                   // Don't retry if user already exists (409 Conflict)
                   if (axios.isAxiosError(error) && error.response?.status === 409) {
                     logger.warn('User already exists, not retrying', { email });
@@ -707,9 +717,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     logger.warn('Auth signup attempt failed after all retries', { error });
                     throw error;
                   }
-                  
+
                   logger.warn(`Auth signup attempt failed, will retry. Retries left: ${retries}`, { error });
-                  await new Promise(resolve => setTimeout(resolve, retryDelay));
+                  await new Promise((resolve) => setTimeout(resolve, retryDelay));
                 }
               }
             })();
@@ -717,7 +727,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             logger.info('Signup successful');
             // Don't show toast here - let the signup component handle success messages
             return true;
-          } catch (error: any) { // Cast error to any
+          } catch (error: any) {
+            // Cast error to any
             // Propagate all errors without mock workarounds
 
             // Otherwise, propagate the error
@@ -751,7 +762,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('userAvatar');
     localStorage.removeItem('userAvatarUrl');
     sessionStorage.removeItem('spheroseg_persisted_user');
-    
+
     // Clear context initialization markers to allow fresh initialization on next login
     sessionStorage.removeItem('spheroseg_language_last_user');
     sessionStorage.removeItem('spheroseg_theme_last_user');
@@ -773,7 +784,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         );
         logger.info('Backend logout successful');
-      } catch (error: any) { // Cast error to any
+      } catch (error: any) {
+        // Cast error to any
         // Non-critical error, just log it
         logger.warn('Backend logout failed, but local session was cleared', {
           error,
@@ -802,22 +814,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // IMPORTANT: We need to distinguish between page refresh and actual window/tab close
       // Unfortunately, there's no reliable way to detect this in modern browsers
       // So we'll use a different approach:
-      
+
       // Don't clear tokens on page refresh - only clear them when:
       // 1. User explicitly logs out
       // 2. Tokens expire
       // 3. Server returns 401 unauthorized
-      
+
       // For now, we'll disable automatic token clearing on beforeunload
       // This prevents the issue where tokens are cleared on page refresh
-      
+
       // OLD LOGIC (disabled to fix refresh issue):
       // if (!shouldPersistSession()) {
       //   logger.info('Remember me not checked, clearing session on window close');
       //   removeTokens();
       //   sessionStorage.removeItem('spheroseg_persisted_user');
       // }
-      
+
       // NEW LOGIC: Mark that we're unloading, but don't clear tokens
       if (!shouldPersistSession()) {
         // Just log that we're in non-persistent mode, but don't clear tokens

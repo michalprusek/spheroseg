@@ -40,11 +40,14 @@ try {
 }
 
 // Disable StrictMode in production to avoid double rendering and duplicate API calls
-const app = import.meta.env.MODE === 'production' ? <App /> : (
-  <React.StrictMode>
+const app =
+  import.meta.env.MODE === 'production' ? (
     <App />
-  </React.StrictMode>
-);
+  ) : (
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
 
 ReactDOM.createRoot(document.getElementById('root')!).render(app);
 

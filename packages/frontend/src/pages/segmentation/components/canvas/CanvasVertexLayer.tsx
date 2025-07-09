@@ -58,8 +58,7 @@ const CanvasVertexLayer: React.FC<CanvasVertexLayerProps> = ({
           const vertexFillColor = selectedPolygon.type === 'internal' ? 'blue' : 'red';
 
           return selectedPolygon.points.map((point, index) => {
-            const isHovered =
-              hoveredVertex?.polygonId === selectedPolygonId && hoveredVertex?.vertexIndex === index;
+            const isHovered = hoveredVertex?.polygonId === selectedPolygonId && hoveredVertex?.vertexIndex === index;
             return (
               <circle
                 key={`${selectedPolygonId}-vertex-${index}`}

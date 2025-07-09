@@ -1,6 +1,6 @@
 /**
  * Centralized Middleware Configuration
- * 
+ *
  * This module organizes and configures all middleware for the Express application
  * in a centralized location for better maintainability and consistency.
  */
@@ -29,18 +29,20 @@ export const configureSecurityMiddleware = (app: Application): void => {
  */
 export const configurePerformanceMiddleware = (app: Application): void => {
   // Compression for response payloads
-  app.use(compression({
-    level: 6, // Balance between compression ratio and CPU usage
-    threshold: 1024, // Only compress responses larger than 1KB
-    filter: (req: express.Request, res: express.Response) => {
-      // Don't compress if the request includes a Cache-Control no-transform directive
-      if (req.headers['cache-control'] && req.headers['cache-control'].includes('no-transform')) {
-        return false;
-      }
-      // Use compression filter function
-      return compression.filter(req, res);
-    },
-  }));
+  app.use(
+    compression({
+      level: 6, // Balance between compression ratio and CPU usage
+      threshold: 1024, // Only compress responses larger than 1KB
+      filter: (req: express.Request, res: express.Response) => {
+        // Don't compress if the request includes a Cache-Control no-transform directive
+        if (req.headers['cache-control'] && req.headers['cache-control'].includes('no-transform')) {
+          return false;
+        }
+        // Use compression filter function
+        return compression.filter(req, res);
+      },
+    })
+  );
 };
 
 /**
@@ -48,25 +50,25 @@ export const configurePerformanceMiddleware = (app: Application): void => {
  */
 export const configureLoggingMiddleware = (app: Application): void => {
   // HTTP request logging
-  const logFormat = config.isDevelopment 
-    ? 'dev' 
-    : 'combined';
+  const logFormat = config.isDevelopment ? 'dev' : 'combined';
 
-  app.use(morgan(logFormat, {
-    stream: {
-      write: (message: string) => {
-        // Remove trailing newline and log through Winston
-        logger.info(message.trim(), { 
-          service: 'http-access',
-          module: 'morgan' 
-        });
+  app.use(
+    morgan(logFormat, {
+      stream: {
+        write: (message: string) => {
+          // Remove trailing newline and log through Winston
+          logger.info(message.trim(), {
+            service: 'http-access',
+            module: 'morgan',
+          });
+        },
       },
-    },
-    // Skip logging for health checks in production
-    skip: (req: express.Request) => {
-      return !config.isDevelopment && req.path === '/health';
-    },
-  }));
+      // Skip logging for health checks in production
+      skip: (req: express.Request) => {
+        return !config.isDevelopment && req.path === '/health';
+      },
+    })
+  );
 };
 
 /**
@@ -83,7 +85,7 @@ export const configureBodyParsingMiddleware = (app: Application): void => {
  */
 export const configureStaticFilesMiddleware = (app: Application): void => {
   const uploadsPath = config.storage.uploadDir;
-  
+
   // Ensure upload directory exists
   if (!fs.existsSync(uploadsPath)) {
     fs.mkdirSync(uploadsPath, { recursive: true });
@@ -91,25 +93,28 @@ export const configureStaticFilesMiddleware = (app: Application): void => {
   }
 
   // Serve static files with proper caching headers
-  app.use('/uploads', express.static(uploadsPath, {
-    maxAge: config.isDevelopment ? 0 : '1d', // Cache for 1 day in production
-    etag: true,
-    lastModified: true,
-    setHeaders: (res: express.Response, filePath: string) => {
-      // Set proper content type for images
-      const ext = path.extname(filePath).toLowerCase();
-      if (['.jpg', '.jpeg'].includes(ext)) {
-        res.setHeader('Content-Type', 'image/jpeg');
-      } else if (ext === '.png') {
-        res.setHeader('Content-Type', 'image/png');
-      } else if (ext === '.tiff' || ext === '.tif') {
-        res.setHeader('Content-Type', 'image/tiff');
-      }
-      
-      // Add security headers for file uploads
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-    },
-  }));
+  app.use(
+    '/uploads',
+    express.static(uploadsPath, {
+      maxAge: config.isDevelopment ? 0 : '1d', // Cache for 1 day in production
+      etag: true,
+      lastModified: true,
+      setHeaders: (res: express.Response, filePath: string) => {
+        // Set proper content type for images
+        const ext = path.extname(filePath).toLowerCase();
+        if (['.jpg', '.jpeg'].includes(ext)) {
+          res.setHeader('Content-Type', 'image/jpeg');
+        } else if (ext === '.png') {
+          res.setHeader('Content-Type', 'image/png');
+        } else if (ext === '.tiff' || ext === '.tif') {
+          res.setHeader('Content-Type', 'image/tiff');
+        }
+
+        // Add security headers for file uploads
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+      },
+    })
+  );
 };
 
 /**
@@ -137,22 +142,22 @@ export const configureErrorHandlingMiddleware = (app: Application): void => {
 export const configureMiddleware = (app: Application): void => {
   // 1. Performance middleware (compression should be early)
   configurePerformanceMiddleware(app);
-  
+
   // 2. Logging middleware (log raw requests)
   configureLoggingMiddleware(app);
-  
+
   // 3. Body parsing middleware (MUST be before security checks that need body)
   configureBodyParsingMiddleware(app);
-  
+
   // 4. Security middleware (needs parsed body for suspicious pattern detection)
   configureSecurityMiddleware(app);
-  
+
   // 5. Request monitoring middleware (unified monitoring system)
   app.use(requestLoggerMiddleware);
-  
+
   // 6. Static files middleware
   configureStaticFilesMiddleware(app);
-  
+
   logger.info('All middleware configured successfully');
 };
 

@@ -83,7 +83,7 @@ export async function duplicateProject(
   pool: Pool,
   originalProjectId: string,
   userId: string,
-  options: DuplicationOptions = {},
+  options: DuplicationOptions = {}
 ): Promise<Project> {
   // Merge options with defaults
   const mergedOptions: DuplicationOptions = { ...DEFAULT_OPTIONS, ...options };
@@ -98,7 +98,7 @@ export async function duplicateProject(
     // 1. Fetch original project data
     const projectRes = await client.query(
       'SELECT title, description FROM projects WHERE id = $1 AND user_id = $2',
-      [originalProjectId, userId],
+      [originalProjectId, userId]
     );
 
     if (projectRes.rows.length === 0) {
@@ -111,7 +111,7 @@ export async function duplicateProject(
     const newProjectTitle = mergedOptions.newTitle || `${originalProject.title} (Copy)`;
     const newProjectRes = await client.query(
       'INSERT INTO projects (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
-      [userId, newProjectTitle, originalProject.description],
+      [userId, newProjectTitle, originalProject.description]
     );
 
     const newProject = newProjectRes.rows[0];
@@ -152,10 +152,12 @@ async function duplicateProjectImages(
   originalProjectId: string,
   newProjectId: string,
   userId: string,
-  options: DuplicationOptions,
+  options: DuplicationOptions
 ): Promise<void> {
   // Fetch images from the original project
-  const imagesRes = await client.query(`SELECT * FROM images WHERE project_id = $1`, [originalProjectId]);
+  const imagesRes = await client.query(`SELECT * FROM images WHERE project_id = $1`, [
+    originalProjectId,
+  ]);
 
   const originalImages = imagesRes.rows;
 
@@ -189,14 +191,14 @@ async function duplicateImage(
   originalImage: Image,
   newProjectId: string,
   userId: string,
-  options: DuplicationOptions,
+  options: DuplicationOptions
 ): Promise<Image> {
   try {
     // Generate new file paths
     const { newStoragePath, newThumbnailPath } = generateNewFilePaths(
       originalImage.storage_path,
       originalImage.thumbnail_path,
-      newProjectId,
+      newProjectId
     );
 
     // Copy files if needed
@@ -224,7 +226,11 @@ async function duplicateImage(
 
       // Copy segmentation file
       if (options.copyFiles) {
-        await copyImageFiles(originalImage.segmentation_result_path, newSegmentationPath, options.baseDir || '');
+        await copyImageFiles(
+          originalImage.segmentation_result_path,
+          newSegmentationPath,
+          options.baseDir || ''
+        );
       }
 
       segmentationStatus = 'completed';
@@ -249,7 +255,7 @@ async function duplicateImage(
         options.resetStatus ? 'pending' : originalImage.status,
         segmentationStatus,
         segmentationResultPath,
-      ],
+      ]
     );
 
     return newImageRes.rows[0];
@@ -273,7 +279,7 @@ async function duplicateImage(
 function generateNewFilePaths(
   originalStoragePath: string,
   originalThumbnailPath?: string,
-  newProjectId?: string,
+  newProjectId?: string
 ): { newStoragePath: string; newThumbnailPath?: string } {
   // Generate timestamp and random suffix for uniqueness
   const timestamp = Date.now();
@@ -309,7 +315,11 @@ function generateNewFilePaths(
  * @param targetPath Target path (relative to baseDir)
  * @param baseDir Base directory
  */
-async function copyImageFiles(sourcePath: string, targetPath: string, baseDir: string): Promise<void> {
+async function copyImageFiles(
+  sourcePath: string,
+  targetPath: string,
+  baseDir: string
+): Promise<void> {
   try {
     // Normalize paths
     const normalizedSourcePath = sourcePath.startsWith('/') ? sourcePath.substring(1) : sourcePath;
@@ -352,7 +362,7 @@ export async function duplicateProjectViaApi(
   baseUrl: string,
   projectId: string,
   token: string,
-  options: DuplicationOptions = {},
+  options: DuplicationOptions = {}
 ): Promise<any> {
   try {
     // Import axios dynamically to avoid server-side dependency
@@ -376,7 +386,7 @@ export async function duplicateProjectViaApi(
       },
       {
         headers: { Authorization: `Bearer ${token}` },
-      },
+      }
     );
 
     const newProject = newProjectResponse.data;
@@ -392,7 +402,12 @@ export async function duplicateProjectViaApi(
 
     // 4. Create directory for new project if needed
     if (options.copyFiles) {
-      const uploadsDir = path.join(options.baseDir || process.cwd(), 'public', 'uploads', newProject.id);
+      const uploadsDir = path.join(
+        options.baseDir || process.cwd(),
+        'public',
+        'uploads',
+        newProject.id
+      );
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
         logger.info(`Created directory for new project: ${uploadsDir}`);
@@ -406,7 +421,7 @@ export async function duplicateProjectViaApi(
         const { newStoragePath, newThumbnailPath } = generateNewFilePaths(
           image.storage_path,
           image.thumbnail_path,
-          newProject.id,
+          newProject.id
         );
 
         // Copy files if needed
@@ -414,14 +429,14 @@ export async function duplicateProjectViaApi(
           await copyImageFiles(
             image.storage_path,
             newStoragePath,
-            path.join(options.baseDir || process.cwd(), 'public'),
+            path.join(options.baseDir || process.cwd(), 'public')
           );
 
           if (image.thumbnail_path && newThumbnailPath) {
             await copyImageFiles(
               image.thumbnail_path,
               newThumbnailPath,
-              path.join(options.baseDir || process.cwd(), 'public'),
+              path.join(options.baseDir || process.cwd(), 'public')
             );
           }
         }
@@ -441,7 +456,7 @@ export async function duplicateProjectViaApi(
           },
           {
             headers: { Authorization: `Bearer ${token}` },
-          },
+          }
         );
 
         logger.info(`Created new image record: ${newImageResponse.data.name}`);

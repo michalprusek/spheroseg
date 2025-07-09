@@ -150,7 +150,7 @@ describe('ImageDisplay Component', () => {
           selectionMode={true}
           isSelected={false}
           onToggleSelection={onToggleSelection}
-        />
+        />,
       );
 
       // Check if the checkbox is rendered
@@ -208,7 +208,7 @@ describe('ImageDisplay Component', () => {
           selectionMode={true}
           isSelected={false}
           onToggleSelection={onToggleSelection}
-        />
+        />,
       );
 
       // Check if the checkbox is rendered
@@ -243,7 +243,7 @@ describe('ImageDisplay Component', () => {
           selectionMode={true}
           isSelected={true}
           onToggleSelection={vi.fn()}
-        />
+        />,
       );
 
       // Check if the checkbox is checked
@@ -306,7 +306,7 @@ describe('ImageDisplay Component', () => {
           selectionMode={true}
           isSelected={false}
           onToggleSelection={onToggleSelection}
-        />
+        />,
       );
 
       // Change the checkbox

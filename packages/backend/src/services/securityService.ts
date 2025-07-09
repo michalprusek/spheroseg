@@ -117,7 +117,11 @@ export async function updateSecurityIssue(id: string, updateData: any, userId: s
  * @param options Filter and pagination options
  * @returns List of vulnerability scans
  */
-export async function getVulnerabilityScans(options: { page?: number; limit?: number; scanType?: string }) {
+export async function getVulnerabilityScans(options: {
+  page?: number;
+  limit?: number;
+  scanType?: string;
+}) {
   const { page = 1, limit = 10, scanType } = options;
 
   return {

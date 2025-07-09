@@ -22,7 +22,7 @@ export type LazyComponentWithFallback<T = any> = LazyExoticComponent<ComponentTy
  */
 export function createLazyComponent<T = any>(
   importFn: () => Promise<ComponentModule>,
-  fallbackImportFn?: () => Promise<ComponentModule>
+  fallbackImportFn?: () => Promise<ComponentModule>,
 ): LazyComponentWithFallback<T> {
   return lazy(async () => {
     try {

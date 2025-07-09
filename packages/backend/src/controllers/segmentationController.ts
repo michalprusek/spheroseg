@@ -160,7 +160,11 @@ export const getSegmentationVersion = async (req: Request, res: Response, next: 
  * Restore previous segmentation version
  * @route POST /api/images/:imageId/segmentation/versions/:version/restore
  */
-export const restoreSegmentationVersion = async (req: Request, res: Response, next: NextFunction) => {
+export const restoreSegmentationVersion = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const imageId = req.params.imageId;
     const versionStr = req.params.version;

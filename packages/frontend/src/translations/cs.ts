@@ -28,7 +28,7 @@ export default {
       queued: 'Ve frontě',
       statusProcessing: 'Segmentace: {{count}} se zpracovává',
       statusReady: 'Připraveno',
-      tasksTotal: '{{total}} úkolů celkem ({{running}} zpracovává, {{queued}} ve frontě)'
+      tasksTotal: '{{total}} úkolů celkem ({{running}} zpracovává, {{queued}} ve frontě)',
     },
     selectPolygonForEdit: 'Vyberte polygon pro úpravu',
     selectPolygonForSlice: 'Vyberte polygon pro rozdělení',
@@ -153,7 +153,7 @@ export default {
       deletingImages: 'Mazání {{count}} obrázků...',
       deleteSuccess: 'Úspěšně smazáno {{count}} obrázků',
       deleteFailed: 'Smazání {{count}} obrázků selhalo',
-      preparingExport: 'Příprava exportu {{count}} obrázků...'
+      preparingExport: 'Příprava exportu {{count}} obrázků...',
     },
     segmentation: {
       processingInBatches: 'Spouštění segmentace pro {{count}} obrázků v {{batches}} dávkách...',
@@ -164,7 +164,7 @@ export default {
       allSuccess: 'Segmentace: Všech {{count}} obrázků úspěšně zařazeno do fronty',
       allFailed: 'Segmentace: Všech {{count}} obrázků selhalo',
       startedImages: 'Segmentace spuštěna pro {{count}} obrázků',
-      queuedLocallyWarning: 'Segmentace lokálně zařazena do fronty pro {{count}} obrázků. Připojení k serveru selhalo.'
+      queuedLocallyWarning: 'Segmentace lokálně zařazena do fronty pro {{count}} obrázků. Připojení k serveru selhalo.',
     },
     loading: 'Načítání projektu...',
     notFound: 'Projekt nenalezen',
@@ -175,7 +175,7 @@ export default {
     noImages: {
       title: 'Zatím žádné obrázky',
       description: 'Tento projekt zatím neobsahuje žádné obrázky. Nahrajte obrázky pro začátek.',
-      uploadButton: 'Nahrát obrázky'
+      uploadButton: 'Nahrát obrázky',
     },
     deleteProject: 'Smazat projekt',
     deleteConfirmation: 'Opravdu chcete smazat projekt "{{projectName}}"? Tuto akci nelze vrátit zpět.',
@@ -200,7 +200,8 @@ export default {
     projectDeleted: 'Projekt byl úspěšně smazán',
     projectDeletionFailed: 'Smazání projektu selhalo',
     confirmDelete: 'Opravdu chcete smazat tento projekt?',
-    confirmDeleteDescription: 'Tuto akci nelze vrátit zpět. Všechna data spojená s tímto projektem budou trvale smazána.',
+    confirmDeleteDescription:
+      'Tuto akci nelze vrátit zpět. Všechna data spojená s tímto projektem budou trvale smazána.',
     deleteProject: 'Smazat projekt',
     editProject: 'Upravit projekt',
     viewProject: 'Zobrazit projekt',
@@ -576,8 +577,7 @@ export default {
     },
     uploadingImages: {
       title: 'Nahrávání obrázků',
-      paragraph1:
-        'SpheroSeg podporuje různé formáty obrázků běžně používané v mikroskopii, včetně TIFF, PNG a JPEG.',
+      paragraph1: 'SpheroSeg podporuje různé formáty obrázků běžně používané v mikroskopii, včetně TIFF, PNG a JPEG.',
       methods: {
         title: 'Metody nahrávání',
         paragraph1: 'Existuje několik způsobů, jak nahrát obrázky:',
@@ -725,8 +725,7 @@ export default {
       'Tuto akci nelze vrátit zpět. Všechna data spojená s tímto projektem budou trvale smazána.',
     delete: 'Smazat',
     deleteProject: 'Smazat projekt',
-    deleteProjectDescription:
-      'Tuto akci nelze vrátit zpět. Tím se trvale smaže projekt a všechna související data.',
+    deleteProjectDescription: 'Tuto akci nelze vrátit zpět. Tím se trvale smaže projekt a všechna související data.',
     deleteWarning: 'Chystáte se smazat následující projekt:',
     typeToConfirm: 'Napište název projektu pro potvrzení',
     confirmDeleteError: 'Pro potvrzení napište přesně název projektu',
@@ -755,8 +754,7 @@ export default {
     duplicateFailed: 'Duplikace projektu selhala',
     duplicateTitle: 'Duplikovat projekt',
     duplicateProject: 'Duplikovat projekt',
-    duplicateProjectDescription:
-      'Vytvořit kopii tohoto projektu včetně všech obrázků. Níže můžete upravit možnosti.',
+    duplicateProjectDescription: 'Vytvořit kopii tohoto projektu včetně všech obrázků. Níže můžete upravit možnosti.',
     duplicateCancelled: 'Duplikace projektu byla zrušena',
     duplicatingProject: 'Duplikování projektu',
     duplicatingProjectDescription: 'Váš projekt se duplikuje. Může to chvíli trvat.',
@@ -764,8 +762,7 @@ export default {
     duplicationComplete: 'Duplikace projektu byla dokončena',
     duplicationTaskFetchError: 'Chyba při načítání dat úkolu',
     duplicationCancelError: 'Chyba při rušení duplikace',
-    duplicateProgressDescription:
-      'Váš projekt se duplikuje. Tento proces může u velkých projektů nějakou dobu trvat.',
+    duplicateProgressDescription: 'Váš projekt se duplikuje. Tento proces může u velkých projektů nějakou dobu trvat.',
     duplicationPending: 'Čeká',
     duplicationProcessing: 'Zpracovává se',
     duplicationCompleted: 'Dokončeno',
@@ -973,8 +970,7 @@ export default {
     newPassword: 'Nové heslo',
     confirmNewPassword: 'Potvrdit nové heslo',
     dangerZone: 'Nebezpečná zóna',
-    deleteAccountWarning:
-      'Jakmile smažete svůj účet, není cesty zpět. Všechna vaše data budou trvale smazána.',
+    deleteAccountWarning: 'Jakmile smažete svůj účet, není cesty zpět. Všechna vaše data budou trvale smazána.',
     savingChanges: 'Ukládání změn...',
     savePreferences: 'Uložit preference',
     usernameTaken: 'Toto uživatelské jméno je již obsazeno',
@@ -1140,7 +1136,8 @@ export default {
     },
     contactUs: {
       title: '8. Kontaktujte nás',
-      paragraph1: 'Pokud máte jakékoli dotazy k těmto zásadám ochrany osobních údajů, kontaktujte nás prosím na privacy@spheroseg.com.',
+      paragraph1:
+        'Pokud máte jakékoli dotazy k těmto zásadám ochrany osobních údajů, kontaktujte nás prosím na privacy@spheroseg.com.',
     },
     lastUpdated: 'Naposledy aktualizováno: 7. ledna 2025',
   },
@@ -1223,10 +1220,10 @@ export default {
   },
   export: {
     formatDescriptions: {
-      COCO: "Formát JSON Common Objects in Context (COCO) pro detekci objektů",
-      YOLO: "Textový formát You Only Look Once (YOLO) pro detekci objektů",
-      MASK: "Binární maskové obrázky pro každý segmentovaný objekt",
-      POLYGONS: "Souřadnice polygonů ve formátu JSON"
+      COCO: 'Formát JSON Common Objects in Context (COCO) pro detekci objektů',
+      YOLO: 'Textový formát You Only Look Once (YOLO) pro detekci objektů',
+      MASK: 'Binární maskové obrázky pro každý segmentovaný objekt',
+      POLYGONS: 'Souřadnice polygonů ve formátu JSON',
     },
     exportCompleted: 'Export dokončen',
     exportFailed: 'Export selhal',
@@ -1251,8 +1248,8 @@ export default {
       metricsRequireSegmentation: 'Export metrik vyžaduje dokončenou segmentaci',
     },
     formats: {
-      COCO: "COCO JSON",
-      YOLO: "YOLO TXT",
+      COCO: 'COCO JSON',
+      YOLO: 'YOLO TXT',
       MASK: 'Maska (TIFF)',
       POLYGONS: 'Polygony (JSON)',
     },
@@ -1379,5 +1376,5 @@ export default {
     userEmail: 'E-mail uživatele',
     view: 'Zobrazit',
     viewOnly: 'Pouze zobrazit',
-  }
-}
+  },
+};

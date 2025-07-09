@@ -1,6 +1,6 @@
 /**
  * Unified Logging System for Frontend
- * 
+ *
  * Provides consistent logging with namespacing, levels, and server shipping.
  * This consolidates all logging patterns into a single, configurable system.
  */
@@ -142,7 +142,7 @@ class UnifiedLogger {
     // Memory storage
     if (this.config.enableMemoryStorage) {
       this.memoryLogs.push(entry);
-      
+
       // Trim logs if exceeding max
       if (this.memoryLogs.length > this.config.maxMemoryLogs) {
         this.memoryLogs = this.memoryLogs.slice(-this.config.maxMemoryLogs);
@@ -182,7 +182,7 @@ class UnifiedLogger {
     };
 
     // Transform logs to match backend schema
-    const transformedLogs = logsToShip.map(log => ({
+    const transformedLogs = logsToShip.map((log) => ({
       timestamp: log.timestamp,
       level: log.level,
       levelName: levelNames[log.level] || 'INFO',
@@ -195,29 +195,32 @@ class UnifiedLogger {
     }));
 
     // Use safeAsync to handle errors gracefully
-    await safeAsync(async () => {
-      const response = await fetch(this.config.serverEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          logs: transformedLogs,
-          source: 'frontend',
-          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-          timestamp: new Date().toISOString(),
-        }),
-        // Use keepalive for immediate shipping on page unload
-        keepalive: immediate,
-      });
+    await safeAsync(
+      async () => {
+        const response = await fetch(this.config.serverEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            logs: transformedLogs,
+            source: 'frontend',
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+            timestamp: new Date().toISOString(),
+          }),
+          // Use keepalive for immediate shipping on page unload
+          keepalive: immediate,
+        });
 
-      if (!response.ok) {
-        throw new Error(`Failed to ship logs: ${response.statusText}`);
-      }
-    }, {
-      showToast: false,
-      logError: false, // Avoid recursive logging
-    });
+        if (!response.ok) {
+          throw new Error(`Failed to ship logs: ${response.statusText}`);
+        }
+      },
+      {
+        showToast: false,
+        logError: false, // Avoid recursive logging
+      },
+    );
   }
 
   // Utility methods
@@ -298,7 +301,7 @@ export function getLogger(namespace: string): UnifiedLogger {
 export function setGlobalLogLevel(level: LogLevel): void {
   globalLogger.setLevel(level);
   // Update all cached loggers
-  loggerCache.forEach(logger => logger.setLevel(level));
+  loggerCache.forEach((logger) => logger.setLevel(level));
 }
 
 /**
@@ -335,23 +338,23 @@ export function overrideConsole(): void {
   };
 
   console.log = (...args: any[]) => {
-    globalLogger.info(args.map(arg => String(arg)).join(' '));
+    globalLogger.info(args.map((arg) => String(arg)).join(' '));
   };
 
   console.debug = (...args: any[]) => {
-    globalLogger.debug(args.map(arg => String(arg)).join(' '));
+    globalLogger.debug(args.map((arg) => String(arg)).join(' '));
   };
 
   console.info = (...args: any[]) => {
-    globalLogger.info(args.map(arg => String(arg)).join(' '));
+    globalLogger.info(args.map((arg) => String(arg)).join(' '));
   };
 
   console.warn = (...args: any[]) => {
-    globalLogger.warn(args.map(arg => String(arg)).join(' '));
+    globalLogger.warn(args.map((arg) => String(arg)).join(' '));
   };
 
   console.error = (...args: any[]) => {
-    globalLogger.error(args.map(arg => String(arg)).join(' '));
+    globalLogger.error(args.map((arg) => String(arg)).join(' '));
   };
 
   // Store reference to restore later if needed

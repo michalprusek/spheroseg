@@ -12,16 +12,19 @@ export const i18nInitializedPromise = (async () => {
 
     await i18nInstance.use(initReactI18next).init({
       resources: baseResources,
-      lng: 'en', 
+      lng: 'en',
       fallbackLng: 'en',
       interpolation: {
-        escapeValue: false, 
+        escapeValue: false,
       },
       returnObjects: true, // Allow returning arrays and objects
       debug: process.env.NODE_ENV === 'development',
     });
-    logger.info('[i18n] i18next initialized successfully. Loaded languages:', Object.keys(i18nInstance.services.resourceStore.data));
-    return i18nInstance; 
+    logger.info(
+      '[i18n] i18next initialized successfully. Loaded languages:',
+      Object.keys(i18nInstance.services.resourceStore.data),
+    );
+    return i18nInstance;
   } catch (error) {
     logger.error('[i18n] Failed to initialize i18next:', error);
     throw error;

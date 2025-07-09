@@ -23,9 +23,9 @@ const minimalEnFallback = {
     noImages: {
       title: 'No Images Yet',
       description: "This project doesn't have any images yet. Upload images to get started.",
-      uploadButton: 'Upload Images'
-    }
-  }
+      uploadButton: 'Upload Images',
+    },
+  },
 };
 
 export async function initializeTranslations() {
@@ -65,7 +65,7 @@ export const translations = {
   de: {},
   es: {},
   fr: {},
-  zh: {}
+  zh: {},
 };
 
 export default translations; // Legacy default export, also likely empty initially

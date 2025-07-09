@@ -88,7 +88,7 @@ describe('validationMiddleware', () => {
             message: expect.any(String),
           }),
         ]),
-      }),
+      })
     );
   });
 
@@ -121,7 +121,7 @@ describe('validationMiddleware', () => {
             message: 'Page must be a number',
           }),
         ]),
-      }),
+      })
     );
   });
 
@@ -154,7 +154,7 @@ describe('validationMiddleware', () => {
             message: 'Invalid UUID format',
           }),
         ]),
-      }),
+      })
     );
   });
 
@@ -222,7 +222,7 @@ describe('validationMiddleware', () => {
             message: 'Passwords do not match',
           }),
         ]),
-      }),
+      })
     );
   });
 

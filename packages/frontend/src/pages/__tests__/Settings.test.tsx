@@ -160,7 +160,6 @@ const MockSettings = ({ isLoggedIn = true, isLoading = false, hasError = false }
               </select>
             </div>
           </div>
-
         </div>
       )}
     </div>
@@ -253,6 +252,5 @@ describe('Settings Page', () => {
     expect(screen.getByText('Appearance Settings')).toBeInTheDocument();
     expect(screen.getByText('Theme')).toBeInTheDocument();
     expect(screen.getByText('Language')).toBeInTheDocument();
-
   });
 });

@@ -40,7 +40,10 @@ interface ProjectResponse {
  * @returns The newly created project
  * @throws ApiError if project creation fails
  */
-export async function createProject(pool: Pool, params: CreateProjectParams): Promise<ProjectResponse> {
+export async function createProject(
+  pool: Pool,
+  params: CreateProjectParams
+): Promise<ProjectResponse> {
   const { title: rawTitle, description, userId, tags = [], public: isPublic = false } = params;
 
   // Ensure title is not empty or undefined and properly trimmed
@@ -64,10 +67,10 @@ export async function createProject(pool: Pool, params: CreateProjectParams): Pr
     await client.query('BEGIN');
 
     // Check if a project with the same title already exists for this user
-    const existingProject = await client.query('SELECT id FROM projects WHERE user_id = $1 AND title = $2', [
-      userId,
-      title,
-    ]);
+    const existingProject = await client.query(
+      'SELECT id FROM projects WHERE user_id = $1 AND title = $2',
+      [userId, title]
+    );
 
     if (existingProject.rows.length > 0) {
       throw new ApiError(409, `A project with the title "${title}" already exists`);
@@ -173,14 +176,17 @@ export async function createProject(pool: Pool, params: CreateProjectParams): Pr
       throw error;
     }
 
-    logger.error('Error creating project', { 
-      error: error instanceof Error ? {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      } : error,
-      title, 
-      userId 
+    logger.error('Error creating project', {
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+              name: error.name,
+            }
+          : error,
+      title,
+      userId,
     });
     throw new ApiError(500, 'Failed to create project');
   } finally {
@@ -196,9 +202,16 @@ export async function createProject(pool: Pool, params: CreateProjectParams): Pr
  * @param userId The user ID requesting the project
  * @returns The project if found and user has access, null otherwise
  */
-export async function getProjectById(pool: Pool, projectId: string, userId: string): Promise<ProjectResponse | null> {
+export async function getProjectById(
+  pool: Pool,
+  projectId: string,
+  userId: string
+): Promise<ProjectResponse | null> {
   // First try to fetch the project owned by the user
-  const ownedProject = await pool.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [projectId, userId]);
+  const ownedProject = await pool.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
+    projectId,
+    userId,
+  ]);
 
   if (ownedProject.rows.length > 0) {
     return {
@@ -218,7 +231,7 @@ export async function getProjectById(pool: Pool, projectId: string, userId: stri
         AND ps.user_id = $2
         AND ps.invitation_token IS NULL
     `,
-      [projectId, userId],
+      [projectId, userId]
     );
 
     if (sharedProject.rows.length > 0) {
@@ -251,7 +264,7 @@ export async function getUserProjects(
   userId: string,
   limit: number = 10,
   offset: number = 0,
-  includeShared: boolean = true,
+  includeShared: boolean = true
 ): Promise<{ projects: ProjectResponse[]; total: number }> {
   // Build the query based on available tables and columns
   let baseSelect = `
@@ -398,10 +411,13 @@ export async function updateProject(
   pool: Pool,
   projectId: string,
   userId: string,
-  updates: { title?: string; description?: string },
+  updates: { title?: string; description?: string }
 ): Promise<ProjectResponse> {
   // Check if user owns the project
-  const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [projectId, userId]);
+  const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
+    projectId,
+    userId,
+  ]);
 
   if (projectCheck.rows.length === 0) {
     throw new ApiError(404, 'Project not found or you do not have permission to update it');
@@ -414,11 +430,10 @@ export async function updateProject(
 
   if (updates.title !== undefined) {
     // Check if title already exists for another project owned by this user
-    const titleCheck = await pool.query('SELECT id FROM projects WHERE user_id = $1 AND title = $2 AND id != $3', [
-      userId,
-      updates.title,
-      projectId,
-    ]);
+    const titleCheck = await pool.query(
+      'SELECT id FROM projects WHERE user_id = $1 AND title = $2 AND id != $3',
+      [userId, updates.title, projectId]
+    );
 
     if (titleCheck.rows.length > 0) {
       throw new ApiError(409, `A project with the title "${updates.title}" already exists`);
@@ -465,7 +480,11 @@ export async function updateProject(
  * @returns True if successfully deleted
  * @throws ApiError if project deletion fails or user doesn't own the project
  */
-export async function deleteProject(pool: Pool, projectId: string, userId: string): Promise<boolean> {
+export async function deleteProject(
+  pool: Pool,
+  projectId: string,
+  userId: string
+): Promise<boolean> {
   const client = await pool.connect();
 
   try {
@@ -474,7 +493,9 @@ export async function deleteProject(pool: Pool, projectId: string, userId: strin
     // Check if project exists and user owns it
     try {
       // First check if the project exists at all
-      const projectExists = await client.query('SELECT id, user_id FROM projects WHERE id = $1', [projectId]);
+      const projectExists = await client.query('SELECT id, user_id FROM projects WHERE id = $1', [
+        projectId,
+      ]);
 
       if (projectExists.rows.length === 0) {
         // Project doesn't exist
@@ -486,10 +507,10 @@ export async function deleteProject(pool: Pool, projectId: string, userId: strin
       }
 
       // Now check if user owns the project
-      const projectCheck = await client.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await client.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         // Project exists but user doesn't own it
@@ -515,15 +536,17 @@ export async function deleteProject(pool: Pool, projectId: string, userId: strin
 
     // Get all images in the project before deletion for cleanup
     logger.info('Fetching all images in project before deletion', { projectId });
-    const imagesQuery = await client.query('SELECT id FROM images WHERE project_id = $1', [projectId]);
-    const imageIds = imagesQuery.rows.map(row => row.id);
+    const imagesQuery = await client.query('SELECT id FROM images WHERE project_id = $1', [
+      projectId,
+    ]);
+    const imageIds = imagesQuery.rows.map((row) => row.id);
     logger.info(`Found ${imageIds.length} images to delete with project`, { projectId });
 
     // Step 1: First delete records from database (cascades to related tables)
-    const deleteResult = await client.query('DELETE FROM projects WHERE id = $1 AND user_id = $2 RETURNING id', [
-      projectId,
-      userId,
-    ]);
+    const deleteResult = await client.query(
+      'DELETE FROM projects WHERE id = $1 AND user_id = $2 RETURNING id',
+      [projectId, userId]
+    );
 
     if (deleteResult.rowCount === 0) {
       throw new ApiError(404, 'Project not found for deletion');
@@ -535,8 +558,10 @@ export async function deleteProject(pool: Pool, projectId: string, userId: strin
 
     // Step 2: Properly clean up all project files using fileCleanupService
     try {
-
-      logger.info('Starting thorough file cleanup for project', { projectId, imageCount: imageIds.length });
+      logger.info('Starting thorough file cleanup for project', {
+        projectId,
+        imageCount: imageIds.length,
+      });
 
       // Use the dedicated file cleanup service to properly clean all files
       const cleanupResult = await fileCleanupService.cleanupProjectFiles(pool, projectId);

@@ -53,7 +53,7 @@ export const mockAuthenticatedUser = (user = createUserFixture()) => {
     jest.fn((req, res, next) => {
       req.user = { userId: user.id, email: user.email };
       next();
-    }),
+    })
   );
 
   return user;

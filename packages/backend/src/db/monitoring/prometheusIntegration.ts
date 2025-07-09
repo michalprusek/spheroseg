@@ -21,7 +21,7 @@ export function integrateWithAppMetrics(): void {
 export function initDbMetricsCollection(): void {
   // Initialize the database monitoring
   dbMonitoring.init();
-  
+
   // Integration is automatic with unified registry
   unifiedLogger.info('Database metrics collection initialized via unified monitoring');
 }

@@ -11,24 +11,24 @@ import React, { ComponentType, memo, useState, useEffect, useRef } from 'react';
 export function arePropsEqual<P extends Record<string, any>>(
   prevProps: P,
   nextProps: P,
-  propsToCompare?: (keyof P)[]
+  propsToCompare?: (keyof P)[],
 ): boolean {
   const keys = propsToCompare || (Object.keys(prevProps) as (keyof P)[]);
-  
+
   return keys.every((key) => {
     const prev = prevProps[key];
     const next = nextProps[key];
-    
+
     // Skip function comparisons (they're usually callbacks)
     if (typeof prev === 'function' && typeof next === 'function') {
       return true;
     }
-    
+
     // Deep equality for objects
     if (typeof prev === 'object' && typeof next === 'object') {
       return JSON.stringify(prev) === JSON.stringify(next);
     }
-    
+
     return prev === next;
   });
 }
@@ -38,11 +38,9 @@ export function arePropsEqual<P extends Record<string, any>>(
  */
 export function withMemo<P extends object>(
   Component: ComponentType<P>,
-  propsToCompare?: (keyof P)[]
+  propsToCompare?: (keyof P)[],
 ): ComponentType<P> {
-  return memo(Component, (prevProps, nextProps) =>
-    arePropsEqual(prevProps, nextProps, propsToCompare)
-  );
+  return memo(Component, (prevProps, nextProps) => arePropsEqual(prevProps, nextProps, propsToCompare));
 }
 
 /**
@@ -108,10 +106,7 @@ export function useVirtualList<T>({
   const [scrollTop, setScrollTop] = React.useState(0);
 
   const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
-  const endIndex = Math.min(
-    items.length - 1,
-    Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
-  );
+  const endIndex = Math.min(items.length - 1, Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan);
 
   const visibleItems = items.slice(startIndex, endIndex + 1);
   const totalHeight = items.length * itemHeight;
@@ -130,10 +125,7 @@ export function useVirtualList<T>({
 /**
  * Intersection Observer hook for lazy loading
  */
-export function useIntersectionObserver(
-  ref: React.RefObject<Element>,
-  options?: IntersectionObserverInit
-): boolean {
+export function useIntersectionObserver(ref: React.RefObject<Element>, options?: IntersectionObserverInit): boolean {
   const [isIntersecting, setIsIntersecting] = React.useState(false);
 
   React.useEffect(() => {
@@ -155,4 +147,3 @@ export function useIntersectionObserver(
 
   return isIntersecting;
 }
-

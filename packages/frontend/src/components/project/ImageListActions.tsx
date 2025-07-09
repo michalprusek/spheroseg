@@ -6,11 +6,12 @@ import { useTranslations } from '@/hooks/useTranslations';
 interface ImageListActionsProps {
   onDelete: () => void;
   onResegment?: () => void;
+  isProcessing?: boolean;
 }
 
-const ImageListActions = ({ onDelete, onResegment }: ImageListActionsProps) => {
+const ImageListActions = ({ onDelete, onResegment, isProcessing = false }: ImageListActionsProps) => {
   const { t } = useTranslations();
-  
+
   return (
     <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
       {onResegment && (
@@ -20,11 +21,14 @@ const ImageListActions = ({ onDelete, onResegment }: ImageListActionsProps) => {
           className="h-7 w-7"
           onClick={(e) => {
             e.stopPropagation();
-            onResegment();
+            if (!isProcessing) {
+              onResegment();
+            }
           }}
-          title={t('project.resegmentImage')}
+          disabled={isProcessing}
+          title={isProcessing ? t('segmentation.processingImage') : t('project.resegmentImage')}
         >
-          <RefreshCcw className="h-4 w-4" />
+          <RefreshCcw className={`h-4 w-4 ${isProcessing ? 'animate-spin' : ''}`} />
         </Button>
       )}
       <Button
@@ -35,6 +39,7 @@ const ImageListActions = ({ onDelete, onResegment }: ImageListActionsProps) => {
           e.stopPropagation();
           onDelete();
         }}
+        disabled={isProcessing}
         title={t('project.deleteImage')}
       >
         <Trash2 className="h-4 w-4" />

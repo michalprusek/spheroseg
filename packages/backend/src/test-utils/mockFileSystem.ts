@@ -266,7 +266,7 @@ export class MockFileSystem {
   public readFile(
     filePath: string,
     options: { encoding?: string; flag?: string } | string | undefined | null,
-    callback?: (err: Error | null, data: Buffer | string) => void,
+    callback?: (err: Error | null, data: Buffer | string) => void
   ): void | Promise<Buffer | string> {
     const normalizedPath = this.normalizePath(filePath);
 
@@ -277,7 +277,8 @@ export class MockFileSystem {
     }
 
     // Determine encoding
-    const encoding = typeof options === 'string' ? options : options && options.encoding ? options.encoding : null;
+    const encoding =
+      typeof options === 'string' ? options : options && options.encoding ? options.encoding : null;
 
     // Return Promise if no callback
     if (!callback) {
@@ -322,12 +323,13 @@ export class MockFileSystem {
    */
   public readFileSync(
     filePath: string,
-    options?: { encoding?: string; flag?: string } | string | null,
+    options?: { encoding?: string; flag?: string } | string | null
   ): Buffer | string {
     const normalizedPath = this.normalizePath(filePath);
 
     // Determine encoding
-    const encoding = typeof options === 'string' ? options : options && options.encoding ? options.encoding : null;
+    const encoding =
+      typeof options === 'string' ? options : options && options.encoding ? options.encoding : null;
 
     // Check if file exists
     if (!this.exists(normalizedPath)) {
@@ -363,7 +365,7 @@ export class MockFileSystem {
     filePath: string,
     data: string | Buffer | Uint8Array,
     options: { encoding?: string; mode?: number; flag?: string } | string | undefined | null,
-    callback?: (err: Error | null) => void,
+    callback?: (err: Error | null) => void
   ): void | Promise<void> {
     const normalizedPath = this.normalizePath(filePath);
 
@@ -399,7 +401,9 @@ export class MockFileSystem {
         mtime: now,
         atime: now,
         ctime: now,
-        birthtime: this.exists(normalizedPath) ? (this.fs[normalizedPath] as MockFileEntry).birthtime : now,
+        birthtime: this.exists(normalizedPath)
+          ? (this.fs[normalizedPath] as MockFileEntry).birthtime
+          : now,
         mode: options && typeof options === 'object' && options.mode ? options.mode : 0o100644,
         size: contentBuffer.length,
       };
@@ -416,7 +420,7 @@ export class MockFileSystem {
   public writeFileSync(
     filePath: string,
     data: string | Buffer | Uint8Array,
-    options?: { encoding?: string; mode?: number; flag?: string } | string | null,
+    options?: { encoding?: string; mode?: number; flag?: string } | string | null
   ): void {
     const normalizedPath = this.normalizePath(filePath);
 
@@ -434,7 +438,9 @@ export class MockFileSystem {
       mtime: now,
       atime: now,
       ctime: now,
-      birthtime: this.exists(normalizedPath) ? (this.fs[normalizedPath] as MockFileEntry).birthtime : now,
+      birthtime: this.exists(normalizedPath)
+        ? (this.fs[normalizedPath] as MockFileEntry).birthtime
+        : now,
       mode: options && typeof options === 'object' && options.mode ? options.mode : 0o100644,
       size: contentBuffer.length,
     };
@@ -446,7 +452,7 @@ export class MockFileSystem {
   public mkdir(
     dirPath: string,
     options: { recursive?: boolean; mode?: number } | number | undefined | null,
-    callback?: (err: Error | null) => void,
+    callback?: (err: Error | null) => void
   ): void | Promise<void> {
     const normalizedPath = this.normalizePath(dirPath);
 
@@ -513,7 +519,10 @@ export class MockFileSystem {
   /**
    * fs.mkdirSync implementation
    */
-  public mkdirSync(dirPath: string, options?: { recursive?: boolean; mode?: number } | number | null): void {
+  public mkdirSync(
+    dirPath: string,
+    options?: { recursive?: boolean; mode?: number } | number | null
+  ): void {
     const normalizedPath = this.normalizePath(dirPath);
 
     // Normalize options
@@ -560,7 +569,7 @@ export class MockFileSystem {
   public readdir(
     dirPath: string,
     options: { encoding?: string; withFileTypes?: boolean } | string | undefined | null,
-    callback?: (err: Error | null, files: string[] | fs.Dirent[]) => void,
+    callback?: (err: Error | null, files: string[] | fs.Dirent[]) => void
   ): void | Promise<string[] | fs.Dirent[]> {
     const normalizedPath = this.normalizePath(dirPath);
 
@@ -646,7 +655,7 @@ export class MockFileSystem {
    */
   public readdirSync(
     dirPath: string,
-    options?: { encoding?: string; withFileTypes?: boolean } | string | null,
+    options?: { encoding?: string; withFileTypes?: boolean } | string | null
   ): string[] | fs.Dirent[] {
     const normalizedPath = this.normalizePath(dirPath);
 
@@ -715,7 +724,7 @@ export class MockFileSystem {
   public stat(
     path: string,
     options: { bigint?: boolean } | undefined | null,
-    callback?: (err: Error | null, stats: fs.Stats) => void,
+    callback?: (err: Error | null, stats: fs.Stats) => void
   ): void | Promise<fs.Stats> {
     const normalizedPath = this.normalizePath(path);
 
@@ -845,7 +854,7 @@ export class MockFileSystem {
   public rmdir(
     path: string,
     options?: { recursive?: boolean } | null,
-    callback?: (err: Error | null) => void,
+    callback?: (err: Error | null) => void
   ): void | Promise<void> {
     const normalizedPath = this.normalizePath(path);
 
@@ -970,7 +979,11 @@ export class MockFileSystem {
   /**
    * fs.rename implementation
    */
-  public rename(oldPath: string, newPath: string, callback?: (err: Error | null) => void): void | Promise<void> {
+  public rename(
+    oldPath: string,
+    newPath: string,
+    callback?: (err: Error | null) => void
+  ): void | Promise<void> {
     const normalizedOldPath = this.normalizePath(oldPath);
     const normalizedNewPath = this.normalizePath(newPath);
 
@@ -986,7 +999,9 @@ export class MockFileSystem {
 
     // Check if old path exists
     if (!this.exists(normalizedOldPath)) {
-      const err = new Error(`ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`);
+      const err = new Error(
+        `ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`
+      );
       (err as any).code = 'ENOENT';
       (err as any).syscall = 'rename';
       (err as any).path = oldPath;
@@ -997,7 +1012,9 @@ export class MockFileSystem {
     // Ensure parent directory of new path exists
     const parentDir = this.dirname(normalizedNewPath);
     if (!this.exists(parentDir)) {
-      const err = new Error(`ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`);
+      const err = new Error(
+        `ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`
+      );
       (err as any).code = 'ENOENT';
       (err as any).syscall = 'rename';
       (err as any).path = oldPath;
@@ -1013,7 +1030,9 @@ export class MockFileSystem {
       });
 
       if (hasChildren) {
-        const err = new Error(`ENOTEMPTY: directory not empty, rename '${oldPath}' -> '${newPath}'`);
+        const err = new Error(
+          `ENOTEMPTY: directory not empty, rename '${oldPath}' -> '${newPath}'`
+        );
         (err as any).code = 'ENOTEMPTY';
         (err as any).syscall = 'rename';
         (err as any).path = oldPath;
@@ -1051,7 +1070,9 @@ export class MockFileSystem {
 
     // Check if old path exists
     if (!this.exists(normalizedOldPath)) {
-      const err = new Error(`ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`);
+      const err = new Error(
+        `ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`
+      );
       (err as any).code = 'ENOENT';
       (err as any).syscall = 'rename';
       (err as any).path = oldPath;
@@ -1062,7 +1083,9 @@ export class MockFileSystem {
     // Ensure parent directory of new path exists
     const parentDir = this.dirname(normalizedNewPath);
     if (!this.exists(parentDir)) {
-      const err = new Error(`ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`);
+      const err = new Error(
+        `ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`
+      );
       (err as any).code = 'ENOENT';
       (err as any).syscall = 'rename';
       (err as any).path = oldPath;
@@ -1078,7 +1101,9 @@ export class MockFileSystem {
       });
 
       if (hasChildren) {
-        const err = new Error(`ENOTEMPTY: directory not empty, rename '${oldPath}' -> '${newPath}'`);
+        const err = new Error(
+          `ENOTEMPTY: directory not empty, rename '${oldPath}' -> '${newPath}'`
+        );
         (err as any).code = 'ENOTEMPTY';
         (err as any).syscall = 'rename';
         (err as any).path = oldPath;
@@ -1142,7 +1167,7 @@ export class MockFileSystem {
       start?: number;
       end?: number;
       highWaterMark?: number;
-    },
+    }
   ): Readable {
     const normalizedPath = this.normalizePath(path);
     const stream = new Readable({
@@ -1207,7 +1232,7 @@ export class MockFileSystem {
       mode?: number;
       autoClose?: boolean;
       start?: number;
-    },
+    }
   ): fs.WriteStream {
     const normalizedPath = this.normalizePath(path);
     const parentDir = this.dirname(normalizedPath);
@@ -1252,7 +1277,9 @@ export class MockFileSystem {
         mtime: now,
         atime: now,
         ctime: now,
-        birthtime: this.exists(normalizedPath) ? (this.fs[normalizedPath] as MockFileEntry).birthtime : now,
+        birthtime: this.exists(normalizedPath)
+          ? (this.fs[normalizedPath] as MockFileEntry).birthtime
+          : now,
         mode: options && options.mode ? options.mode : 0o100644,
         size: content.length,
       };
@@ -1325,7 +1352,8 @@ export function mockFsModule(fileSystem: MockFileSystem): void {
   jest.mock('fs/promises', () => {
     return {
       readFile: (path: string, options?: any) => fileSystem.readFile(path, options),
-      writeFile: (path: string, data: any, options?: any) => fileSystem.writeFile(path, data, options),
+      writeFile: (path: string, data: any, options?: any) =>
+        fileSystem.writeFile(path, data, options),
       mkdir: (path: string, options?: any) => fileSystem.mkdir(path, options),
       readdir: (path: string, options?: any) => fileSystem.readdir(path, options),
       stat: (path: string, options?: any) => fileSystem.stat(path, options),
@@ -1350,8 +1378,14 @@ export function setupTestFiles(fileSystem: MockFileSystem): void {
   // Add some test images
   fileSystem.addFile('/app/uploads/images/project-1/image-1.jpg', Buffer.from('test-image-data'));
   fileSystem.addFile('/app/uploads/images/project-1/image-2.jpg', Buffer.from('test-image-data'));
-  fileSystem.addFile('/app/uploads/thumbnails/project-1/image-1.jpg', Buffer.from('test-thumb-data'));
-  fileSystem.addFile('/app/uploads/thumbnails/project-1/image-2.jpg', Buffer.from('test-thumb-data'));
+  fileSystem.addFile(
+    '/app/uploads/thumbnails/project-1/image-1.jpg',
+    Buffer.from('test-thumb-data')
+  );
+  fileSystem.addFile(
+    '/app/uploads/thumbnails/project-1/image-2.jpg',
+    Buffer.from('test-thumb-data')
+  );
 
   // Add a test configuration file
   fileSystem.addFile(
@@ -1360,7 +1394,7 @@ export function setupTestFiles(fileSystem: MockFileSystem): void {
       uploadDir: '/app/uploads',
       maxImageSize: 10485760,
       allowedTypes: ['image/jpeg', 'image/png', 'image/gif'],
-    }),
+    })
   );
 
   // Add a test segmentation data file
@@ -1380,7 +1414,7 @@ export function setupTestFiles(fileSystem: MockFileSystem): void {
           ],
         },
       ],
-    }),
+    })
   );
 }
 

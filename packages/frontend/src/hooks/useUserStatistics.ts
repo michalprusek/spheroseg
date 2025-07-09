@@ -23,7 +23,7 @@ export const useUserStatistics = () => {
     isFetching,
     isSuccess,
     refetch,
-    invalidate
+    invalidate,
   } = useApiCache<UserStatistics>(API_PATHS.USERS.STATS, {
     ttl: 5 * 60 * 1000, // 5 minutes cache
     layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
@@ -33,9 +33,9 @@ export const useUserStatistics = () => {
     retry: 1,
     onError: (error) => {
       logger.error('Failed to fetch user statistics:', error);
-    }
+    },
   });
-  
+
   // Return default statistics if API fails
   const defaultStatistics: UserStatistics = {
     totalProjects: 0,
@@ -46,7 +46,7 @@ export const useUserStatistics = () => {
     storageUsed: 0,
     lastActivity: new Date().toISOString(),
   };
-  
+
   return {
     data: statistics || defaultStatistics,
     error,
@@ -54,6 +54,6 @@ export const useUserStatistics = () => {
     isFetching,
     isSuccess,
     refetch,
-    invalidate
+    invalidate,
   };
 };

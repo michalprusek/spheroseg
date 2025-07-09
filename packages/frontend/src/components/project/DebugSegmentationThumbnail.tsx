@@ -57,7 +57,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
             originalHeight = imageResponse.data.height;
             console.log('[DEBUG] Got original image dimensions from image API:', {
               width: originalWidth,
-              height: originalHeight
+              height: originalHeight,
             });
           }
         } catch (imageErr) {
@@ -73,7 +73,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
           if (response.data.result_data.imageWidth && response.data.result_data.imageHeight) {
             console.log('[DEBUG] API provided image dimensions in result_data:', {
               width: response.data.result_data.imageWidth,
-              height: response.data.result_data.imageHeight
+              height: response.data.result_data.imageHeight,
             });
 
             // Use these dimensions if we didn't get them from the image API
@@ -89,13 +89,13 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
           ...response.data,
           imageWidth: originalWidth || response.data.imageWidth,
           imageHeight: originalHeight || response.data.imageHeight,
-          polygons: response.data.polygons || (response.data.result_data ? response.data.result_data.polygons : [])
+          polygons: response.data.polygons || (response.data.result_data ? response.data.result_data.polygons : []),
         };
 
         console.log('[DEBUG] Final segmentation data with dimensions:', {
           imageWidth: segData.imageWidth,
           imageHeight: segData.imageHeight,
-          polygonsCount: segData.polygons ? segData.polygons.length : 0
+          polygonsCount: segData.polygons ? segData.polygons.length : 0,
         });
 
         setSegmentationData(segData);
@@ -133,7 +133,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
     originalWidth,
     originalHeight,
     containerWidth,
-    containerHeight
+    containerHeight,
   );
 
   CLogger.debug('Rendering polygons with dimensions:', {
@@ -142,7 +142,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
     containerWidth,
     containerHeight,
     polygonsCount: segmentationData.polygons.length,
-    scaledPolygonsCount: scaledPolygons.length
+    scaledPolygonsCount: scaledPolygons.length,
   });
 
   // Log first polygon for debugging
@@ -154,7 +154,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
       class: firstPoly.class,
       pointCount: firstPoly.points.length,
       firstPoint: firstPoly.points[0],
-      hasHoles: firstPoly.holes && firstPoly.holes.length > 0
+      hasHoles: firstPoly.holes && firstPoly.holes.length > 0,
     });
   }
 
@@ -175,13 +175,14 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
 
           // Determine color based on polygon type (external=red, internal=blue)
           const isInternal = polygon.type === 'internal' || polygon.class === 'hole';
-          const fillColor = isInternal ? "#0000ff" : "#ff0000";
-          const strokeColor = isInternal ? "#0000ff" : "#ff0000";
+          const fillColor = isInternal ? '#0000ff' : '#ff0000';
+          const strokeColor = isInternal ? '#0000ff' : '#ff0000';
 
           // Use the createSvgPath utility from svgUtils
-          const svgPath = polygon.holes && polygon.holes.length > 0
-            ? createSvgPath(polygon.points, polygon.holes)
-            : createSvgPath(polygon.points);
+          const svgPath =
+            polygon.holes && polygon.holes.length > 0
+              ? createSvgPath(polygon.points, polygon.holes)
+              : createSvgPath(polygon.points);
 
           CLogger.debug(`Polygon ${index}:`, {
             id: polygon.id,

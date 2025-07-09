@@ -14,13 +14,18 @@ interface ImageLoadOptions {
 const isImageUrl = (filename: string): boolean => {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.tif'];
   const lowerFilename = filename.toLowerCase();
-  return imageExtensions.some(ext => lowerFilename.endsWith(ext));
+  return imageExtensions.some((ext) => lowerFilename.endsWith(ext));
 };
 
 /**
  * Generate possible image paths for a given project and image
  */
-const generatePossibleImagePaths = (projectId: string, imageId: string, filename: string, baseUrl: string): string[] => {
+const generatePossibleImagePaths = (
+  projectId: string,
+  imageId: string,
+  filename: string,
+  baseUrl: string,
+): string[] => {
   const paths = [
     `/uploads/${projectId}/${filename}`,
     `/api/uploads/${projectId}/${filename}`,
@@ -35,7 +40,7 @@ const generatePossibleImagePaths = (projectId: string, imageId: string, filename
     `${baseUrl}/uploads/${filename}`,
     `${baseUrl}/api/uploads/${filename}`,
   ];
-  
+
   return paths;
 };
 
@@ -152,43 +157,37 @@ export const generateAlternativeUrls = (originalUrl: string, projectId?: string,
   if (lowerFilename.endsWith('.tiff') || lowerFilename.endsWith('.tif')) {
     const baseFilename = filename.substring(0, filename.lastIndexOf('.'));
     const pngFilename = `${baseFilename}.png`;
-    
+
     // Add converted PNG versions to the beginning (higher priority)
     urls.unshift(
       originalUrl.replace(filename, pngFilename),
       `${baseUrl}${urlWithoutOrigin.replace(filename, pngFilename)}`,
       `/api${urlWithoutOrigin.replace(filename, pngFilename)}`,
       `/uploads/${pngFilename}`,
-      `/api/uploads/${pngFilename}`
+      `/api/uploads/${pngFilename}`,
     );
-    
+
     if (projectId) {
-      urls.unshift(
-        `/uploads/${projectId}/${pngFilename}`,
-        `/api/uploads/${projectId}/${pngFilename}`
-      );
+      urls.unshift(`/uploads/${projectId}/${pngFilename}`, `/api/uploads/${projectId}/${pngFilename}`);
     }
   }
-  
+
   // Special handling for BMP files - add converted PNG version
   if (lowerFilename.endsWith('.bmp')) {
     const baseFilename = filename.substring(0, filename.lastIndexOf('.'));
     const pngFilename = `${baseFilename}.png`;
-    
+
     // Add converted PNG versions to the beginning (higher priority)
     urls.unshift(
       originalUrl.replace(filename, pngFilename),
       `${baseUrl}${urlWithoutOrigin.replace(filename, pngFilename)}`,
       `/api${urlWithoutOrigin.replace(filename, pngFilename)}`,
       `/uploads/${pngFilename}`,
-      `/api/uploads/${pngFilename}`
+      `/api/uploads/${pngFilename}`,
     );
-    
+
     if (projectId) {
-      urls.unshift(
-        `/uploads/${projectId}/${pngFilename}`,
-        `/api/uploads/${projectId}/${pngFilename}`
-      );
+      urls.unshift(`/uploads/${projectId}/${pngFilename}`, `/api/uploads/${projectId}/${pngFilename}`);
     }
   }
 

@@ -73,7 +73,7 @@ const ProjectDetail = lazy(() =>
 );
 const SegmentationPage = createLazyComponent(
   () => import('./pages/segmentation/SegmentationPage'),
-  () => import('./pages/NotFound')
+  () => import('./pages/NotFound'),
 );
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Settings = lazy(() =>
@@ -128,11 +128,11 @@ const ForgotPassword = lazy(() =>
 );
 const SegmentationEditorRedirect = createLazyComponent(
   () => import('./pages/segmentation/SegmentationEditorRedirect'),
-  () => import('./pages/NotFound')
+  () => import('./pages/NotFound'),
 );
 const AcceptInvitation = createLazyComponent(
   () => import('./pages/AcceptInvitation'),
-  () => import('./pages/NotFound')
+  () => import('./pages/NotFound'),
 );
 
 // Create a client for React Query
@@ -232,7 +232,8 @@ const AppLayout = () => {
 
         // Pokud bylo vyčištěno hodně dat, informujeme uživatele
         const freedSpace = statsBefore.totalSize - statsAfter.totalSize;
-        if (freedSpace > 10 * 1024 * 1024) { // Více než 10 MB
+        if (freedSpace > 10 * 1024 * 1024) {
+          // Více než 10 MB
           toast.info(`Vyčištěno ${(freedSpace / (1024 * 1024)).toFixed(1)} MB starých dat z mezipaměti.`);
         }
       } catch (error) {

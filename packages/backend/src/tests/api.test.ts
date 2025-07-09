@@ -83,14 +83,24 @@ mockApp.get('/api/status', (req, res) => {
 
 // Auth routes
 mockApp.post('/api/auth/login', (req, res) => {
-  if (!req.body.email || !req.body.email.includes('@') || !req.body.password || req.body.password.length < 6) {
+  if (
+    !req.body.email ||
+    !req.body.email.includes('@') ||
+    !req.body.password ||
+    req.body.password.length < 6
+  ) {
     return res.status(400).json({ errors: ['Invalid credentials'] });
   }
   res.status(200).json({ token: 'mock-token' });
 });
 
 mockApp.post('/api/auth/register', (req, res) => {
-  if (!req.body.email || !req.body.email.includes('@') || !req.body.password || req.body.password.length < 6) {
+  if (
+    !req.body.email ||
+    !req.body.email.includes('@') ||
+    !req.body.password ||
+    req.body.password.length < 6
+  ) {
     return res.status(400).json({ errors: ['Invalid input'] });
   }
   res.status(201).json({ message: 'User registered' });
@@ -98,7 +108,11 @@ mockApp.post('/api/auth/register', (req, res) => {
 
 // Protected routes
 // Add auth check middleware for protected routes
-const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const authMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
   if (!(req as any).user) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
@@ -222,7 +236,9 @@ afterAll(async () => {
 describe('Authentication Endpoints', () => {
   describe('POST /api/auth/login', () => {
     it('should return 400 for invalid input', async () => {
-      const response = await request(app).post('/api/auth/login').send({ email: 'invalid-email', password: '123' });
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'invalid-email', password: '123' });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('errors');
@@ -258,7 +274,9 @@ describe('Protected Endpoints', () => {
     });
 
     it('should return 401 when invalid token is provided', async () => {
-      const response = await request(app).get('/api/users/profile').set('Authorization', 'Bearer invalid-token');
+      const response = await request(app)
+        .get('/api/users/profile')
+        .set('Authorization', 'Bearer invalid-token');
 
       expect(response.status).toBe(401);
     });
@@ -268,7 +286,9 @@ describe('Protected Endpoints', () => {
 
       // This test will still fail if the endpoint requires database access
       // But it tests that the auth middleware accepts the token
-      const response = await request(app).get('/api/users/profile').set('Authorization', `Bearer ${token}`);
+      const response = await request(app)
+        .get('/api/users/profile')
+        .set('Authorization', `Bearer ${token}`);
 
       // We expect either 200 (success) or 404/500 (database error)
       // But not 401 (unauthorized)
@@ -288,7 +308,9 @@ describe('Project Endpoints', () => {
     });
 
     it('should return projects with valid token', async () => {
-      const response = await request(app).get('/api/projects').set('Authorization', `Bearer ${token}`);
+      const response = await request(app)
+        .get('/api/projects')
+        .set('Authorization', `Bearer ${token}`);
 
       // Since we're not mocking the database, we can't guarantee success
       // But we can check that authentication worked
@@ -410,7 +432,9 @@ describe('Segmentation Endpoints', () => {
 
   describe('POST /api/segmentation/batch-trigger', () => {
     it('should require authentication', async () => {
-      const response = await request(app).post('/api/segmentation/batch-trigger').send({ projectId });
+      const response = await request(app)
+        .post('/api/segmentation/batch-trigger')
+        .send({ projectId });
 
       expect(response.status).toBe(401);
     });
@@ -434,7 +458,9 @@ describe('Segmentation Endpoints', () => {
     });
 
     it('should return queue status with valid token', async () => {
-      const response = await request(app).get('/api/segmentation/status').set('Authorization', `Bearer ${token}`);
+      const response = await request(app)
+        .get('/api/segmentation/status')
+        .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('queueLength');
@@ -486,7 +512,9 @@ describe('User Endpoints', () => {
     });
 
     it('should return user profile with valid token', async () => {
-      const response = await request(app).get('/api/users/profile').set('Authorization', `Bearer ${token}`);
+      const response = await request(app)
+        .get('/api/users/profile')
+        .set('Authorization', `Bearer ${token}`);
 
       // Since we're not mocking the database, we can't guarantee success
       // But we can check that authentication worked
@@ -502,7 +530,9 @@ describe('User Endpoints', () => {
     });
 
     it('should return user statistics with valid token', async () => {
-      const response = await request(app).get('/api/users/me/statistics').set('Authorization', `Bearer ${token}`);
+      const response = await request(app)
+        .get('/api/users/me/statistics')
+        .set('Authorization', `Bearer ${token}`);
 
       // Since we're not mocking the database, we can't guarantee success
       // But we can check that authentication worked
@@ -512,7 +542,9 @@ describe('User Endpoints', () => {
 
   describe('PUT /api/users/profile', () => {
     it('should require authentication', async () => {
-      const response = await request(app).put('/api/users/profile').send({ username: 'newusername' });
+      const response = await request(app)
+        .put('/api/users/profile')
+        .send({ username: 'newusername' });
 
       expect(response.status).toBe(401);
     });

@@ -15,10 +15,10 @@ export const performanceConfig = {
     // Memory usage thresholds
     thresholds: {
       unhealthy: 90, // percentage
-      degraded: 75,  // percentage
+      degraded: 75, // percentage
       heapUnhealthy: 95, // percentage
-      heapDegraded: 85,  // percentage
-    }
+      heapDegraded: 85, // percentage
+    },
   },
 
   // Database connection pool settings
@@ -56,7 +56,7 @@ export const performanceConfig = {
     dbTimeoutMs: parseInt(process.env.HEALTH_CHECK_DB_TIMEOUT || '5000', 10),
     // Slow response threshold
     slowResponseMs: parseInt(process.env.HEALTH_CHECK_SLOW_RESPONSE || '5000', 10),
-  }
+  },
 };
 
 export default performanceConfig;

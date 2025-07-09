@@ -1,6 +1,6 @@
 /**
  * Date and time utility functions
- * 
+ *
  * This module provides centralized date formatting utilities for the application.
  * All date formatting should use these functions for consistency.
  */
@@ -9,39 +9,39 @@
  * Default date formats used across the application
  */
 export const DATE_FORMATS = {
-  DATE_ONLY: { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
+  DATE_ONLY: {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   } as const,
-  DATE_LONG: { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  DATE_LONG: {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   } as const,
-  TIME_ONLY: { 
-    hour: 'numeric', 
-    minute: 'numeric' 
-  } as const,
-  TIME_WITH_SECONDS: { 
-    hour: 'numeric', 
+  TIME_ONLY: {
+    hour: 'numeric',
     minute: 'numeric',
-    second: 'numeric'
   } as const,
-  DATE_TIME: { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric', 
-    hour: 'numeric', 
-    minute: 'numeric' 
-  } as const,
-  FULL_DATE_TIME: { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric', 
-    hour: 'numeric', 
+  TIME_WITH_SECONDS: {
+    hour: 'numeric',
     minute: 'numeric',
-    second: 'numeric'
+    second: 'numeric',
+  } as const,
+  DATE_TIME: {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  } as const,
+  FULL_DATE_TIME: {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
   } as const,
 } as const;
 
@@ -240,7 +240,7 @@ export function formatISODateTime(date: string | Date): string {
  */
 export function isValidDate(date: string | Date | undefined | null): boolean {
   if (!date) return false;
-  
+
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return !isNaN(dateObj.getTime());
@@ -258,9 +258,9 @@ export function isValidDate(date: string | Date | undefined | null): boolean {
 export function getDateDifference(date1: string | Date, date2: string | Date = new Date()) {
   const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
   const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
-  
+
   const diffInMs = Math.abs(d2.getTime() - d1.getTime());
-  
+
   return {
     milliseconds: diffInMs,
     seconds: Math.floor(diffInMs / 1000),
@@ -280,13 +280,9 @@ export function getDateDifference(date1: string | Date, date2: string | Date = n
  * @param unit - Unit of time ('days', 'hours', 'minutes', 'seconds')
  * @returns New date with added time
  */
-export function addToDate(
-  date: string | Date, 
-  amount: number, 
-  unit: 'days' | 'hours' | 'minutes' | 'seconds'
-): Date {
+export function addToDate(date: string | Date, amount: number, unit: 'days' | 'hours' | 'minutes' | 'seconds'): Date {
   const dateObj = typeof date === 'string' ? new Date(date) : new Date(date);
-  
+
   switch (unit) {
     case 'days':
       dateObj.setDate(dateObj.getDate() + amount);
@@ -301,7 +297,7 @@ export function addToDate(
       dateObj.setSeconds(dateObj.getSeconds() + amount);
       break;
   }
-  
+
   return dateObj;
 }
 

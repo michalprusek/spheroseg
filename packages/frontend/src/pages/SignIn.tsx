@@ -33,7 +33,7 @@ const SignIn = () => {
 
     const success = await signIn(email, password, rememberMe);
     setIsLoading(false);
-    
+
     // signIn function already handles error toasts in AuthContext
     // No need to show additional toasts here
   };
@@ -107,8 +107,8 @@ const SignIn = () => {
 
             <div className="flex items-center space-x-2">
               <div className="flex items-center h-5">
-                <Checkbox 
-                  id="remember" 
+                <Checkbox
+                  id="remember"
                   checked={rememberMe}
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />

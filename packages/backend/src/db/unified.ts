@@ -1,6 +1,6 @@
 /**
  * Unified Database Access Layer
- * 
+ *
  * This module consolidates all database operations, caching, monitoring,
  * and transaction handling into a single, consistent interface.
  */
@@ -43,7 +43,7 @@ let pool: Pool | null = null;
 export function getPool(): Pool {
   if (!pool) {
     const databaseUrl = process.env.DATABASE_URL;
-    
+
     const poolConfig = databaseUrl
       ? {
           connectionString: databaseUrl,
@@ -52,7 +52,7 @@ export function getPool(): Pool {
           min: performanceConfig.database.poolMin,
           idleTimeoutMillis: performanceConfig.database.idleTimeoutMs,
           connectionTimeoutMillis: performanceConfig.database.connectionTimeoutMs,
-          allowExitOnIdle: performanceConfig.database.allowExitOnIdle
+          allowExitOnIdle: performanceConfig.database.allowExitOnIdle,
         }
       : {
           host: config.db.host,
@@ -65,11 +65,11 @@ export function getPool(): Pool {
           min: performanceConfig.database.poolMin,
           idleTimeoutMillis: performanceConfig.database.idleTimeoutMs,
           connectionTimeoutMillis: performanceConfig.database.connectionTimeoutMs,
-          allowExitOnIdle: performanceConfig.database.allowExitOnIdle
+          allowExitOnIdle: performanceConfig.database.allowExitOnIdle,
         };
 
     pool = new Pool(poolConfig);
-    
+
     pool.on('error', (err) => {
       logger.error('Database pool error', { error: err });
     });
@@ -79,7 +79,7 @@ export function getPool(): Pool {
       database: poolConfig.database || 'from DATABASE_URL',
     });
   }
-  
+
   return pool;
 }
 
@@ -90,10 +90,7 @@ export function getPool(): Pool {
 /**
  * Execute a database query with monitoring
  */
-export async function query<T = any>(
-  text: string,
-  params?: any[]
-): Promise<QueryResult<T>> {
+export async function query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
   const pool = getPool();
   return monitorQuery(text, params || [], () => pool.query<T>(text, params));
 }
@@ -107,23 +104,23 @@ export async function cachedQuery<T = any>(
   ttl?: number
 ): Promise<QueryResult<T>> {
   const cacheKey = `query:${text}:${JSON.stringify(params || [])}`;
-  
+
   // Check cache first
   const cached = unifiedCache.get<QueryResult<T>>(cacheKey);
   if (cached) {
     return cached;
   }
-  
+
   // Execute query with monitoring
   const result = await query<T>(text, params);
-  
+
   // Cache the result
   if (ttl !== undefined) {
     unifiedCache.set(cacheKey, result, ttl);
   } else {
     unifiedCache.set(cacheKey, result);
   }
-  
+
   return result;
 }
 
@@ -134,12 +131,10 @@ export async function cachedQuery<T = any>(
 /**
  * Execute a function within a database transaction
  */
-export async function withTransaction<T>(
-  fn: (client: PoolClient) => Promise<T>
-): Promise<T> {
+export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const pool = getPool();
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
     const result = await fn(client);
@@ -162,13 +157,13 @@ export async function withTransaction<T>(
  */
 export async function checkTableExists(tableName: string): Promise<boolean> {
   const cacheKey = `table:${tableName}`;
-  
+
   // Check schema cache
   const cached = schemaCache.get<boolean>(cacheKey);
   if (cached !== undefined) {
     return cached;
   }
-  
+
   const result = await query<{ exists: boolean }>(
     `SELECT EXISTS (
       SELECT FROM information_schema.tables 
@@ -177,28 +172,25 @@ export async function checkTableExists(tableName: string): Promise<boolean> {
     )`,
     [tableName]
   );
-  
+
   const exists = result.rows[0]?.exists || false;
   schemaCache.set(cacheKey, exists);
-  
+
   return exists;
 }
 
 /**
  * Check if a column exists in a table
  */
-export async function checkColumnExists(
-  tableName: string,
-  columnName: string
-): Promise<boolean> {
+export async function checkColumnExists(tableName: string, columnName: string): Promise<boolean> {
   const cacheKey = `column:${tableName}:${columnName}`;
-  
+
   // Check schema cache
   const cached = schemaCache.get<boolean>(cacheKey);
   if (cached !== undefined) {
     return cached;
   }
-  
+
   const result = await query<{ exists: boolean }>(
     `SELECT EXISTS (
       SELECT FROM information_schema.columns 
@@ -208,10 +200,10 @@ export async function checkColumnExists(
     )`,
     [tableName, columnName]
   );
-  
+
   const exists = result.rows[0]?.exists || false;
   schemaCache.set(cacheKey, exists);
-  
+
   return exists;
 }
 
@@ -223,12 +215,12 @@ export async function checkColumnsExist(
   columnNames: string[]
 ): Promise<{ [column: string]: boolean }> {
   const results: { [column: string]: boolean } = {};
-  
+
   // Check each column (could be optimized with a single query)
   for (const columnName of columnNames) {
     results[columnName] = await checkColumnExists(tableName, columnName);
   }
-  
+
   return results;
 }
 
@@ -241,8 +233,8 @@ export async function checkColumnsExist(
  */
 export function clearCacheByPattern(pattern: string): void {
   const keys = unifiedCache.keys();
-  const keysToDelete = keys.filter(key => key.includes(pattern));
-  
+  const keysToDelete = keys.filter((key) => key.includes(pattern));
+
   if (keysToDelete.length > 0) {
     unifiedCache.del(keysToDelete);
     logger.debug(`Cleared ${keysToDelete.length} cache entries matching pattern: ${pattern}`);
@@ -279,13 +271,17 @@ export function getCacheStats() {
       keys: unifiedCache.keys().length,
       hits: unifiedCache.getStats().hits,
       misses: unifiedCache.getStats().misses,
-      hitRate: unifiedCache.getStats().hits / (unifiedCache.getStats().hits + unifiedCache.getStats().misses) || 0,
+      hitRate:
+        unifiedCache.getStats().hits /
+          (unifiedCache.getStats().hits + unifiedCache.getStats().misses) || 0,
     },
     schema: {
       keys: schemaCache.keys().length,
       hits: schemaCache.getStats().hits,
       misses: schemaCache.getStats().misses,
-      hitRate: schemaCache.getStats().hits / (schemaCache.getStats().hits + schemaCache.getStats().misses) || 0,
+      hitRate:
+        schemaCache.getStats().hits /
+          (schemaCache.getStats().hits + schemaCache.getStats().misses) || 0,
     },
   };
 }

@@ -12,7 +12,9 @@ router.get('/', async (req: Request, res: Response) => {
     const dbConnected = await checkDbConnection();
 
     // Check ML service if required
-    const mlServiceStatus = config.segmentation.checkpointExists ? 'configured' : 'missing_checkpoint';
+    const mlServiceStatus = config.segmentation.checkpointExists
+      ? 'configured'
+      : 'missing_checkpoint';
 
     // Send health status
     res.status(200).json({

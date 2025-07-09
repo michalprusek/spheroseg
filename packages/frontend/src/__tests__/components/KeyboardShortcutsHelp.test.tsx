@@ -19,7 +19,9 @@ vi.mock('@/contexts/LanguageContext', () => ({
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => (
+      <div {...props}>{children}</div>
+    ),
   },
   AnimatePresence: ({ children }: React.PropsWithChildren<unknown>) => <>{children}</>,
 }));

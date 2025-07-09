@@ -1,6 +1,6 @@
 /**
  * Unified Permission Service
- * 
+ *
  * This service consolidates all permission and authorization functionality
  * into a single, comprehensive API for managing access control.
  */
@@ -20,7 +20,7 @@ const logger = createLogger('UnifiedPermissionService');
 export enum Role {
   ADMIN = 'admin',
   USER = 'user',
-  GUEST = 'guest'
+  GUEST = 'guest',
 }
 
 export enum Permission {
@@ -28,7 +28,7 @@ export enum Permission {
   SYSTEM_ADMIN = 'system:admin',
   SYSTEM_MANAGE_USERS = 'system:manage_users',
   SYSTEM_VIEW_LOGS = 'system:view_logs',
-  
+
   // Project permissions
   PROJECT_CREATE = 'project:create',
   PROJECT_VIEW_ALL = 'project:view_all',
@@ -41,7 +41,7 @@ export enum Permission {
   PROJECT_DELETE_OWN = 'project:delete_own',
   PROJECT_SHARE = 'project:share',
   PROJECT_EXPORT = 'project:export',
-  
+
   // Image permissions
   IMAGE_UPLOAD = 'image:upload',
   IMAGE_VIEW = 'image:view',
@@ -49,19 +49,19 @@ export enum Permission {
   IMAGE_DELETE = 'image:delete',
   IMAGE_SEGMENT = 'image:segment',
   IMAGE_DOWNLOAD = 'image:download',
-  
+
   // Segmentation permissions
   SEGMENTATION_CREATE = 'segmentation:create',
   SEGMENTATION_VIEW = 'segmentation:view',
   SEGMENTATION_EDIT = 'segmentation:edit',
   SEGMENTATION_DELETE = 'segmentation:delete',
   SEGMENTATION_APPROVE = 'segmentation:approve',
-  
+
   // User permissions
   USER_VIEW_PROFILE = 'user:view_profile',
   USER_EDIT_PROFILE = 'user:edit_profile',
   USER_CHANGE_PASSWORD = 'user:change_password',
-  USER_DELETE_ACCOUNT = 'user:delete_account'
+  USER_DELETE_ACCOUNT = 'user:delete_account',
 }
 
 export interface ResourcePermission {
@@ -107,7 +107,7 @@ const DEFAULT_CONFIG: PermissionConfig = {
   cacheEnabled: true,
   cacheTTL: 5 * 60 * 1000, // 5 minutes
   strictMode: true,
-  logPermissionChecks: false
+  logPermissionChecks: false,
 };
 
 // Default role-permission mappings
@@ -138,8 +138,8 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissions[] = [
       Permission.USER_VIEW_PROFILE,
       Permission.USER_EDIT_PROFILE,
       Permission.USER_CHANGE_PASSWORD,
-      Permission.USER_DELETE_ACCOUNT
-    ]
+      Permission.USER_DELETE_ACCOUNT,
+    ],
   },
   {
     role: Role.USER,
@@ -165,8 +165,8 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissions[] = [
       Permission.USER_VIEW_PROFILE,
       Permission.USER_EDIT_PROFILE,
       Permission.USER_CHANGE_PASSWORD,
-      Permission.USER_DELETE_ACCOUNT
-    ]
+      Permission.USER_DELETE_ACCOUNT,
+    ],
   },
   {
     role: Role.GUEST,
@@ -174,9 +174,9 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissions[] = [
       Permission.PROJECT_VIEW_SHARED,
       Permission.IMAGE_VIEW,
       Permission.SEGMENTATION_VIEW,
-      Permission.USER_VIEW_PROFILE
-    ]
-  }
+      Permission.USER_VIEW_PROFILE,
+    ],
+  },
 ];
 
 // ===========================
@@ -187,7 +187,7 @@ class UnifiedPermissionService {
   private config: PermissionConfig = DEFAULT_CONFIG;
   private rolePermissions: Map<Role, RolePermissions> = new Map();
   private permissionCache: Map<string, boolean> = new Map();
-  
+
   constructor() {
     this.initializeRolePermissions();
   }
@@ -203,20 +203,17 @@ class UnifiedPermissionService {
   /**
    * Check if user has a specific permission
    */
-  public async hasPermission(
-    check: PermissionCheck,
-    user?: User | null
-  ): Promise<boolean> {
+  public async hasPermission(check: PermissionCheck, user?: User | null): Promise<boolean> {
     try {
       // Get current user if not provided
       const currentUser = user || authService.getCurrentUser();
       if (!currentUser) {
         return false;
       }
-      
+
       // Create cache key
       const cacheKey = this.createCacheKey(currentUser.id, check);
-      
+
       // Check cache first
       if (this.config.cacheEnabled) {
         const cached = await this.getFromCache(cacheKey);
@@ -227,14 +224,11 @@ class UnifiedPermissionService {
           return cached;
         }
       }
-      
+
       // Check resource-specific permissions first
       if (check.resource && check.resourceId) {
-        const resourcePermission = await this.checkResourcePermission(
-          currentUser,
-          check
-        );
-        
+        const resourcePermission = await this.checkResourcePermission(currentUser, check);
+
         if (resourcePermission !== null) {
           await this.saveToCache(cacheKey, resourcePermission);
           if (this.config.logPermissionChecks) {
@@ -243,19 +237,16 @@ class UnifiedPermissionService {
           return resourcePermission;
         }
       }
-      
+
       // Check role-based permissions
-      const rolePermission = this.checkRolePermission(
-        currentUser.role as Role,
-        check.permission
-      );
-      
+      const rolePermission = this.checkRolePermission(currentUser.role as Role, check.permission);
+
       await this.saveToCache(cacheKey, rolePermission);
-      
+
       if (this.config.logPermissionChecks) {
         logger.debug('Permission check (role)', { check, result: rolePermission });
       }
-      
+
       return rolePermission;
     } catch (error) {
       logger.error('Permission check failed', error);
@@ -266,27 +257,21 @@ class UnifiedPermissionService {
   /**
    * Check multiple permissions at once
    */
-  public async hasPermissions(
-    checks: PermissionCheck[],
-    user?: User | null
-  ): Promise<Record<string, boolean>> {
+  public async hasPermissions(checks: PermissionCheck[], user?: User | null): Promise<Record<string, boolean>> {
     const results: Record<string, boolean> = {};
-    
+
     for (const check of checks) {
       const key = `${check.permission}:${check.resource || ''}:${check.resourceId || ''}`;
       results[key] = await this.hasPermission(check, user);
     }
-    
+
     return results;
   }
 
   /**
    * Check if user has any of the specified permissions
    */
-  public async hasAnyPermission(
-    permissions: Permission[],
-    user?: User | null
-  ): Promise<boolean> {
+  public async hasAnyPermission(permissions: Permission[], user?: User | null): Promise<boolean> {
     for (const permission of permissions) {
       if (await this.hasPermission({ permission }, user)) {
         return true;
@@ -298,10 +283,7 @@ class UnifiedPermissionService {
   /**
    * Check if user has all of the specified permissions
    */
-  public async hasAllPermissions(
-    permissions: Permission[],
-    user?: User | null
-  ): Promise<boolean> {
+  public async hasAllPermissions(permissions: Permission[], user?: User | null): Promise<boolean> {
     for (const permission of permissions) {
       if (!(await this.hasPermission({ permission }, user))) {
         return false;
@@ -313,66 +295,54 @@ class UnifiedPermissionService {
   /**
    * Get all permissions for a user
    */
-  public async getUserPermissions(
-    userId?: string
-  ): Promise<UserPermissions> {
-    const user = userId 
-      ? await this.fetchUser(userId)
-      : authService.getCurrentUser();
-    
+  public async getUserPermissions(userId?: string): Promise<UserPermissions> {
+    const user = userId ? await this.fetchUser(userId) : authService.getCurrentUser();
+
     if (!user) {
       throw new AppError('User not found', ErrorType.NOT_FOUND);
     }
-    
+
     // Get role permissions
     const rolePerms = this.rolePermissions.get(user.role as Role);
     const permissions = rolePerms?.permissions || [];
-    
+
     // Get resource-specific permissions
     const resourcePermissions = await this.fetchResourcePermissions(user.id);
-    
+
     return {
       userId: user.id,
       role: user.role as Role,
       permissions,
-      resourcePermissions
+      resourcePermissions,
     };
   }
 
   /**
    * Check if user is owner of a resource
    */
-  public async isResourceOwner(
-    resource: string,
-    resourceId: string,
-    userId?: string
-  ): Promise<boolean> {
+  public async isResourceOwner(resource: string, resourceId: string, userId?: string): Promise<boolean> {
     try {
       const currentUserId = userId || authService.getCurrentUser()?.id;
       if (!currentUserId) return false;
-      
+
       // Check cache
       const cacheKey = `owner:${resource}:${resourceId}:${currentUserId}`;
       const cached = await cacheService.get<boolean>(cacheKey, {
-        layer: [CacheLayer.MEMORY]
+        layer: [CacheLayer.MEMORY],
       });
-      
+
       if (cached !== null) return cached;
-      
+
       // Fetch ownership info from backend
-      const isOwner = await this.fetchResourceOwnership(
-        resource,
-        resourceId,
-        currentUserId
-      );
-      
+      const isOwner = await this.fetchResourceOwnership(resource, resourceId, currentUserId);
+
       // Cache result
       await cacheService.set(cacheKey, isOwner, {
         ttl: this.config.cacheTTL,
         layer: [CacheLayer.MEMORY],
-        tags: ['permissions', `resource-${resource}-${resourceId}`]
+        tags: ['permissions', `resource-${resource}-${resourceId}`],
       });
-      
+
       return isOwner;
     } catch (error) {
       logger.error('Ownership check failed', error);
@@ -383,28 +353,22 @@ class UnifiedPermissionService {
   /**
    * Get resource-specific permissions
    */
-  public async getResourcePermissions(
-    resource: string,
-    resourceId: string,
-    userId?: string
-  ): Promise<Permission[]> {
-    const user = userId 
-      ? await this.fetchUser(userId)
-      : authService.getCurrentUser();
-    
+  public async getResourcePermissions(resource: string, resourceId: string, userId?: string): Promise<Permission[]> {
+    const user = userId ? await this.fetchUser(userId) : authService.getCurrentUser();
+
     if (!user) return [];
-    
+
     // Admin has all permissions
     if (user.role === Role.ADMIN) {
       return Object.values(Permission);
     }
-    
+
     // Check if owner
     const isOwner = await this.isResourceOwner(resource, resourceId, user.id);
-    
+
     // Get permissions based on ownership and role
     const permissions: Permission[] = [];
-    
+
     if (resource === 'project') {
       if (isOwner) {
         permissions.push(
@@ -412,19 +376,15 @@ class UnifiedPermissionService {
           Permission.PROJECT_EDIT_OWN,
           Permission.PROJECT_DELETE_OWN,
           Permission.PROJECT_SHARE,
-          Permission.PROJECT_EXPORT
+          Permission.PROJECT_EXPORT,
         );
       } else {
         // Check if shared with user
-        const sharedPermissions = await this.fetchSharedPermissions(
-          resource,
-          resourceId,
-          user.id
-        );
+        const sharedPermissions = await this.fetchSharedPermissions(resource, resourceId, user.id);
         permissions.push(...sharedPermissions);
       }
     }
-    
+
     return permissions;
   }
 
@@ -435,11 +395,11 @@ class UnifiedPermissionService {
     userId: string,
     permission: Permission,
     resource?: string,
-    resourceId?: string
+    resourceId?: string,
   ): Promise<void> {
     // This would typically call a backend API
     logger.info('Granting permission', { userId, permission, resource, resourceId });
-    
+
     // Clear cache
     await this.clearUserCache(userId);
   }
@@ -451,11 +411,11 @@ class UnifiedPermissionService {
     userId: string,
     permission: Permission,
     resource?: string,
-    resourceId?: string
+    resourceId?: string,
   ): Promise<void> {
     // This would typically call a backend API
     logger.info('Revoking permission', { userId, permission, resource, resourceId });
-    
+
     // Clear cache
     await this.clearUserCache(userId);
   }
@@ -479,7 +439,7 @@ class UnifiedPermissionService {
         this.permissionCache.delete(key);
       }
     }
-    
+
     // Clear persistent cache
     await cacheService.deleteByTag(`user-permissions-${userId}`);
   }
@@ -489,7 +449,7 @@ class UnifiedPermissionService {
   // ===========================
 
   private initializeRolePermissions(): void {
-    DEFAULT_ROLE_PERMISSIONS.forEach(rp => {
+    DEFAULT_ROLE_PERMISSIONS.forEach((rp) => {
       this.rolePermissions.set(rp.role, rp);
     });
   }
@@ -497,12 +457,12 @@ class UnifiedPermissionService {
   private checkRolePermission(role: Role, permission: Permission): boolean {
     const rolePerms = this.rolePermissions.get(role);
     if (!rolePerms) return false;
-    
+
     // Check direct permissions
     if (rolePerms.permissions.includes(permission)) {
       return true;
     }
-    
+
     // Check inherited permissions
     if (rolePerms.inherits) {
       for (const inheritedRole of rolePerms.inherits) {
@@ -511,23 +471,16 @@ class UnifiedPermissionService {
         }
       }
     }
-    
+
     return false;
   }
 
-  private async checkResourcePermission(
-    user: User,
-    check: PermissionCheck
-  ): Promise<boolean | null> {
+  private async checkResourcePermission(user: User, check: PermissionCheck): Promise<boolean | null> {
     // Special handling for resource-specific permissions
     if (check.resource === 'project') {
       // Check if user is owner
-      const isOwner = await this.isResourceOwner(
-        check.resource,
-        check.resourceId!,
-        user.id
-      );
-      
+      const isOwner = await this.isResourceOwner(check.resource, check.resourceId!, user.id);
+
       // Map permission to ownership-based permission
       if (isOwner) {
         switch (check.permission) {
@@ -545,16 +498,12 @@ class UnifiedPermissionService {
         }
       } else {
         // Check shared permissions
-        const sharedPerms = await this.fetchSharedPermissions(
-          check.resource,
-          check.resourceId!,
-          user.id
-        );
-        
+        const sharedPerms = await this.fetchSharedPermissions(check.resource, check.resourceId!, user.id);
+
         return sharedPerms.includes(check.permission);
       }
     }
-    
+
     return null; // No resource-specific handling
   }
 
@@ -567,27 +516,27 @@ class UnifiedPermissionService {
     if (this.permissionCache.has(key)) {
       return this.permissionCache.get(key)!;
     }
-    
+
     // Check persistent cache
     const cached = await cacheService.get<boolean>(`permission:${key}`, {
-      layer: [CacheLayer.MEMORY]
+      layer: [CacheLayer.MEMORY],
     });
-    
+
     return cached;
   }
 
   private async saveToCache(key: string, value: boolean): Promise<void> {
     // Save to memory cache
     this.permissionCache.set(key, value);
-    
+
     // Save to persistent cache if enabled
     if (this.config.cacheEnabled) {
       const [userId] = key.split(':');
-      
+
       await cacheService.set(`permission:${key}`, value, {
         ttl: this.config.cacheTTL,
         layer: [CacheLayer.MEMORY],
-        tags: ['permissions', `user-permissions-${userId}`]
+        tags: ['permissions', `user-permissions-${userId}`],
       });
     }
   }
@@ -603,36 +552,22 @@ class UnifiedPermissionService {
     return currentUser?.id === userId ? currentUser : null;
   }
 
-  private async fetchResourcePermissions(
-    userId: string
-  ): Promise<ResourcePermission[]> {
+  private async fetchResourcePermissions(userId: string): Promise<ResourcePermission[]> {
     // This would typically fetch from backend
     // For now, return empty array
     return [];
   }
 
-  private async fetchResourceOwnership(
-    resource: string,
-    resourceId: string,
-    userId: string
-  ): Promise<boolean> {
+  private async fetchResourceOwnership(resource: string, resourceId: string, userId: string): Promise<boolean> {
     // This would typically check with backend
     // For now, return false
     return false;
   }
 
-  private async fetchSharedPermissions(
-    resource: string,
-    resourceId: string,
-    userId: string
-  ): Promise<Permission[]> {
+  private async fetchSharedPermissions(resource: string, resourceId: string, userId: string): Promise<Permission[]> {
     // This would typically fetch from backend
     // For now, return basic shared permissions
-    return [
-      Permission.PROJECT_VIEW_SHARED,
-      Permission.IMAGE_VIEW,
-      Permission.SEGMENTATION_VIEW
-    ];
+    return [Permission.PROJECT_VIEW_SHARED, Permission.IMAGE_VIEW, Permission.SEGMENTATION_VIEW];
   }
 }
 
@@ -659,5 +594,5 @@ export const {
   getResourcePermissions,
   grantPermission,
   revokePermission,
-  clearCache
+  clearCache,
 } = permissionService;

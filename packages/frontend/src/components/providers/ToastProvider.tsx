@@ -21,16 +21,15 @@ export function ToastProvider({ children }: ToastProviderProps) {
         theme={theme as 'light' | 'dark' | 'system'}
         richColors
         closeButton
-        
         // Position and layout
         position="bottom-right"
         expand={true}
         visibleToasts={5}
-        
         // Styling
         toastOptions={{
           classNames: {
-            toast: 'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg',
+            toast:
+              'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg',
             description: 'group-[.toast]:text-muted-foreground',
             actionButton: 'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground',
             cancelButton: 'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground',
@@ -44,10 +43,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
             animation: 'slideIn 0.2s ease-out',
           },
         }}
-        
         // Accessibility
         pauseWhenPageIsHidden
-        
         // Custom styles for different viewport sizes
         className="toaster-container"
         style={{
@@ -58,14 +55,12 @@ export function ToastProvider({ children }: ToastProviderProps) {
             left: '1rem',
           },
         }}
-        
         // Gap between toasts
         gap={8}
-        
         // Offset from viewport edge
         offset="1rem"
       />
-      
+
       <style jsx global>{`
         /* Custom animations */
         @keyframes slideIn {
@@ -78,35 +73,35 @@ export function ToastProvider({ children }: ToastProviderProps) {
             opacity: 1;
           }
         }
-        
+
         /* Custom toast styles */
         .toaster-container {
           z-index: 9999;
         }
-        
+
         /* Success variant with custom colors */
-        [data-sonner-toast][data-type="success"] {
+        [data-sonner-toast][data-type='success'] {
           --success: 142.1 76.2% 36.3%;
           --success-foreground: 355.7 100% 97.3%;
         }
-        
+
         /* Warning variant with custom colors */
-        [data-sonner-toast][data-type="warning"] {
+        [data-sonner-toast][data-type='warning'] {
           --warning: 38 92% 50%;
           --warning-foreground: 48 96% 89%;
         }
-        
+
         /* Info variant with custom colors */
-        [data-sonner-toast][data-type="info"] {
+        [data-sonner-toast][data-type='info'] {
           --info: 214.3 77.8% 52.7%;
           --info-foreground: 214.3 77.8% 92.7%;
         }
-        
+
         /* Loading state animation */
-        [data-sonner-toast][data-type="loading"] svg {
+        [data-sonner-toast][data-type='loading'] svg {
           animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
           from {
             transform: rotate(0deg);
@@ -115,7 +110,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
             transform: rotate(360deg);
           }
         }
-        
+
         /* Mobile responsiveness */
         @media (max-width: 640px) {
           [data-sonner-toaster] {
@@ -125,7 +120,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
             right: 0 !important;
             margin: 1rem !important;
           }
-          
+
           [data-sonner-toast] {
             width: 100% !important;
             max-width: none !important;

@@ -1,6 +1,6 @@
 /**
  * Scheduled Task Service
- * 
+ *
  * Manages scheduled tasks like file cleanup, storage monitoring, and maintenance
  */
 
@@ -138,7 +138,6 @@ class ScheduledTaskService {
           usagePercentage: Math.round(usageRatio * 100),
           freeBytes: storageInfo.totalBytes - storageInfo.usedBytes,
         });
-
       } catch (error) {
         logger.error('Error in storage monitoring task:', { error });
       }
@@ -181,7 +180,7 @@ class ScheduledTaskService {
     // Calculate used storage
     let usedBytes = 0;
     const uploadDir = config.storage.uploadDir;
-    
+
     if (fs.existsSync(uploadDir)) {
       usedBytes = await this.getDirectorySize(uploadDir);
     }
@@ -201,11 +200,11 @@ class ScheduledTaskService {
     let totalSize = 0;
 
     const files = fs.readdirSync(dirPath);
-    
+
     for (const file of files) {
       const filePath = path.join(dirPath, file);
       const stats = fs.statSync(filePath);
-      
+
       if (stats.isDirectory()) {
         totalSize += await this.getDirectorySize(filePath);
       } else {
@@ -224,7 +223,7 @@ class ScheduledTaskService {
     schedule: string;
     running: boolean;
   }> {
-    return Array.from(this.tasks.values()).map(task => ({
+    return Array.from(this.tasks.values()).map((task) => ({
       name: task.name,
       schedule: task.schedule,
       running: task.running,
@@ -236,7 +235,7 @@ class ScheduledTaskService {
    */
   async runTask(taskName: string): Promise<void> {
     const task = this.tasks.get(taskName);
-    
+
     if (!task) {
       throw new Error(`Task '${taskName}' not found`);
     }

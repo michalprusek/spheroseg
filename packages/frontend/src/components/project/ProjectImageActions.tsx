@@ -208,13 +208,13 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
             if (cleanedId) {
               // Invalidate project images cache in unified cache service
               await cacheService.delete(`project-images:${cleanedId}`);
-              
+
               // Also clear by tags
               await cacheService.deleteByTag(`project-${cleanedId}`);
-              
+
               console.log(`Invalidated unified cache for project ${cleanedId}`);
             }
-            
+
             // Vyčistíme legacy projectImagesCache
             try {
               // Dynamický import pro vyhnutí se cyklickým závislostem
@@ -232,10 +232,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
             try {
               const cleanedId = projectId?.startsWith('project-') ? projectId.substring(8) : projectId;
               if (cleanedId) {
-                const storageKeys = [
-                  `spheroseg_images_${cleanedId}`,
-                  `spheroseg_uploaded_images_${cleanedId}`,
-                ];
+                const storageKeys = [`spheroseg_images_${cleanedId}`, `spheroseg_uploaded_images_${cleanedId}`];
 
                 for (const key of storageKeys) {
                   const storedData = localStorage.getItem(key);
@@ -302,22 +299,24 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           }
 
           // Dispatch a custom event that can be listened to by other components
-          console.log(`ProjectImageActions: Dispatching image-deleted event for ${imageId} in project ${cleanProjectId}`);
+          console.log(
+            `ProjectImageActions: Dispatching image-deleted event for ${imageId} in project ${cleanProjectId}`,
+          );
           const event = new CustomEvent('image-deleted', {
-            detail: { 
-              imageId, 
+            detail: {
+              imageId,
               projectId: cleanProjectId,
-              forceRefresh: true // Přidáno pro informaci, že je nutná kompletní aktualizace
+              forceRefresh: true, // Přidáno pro informaci, že je nutná kompletní aktualizace
             },
           });
           window.dispatchEvent(event);
-          
+
           // Also dispatch an event to update queue status if needed
           const queueUpdateEvent = new CustomEvent('queue-status-update', {
             detail: {
               refresh: true,
               projectId: cleanProjectId,
-              forceRefresh: true, 
+              forceRefresh: true,
             },
           });
           window.dispatchEvent(queueUpdateEvent);
@@ -441,36 +440,35 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
   const handleResegment = useCallback(
     async (imageId: string) => {
       setIsResegmenting((prev) => ({ ...prev, [imageId]: true }));
-      toast.info('Spouštím opětovnou segmentaci pomocí neuronové sítě ResUNet...');
+      toast.info('Starting resegmentation with ResUNet neural network...');
 
       try {
-        // 1. Aktualizujeme status obrázku v UI před API voláním pro lepší UX
-        // Immediately update the image status to 'processing'
+        // 1. Update image status to 'queued' in UI for better UX
         const updatedImagesInitial = images.map((img: ProjectImage) => {
           if (img.id === imageId) {
-            return { ...img, segmentationStatus: 'processing' as ImageStatus };
+            return { ...img, segmentationStatus: 'queued' as ImageStatus };
           }
           return img;
         });
 
-        // Aktualizujeme lokální stav
+        // Update local state
         try {
           onImagesChange(updatedImagesInitial);
         } catch (error) {
           console.warn('Failed to update images with onImagesChange:', error);
         }
 
-        // Vždy použijeme událost pro aktualizaci stavu, aby všechny komponenty byly informovány
+        // Always dispatch event to update status in all components
         const updateEvent = new CustomEvent('image-status-update', {
           detail: {
             imageId,
-            status: 'processing',
-            forceQueueUpdate: true, // Přidáme flag pro vynucení aktualizace fronty
+            status: 'queued',
+            forceQueueUpdate: true,
           },
         });
         window.dispatchEvent(updateEvent);
 
-        // Aktualizujeme také stav fronty - použijeme setTimeout, aby se událost zpracovala až po aktualizaci stavu obrázku
+        // Update queue status
         setTimeout(() => {
           console.log('Dispatching queue-status-update event');
           const queueUpdateEvent = new CustomEvent('queue-status-update', {
@@ -479,44 +477,39 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           window.dispatchEvent(queueUpdateEvent);
         }, 100);
 
-        // 2. Provedeme API volání pro segmentaci
+        // 2. Call the resegment API endpoint
         if (projectId) {
-          // Ensure projectId is properly formatted - we need to remove the project- prefix
           const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
 
           try {
             console.log(`Triggering resegmentation for image ${imageId} in project ${cleanProjectId}`);
 
-            // Pokus o volání nového endpointu
-            const response = await apiClient.post(`/api/projects/${cleanProjectId}/segmentations/batch`, {
-              imageIds: [imageId],
-              priority: 5,
-              model_type: 'resunet',
-              force_resegment: true,
+            // Use the dedicated resegment endpoint that deletes old data
+            const response = await apiClient.post(`/api/segmentation/${imageId}/resegment`, {
+              project_id: cleanProjectId,
             });
 
-            console.log('Segmentation API response:', response.data);
+            console.log('Resegmentation API response:', response.data);
 
-            // Explicitně aktualizujeme stav obrázku po úspěšném API volání
+            // Update status to 'queued' after successful API call
             const updateEvent = new CustomEvent('image-status-update', {
-              detail: { imageId, status: 'processing' },
+              detail: { imageId, status: 'queued' },
             });
             window.dispatchEvent(updateEvent);
 
-            // Aktualizujeme stav fronty - použijeme speciální událost pro okamžitou aktualizaci
+            // Update queue status
             const queueUpdateEvent = new CustomEvent('queue-status-update', {
               detail: {
                 refresh: true,
                 projectId: cleanProjectId,
-                forceRefresh: true, // Přidáme flag pro vynucení aktualizace
-                immediate: true, // Přidáme flag pro okamžitou aktualizaci
+                forceRefresh: true,
+                immediate: true,
               },
             });
             window.dispatchEvent(queueUpdateEvent);
 
-            // Počkáme 500ms a pak znovu aktualizujeme stav fronty, aby se projevily změny na backendu
+            // Check status after a delay
             setTimeout(() => {
-              // Aktualizujeme stav fronty znovu po krátké prodlevě
               const delayedQueueUpdateEvent = new CustomEvent('queue-status-update', {
                 detail: {
                   refresh: true,
@@ -526,61 +519,47 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
               });
               window.dispatchEvent(delayedQueueUpdateEvent);
 
-              // Také aktualizujeme stav obrázku
+              // Also update image status
               fetchImageStatus(imageId, cleanProjectId);
             }, 500);
 
-            toast.success('Úloha opětovné segmentace byla úspěšně zařazena.');
-          } catch (newEndpointErr) {
-            console.warn(`Primary endpoint failed, trying legacy endpoint:`, newEndpointErr);
+            toast.success('Resegmentation task has been queued successfully.');
+          } catch (apiErr) {
+            console.error('Resegmentation API call failed:', apiErr);
+            toast.error('Failed to start resegmentation. Please try again.');
 
+            // Reset status on error
             try {
-              // Fallback na legacy endpoint
-              const legacyResponse = await apiClient.post(`/api/segmentations/batch`, {
-                imageIds: [imageId],
-                priority: 5,
-                model_type: 'resunet',
-              });
-
-              console.log('Legacy segmentation API response:', legacyResponse.data);
-              toast.success('Úloha opětovné segmentace pomocí neuronové sítě byla úspěšně zařazena.');
-            } catch (legacyErr) {
-              console.error('All segmentation API endpoints failed:', legacyErr);
-              toast.error('Nepodařilo se kontaktovat server. Zkontrolujte připojení k síti.');
-
-              // Vrátíme status na původní
-              try {
-                onImagesChange(
-                  images.map((img: ProjectImage) => {
-                    if (img.id === imageId) {
-                      return {
-                        ...img,
-                        segmentationStatus: 'pending' as ImageStatus,
-                      }; // Reset to pending or original status
-                    }
-                    return img;
-                  }),
-                );
-              } catch (error) {
-                console.warn('Failed to update images with onImagesChange:', error);
-              }
-              throw legacyErr;
+              onImagesChange(
+                images.map((img: ProjectImage) => {
+                  if (img.id === imageId) {
+                    return {
+                      ...img,
+                      segmentationStatus: img.segmentationStatus || ('without_segmentation' as ImageStatus),
+                    };
+                  }
+                  return img;
+                }),
+              );
+            } catch (error) {
+              console.warn('Failed to update images with onImagesChange:', error);
             }
+            throw apiErr;
           }
         } else {
-          // Chybí projectId
+          // Missing projectId
           console.error('Missing projectId for segmentation');
-          toast.error('Chybí ID projektu pro segmentaci');
+          toast.error('Missing project ID for segmentation');
 
-          // Vrátíme status na původní
+          // Reset status
           try {
             onImagesChange(
               images.map((img: ProjectImage) => {
                 if (img.id === imageId) {
                   return {
                     ...img,
-                    segmentationStatus: 'pending' as ImageStatus,
-                  }; // Reset to pending or original status
+                    segmentationStatus: img.segmentationStatus || ('without_segmentation' as ImageStatus),
+                  };
                 }
                 return img;
               }),
@@ -593,14 +572,12 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
       } catch (err: unknown) {
         console.error('Error triggering segmentation:', err);
 
-        let errorMessage = 'Chyba při spouštění segmentace';
+        let errorMessage = 'Error starting segmentation';
         if (err instanceof Error) {
-          errorMessage = `Chyba: ${err.message}`;
+          errorMessage = `Error: ${err.message}`;
         }
 
         toast.error(errorMessage);
-
-        // Vrátíme status na původní, pokud není již změněn v catch blocích výše
       } finally {
         setIsResegmenting((prev) => ({ ...prev, [imageId]: false }));
       }

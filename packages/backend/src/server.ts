@@ -1,6 +1,6 @@
 /**
  * HTTP Server Initialization
- * 
+ *
  * This module handles HTTP server creation, Socket.IO initialization,
  * and graceful shutdown. Separated from app.ts for better modularity.
  */
@@ -29,32 +29,37 @@ const isProduction = process.env.NODE_ENV === 'production';
 const manualGcEnabled = process.env.ENABLE_MANUAL_GC === 'true';
 
 if (isProduction && manualGcEnabled) {
-  logger.warn('Manual GC is enabled in production! This should only be used for debugging specific memory issues.');
+  logger.warn(
+    'Manual GC is enabled in production! This should only be used for debugging specific memory issues.'
+  );
 }
 
 if (global.gc && performanceConfig.memory.gcIntervalMs > 0 && manualGcEnabled && !isProduction) {
-  logger.info('Manual garbage collection enabled with interval:', performanceConfig.memory.gcIntervalMs);
-  
+  logger.info(
+    'Manual garbage collection enabled with interval:',
+    performanceConfig.memory.gcIntervalMs
+  );
+
   // Track GC performance
   let gcCount = 0;
   let totalGcTime = 0;
-  
+
   setInterval(() => {
     if (global.gc) {
       const startTime = process.hrtime.bigint();
       const memBefore = process.memoryUsage();
-      
+
       global.gc();
-      
+
       const endTime = process.hrtime.bigint();
       const memAfter = process.memoryUsage();
       const gcTime = Number(endTime - startTime) / 1000000; // Convert to milliseconds
-      
+
       gcCount++;
       totalGcTime += gcTime;
-      
+
       const freedMemory = (memBefore.heapUsed - memAfter.heapUsed) / 1024 / 1024;
-      
+
       logger.debug('Manual GC completed', {
         gcNumber: gcCount,
         duration: `${gcTime.toFixed(2)}ms`,
@@ -62,7 +67,7 @@ if (global.gc && performanceConfig.memory.gcIntervalMs > 0 && manualGcEnabled &&
         freedMemory: `${freedMemory.toFixed(2)}MB`,
         heapUsed: `${(memAfter.heapUsed / 1024 / 1024).toFixed(2)}MB`,
       });
-      
+
       // Warn if GC is taking too long
       if (gcTime > 100) {
         logger.warn('Manual GC took longer than 100ms', { duration: gcTime });
@@ -73,7 +78,9 @@ if (global.gc && performanceConfig.memory.gcIntervalMs > 0 && manualGcEnabled &&
   if (isProduction) {
     logger.info('Manual GC available but disabled in production');
   } else {
-    logger.info('Manual GC available but disabled. Enable with ENABLE_MANUAL_GC=true (development only)');
+    logger.info(
+      'Manual GC available but disabled. Enable with ENABLE_MANUAL_GC=true (development only)'
+    );
   }
 }
 
@@ -110,7 +117,6 @@ const initializeServices = async (): Promise<void> => {
     if (config.monitoring?.metricsEnabled) {
       startPerformanceMonitoring(60000); // Every minute
     }
-
   } catch (error: any) {
     logger.error('Failed to initialize services', { error: error?.message || error });
     throw error;
@@ -127,11 +133,11 @@ const startServer = async (): Promise<void> => {
 
     // Start HTTP server
     const { port, host } = config.server;
-    
+
     server.listen(port, host, () => {
       const address = server.address() as AddressInfo;
       const serverUrl = `http://${address.address}:${address.port}`;
-      
+
       logger.info('Server started successfully', {
         port: address.port,
         host: address.address,
@@ -140,7 +146,7 @@ const startServer = async (): Promise<void> => {
         uploadDir: config.storage.uploadDir,
         processId: process.pid,
       });
-      
+
       // Console output for development
       console.log(`🚀 Server running at ${serverUrl}`);
       console.log(`📁 Upload directory: ${config.storage.uploadDir}`);
@@ -149,7 +155,6 @@ const startServer = async (): Promise<void> => {
       console.log(`🔌 Socket.IO server ready`);
       console.log(`💾 Database connected`);
     });
-
   } catch (error: any) {
     logger.error('Failed to start server', { error: error?.message || error });
     process.exit(1);
@@ -161,7 +166,7 @@ const startServer = async (): Promise<void> => {
  */
 const shutdown = async (signal: string): Promise<void> => {
   logger.info(`${signal} received, starting graceful shutdown`);
-  
+
   const shutdownTimeout = setTimeout(() => {
     logger.error('Graceful shutdown timeout, forcing exit');
     process.exit(1);
@@ -190,14 +195,12 @@ const shutdown = async (signal: string): Promise<void> => {
         clearTimeout(shutdownTimeout);
         logger.info('Graceful shutdown completed');
         process.exit(0);
-
       } catch (error: any) {
         logger.error('Error during shutdown', { error: error?.message || error });
         clearTimeout(shutdownTimeout);
         process.exit(1);
       }
     });
-
   } catch (error: any) {
     logger.error('Error initiating shutdown', { error: error?.message || error });
     clearTimeout(shutdownTimeout);
@@ -209,17 +212,17 @@ const shutdown = async (signal: string): Promise<void> => {
  * Error handlers
  */
 process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception', { 
-    error: error.message, 
-    stack: error.stack 
+  logger.error('Uncaught Exception', {
+    error: error.message,
+    stack: error.stack,
   });
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection', { 
+  logger.error('Unhandled Rejection', {
     reason: reason,
-    promise: promise 
+    promise: promise,
   });
   process.exit(1);
 });

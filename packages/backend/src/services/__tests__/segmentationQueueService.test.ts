@@ -60,7 +60,9 @@ beforeEach(() => {
   (path.resolve as jest.Mock).mockImplementation((...args) => args.join('/'));
   (path.join as jest.Mock).mockImplementation((...args) => args.join('/'));
   (path.basename as jest.Mock).mockImplementation((filePath: string) => filePath.split('/').pop());
-  (path.relative as jest.Mock).mockImplementation((from: string, to: string) => to.replace(from + '/', ''));
+  (path.relative as jest.Mock).mockImplementation((from: string, to: string) =>
+    to.replace(from + '/', '')
+  );
 
   // Mock fs functions
   (fs.existsSync as jest.Mock).mockReturnValue(true);
@@ -77,7 +79,7 @@ beforeEach(() => {
           ],
         },
       ],
-    }),
+    })
   );
 
   // Mock spawn
@@ -162,7 +164,7 @@ describe('segmentationQueueService', () => {
           id: imageId,
           priority,
           forceRequeue: false,
-        },
+        }
       );
     });
 
@@ -178,7 +180,7 @@ describe('segmentationQueueService', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         `UPDATE segmentation_results SET status = $1, result_data = $2, updated_at = NOW() WHERE image_id = $3`,
-        ['processing', null, imageId],
+        ['processing', null, imageId]
       );
 
       const mockQueue = new TaskQueue() as any;
@@ -193,7 +195,7 @@ describe('segmentationQueueService', () => {
           id: imageId,
           priority: 1,
           forceRequeue: true,
-        },
+        }
       );
     });
 
@@ -245,9 +247,10 @@ describe('segmentationQueueService', () => {
         ],
       });
 
-      expect(pool.query).toHaveBeenCalledWith(`SELECT id, name, project_id FROM images WHERE id = ANY($1::uuid[])`, [
-        ['image-id'],
-      ]);
+      expect(pool.query).toHaveBeenCalledWith(
+        `SELECT id, name, project_id FROM images WHERE id = ANY($1::uuid[])`,
+        [['image-id']]
+      );
     });
 
     it('should return basic status when no running tasks', async () => {
@@ -368,7 +371,7 @@ describe('segmentationQueueService', () => {
       expect(fs.readFileSync).toHaveBeenCalled();
       expect(pool.query).toHaveBeenCalledWith(
         `UPDATE segmentation_results SET status = $1, result_data = $2, updated_at = NOW() WHERE image_id = $3`,
-        expect.any(Array),
+        expect.any(Array)
       );
 
       // Verify socket notification
@@ -379,7 +382,7 @@ describe('segmentationQueueService', () => {
         expect.objectContaining({
           imageId: 'test-image-id',
           status: 'completed',
-        }),
+        })
       );
     });
 
@@ -413,7 +416,7 @@ describe('segmentationQueueService', () => {
         // Assert
         expect(pool.query).toHaveBeenCalledWith(
           `UPDATE segmentation_results SET status = $1, result_data = $2, updated_at = NOW() WHERE image_id = $3`,
-          ['failed', null, 'test-image-id'],
+          ['failed', null, 'test-image-id']
         );
 
         // Verify socket notification
@@ -425,7 +428,7 @@ describe('segmentationQueueService', () => {
             imageId: 'test-image-id',
             status: 'failed',
             error: 'Failed to start script: Process error',
-          }),
+          })
         );
       }
     });
@@ -461,7 +464,7 @@ describe('segmentationQueueService', () => {
         // Assert
         expect(pool.query).toHaveBeenCalledWith(
           `UPDATE segmentation_results SET status = $1, result_data = $2, updated_at = NOW() WHERE image_id = $3`,
-          ['failed', null, 'test-image-id'],
+          ['failed', null, 'test-image-id']
         );
 
         // Verify error message contains stderr output
@@ -470,7 +473,7 @@ describe('segmentationQueueService', () => {
           'segmentation_update',
           expect.objectContaining({
             error: expect.stringContaining('Error in segmentation'),
-          }),
+          })
         );
       }
     });
@@ -504,7 +507,7 @@ describe('segmentationQueueService', () => {
         expect(error.message).toContain('Image file not found');
         expect(pool.query).toHaveBeenCalledWith(
           `UPDATE segmentation_results SET status = $1, result_data = $2, updated_at = NOW() WHERE image_id = $3`,
-          ['failed', null, 'test-image-id'],
+          ['failed', null, 'test-image-id']
         );
       }
     });
@@ -543,7 +546,7 @@ describe('segmentationQueueService', () => {
         expect(error).toBeInstanceOf(SyntaxError);
         expect(pool.query).toHaveBeenCalledWith(
           `UPDATE segmentation_results SET status = $1, result_data = $2, updated_at = NOW() WHERE image_id = $3`,
-          ['failed', null, 'test-image-id'],
+          ['failed', null, 'test-image-id']
         );
 
         // Verify error message contains syntax error
@@ -552,7 +555,7 @@ describe('segmentationQueueService', () => {
           'segmentation_update',
           expect.objectContaining({
             error: expect.stringContaining('SyntaxError'),
-          }),
+          })
         );
       }
     });
@@ -605,7 +608,7 @@ describe('segmentationQueueService', () => {
           'true',
           '--max_polygons',
           '10',
-        ]),
+        ])
       );
     });
   });
@@ -636,7 +639,9 @@ describe('segmentationQueueService', () => {
 
       // Assert
       expect(result).toBe(false);
-      expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Segmentation script not found'));
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Segmentation script not found')
+      );
     });
 
     it('should fail if checkpoint does not exist', async () => {
@@ -681,7 +686,9 @@ describe('segmentationQueueService', () => {
 
       // Assert
       expect(result).toBe(false);
-      expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('ML service health check failed'));
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('ML service health check failed')
+      );
 
       // Cleanup
       delete process.env.ML_SERVICE_URL;
@@ -702,7 +709,7 @@ describe('segmentationQueueService', () => {
         'Error setting up segmentation queue:',
         expect.objectContaining({
           error: 'File system error',
-        }),
+        })
       );
     });
   });
@@ -782,13 +789,13 @@ describe('segmentationQueueService', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         `UPDATE segmentation_results SET status = $1, result_data = $2, updated_at = NOW() WHERE image_id = $3`,
-        ['completed', expect.any(Object), 'test-image-id'],
+        ['completed', expect.any(Object), 'test-image-id']
       );
 
-      expect(pool.query).toHaveBeenCalledWith(`UPDATE images SET status = $1, updated_at = NOW() WHERE id = $2`, [
-        'completed',
-        'test-image-id',
-      ]);
+      expect(pool.query).toHaveBeenCalledWith(
+        `UPDATE images SET status = $1, updated_at = NOW() WHERE id = $2`,
+        ['completed', 'test-image-id']
+      );
 
       const mockIO = getIO();
       expect(mockIO.to).toHaveBeenCalledWith('mock-user-id');
@@ -797,7 +804,7 @@ describe('segmentationQueueService', () => {
         expect.objectContaining({
           imageId: 'test-image-id',
           status: 'completed',
-        }),
+        })
       );
     });
 
@@ -832,7 +839,10 @@ describe('segmentationQueueService', () => {
       await promise;
 
       // Assert
-      expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Database error'), expect.anything());
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Database error'),
+        expect.anything()
+      );
     });
 
     it('should handle socket notification errors', async () => {
@@ -871,7 +881,7 @@ describe('segmentationQueueService', () => {
       // Assert
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error sending socket notification'),
-        expect.anything(),
+        expect.anything()
       );
     });
   });

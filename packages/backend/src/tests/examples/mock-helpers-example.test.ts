@@ -46,7 +46,7 @@ describe('Example API with Mock Helpers', () => {
       JSON.stringify({
         imageDirectory: '/app/uploads/images',
         thumbnailDirectory: '/app/uploads/thumbnails',
-      }),
+      })
     );
 
     // Setup test data
@@ -141,9 +141,11 @@ describe('Example API with Mock Helpers', () => {
           }
 
           // Query database for images belonging to project
-          return db.query('SELECT * FROM images WHERE project_id = $1', [id]).then((imagesResult) => {
-            res.status(200).json(imagesResult.rows);
-          });
+          return db
+            .query('SELECT * FROM images WHERE project_id = $1', [id])
+            .then((imagesResult) => {
+              res.status(200).json(imagesResult.rows);
+            });
         })
         .catch((err) => {
           res.status(500).json({ error: err.message });
@@ -225,7 +227,7 @@ describe('Example API with Mock Helpers', () => {
                 imageRecord.height,
                 imageRecord.created_at,
                 imageRecord.updated_at,
-              ],
+              ]
             )
             .then((insertResult) => {
               res.status(201).json(insertResult.rows[0]);
@@ -250,7 +252,9 @@ describe('Example API with Mock Helpers', () => {
       }
 
       // Make request with authentication
-      const response = await request(app).get('/api/projects').set('Authorization', `Bearer ${tokenData.token}`);
+      const response = await request(app)
+        .get('/api/projects')
+        .set('Authorization', `Bearer ${tokenData.token}`);
 
       // Verify response
       expect(response.status).toBe(200);
@@ -365,10 +369,13 @@ describe('Example API with Mock Helpers', () => {
       }
 
       // Make request with authentication
-      const response = await request(app).post('/api/images').set('Authorization', `Bearer ${tokenData.token}`).send({
-        projectId: 'test-project-id',
-        imageData: 'base64-encoded-image-data',
-      });
+      const response = await request(app)
+        .post('/api/images')
+        .set('Authorization', `Bearer ${tokenData.token}`)
+        .send({
+          projectId: 'test-project-id',
+          imageData: 'base64-encoded-image-data',
+        });
 
       // Verify response
       expect(response.status).toBe(201);
@@ -399,10 +406,13 @@ describe('Example API with Mock Helpers', () => {
       }
 
       // Make request with authentication but missing fields
-      const response = await request(app).post('/api/images').set('Authorization', `Bearer ${tokenData.token}`).send({
-        projectId: 'test-project-id',
-        // Missing imageData
-      });
+      const response = await request(app)
+        .post('/api/images')
+        .set('Authorization', `Bearer ${tokenData.token}`)
+        .send({
+          projectId: 'test-project-id',
+          // Missing imageData
+        });
 
       // Verify response
       expect(response.status).toBe(400);
@@ -417,10 +427,13 @@ describe('Example API with Mock Helpers', () => {
       }
 
       // Make request with authentication but non-existent project
-      const response = await request(app).post('/api/images').set('Authorization', `Bearer ${tokenData.token}`).send({
-        projectId: 'non-existent-id',
-        imageData: 'base64-encoded-image-data',
-      });
+      const response = await request(app)
+        .post('/api/images')
+        .set('Authorization', `Bearer ${tokenData.token}`)
+        .send({
+          projectId: 'non-existent-id',
+          imageData: 'base64-encoded-image-data',
+        });
 
       // Verify response
       expect(response.status).toBe(404);

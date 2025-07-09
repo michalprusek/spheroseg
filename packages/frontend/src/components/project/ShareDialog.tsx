@@ -32,12 +32,13 @@ interface ShareDialogProps {
 }
 
 // Validation schema for sharing form - will be created inside component
-const createShareFormSchema = (t: any) => z.object({
-  email: z.string().email({ message: t('share.invalidEmail') || 'Invalid email address' }),
-  permission: z.enum(['view', 'edit'], {
-    required_error: t('share.selectPermission') || 'Please select a permission type',
-  }),
-});
+const createShareFormSchema = (t: any) =>
+  z.object({
+    email: z.string().email({ message: t('share.invalidEmail') || 'Invalid email address' }),
+    permission: z.enum(['view', 'edit'], {
+      required_error: t('share.selectPermission') || 'Please select a permission type',
+    }),
+  });
 
 type ShareFormValues = {
   email: string;
@@ -58,7 +59,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [sharedUsers, setSharedUsers] = useState<SharedUser[]>([]);
   const [isLoadingShares, setIsLoadingShares] = useState(false);
@@ -105,7 +106,10 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
     setIsLoading(true);
     try {
       await apiClient.post(`/api/project-shares/${projectId}`, values);
-      toast.success(t('share.sharedSuccess', { projectName, email: values.email }) || `Project "${projectName}" has been shared with ${values.email}`);
+      toast.success(
+        t('share.sharedSuccess', { projectName, email: values.email }) ||
+          `Project "${projectName}" has been shared with ${values.email}`,
+      );
       form.reset();
       fetchSharedUsers(); // Po úspěšném sdílení znovu načteme seznam sdílených uživatelů
     } catch (error: any) {
@@ -171,7 +175,9 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
       <DialogContent className="sm:max-w-md md:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('share.shareProjectTitle', { projectName }) || `Share project "${projectName}"`}</DialogTitle>
-          <DialogDescription>{t('share.shareDescription') || 'Invite other users to collaborate on this project.'}</DialogDescription>
+          <DialogDescription>
+            {t('share.shareDescription') || 'Invite other users to collaborate on this project.'}
+          </DialogDescription>
         </DialogHeader>
 
         {isOwner ? (
@@ -186,295 +192,301 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
                 {t('share.inviteByLink') || 'Invitation link'}
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="email" className="space-y-4">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="flex space-x-2">
+                  <div className="flex space-x-2">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder={t('share.userEmail') || 'User email'}
+                                className="pl-8"
+                                {...field}
+                                disabled={isLoading}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t('share.sharing') || 'Sharing...'}
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          {t('share.invite') || 'Invite'}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="permission"
                     render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormControl>
-                          <div className="relative">
-                            <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder={t('share.userEmail') || 'User email'} className="pl-8" {...field} disabled={isLoading} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
+                      <FormItem>
+                        <FormLabel>{t('share.permissions') || 'Permissions'}</FormLabel>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          disabled={isLoading}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="view" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              <Eye className="h-4 w-4 inline mr-1" />
+                              {t('share.viewOnly') || 'View only'}
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="edit" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              <Edit className="h-4 w-4 inline mr-1" />
+                              {t('share.canEdit') || 'Can edit'}
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                        <FormDescription>
+                          {t('share.selectAccessLevel') || 'Select access level for this user'}
+                        </FormDescription>
                       </FormItem>
                     )}
                   />
+                </form>
+              </Form>
 
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? (
+              <Separator />
+
+              <div>
+                <h3 className="text-sm font-medium mb-2">{t('share.sharedWith') || 'Shared with'}</h3>
+
+                {isLoadingShares ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : sharedUsers.length > 0 ? (
+                  <div className="border rounded-md max-h-48 overflow-y-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t('share.email') || 'Email'}</TableHead>
+                          <TableHead>{t('share.permissions') || 'Permissions'}</TableHead>
+                          <TableHead>{t('share.status') || 'Status'}</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sharedUsers.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell className="font-medium">{user.email}</TableCell>
+                            <TableCell>
+                              {user.permission === 'view' ? (
+                                <span className="flex items-center">
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  {t('share.view') || 'View'}
+                                </span>
+                              ) : (
+                                <span className="flex items-center">
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  {t('share.edit') || 'Edit'}
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {user.isPending ? (
+                                <span className="text-amber-500 text-xs">
+                                  {t('share.pendingAcceptance') || 'Pending acceptance'}
+                                </span>
+                              ) : (
+                                <span className="text-green-500 text-xs">{t('share.accepted') || 'Accepted'}</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveShare(user.id, user.email)}
+                                title={t('share.removeShare') || 'Remove share'}
+                              >
+                                <Trash className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    {t('share.noShares') || 'This project is not shared with anyone yet'}
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="link" className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('share.linkPermissions') || 'Link permissions'}</label>
+                  <RadioGroup
+                    value={linkPermission}
+                    onValueChange={(value) => setLinkPermission(value as 'view' | 'edit')}
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="view" />
+                      <label className="font-normal cursor-pointer">
+                        <Eye className="h-4 w-4 inline mr-1" />
+                        {t('share.viewOnly') || 'View only'}
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="edit" />
+                      <label className="font-normal cursor-pointer">
+                        <Edit className="h-4 w-4 inline mr-1" />
+                        {t('share.canEdit') || 'Can edit'}
+                      </label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {!invitationLink ? (
+                  <Button onClick={generateInvitationLink} disabled={isGeneratingLink} className="w-full">
+                    {isGeneratingLink ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t('share.sharing') || 'Sharing...'}
+                        {t('share.generating') || 'Generating...'}
                       </>
                     ) : (
                       <>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        {t('share.invite') || 'Invite'}
+                        <Link className="mr-2 h-4 w-4" />
+                        {t('share.generateLink') || 'Generate invitation link'}
                       </>
                     )}
                   </Button>
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="permission"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('share.permissions') || 'Permissions'}</FormLabel>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        disabled={isLoading}
-                        className="flex space-x-4"
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      {t('share.shareLinkDescription') ||
+                        'Share this link with users you want to give access to the project:'}
+                    </p>
+                    <div className="flex space-x-2">
+                      <Input value={invitationLink} readOnly className="flex-1" />
+                      <Button
+                        onClick={copyToClipboard}
+                        size="icon"
+                        variant="outline"
+                        title={t('share.copyToClipboard') || 'Copy to clipboard'}
                       >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="view" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                            <Eye className="h-4 w-4 inline mr-1" />
-                            {t('share.viewOnly') || 'View only'}
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="edit" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                            <Edit className="h-4 w-4 inline mr-1" />
-                            {t('share.canEdit') || 'Can edit'}
-                          </FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                      <FormDescription>{t('share.selectAccessLevel') || 'Select access level for this user'}</FormDescription>
-                    </FormItem>
-                  )}
-                />
-              </form>
-            </Form>
-
-            <Separator />
-
-            <div>
-              <h3 className="text-sm font-medium mb-2">{t('share.sharedWith') || 'Shared with'}</h3>
-
-              {isLoadingShares ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : sharedUsers.length > 0 ? (
-                <div className="border rounded-md max-h-48 overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t('share.email') || 'Email'}</TableHead>
-                        <TableHead>{t('share.permissions') || 'Permissions'}</TableHead>
-                        <TableHead>{t('share.status') || 'Status'}</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sharedUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.email}</TableCell>
-                          <TableCell>
-                            {user.permission === 'view' ? (
-                              <span className="flex items-center">
-                                <Eye className="h-3 w-3 mr-1" />
-                                {t('share.view') || 'View'}
-                              </span>
-                            ) : (
-                              <span className="flex items-center">
-                                <Edit className="h-3 w-3 mr-1" />
-                                {t('share.edit') || 'Edit'}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {user.isPending ? (
-                              <span className="text-amber-500 text-xs">{t('share.pendingAcceptance') || 'Pending acceptance'}</span>
-                            ) : (
-                              <span className="text-green-500 text-xs">{t('share.accepted') || 'Accepted'}</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleRemoveShare(user.id, user.email)}
-                              title={t('share.removeShare') || 'Remove share'}
-                            >
-                              <Trash className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  {t('share.noShares') || 'This project is not shared with anyone yet'}
-                </p>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="link" className="space-y-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t('share.linkPermissions') || 'Link permissions'}</label>
-                <RadioGroup
-                  value={linkPermission}
-                  onValueChange={(value) => setLinkPermission(value as 'view' | 'edit')}
-                  className="flex space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="view" />
-                    <label className="font-normal cursor-pointer">
-                      <Eye className="h-4 w-4 inline mr-1" />
-                      {t('share.viewOnly') || 'View only'}
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="edit" />
-                    <label className="font-normal cursor-pointer">
-                      <Edit className="h-4 w-4 inline mr-1" />
-                      {t('share.canEdit') || 'Can edit'}
-                    </label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {!invitationLink ? (
-                <Button 
-                  onClick={generateInvitationLink}
-                  disabled={isGeneratingLink}
-                  className="w-full"
-                >
-                  {isGeneratingLink ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t('share.generating') || 'Generating...'}
-                    </>
-                  ) : (
-                    <>
-                      <Link className="mr-2 h-4 w-4" />
-                      {t('share.generateLink') || 'Generate invitation link'}
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    {t('share.shareLinkDescription') || 'Share this link with users you want to give access to the project:'}
-                  </p>
-                  <div className="flex space-x-2">
-                    <Input
-                      value={invitationLink}
-                      readOnly
-                      className="flex-1"
-                    />
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Button
-                      onClick={copyToClipboard}
-                      size="icon"
+                      onClick={() => {
+                        setInvitationLink('');
+                        generateInvitationLink();
+                      }}
                       variant="outline"
-                      title={t('share.copyToClipboard') || 'Copy to clipboard'}
+                      className="w-full"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Link className="mr-2 h-4 w-4" />
+                      {t('share.generateNewLink') || 'Generate new link'}
                     </Button>
                   </div>
-                  <Button
-                    onClick={() => {
-                      setInvitationLink('');
-                      generateInvitationLink();
-                    }}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <Link className="mr-2 h-4 w-4" />
-                    {t('share.generateNewLink') || 'Generate new link'}
-                  </Button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            <Separator />
+              <Separator />
 
-            <div>
-              <h3 className="text-sm font-medium mb-2">{t('share.sharedWith') || 'Shared with'}</h3>
+              <div>
+                <h3 className="text-sm font-medium mb-2">{t('share.sharedWith') || 'Shared with'}</h3>
 
-              {isLoadingShares ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : sharedUsers.length > 0 ? (
-                <div className="border rounded-md max-h-48 overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t('share.email') || 'Email'}</TableHead>
-                        <TableHead>{t('share.permissions') || 'Permissions'}</TableHead>
-                        <TableHead>{t('share.status') || 'Status'}</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sharedUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.email}</TableCell>
-                          <TableCell>
-                            {user.permission === 'view' ? (
-                              <span className="flex items-center">
-                                <Eye className="h-3 w-3 mr-1" />
-                                {t('share.view') || 'View'}
-                              </span>
-                            ) : (
-                              <span className="flex items-center">
-                                <Edit className="h-3 w-3 mr-1" />
-                                {t('share.edit') || 'Edit'}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {user.isPending ? (
-                              <span className="text-amber-500 text-xs">{t('share.pendingAcceptance') || 'Pending acceptance'}</span>
-                            ) : (
-                              <span className="text-green-500 text-xs">{t('share.accepted') || 'Accepted'}</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleRemoveShare(user.id, user.email)}
-                              title={t('share.removeShare') || 'Remove share'}
-                            >
-                              <Trash className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </TableCell>
+                {isLoadingShares ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : sharedUsers.length > 0 ? (
+                  <div className="border rounded-md max-h-48 overflow-y-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t('share.email') || 'Email'}</TableHead>
+                          <TableHead>{t('share.permissions') || 'Permissions'}</TableHead>
+                          <TableHead>{t('share.status') || 'Status'}</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  {t('share.noShares') || 'This project is not shared with anyone yet'}
-                </p>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+                      </TableHeader>
+                      <TableBody>
+                        {sharedUsers.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell className="font-medium">{user.email}</TableCell>
+                            <TableCell>
+                              {user.permission === 'view' ? (
+                                <span className="flex items-center">
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  {t('share.view') || 'View'}
+                                </span>
+                              ) : (
+                                <span className="flex items-center">
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  {t('share.edit') || 'Edit'}
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {user.isPending ? (
+                                <span className="text-amber-500 text-xs">
+                                  {t('share.pendingAcceptance') || 'Pending acceptance'}
+                                </span>
+                              ) : (
+                                <span className="text-green-500 text-xs">{t('share.accepted') || 'Accepted'}</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveShare(user.id, user.email)}
+                                title={t('share.removeShare') || 'Remove share'}
+                              >
+                                <Trash className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    {t('share.noShares') || 'This project is not shared with anyone yet'}
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         ) : (
-          <p className="text-center py-4">{t('share.noPermission') || 'You do not have permission to share this project.'}</p>
+          <p className="text-center py-4">
+            {t('share.noPermission') || 'You do not have permission to share this project.'}
+          </p>
         )}
 
         <DialogFooter className="sm:justify-end">

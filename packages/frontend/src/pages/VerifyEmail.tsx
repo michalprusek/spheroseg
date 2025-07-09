@@ -15,7 +15,7 @@ const VerifyEmail = () => {
 
   useEffect(() => {
     const token = searchParams.get('token');
-    
+
     if (!token) {
       setStatus('error');
       setErrorMessage(t('auth.invalidVerificationLink') || 'Invalid verification link');
@@ -28,11 +28,7 @@ const VerifyEmail = () => {
         setStatus('success');
       } catch (error: any) {
         setStatus('error');
-        setErrorMessage(
-          error.response?.data?.message || 
-          t('auth.verificationFailed') || 
-          'Email verification failed'
-        );
+        setErrorMessage(error.response?.data?.message || t('auth.verificationFailed') || 'Email verification failed');
       }
     };
 
@@ -58,7 +54,7 @@ const VerifyEmail = () => {
               </CardDescription>
             </>
           )}
-          
+
           {status === 'success' && (
             <>
               <CheckCircle className="h-12 w-12 mx-auto text-green-500" />
@@ -72,23 +68,17 @@ const VerifyEmail = () => {
                 <Button onClick={() => navigate('/sign-in')} className="w-full">
                   {t('common.signIn') || 'Sign In'}
                 </Button>
-                <Button 
-                  onClick={() => window.close()} 
-                  variant="outline" 
-                  className="w-full"
-                >
+                <Button onClick={() => window.close()} variant="outline" className="w-full">
                   {t('common.closeWindow') || 'Close Window'}
                 </Button>
               </div>
             </>
           )}
-          
+
           {status === 'error' && (
             <>
               <XCircle className="h-12 w-12 mx-auto text-red-500" />
-              <CardDescription className="text-red-600 dark:text-red-400">
-                {errorMessage}
-              </CardDescription>
+              <CardDescription className="text-red-600 dark:text-red-400">{errorMessage}</CardDescription>
               <div className="space-y-2">
                 <Button onClick={() => navigate('/sign-in')} variant="outline" className="w-full">
                   {t('common.signIn') || 'Sign In'}

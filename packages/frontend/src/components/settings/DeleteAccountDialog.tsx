@@ -28,7 +28,7 @@ export function DeleteAccountDialog({ open, onClose }: DeleteAccountDialogProps)
   const { t } = useLanguage();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  
+
   const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -68,20 +68,20 @@ export function DeleteAccountDialog({ open, onClose }: DeleteAccountDialogProps)
       };
 
       await authApiService.deleteAccount(deleteData);
-      
+
       logger.info('Account deleted successfully', { userId: user.id });
       toast.success(t('settings.accountDeleted') || 'Account deleted successfully');
-      
+
       // Sign out user after successful deletion
       await signOut();
-      
+
       // Explicitly navigate to home page
       navigate('/');
-      
+
       handleClose();
     } catch (error: any) {
       logger.error('Error deleting account', { error });
-      
+
       if (error.response?.status === 400) {
         setError(error.response.data.message || t('settings.deleteAccountError') || 'Failed to delete account');
       } else {
@@ -101,8 +101,8 @@ export function DeleteAccountDialog({ open, onClose }: DeleteAccountDialogProps)
             {t('settings.deleteAccount') || 'Delete Account'}
           </DialogTitle>
           <DialogDescription>
-            {t('settings.deleteAccountDescription') || 
-             'This action cannot be undone. This will permanently delete your account and remove all your data from our servers.'}
+            {t('settings.deleteAccountDescription') ||
+              'This action cannot be undone. This will permanently delete your account and remove all your data from our servers.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -110,15 +110,13 @@ export function DeleteAccountDialog({ open, onClose }: DeleteAccountDialogProps)
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              {t('settings.deleteAccountWarning') || 
-               'Warning: All your projects, images, and settings will be permanently deleted.'}
+              {t('settings.deleteAccountWarning') ||
+                'Warning: All your projects, images, and settings will be permanently deleted.'}
             </AlertDescription>
           </Alert>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-email">
-              {t('settings.confirmUsername') || `Type "${user?.email}" to confirm`}
-            </Label>
+            <Label htmlFor="confirm-email">{t('settings.confirmUsername') || `Type "${user?.email}" to confirm`}</Label>
             <Input
               id="confirm-email"
               type="email"
@@ -130,9 +128,7 @@ export function DeleteAccountDialog({ open, onClose }: DeleteAccountDialogProps)
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">
-              {t('settings.password') || 'Password'}
-            </Label>
+            <Label htmlFor="password">{t('settings.password') || 'Password'}</Label>
             <Input
               id="password"
               type="password"
@@ -152,23 +148,14 @@ export function DeleteAccountDialog({ open, onClose }: DeleteAccountDialogProps)
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isDeleting}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={isDeleting}>
             {t('common.cancel') || 'Cancel'}
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isDeleting || !confirmEmail || !password}
-          >
+          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || !confirmEmail || !password}>
             {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isDeleting 
-              ? (t('settings.deletingAccount') || 'Deleting Account...') 
-              : (t('settings.deleteAccount') || 'Delete Account')
-            }
+            {isDeleting
+              ? t('settings.deletingAccount') || 'Deleting Account...'
+              : t('settings.deleteAccount') || 'Delete Account'}
           </Button>
         </DialogFooter>
       </DialogContent>

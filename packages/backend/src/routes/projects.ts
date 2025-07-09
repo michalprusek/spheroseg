@@ -1,6 +1,6 @@
 import express, { Response, Router, NextFunction } from 'express';
 import { getPool } from '../db';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import { validate } from '../middleware/validationMiddleware';
 import {
   listProjectsSchema,
@@ -62,7 +62,13 @@ router.get(
       }
 
       // Get projects using the service
-      const result = await projectService.getUserProjects(getPool(), userId, limit, offset, includeShared);
+      const result = await projectService.getUserProjects(
+        getPool(),
+        userId,
+        limit,
+        offset,
+        includeShared
+      );
 
       logger.info('Projects fetched successfully', {
         count: result.projects.length,
@@ -77,7 +83,7 @@ router.get(
       logger.error('Error fetching projects', { error });
       next(error);
     }
-  },
+  }
 );
 
 // POST /api/projects - Create a new project
@@ -129,7 +135,7 @@ router.post(
                     AND column_name = $1
                 )
             `,
-          [column],
+          [column]
         );
 
         if (!columnCheck.rows[0].exists) {
@@ -146,7 +152,6 @@ router.post(
           error: 'SCHEMA_ERROR',
         });
       }
-
 
       // Extract optional fields from request body
       const { tags, public: isPublic } = req.body;
@@ -184,18 +189,21 @@ router.post(
 
       res.status(201).json(newProject);
     } catch (error) {
-      logger.error('Error creating project', { 
-        error: error instanceof Error ? {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
-        } : error,
-        title, 
-        userId 
+      logger.error('Error creating project', {
+        error:
+          error instanceof Error
+            ? {
+                message: error.message,
+                stack: error.stack,
+                name: error.name,
+              }
+            : error,
+        title,
+        userId,
       });
       next(error);
     }
-  },
+  }
 );
 
 // GET /api/projects/:id - Get a specific project by ID, or return a project template for "new"
@@ -248,7 +256,6 @@ router.get(
         });
       }
 
-
       // Get project using the service
       const project = await projectService.getProjectById(getPool(), projectId, userId);
 
@@ -271,7 +278,7 @@ router.get(
       logger.error('Error fetching project', { error, projectId, userId });
       next(error);
     }
-  },
+  }
 );
 
 // DELETE /api/projects/:id - Delete a project by ID
@@ -308,7 +315,6 @@ router.delete(
         });
       }
 
-
       // Delete the project using the service
       await projectService.deleteProject(getPool(), projectId, userId);
 
@@ -328,7 +334,7 @@ router.delete(
 
       next(error);
     }
-  },
+  }
 );
 
 // POST /api/projects/:id/duplicate - Duplicate a project
@@ -340,7 +346,13 @@ router.post(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { id: originalProjectId } = req.params;
-    const { newTitle, copyFiles = true, copySegmentations = false, resetStatus = true, async = false } = req.body;
+    const {
+      newTitle,
+      copyFiles = true,
+      copySegmentations = false,
+      resetStatus = true,
+      async = false,
+    } = req.body;
 
     if (!userId) return res.status(401).json({ message: 'Authentication error' });
 
@@ -372,10 +384,10 @@ router.post(
       }
 
       // Verify the source project exists and belongs to the user
-      const projectCheck = await getPool().query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
-        originalProjectId,
-        userId,
-      ]);
+      const projectCheck = await getPool().query(
+        'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
+        [originalProjectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         logger.info('Source project not found or access denied', {
@@ -401,7 +413,9 @@ router.post(
         if (tasksTableExists) {
           try {
             // Import the duplication queue service
-            const projectDuplicationQueueService = await import('../services/projectDuplicationQueueService');
+            const projectDuplicationQueueService = await import(
+              '../services/projectDuplicationQueueService'
+            );
 
             // Trigger an asynchronous duplication
             const taskId = await projectDuplicationQueueService.default.triggerProjectDuplication(
@@ -414,7 +428,7 @@ router.post(
                 copySegmentations,
                 resetStatus,
                 baseDir: process.cwd(),
-              },
+              }
             );
 
             logger.info('Project duplication task created successfully', {
@@ -429,7 +443,8 @@ router.post(
               taskId,
               status: 'pending',
               originalProjectId,
-              message: 'Project duplication started. Monitor progress using the duplication task API.',
+              message:
+                'Project duplication started. Monitor progress using the duplication task API.',
             });
           } catch (queueError) {
             logger.error('Error using duplication queue service', {
@@ -452,13 +467,18 @@ router.post(
         const projectDuplicationService = await import('../services/projectDuplicationService');
 
         // Duplicate the project using the centralized service
-        const newProject = await projectDuplicationService.duplicateProject(getPool(), originalProjectId, userId, {
-          newTitle,
-          copyFiles,
-          copySegmentations,
-          resetStatus,
-          baseDir: process.cwd(), // Use current working directory as base
-        });
+        const newProject = await projectDuplicationService.duplicateProject(
+          getPool(),
+          originalProjectId,
+          userId,
+          {
+            newTitle,
+            copyFiles,
+            copySegmentations,
+            resetStatus,
+            baseDir: process.cwd(), // Use current working directory as base
+          }
+        );
 
         logger.info('Project duplicated successfully (synchronous)', {
           originalProjectId,
@@ -486,7 +506,11 @@ router.post(
           // Basic duplicate without files - just create new project with same title
           const newProjectResult = await getPool().query(
             'INSERT INTO projects (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
-            [userId, newTitle || `Copy of ${projectCheck.rows[0].title}`, projectCheck.rows[0].description],
+            [
+              userId,
+              newTitle || `Copy of ${projectCheck.rows[0].title}`,
+              projectCheck.rows[0].description,
+            ]
           );
 
           logger.info('Project duplicated using fallback method', {
@@ -507,7 +531,7 @@ router.post(
       });
       next(error);
     }
-  },
+  }
 );
 
 // GET /api/projects/:id/images - Get images for a specific project
@@ -544,10 +568,10 @@ router.get(
       }
 
       // Verify user has access to the project
-      const projectCheck = await getPool().query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await getPool().query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         logger.info('Project not found or access denied', { projectId, userId });
@@ -601,8 +625,7 @@ router.get(
       logger.error('Error fetching project images', { error, projectId, userId });
       next(error);
     }
-  },
+  }
 );
-
 
 export default router;

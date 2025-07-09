@@ -33,7 +33,7 @@ export const loadImageDirectly = async (
     // The directImageLoader should only be used as a last resort, and ideally
     // we should have the storage path from the API
     const potentialUrls: string[] = [];
-    
+
     // Add a log to indicate this fallback shouldn't normally be used
     logger.warn(`DirectImageLoader being used as fallback - this indicates API communication issues`);
 

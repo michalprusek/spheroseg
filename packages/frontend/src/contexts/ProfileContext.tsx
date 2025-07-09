@@ -55,10 +55,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
           // Mark this user as processed
           window.sessionStorage.setItem('spheroseg_profile_last_user', user.id);
-          
+
           // Add a small delay to ensure auth is fully initialized
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
           await loadFromDatabase();
         } else {
           setProfile(null);
@@ -113,7 +113,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         setProfile(profile);
         // Cache in localStorage for offline use
         localStorage.setItem('userProfile', JSON.stringify(profile));
-        
+
         // If there's an avatar URL from API, also store it separately for easier access
         if (apiProfile.avatar_url) {
           localStorage.setItem('userAvatarUrl', apiProfile.avatar_url);
@@ -146,7 +146,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   // Sync current profile to database
   const syncToDatabase = async (): Promise<void> => {
     if (!profile) return;
-    
+
     try {
       await userProfileService.updateUserProfile(profile);
       console.log('Profile synced to database successfully');

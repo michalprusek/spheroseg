@@ -10,7 +10,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 // Mock svgUtils
 jest.mock('@/lib/svgUtils', () => ({
-  scalePolygons: jest.fn((polygons) => polygons.map(p => ({...p}))), // Simple mock that returns the same polygons
+  scalePolygons: jest.fn((polygons) => polygons.map((p) => ({ ...p }))), // Simple mock that returns the same polygons
   createSvgPath: jest.fn(),
   darkenColor: jest.fn(),
 }));
@@ -89,8 +89,8 @@ describe('DebugSegmentationThumbnail', () => {
             id: 'test-image-id',
             width: 1024,
             height: 768,
-            name: 'Test Image'
-          }
+            name: 'Test Image',
+          },
         });
       } else {
         return Promise.resolve({ data: mockSegmentationData });
@@ -126,8 +126,8 @@ describe('DebugSegmentationThumbnail', () => {
             id: 'test-image-id',
             width: 1024,
             height: 768,
-            name: 'Test Image'
-          }
+            name: 'Test Image',
+          },
         });
       } else {
         return Promise.resolve({ data: mockSegmentationData });
@@ -165,8 +165,8 @@ describe('DebugSegmentationThumbnail', () => {
             id: 'test-image-id',
             width: originalWidth,
             height: originalHeight,
-            name: 'Test Image'
-          }
+            name: 'Test Image',
+          },
         });
       } else {
         return Promise.resolve({ data: mockSegmentationData });
@@ -181,8 +181,8 @@ describe('DebugSegmentationThumbnail', () => {
         '[DEBUG] Got original image dimensions from image API:',
         expect.objectContaining({
           width: originalWidth,
-          height: originalHeight
-        })
+          height: originalHeight,
+        }),
       );
 
       // Check that the final dimensions were used
@@ -190,8 +190,8 @@ describe('DebugSegmentationThumbnail', () => {
         '[DEBUG] Final segmentation data with dimensions:',
         expect.objectContaining({
           imageWidth: originalWidth,
-          imageHeight: originalHeight
-        })
+          imageHeight: originalHeight,
+        }),
       );
     });
   });

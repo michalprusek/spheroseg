@@ -19,7 +19,7 @@ export const SegmentationPage: React.FC = () => {
   }>();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  
+
   // Remove console.log to reduce noise
 
   // Create a ref for the canvas

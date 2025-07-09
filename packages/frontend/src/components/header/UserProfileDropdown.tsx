@@ -35,24 +35,24 @@ const UserProfileDropdown = ({ username }: UserProfileDropdownProps) => {
     // Priority order: localStorage userAvatar > profile.avatar_url > localStorage userAvatarUrl
     const storedAvatar = localStorage.getItem('userAvatar');
     const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
-    
+
     if (storedAvatar) {
       // This is typically a data URL from recent upload
       setAvatarUrl(storedAvatar);
       return;
     }
-    
+
     if (profile?.avatar_url) {
       setAvatarUrl(profile.avatar_url);
       return;
     }
-    
+
     if (storedAvatarUrl) {
       // This is typically an API URL from previous session
       setAvatarUrl(storedAvatarUrl);
       return;
     }
-    
+
     setAvatarUrl(null);
   }, [profile, user]);
 

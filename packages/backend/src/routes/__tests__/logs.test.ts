@@ -251,7 +251,11 @@ describe('Logs API Controller', () => {
       };
 
       // Call the controller
-      await logsController.getSystemStats(mockRequest as Request, mockResponse as Response, mockNext);
+      await logsController.getSystemStats(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called
       expect(loggingService.getSystemStats).toHaveBeenCalled();
@@ -268,7 +272,11 @@ describe('Logs API Controller', () => {
       };
 
       // Call the controller
-      await logsController.getSystemStats(mockRequest as Request, mockResponse as Response, mockNext);
+      await logsController.getSystemStats(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -314,7 +322,11 @@ describe('Logs API Controller', () => {
       };
 
       // Call the controller
-      await logsController.getLogDetails(mockRequest as Request, mockResponse as Response, mockNext);
+      await logsController.getLogDetails(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct id
       expect(loggingService.getLogById).toHaveBeenCalledWith('log-123');
@@ -335,7 +347,11 @@ describe('Logs API Controller', () => {
       };
 
       // Call the controller
-      await logsController.getLogDetails(mockRequest as Request, mockResponse as Response, mockNext);
+      await logsController.getLogDetails(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -350,7 +366,11 @@ describe('Logs API Controller', () => {
       };
 
       // Call the controller
-      await logsController.getLogDetails(mockRequest as Request, mockResponse as Response, mockNext);
+      await logsController.getLogDetails(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));

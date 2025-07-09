@@ -27,13 +27,19 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const loadTheme = async () => {
       // Always check localStorage first as it's the most reliable fallback
       const localTheme = localStorage.getItem('theme') as Theme | null;
-      const validLocalTheme = localTheme && ['light', 'dark', 'system'].includes(localTheme) ? localTheme as Theme : 'system';
-      
+      const validLocalTheme =
+        localTheme && ['light', 'dark', 'system'].includes(localTheme) ? (localTheme as Theme) : 'system';
+
       if (user) {
         // Prevent multiple concurrent API calls for the same user
         const lastUserId = window.sessionStorage.getItem('spheroseg_theme_last_user');
         if (lastUserId === user.id) {
-          console.log('[ThemeContext] Theme already loaded for user', user.id, ', using localStorage:', validLocalTheme);
+          console.log(
+            '[ThemeContext] Theme already loaded for user',
+            user.id,
+            ', using localStorage:',
+            validLocalTheme,
+          );
           setThemeState(validLocalTheme);
           applyTheme(validLocalTheme);
           setLoaded(true);
@@ -43,19 +49,19 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         try {
           // Mark this user as processed
           window.sessionStorage.setItem('spheroseg_theme_last_user', user.id);
-          
+
           // Try to load from database
           const dbTheme = await userProfileService.loadSettingFromDatabase('theme', 'theme', 'system');
-          
+
           if (dbTheme && ['light', 'dark', 'system'].includes(dbTheme)) {
             const validDbTheme = dbTheme as Theme;
-            
+
             // Update localStorage if DB has different value
             if (localTheme !== validDbTheme) {
               localStorage.setItem('theme', validDbTheme);
               console.log('[ThemeContext] Updated localStorage with DB theme:', validDbTheme);
             }
-            
+
             setThemeState(validDbTheme);
             applyTheme(validDbTheme);
           } else {

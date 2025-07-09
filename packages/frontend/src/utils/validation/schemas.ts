@@ -1,6 +1,6 @@
 /**
  * Centralized Validation Schemas
- * 
+ *
  * This module contains all reusable Zod schemas for form validation
  * across the application. It provides consistent validation rules
  * and error messages.
@@ -43,8 +43,14 @@ export const emailSchema = z
  */
 export const passwordSchema = z
   .string()
-  .min(VALIDATION_RULES.PASSWORD_MIN_LENGTH, `Password must be at least ${VALIDATION_RULES.PASSWORD_MIN_LENGTH} characters`)
-  .max(VALIDATION_RULES.PASSWORD_MAX_LENGTH, `Password must not exceed ${VALIDATION_RULES.PASSWORD_MAX_LENGTH} characters`)
+  .min(
+    VALIDATION_RULES.PASSWORD_MIN_LENGTH,
+    `Password must be at least ${VALIDATION_RULES.PASSWORD_MIN_LENGTH} characters`,
+  )
+  .max(
+    VALIDATION_RULES.PASSWORD_MAX_LENGTH,
+    `Password must not exceed ${VALIDATION_RULES.PASSWORD_MAX_LENGTH} characters`,
+  )
   .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
   .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
   .regex(/[0-9]/, 'Password must contain at least one number')
@@ -55,16 +61,28 @@ export const passwordSchema = z
  */
 export const simplePasswordSchema = z
   .string()
-  .min(VALIDATION_RULES.PASSWORD_MIN_LENGTH, `Password must be at least ${VALIDATION_RULES.PASSWORD_MIN_LENGTH} characters`)
-  .max(VALIDATION_RULES.PASSWORD_MAX_LENGTH, `Password must not exceed ${VALIDATION_RULES.PASSWORD_MAX_LENGTH} characters`);
+  .min(
+    VALIDATION_RULES.PASSWORD_MIN_LENGTH,
+    `Password must be at least ${VALIDATION_RULES.PASSWORD_MIN_LENGTH} characters`,
+  )
+  .max(
+    VALIDATION_RULES.PASSWORD_MAX_LENGTH,
+    `Password must not exceed ${VALIDATION_RULES.PASSWORD_MAX_LENGTH} characters`,
+  );
 
 /**
  * Username validation schema
  */
 export const usernameSchema = z
   .string()
-  .min(VALIDATION_RULES.USERNAME_MIN_LENGTH, `Username must be at least ${VALIDATION_RULES.USERNAME_MIN_LENGTH} characters`)
-  .max(VALIDATION_RULES.USERNAME_MAX_LENGTH, `Username must not exceed ${VALIDATION_RULES.USERNAME_MAX_LENGTH} characters`)
+  .min(
+    VALIDATION_RULES.USERNAME_MIN_LENGTH,
+    `Username must be at least ${VALIDATION_RULES.USERNAME_MIN_LENGTH} characters`,
+  )
+  .max(
+    VALIDATION_RULES.USERNAME_MAX_LENGTH,
+    `Username must not exceed ${VALIDATION_RULES.USERNAME_MAX_LENGTH} characters`,
+  )
   .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, hyphens, and underscores')
   .trim();
 
@@ -82,7 +100,10 @@ export const titleSchema = z
  */
 export const descriptionSchema = z
   .string()
-  .max(VALIDATION_RULES.DESCRIPTION_MAX_LENGTH, `Description must not exceed ${VALIDATION_RULES.DESCRIPTION_MAX_LENGTH} characters`)
+  .max(
+    VALIDATION_RULES.DESCRIPTION_MAX_LENGTH,
+    `Description must not exceed ${VALIDATION_RULES.DESCRIPTION_MAX_LENGTH} characters`,
+  )
   .optional();
 
 /**
@@ -93,9 +114,7 @@ export const booleanSchema = z.boolean();
 /**
  * Required checkbox schema (must be true)
  */
-export const requiredCheckboxSchema = z
-  .boolean()
-  .refine((val) => val === true, 'This field must be checked');
+export const requiredCheckboxSchema = z.boolean().refine((val) => val === true, 'This field must be checked');
 
 // ===========================
 // Composite Schemas
@@ -104,18 +123,17 @@ export const requiredCheckboxSchema = z
 /**
  * Sign up form schema
  */
-export const signUpSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-  agreeToTerms: requiredCheckboxSchema.refine(
-    (val) => val === true,
-    'You must agree to the terms and conditions'
-  ),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+export const signUpSchema = z
+  .object({
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+    agreeToTerms: requiredCheckboxSchema.refine((val) => val === true, 'You must agree to the terms and conditions'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 /**
  * Sign in form schema
@@ -136,28 +154,33 @@ export const forgotPasswordSchema = z.object({
 /**
  * Reset password form schema
  */
-export const resetPasswordSchema = z.object({
-  password: passwordSchema,
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+export const resetPasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 /**
  * Change password form schema
  */
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: passwordSchema,
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-}).refine((data) => data.currentPassword !== data.newPassword, {
-  message: "New password must be different from current password",
-  path: ['newPassword'],
-});
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: 'New password must be different from current password',
+    path: ['newPassword'],
+  });
 
 /**
  * Create project form schema
@@ -213,10 +236,7 @@ export const requestAccessSchema = z.object({
 /**
  * Create a dynamic schema with translations
  */
-export function createTranslatedSchema<T extends z.ZodType>(
-  schema: T,
-  translations: Record<string, string>
-): T {
+export function createTranslatedSchema<T extends z.ZodType>(schema: T, translations: Record<string, string>): T {
   // This is a placeholder for translation logic
   // In practice, you'd integrate with your i18n system
   return schema;
@@ -258,9 +278,7 @@ export function getPasswordStrength(password: string): {
 /**
  * Email validation with async check
  */
-export const createAsyncEmailSchema = (
-  checkEmailExists: (email: string) => Promise<boolean>
-) => {
+export const createAsyncEmailSchema = (checkEmailExists: (email: string) => Promise<boolean>) => {
   return emailSchema.refine(
     async (email) => {
       const exists = await checkEmailExists(email);
@@ -268,7 +286,7 @@ export const createAsyncEmailSchema = (
     },
     {
       message: 'This email is already registered',
-    }
+    },
   );
 };
 
@@ -294,7 +312,7 @@ export type RequestAccessForm = z.infer<typeof requestAccessSchema>;
 export default {
   // Rules
   VALIDATION_RULES,
-  
+
   // Base schemas
   emailSchema,
   passwordSchema,
@@ -304,7 +322,7 @@ export default {
   descriptionSchema,
   booleanSchema,
   requiredCheckboxSchema,
-  
+
   // Form schemas
   signUpSchema,
   signInSchema,
@@ -316,7 +334,7 @@ export default {
   shareProjectSchema,
   userProfileSchema,
   requestAccessSchema,
-  
+
   // Helpers
   createTranslatedSchema,
   getPasswordStrength,

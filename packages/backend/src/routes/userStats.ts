@@ -1,5 +1,5 @@
 import express, { Response, Router } from 'express';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import userStatsService from '../services/userStatsService';
 import pool from '../db';
 import logger from '../utils/logger';

@@ -1,6 +1,6 @@
 /**
  * Validation Module
- * 
+ *
  * Centralized form validation utilities, schemas, and components
  */
 
@@ -18,15 +18,15 @@ export {
   signUpSchema,
   signInSchema,
   createProjectSchema,
-  
+
   // Types
   type SignUpForm,
   type SignInForm,
   type CreateProjectForm,
-  
+
   // Validation rules
   VALIDATION_RULES,
-  
+
   // Helpers
   getPasswordStrength,
 } from './schemas';

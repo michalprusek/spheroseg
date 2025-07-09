@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '@/lib/apiClient';
-import { Point as ApiPoint, Polygon as ApiPolygon, SegmentationResult as ApiSegmentationResult } from '@/lib/segmentation/types';
+import {
+  Point as ApiPoint,
+  Polygon as ApiPolygon,
+  SegmentationResult as ApiSegmentationResult,
+} from '@/lib/segmentation/types';
 import { createSvgPath, scalePolygons, darkenColor } from '@/lib/svgUtils';
 import { createNamespacedLogger } from '@/utils/logger';
 
@@ -112,42 +116,53 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
               // Direct polygons array
               if (Array.isArray(response.data)) {
                 const legacyData = response.data as LegacyListItem[];
-                fetchedPolygons = legacyData.map((p: LegacyListItem): InternalPolygon => ({
-                  id: p.id || `legacy-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-                  points: p.points,
-                  type: p.type || 'external',
-                  class: p.class || p.label, // Use p.class if available, otherwise p.label
-                  holes: p.holes,
-                  legacyLabel: p.label, // Store original label if it exists
-                  legacyScore: p.score, // Store original score if it exists
-                  // metadata is optional in ApiPolygon, so it's fine if not present here
-                }));
-                CLogger.warn(`Fetched legacy segmentation format from ${endpoint.name}. Original image dimensions not available from this endpoint.`);
+                fetchedPolygons = legacyData.map(
+                  (p: LegacyListItem): InternalPolygon => ({
+                    id: p.id || `legacy-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                    points: p.points,
+                    type: p.type || 'external',
+                    class: p.class || p.label, // Use p.class if available, otherwise p.label
+                    holes: p.holes,
+                    legacyLabel: p.label, // Store original label if it exists
+                    legacyScore: p.score, // Store original score if it exists
+                    // metadata is optional in ApiPolygon, so it's fine if not present here
+                  }),
+                );
+                CLogger.warn(
+                  `Fetched legacy segmentation format from ${endpoint.name}. Original image dimensions not available from this endpoint.`,
+                );
                 // width and height remain undefined, will use imageSize from loaded image later
               }
               // Polygons in result_data
               else if (response.data.polygons && Array.isArray(response.data.polygons)) {
                 const currentData = response.data as ApiSegmentationResult;
-                fetchedPolygons = currentData.polygons.map((apiPoly: ApiPolygon): InternalPolygon => ({
-                  ...apiPoly, // Spread all fields from ApiPolygon
-                  // legacyLabel and legacyScore will be undefined here as ApiPolygon doesn't have them
-                  // This is fine as they are optional in InternalPolygon
-                }));
+                fetchedPolygons = currentData.polygons.map(
+                  (apiPoly: ApiPolygon): InternalPolygon => ({
+                    ...apiPoly, // Spread all fields from ApiPolygon
+                    // legacyLabel and legacyScore will be undefined here as ApiPolygon doesn't have them
+                    // This is fine as they are optional in InternalPolygon
+                  }),
+                );
                 width = currentData.imageWidth;
                 height = currentData.imageHeight;
-                CLogger.info(`Fetched segmentation data from ${endpoint.name}. Polygons: ${fetchedPolygons.length}, API imageWidth: ${width}, API imageHeight: ${height}`);
+                CLogger.info(
+                  `Fetched segmentation data from ${endpoint.name}. Polygons: ${fetchedPolygons.length}, API imageWidth: ${width}, API imageHeight: ${height}`,
+                );
               }
             }
 
-            if (fetchedPolygons.length > 0 || (endpoint.name && response.status === 200)) { // If we got a 200 OK with empty array, it's valid
+            if (fetchedPolygons.length > 0 || (endpoint.name && response.status === 200)) {
+              // If we got a 200 OK with empty array, it's valid
               CLogger.info(`${endpoint.name} success, got ${fetchedPolygons.length} polygons for image ${imageId}`);
 
               // Process polygons - ensure each polygon has a type
-              const processedPolygons = fetchedPolygons.map((polygon): InternalPolygon => ({
-                ...polygon,
-                id: polygon.id || `poly-${Math.random().toString(36).substring(2, 9)}`,
-                type: polygon.type || 'external',
-              }));
+              const processedPolygons = fetchedPolygons.map(
+                (polygon): InternalPolygon => ({
+                  ...polygon,
+                  id: polygon.id || `poly-${Math.random().toString(36).substring(2, 9)}`,
+                  type: polygon.type || 'external',
+                }),
+              );
 
               setSegmentationData({
                 polygons: processedPolygons,
@@ -164,7 +179,9 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
                 });
                 CLogger.info(`Dimensions for image ${imageId} from API: ${width}x${height}`);
               } else {
-                CLogger.warn(`API for image ${imageId} returned polygons but no explicit imageWidth/imageHeight. Scaling might be inaccurate if thumbnail dimensions are used as original dimensions for full-res polygons.`);
+                CLogger.warn(
+                  `API for image ${imageId} returned polygons but no explicit imageWidth/imageHeight. Scaling might be inaccurate if thumbnail dimensions are used as original dimensions for full-res polygons.`,
+                );
                 // imageSize will be set by handleImageLoad or default if API doesn't provide them
               }
 
@@ -231,7 +248,8 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
       CLogger.debug(`Attempting to use direct thumbnailUrl: ${thumbnailUrl}`);
       setImageSrc(thumbnailUrl);
       setTriedDirectUrl(true); // Mark that we've tried the direct URL
-    } else if (imageId) { // && !thumbnailUrl implies we need to fetch
+    } else if (imageId) {
+      // && !thumbnailUrl implies we need to fetch
       CLogger.debug(`No thumbnailUrl, attempting to fetch blob for imageId: ${imageId}`);
       // Attempt to retrieve from local storage first
       const storedImage = localStorage.getItem(`thumbnail-${imageId}`);
@@ -288,20 +306,28 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
         newImageSize.width > 0 &&
         newImageSize.height > 0 &&
         (!imageSize || // if imageSize is not set yet by API
-          (
-            // Or if API didn't provide valid dimensions (width/height might be 0 or undefined from API response)
-            // This condition checks if imageSize is not set OR if it was set but to invalid values (e.g. 0x0 or default 100x100 if API failed)
-            !(imageSize && imageSize.width > 0 && imageSize.height > 0 && (imageSize.width !== 100 || imageSize.height !== 100) ) && // Avoid overwriting valid API dimensions (unless they were the default 100x100)
-            (imageSize?.width !== newImageSize.width || imageSize?.height !== newImageSize.height) // and new dimensions are different
-          )
-        )
+          // Or if API didn't provide valid dimensions (width/height might be 0 or undefined from API response)
+          // This condition checks if imageSize is not set OR if it was set but to invalid values (e.g. 0x0 or default 100x100 if API failed)
+          (!(
+            imageSize &&
+            imageSize.width > 0 &&
+            imageSize.height > 0 &&
+            (imageSize.width !== 100 || imageSize.height !== 100)
+          ) && // Avoid overwriting valid API dimensions (unless they were the default 100x100)
+            (imageSize?.width !== newImageSize.width || imageSize?.height !== newImageSize.height))) // and new dimensions are different
       ) {
-        CLogger.info(`Image ${imageId} loaded, natural dimensions: ${newImageSize.width}x${newImageSize.height}. API did not provide valid dimensions or they were default. Updating imageSize based on thumbnail.`);
+        CLogger.info(
+          `Image ${imageId} loaded, natural dimensions: ${newImageSize.width}x${newImageSize.height}. API did not provide valid dimensions or they were default. Updating imageSize based on thumbnail.`,
+        );
         setImageSize(newImageSize);
-      } else if (imageSize && (imageSize.width === newImageSize.width && imageSize.height === newImageSize.height)) {
-        CLogger.info(`Image ${imageId} loaded, natural dimensions match API/existing dimensions: ${newImageSize.width}x${newImageSize.height}. No update to imageSize needed.`);
+      } else if (imageSize && imageSize.width === newImageSize.width && imageSize.height === newImageSize.height) {
+        CLogger.info(
+          `Image ${imageId} loaded, natural dimensions match API/existing dimensions: ${newImageSize.width}x${newImageSize.height}. No update to imageSize needed.`,
+        );
       } else {
-        CLogger.info(`Image ${imageId} loaded, natural dimensions: ${newImageSize.width}x${newImageSize.height}. API/existing dimensions (${imageSize?.width}x${imageSize?.height}) will be preferred or already set.`);
+        CLogger.info(
+          `Image ${imageId} loaded, natural dimensions: ${newImageSize.width}x${newImageSize.height}. API/existing dimensions (${imageSize?.width}x${imageSize?.height}) will be preferred or already set.`,
+        );
       }
     }
     setIsLoading(false); // Image element itself has loaded
@@ -354,7 +380,7 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
 
       if (scaled && scaled.length > 0) {
         // Map scaled ApiPolygons to DisplayPolygons, adding color
-        const displayPolygons: DisplayPolygon[] = scaled.map(poly => ({
+        const displayPolygons: DisplayPolygon[] = scaled.map((poly) => ({
           ...poly,
           // Example color logic, can be refined based on poly.class or other props
           color: poly.type === 'internal' ? '#0000ff' : '#ff0000', // Blue for internal, red for external
@@ -364,21 +390,21 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
       } else {
         setScaledPolygons([]); // Ensure scaledPolygons is an empty array if scaling results in no polygons
       }
-    } else if (segmentationData && Array.isArray(segmentationData.polygons) && segmentationData.polygons.length === 0) { // Use optional chaining here too for consistency
+    } else if (segmentationData && Array.isArray(segmentationData.polygons) && segmentationData.polygons.length === 0) {
+      // Use optional chaining here too for consistency
       // If there are explicitly zero polygons, clear scaledPolygons
       CLogger.info('Segmentation data present but has zero polygons. Clearing scaled polygons.');
       setScaledPolygons([]);
     }
     // Do not clear if segmentationData is null/undefined yet, as it might still be loading
-
   }, [
-    segmentationData, 
-    imageSize, 
+    segmentationData,
+    imageSize,
     // Using offsetWidth/Height as deps for resize handling
-    containerRef.current?.offsetWidth, 
+    containerRef.current?.offsetWidth,
     containerRef.current?.offsetHeight,
     width, // Prop width, for initial sizing if containerRef not ready
-    height // Prop height
+    height, // Prop height
   ]);
 
   // Handle image error
@@ -426,10 +452,10 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
     });
   }
 
-  const showNoSegmentationMessage = 
-    !isLoading && 
-    segmentationData && 
-    Array.isArray(segmentationData.polygons) && 
+  const showNoSegmentationMessage =
+    !isLoading &&
+    segmentationData &&
+    Array.isArray(segmentationData.polygons) &&
     segmentationData.polygons.length === 0;
 
   // Render the image and SVG overlay
@@ -470,7 +496,7 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
           ))}
         </svg>
       ) : (
-        showNoSegmentationMessage && ( 
+        showNoSegmentationMessage && (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="text-xs text-gray-500 p-1 bg-white bg-opacity-75 rounded">No seg</p>
           </div>

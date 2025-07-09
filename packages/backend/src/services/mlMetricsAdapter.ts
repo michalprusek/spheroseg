@@ -59,9 +59,15 @@ const ML_CPU_UTILIZATION = new Gauge({
  * @param labels Labels to match
  * @returns Metric value or null if not found
  */
-function extractMetricValue(metrics: string, metricName: string, labels: Record<string, string> = {}): number | null {
+function extractMetricValue(
+  metrics: string,
+  metricName: string,
+  labels: Record<string, string> = {}
+): number | null {
   const lines = metrics.split('\n');
-  const metricLines = lines.filter((line) => line.startsWith(metricName) && !line.startsWith(`${metricName}_`));
+  const metricLines = lines.filter(
+    (line) => line.startsWith(metricName) && !line.startsWith(`${metricName}_`)
+  );
 
   if (metricLines.length === 0) {
     return null;
@@ -109,11 +115,13 @@ function extractMetricValue(metrics: string, metricName: string, labels: Record<
  */
 function extractMetricsWithLabels(
   metrics: string,
-  metricPrefix: string,
+  metricPrefix: string
 ): Array<{ labels: Record<string, string>; value: number }> {
   const result: Array<{ labels: Record<string, string>; value: number }> = [];
   const lines = metrics.split('\n');
-  const metricLines = lines.filter((line) => line.startsWith(metricPrefix) && !line.startsWith(`${metricPrefix}_`));
+  const metricLines = lines.filter(
+    (line) => line.startsWith(metricPrefix) && !line.startsWith(`${metricPrefix}_`)
+  );
 
   for (const line of metricLines) {
     const labelsMatch = line.match(/{([^}]+)}/);
@@ -166,10 +174,17 @@ async function fetchAndUpdateMlMetrics(): Promise<void> {
       }
 
       // Update task duration metrics
-      const taskDurations = extractMetricsWithLabels(metricsText, 'ml_segmentation_duration_seconds_sum');
+      const taskDurations = extractMetricsWithLabels(
+        metricsText,
+        'ml_segmentation_duration_seconds_sum'
+      );
       for (const { labels, value } of taskDurations) {
         // We need both _sum and _count to calculate average
-        const count = extractMetricValue(metricsText, 'ml_segmentation_duration_seconds_count', labels);
+        const count = extractMetricValue(
+          metricsText,
+          'ml_segmentation_duration_seconds_count',
+          labels
+        );
         if (count !== null && count > 0) {
           // Calculate average
           const average = value / count;
@@ -211,7 +226,9 @@ async function fetchAndUpdateMlMetrics(): Promise<void> {
       logger.debug('Updated ML metrics from ML service');
     }
   } catch (error) {
-    logger.warn(`Failed to fetch ML metrics: ${error instanceof Error ? error.message : String(error)}`);
+    logger.warn(
+      `Failed to fetch ML metrics: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 

@@ -50,7 +50,10 @@ describe('Export API Tests', () => {
 
     // Create a test image file
     testImagePath = path.join(__dirname, 'test-image.jpg');
-    fs.writeFileSync(testImagePath, Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
+    fs.writeFileSync(
+      testImagePath,
+      Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
+    );
 
     // Upload the test image
     const imageResponse = await request(app)
@@ -96,7 +99,7 @@ describe('Export API Tests', () => {
           circularity: 0.8,
           objectCount: 1,
         },
-      ],
+      ]
     );
   });
 
@@ -159,7 +162,7 @@ describe('Export API Tests', () => {
 
     expect(response.status).toBe(200);
     expect(response.header['content-type']).toMatch(
-      /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/,
+      /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/
     );
     expect(response.header['content-disposition']).toMatch(/attachment; filename=/);
   });

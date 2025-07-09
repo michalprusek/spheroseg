@@ -1,6 +1,6 @@
 /**
  * Security Helper Utilities
- * 
+ *
  * Common security-related utility functions used across the application
  */
 
@@ -50,7 +50,7 @@ export const generateSessionId = (): string => {
  */
 export const sanitizeInput = (input: string): string => {
   if (typeof input !== 'string') return '';
-  
+
   return input
     .replace(/[<>]/g, '') // Remove angle brackets
     .replace(/javascript:/gi, '') // Remove javascript: protocol
@@ -66,18 +66,19 @@ export const sanitizeInput = (input: string): string => {
  */
 export const isTrustedOrigin = (req: Request, trustedOrigins: string[]): boolean => {
   const origin = req.get('origin') || req.get('referer');
-  
+
   if (!origin) return false;
-  
-  return trustedOrigins.some(trusted => {
+
+  return trustedOrigins.some((trusted) => {
     if (trusted === '*') return true;
-    
+
     try {
       const trustedUrl = new URL(trusted);
       const originUrl = new URL(origin);
-      
-      return trustedUrl.hostname === originUrl.hostname &&
-             trustedUrl.protocol === originUrl.protocol;
+
+      return (
+        trustedUrl.hostname === originUrl.hostname && trustedUrl.protocol === originUrl.protocol
+      );
     } catch {
       return false;
     }
@@ -97,13 +98,13 @@ export const getClientIp = (req: Request): string => {
     // Return first IP if multiple are present
     return forwarded.split(',')[0].trim();
   }
-  
+
   // Check for real IP header (some proxies use this)
   const realIp = req.get('x-real-ip');
   if (realIp) {
     return realIp;
   }
-  
+
   // Fall back to request IP
   return req.ip || 'unknown';
 };
@@ -123,45 +124,47 @@ export const isValidEmail = (email: string): boolean => {
  * @param password Password to validate
  * @returns Object with validation result and message
  */
-export const validatePasswordStrength = (password: string): {
+export const validatePasswordStrength = (
+  password: string
+): {
   isValid: boolean;
   message?: string;
 } => {
   if (!password || password.length < 8) {
     return {
       isValid: false,
-      message: 'Password must be at least 8 characters long'
+      message: 'Password must be at least 8 characters long',
     };
   }
-  
+
   if (!/[A-Z]/.test(password)) {
     return {
       isValid: false,
-      message: 'Password must contain at least one uppercase letter'
+      message: 'Password must contain at least one uppercase letter',
     };
   }
-  
+
   if (!/[a-z]/.test(password)) {
     return {
       isValid: false,
-      message: 'Password must contain at least one lowercase letter'
+      message: 'Password must contain at least one lowercase letter',
     };
   }
-  
+
   if (!/[0-9]/.test(password)) {
     return {
       isValid: false,
-      message: 'Password must contain at least one number'
+      message: 'Password must contain at least one number',
     };
   }
-  
+
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     return {
       isValid: false,
-      message: 'Password must contain at least one special character'
+      message: 'Password must contain at least one special character',
     };
   }
-  
+
   return { isValid: true };
 };
 
@@ -170,13 +173,15 @@ export const validatePasswordStrength = (password: string): {
  * @param apiKey API key to hash
  * @returns Object with hash and salt
  */
-export const hashApiKey = (apiKey: string): {
+export const hashApiKey = (
+  apiKey: string
+): {
   hash: string;
   salt: string;
 } => {
   const salt = crypto.randomBytes(16).toString('hex');
   const hash = crypto.pbkdf2Sync(apiKey, salt, 10000, 64, 'sha512').toString('hex');
-  
+
   return { hash, salt };
 };
 
@@ -199,18 +204,18 @@ export const verifyApiKey = (apiKey: string, hash: string, salt: string): boolea
  * @returns Encoded token
  */
 export const generateTimeLimitedToken = (data: any, expiryMinutes: number = 30): string => {
-  const expiry = Date.now() + (expiryMinutes * 60 * 1000);
+  const expiry = Date.now() + expiryMinutes * 60 * 1000;
   const payload = {
     data,
-    exp: expiry
+    exp: expiry,
   };
-  
+
   const token = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const signature = crypto
     .createHmac('sha256', config.security.tokenSecret || 'default-secret')
     .update(token)
     .digest('base64url');
-    
+
   return `${token}.${signature}`;
 };
 
@@ -222,22 +227,22 @@ export const generateTimeLimitedToken = (data: any, expiryMinutes: number = 30):
 export const verifyTimeLimitedToken = (token: string): any | null => {
   try {
     const [payload, signature] = token.split('.');
-    
+
     const expectedSignature = crypto
       .createHmac('sha256', config.security.tokenSecret || 'default-secret')
       .update(payload)
       .digest('base64url');
-      
+
     if (signature !== expectedSignature) {
       return null;
     }
-    
+
     const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString());
-    
+
     if (decoded.exp < Date.now()) {
       return null;
     }
-    
+
     return decoded.data;
   } catch {
     return null;

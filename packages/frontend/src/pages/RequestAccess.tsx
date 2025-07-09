@@ -34,7 +34,13 @@ const RequestAccess = () => {
 
   // Determine if form can be submitted
   // If email validation fails/errors, don't block submission - just check basic form validity
-  const canSubmit = email && name && reason && !emailValidation.exists && !emailValidation.hasAccessRequest && !emailValidation.isValidating;
+  const canSubmit =
+    email &&
+    name &&
+    reason &&
+    !emailValidation.exists &&
+    !emailValidation.hasAccessRequest &&
+    !emailValidation.isValidating;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,28 +147,36 @@ const RequestAccess = () => {
                     className={`h-10 bg-gray-50 dark:bg-gray-700/50 rounded-md transition-colors pr-10 ${
                       emailValidation.exists || emailValidation.hasAccessRequest
                         ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                        : email && !emailValidation.isValidating && !emailValidation.exists && !emailValidation.hasAccessRequest
-                        ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
-                        : 'border-gray-300 dark:border-gray-600'
+                        : email &&
+                            !emailValidation.isValidating &&
+                            !emailValidation.exists &&
+                            !emailValidation.hasAccessRequest
+                          ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
+                          : 'border-gray-300 dark:border-gray-600'
                     }`}
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                     {emailValidation.isValidating && email && (
                       <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                     )}
-                    {!emailValidation.isValidating && email && (emailValidation.exists || emailValidation.hasAccessRequest) && (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
-                    )}
-                    {!emailValidation.isValidating && email && !emailValidation.exists && !emailValidation.hasAccessRequest && email.includes('@') && (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    )}
+                    {!emailValidation.isValidating &&
+                      email &&
+                      (emailValidation.exists || emailValidation.hasAccessRequest) && (
+                        <AlertCircle className="h-4 w-4 text-red-500" />
+                      )}
+                    {!emailValidation.isValidating &&
+                      email &&
+                      !emailValidation.exists &&
+                      !emailValidation.hasAccessRequest &&
+                      email.includes('@') && <CheckCircle className="h-4 w-4 text-green-500" />}
                   </div>
                 </div>
                 {(emailValidation.exists || emailValidation.hasAccessRequest) && (
                   <p className="text-sm text-red-600 dark:text-red-400 mt-1">
                     {emailValidation.exists
                       ? t('auth.emailAlreadyExists') || 'This email is already registered. Please sign in instead.'
-                      : t('auth.emailHasPendingRequest') || 'This email already has a pending access request. Please wait for approval.'}
+                      : t('auth.emailHasPendingRequest') ||
+                        'This email already has a pending access request. Please wait for approval.'}
                   </p>
                 )}
               </div>
@@ -220,9 +234,9 @@ const RequestAccess = () => {
                 </Link>
               </p>
 
-              <Button 
-                type="submit" 
-                className="w-full h-10 text-base font-semibold rounded-md" 
+              <Button
+                type="submit"
+                className="w-full h-10 text-base font-semibold rounded-md"
                 disabled={isSubmitting || !canSubmit}
               >
                 {isSubmitting ? (

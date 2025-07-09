@@ -17,7 +17,7 @@ export {
 export const distanceToSegment = (
   p: { x: number; y: number },
   v: { x: number; y: number },
-  w: { x: number; y: number }
+  w: { x: number; y: number },
 ): number => {
   const lengthSquared = Math.pow(w.x - v.x, 2) + Math.pow(w.y - v.y, 2);
   if (lengthSquared === 0) return Math.sqrt(Math.pow(p.x - v.x, 2) + Math.pow(p.y - v.y, 2));

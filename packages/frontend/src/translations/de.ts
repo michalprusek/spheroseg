@@ -7,7 +7,8 @@ export default {
       splitPolygon: 'Polygon teilen',
       deletePolygon: 'Polygon löschen',
       confirmDeleteTitle: 'Sind Sie sicher, dass Sie das Polygon löschen möchten?',
-      confirmDeleteMessage: 'Diese Aktion ist unwiderruflich. Das Polygon wird dauerhaft aus der Segmentierung entfernt.',
+      confirmDeleteMessage:
+        'Diese Aktion ist unwiderruflich. Das Polygon wird dauerhaft aus der Segmentierung entfernt.',
       duplicateVertex: 'Eckpunkt duplizieren',
       deleteVertex: 'Eckpunkt löschen',
     },
@@ -28,7 +29,7 @@ export default {
       queued: 'In Warteschlange',
       statusProcessing: 'Segmentierung: {{count}} in Bearbeitung',
       statusReady: 'Bereit',
-      tasksTotal: '{{total}} Aufgaben insgesamt ({{running}} in Bearbeitung, {{queued}} in Warteschlange)'
+      tasksTotal: '{{total}} Aufgaben insgesamt ({{running}} in Bearbeitung, {{queued}} in Warteschlange)',
     },
     selectPolygonForEdit: 'Wählen Sie ein Polygon zum Bearbeiten aus',
     selectPolygonForSlice: 'Wählen Sie ein Polygon zum Teilen aus',
@@ -149,11 +150,12 @@ export default {
     detail: {
       noImagesSelected: 'Keine Bilder ausgewählt',
       triggeringResegmentation: 'Starte Neusegmentierung für {{count}} Bilder...',
-      deleteConfirmation: 'Sind Sie sicher, dass Sie {{count}} Bilder löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
+      deleteConfirmation:
+        'Sind Sie sicher, dass Sie {{count}} Bilder löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
       deletingImages: 'Lösche {{count}} Bilder...',
       deleteSuccess: '{{count}} Bilder erfolgreich gelöscht',
       deleteFailed: 'Löschen von {{count}} Bildern fehlgeschlagen',
-      preparingExport: 'Export von {{count}} Bildern wird vorbereitet...'
+      preparingExport: 'Export von {{count}} Bildern wird vorbereitet...',
     },
     segmentation: {
       processingInBatches: 'Starte Segmentierung für {{count}} Bilder in {{batches}} Stapeln...',
@@ -164,7 +166,8 @@ export default {
       allSuccess: 'Segmentierung: Alle {{count}} Bilder erfolgreich in Warteschlange',
       allFailed: 'Segmentierung: Alle {{count}} Bilder fehlgeschlagen',
       startedImages: 'Segmentierung für {{count}} Bilder gestartet',
-      queuedLocallyWarning: 'Segmentierung für {{count}} Bilder lokal in Warteschlange. Serververbindung fehlgeschlagen.'
+      queuedLocallyWarning:
+        'Segmentierung für {{count}} Bilder lokal in Warteschlange. Serververbindung fehlgeschlagen.',
     },
     loading: 'Projekt wird geladen...',
     notFound: 'Projekt nicht gefunden',
@@ -175,12 +178,14 @@ export default {
     noImages: {
       title: 'Noch keine Bilder',
       description: 'Dieses Projekt enthält noch keine Bilder. Laden Sie Bilder hoch, um zu beginnen.',
-      uploadButton: 'Bilder hochladen'
+      uploadButton: 'Bilder hochladen',
     },
     deleteProject: 'Projekt löschen',
-    deleteConfirmation: 'Sind Sie sicher, dass Sie das Projekt "{{projectName}}" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
+    deleteConfirmation:
+      'Sind Sie sicher, dass Sie das Projekt "{{projectName}}" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
     duplicateProject: 'Projekt duplizieren',
-    duplicateDescription: 'Erstellen Sie eine Kopie dieses Projekts. Das neue Projekt wird mit dem von Ihnen angegebenen Namen erstellt.',
+    duplicateDescription:
+      'Erstellen Sie eine Kopie dieses Projekts. Das neue Projekt wird mit dem von Ihnen angegebenen Namen erstellt.',
     newProjectName: 'Neuer Projektname',
     enterProjectName: 'Geben Sie den neuen Projektnamen ein',
     duplicate: 'Duplizieren',
@@ -200,7 +205,8 @@ export default {
     projectDeleted: 'Projekt erfolgreich gelöscht',
     projectDeletionFailed: 'Projektlöschung fehlgeschlagen',
     confirmDelete: 'Sind Sie sicher, dass Sie dieses Projekt löschen möchten?',
-    confirmDeleteDescription: 'Diese Aktion kann nicht rückgängig gemacht werden. Alle mit diesem Projekt verbundenen Daten werden dauerhaft gelöscht.',
+    confirmDeleteDescription:
+      'Diese Aktion kann nicht rückgängig gemacht werden. Alle mit diesem Projekt verbundenen Daten werden dauerhaft gelöscht.',
     deleteProject: 'Projekt löschen',
     editProject: 'Projekt bearbeiten',
     viewProject: 'Projekt anzeigen',
@@ -227,7 +233,8 @@ export default {
     duplicateFailed: 'Projektduplizierung fehlgeschlagen',
     duplicateTitle: 'Projekt duplizieren',
     duplicateProject: 'Projekt duplizieren',
-    duplicateProjectDescription: 'Erstellen Sie eine Kopie dieses Projekts einschließlich aller Bilder. Sie können die Optionen unten anpassen.',
+    duplicateProjectDescription:
+      'Erstellen Sie eine Kopie dieses Projekts einschließlich aller Bilder. Sie können die Optionen unten anpassen.',
     duplicateCancelled: 'Projektduplizierung abgebrochen',
     duplicatingProject: 'Projekt wird dupliziert',
     duplicatingProjectDescription: 'Ihr Projekt wird dupliziert. Dies kann einen Moment dauern.',
@@ -235,7 +242,8 @@ export default {
     duplicationComplete: 'Projektduplizierung abgeschlossen',
     duplicationTaskFetchError: 'Fehler beim Abrufen der Aufgabendaten',
     duplicationCancelError: 'Fehler beim Abbrechen der Duplizierung',
-    duplicateProgressDescription: 'Ihr Projekt wird dupliziert. Dieser Vorgang kann bei großen Projekten einige Zeit dauern.',
+    duplicateProgressDescription:
+      'Ihr Projekt wird dupliziert. Dieser Vorgang kann bei großen Projekten einige Zeit dauern.',
     duplicationPending: 'Ausstehend',
     duplicationProcessing: 'In Bearbeitung',
     duplicationCompleted: 'Abgeschlossen',
@@ -254,7 +262,8 @@ export default {
     noActiveDuplications: 'Keine aktiven Duplizierungen',
     noDuplications: 'Keine Duplizierungsaufgaben gefunden',
     deleteProjectDescription: 'Diese Aktion wird das Projekt und alle zugehörigen Daten dauerhaft löschen.',
-    deleteWarning: 'Diese Aktion kann nicht rückgängig gemacht werden. Alle mit diesem Projekt verbundenen Daten werden dauerhaft gelöscht.',
+    deleteWarning:
+      'Diese Aktion kann nicht rückgängig gemacht werden. Alle mit diesem Projekt verbundenen Daten werden dauerhaft gelöscht.',
     untitledProject: 'Unbenanntes Projekt',
     typeToConfirm: 'Geben Sie "delete" ein, um zu bestätigen',
     deleteConfirm: 'Sind Sie sicher, dass Sie dieses Projekt löschen möchten?',
@@ -269,7 +278,8 @@ export default {
     creatingProject: 'Projekt wird erstellt...',
     noImages: {
       title: 'Noch keine Bilder',
-      description: 'Dieses Projekt enthält noch keine Bilder. Laden Sie Bilder hoch, um mit der Segmentierung zu beginnen.',
+      description:
+        'Dieses Projekt enthält noch keine Bilder. Laden Sie Bilder hoch, um mit der Segmentierung zu beginnen.',
       uploadButton: 'Bilder hochladen',
     },
   },
@@ -409,7 +419,7 @@ export default {
     signingIn: 'Anmeldung läuft...',
     forgotPassword: 'Passwort vergessen?',
     resetPassword: 'Passwort zurücksetzen',
-    dontHaveAccount: "Noch kein Konto?",
+    dontHaveAccount: 'Noch kein Konto?',
     alreadyHaveAccount: 'Bereits ein Konto?',
     createAccount: 'Konto erstellen',
     signInWithGoogle: 'Mit Google anmelden',
@@ -417,7 +427,7 @@ export default {
     or: 'oder',
     signInTitle: 'Anmelden',
     signInDescription: 'Melden Sie sich bei Ihrem Konto an',
-    noAccount: "Noch kein Konto?",
+    noAccount: 'Noch kein Konto?',
     emailAddressLabel: 'E-Mail-Adresse',
     passwordLabel: 'Passwort',
     currentPasswordLabel: 'Aktuelles Passwort',
@@ -426,12 +436,12 @@ export default {
     rememberMe: 'Angemeldet bleiben',
     emailRequired: 'E-Mail ist erforderlich',
     passwordRequired: 'Passwort ist erforderlich',
-    alreadyLoggedInTitle: "Sie sind bereits angemeldet",
+    alreadyLoggedInTitle: 'Sie sind bereits angemeldet',
     alreadyLoggedInMessage: 'Sie sind bereits bei Ihrem Konto angemeldet',
     goToDashboardLink: 'Zum Dashboard',
     invalidEmail: 'Ungültige E-Mail-Adresse',
     passwordTooShort: 'Passwort muss mindestens 6 Zeichen lang sein',
-    passwordsDontMatch: "Passwörter stimmen nicht überein",
+    passwordsDontMatch: 'Passwörter stimmen nicht überein',
     invalidCredentials: 'Ungültige E-Mail oder Passwort',
     accountCreated: 'Konto erfolgreich erstellt',
     resetLinkSent: 'Link zum Zurücksetzen des Passworts an Ihre E-Mail gesendet',
@@ -461,10 +471,13 @@ export default {
     signUpDescription: 'Registrieren Sie sich für ein neues Konto',
     enterInfoCreateAccount: 'Geben Sie Ihre Informationen ein, um ein Konto zu erstellen',
     creatingAccount: 'Konto wird erstellt...',
-    emailAlreadyExists: 'Diese E-Mail ist bereits registriert. Bitte verwenden Sie eine andere E-Mail oder melden Sie sich an.',
-    emailHasPendingRequest: 'Diese E-Mail hat bereits eine ausstehende Zugangsanfrage. Bitte warten Sie auf die Genehmigung.',
+    emailAlreadyExists:
+      'Diese E-Mail ist bereits registriert. Bitte verwenden Sie eine andere E-Mail oder melden Sie sich an.',
+    emailHasPendingRequest:
+      'Diese E-Mail hat bereits eine ausstehende Zugangsanfrage. Bitte warten Sie auf die Genehmigung.',
     signUpSuccess: 'Erfolgreich registriert!',
-    signUpSuccessEmail: 'Registrierung erfolgreich! Bitte überprüfen Sie Ihre E-Mails oder warten Sie auf die Genehmigung durch den Administrator.',
+    signUpSuccessEmail:
+      'Registrierung erfolgreich! Bitte überprüfen Sie Ihre E-Mails oder warten Sie auf die Genehmigung durch den Administrator.',
     signUpFailed: 'Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.',
     alreadyHaveAccess: 'Bereits Zugang?',
     forgotPasswordTitle: 'Passwort zurücksetzen',
@@ -586,7 +599,8 @@ export default {
         'Der Segmentierungsprozess identifiziert die Grenzen von Sphäroiden in Ihren Bildern und ermöglicht eine präzise Analyse ihrer Morphologie.',
       automatic: {
         title: 'Automatische Segmentierung',
-        paragraph1: 'Unsere KI-gestützte automatische Segmentierung kann Sphäroidgrenzen mit hoher Genauigkeit erkennen:',
+        paragraph1:
+          'Unsere KI-gestützte automatische Segmentierung kann Sphäroidgrenzen mit hoher Genauigkeit erkennen:',
         step1: 'Wählen Sie ein Bild aus Ihrem Projekt aus',
         step2: 'Klicken Sie auf "Auto-Segmentieren", um den Prozess zu starten',
         step3: 'Das System verarbeitet das Bild und zeigt die erkannten Grenzen an',
@@ -594,7 +608,8 @@ export default {
       },
       manual: {
         title: 'Manuelle Anpassungen',
-        paragraph1: 'Manchmal erfordert die automatische Segmentierung eine Verfeinerung. Unser Editor bietet Werkzeuge für:',
+        paragraph1:
+          'Manchmal erfordert die automatische Segmentierung eine Verfeinerung. Unser Editor bietet Werkzeuge für:',
         step1: 'Hinzufügen oder Entfernen von Eckpunkten entlang der Grenze',
         step2: 'Anpassen von Eckpunktpositionen für genauere Grenzen',
         step3: 'Teilen oder Zusammenführen von Regionen',
@@ -604,11 +619,12 @@ export default {
     apiReference: {
       title: 'API-Referenz',
       paragraph1:
-        "SpheroSeg bietet eine RESTful-API für den programmatischen Zugriff auf die Funktionen der Plattform. Dies ist ideal für die Integration in Ihre bestehenden Workflows oder die Stapelverarbeitung.",
+        'SpheroSeg bietet eine RESTful-API für den programmatischen Zugriff auf die Funktionen der Plattform. Dies ist ideal für die Integration in Ihre bestehenden Workflows oder die Stapelverarbeitung.',
       endpoint1Desc: 'Ruft eine Liste aller Ihrer Projekte ab',
       endpoint2Desc: 'Ruft alle Bilder innerhalb eines bestimmten Projekts ab',
       endpoint3Desc: 'Initiiert die Segmentierung für ein bestimmtes Bild',
-      contactPrefix: 'Für die vollständige API-Dokumentation und Authentifizierungsdetails kontaktieren Sie uns bitte unter',
+      contactPrefix:
+        'Für die vollständige API-Dokumentation und Authentifizierungsdetails kontaktieren Sie uns bitte unter',
     },
     backToHome: 'Zurück zur Startseite',
     backToTop: 'Zurück nach oben',
@@ -637,7 +653,8 @@ export default {
     featureExport: 'Statistische Einblicke',
     featureExportDesc: 'Umfassende Metriken und Visualisierungen zur Extraktion aussagekräftiger Datenmuster.',
     ctaTitle: 'Bereit, Ihren Zellanalyse-Workflow zu transformieren?',
-    ctaSubtitle: 'Schließen Sie sich führenden Forschern an, die unsere Plattform bereits nutzen, um ihre Entdeckungen zu beschleunigen.',
+    ctaSubtitle:
+      'Schließen Sie sich führenden Forschern an, die unsere Plattform bereits nutzen, um ihre Entdeckungen zu beschleunigen.',
     ctaButton: 'Konto erstellen',
   },
   navbar: {
@@ -884,9 +901,11 @@ export default {
     },
     cta: {
       title: 'Bereit, Ihre Forschung zu transformieren?',
-      subtitle: 'Beginnen Sie noch heute mit SpheroSeg und entdecken Sie neue Möglichkeiten in der Zellsphäroid-Analyse',
+      subtitle:
+        'Beginnen Sie noch heute mit SpheroSeg und entdecken Sie neue Möglichkeiten in der Zellsphäroid-Analyse',
       boxTitle: 'Kostenloses Konto erstellen',
-      boxText: 'Erhalten Sie Zugriff auf alle Plattformfunktionen und beginnen Sie mit der Analyse Ihrer Mikroskopiebilder',
+      boxText:
+        'Erhalten Sie Zugriff auf alle Plattformfunktionen und beginnen Sie mit der Analyse Ihrer Mikroskopiebilder',
       button: 'Konto erstellen',
     },
   },
@@ -1130,7 +1149,8 @@ export default {
     },
     contactUs: {
       title: '8. Kontaktieren Sie uns',
-      paragraph1: 'Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns bitte unter privacy@spheroseg.com.',
+      paragraph1:
+        'Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns bitte unter privacy@spheroseg.com.',
     },
     lastUpdated: 'Zuletzt aktualisiert: 7. Januar 2025',
   },
@@ -1153,7 +1173,8 @@ export default {
     addPointsMode: 'Punkte hinzufügen-Modus',
     createPolygonMode: 'Polygon erstellen-Modus',
     save: 'Speichern',
-    description: 'Diese Tastenkürzel funktionieren im Segmentierungs-Editor für schnelleres und komfortableres Arbeiten.',
+    description:
+      'Diese Tastenkürzel funktionieren im Segmentierungs-Editor für schnelleres und komfortableres Arbeiten.',
   },
   imageProcessor: {
     segmentationStarted: 'Segmentierungsprozess wurde gestartet...',
@@ -1213,10 +1234,10 @@ export default {
   },
   export: {
     formatDescriptions: {
-      COCO: "Common Objects in Context (COCO) JSON-Format für Objekterkennung",
-      YOLO: "You Only Look Once (YOLO) Textformat für Objekterkennung",
-      MASK: "Binäre Maskenbilder für jedes segmentierte Objekt",
-      POLYGONS: "Polygonkoordinaten im JSON-Format"
+      COCO: 'Common Objects in Context (COCO) JSON-Format für Objekterkennung',
+      YOLO: 'You Only Look Once (YOLO) Textformat für Objekterkennung',
+      MASK: 'Binäre Maskenbilder für jedes segmentierte Objekt',
+      POLYGONS: 'Polygonkoordinaten im JSON-Format',
     },
     exportCompleted: 'Export abgeschlossen',
     exportFailed: 'Export fehlgeschlagen',
@@ -1241,8 +1262,8 @@ export default {
       metricsRequireSegmentation: 'Der Export von Metriken erfordert eine abgeschlossene Segmentierung',
     },
     formats: {
-      COCO: "COCO JSON",
-      YOLO: "YOLO TXT",
+      COCO: 'COCO JSON',
+      YOLO: 'YOLO TXT',
       MASK: 'Maske (TIFF)',
       POLYGONS: 'Polygone (JSON)',
     },
@@ -1282,7 +1303,8 @@ export default {
     duplicateTooltip: 'Projekt duplizieren',
     deleteTooltip: 'Projekt löschen',
     deleteConfirmTitle: 'Sind Sie sicher?',
-    deleteConfirmDesc: 'Sind Sie sicher, dass Sie das Projekt "{{projectName}}" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
+    deleteConfirmDesc:
+      'Sind Sie sicher, dass Sie das Projekt "{{projectName}}" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
     deleteSuccess: 'Projekt "{{projectName}}" wurde erfolgreich gelöscht.',
     deleteError: 'Projektlöschung fehlgeschlagen.',
     duplicateSuccess: 'Projekt "{{projectName}}" wurde erfolgreich dupliziert.',
@@ -1311,7 +1333,8 @@ export default {
     loadingImage: 'Bild wird geladen...',
     sliceErrorInvalidPolygon: 'Schneiden nicht möglich: Ungültiges Polygon ausgewählt.',
     sliceWarningInvalidResult: 'Das Schneiden hat zu kleine und ungültige Polygone erstellt.',
-    sliceWarningInvalidIntersections: 'Ungültiger Schnitt: Die Schnittlinie muss das Polygon an genau zwei Punkten schneiden.',
+    sliceWarningInvalidIntersections:
+      'Ungültiger Schnitt: Die Schnittlinie muss das Polygon an genau zwei Punkten schneiden.',
     sliceSuccess: 'Polygon erfolgreich geschnitten.',
     noPolygonToSlice: 'Keine Polygone zum Schneiden verfügbar.',
     savingTooltip: 'Speichert...',
@@ -1369,5 +1392,5 @@ export default {
     userEmail: 'Benutzer-E-Mail',
     view: 'Anzeigen',
     viewOnly: 'Nur anzeigen',
-  }
-}
+  },
+};

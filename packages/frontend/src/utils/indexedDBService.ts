@@ -314,17 +314,17 @@ export const getDBStats = async (): Promise<{ count: number; totalSize: number }
 export const clearEntireDatabase = async (): Promise<void> => {
   return new Promise((resolve, reject) => {
     const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
-    
+
     deleteRequest.onsuccess = () => {
       console.log('IndexedDB database completely cleared');
       resolve();
     };
-    
+
     deleteRequest.onerror = (event) => {
       console.error('Error clearing IndexedDB database:', event);
       reject(new Error('Error clearing database'));
     };
-    
+
     deleteRequest.onblocked = () => {
       console.warn('Database deletion blocked - close all tabs and try again');
       reject(new Error('Database deletion blocked'));

@@ -57,14 +57,14 @@ describe('Polygon Operations', () => {
       expect(result!.polygons).toHaveLength(2);
 
       // Both polygons should have valid points
-      result!.polygons.forEach(polygon => {
+      result!.polygons.forEach((polygon) => {
         expect(polygon.points.length).toBeGreaterThanOrEqual(3);
         expect(polygon.id).toBe('mock-uuid');
         expect(polygon.type).toBe('cell');
       });
 
       // Check that original polygon is removed
-      expect(result!.polygons.find(p => p.id === 'poly-1')).toBeUndefined();
+      expect(result!.polygons.find((p) => p.id === 'poly-1')).toBeUndefined();
     });
 
     it('should split a square polygon with vertical line', () => {
@@ -80,7 +80,7 @@ describe('Polygon Operations', () => {
       expect(result!.polygons).toHaveLength(2);
 
       // Check areas are calculated
-      result!.polygons.forEach(polygon => {
+      result!.polygons.forEach((polygon) => {
         expect(polygon.area).toBeGreaterThan(0);
       });
     });
@@ -175,7 +175,7 @@ describe('Polygon Operations', () => {
 
       // This might create polygons with < 3 points
       if (result) {
-        result.polygons.forEach(polygon => {
+        result.polygons.forEach((polygon) => {
           expect(polygon.points.length).toBeGreaterThanOrEqual(3);
         });
       }
@@ -194,7 +194,7 @@ describe('Polygon Operations', () => {
       const result = polygonOperations.splitPolygon(segmentation, 'poly-1', line);
 
       expect(result).not.toBeNull();
-      result!.polygons.forEach(polygon => {
+      result!.polygons.forEach((polygon) => {
         expect(polygon.confidence).toBe(0.85);
         expect(polygon.class).toBe('nucleus');
         expect(polygon.type).toBe('cell');

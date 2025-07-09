@@ -6,7 +6,7 @@
 
 import express, { Response, Router, NextFunction } from 'express';
 import { z } from 'zod';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import { validate } from '../middleware/validationMiddleware';
 import pool from '../db';
 import logger from '../utils/logger';
@@ -95,16 +95,18 @@ router.post(
 
       const tasksTableExists = tasksTableCheck.rows[0].exists;
       if (!tasksTableExists) {
-        logger.warn('Project duplication tasks table does not exist, fallback to synchronous duplication');
+        logger.warn(
+          'Project duplication tasks table does not exist, fallback to synchronous duplication'
+        );
 
         // Import the duplication service
         const projectDuplicationService = await import('../services/projectDuplicationService');
 
         // Verify the source project exists and belongs to the user
-        const projectCheck = await pool.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
-          originalProjectId,
-          userId,
-        ]);
+        const projectCheck = await pool.query(
+          'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
+          [originalProjectId, userId]
+        );
 
         if (projectCheck.rows.length === 0) {
           logger.info('Source project not found or access denied', {
@@ -115,13 +117,18 @@ router.post(
         }
 
         // Duplicate the project synchronously
-        const newProject = await projectDuplicationService.duplicateProject(pool, originalProjectId, userId, {
-          newTitle,
-          copyFiles,
-          copySegmentations,
-          resetStatus,
-          baseDir: process.cwd(),
-        });
+        const newProject = await projectDuplicationService.duplicateProject(
+          pool,
+          originalProjectId,
+          userId,
+          {
+            newTitle,
+            copyFiles,
+            copySegmentations,
+            resetStatus,
+            baseDir: process.cwd(),
+          }
+        );
 
         logger.info('Project duplicated successfully (synchronous)', {
           originalProjectId,
@@ -133,10 +140,10 @@ router.post(
       }
 
       // Verify the source project exists and belongs to the user
-      const projectCheck = await pool.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
-        originalProjectId,
-        userId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
+        [originalProjectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         logger.info('Source project not found or access denied', {
@@ -147,7 +154,9 @@ router.post(
       }
 
       // Import the duplication queue service
-      const projectDuplicationQueueService = await import('../services/projectDuplicationQueueService');
+      const projectDuplicationQueueService = await import(
+        '../services/projectDuplicationQueueService'
+      );
 
       // Trigger an asynchronous duplication
       const taskId = await projectDuplicationQueueService.default.triggerProjectDuplication(
@@ -160,7 +169,7 @@ router.post(
           copySegmentations,
           resetStatus,
           baseDir: process.cwd(),
-        },
+        }
       );
 
       logger.info('Project duplication task created successfully', {
@@ -186,7 +195,7 @@ router.post(
       });
       next(error);
     }
-  },
+  }
 );
 
 // GET /api/duplication - List duplication tasks for the current user
@@ -230,7 +239,9 @@ router.get(
       }
 
       // Import the duplication queue service
-      const projectDuplicationQueueService = await import('../services/projectDuplicationQueueService');
+      const projectDuplicationQueueService = await import(
+        '../services/projectDuplicationQueueService'
+      );
 
       // Get tasks for the user
       const tasks = await projectDuplicationQueueService.default.getDuplicationTasks(pool, userId);
@@ -255,7 +266,7 @@ router.get(
       logger.error('Error fetching duplication tasks', { error, userId });
       next(error);
     }
-  },
+  }
 );
 
 // GET /api/duplication/:taskId - Get a specific duplication task
@@ -289,10 +300,16 @@ router.get(
       }
 
       // Import the duplication queue service
-      const projectDuplicationQueueService = await import('../services/projectDuplicationQueueService');
+      const projectDuplicationQueueService = await import(
+        '../services/projectDuplicationQueueService'
+      );
 
       // Get the task
-      const task = await projectDuplicationQueueService.default.getDuplicationTask(pool, taskId, userId);
+      const task = await projectDuplicationQueueService.default.getDuplicationTask(
+        pool,
+        taskId,
+        userId
+      );
 
       if (!task) {
         logger.info('Duplication task not found or not authorized', {
@@ -312,7 +329,7 @@ router.get(
       });
       next(error);
     }
-  },
+  }
 );
 
 // DELETE /api/duplication/:taskId - Cancel a duplication task
@@ -346,10 +363,16 @@ router.delete(
       }
 
       // Import the duplication queue service
-      const projectDuplicationQueueService = await import('../services/projectDuplicationQueueService');
+      const projectDuplicationQueueService = await import(
+        '../services/projectDuplicationQueueService'
+      );
 
       // Cancel the task
-      const cancelled = await projectDuplicationQueueService.default.cancelDuplicationTask(pool, taskId, userId);
+      const cancelled = await projectDuplicationQueueService.default.cancelDuplicationTask(
+        pool,
+        taskId,
+        userId
+      );
 
       if (!cancelled) {
         logger.info('Failed to cancel duplication task', { userId, taskId });
@@ -366,7 +389,7 @@ router.delete(
       });
       next(error);
     }
-  },
+  }
 );
 
 export default router;

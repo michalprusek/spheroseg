@@ -20,7 +20,7 @@ class AuthService {
     email: string,
     password: string,
     name?: string,
-    preferred_language?: string,
+    preferred_language?: string
   ): Promise<any> {
     logger.info('Processing user registration request', { email });
 
@@ -55,7 +55,7 @@ class AuthService {
       // Insert new user
       const result = await client.query(
         'INSERT INTO users (id, email, password_hash, name, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING id, email, name, created_at',
-        [newUserId, email, passwordHash, name || email.split('@')[0]],
+        [newUserId, email, passwordHash, name || email.split('@')[0]]
       );
 
       const userId = result.rows[0].id;
@@ -70,7 +70,7 @@ class AuthService {
       if (preferred_language) {
         await client.query(
           'INSERT INTO user_profiles (user_id, preferred_language, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())',
-          [userId, preferred_language],
+          [userId, preferred_language]
         );
       }
 
@@ -84,13 +84,16 @@ class AuthService {
       const tokenResponse = await tokenService.createTokenResponse(userId, userEmail);
 
       logger.info('User registered successfully', { userId, email: userEmail });
-      
+
       // Send verification email asynchronously
       this.sendVerificationEmail(userEmail).catch((error) => {
-        logger.error('Failed to send verification email after registration', { error, email: userEmail });
+        logger.error('Failed to send verification email after registration', {
+          error,
+          email: userEmail,
+        });
         // Don't throw error here - user is already registered
       });
-      
+
       return {
         user: {
           id: userId,
@@ -103,7 +106,11 @@ class AuthService {
     } catch (error) {
       await client.query('ROLLBACK');
       logger.error('Registration error', { error, email });
-      throw new ApiError('Failed to register user', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to register user',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }
@@ -122,13 +129,17 @@ class AuthService {
     const client = await db.getPool().connect();
     try {
       // Find user by email
-      const result = await client.query('SELECT id, email, name, password_hash, created_at FROM users WHERE email = $1', [
-        email,
-      ]);
+      const result = await client.query(
+        'SELECT id, email, name, password_hash, created_at FROM users WHERE email = $1',
+        [email]
+      );
 
       if (result.rows.length === 0) {
         logger.warn('Login attempt with non-existent email', { email });
-        throw new ApiError('This email address is not registered. Please check your email or sign up for a new account.', 404);
+        throw new ApiError(
+          'This email address is not registered. Please check your email or sign up for a new account.',
+          404
+        );
       }
 
       const user = result.rows[0];
@@ -149,8 +160,16 @@ class AuthService {
         : {};
 
       // Generate tokens
-      const accessToken = tokenService.generateAccessToken(user.id, user.email, tokenOptions.accessTokenExpiry);
-      const refreshToken = await tokenService.generateRefreshToken(user.id, user.email, tokenOptions.refreshTokenExpiry);
+      const accessToken = tokenService.generateAccessToken(
+        user.id,
+        user.email,
+        tokenOptions.accessTokenExpiry
+      );
+      const refreshToken = await tokenService.generateRefreshToken(
+        user.id,
+        user.email,
+        tokenOptions.refreshTokenExpiry
+      );
 
       // Update last login time
       await client.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
@@ -184,7 +203,11 @@ class AuthService {
     } catch (error) {
       logger.error('Login error', { error, email });
       if (error instanceof ApiError) throw error;
-      throw new ApiError('Failed to login', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to login',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }
@@ -230,7 +253,12 @@ class AuthService {
           throw new ApiError('Invalid refresh token', 401, 'invalid_token');
         }
       }
-      throw new ApiError('Invalid refresh token', 401, 'invalid_token', error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Invalid refresh token',
+        401,
+        'invalid_token',
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 
@@ -260,24 +288,23 @@ class AuthService {
       const passwordHash = await bcryptjs.hash(newPassword, config.auth.saltRounds);
 
       // Update user's password
-      await client.query(
-        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
-        [passwordHash, userId]
-      );
+      await client.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [
+        passwordHash,
+        userId,
+      ]);
 
       // Revoke all existing refresh tokens for security
-      await client.query(
-        'UPDATE refresh_tokens SET is_revoked = true WHERE user_id = $1',
-        [userId]
-      );
+      await client.query('UPDATE refresh_tokens SET is_revoked = true WHERE user_id = $1', [
+        userId,
+      ]);
 
       // Send password reset email
       try {
         const emailResult = await sendPasswordReset(email, name, newPassword);
-        logger.info('Password reset email sent', { 
-          userId, 
-          email, 
-          testUrl: emailResult.testUrl 
+        logger.info('Password reset email sent', {
+          userId,
+          email,
+          testUrl: emailResult.testUrl,
         });
       } catch (emailError) {
         logger.error('Failed to send password reset email', { error: emailError, email, userId });
@@ -285,7 +312,11 @@ class AuthService {
       }
     } catch (error) {
       logger.error('Forgot password error', { error, email });
-      throw new ApiError('Failed to process password reset request', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to process password reset request',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }
@@ -303,7 +334,7 @@ class AuthService {
     try {
       // Get all non-expired tokens (we'll check them one by one)
       const result = await client.query(
-        'SELECT id, user_id, token_hash FROM password_reset_tokens WHERE expires_at > NOW()',
+        'SELECT id, user_id, token_hash FROM password_reset_tokens WHERE expires_at > NOW()'
       );
 
       if (result.rows.length === 0) {
@@ -337,7 +368,10 @@ class AuthService {
       // Update password and invalidate token
       await client.query('BEGIN');
       try {
-        await client.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [passwordHash, userId]);
+        await client.query(
+          'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+          [passwordHash, userId]
+        );
         await client.query('DELETE FROM password_reset_tokens WHERE id = $1', [tokenId]);
 
         // Revoke all refresh tokens for this user for security
@@ -352,7 +386,11 @@ class AuthService {
       }
     } catch (error) {
       logger.error('Password reset error', { error });
-      throw new ApiError('Failed to reset password', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to reset password',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }
@@ -373,9 +411,10 @@ class AuthService {
 
           if (jti) {
             // Revoke the specific token
-            await db.query('UPDATE refresh_tokens SET is_revoked = true, updated_at = NOW() WHERE token_id = $1', [
-              jti,
-            ]);
+            await db.query(
+              'UPDATE refresh_tokens SET is_revoked = true, updated_at = NOW() WHERE token_id = $1',
+              [jti]
+            );
             logger.info('Refresh token revoked on logout', { jti });
           }
         } catch (error) {
@@ -409,7 +448,11 @@ class AuthService {
       await tokenService.revokeAllUserTokens(userId);
     } catch (error) {
       logger.error('Error revoking sessions', { error, userId });
-      throw new ApiError('Failed to revoke sessions', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to revoke sessions',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 
@@ -418,7 +461,9 @@ class AuthService {
    * @param email The email to check
    * @returns Object indicating if email exists and if there's a pending access request
    */
-  public async checkEmailExists(email: string): Promise<{ exists: boolean; hasAccessRequest: boolean }> {
+  public async checkEmailExists(
+    email: string
+  ): Promise<{ exists: boolean; hasAccessRequest: boolean }> {
     logger.info('Checking email existence', { email });
 
     const client = await db.getPool().connect();
@@ -430,7 +475,10 @@ class AuthService {
       // Try to check access requests table, but handle if it doesn't exist
       let hasAccessRequest = false;
       try {
-        const accessRequestResult = await client.query('SELECT id FROM access_requests WHERE email = $1', [email]);
+        const accessRequestResult = await client.query(
+          'SELECT id FROM access_requests WHERE email = $1',
+          [email]
+        );
         hasAccessRequest = accessRequestResult.rows.length > 0;
       } catch (accessRequestError: any) {
         if (accessRequestError.code === '42P01') {
@@ -443,7 +491,11 @@ class AuthService {
       return { exists, hasAccessRequest };
     } catch (error) {
       logger.error('Error checking email existence', { error, email });
-      throw new ApiError('Failed to check email', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to check email',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }
@@ -464,7 +516,10 @@ class AuthService {
     const client = await db.getPool().connect();
     try {
       // Get user data
-      const userResult = await client.query('SELECT id, email, name, created_at FROM users WHERE id = $1', [userId]);
+      const userResult = await client.query(
+        'SELECT id, email, name, created_at FROM users WHERE id = $1',
+        [userId]
+      );
 
       if (userResult.rows.length === 0) {
         logger.warn('User not found in database', { userId });
@@ -497,7 +552,11 @@ class AuthService {
       };
     } catch (error) {
       logger.error('Error fetching current user', { error, userId });
-      throw new ApiError('Failed to fetch user data', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to fetch user data',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }
@@ -509,7 +568,11 @@ class AuthService {
    * @param currentPassword Current password
    * @param newPassword New password
    */
-  public async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+  public async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> {
     if (!userId) {
       throw new ApiError('User ID is required', 400);
     }
@@ -541,21 +604,24 @@ class AuthService {
       const newPasswordHash = await bcryptjs.hash(newPassword, config.auth.saltRounds);
 
       // Update password in database
-      await client.query(
-        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
-        [newPasswordHash, userId]
-      );
+      await client.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [
+        newPasswordHash,
+        userId,
+      ]);
 
       // Revoke all existing refresh tokens for security
-      await client.query(
-        'UPDATE refresh_tokens SET is_revoked = true WHERE user_id = $1',
-        [userId]
-      );
+      await client.query('UPDATE refresh_tokens SET is_revoked = true WHERE user_id = $1', [
+        userId,
+      ]);
 
       logger.info('Password changed successfully', { userId });
     } catch (error) {
       logger.error('Error changing password', { error, userId });
-      throw new ApiError('Failed to change password', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to change password',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }
@@ -604,8 +670,11 @@ class AuthService {
       await client.query('BEGIN');
       try {
         // 1. Update access requests to remove processed_by reference (no CASCADE DELETE)
-        await client.query('UPDATE access_requests SET processed_by = NULL WHERE processed_by = $1', [userId]);
-        
+        await client.query(
+          'UPDATE access_requests SET processed_by = NULL WHERE processed_by = $1',
+          [userId]
+        );
+
         // 2. Delete user (CASCADE DELETE will handle most dependencies)
         await client.query('DELETE FROM users WHERE id = $1', [userId]);
 
@@ -617,7 +686,11 @@ class AuthService {
       }
     } catch (error) {
       logger.error('Error deleting account', { error, userId });
-      throw new ApiError('Failed to delete account', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to delete account',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }
@@ -630,12 +703,12 @@ class AuthService {
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
     const crypto = require('crypto');
     let password = '';
-    
+
     for (let i = 0; i < length; i++) {
       const randomIndex = crypto.randomInt(0, chars.length);
       password += chars[randomIndex];
     }
-    
+
     return password;
   }
 
@@ -650,14 +723,17 @@ class AuthService {
     const client = await db.getPool().connect();
     try {
       // Check if user exists
-      const userResult = await client.query('SELECT id, email_verified FROM users WHERE email = $1', [email]);
-      
+      const userResult = await client.query(
+        'SELECT id, email_verified FROM users WHERE email = $1',
+        [email]
+      );
+
       if (userResult.rows.length === 0) {
         throw new ApiError('User not found', 404);
       }
 
       const user = userResult.rows[0];
-      
+
       if (user.email_verified) {
         throw new ApiError('Email already verified', 400);
       }
@@ -676,18 +752,22 @@ class AuthService {
 
       // Send email with verification link
       const verificationUrl = `${config.server.frontendUrl}/verify-email?token=${token}`;
-      
+
       // Import email service
       const { sendVerificationEmail } = await import('./emailService');
-      
+
       // Send verification email
       await sendVerificationEmail(email, verificationUrl);
-      
-      logger.info('Verification email sent successfully', { email, verificationUrl })
+
+      logger.info('Verification email sent successfully', { email, verificationUrl });
     } catch (error) {
       logger.error('Error sending verification email', { error, email });
       if (error instanceof ApiError) throw error;
-      throw new ApiError('Failed to send verification email', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to send verification email',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }
@@ -723,10 +803,9 @@ class AuthService {
       const verification = tokenResult.rows[0];
 
       // Mark token as used
-      await client.query(
-        'UPDATE email_verifications SET used_at = NOW() WHERE id = $1',
-        [verification.id]
-      );
+      await client.query('UPDATE email_verifications SET used_at = NOW() WHERE id = $1', [
+        verification.id,
+      ]);
 
       // Mark user as verified
       await client.query(
@@ -741,7 +820,11 @@ class AuthService {
       await client.query('ROLLBACK');
       logger.error('Error verifying email', { error });
       if (error instanceof ApiError) throw error;
-      throw new ApiError('Failed to verify email', 500, error instanceof Error ? error.message : String(error));
+      throw new ApiError(
+        'Failed to verify email',
+        500,
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       client.release();
     }

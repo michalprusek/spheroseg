@@ -1,6 +1,6 @@
 /**
  * Logging Module
- * 
+ *
  * Re-exports the unified logger for convenient imports
  */
 
@@ -8,7 +8,7 @@ export * from './unifiedLogger';
 export { default } from './unifiedLogger';
 
 // Convenience exports
-export { 
+export {
   createLogger,
   createNamespacedLogger,
   getLogger,
@@ -18,5 +18,5 @@ export {
   overrideConsole,
   restoreConsole,
   LogLevel,
-  LogLevel as LEVELS
+  LogLevel as LEVELS,
 } from './unifiedLogger';

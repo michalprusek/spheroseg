@@ -44,7 +44,10 @@ const ImageSelectionCard: React.FC<ImageSelectionCardProps> = ({
                 className="flex items-center border p-3 rounded-md space-x-4 hover:bg-gray-50 dark:hover:bg-gray-800"
                 onClick={(e) => {
                   // Only handle click if it's not on the checkbox
-                  if (e.target === e.currentTarget || !e.currentTarget.querySelector('[role="checkbox"]')?.contains(e.target as Node)) {
+                  if (
+                    e.target === e.currentTarget ||
+                    !e.currentTarget.querySelector('[role="checkbox"]')?.contains(e.target as Node)
+                  ) {
                     handleSelectImage(image.id);
                   }
                 }}

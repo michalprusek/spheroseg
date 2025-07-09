@@ -1,6 +1,6 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import { getPool } from '../db';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';

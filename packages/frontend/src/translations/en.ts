@@ -28,7 +28,7 @@ export default {
       queued: 'Queued',
       statusProcessing: 'Segmentation: {{count}} processing',
       statusReady: 'Ready',
-      tasksTotal: '{{total}} tasks total ({{running}} processing, {{queued}} queued)'
+      tasksTotal: '{{total}} tasks total ({{running}} processing, {{queued}} queued)',
     },
     selectPolygonForEdit: 'Select a polygon to edit',
     selectPolygonForSlice: 'Select a polygon to slice',
@@ -154,7 +154,7 @@ export default {
       deletingImages: 'Deleting {{count}} images...',
       deleteSuccess: 'Successfully deleted {{count}} images',
       deleteFailed: 'Failed to delete {{count}} images',
-      preparingExport: 'Preparing export of {{count}} images...'
+      preparingExport: 'Preparing export of {{count}} images...',
     },
     segmentation: {
       processingInBatches: 'Starting segmentation for {{count}} images in {{batches}} batches...',
@@ -165,7 +165,7 @@ export default {
       allSuccess: 'Segmentation: All {{count}} images successfully queued',
       allFailed: 'Segmentation: All {{count}} images failed',
       startedImages: 'Segmentation started for {{count}} images',
-      queuedLocallyWarning: 'Segmentation queued locally for {{count}} images. Server connection failed.'
+      queuedLocallyWarning: 'Segmentation queued locally for {{count}} images. Server connection failed.',
     },
     loading: 'Loading project...',
     notFound: 'Project not found',
@@ -176,12 +176,13 @@ export default {
     noImages: {
       title: 'No Images Yet',
       description: "This project doesn't have any images yet. Upload images to get started.",
-      uploadButton: 'Upload Images'
+      uploadButton: 'Upload Images',
     },
     deleteProject: 'Delete Project',
     deleteConfirmation: 'Are you sure you want to delete the project "{{projectName}}"? This action cannot be undone.',
     duplicateProject: 'Duplicate Project',
-    duplicateDescription: 'Create a copy of this project. The new project will be created with the name you provide below.',
+    duplicateDescription:
+      'Create a copy of this project. The new project will be created with the name you provide below.',
     newProjectName: 'New Project Name',
     enterProjectName: 'Enter the new project name',
     duplicate: 'Duplicate',
@@ -203,7 +204,8 @@ export default {
     projectDeleted: 'Project successfully deleted',
     projectDeletionFailed: 'Project deletion failed',
     confirmDelete: 'Are you sure you want to delete this project?',
-    confirmDeleteDescription: 'This action cannot be undone. All data associated with this project will be permanently deleted.',
+    confirmDeleteDescription:
+      'This action cannot be undone. All data associated with this project will be permanently deleted.',
     deleteProject: 'Delete project',
     editProject: 'Edit project',
     viewProject: 'View project',
@@ -230,7 +232,8 @@ export default {
     duplicateFailed: 'Failed to duplicate project',
     duplicateTitle: 'Duplicate project',
     duplicateProject: 'Duplicate project',
-    duplicateProjectDescription: 'Create a copy of this project including all images. You can customize the options below.',
+    duplicateProjectDescription:
+      'Create a copy of this project including all images. You can customize the options below.',
     duplicateCancelled: 'Project duplication cancelled',
     duplicatingProject: 'Duplicating project',
     duplicatingProjectDescription: 'Your project is being duplicated. This may take a few moments.',
@@ -238,7 +241,8 @@ export default {
     duplicationComplete: 'Project duplication completed',
     duplicationTaskFetchError: 'Error fetching task data',
     duplicationCancelError: 'Error cancelling duplication',
-    duplicateProgressDescription: 'Your project is being duplicated. This process may take some time for large projects.',
+    duplicateProgressDescription:
+      'Your project is being duplicated. This process may take some time for large projects.',
     duplicationPending: 'Pending',
     duplicationProcessing: 'Processing',
     duplicationCompleted: 'Completed',
@@ -272,7 +276,7 @@ export default {
     creatingProject: 'Creating project...',
     noImages: {
       title: 'No images yet',
-      description: 'This project doesn\'t have any images yet. Upload images to start segmentation.',
+      description: "This project doesn't have any images yet. Upload images to start segmentation.",
       uploadButton: 'Upload Images',
     },
   },
@@ -684,7 +688,7 @@ export default {
     totalImages: 'Total Images',
     totalAnalyses: 'Total Analyses',
     lastUpdated: 'Last Updated',
-    noProjectsDescription: 'You haven\'t created any projects yet. Create your first project to get started.',
+    noProjectsDescription: "You haven't created any projects yet. Create your first project to get started.",
     searchProjectsPlaceholder: 'Search projects by name...',
     sortBy: 'Sort by',
     name: 'Name',
@@ -1125,10 +1129,10 @@ export default {
   },
   export: {
     formatDescriptions: {
-      COCO: "Common Objects in Context (COCO) JSON format for object detection",
-      YOLO: "You Only Look Once (YOLO) text format for object detection",
-      MASK: "Binary mask images for each segmented object",
-      POLYGONS: "Polygon coordinates in JSON format"
+      COCO: 'Common Objects in Context (COCO) JSON format for object detection',
+      YOLO: 'You Only Look Once (YOLO) text format for object detection',
+      MASK: 'Binary mask images for each segmented object',
+      POLYGONS: 'Polygon coordinates in JSON format',
     },
     exportCompleted: 'Export completed',
     exportFailed: 'Export failed',
@@ -1153,8 +1157,8 @@ export default {
       metricsRequireSegmentation: 'Exporting metrics requires completed segmentation',
     },
     formats: {
-      COCO: "COCO JSON",
-      YOLO: "YOLO TXT",
+      COCO: 'COCO JSON',
+      YOLO: 'YOLO TXT',
       MASK: 'Mask (TIFF)',
       POLYGONS: 'Polygons (JSON)',
     },
@@ -1286,27 +1290,33 @@ export default {
     title: 'Terms of Service',
     acceptance: {
       title: '1. Acceptance of Terms',
-      paragraph1: 'By accessing or using SpheroSeg, you agree to be bound by these Terms of Service. If you do not agree with these terms, please do not use our service.',
+      paragraph1:
+        'By accessing or using SpheroSeg, you agree to be bound by these Terms of Service. If you do not agree with these terms, please do not use our service.',
     },
     useLicense: {
       title: '2. Use License',
-      paragraph1: 'SpheroSeg grants you a limited, non-exclusive, non-transferable license to use the service for research and educational purposes. Commercial use requires a separate license agreement.',
+      paragraph1:
+        'SpheroSeg grants you a limited, non-exclusive, non-transferable license to use the service for research and educational purposes. Commercial use requires a separate license agreement.',
     },
     dataUsage: {
       title: '3. Data Usage',
-      paragraph1: 'You retain all rights to your uploaded images and data. We do not share your data with third parties without your explicit consent. Your data is used solely to provide and improve our segmentation services.',
+      paragraph1:
+        'You retain all rights to your uploaded images and data. We do not share your data with third parties without your explicit consent. Your data is used solely to provide and improve our segmentation services.',
     },
     limitations: {
       title: '4. Service Limitations',
-      paragraph1: 'SpheroSeg is provided "as is" without any warranties, express or implied. We do not guarantee 100% availability, accuracy, or reliability. Users are responsible for validating results for their specific applications.',
+      paragraph1:
+        'SpheroSeg is provided "as is" without any warranties, express or implied. We do not guarantee 100% availability, accuracy, or reliability. Users are responsible for validating results for their specific applications.',
     },
     revisions: {
       title: '5. Revisions',
-      paragraph1: 'We reserve the right to modify these terms at any time. Changes will take effect immediately upon posting. Your continued use of the service constitutes acceptance of the revised terms.',
+      paragraph1:
+        'We reserve the right to modify these terms at any time. Changes will take effect immediately upon posting. Your continued use of the service constitutes acceptance of the revised terms.',
     },
     governingLaw: {
       title: '6. Governing Law',
-      paragraph1: 'These terms are governed by the laws of the Czech Republic. Any disputes will be resolved by the competent courts in Prague.',
+      paragraph1:
+        'These terms are governed by the laws of the Czech Republic. Any disputes will be resolved by the competent courts in Prague.',
     },
     lastUpdated: 'Last Updated: January 7, 2025',
   },
@@ -1314,7 +1324,8 @@ export default {
     title: 'Privacy Policy',
     introduction: {
       title: '1. Introduction',
-      paragraph1: 'At SpheroSeg, we are committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and what rights you have regarding your information.',
+      paragraph1:
+        'At SpheroSeg, we are committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and what rights you have regarding your information.',
     },
     dataCollection: {
       title: '2. Information We Collect',
@@ -1339,12 +1350,14 @@ export default {
     },
     dataStorage: {
       title: '4. Data Storage and Security',
-      paragraph1: 'We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.',
+      paragraph1:
+        'We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.',
       paragraph2: 'Your data is stored on secure servers and is deleted according to our data retention policy.',
     },
     dataSharing: {
       title: '5. Data Sharing',
-      paragraph1: 'We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy or as required by law.',
+      paragraph1:
+        'We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy or as required by law.',
     },
     userRights: {
       title: '6. Your Rights',
@@ -1359,11 +1372,13 @@ export default {
     },
     cookies: {
       title: '7. Cookies and Tracking Technologies',
-      paragraph1: 'We use cookies and similar technologies to enhance your experience, analyze site usage, and personalize content.',
+      paragraph1:
+        'We use cookies and similar technologies to enhance your experience, analyze site usage, and personalize content.',
     },
     changes: {
       title: '8. Changes to This Policy',
-      paragraph1: 'We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.',
+      paragraph1:
+        'We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.',
     },
     contact: {
       title: '9. Contact Us',
@@ -1371,5 +1386,5 @@ export default {
       email: 'privacy@spheroseg.com',
     },
     lastUpdated: 'Last Updated: January 7, 2025',
-  }
-}
+  },
+};

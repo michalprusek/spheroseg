@@ -67,7 +67,7 @@ export const generateAccessToken = (
     expiry?: string;
     jti?: string;
     tokenVersion?: number;
-  } = {},
+  } = {}
 ): string => {
   const jwtSecret = config.auth.jwtSecret;
   if (!jwtSecret) {
@@ -75,7 +75,11 @@ export const generateAccessToken = (
     throw new Error('JWT secret is not defined');
   }
 
-  const { expiry = config.auth.accessTokenExpiry || '15m', jti = generateTokenId(), tokenVersion = 1 } = options;
+  const {
+    expiry = config.auth.accessTokenExpiry || '15m',
+    jti = generateTokenId(),
+    tokenVersion = 1,
+  } = options;
 
   const fingerprint = generateRandomToken(32);
 
@@ -114,7 +118,7 @@ export const generateRefreshToken = async (
     familyId?: string;
     userAgent?: string;
     ipAddress?: string;
-  } = {},
+  } = {}
 ): Promise<string> => {
   const jwtSecret = config.auth.jwtSecret;
   if (!jwtSecret) {
@@ -162,7 +166,15 @@ export const generateRefreshToken = async (
       `INSERT INTO refresh_tokens
        (user_id, token_id, family_id, device_id, user_agent, ip_address, expires_at, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-      [userId, jti, familyId, deviceId, userAgent?.substring(0, 255) || null, ipAddress || null, expiresAt],
+      [
+        userId,
+        jti,
+        familyId,
+        deviceId,
+        userAgent?.substring(0, 255) || null,
+        ipAddress || null,
+        expiresAt,
+      ]
     );
 
     return `${token}.${jti}`;
@@ -187,7 +199,7 @@ export const verifyToken = (
     validateFingerprint?: boolean;
     requiredIssuer?: string;
     requiredAudience?: string;
-  } = {},
+  } = {}
 ): TokenPayload => {
   const jwtSecret = config.auth.jwtSecret;
   if (!jwtSecret) {
@@ -263,7 +275,7 @@ export const verifyRefreshToken = async (
     userAgent?: string;
     ipAddress?: string;
     strictDeviceCheck?: boolean;
-  } = {},
+  } = {}
 ): Promise<TokenPayload & { familyId: string; deviceId: string }> => {
   const jwtSecret = config.auth.jwtSecret;
   if (!jwtSecret) {
@@ -310,7 +322,7 @@ export const verifyRefreshToken = async (
       (SELECT COUNT(*) FROM refresh_tokens WHERE family_id = t.family_id) as token_count
     FROM refresh_tokens t
     WHERE token_id = $1 AND expires_at > NOW()`,
-    [jti],
+    [jti]
   );
 
   if (result.rows.length === 0) {
@@ -401,7 +413,7 @@ export const rotateRefreshToken = async (
     userAgent?: string;
     ipAddress?: string;
     maxTokensPerFamily?: number;
-  } = {},
+  } = {}
 ): Promise<string> => {
   const jwtSecret = config.auth.jwtSecret;
   if (!jwtSecret) {
@@ -418,13 +430,15 @@ export const rotateRefreshToken = async (
       strictDeviceCheck: false,
     });
 
-    await pool.query('UPDATE refresh_tokens SET is_revoked = true, updated_at = NOW() WHERE token_id = $1', [
-      oldDecoded.jti,
-    ]);
+    await pool.query(
+      'UPDATE refresh_tokens SET is_revoked = true, updated_at = NOW() WHERE token_id = $1',
+      [oldDecoded.jti]
+    );
 
-    const tokenCountResult = await pool.query('SELECT COUNT(*) as count FROM refresh_tokens WHERE family_id = $1', [
-      oldDecoded.fid,
-    ]);
+    const tokenCountResult = await pool.query(
+      'SELECT COUNT(*) as count FROM refresh_tokens WHERE family_id = $1',
+      [oldDecoded.fid]
+    );
 
     const tokenCount = parseInt(tokenCountResult.rows[0].count, 10);
 
@@ -435,9 +449,10 @@ export const rotateRefreshToken = async (
         userId,
       });
 
-      await pool.query('UPDATE refresh_tokens SET is_revoked = true, updated_at = NOW() WHERE family_id = $1', [
-        oldDecoded.fid,
-      ]);
+      await pool.query(
+        'UPDATE refresh_tokens SET is_revoked = true, updated_at = NOW() WHERE family_id = $1',
+        [oldDecoded.fid]
+      );
 
       const newRefreshToken = await generateRefreshToken(userId, email, {
         userAgent,
@@ -476,9 +491,10 @@ export const revokeAllUserTokens = async (
     exceptFamilyId?: string;
     exceptDeviceId?: string;
     olderThan?: Date;
-  } = {},
+  } = {}
 ): Promise<void> => {
-  let query = 'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL';
+  let query =
+    'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL';
   const params: any[] = [userId];
   let paramIndex = 2;
 
@@ -530,7 +546,7 @@ export const cleanupExpiredTokens = async (
     olderThan?: Date;
     beforeTimestamp?: number;
     limit?: number;
-  } = {},
+  } = {}
 ): Promise<number> => {
   let query = 'DELETE FROM refresh_tokens WHERE expires_at < NOW() OR revoked_at IS NOT NULL';
   const params: any[] = [];
@@ -582,7 +598,7 @@ export const createTokenResponse = async (
     ipAddress?: string;
     accessTokenExpiry?: string;
     refreshTokenExpiry?: string;
-  } = {},
+  } = {}
 ): Promise<TokenResponse> => {
   const jwtSecret = config.auth.jwtSecret;
   if (!jwtSecret) {

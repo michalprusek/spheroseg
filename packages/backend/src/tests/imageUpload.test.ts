@@ -90,7 +90,7 @@ jest.mock('sharp', () =>
     metadata: jest.fn().mockResolvedValue({ width: 800, height: 600, format: 'jpeg' }),
     resize: jest.fn().mockReturnThis(),
     toFile: jest.fn().mockResolvedValue({}),
-  })),
+  }))
 );
 
 // Mock multer module
@@ -139,14 +139,18 @@ jest.mock('../utils/imageUtils.unified', () => ({
     ensureDirectoryExists: jest.fn().mockResolvedValue(undefined),
     getImageMetadata: jest.fn().mockResolvedValue({ width: 800, height: 600, format: 'jpeg' }),
     createThumbnail: jest.fn().mockResolvedValue(undefined),
-    dbPathToFilesystemPath: jest.fn().mockReturnValue('/tmp/uploads/test-project-id/test-image.jpg'),
+    dbPathToFilesystemPath: jest
+      .fn()
+      .mockReturnValue('/tmp/uploads/test-project-id/test-image.jpg'),
     normalizePathForDb: jest.fn().mockReturnValue('/uploads/test-project-id/test-image.jpg'),
     formatImageForApi: jest.fn().mockImplementation((image) => ({
       ...image,
       storage_path: `http://localhost:3000/uploads/test-project-id/test-image.jpg`,
       thumbnail_path: `http://localhost:3000/uploads/test-project-id/thumb-test-image.jpg`,
     })),
-    verifyImageFilesForApi: jest.fn().mockImplementation((image) => ({ ...image, file_exists: true })),
+    verifyImageFilesForApi: jest
+      .fn()
+      .mockImplementation((image) => ({ ...image, file_exists: true })),
     deleteFile: jest.fn().mockResolvedValue(undefined),
   },
   fileExists: jest.fn().mockResolvedValue(true),

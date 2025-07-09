@@ -250,30 +250,26 @@ const StatsOverview: React.FC = () => {
   const [showExtended, setShowExtended] = useState(false);
 
   // Use the updated useUserStatistics hook with unified cache
-  const {
-    data: rawStats,
-    isLoading,
-    error,
-    refetch: fetchStatistics,
-    invalidate: clearCache
-  } = useUserStatistics();
-  
+  const { data: rawStats, isLoading, error, refetch: fetchStatistics, invalidate: clearCache } = useUserStatistics();
+
   // Transform the data to match the expected format
-  const stats: UserStats | undefined = rawStats ? {
-    totalProjects: rawStats.totalProjects,
-    totalImages: rawStats.totalImages,
-    completedSegmentations: rawStats.segmentedImages,
-    storageUsedMB: rawStats.storageUsed,
-    recentActivity: [], // This would need to come from a separate endpoint
-    comparisons: {
-      projectsThisMonth: 0,
-      projectsLastMonth: 0,
-      projectsChange: 0,
-      imagesThisMonth: 0,
-      imagesLastMonth: 0,
-      imagesChange: 0,
-    }
-  } : undefined;
+  const stats: UserStats | undefined = rawStats
+    ? {
+        totalProjects: rawStats.totalProjects,
+        totalImages: rawStats.totalImages,
+        completedSegmentations: rawStats.segmentedImages,
+        storageUsedMB: rawStats.storageUsed,
+        recentActivity: [], // This would need to come from a separate endpoint
+        comparisons: {
+          projectsThisMonth: 0,
+          projectsLastMonth: 0,
+          projectsChange: 0,
+          imagesThisMonth: 0,
+          imagesLastMonth: 0,
+          imagesChange: 0,
+        },
+      }
+    : undefined;
 
   // Listen for statistics update events
   useEffect(() => {
@@ -402,9 +398,7 @@ const StatsOverview: React.FC = () => {
           value={isLoading ? '' : `${(stats?.storageUsedMB || 0.01).toFixed(1)} MB`}
           icon={<HardDrive className="h-4 w-4" />}
           description={
-            stats?.totalImages
-              ? `${stats.totalImages} ${stats.totalImages === 1 ? 'image' : 'images'}`
-              : undefined
+            stats?.totalImages ? `${stats.totalImages} ${stats.totalImages === 1 ? 'image' : 'images'}` : undefined
           }
           isLoading={isLoading}
           onClick={toggleExtendedView}

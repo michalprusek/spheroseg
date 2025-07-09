@@ -24,7 +24,12 @@ interface AvatarUploaderProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAvatarChange, onUploadRequest, size = 'md' }) => {
+const AvatarUploader: React.FC<AvatarUploaderProps> = ({
+  currentAvatarUrl,
+  onAvatarChange,
+  onUploadRequest,
+  size = 'md',
+}) => {
   const { t } = useLanguage();
   const { updateAvatar, removeAvatar, updateProfile } = useProfile();
   const [isUploading, setIsUploading] = useState(false);
@@ -65,7 +70,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
     // Create a preview URL for the cropper
     // Use generateTiffPreview which handles TIFF/BMP conversion
     const previewUrl = await generateTiffPreview(file);
-    
+
     if (!previewUrl) {
       showError(t('profile.previewError') || 'Failed to generate image preview');
       return;
@@ -81,7 +86,6 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
       fileInputRef.current.value = '';
     }
   };
-
 
   // Handle cropper completion
   const handleCropComplete = async (cropData: any) => {
@@ -127,10 +131,10 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
         localStorage.setItem('userAvatar', imageToUpload);
 
         showSuccess(t('profile.avatarUpdated') || 'Profile picture updated');
-        
+
         // Clear preview after successful upload
         setPreviewUrl(null);
-        
+
         // Update parent with new avatar URL (no pending changes since it's uploaded)
         onAvatarChange(imageToUpload, false);
       },
@@ -176,10 +180,10 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
   useEffect(() => {
     // Don't override if we already have a preview (user is in the middle of editing)
     if (previewUrl) return;
-    
+
     const storedAvatar = localStorage.getItem('userAvatar');
     const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
-    
+
     // If current avatar URL is empty/null, check localStorage
     if (!currentAvatarUrl || currentAvatarUrl.length === 0) {
       if (storedAvatar) {
@@ -246,7 +250,13 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ currentAvatarUrl, onAva
       </div>
 
       {/* Hidden file input */}
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,.tiff,.tif" className="hidden" />
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*,.tiff,.tif"
+        className="hidden"
+      />
 
       <p className="text-xs text-muted-foreground">
         {t('profile.avatarHelp') || 'Click the camera icon to upload a profile picture'}

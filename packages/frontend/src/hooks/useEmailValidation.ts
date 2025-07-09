@@ -10,10 +10,7 @@ export interface EmailValidationResult {
 }
 
 // Custom debounce hook
-const useDebounce = <T extends (...args: any[]) => any>(
-  callback: T,
-  delay: number
-): T => {
+const useDebounce = <T extends (...args: any[]) => any>(callback: T, delay: number): T => {
   const debounceRef = useRef<NodeJS.Timeout>();
 
   const debouncedCallback = useCallback(
@@ -25,7 +22,7 @@ const useDebounce = <T extends (...args: any[]) => any>(
         callback(...args);
       }, delay);
     },
-    [callback, delay]
+    [callback, delay],
   ) as T;
 
   useEffect(() => {
@@ -81,7 +78,7 @@ export const useEmailValidation = (debounceDelay: number = 500) => {
       return;
     }
 
-    setValidationState(prev => ({
+    setValidationState((prev) => ({
       ...prev,
       isValidating: true,
       error: null,
@@ -112,7 +109,7 @@ export const useEmailValidation = (debounceDelay: number = 500) => {
       }
 
       console.warn('Email validation failed:', error);
-      
+
       // If validation fails, don't block the user - just reset to neutral state
       // This allows the form to still be functional even if email validation is down
       setValidationState({
@@ -127,9 +124,12 @@ export const useEmailValidation = (debounceDelay: number = 500) => {
 
   const debouncedValidateEmail = useDebounce(validateEmail, debounceDelay);
 
-  const checkEmail = useCallback((email: string) => {
-    debouncedValidateEmail(email);
-  }, [debouncedValidateEmail]);
+  const checkEmail = useCallback(
+    (email: string) => {
+      debouncedValidateEmail(email);
+    },
+    [debouncedValidateEmail],
+  );
 
   return {
     ...validationState,

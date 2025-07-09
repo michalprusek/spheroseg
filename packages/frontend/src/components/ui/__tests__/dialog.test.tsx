@@ -16,17 +16,17 @@ import '@testing-library/jest-dom';
 // Mock the Radix UI Dialog components
 vi.mock('@radix-ui/react-dialog', () => {
   const React = require('react');
-  
+
   // Create a context to share state between components
   const DialogContext = React.createContext({
     isOpen: false,
     setIsOpen: () => {},
   });
-  
+
   return {
     Root: ({ children, open, onOpenChange, modal = true }) => {
       const [isOpen, setIsOpen] = React.useState(open ?? false);
-      
+
       React.useEffect(() => {
         if (open !== undefined) {
           setIsOpen(open);

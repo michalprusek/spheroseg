@@ -48,14 +48,10 @@ export const DeleteProjectDialog: React.FC<DeleteProjectDialogProps> = ({
             <Trash2 className="h-5 w-5 text-destructive" />
             {t('project.deleteProject')}
           </AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('project.deleteConfirmation', { projectName })}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{t('project.deleteConfirmation', { projectName })}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>
-            {t('common.cancel')}
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={isDeleting}

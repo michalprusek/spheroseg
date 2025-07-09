@@ -171,10 +171,10 @@ describe('Network Failure Tests', () => {
         // Override fetch in the service to use our mock server
         _callMlService: jest.fn().mockImplementation(async (endpoint) => {
           const response = await axios.get(`${mockServerUrl}${endpoint}`);
-            if (response.status >= 400) {
-              throw new Error(`HTTP error: ${response.status}`);
-            }
-            return response.data;
+          if (response.status >= 400) {
+            throw new Error(`HTTP error: ${response.status}`);
+          }
+          return response.data;
         }),
       };
     });
@@ -186,26 +186,29 @@ describe('Network Failure Tests', () => {
     global._retryCount = 0;
 
     // Use the segmentation service module after it's loaded
-    segmentationServicePromise.then(segmentationService => {
-      // Ensure we're using our mock service
-      segmentationService._callMlService = jest.fn().mockImplementation(async (endpoint) => {
-        // Call our test endpoint
-        const response = await axios.get(`${mockServerUrl}${endpoint}`);
-        if (response.status >= 400) {
-          throw new Error(`HTTP error: ${response.status}`);
-        }
-        return response.data;
-      });
+    segmentationServicePromise
+      .then((segmentationService) => {
+        // Ensure we're using our mock service
+        segmentationService._callMlService = jest.fn().mockImplementation(async (endpoint) => {
+          // Call our test endpoint
+          const response = await axios.get(`${mockServerUrl}${endpoint}`);
+          if (response.status >= 400) {
+            throw new Error(`HTTP error: ${response.status}`);
+          }
+          return response.data;
+        });
 
-      // Call segmentation with retries
-      return segmentationService._callMlService('/retry-success', {});
-    }).then(() => {
-      // If it succeeds, verify retry count
-      expect(global._retryCount).toBe(3);
-    }).catch(error => {
-      // If it fails, check error and retry count
-      expect(global._retryCount).toBeGreaterThan(0);
-      throw error;
-    });
+        // Call segmentation with retries
+        return segmentationService._callMlService('/retry-success', {});
+      })
+      .then(() => {
+        // If it succeeds, verify retry count
+        expect(global._retryCount).toBe(3);
+      })
+      .catch((error) => {
+        // If it fails, check error and retry count
+        expect(global._retryCount).toBeGreaterThan(0);
+        throw error;
+      });
   });
 });

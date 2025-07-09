@@ -10,7 +10,7 @@ import sharp from 'sharp';
 import userProfileService from '../services/userProfileService';
 import logger from '../utils/logger';
 import db from '../db';
-import { AuthenticatedRequest } from '../security/middleware/auth';;
+import { AuthenticatedRequest } from '../security/middleware/auth';
 
 // Get the actual pool instance
 const dbPool = db.getPool();
@@ -45,7 +45,7 @@ export const getUserProfile = async (req: AuthenticatedRequest, res: Response) =
     }
 
     const profile = await userProfileService.getUserProfile(dbPool, userId);
-    
+
     if (!profile) {
       return res.status(404).json({ error: 'Profile not found' });
     }
@@ -67,13 +67,19 @@ export const getUserProfileWithSettings = async (req: AuthenticatedRequest, res:
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { profile, settings } = await userProfileService.getUserProfileWithSettings(dbPool, userId);
-    
+    const { profile, settings } = await userProfileService.getUserProfileWithSettings(
+      dbPool,
+      userId
+    );
+
     // Convert settings to object for easier frontend usage
-    const settingsObj = settings.reduce((acc, setting) => {
-      acc[setting.setting_key] = setting.setting_value;
-      return acc;
-    }, {} as Record<string, any>);
+    const settingsObj = settings.reduce(
+      (acc, setting) => {
+        acc[setting.setting_key] = setting.setting_value;
+        return acc;
+      },
+      {} as Record<string, any>
+    );
 
     res.json({ profile, settings: settingsObj });
   } catch (error) {
@@ -93,15 +99,15 @@ export const createUserProfile = async (req: AuthenticatedRequest, res: Response
     }
 
     const profile = await userProfileService.createUserProfile(dbPool, userId, req.body);
-    
+
     res.status(201).json(profile);
   } catch (error) {
-    logger.error('Error creating user profile:', { 
-      error, 
+    logger.error('Error creating user profile:', {
+      error,
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       userId: req.user?.userId,
-      body: req.body 
+      body: req.body,
     });
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -118,7 +124,7 @@ export const updateUserProfile = async (req: AuthenticatedRequest, res: Response
     }
 
     const profile = await userProfileService.updateUserProfile(dbPool, userId, req.body);
-    
+
     res.json(profile);
   } catch (error) {
     logger.error('Error updating user profile:', error);
@@ -144,14 +150,19 @@ export const uploadAvatarHandler = async (req: AuthenticatedRequest, res: Respon
     }
 
     const uploadsDir = process.env.UPLOADS_DIR || '/app/uploads';
-    const avatarFile = await userProfileService.saveAvatarFile(dbPool, userId, req.file, uploadsDir);
-    
-    res.json({ 
+    const avatarFile = await userProfileService.saveAvatarFile(
+      dbPool,
+      userId,
+      req.file,
+      uploadsDir
+    );
+
+    res.json({
       message: 'Avatar uploaded successfully',
       avatar: {
         filename: avatarFile.filename,
-        url: `/uploads/avatars/${avatarFile.filename}`
-      }
+        url: `/uploads/avatars/${avatarFile.filename}`,
+      },
     });
   } catch (error) {
     logger.error('Error uploading avatar:', error);
@@ -170,7 +181,7 @@ export const deleteAvatar = async (req: AuthenticatedRequest, res: Response) => 
     }
 
     await userProfileService.deleteAvatarFile(dbPool, userId);
-    
+
     res.json({ message: 'Avatar deleted successfully' });
   } catch (error) {
     logger.error('Error deleting avatar:', error);
@@ -185,13 +196,13 @@ export const getUserSetting = async (req: AuthenticatedRequest, res: Response) =
   try {
     const userId = req.user?.userId;
     const { key } = req.params;
-    
+
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const setting = await userProfileService.getUserSetting(dbPool, userId, key);
-    
+
     if (!setting) {
       return res.status(404).json({ error: 'Setting not found' });
     }
@@ -199,7 +210,7 @@ export const getUserSetting = async (req: AuthenticatedRequest, res: Response) =
     res.json({
       key: setting.setting_key,
       value: setting.setting_value,
-      category: setting.category
+      category: setting.category,
     });
   } catch (error) {
     logger.error('Error fetching user setting:', error);
@@ -218,16 +229,19 @@ export const getUserSettings = async (req: AuthenticatedRequest, res: Response) 
     }
 
     const settings = await userProfileService.getUserSettings(dbPool, userId);
-    
+
     // Convert to object format
-    const settingsObj = settings.reduce((acc, setting) => {
-      acc[setting.setting_key] = {
-        value: setting.setting_value,
-        category: setting.category,
-        updated_at: setting.updated_at
-      };
-      return acc;
-    }, {} as Record<string, any>);
+    const settingsObj = settings.reduce(
+      (acc, setting) => {
+        acc[setting.setting_key] = {
+          value: setting.setting_value,
+          category: setting.category,
+          updated_at: setting.updated_at,
+        };
+        return acc;
+      },
+      {} as Record<string, any>
+    );
 
     res.json(settingsObj);
   } catch (error) {
@@ -244,7 +258,7 @@ export const setUserSetting = async (req: AuthenticatedRequest, res: Response) =
     const userId = req.user?.userId;
     const { key } = req.params;
     const { value, category = 'general' } = req.body;
-    
+
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -254,12 +268,12 @@ export const setUserSetting = async (req: AuthenticatedRequest, res: Response) =
     }
 
     const setting = await userProfileService.setUserSetting(dbPool, userId, key, value, category);
-    
+
     res.json({
       key: setting.setting_key,
       value: setting.setting_value,
       category: setting.category,
-      updated_at: setting.updated_at
+      updated_at: setting.updated_at,
     });
   } catch (error) {
     logger.error('Error setting user setting:', error);
@@ -274,13 +288,13 @@ export const deleteUserSetting = async (req: AuthenticatedRequest, res: Response
   try {
     const userId = req.user?.userId;
     const { key } = req.params;
-    
+
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     await userProfileService.deleteUserSetting(dbPool, userId, key);
-    
+
     res.json({ message: 'Setting deleted successfully' });
   } catch (error) {
     logger.error('Error deleting user setting:', error);
@@ -295,7 +309,7 @@ export const batchUpdateUserSettings = async (req: AuthenticatedRequest, res: Re
   try {
     const userId = req.user?.userId;
     const { settings } = req.body;
-    
+
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -311,14 +325,17 @@ export const batchUpdateUserSettings = async (req: AuthenticatedRequest, res: Re
       })
     );
 
-    const settingsObj = updatedSettings.reduce((acc, setting) => {
-      acc[setting.setting_key] = {
-        value: setting.setting_value,
-        category: setting.category,
-        updated_at: setting.updated_at
-      };
-      return acc;
-    }, {} as Record<string, any>);
+    const settingsObj = updatedSettings.reduce(
+      (acc, setting) => {
+        acc[setting.setting_key] = {
+          value: setting.setting_value,
+          category: setting.category,
+          updated_at: setting.updated_at,
+        };
+        return acc;
+      },
+      {} as Record<string, any>
+    );
 
     res.json(settingsObj);
   } catch (error) {
@@ -345,7 +362,7 @@ export const generateAvatarPreview = async (req: AuthenticatedRequest, res: Resp
     // Set appropriate headers
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'private, max-age=3600');
-    
+
     // Send the converted image
     res.send(convertedBuffer);
   } catch (error) {
@@ -367,5 +384,5 @@ export default {
   deleteUserSetting,
   batchUpdateUserSettings,
   uploadAvatar,
-  generateAvatarPreview
+  generateAvatarPreview,
 };

@@ -208,13 +208,13 @@ describe('Export API Comprehensive Tests', () => {
 
       // Check for COCO annotation file
       const hasCOCOFile = Object.keys(zip.files).some(
-        (name) => name.includes('annotations.json') || name.includes('coco'),
+        (name) => name.includes('annotations.json') || name.includes('coco')
       );
       expect(hasCOCOFile).toBeTruthy();
 
       // Verify COCO format content
       const cocoFiles = Object.keys(zip.files).filter(
-        (name) => name.includes('annotations.json') || name.includes('coco'),
+        (name) => name.includes('annotations.json') || name.includes('coco')
       );
 
       if (cocoFiles.length > 0) {
@@ -248,7 +248,9 @@ describe('Export API Comprehensive Tests', () => {
       const zip = await JSZip.loadAsync(zipBuffer);
 
       // YOLO format creates .txt files with class x_center y_center width height
-      const txtFiles = Object.keys(zip.files).filter((name) => name.endsWith('.txt') && !name.includes('metadata'));
+      const txtFiles = Object.keys(zip.files).filter(
+        (name) => name.endsWith('.txt') && !name.includes('metadata')
+      );
 
       expect(txtFiles.length).toBeGreaterThan(0);
 
@@ -284,7 +286,9 @@ describe('Export API Comprehensive Tests', () => {
       const zip = await JSZip.loadAsync(zipBuffer);
 
       // Should have mask .png files
-      const maskFiles = Object.keys(zip.files).filter((name) => name.includes('/masks/') && name.endsWith('.png'));
+      const maskFiles = Object.keys(zip.files).filter(
+        (name) => name.includes('/masks/') && name.endsWith('.png')
+      );
 
       expect(maskFiles.length).toBeGreaterThan(0);
     });
@@ -308,7 +312,9 @@ describe('Export API Comprehensive Tests', () => {
       const zip = await JSZip.loadAsync(zipBuffer);
 
       // Should have polygon JSON files
-      const polygonFiles = Object.keys(zip.files).filter((name) => name.includes('polygons') && name.endsWith('.json'));
+      const polygonFiles = Object.keys(zip.files).filter(
+        (name) => name.includes('polygons') && name.endsWith('.json')
+      );
 
       expect(polygonFiles.length).toBeGreaterThan(0);
 
@@ -319,7 +325,8 @@ describe('Export API Comprehensive Tests', () => {
 
         // Check if it's an array of polygons or has a polygons array property
         const hasPolygons =
-          Array.isArray(polygonsData) || (polygonsData.polygons && Array.isArray(polygonsData.polygons));
+          Array.isArray(polygonsData) ||
+          (polygonsData.polygons && Array.isArray(polygonsData.polygons));
         expect(hasPolygons).toBe(true);
       }
     });
@@ -336,7 +343,7 @@ describe('Export API Comprehensive Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(
-        /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/,
+        /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/
       );
       expect(response.body).toBeTruthy();
     });

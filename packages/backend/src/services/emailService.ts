@@ -21,13 +21,13 @@ async function createTransporter() {
     EMAIL_HOST,
     EMAIL_PORT,
     EMAIL_FROM,
-    hasAuth: !!(EMAIL_USER && EMAIL_PASS)
+    hasAuth: !!(EMAIL_USER && EMAIL_PASS),
   });
-  
+
   // Pokud je nastaven EMAIL_HOST, použijeme ho (bez ohledu na přihlašovací údaje)
   if (EMAIL_HOST && EMAIL_HOST !== 'smtp.ethereal.email') {
     logger.info(`Using SMTP server: ${EMAIL_HOST}:${EMAIL_PORT}`);
-    
+
     const transportConfig: any = {
       host: EMAIL_HOST,
       port: EMAIL_PORT,
@@ -38,7 +38,7 @@ async function createTransporter() {
       socketTimeout: 10000,
       tls: {
         rejectUnauthorized: false, // Povolení self-signed certifikátů
-        servername: EMAIL_HOST // Explicitně nastavit server name pro TLS
+        servername: EMAIL_HOST, // Explicitně nastavit server name pro TLS
       },
     };
 
@@ -70,7 +70,7 @@ async function createTransporter() {
     socketTimeout: 10000,
     tls: {
       rejectUnauthorized: false,
-      servername: 'mail.utia.cas.cz'
+      servername: 'mail.utia.cas.cz',
     },
   });
 }
@@ -97,7 +97,7 @@ export async function sendEmail({
       setTimeout(() => reject(new Error('Email send timeout')), 15000);
     });
 
-    const result = await Promise.race([
+    const result = (await Promise.race([
       transporter.sendMail({
         from: EMAIL_FROM,
         to,
@@ -105,22 +105,25 @@ export async function sendEmail({
         text,
         html: html || text,
       }),
-      timeoutPromise
-    ]) as any;
+      timeoutPromise,
+    ])) as any;
 
     logger.info(`Email sent to ${to}: ${result.messageId}`);
 
     return result;
   } catch (error) {
     logger.error('Failed to send email', {
-      error: error instanceof Error ? {
-        message: error.message,
-        code: (error as any).code,
-        command: (error as any).command,
-        response: (error as any).response,
-        responseCode: (error as any).responseCode,
-        stack: error.stack
-      } : error,
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              code: (error as any).code,
+              command: (error as any).command,
+              response: (error as any).response,
+              responseCode: (error as any).responseCode,
+              stack: error.stack,
+            }
+          : error,
       to,
       subject,
     });
@@ -302,11 +305,10 @@ Request Date: ${new Date().toLocaleString('en-US')}`;
 export async function sendPasswordReset(
   email: string,
   name: string,
-  newPassword: string,
+  newPassword: string
 ): Promise<{ success: boolean; testUrl?: string }> {
-
   const subject = 'SpheroSeg - Password Reset';
-  
+
   const text = `Password Reset
 
 Hello,
@@ -385,12 +387,9 @@ SpheroSeg Team`;
 /**
  * Sends email verification link
  */
-export async function sendVerificationEmail(
-  email: string,
-  verificationUrl: string,
-): Promise<void> {
+export async function sendVerificationEmail(email: string, verificationUrl: string): Promise<void> {
   const subject = 'SpheroSeg - Email Verification';
-  
+
   const text = `
 Hello,
 

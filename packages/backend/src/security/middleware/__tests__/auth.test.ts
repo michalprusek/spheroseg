@@ -40,7 +40,9 @@ describe('Authorization Middleware', () => {
 
       await isAdmin(mockRequest as AuthenticatedRequest, response, mockNext);
 
-      expect(mockDbQuery).toHaveBeenCalledWith('SELECT role FROM users WHERE id = $1', ['admin-user-id']);
+      expect(mockDbQuery).toHaveBeenCalledWith('SELECT role FROM users WHERE id = $1', [
+        'admin-user-id',
+      ]);
       expect(mockNext).toHaveBeenCalledTimes(1);
       expect(response.status).not.toHaveBeenCalled();
     });
@@ -54,7 +56,9 @@ describe('Authorization Middleware', () => {
 
       await isAdmin(mockRequest as AuthenticatedRequest, response, mockNext);
 
-      expect(mockDbQuery).toHaveBeenCalledWith('SELECT role FROM users WHERE id = $1', ['regular-user-id']);
+      expect(mockDbQuery).toHaveBeenCalledWith('SELECT role FROM users WHERE id = $1', [
+        'regular-user-id',
+      ]);
       expect(response.status).toHaveBeenCalledWith(403);
       expect(response.json).toHaveBeenCalledWith({
         message: 'Forbidden: Admin access required',
@@ -68,7 +72,9 @@ describe('Authorization Middleware', () => {
 
       await isAdmin(mockRequest as AuthenticatedRequest, response, mockNext);
 
-      expect(mockDbQuery).toHaveBeenCalledWith('SELECT role FROM users WHERE id = $1', ['ghost-user-id']);
+      expect(mockDbQuery).toHaveBeenCalledWith('SELECT role FROM users WHERE id = $1', [
+        'ghost-user-id',
+      ]);
       expect(response.status).toHaveBeenCalledWith(403);
       expect(response.json).toHaveBeenCalledWith({
         message: 'Forbidden: Admin access required',
@@ -95,7 +101,9 @@ describe('Authorization Middleware', () => {
 
       await isAdmin(mockRequest as AuthenticatedRequest, response, mockNext);
 
-      expect(mockDbQuery).toHaveBeenCalledWith('SELECT role FROM users WHERE id = $1', ['admin-user-id']);
+      expect(mockDbQuery).toHaveBeenCalledWith('SELECT role FROM users WHERE id = $1', [
+        'admin-user-id',
+      ]);
       expect(response.status).not.toHaveBeenCalled();
       expect(mockNext).toHaveBeenCalledWith(dbError);
     });
@@ -115,7 +123,9 @@ describe('Authorization Middleware', () => {
 
       await isUserApproved(mockRequest as AuthenticatedRequest, response, mockNext);
 
-      expect(mockDbQuery).toHaveBeenCalledWith('SELECT is_approved FROM users WHERE id = $1', ['approved-user-id']);
+      expect(mockDbQuery).toHaveBeenCalledWith('SELECT is_approved FROM users WHERE id = $1', [
+        'approved-user-id',
+      ]);
       expect(mockNext).toHaveBeenCalledTimes(1);
       expect(response.status).not.toHaveBeenCalled();
     });
@@ -132,7 +142,9 @@ describe('Authorization Middleware', () => {
 
       await isUserApproved(mockRequest as AuthenticatedRequest, response, mockNext);
 
-      expect(mockDbQuery).toHaveBeenCalledWith('SELECT is_approved FROM users WHERE id = $1', ['not-approved-user-id']);
+      expect(mockDbQuery).toHaveBeenCalledWith('SELECT is_approved FROM users WHERE id = $1', [
+        'not-approved-user-id',
+      ]);
       expect(response.status).toHaveBeenCalledWith(403);
       expect(response.json).toHaveBeenCalledWith({
         message: 'Forbidden: Account not approved',
@@ -146,7 +158,9 @@ describe('Authorization Middleware', () => {
 
       await isUserApproved(mockRequest as AuthenticatedRequest, response, mockNext);
 
-      expect(mockDbQuery).toHaveBeenCalledWith('SELECT is_approved FROM users WHERE id = $1', ['ghost-user-id']);
+      expect(mockDbQuery).toHaveBeenCalledWith('SELECT is_approved FROM users WHERE id = $1', [
+        'ghost-user-id',
+      ]);
       expect(response.status).toHaveBeenCalledWith(403);
       expect(response.json).toHaveBeenCalledWith({
         message: 'Forbidden: Account not approved',
@@ -175,7 +189,9 @@ describe('Authorization Middleware', () => {
 
       await isUserApproved(mockRequest as AuthenticatedRequest, response, mockNext);
 
-      expect(mockDbQuery).toHaveBeenCalledWith('SELECT is_approved FROM users WHERE id = $1', ['approved-user-id']);
+      expect(mockDbQuery).toHaveBeenCalledWith('SELECT is_approved FROM users WHERE id = $1', [
+        'approved-user-id',
+      ]);
       expect(response.status).not.toHaveBeenCalled();
       expect(mockNext).toHaveBeenCalledWith(dbError);
     });

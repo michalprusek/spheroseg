@@ -1,6 +1,6 @@
 /**
  * Unified Cache Service
- * 
+ *
  * This service consolidates all caching functionality into a single source of truth.
  * It provides a layered caching strategy with memory, localStorage, and IndexedDB.
  */
@@ -105,19 +105,19 @@ class UnifiedCacheService {
   private async initializeIndexedDB(): Promise<void> {
     try {
       const request = indexedDB.open(this.dbName, this.dbVersion);
-      
+
       request.onerror = () => {
         logger.error('Failed to open IndexedDB:', request.error);
       };
-      
+
       request.onsuccess = () => {
         this.db = request.result;
         logger.info('IndexedDB initialized');
       };
-      
+
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         if (!db.objectStoreNames.contains('cache')) {
           const store = db.createObjectStore('cache', { keyPath: 'key' });
           store.createIndex('expiresAt', 'expiresAt');
@@ -132,30 +132,27 @@ class UnifiedCacheService {
   /**
    * Get item from cache
    */
-  public async get<T = any>(
-    key: string,
-    options: CacheOptions = {}
-  ): Promise<T | null> {
+  public async get<T = any>(key: string, options: CacheOptions = {}): Promise<T | null> {
     try {
       const layers = this.getLayers(options.layer);
-      
+
       // Try each layer in order
       for (const layer of layers) {
         const entry = await this.getFromLayer<T>(key, layer);
-        
+
         if (entry && !this.isExpired(entry)) {
           this.stats.hits++;
           entry.hits++;
-          
+
           // Promote to higher layers if found in lower layer
           if (layer !== CacheLayer.MEMORY && layers.includes(CacheLayer.MEMORY)) {
             this.setInLayer(key, entry.value, CacheLayer.MEMORY, options);
           }
-          
+
           return entry.value;
         }
       }
-      
+
       this.stats.misses++;
       return null;
     } catch (error) {
@@ -167,30 +164,26 @@ class UnifiedCacheService {
   /**
    * Set item in cache
    */
-  public async set<T = any>(
-    key: string,
-    value: T,
-    options: CacheOptions = {}
-  ): Promise<void> {
+  public async set<T = any>(key: string, value: T, options: CacheOptions = {}): Promise<void> {
     try {
       const layers = this.getLayers(options.layer);
       const ttl = options.ttl || this.config.defaultTTL;
-      
+
       // Set in each specified layer
       for (const layer of layers) {
         await this.setInLayer(key, value, layer, { ...options, ttl });
       }
-      
+
       // Update tags index
       if (options.tags) {
-        options.tags.forEach(tag => {
+        options.tags.forEach((tag) => {
           if (!this.tagIndex.has(tag)) {
             this.tagIndex.set(tag, new Set());
           }
           this.tagIndex.get(tag)!.add(key);
         });
       }
-      
+
       logger.debug(`Cached ${key} in layers: ${layers.join(', ')}`);
     } catch (error) {
       logger.error(`Cache set error for key ${key}:`, error);
@@ -203,14 +196,14 @@ class UnifiedCacheService {
   public async delete(key: string, layer?: CacheLayer | CacheLayer[]): Promise<void> {
     try {
       const layers = this.getLayers(layer);
-      
+
       for (const l of layers) {
         await this.deleteFromLayer(key, l);
       }
-      
+
       // Remove from tag index
-      this.tagIndex.forEach(keys => keys.delete(key));
-      
+      this.tagIndex.forEach((keys) => keys.delete(key));
+
       logger.debug(`Deleted ${key} from cache`);
     } catch (error) {
       logger.error(`Cache delete error for key ${key}:`, error);
@@ -223,11 +216,11 @@ class UnifiedCacheService {
   public async clear(layer?: CacheLayer | CacheLayer[]): Promise<void> {
     try {
       const layers = this.getLayers(layer);
-      
+
       for (const l of layers) {
         await this.clearLayer(l);
       }
-      
+
       if (!layer || layers.length === 3) {
         this.tagIndex.clear();
         this.stats = {
@@ -239,7 +232,7 @@ class UnifiedCacheService {
           itemCount: 0,
         };
       }
-      
+
       logger.info('Cache cleared');
     } catch (error) {
       logger.error('Cache clear error:', error);
@@ -252,7 +245,7 @@ class UnifiedCacheService {
   public async getByTag(tag: string): Promise<Map<string, any>> {
     const results = new Map<string, any>();
     const keys = this.tagIndex.get(tag);
-    
+
     if (keys) {
       for (const key of keys) {
         const value = await this.get(key);
@@ -261,7 +254,7 @@ class UnifiedCacheService {
         }
       }
     }
-    
+
     return results;
   }
 
@@ -270,7 +263,7 @@ class UnifiedCacheService {
    */
   public async deleteByTag(tag: string): Promise<void> {
     const keys = this.tagIndex.get(tag);
-    
+
     if (keys) {
       for (const key of keys) {
         await this.delete(key);
@@ -291,24 +284,22 @@ class UnifiedCacheService {
    */
   public configure(config: Partial<CacheConfig>): void {
     this.config = { ...this.config, ...config };
-    
+
     if (this.config.autoCleanup) {
       this.startAutoCleanup();
     } else {
       this.stopAutoCleanup();
     }
-    
+
     logger.info('Cache configured:', this.config);
   }
 
   /**
    * Warm cache with data
    */
-  public async warmUp(
-    data: Array<{ key: string; value: any; options?: CacheOptions }>
-  ): Promise<void> {
+  public async warmUp(data: Array<{ key: string; value: any; options?: CacheOptions }>): Promise<void> {
     logger.info(`Warming up cache with ${data.length} items`);
-    
+
     for (const item of data) {
       await this.set(item.key, item.value, item.options);
     }
@@ -355,8 +346,8 @@ class UnifiedCacheService {
   private async getFromLayer<T>(key: string, layer: CacheLayer): Promise<CacheEntry<T> | null> {
     switch (layer) {
       case CacheLayer.MEMORY:
-        return this.memoryCache.get(key) as CacheEntry<T> | undefined || null;
-      
+        return (this.memoryCache.get(key) as CacheEntry<T> | undefined) || null;
+
       case CacheLayer.LOCAL_STORAGE:
         try {
           const item = localStorage.getItem(`cache:${key}`);
@@ -364,10 +355,10 @@ class UnifiedCacheService {
         } catch {
           return null;
         }
-      
+
       case CacheLayer.INDEXED_DB:
         return this.getFromIndexedDB<T>(key);
-      
+
       default:
         return null;
     }
@@ -377,7 +368,7 @@ class UnifiedCacheService {
     key: string,
     value: T,
     layer: CacheLayer,
-    options: CacheOptions & { ttl: number }
+    options: CacheOptions & { ttl: number },
   ): Promise<void> {
     const entry: CacheEntry<T> = {
       key,
@@ -389,15 +380,15 @@ class UnifiedCacheService {
       compressed: options.compress && this.config.enableCompression,
       encrypted: options.encrypt && this.config.enableEncryption,
     };
-    
+
     // Apply compression/encryption if needed
     if (entry.compressed) {
-      entry.value = await this.compress(value) as T;
+      entry.value = (await this.compress(value)) as T;
     }
     if (entry.encrypted) {
-      entry.value = await this.encrypt(entry.value) as T;
+      entry.value = (await this.encrypt(entry.value)) as T;
     }
-    
+
     switch (layer) {
       case CacheLayer.MEMORY:
         // Check memory limit
@@ -407,7 +398,7 @@ class UnifiedCacheService {
         this.memoryCache.set(key, entry);
         this.stats.memorySize += entry.size;
         break;
-      
+
       case CacheLayer.LOCAL_STORAGE:
         try {
           localStorage.setItem(`cache:${key}`, JSON.stringify(entry));
@@ -417,12 +408,12 @@ class UnifiedCacheService {
           this.handleStorageQuota();
         }
         break;
-      
+
       case CacheLayer.INDEXED_DB:
         await this.setInIndexedDB(entry);
         break;
     }
-    
+
     this.stats.itemCount++;
   }
 
@@ -436,11 +427,11 @@ class UnifiedCacheService {
           this.stats.itemCount--;
         }
         break;
-      
+
       case CacheLayer.LOCAL_STORAGE:
         localStorage.removeItem(`cache:${key}`);
         break;
-      
+
       case CacheLayer.INDEXED_DB:
         await this.deleteFromIndexedDB(key);
         break;
@@ -453,12 +444,12 @@ class UnifiedCacheService {
         this.memoryCache.clear();
         this.stats.memorySize = 0;
         break;
-      
+
       case CacheLayer.LOCAL_STORAGE:
-        const keys = Object.keys(localStorage).filter(k => k.startsWith('cache:'));
-        keys.forEach(k => localStorage.removeItem(k));
+        const keys = Object.keys(localStorage).filter((k) => k.startsWith('cache:'));
+        keys.forEach((k) => localStorage.removeItem(k));
         break;
-      
+
       case CacheLayer.INDEXED_DB:
         await this.clearIndexedDB();
         break;
@@ -467,16 +458,16 @@ class UnifiedCacheService {
 
   private async getFromIndexedDB<T>(key: string): Promise<CacheEntry<T> | null> {
     if (!this.db) return null;
-    
+
     return new Promise((resolve) => {
       const transaction = this.db!.transaction(['cache'], 'readonly');
       const store = transaction.objectStore('cache');
       const request = store.get(key);
-      
+
       request.onsuccess = () => {
         resolve(request.result || null);
       };
-      
+
       request.onerror = () => {
         logger.error('IndexedDB get error:', request.error);
         resolve(null);
@@ -486,12 +477,12 @@ class UnifiedCacheService {
 
   private async setInIndexedDB<T>(entry: CacheEntry<T>): Promise<void> {
     if (!this.db) return;
-    
+
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['cache'], 'readwrite');
       const store = transaction.objectStore('cache');
       const request = store.put(entry);
-      
+
       request.onsuccess = () => resolve();
       request.onerror = () => {
         logger.error('IndexedDB set error:', request.error);
@@ -502,12 +493,12 @@ class UnifiedCacheService {
 
   private async deleteFromIndexedDB(key: string): Promise<void> {
     if (!this.db) return;
-    
+
     return new Promise((resolve) => {
       const transaction = this.db!.transaction(['cache'], 'readwrite');
       const store = transaction.objectStore('cache');
       const request = store.delete(key);
-      
+
       request.onsuccess = () => resolve();
       request.onerror = () => {
         logger.error('IndexedDB delete error:', request.error);
@@ -518,12 +509,12 @@ class UnifiedCacheService {
 
   private async clearIndexedDB(): Promise<void> {
     if (!this.db) return;
-    
+
     return new Promise((resolve) => {
       const transaction = this.db!.transaction(['cache'], 'readwrite');
       const store = transaction.objectStore('cache');
       const request = store.clear();
-      
+
       request.onsuccess = () => resolve();
       request.onerror = () => {
         logger.error('IndexedDB clear error:', request.error);
@@ -547,14 +538,14 @@ class UnifiedCacheService {
   private evictLRU(): void {
     let oldestKey: string | null = null;
     let oldestTime = Infinity;
-    
+
     for (const [key, entry] of this.memoryCache) {
       if (entry.timestamp < oldestTime) {
         oldestTime = entry.timestamp;
         oldestKey = key;
       }
     }
-    
+
     if (oldestKey) {
       this.deleteFromLayer(oldestKey, CacheLayer.MEMORY);
       this.stats.evictions++;
@@ -563,8 +554,8 @@ class UnifiedCacheService {
 
   private handleStorageQuota(): void {
     // Clear expired items from localStorage
-    const keys = Object.keys(localStorage).filter(k => k.startsWith('cache:'));
-    
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith('cache:'));
+
     for (const key of keys) {
       try {
         const item = localStorage.getItem(key);
@@ -582,25 +573,25 @@ class UnifiedCacheService {
 
   private async getKeysByPrefix(prefix: string): Promise<string[]> {
     const keys: string[] = [];
-    
+
     // Memory cache
     for (const key of this.memoryCache.keys()) {
       if (key.startsWith(prefix)) {
         keys.push(key);
       }
     }
-    
+
     // LocalStorage
     Object.keys(localStorage)
-      .filter(k => k.startsWith(`cache:${prefix}`))
-      .forEach(k => keys.push(k.replace('cache:', '')));
-    
+      .filter((k) => k.startsWith(`cache:${prefix}`))
+      .forEach((k) => keys.push(k.replace('cache:', '')));
+
     // IndexedDB
     if (this.db) {
       const transaction = this.db.transaction(['cache'], 'readonly');
       const store = transaction.objectStore('cache');
       const request = store.openCursor();
-      
+
       await new Promise<void>((resolve) => {
         request.onsuccess = (event) => {
           const cursor = (event.target as IDBRequest).result;
@@ -615,7 +606,7 @@ class UnifiedCacheService {
         };
       });
     }
-    
+
     return [...new Set(keys)];
   }
 
@@ -635,7 +626,7 @@ class UnifiedCacheService {
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer);
     }
-    
+
     this.cleanupTimer = setInterval(() => {
       this.cleanup();
     }, this.config.cleanupInterval);
@@ -650,16 +641,16 @@ class UnifiedCacheService {
 
   private async cleanup(): Promise<void> {
     logger.debug('Running cache cleanup');
-    
+
     // Clean memory cache
     for (const [key, entry] of this.memoryCache) {
       if (this.isExpired(entry)) {
         this.deleteFromLayer(key, CacheLayer.MEMORY);
       }
     }
-    
+
     // Clean localStorage
-    const lsKeys = Object.keys(localStorage).filter(k => k.startsWith('cache:'));
+    const lsKeys = Object.keys(localStorage).filter((k) => k.startsWith('cache:'));
     for (const key of lsKeys) {
       try {
         const item = localStorage.getItem(key);
@@ -673,7 +664,7 @@ class UnifiedCacheService {
         localStorage.removeItem(key);
       }
     }
-    
+
     // Clean IndexedDB
     if (this.db) {
       const transaction = this.db.transaction(['cache'], 'readwrite');
@@ -681,7 +672,7 @@ class UnifiedCacheService {
       const index = store.index('expiresAt');
       const range = IDBKeyRange.upperBound(Date.now());
       const request = index.openCursor(range);
-      
+
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {

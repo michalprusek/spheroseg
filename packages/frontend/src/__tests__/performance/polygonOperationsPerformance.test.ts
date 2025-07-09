@@ -22,10 +22,10 @@ import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations'
 import { Polygon, Point } from '@/pages/segmentation/types';
 
 // Import polygon utility functions to test
-import { 
-  isPointInPolygon, 
+import {
+  isPointInPolygon,
   slicePolygonObject as slicePolygon,
-  simplifyPolygon 
+  simplifyPolygon,
 } from '@spheroseg/shared/utils/polygonUtils';
 
 // Define performance test thresholds

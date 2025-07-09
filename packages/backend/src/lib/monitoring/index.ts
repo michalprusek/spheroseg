@@ -1,6 +1,6 @@
 /**
  * Performance monitoring compatibility layer
- * 
+ *
  * This file maintains backward compatibility for lib/monitoring imports
  * while using the unified monitoring system internally.
  */

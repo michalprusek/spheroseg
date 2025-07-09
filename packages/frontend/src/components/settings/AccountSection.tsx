@@ -15,14 +15,22 @@ import { DeleteAccountDialog } from './DeleteAccountDialog';
 import logger from '@/utils/logger';
 
 // Password change form schema - use a function to create schema with translated messages
-const createPasswordChangeSchema = (t: (key: string) => string) => z.object({
-  current_password: z.string().min(1, t('settings.currentPassword') || 'Current password is required'),
-  new_password: z.string().min(8, t('settings.newPassword') + ' must be at least 8 characters' || 'New password must be at least 8 characters'),
-  confirm_password: z.string().min(8, t('settings.confirmPasswordLabel') || 'Password confirmation is required'),
-}).refine((data) => data.new_password === data.confirm_password, {
-  message: t('settings.passwordsDoNotMatch') || 'Passwords do not match',
-  path: ['confirm_password'],
-});
+const createPasswordChangeSchema = (t: (key: string) => string) =>
+  z
+    .object({
+      current_password: z.string().min(1, t('settings.currentPassword') || 'Current password is required'),
+      new_password: z
+        .string()
+        .min(
+          8,
+          t('settings.newPassword') + ' must be at least 8 characters' || 'New password must be at least 8 characters',
+        ),
+      confirm_password: z.string().min(8, t('settings.confirmPasswordLabel') || 'Password confirmation is required'),
+    })
+    .refine((data) => data.new_password === data.confirm_password, {
+      message: t('settings.passwordsDoNotMatch') || 'Passwords do not match',
+      path: ['confirm_password'],
+    });
 
 const AccountSection = () => {
   const { t } = useLanguage();
@@ -55,17 +63,19 @@ const AccountSection = () => {
       };
 
       await authApiService.changePassword(changeData);
-      
+
       logger.info('Password changed successfully');
       toast.success(t('settings.passwordChanged') || 'Password changed successfully');
-      
+
       // Clear the form
       reset();
     } catch (error: any) {
       logger.error('Error changing password', { error });
-      
+
       if (error.response?.status === 400) {
-        setPasswordError(error.response.data.message || t('settings.passwordChangeError') || 'Failed to change password');
+        setPasswordError(
+          error.response.data.message || t('settings.passwordChangeError') || 'Failed to change password',
+        );
       } else {
         setPasswordError(t('settings.passwordChangeError') || 'Failed to change password');
       }
@@ -102,20 +112,13 @@ const AccountSection = () => {
                   <p className="text-sm text-destructive">{errors.current_password.message}</p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="new_password">{t('settings.newPassword') || 'New Password'}</Label>
-                <Input
-                  id="new_password"
-                  type="password"
-                  {...register('new_password')}
-                  disabled={isChangingPassword}
-                />
-                {errors.new_password && (
-                  <p className="text-sm text-destructive">{errors.new_password.message}</p>
-                )}
+                <Input id="new_password" type="password" {...register('new_password')} disabled={isChangingPassword} />
+                {errors.new_password && <p className="text-sm text-destructive">{errors.new_password.message}</p>}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirm_password">{t('settings.confirmNewPassword') || 'Confirm New Password'}</Label>
                 <Input
@@ -138,15 +141,11 @@ const AccountSection = () => {
             )}
 
             <div className="flex justify-end">
-              <Button 
-                type="submit" 
-                disabled={!isValid || isChangingPassword}
-              >
+              <Button type="submit" disabled={!isValid || isChangingPassword}>
                 {isChangingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isChangingPassword 
-                  ? (t('settings.changingPassword') || 'Changing Password...') 
-                  : (t('settings.changePassword') || 'Change Password')
-                }
+                {isChangingPassword
+                  ? t('settings.changingPassword') || 'Changing Password...'
+                  : t('settings.changePassword') || 'Change Password'}
               </Button>
             </div>
           </form>
@@ -166,17 +165,12 @@ const AccountSection = () => {
         </CardHeader>
         <CardContent>
           <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-md">
-            <h4 className="font-medium mb-2 text-destructive">
-              {t('settings.deleteAccount') || 'Delete Account'}
-            </h4>
+            <h4 className="font-medium mb-2 text-destructive">{t('settings.deleteAccount') || 'Delete Account'}</h4>
             <p className="text-sm text-muted-foreground mb-4">
-              {t('settings.deleteAccountWarning') || 
-               'Once you delete your account, there is no going back. Please be certain.'}
+              {t('settings.deleteAccountWarning') ||
+                'Once you delete your account, there is no going back. Please be certain.'}
             </p>
-            <Button 
-              variant="destructive"
-              onClick={() => setDeleteDialogOpen(true)}
-            >
+            <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
               {t('settings.deleteAccount') || 'Delete Account'}
             </Button>
           </div>
@@ -184,10 +178,7 @@ const AccountSection = () => {
       </Card>
 
       {/* Delete Account Dialog */}
-      <DeleteAccountDialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      />
+      <DeleteAccountDialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} />
     </div>
   );
 };

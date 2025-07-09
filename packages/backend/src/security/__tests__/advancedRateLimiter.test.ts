@@ -18,11 +18,11 @@ jest.mock('../../config', () => ({
       useRedis: false,
     },
     redis: {
-      url: 'redis://localhost:6379'
+      url: 'redis://localhost:6379',
     },
     isDevelopment: false,
-    isTest: true
-  }
+    isTest: true,
+  },
 }));
 
 // Mock logger
@@ -31,7 +31,7 @@ jest.mock('../../utils/logger', () => ({
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-  }
+  },
 }));
 
 describe('HierarchicalRateLimiter', () => {
@@ -48,15 +48,19 @@ describe('HierarchicalRateLimiter', () => {
       rateLimiter = new HierarchicalRateLimiter({
         tiers: [
           { name: 'test-default', points: 5, duration: 60 },
-          { name: 'test-burst', points: 2, duration: 10 }
+          { name: 'test-burst', points: 2, duration: 10 },
         ],
         useRedis: false,
         keyPrefix: 'test',
       });
 
-      app.get('/test', rateLimiter.middleware(['test-default', 'test-burst']), (req: Request, res: Response) => {
-        res.json({ success: true });
-      });
+      app.get(
+        '/test',
+        rateLimiter.middleware(['test-default', 'test-burst']),
+        (req: Request, res: Response) => {
+          res.json({ success: true });
+        }
+      );
     });
 
     it('should allow requests within rate limits', async () => {
@@ -84,7 +88,7 @@ describe('HierarchicalRateLimiter', () => {
 
     it('should set proper headers on successful requests', async () => {
       const response = await request(app).get('/test');
-      
+
       expect(response.headers['x-ratelimit-test-default-limit']).toBe('5');
       expect(response.headers['x-ratelimit-test-default-remaining']).toBeDefined();
       expect(response.headers['x-ratelimit-test-burst-limit']).toBe('2');
@@ -134,7 +138,7 @@ describe('HierarchicalRateLimiter', () => {
     it('should allow dynamic whitelist management', async () => {
       // Add IP to whitelist
       rateLimiter.addToWhitelist('10.0.0.1');
-      
+
       // Verify IP was added (would need to mock IP in real test)
       expect(rateLimiter['whitelistedIPs'].has('10.0.0.1')).toBe(true);
 
@@ -193,7 +197,7 @@ describe('HierarchicalRateLimiter', () => {
       });
 
       await request(app).get('/test');
-      
+
       expect(keyGenerator).toHaveBeenCalled();
     });
 
@@ -223,14 +227,18 @@ describe('HierarchicalRateLimiter', () => {
         tiers: [
           { name: 'minute', points: 10, duration: 60 },
           { name: 'hour', points: 50, duration: 3600 },
-          { name: 'burst', points: 3, duration: 10, blockDuration: 30 }
+          { name: 'burst', points: 3, duration: 10, blockDuration: 30 },
         ],
         useRedis: false,
       });
 
-      app.get('/test', rateLimiter.middleware(['minute', 'hour', 'burst']), (req: Request, res: Response) => {
-        res.json({ success: true });
-      });
+      app.get(
+        '/test',
+        rateLimiter.middleware(['minute', 'hour', 'burst']),
+        (req: Request, res: Response) => {
+          res.json({ success: true });
+        }
+      );
     });
 
     it('should enforce all tier limits independently', async () => {
@@ -257,7 +265,7 @@ describe('HierarchicalRateLimiter', () => {
 
     beforeEach(() => {
       mockRedisClient = new Redis() as jest.Mocked<Redis>;
-      
+
       rateLimiter = new HierarchicalRateLimiter({
         tiers: [{ name: 'test', points: 5, duration: 60 }],
         useRedis: true,
@@ -276,7 +284,7 @@ describe('HierarchicalRateLimiter', () => {
       rateLimiter = new HierarchicalRateLimiter({
         tiers: [
           { name: 'test1', points: 1, duration: 60 },
-          { name: 'test2', points: 1, duration: 60 }
+          { name: 'test2', points: 1, duration: 60 },
         ],
         useRedis: false,
       });
@@ -285,13 +293,13 @@ describe('HierarchicalRateLimiter', () => {
     it('should reset rate limit for specific tier', async () => {
       // Implementation would consume points then reset
       await rateLimiter.reset('test-key', 'test1');
-      
+
       // Verify reset (would need to check internal state)
     });
 
     it('should reset all tiers when no tier specified', async () => {
       await rateLimiter.reset('test-key');
-      
+
       // Verify all tiers reset
     });
   });
@@ -306,7 +314,7 @@ describe('HierarchicalRateLimiter', () => {
 
     it('should track consumption correctly', async () => {
       const consumption = await rateLimiter.getConsumption('test-key', 'test');
-      
+
       // Initial consumption should be null or 0
       expect(consumption?.consumedPoints || 0).toBe(0);
     });

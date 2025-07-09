@@ -143,9 +143,9 @@ const ThemedFooter = () => {
                 <Github className="w-5 h-5" />
                 <span className="text-sm">{getTranslation('footer.githubRepository') || 'GitHub Repository'}</span>
               </a>
-              <a 
-                href="mailto:spheroseg@utia.cas.cz" 
-                className={`${getLinkHoverClasses()} flex items-center gap-2`} 
+              <a
+                href="mailto:spheroseg@utia.cas.cz"
+                className={`${getLinkHoverClasses()} flex items-center gap-2`}
                 aria-label={getTranslation('footer.contactEmail') || 'Contact Email'}
               >
                 <Mail className="w-5 h-5" />

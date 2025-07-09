@@ -1,19 +1,11 @@
 /**
  * Unified Socket Context
- * 
+ *
  * This context provides global WebSocket functionality using the unified service.
  * It manages authentication-based connections and provides a clean API for components.
  */
 
-import React, { 
-  createContext, 
-  useContext, 
-  useEffect, 
-  useState, 
-  useCallback,
-  useMemo,
-  ReactNode 
-} from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import webSocketService, { ConnectionState } from '@/services/unifiedWebSocketService';
 import { createLogger } from '@/utils/logging/unifiedLogger';
@@ -31,22 +23,22 @@ export interface SocketContextValue {
   isConnecting: boolean;
   connectionError: Error | null;
   connectionState: ConnectionState;
-  
+
   // Core actions
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  
+
   // Event handling
   emit: (event: string, ...args: any[]) => void;
   emitWithAck: (event: string, ...args: any[]) => Promise<any>;
   on: (event: string, handler: (...args: any[]) => void) => () => void;
   off: (event: string, handler?: (...args: any[]) => void) => void;
-  
+
   // Room management
   joinRoom: (room: string) => Promise<void>;
   leaveRoom: (room: string) => Promise<void>;
   getRooms: () => string[];
-  
+
   // Specialized methods
   joinProjectRoom: (projectId: string) => Promise<void>;
   leaveProjectRoom: (projectId: string) => Promise<void>;
@@ -78,44 +70,45 @@ export function UnifiedSocketProvider({
   reconnectOnAuth = true,
 }: UnifiedSocketProviderProps) {
   const { isAuthenticated, user } = useAuth();
-  const [connectionState, setConnectionState] = useState<ConnectionState>(
-    webSocketService.getConnectionState()
-  );
-  
+  const [connectionState, setConnectionState] = useState<ConnectionState>(webSocketService.getConnectionState());
+
   // Track initialization
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
   // Update connection state
-  const updateConnectionState = useCallback((state: ConnectionState) => {
-    setConnectionState(state);
-    
-    // Show connection toasts if enabled
-    if (showConnectionToasts) {
-      if (state.isConnected && !connectionState.isConnected) {
-        toast.success('Real-time connection established');
-      } else if (!state.isConnected && connectionState.isConnected) {
-        toast.warning('Real-time connection lost');
+  const updateConnectionState = useCallback(
+    (state: ConnectionState) => {
+      setConnectionState(state);
+
+      // Show connection toasts if enabled
+      if (showConnectionToasts) {
+        if (state.isConnected && !connectionState.isConnected) {
+          toast.success('Real-time connection established');
+        } else if (!state.isConnected && connectionState.isConnected) {
+          toast.warning('Real-time connection lost');
+        }
       }
-    }
-  }, [connectionState.isConnected, showConnectionToasts]);
-  
+    },
+    [connectionState.isConnected, showConnectionToasts],
+  );
+
   // Initialize WebSocket service
   const initialize = useCallback(async () => {
     if (isInitialized) return;
-    
+
     try {
       logger.info('Initializing WebSocket service');
-      
+
       // Initialize with authentication
       await webSocketService.initialize({
         autoConnect: false, // We'll handle connection manually
       });
-      
+
       // Subscribe to state changes
       const unsubscribe = webSocketService.onStateChange(updateConnectionState);
-      
+
       setIsInitialized(true);
-      
+
       // Return cleanup function
       return unsubscribe;
     } catch (error) {
@@ -125,18 +118,18 @@ export function UnifiedSocketProvider({
       }
     }
   }, [isInitialized, updateConnectionState, showConnectionToasts]);
-  
+
   // Connect to WebSocket
   const connect = useCallback(async () => {
     if (!isAuthenticated) {
       logger.warn('Cannot connect: User not authenticated');
       return;
     }
-    
+
     if (!isInitialized) {
       await initialize();
     }
-    
+
     try {
       await webSocketService.connect();
       logger.info('WebSocket connected');
@@ -147,7 +140,7 @@ export function UnifiedSocketProvider({
       }
     }
   }, [isAuthenticated, isInitialized, initialize, showConnectionToasts]);
-  
+
   // Disconnect from WebSocket
   const disconnect = useCallback(async () => {
     try {
@@ -157,29 +150,29 @@ export function UnifiedSocketProvider({
       logger.error('Failed to disconnect:', error);
     }
   }, []);
-  
+
   // Event handling methods
   const emit = useCallback((event: string, ...args: any[]) => {
     webSocketService.emit(event, ...args);
   }, []);
-  
+
   const emitWithAck = useCallback(async (event: string, ...args: any[]) => {
     return webSocketService.emitWithAck(event, ...args);
   }, []);
-  
+
   const on = useCallback((event: string, handler: (...args: any[]) => void) => {
     const id = webSocketService.on(event, handler);
-    
+
     // Return cleanup function
     return () => {
       webSocketService.off(event, id);
     };
   }, []);
-  
+
   const off = useCallback((event: string, handler?: (...args: any[]) => void) => {
     webSocketService.off(event, handler);
   }, []);
-  
+
   // Room management methods
   const joinRoom = useCallback(async (room: string) => {
     try {
@@ -190,7 +183,7 @@ export function UnifiedSocketProvider({
       throw error;
     }
   }, []);
-  
+
   const leaveRoom = useCallback(async (room: string) => {
     try {
       await webSocketService.leaveRoom(room);
@@ -199,28 +192,28 @@ export function UnifiedSocketProvider({
       logger.error(`Failed to leave room ${room}:`, error);
     }
   }, []);
-  
+
   const getRooms = useCallback(() => {
     return webSocketService.getRooms();
   }, []);
-  
+
   // Specialized room methods
   const joinProjectRoom = useCallback(async (projectId: string) => {
     await webSocketService.joinProjectRoom(projectId);
   }, []);
-  
+
   const leaveProjectRoom = useCallback(async (projectId: string) => {
     await webSocketService.leaveProjectRoom(projectId);
   }, []);
-  
+
   const joinSegmentationQueue = useCallback(async () => {
     await webSocketService.joinSegmentationQueueRoom();
   }, []);
-  
+
   const leaveSegmentationQueue = useCallback(async () => {
     await webSocketService.leaveRoom('segmentation_queue');
   }, []);
-  
+
   // Handle authentication changes
   useEffect(() => {
     if (isAuthenticated && autoConnect) {
@@ -231,15 +224,15 @@ export function UnifiedSocketProvider({
       disconnect();
     }
   }, [isAuthenticated, autoConnect, connectionState.isConnected, connect, disconnect]);
-  
+
   // Initialize on mount
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
-    
-    initialize().then(cleanup => {
+
+    initialize().then((cleanup) => {
       unsubscribe = cleanup;
     });
-    
+
     return () => {
       unsubscribe?.();
       if (connectionState.isConnected) {
@@ -247,57 +240,56 @@ export function UnifiedSocketProvider({
       }
     };
   }, []);
-  
+
   // Create context value
-  const contextValue = useMemo<SocketContextValue>(() => ({
-    // Connection state
-    isConnected: connectionState.isConnected,
-    isConnecting: connectionState.isConnecting,
-    connectionError: connectionState.error,
-    connectionState,
-    
-    // Core actions
-    connect,
-    disconnect,
-    
-    // Event handling
-    emit,
-    emitWithAck,
-    on,
-    off,
-    
-    // Room management
-    joinRoom,
-    leaveRoom,
-    getRooms,
-    
-    // Specialized methods
-    joinProjectRoom,
-    leaveProjectRoom,
-    joinSegmentationQueue,
-    leaveSegmentationQueue,
-  }), [
-    connectionState,
-    connect,
-    disconnect,
-    emit,
-    emitWithAck,
-    on,
-    off,
-    joinRoom,
-    leaveRoom,
-    getRooms,
-    joinProjectRoom,
-    leaveProjectRoom,
-    joinSegmentationQueue,
-    leaveSegmentationQueue,
-  ]);
-  
-  return (
-    <UnifiedSocketContext.Provider value={contextValue}>
-      {children}
-    </UnifiedSocketContext.Provider>
+  const contextValue = useMemo<SocketContextValue>(
+    () => ({
+      // Connection state
+      isConnected: connectionState.isConnected,
+      isConnecting: connectionState.isConnecting,
+      connectionError: connectionState.error,
+      connectionState,
+
+      // Core actions
+      connect,
+      disconnect,
+
+      // Event handling
+      emit,
+      emitWithAck,
+      on,
+      off,
+
+      // Room management
+      joinRoom,
+      leaveRoom,
+      getRooms,
+
+      // Specialized methods
+      joinProjectRoom,
+      leaveProjectRoom,
+      joinSegmentationQueue,
+      leaveSegmentationQueue,
+    }),
+    [
+      connectionState,
+      connect,
+      disconnect,
+      emit,
+      emitWithAck,
+      on,
+      off,
+      joinRoom,
+      leaveRoom,
+      getRooms,
+      joinProjectRoom,
+      leaveProjectRoom,
+      joinSegmentationQueue,
+      leaveSegmentationQueue,
+    ],
   );
+
+  return <UnifiedSocketContext.Provider value={contextValue}>{children}</UnifiedSocketContext.Provider>;
 }
 
 // ===========================
@@ -306,11 +298,11 @@ export function UnifiedSocketProvider({
 
 export function useUnifiedSocket(): SocketContextValue {
   const context = useContext(UnifiedSocketContext);
-  
+
   if (!context) {
     throw new Error('useUnifiedSocket must be used within UnifiedSocketProvider');
   }
-  
+
   return context;
 }
 
@@ -319,11 +311,11 @@ export function useUnifiedSocket(): SocketContextValue {
 // ===========================
 
 export function withUnifiedSocket<P extends object>(
-  Component: React.ComponentType<P & { socket: SocketContextValue }>
+  Component: React.ComponentType<P & { socket: SocketContextValue }>,
 ) {
   return function WithUnifiedSocketComponent(props: P) {
     const socket = useUnifiedSocket();
-    
+
     return <Component {...props} socket={socket} />;
   };
 }

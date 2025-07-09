@@ -59,7 +59,10 @@ export class UserStatsService {
       }
 
       // Fetch total projects
-      const projectsCountRes = await pool.query('SELECT COUNT(*) FROM projects WHERE user_id = $1', [userId]);
+      const projectsCountRes = await pool.query(
+        'SELECT COUNT(*) FROM projects WHERE user_id = $1',
+        [userId]
+      );
       stats.totalProjects = parseInt(projectsCountRes.rows[0].count, 10);
 
       // Check if images table exists
@@ -80,11 +83,11 @@ export class UserStatsService {
       // Fetch total images
       const imagesCountRes = await pool.query(
         'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1',
-        [userId],
+        [userId]
       );
       stats.totalImages = parseInt(imagesCountRes.rows[0].count, 10);
 
-      // Fetch completed segmentations 
+      // Fetch completed segmentations
       // Note: We use 'segmentation_status' field which tracks ML processing state ('without_segmentation', 'queued', 'processing', 'completed', 'failed')
       // This is different from 'status' field which tracks general image state ('pending', 'queued', 'completed')
       try {
@@ -102,7 +105,7 @@ export class UserStatsService {
         if (columnCheck.rows[0].exists) {
           const completedSegmentationsRes = await pool.query(
             'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.segmentation_status = $2',
-            [userId, 'completed'],
+            [userId, 'completed']
           );
           stats.completedSegmentations = parseInt(completedSegmentationsRes.rows[0].count, 10);
         } else {
@@ -110,7 +113,7 @@ export class UserStatsService {
           logger.warn('segmentation_status column not found, falling back to status column');
           const completedSegmentationsRes = await pool.query(
             'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.status = $2',
-            [userId, 'completed'],
+            [userId, 'completed']
           );
           stats.completedSegmentations = parseInt(completedSegmentationsRes.rows[0].count, 10);
         }
@@ -122,15 +125,16 @@ export class UserStatsService {
       // Calculate storage usage - first try from users table, then from images
       try {
         // Try to get from users table first
-        const storageRes = await pool.query('SELECT storage_used_bytes, storage_limit_bytes FROM users WHERE id = $1', [
-          userId,
-        ]);
+        const storageRes = await pool.query(
+          'SELECT storage_used_bytes, storage_limit_bytes FROM users WHERE id = $1',
+          [userId]
+        );
 
         if (storageRes.rows.length > 0) {
           if (storageRes.rows[0].storage_used_bytes) {
             stats.storageUsedBytes = BigInt(storageRes.rows[0].storage_used_bytes);
-            logger.debug('Got storage info from users table', { 
-              storageBytes: stats.storageUsedBytes.toString() 
+            logger.debug('Got storage info from users table', {
+              storageBytes: stats.storageUsedBytes.toString(),
             });
           }
 
@@ -160,13 +164,13 @@ export class UserStatsService {
             // Use file_size column to calculate total storage
             const storageSumRes = await pool.query(
               'SELECT COALESCE(SUM(file_size), 0) as sum FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1',
-              [userId],
+              [userId]
             );
 
             // Log raw sum
             logger.debug('Raw storage sum from images', {
               sum: storageSumRes.rows[0].sum,
-              type: typeof storageSumRes.rows[0].sum
+              type: typeof storageSumRes.rows[0].sum,
             });
 
             // Convert to BigInt and handle null/undefined
@@ -174,7 +178,9 @@ export class UserStatsService {
               stats.storageUsedBytes = BigInt(storageSumRes.rows[0].sum);
             } else {
               // If still no storage info, estimate based on image count (1MB per image)
-              stats.storageUsedBytes = BigInt(Math.max(stats.totalImages * 1024 * 1024, 1024 * 1024));
+              stats.storageUsedBytes = BigInt(
+                Math.max(stats.totalImages * 1024 * 1024, 1024 * 1024)
+              );
             }
 
             // Log the calculated storage
@@ -182,24 +188,24 @@ export class UserStatsService {
               rawSum: storageSumRes.rows[0].sum,
               calculatedBytes: stats.storageUsedBytes.toString(),
               imageCount: stats.totalImages,
-              perImageAvg: stats.totalImages > 0 ? 
-                Number(stats.storageUsedBytes) / stats.totalImages : 0
+              perImageAvg:
+                stats.totalImages > 0 ? Number(stats.storageUsedBytes) / stats.totalImages : 0,
             });
           } else {
             // If no file_size column, estimate based on image count
             stats.storageUsedBytes = BigInt(Math.max(stats.totalImages * 1024 * 1024, 1024 * 1024));
             logger.debug('Estimated storage based on image count (no file_size column)', {
               imageCount: stats.totalImages,
-              estimatedBytes: stats.storageUsedBytes.toString()
+              estimatedBytes: stats.storageUsedBytes.toString(),
             });
           }
         } catch (sumError) {
           logger.error('Error calculating storage from images', { error: sumError });
-          
+
           // Use fallback minimum value (~1MB) to ensure non-zero display
           stats.storageUsedBytes = BigInt(1024 * 1024);
           logger.debug('Using fallback minimum storage value', {
-            fallbackBytes: stats.storageUsedBytes.toString()
+            fallbackBytes: stats.storageUsedBytes.toString(),
           });
         }
       }
@@ -220,7 +226,7 @@ export class UserStatsService {
         WHERE p.user_id = $1
         ORDER BY i.updated_at DESC
         LIMIT 5`,
-        [userId],
+        [userId]
       );
       stats.recentImages = recentImagesRes.rows;
 
@@ -244,7 +250,7 @@ export class UserStatsService {
         WHERE p.user_id = $1
         ORDER BY p.updated_at DESC
         LIMIT 5`,
-        [userId],
+        [userId]
       );
       stats.recentProjects = recentProjectsRes.rows;
 
@@ -265,28 +271,28 @@ export class UserStatsService {
       // Projects created this month
       const projectsThisMonthRes = await pool.query(
         'SELECT COUNT(*) FROM projects WHERE user_id = $1 AND created_at >= $2',
-        [userId, firstDayOfMonth],
+        [userId, firstDayOfMonth]
       );
       stats.projectsThisMonth = parseInt(projectsThisMonthRes.rows[0].count, 10);
 
       // Projects created last month
       const projectsLastMonthRes = await pool.query(
         'SELECT COUNT(*) FROM projects WHERE user_id = $1 AND created_at >= $2 AND created_at <= $3',
-        [userId, firstDayOfPrevMonth, lastDayOfPrevMonth],
+        [userId, firstDayOfPrevMonth, lastDayOfPrevMonth]
       );
       stats.projectsLastMonth = parseInt(projectsLastMonthRes.rows[0].count, 10);
 
       // Images uploaded this month
       const imagesThisMonthRes = await pool.query(
         'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.created_at >= $2',
-        [userId, firstDayOfMonth],
+        [userId, firstDayOfMonth]
       );
       stats.imagesThisMonth = parseInt(imagesThisMonthRes.rows[0].count, 10);
 
       // Images uploaded last month
       const imagesLastMonthRes = await pool.query(
         'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.created_at >= $2 AND i.created_at <= $3',
-        [userId, firstDayOfPrevMonth, lastDayOfPrevMonth],
+        [userId, firstDayOfPrevMonth, lastDayOfPrevMonth]
       );
       stats.imagesLastMonth = parseInt(imagesLastMonthRes.rows[0].count, 10);
 
@@ -307,7 +313,7 @@ export class UserStatsService {
              WHERE user_id = $1
              ORDER BY timestamp DESC
              LIMIT 10`,
-            [userId],
+            [userId]
           );
           stats.recentActivity = activityRes.rows;
         } else {
@@ -322,7 +328,7 @@ export class UserStatsService {
              WHERE user_id = $1
              ORDER BY created_at DESC
              LIMIT 5`,
-            [userId],
+            [userId]
           );
 
           const imageActivity = await pool.query(
@@ -338,7 +344,7 @@ export class UserStatsService {
              WHERE p.user_id = $1
              ORDER BY i.created_at DESC
              LIMIT 5`,
-            [userId],
+            [userId]
           );
 
           // Combine and sort activities

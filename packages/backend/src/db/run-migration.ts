@@ -14,19 +14,19 @@ const dbConfig = {
 
 async function runMigration() {
   const pool = new Pool(dbConfig);
-  
+
   try {
     // Read the migration file
     const migrationPath = path.join(__dirname, 'migrations', 'update_image_status_enum.sql');
     const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
-    
+
     logger.info('Running migration: update_image_status_enum.sql');
-    
+
     // Execute the migration
     await pool.query(migrationSQL);
-    
+
     logger.info('Migration completed successfully');
-    
+
     // Log the updated counts
     const statusCounts = await pool.query(`
       SELECT 
@@ -44,12 +44,11 @@ async function runMigration() {
       GROUP BY status
       ORDER BY table_name, status
     `);
-    
+
     logger.info('Status counts after migration:');
-    statusCounts.rows.forEach(row => {
+    statusCounts.rows.forEach((row) => {
       logger.info(`  ${row.table_name}.${row.status}: ${row.count}`);
     });
-    
   } catch (error) {
     logger.error('Migration failed:', error);
     process.exit(1);

@@ -571,17 +571,17 @@ export const handleMouseDown = (
       // Step 2: If polygon is selected, handle slice point placement
       if (selectedPolygonId) {
         const selectedPolygon = segmentationData?.polygons.find((p) => p.id === selectedPolygonId);
-        
+
         if (selectedPolygon) {
           console.log('[Slice Mode] Selected polygon bounds:', {
             id: selectedPolygonId,
             points: selectedPolygon.points.length,
-            minX: Math.min(...selectedPolygon.points.map(p => p.x)),
-            maxX: Math.max(...selectedPolygon.points.map(p => p.x)),
-            minY: Math.min(...selectedPolygon.points.map(p => p.y)),
-            maxY: Math.max(...selectedPolygon.points.map(p => p.y))
+            minX: Math.min(...selectedPolygon.points.map((p) => p.x)),
+            maxX: Math.max(...selectedPolygon.points.map((p) => p.x)),
+            minY: Math.min(...selectedPolygon.points.map((p) => p.y)),
+            maxY: Math.max(...selectedPolygon.points.map((p) => p.y)),
           });
-          
+
           if (!interactionState.sliceStartPoint) {
             // First click - set slice start point
             console.log('[Slice Mode] Setting first slice point:', { x: imageX, y: imageY });
@@ -595,17 +595,17 @@ export const handleMouseDown = (
             console.log('[Slice Mode] Setting second slice point:', { x: imageX, y: imageY });
             console.log('[Slice Mode] Complete slice line:', {
               start: interactionState.sliceStartPoint,
-              end: { x: imageX, y: imageY }
+              end: { x: imageX, y: imageY },
             });
             // The actual slicing will be handled by the component that has access to handleSliceAction
             setTempPoints([interactionState.sliceStartPoint, { x: imageX, y: imageY }]);
-            
+
             // Reset the slice start point after setting both points
             setInteractionState({
               ...interactionState,
               sliceStartPoint: null,
             });
-            
+
             // The component will detect that we have 2 points and trigger the slice
           }
         }
@@ -1055,8 +1055,7 @@ export const handleMouseUp = (
         // Check if position actually changed (to avoid unnecessary history entries)
         const originalPos = interactionState.originalVertexPosition;
         const hasChanged =
-          Math.abs(originalPos.x - finalPosition.x) > 0.001 ||
-          Math.abs(originalPos.y - finalPosition.y) > 0.001;
+          Math.abs(originalPos.x - finalPosition.x) > 0.001 || Math.abs(originalPos.y - finalPosition.y) > 0.001;
 
         // Use the new dragging system to complete the operation
         if (hasChanged && finishDragging) {

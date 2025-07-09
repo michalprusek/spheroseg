@@ -80,7 +80,7 @@ describe('Authentication refresh token mechanism', () => {
     // Verify refresh token is saved to DB
     expect(pool.query).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO refresh_tokens'),
-      expect.arrayContaining([refreshToken, mockUserId]),
+      expect.arrayContaining([refreshToken, mockUserId])
     );
   });
 
@@ -129,7 +129,9 @@ describe('Authentication refresh token mechanism', () => {
     const newToken = refreshResponse.body.token;
 
     // Try accessing a protected resource with the new token
-    const protectedResponse = await request(app).get('/api/user/profile').set('Authorization', `Bearer ${newToken}`);
+    const protectedResponse = await request(app)
+      .get('/api/user/profile')
+      .set('Authorization', `Bearer ${newToken}`);
 
     expect(protectedResponse.status).toBe(200);
   });
@@ -172,7 +174,7 @@ describe('Authentication refresh token mechanism', () => {
     // Verify refresh token was deleted from DB
     expect(pool.query).toHaveBeenCalledWith(
       expect.stringContaining('DELETE FROM refresh_tokens'),
-      expect.arrayContaining([refreshToken]),
+      expect.arrayContaining([refreshToken])
     );
 
     // Try using the refresh token after logout

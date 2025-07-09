@@ -55,7 +55,7 @@ describe('Performance Optimizations', () => {
   describe('withMemo', () => {
     it('should memoize component and prevent unnecessary renders', () => {
       let renderCount = 0;
-      
+
       const TestComponent: React.FC<{ value: number; callback: () => void }> = ({ value }) => {
         renderCount++;
         return <div>{value}</div>;
@@ -63,9 +63,7 @@ describe('Performance Optimizations', () => {
 
       const MemoizedComponent = withMemo(TestComponent, ['value']);
 
-      const { rerender } = render(
-        <MemoizedComponent value={1} callback={() => {}} />
-      );
+      const { rerender } = render(<MemoizedComponent value={1} callback={() => {}} />);
 
       expect(renderCount).toBe(1);
 
@@ -83,10 +81,9 @@ describe('Performance Optimizations', () => {
     jest.useFakeTimers();
 
     it('should debounce value changes', () => {
-      const { result, rerender } = renderHook(
-        ({ value, delay }) => useDebounce(value, delay),
-        { initialProps: { value: 'initial', delay: 500 } }
-      );
+      const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+        initialProps: { value: 'initial', delay: 500 },
+      });
 
       expect(result.current).toBe('initial');
 
@@ -103,13 +100,12 @@ describe('Performance Optimizations', () => {
     });
 
     it('should cancel previous timeout on new value', () => {
-      const { result, rerender } = renderHook(
-        ({ value, delay }) => useDebounce(value, delay),
-        { initialProps: { value: 'initial', delay: 500 } }
-      );
+      const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+        initialProps: { value: 'initial', delay: 500 },
+      });
 
       rerender({ value: 'first', delay: 500 });
-      
+
       act(() => {
         jest.advanceTimersByTime(300);
       });
@@ -130,10 +126,9 @@ describe('Performance Optimizations', () => {
     jest.useFakeTimers();
 
     it('should throttle value changes', () => {
-      const { result, rerender } = renderHook(
-        ({ value, interval }) => useThrottle(value, interval),
-        { initialProps: { value: 'initial', interval: 1000 } }
-      );
+      const { result, rerender } = renderHook(({ value, interval }) => useThrottle(value, interval), {
+        initialProps: { value: 'initial', interval: 1000 },
+      });
 
       expect(result.current).toBe('initial');
 
@@ -159,14 +154,14 @@ describe('Performance Optimizations', () => {
   describe('useVirtualList', () => {
     it('should calculate visible items correctly', () => {
       const items = Array.from({ length: 100 }, (_, i) => i);
-      
+
       const { result } = renderHook(() =>
         useVirtualList({
           items,
           itemHeight: 50,
           containerHeight: 200,
           overscan: 2,
-        })
+        }),
       );
 
       // Should show items 0-5 (4 visible + 2 overscan)
@@ -179,14 +174,14 @@ describe('Performance Optimizations', () => {
 
     it('should update visible items on scroll', () => {
       const items = Array.from({ length: 100 }, (_, i) => i);
-      
+
       const { result } = renderHook(() =>
         useVirtualList({
           items,
           itemHeight: 50,
           containerHeight: 200,
           overscan: 2,
-        })
+        }),
       );
 
       // Simulate scroll
@@ -215,7 +210,7 @@ describe('Performance Optimizations', () => {
 
     it('should observe element and report intersection', async () => {
       const ref = React.createRef<HTMLDivElement>();
-      
+
       const { result } = renderHook(() => useIntersectionObserver(ref));
 
       // Initially not intersecting
@@ -242,10 +237,7 @@ describe('Performance Optimizations', () => {
 
       renderHook(() => useIntersectionObserver(ref, options));
 
-      expect(mockIntersectionObserver).toHaveBeenCalledWith(
-        expect.any(Function),
-        options
-      );
+      expect(mockIntersectionObserver).toHaveBeenCalledWith(expect.any(Function), options);
     });
   });
 });

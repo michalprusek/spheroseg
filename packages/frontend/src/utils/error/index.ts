@@ -1,6 +1,6 @@
 /**
  * Error Handling Module
- * 
+ *
  * Re-exports the unified error handler for convenient imports
  */
 

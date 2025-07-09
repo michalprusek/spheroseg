@@ -18,7 +18,6 @@ export const errorHandler: ErrorRequestHandler = (
     return next(err);
   }
 
-
   let error = err;
 
   // Convert non-ApiError instances to ApiError
@@ -120,7 +119,7 @@ export const asyncHandler = (fn: Function) => {
  */
 export const notFoundHandler = (req: Request, res: Response) => {
   const error = ApiError.notFound(`Route ${req.method} ${req.originalUrl} not found`);
-  
+
   logger.warn('Route not found', {
     method: req.method,
     url: req.originalUrl,

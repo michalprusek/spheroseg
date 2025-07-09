@@ -64,7 +64,7 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
     const allImagesResponse = await requestDeduplicator.execute(
       `/api/projects/${projectId}/images`,
       () => apiClient.get(`/api/projects/${projectId}/images?${cacheBuster}`, { signal }),
-      { method: 'GET' }
+      { method: 'GET' },
     );
 
     if (allImagesResponse.data && Array.isArray(allImagesResponse.data)) {
@@ -94,7 +94,7 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
     const imageResponse = await requestDeduplicator.execute(
       `/api/projects/${projectId}/images/${imageId}`,
       () => apiClient.get(`/api/projects/${projectId}/images/${imageId}?${cacheBuster}`, { signal }),
-      { method: 'GET' }
+      { method: 'GET' },
     );
 
     if (imageResponse.data) {
@@ -176,8 +176,10 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
  * Process image URL to ensure it's absolute and attempts multiple URL formats
  */
 const processImageUrl = (imageData: ImageData): ImageData => {
-  logger.debug(`Processing image URL for image ${imageData.id}, storage_path: ${imageData.storage_path}, src: ${imageData.src}`);
-  
+  logger.debug(
+    `Processing image URL for image ${imageData.id}, storage_path: ${imageData.storage_path}, src: ${imageData.src}`,
+  );
+
   // First try to use storage_path_full which should be a complete URL
   if (imageData.storage_path_full) {
     imageData.src = imageData.storage_path_full;
@@ -213,10 +215,10 @@ const processImageUrl = (imageData: ImageData): ImageData => {
       try {
         const url = new URL(imageData.storage_path);
         const pathOnly = url.pathname;
-        
+
         // Use the pathname directly without prepending baseUrl (nginx will handle routing)
         imageData.src = pathOnly;
-        
+
         // Add alternatives
         imageData.alternativeUrls.push(`${baseUrl}${pathOnly}`);
         imageData.alternativeUrls.push(`/api${pathOnly}`);
@@ -266,15 +268,15 @@ const processImageUrl = (imageData: ImageData): ImageData => {
   if (imageData.storage_path) {
     const baseUrl = window.location.origin;
     const storagePath = imageData.storage_path.replace(/^\//, ''); // Remove leading slash if present
-    
+
     // Add properly formed alternative URLs based on actual storage path
     const additionalUrls = [
       `${baseUrl}/${storagePath}`,
-      `${baseUrl}/api/${storagePath}`, 
+      `${baseUrl}/api/${storagePath}`,
       `/${storagePath}`,
-      `/api/${storagePath}`
+      `/api/${storagePath}`,
     ];
-    
+
     // Merge with existing alternatives, removing duplicates
     const allUrls = [...(imageData.alternativeUrls || []), ...additionalUrls];
     imageData.alternativeUrls = [...new Set(allUrls)];
@@ -306,9 +308,7 @@ export const fetchSegmentationData = async (
   const cacheBuster = `_cb=${Date.now()}`;
 
   // Try multiple endpoint formats in sequence
-  const endpointsToTry = [
-    `/api/images/${imageId}/segmentation?${cacheBuster}`,
-  ];
+  const endpointsToTry = [`/api/images/${imageId}/segmentation?${cacheBuster}`];
 
   for (const endpoint of endpointsToTry) {
     try {
@@ -316,7 +316,7 @@ export const fetchSegmentationData = async (
       const segmentationResponse = await requestDeduplicator.execute(
         endpoint.split('?')[0], // Use endpoint without cache buster as key
         () => apiClient.get(endpoint, { signal }),
-        { method: 'GET' }
+        { method: 'GET' },
       );
       const fetchedSegmentation = segmentationResponse.data;
 
@@ -453,9 +453,7 @@ export const saveSegmentationData = async (
   const saveId = actualId || imageId;
 
   // Try multiple endpoint formats in sequence
-  const endpointsToTry = [
-    `/api/images/${saveId}/segmentation`,
-  ];
+  const endpointsToTry = [`/api/images/${saveId}/segmentation`];
 
   let savedSuccessfully = false;
 
@@ -489,9 +487,7 @@ export const deleteSegmentationData = async (projectId: string, imageId: string)
   logger.info(`Deleting segmentation data for imageId=${imageId} in projectId=${projectId}`);
 
   // Try multiple endpoint formats in sequence
-  const endpointsToTry = [
-    `/api/images/${imageId}/segmentation`,
-  ];
+  const endpointsToTry = [`/api/images/${imageId}/segmentation`];
 
   let deletedSuccessfully = false;
 
@@ -611,7 +607,9 @@ export const fetchSegmentationQueueStatus = async (): Promise<any> => {
   } catch (error) {
     // Only log if it's not a cancellation error
     if (error instanceof Error && error.message !== 'canceled' && error.name !== 'AbortError') {
-      logger.error(`Error fetching segmentation queue status: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Error fetching segmentation queue status: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
     throw error;
   }

@@ -21,7 +21,7 @@ let io: SocketIOServer | null = null;
 export function initializeSocketIO(server: HttpServer): SocketIOServer {
   // Use the shared socket initialization from socket.ts
   io = initSocket(server);
-  
+
   if (!io) {
     throw new Error('Failed to initialize Socket.IO server');
   }
@@ -157,7 +157,7 @@ export function broadcastSegmentationUpdate(
   imageId: string,
   status: 'queued' | 'processing' | 'completed' | 'failed' | 'without_segmentation',
   resultPath?: string,
-  error?: string,
+  error?: string
 ): void {
   if (!io) {
     logger.warn('Cannot broadcast segmentation update: Socket.IO not initialized');
@@ -181,20 +181,19 @@ export function broadcastSegmentationUpdate(
     });
 
     // Map new statuses to old ones for backward compatibility
-    const backwardCompatibleStatus = status === 'queued' ? 'pending' : 
-                                    status === 'without_segmentation' ? 'pending' : 
-                                    status;
-    
+    const backwardCompatibleStatus =
+      status === 'queued' ? 'pending' : status === 'without_segmentation' ? 'pending' : status;
+
     const backwardCompatibleData = {
       ...updateData,
       status: backwardCompatibleStatus,
       // Include new status in a separate field for updated clients
-      newStatus: status
+      newStatus: status,
     };
 
     // Broadcast to all clients in the project room
     io.to(roomName).emit('segmentation_update', updateData);
-    
+
     // Also send backward compatible version
     io.to(roomName).emit('segmentation_update_legacy', backwardCompatibleData);
   } catch (error) {

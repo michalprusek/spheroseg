@@ -14,33 +14,33 @@ export function slicePolygon(polygon: Polygon, sliceStart: Point, sliceEnd: Poin
     polygonId: polygon.id,
     polygonPoints: polygon.points.length,
     sliceStart,
-    sliceEnd
+    sliceEnd,
   });
-  
+
   // Use the shared implementation
   const result = slicePolygonObject(polygon, sliceStart, sliceEnd);
-  
+
   console.log('[slicePolygon] Result from slicePolygonObject:', {
     success: result.success,
-    polygonCount: result.polygons.length
+    polygonCount: result.polygons.length,
   });
-  
+
   if (!result.success || result.polygons.length !== 2) {
     console.error('[slicePolygon] Failed:', result);
     return null;
   }
-  
+
   // Ensure polygons have unique IDs
   const [poly1, poly2] = result.polygons;
   poly1.id = poly1.id || uuidv4();
   poly2.id = poly2.id || uuidv4();
-  
+
   console.log('[slicePolygon] Success! Created polygons:', {
     poly1Id: poly1.id,
     poly1Points: poly1.points.length,
     poly2Id: poly2.id,
-    poly2Points: poly2.points.length
+    poly2Points: poly2.points.length,
   });
-  
+
   return [poly1, poly2];
 }

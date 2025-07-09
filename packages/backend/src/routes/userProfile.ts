@@ -5,7 +5,10 @@
 import { Router } from 'express';
 import userProfileController from '../controllers/userProfileController';
 import { authenticate as authMiddleware } from '../security/middleware/auth';
-import { standardLimiter, sensitiveOperationsLimiter } from '../security/middleware/rateLimitMiddleware';
+import {
+  standardLimiter,
+  sensitiveOperationsLimiter,
+} from '../security/middleware/rateLimitMiddleware';
 
 const router = Router();
 
@@ -19,13 +22,15 @@ router.post('/', standardLimiter, userProfileController.createUserProfile);
 router.put('/', standardLimiter, userProfileController.updateUserProfile);
 
 // Avatar routes
-router.post('/avatar', 
-  sensitiveOperationsLimiter, 
-  userProfileController.uploadAvatar, 
+router.post(
+  '/avatar',
+  sensitiveOperationsLimiter,
+  userProfileController.uploadAvatar,
   userProfileController.uploadAvatarHandler
 );
 router.delete('/avatar', sensitiveOperationsLimiter, userProfileController.deleteAvatar);
-router.post('/avatar/preview',
+router.post(
+  '/avatar/preview',
   standardLimiter,
   userProfileController.uploadAvatar,
   userProfileController.generateAvatarPreview

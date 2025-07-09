@@ -28,7 +28,7 @@ export default {
       queued: '排队中',
       statusProcessing: '分割：{{count}}个处理中',
       statusReady: '就绪',
-      tasksTotal: '共{{total}}个任务（{{running}}个处理中，{{queued}}个排队中）'
+      tasksTotal: '共{{total}}个任务（{{running}}个处理中，{{queued}}个排队中）',
     },
     selectPolygonForEdit: '选择要编辑的多边形',
     selectPolygonForSlice: '选择要切片的多边形',
@@ -182,8 +182,7 @@ export default {
   // Request access
   requestAccess: {
     title: '请求访问',
-    description:
-      '填写此表格以请求访问SpheroSeg平台。我们将审核您的请求并尽快回复。',
+    description: '填写此表格以请求访问SpheroSeg平台。我们将审核您的请求并尽快回复。',
     and: '和',
     form: {
       firstName: '名字',
@@ -261,8 +260,7 @@ export default {
         title: '什么是SpheroSeg？',
         paragraph1:
           'SpheroSeg是一个专门的生物医学图像分析平台，专注于球体分割。我们的先进算法旨在帮助研究人员准确识别和分析显微镜图像中的细胞球体。',
-        paragraph2:
-          '该平台支持多种图像格式，并提供自动和手动分割工具，为研究人员提供分析细胞培养物所需的灵活性。',
+        paragraph2: '该平台支持多种图像格式，并提供自动和手动分割工具，为研究人员提供分析细胞培养物所需的灵活性。',
       },
       keyFeatures: {
         title: '主要特点',
@@ -286,8 +284,7 @@ export default {
       title: '入门',
       accountCreation: {
         title: '帐户创建',
-        paragraph1:
-          '要使用SpheroSeg，您需要创建一个帐户。这使我们能够安全地存储您的项目和图像。',
+        paragraph1: '要使用SpheroSeg，您需要创建一个帐户。这使我们能够安全地存储您的项目和图像。',
         step1Prefix: '访问',
         step1Link: '注册页面',
         step2: '输入您的机构电子邮件地址并创建密码',
@@ -296,8 +293,7 @@ export default {
       },
       creatingProject: {
         title: '创建您的第一个项目',
-        paragraph1:
-          '项目帮助您组织工作。每个项目可以包含多个图像及其相应的分割结果。',
+        paragraph1: '项目帮助您组织工作。每个项目可以包含多个图像及其相应的分割结果。',
         step1: '在您的仪表板上，点击"新项目"',
         step2: '输入项目名称和描述',
         step3: '选择项目类型（默认：球体分析）',
@@ -306,8 +302,7 @@ export default {
     },
     uploadingImages: {
       title: '上传图像',
-      paragraph1:
-        'SpheroSeg支持显微镜中常用的各种图像格式，包括TIFF、PNG和JPEG。',
+      paragraph1: 'SpheroSeg支持显微镜中常用的各种图像格式，包括TIFF、PNG和JPEG。',
       methods: {
         title: '上传方法',
         paragraph1: '有几种上传图像的方法：',
@@ -322,8 +317,7 @@ export default {
     },
     segmentationProcess: {
       title: '分割过程',
-      paragraph1:
-        '分割过程识别图像中球体的边界，允许精确分析其形态。',
+      paragraph1: '分割过程识别图像中球体的边界，允许精确分析其形态。',
       automatic: {
         title: '自动分割',
         paragraph1: '我们的AI驱动的自动分割可以高精度检测球体边界：',
@@ -343,8 +337,7 @@ export default {
     },
     apiReference: {
       title: 'API参考',
-      paragraph1:
-        'SpheroSeg提供RESTful API，用于对平台功能进行编程访问。这非常适合与您现有的工作流程或批处理集成。',
+      paragraph1: 'SpheroSeg提供RESTful API，用于对平台功能进行编程访问。这非常适合与您现有的工作流程或批处理集成。',
       endpoint1Desc: '检索所有项目的列表',
       endpoint2Desc: '检索特定项目中的所有图像',
       endpoint3Desc: '为特定图像启动分割',
@@ -356,16 +349,14 @@ export default {
   hero: {
     platformTag: '高级球体分割平台',
     title: '用于生物医学研究的AI驱动细胞分析',
-    subtitle:
-      '使用我们尖端的球体分割平台提升您的显微细胞图像分析。专为寻求精确性和效率的研究人员设计。',
+    subtitle: '使用我们尖端的球体分割平台提升您的显微细胞图像分析。专为寻求精确性和效率的研究人员设计。',
     getStartedButton: '开始使用',
     learnMoreButton: '了解更多',
     imageAlt1: '球体显微镜图像',
     imageAlt2: '带分析的球体显微镜图像',
     welcomeTitle: '欢迎使用SpheroSeg',
     welcomeSubtitle: '细胞球体分割和分析的高级平台',
-    welcomeDescription:
-      '我们的平台将尖端的人工智能算法与直观的界面相结合，用于精确检测和分析显微镜图像中的细胞球体。',
+    welcomeDescription: '我们的平台将尖端的人工智能算法与直观的界面相结合，用于精确检测和分析显微镜图像中的细胞球体。',
     featuresTitle: '强大的功能',
     featuresSubtitle: '生物医学研究的高级工具',
     featureAiSegmentation: '高级分割',
@@ -397,7 +388,7 @@ export default {
       deletingImages: '正在删除{{count}}个图像...',
       deleteSuccess: '成功删除{{count}}个图像',
       deleteFailed: '删除{{count}}个图像失败',
-      preparingExport: '正在准备导出{{count}}个图像...'
+      preparingExport: '正在准备导出{{count}}个图像...',
     },
     segmentation: {
       processingInBatches: '正在为{{count}}个图像启动分割，分为{{batches}}批...',
@@ -408,7 +399,7 @@ export default {
       allSuccess: '分割：所有{{count}}个图像成功排队',
       allFailed: '分割：所有{{count}}个图像失败',
       startedImages: '已为{{count}}个图像启动分割',
-      queuedLocallyWarning: '已在本地为{{count}}个图像排队分割。服务器连接失败。'
+      queuedLocallyWarning: '已在本地为{{count}}个图像排队分割。服务器连接失败。',
     },
     loading: '正在加载项目...',
     notFound: '项目未找到',
@@ -1075,10 +1066,8 @@ export default {
       tag: '关于平台',
       title: '什么是 SpheroSeg？',
       imageAlt: '球体分割示例',
-      paragraph1:
-        'SpheroSeg 是一个专门为显微图像中细胞球体的分割和分析而设计的高级平台。',
-      paragraph2:
-        '我们的工具将尖端的人工智能算法与直观的界面相结合，为研究人员提供精确的球体边界检测和分析功能。',
+      paragraph1: 'SpheroSeg 是一个专门为显微图像中细胞球体的分割和分析而设计的高级平台。',
+      paragraph2: '我们的工具将尖端的人工智能算法与直观的界面相结合，为研究人员提供精确的球体边界检测和分析功能。',
       paragraph3:
         '该平台由布拉格捷克理工大学核物理与工程学院的 Michal Průšek 在捷克科学院理论与应用力学研究所的 Adam Novozámský 指导下开发，与布拉格化工大学生物化学与微生物学系的研究人员合作完成。',
       contactPrefix: 'spheroseg@utia.cas.cz',
@@ -1255,7 +1244,8 @@ export default {
     title: '服务条款',
     acceptance: {
       title: '1. 接受条款',
-      paragraph1: '通过访问或使用SpheroSeg，您接受并同意受这些服务条款的约束。如果您不接受这些条款，请不要使用我们的服务。',
+      paragraph1:
+        '通过访问或使用SpheroSeg，您接受并同意受这些服务条款的约束。如果您不接受这些条款，请不要使用我们的服务。',
     },
     useLicense: {
       title: '2. 使用许可',
@@ -1263,11 +1253,13 @@ export default {
     },
     dataUsage: {
       title: '3. 数据使用',
-      paragraph1: '您保留对上传图像和数据的所有权利。未经您的明确同意，我们不会与第三方共享您的数据。您的数据仅用于提供和改进我们的分割服务。',
+      paragraph1:
+        '您保留对上传图像和数据的所有权利。未经您的明确同意，我们不会与第三方共享您的数据。您的数据仅用于提供和改进我们的分割服务。',
     },
     limitations: {
       title: '4. 服务限制',
-      paragraph1: 'SpheroSeg按"原样"提供，不提供任何明示或暗示的保证。我们不保证100%的可用性、准确性或可靠性。用户负责验证其特定应用的结果。',
+      paragraph1:
+        'SpheroSeg按"原样"提供，不提供任何明示或暗示的保证。我们不保证100%的可用性、准确性或可靠性。用户负责验证其特定应用的结果。',
     },
     revisions: {
       title: '5. 修订',
@@ -1283,7 +1275,8 @@ export default {
     title: '隐私政策',
     introduction: {
       title: '1. 简介',
-      paragraph1: '在SpheroSeg，我们致力于保护您的隐私。本隐私政策解释了我们收集哪些信息、如何使用这些信息以及您对您的信息享有的权利。',
+      paragraph1:
+        '在SpheroSeg，我们致力于保护您的隐私。本隐私政策解释了我们收集哪些信息、如何使用这些信息以及您对您的信息享有的权利。',
     },
     dataCollection: {
       title: '2. 我们收集的信息',
@@ -1313,18 +1306,13 @@ export default {
     },
     dataSharing: {
       title: '5. 数据共享',
-      paragraph1: '未经您的同意，我们不会出售、交易或以其他方式将您的个人信息转让给第三方，除非本政策中描述的情况或法律要求。',
+      paragraph1:
+        '未经您的同意，我们不会出售、交易或以其他方式将您的个人信息转让给第三方，除非本政策中描述的情况或法律要求。',
     },
     userRights: {
       title: '6. 您的权利',
       paragraph1: '您有权：',
-      list: [
-        '访问您的个人信息',
-        '更正不准确的信息',
-        '请求删除您的数据',
-        '导出您的数据',
-        '反对处理您的数据',
-      ],
+      list: ['访问您的个人信息', '更正不准确的信息', '请求删除您的数据', '导出您的数据', '反对处理您的数据'],
     },
     cookies: {
       title: '7. Cookie和跟踪技术',

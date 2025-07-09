@@ -52,7 +52,7 @@ const createErrorHandler = (type: string, retryAfter: number) => {
       userId: (req as any).user?.userId,
       userAgent: req.get('User-Agent'),
     });
-    
+
     res.set('Retry-After', String(retryAfter));
     res.status(429).json({
       error: {
@@ -81,7 +81,7 @@ export function createRateLimiter(
   }
 
   const typeConfig = rateLimitConfigs[type];
-  
+
   const options: Partial<Options> = {
     ...commonOptions,
     windowMs: typeConfig.windowMs,

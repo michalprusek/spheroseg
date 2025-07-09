@@ -13,7 +13,7 @@ describe('SecurityManager', () => {
   beforeEach(() => {
     // Reset singleton instance
     (SecurityManager as any).instance = null;
-    
+
     // Create new instance with test config
     securityManager = SecurityManager.getInstance({
       enableRateLimit: true,
@@ -33,7 +33,7 @@ describe('SecurityManager', () => {
     // Create test app
     app = express();
     app.use(express.json());
-    
+
     // Apply security manager
     securityManager.applyToApp(app);
 
@@ -89,9 +89,7 @@ describe('SecurityManager', () => {
     it('should mark IP as suspicious after multiple auth failures', async () => {
       // Trigger 5 auth failures
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/auth/login')
-          .send({ password: 'wrong' });
+        await request(app).post('/auth/login').send({ password: 'wrong' });
       }
 
       const metrics = securityManager.getMetrics();
@@ -110,9 +108,8 @@ describe('SecurityManager', () => {
     });
 
     it('should detect SQL injection attempts', async () => {
-      const response = await request(app)
-        .get('/test?search=\' OR 1=1--');
-      
+      const response = await request(app).get("/test?search=' OR 1=1--");
+
       const metrics = securityManager.getMetrics();
       expect(metrics.suspiciousActivities).toBeGreaterThan(0);
     });
@@ -121,7 +118,7 @@ describe('SecurityManager', () => {
       const response = await request(app)
         .post('/test')
         .send({ data: '<script>alert("xss")</script>' });
-      
+
       const metrics = securityManager.getMetrics();
       expect(metrics.suspiciousActivities).toBeGreaterThan(0);
     });
@@ -159,7 +156,7 @@ describe('SecurityManager', () => {
 
     it('should track blocked requests', async () => {
       securityManager.markAsSuspicious('::ffff:127.0.0.1');
-      
+
       await request(app).get('/test');
 
       const metrics = securityManager.getMetrics();

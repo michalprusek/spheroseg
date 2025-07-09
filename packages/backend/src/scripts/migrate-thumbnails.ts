@@ -9,7 +9,8 @@ import * as path from 'path';
 import { Pool } from 'pg';
 import logger from '../utils/logger';
 
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/spheroseg';
+const DATABASE_URL =
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/spheroseg';
 const UPLOADS_DIR = process.env.UPLOADS_DIR || '/app/uploads';
 
 async function migrateJpgThumbnailsToPng() {
@@ -32,7 +33,7 @@ async function migrateJpgThumbnailsToPng() {
 
     for (const row of result.rows) {
       const { id, thumbnail_path } = row;
-      
+
       try {
         // Convert database path to filesystem path
         const oldPath = path.join(UPLOADS_DIR, thumbnail_path);
@@ -58,13 +59,10 @@ async function migrateJpgThumbnailsToPng() {
         }
 
         // Update database
-        await pool.query(
-          'UPDATE images SET thumbnail_path = $1 WHERE id = $2',
-          [newDbPath, id]
-        );
+        await pool.query('UPDATE images SET thumbnail_path = $1 WHERE id = $2', [newDbPath, id]);
 
         totalMigrated++;
-        
+
         if (totalMigrated % 100 === 0) {
           logger.info(`Progress: ${totalMigrated} thumbnails migrated`);
         }
@@ -85,7 +83,6 @@ async function migrateJpgThumbnailsToPng() {
     `);
 
     logger.info(`Remaining .jpg thumbnails in database: ${remainingJpg.rows[0].count}`);
-
   } catch (error) {
     logger.error('Migration failed:', error);
     process.exit(1);

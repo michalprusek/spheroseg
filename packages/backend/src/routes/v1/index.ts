@@ -1,6 +1,6 @@
 /**
  * API v1 Routes
- * 
+ *
  * Version 1 of the API routes for better API versioning and future compatibility.
  */
 

@@ -87,7 +87,9 @@ describe('Database Monitoring Module', () => {
       });
 
       // Execute a query that will fail
-      await expect(dbMonitoring.query('SELECT * FROM invalid_table', [])).rejects.toThrow('DB query error');
+      await expect(dbMonitoring.query('SELECT * FROM invalid_table', [])).rejects.toThrow(
+        'DB query error'
+      );
     });
   });
 
@@ -125,7 +127,7 @@ describe('Database Monitoring Module', () => {
       await expect(
         dbMonitoring.withTransaction(async () => {
           throw new Error('Transaction error');
-        }),
+        })
       ).rejects.toThrow('Transaction error');
 
       // Verify rollback was called

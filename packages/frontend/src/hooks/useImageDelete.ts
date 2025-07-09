@@ -139,7 +139,7 @@ export const useImageDelete = (options: UseImageDeleteOptions = {}): UseImageDel
             detail: {
               imageId,
               projectId: cleanProjectId,
-              forceRefresh: true // Flag to indicate need for full refresh
+              forceRefresh: true, // Flag to indicate need for full refresh
             },
           });
           window.dispatchEvent(event);

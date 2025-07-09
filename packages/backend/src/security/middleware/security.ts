@@ -1,6 +1,6 @@
 /**
  * Consolidated Security Middleware
- * 
+ *
  * This module consolidates all security-related middleware:
  * - Security headers (HSTS, X-Frame-Options, etc.)
  * - Content Security Policy (CSP)
@@ -57,7 +57,7 @@ export const createSecurityHeadersMiddleware = (options: SecurityOptions = {}) =
     const {
       hsts = true,
       hstsMaxAge = 31536000, // 1 year
-      hstsIncludeSubdomains = true
+      hstsIncludeSubdomains = true,
     } = options;
 
     // HSTS (HTTP Strict Transport Security)
@@ -109,56 +109,49 @@ const generateNonce = (): string => {
  */
 export const createCSPMiddleware = (options: SecurityOptions = {}) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const {
-      cspReportOnly = false,
-      cspReportUri
-    } = options;
+    const { cspReportOnly = false, cspReportUri } = options;
 
     const nonce = generateNonce();
-    
+
     // Store nonce in request for use in templates
     (req as any).nonce = nonce;
 
     const isDevelopment = process.env.NODE_ENV === 'development';
-    
+
     // Build CSP directives
     const directives = {
       'default-src': ["'self'"],
-      'script-src': [
-        "'self'",
-        `'nonce-${nonce}'`,
-        ...(isDevelopment ? ["'unsafe-eval'"] : [])
-      ],
+      'script-src': ["'self'", `'nonce-${nonce}'`, ...(isDevelopment ? ["'unsafe-eval'"] : [])],
       'style-src': [
         "'self'",
-        "'unsafe-inline'" // Required for many CSS frameworks
+        "'unsafe-inline'", // Required for many CSS frameworks
       ],
       'img-src': [
         "'self'",
         'data:', // Allow data URLs for images
         'https:', // Allow HTTPS images
-        'blob:' // Allow blob URLs for images
+        'blob:', // Allow blob URLs for images
       ],
       'font-src': [
         "'self'",
         'data:', // Allow data URLs for fonts
-        'https:' // Allow HTTPS fonts
+        'https:', // Allow HTTPS fonts
       ],
       'connect-src': [
         "'self'",
         'ws:', // WebSocket connections
         'wss:', // Secure WebSocket connections
-        ...(isDevelopment ? ['http://localhost:*'] : [])
+        ...(isDevelopment ? ['http://localhost:*'] : []),
       ],
       'media-src': [
         "'self'",
-        'blob:' // Allow blob URLs for media
+        'blob:', // Allow blob URLs for media
       ],
       'object-src': ["'none'"],
       'base-uri': ["'self'"],
       'form-action': ["'self'"],
       'frame-ancestors': ["'none'"],
-      'upgrade-insecure-requests': []
+      'upgrade-insecure-requests': [],
     };
 
     // Add report URI if provided
@@ -177,10 +170,10 @@ export const createCSPMiddleware = (options: SecurityOptions = {}) => {
       .join('; ');
 
     // Set CSP header
-    const headerName = cspReportOnly 
-      ? 'Content-Security-Policy-Report-Only' 
+    const headerName = cspReportOnly
+      ? 'Content-Security-Policy-Report-Only'
       : 'Content-Security-Policy';
-    
+
     res.setHeader(headerName, cspString);
 
     next();
@@ -210,7 +203,7 @@ export const createCSRFMiddleware = (options: SecurityOptions = {}) => {
 
   return (req: Request, res: Response, next: NextFunction) => {
     const ignoreMethods = ['GET', 'HEAD', 'OPTIONS'];
-    
+
     // Skip CSRF for safe methods
     if (ignoreMethods.includes(req.method)) {
       return next();
@@ -220,14 +213,14 @@ export const createCSRFMiddleware = (options: SecurityOptions = {}) => {
     if (req.headers.authorization) {
       return next();
     }
-    
+
     // Skip CSRF for public endpoints
     const publicEndpoints = ['/api/access-requests'];
-    if (publicEndpoints.some(endpoint => req.path.startsWith(endpoint))) {
+    if (publicEndpoints.some((endpoint) => req.path.startsWith(endpoint))) {
       return next();
     }
 
-    const token = req.headers['x-xsrf-token'] as string || req.body?._csrf;
+    const token = (req.headers['x-xsrf-token'] as string) || req.body?._csrf;
     const sessionToken = req.session?.csrfToken;
 
     if (!sessionToken) {
@@ -236,12 +229,12 @@ export const createCSRFMiddleware = (options: SecurityOptions = {}) => {
       if (req.session) {
         req.session.csrfToken = newToken;
       }
-      
+
       // Set CSRF token cookie
       res.cookie('XSRF-TOKEN', newToken, {
         httpOnly: false, // Must be accessible to JavaScript
         secure: req.secure,
-        sameSite: 'strict'
+        sameSite: 'strict',
       });
 
       return next();
@@ -252,12 +245,12 @@ export const createCSRFMiddleware = (options: SecurityOptions = {}) => {
         method: req.method,
         url: req.url,
         hasToken: !!token,
-        hasSessionToken: !!sessionToken
+        hasSessionToken: !!sessionToken,
       });
 
       return res.status(403).json({
         error: 'CSRF token mismatch',
-        message: 'Invalid or missing CSRF token'
+        message: 'Invalid or missing CSRF token',
       });
     }
 
@@ -276,15 +269,16 @@ export const createCORSMiddleware = (options: SecurityOptions = {}) => {
   const defaultOrigins = [
     'http://localhost:3000',
     'http://frontend:3000',
-    'https://spherosegapp.utia.cas.cz'
+    'https://spherosegapp.utia.cas.cz',
   ];
 
-  const allowedOrigins = options.corsOrigins || 
-    config.cors?.allowedOrigins || 
-    defaultOrigins;
+  const allowedOrigins = options.corsOrigins || config.cors?.allowedOrigins || defaultOrigins;
 
   const corsOptions = {
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void
+    ) => {
       // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) {
         return callback(null, true);
@@ -307,9 +301,9 @@ export const createCORSMiddleware = (options: SecurityOptions = {}) => {
       'X-XSRF-TOKEN',
       'X-Requested-With',
       'Accept',
-      'Origin'
+      'Origin',
     ],
-    exposedHeaders: ['X-XSRF-TOKEN']
+    exposedHeaders: ['X-XSRF-TOKEN'],
   };
 
   return cors(corsOptions);
@@ -325,24 +319,26 @@ export const createCORSMiddleware = (options: SecurityOptions = {}) => {
 export const applySecurityMiddleware = (app: Express, options: SecurityOptions = {}): void => {
   const isDevelopment = process.env.NODE_ENV === 'development';
 
-  logger.info('Applying security middleware', { 
+  logger.info('Applying security middleware', {
     environment: process.env.NODE_ENV,
-    options 
+    options,
   });
 
   // Cookie parser (required for CSRF)
   app.use(cookieParser());
 
   // Helmet for basic security headers
-  app.use(helmet({
-    crossOriginEmbedderPolicy: false, // Disabled for Socket.IO compatibility
-    contentSecurityPolicy: false, // We handle CSP ourselves
-    hsts: {
-      maxAge: options.hstsMaxAge || 31536000,
-      includeSubDomains: options.hstsIncludeSubdomains !== false,
-      preload: true
-    }
-  }));
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false, // Disabled for Socket.IO compatibility
+      contentSecurityPolicy: false, // We handle CSP ourselves
+      hsts: {
+        maxAge: options.hstsMaxAge || 31536000,
+        includeSubDomains: options.hstsIncludeSubdomains !== false,
+        preload: true,
+      },
+    })
+  );
 
   // Custom security headers
   app.use(createSecurityHeadersMiddleware(options));
@@ -380,5 +376,5 @@ export default {
   createSecurityHeadersMiddleware,
   createCSPMiddleware,
   createCSRFMiddleware,
-  createCORSMiddleware
+  createCORSMiddleware,
 };

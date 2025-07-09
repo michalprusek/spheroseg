@@ -28,20 +28,19 @@ const SignUp = () => {
 
   type SignUpFormValues = z.infer<typeof formSchema>;
 
-  const formSchema = z.object({
-    firstName: z.string().min(1, 'First name is required'),
-    lastName: z.string().min(1, 'Last name is required'),
-    email: z.string().email('Invalid email address').min(1, 'Email is required'),
-    password: z.string().min(8, 'Password must be at least 8 characters long'),
-    confirmPassword: z.string().min(8, 'Password must be at least 8 characters long'),
-    agreeTerms: z.boolean().refine((val) => val, 'You must agree to the terms and conditions'),
-  }).refine(
-    (data) => data.password === data.confirmPassword,
-    {
+  const formSchema = z
+    .object({
+      firstName: z.string().min(1, 'First name is required'),
+      lastName: z.string().min(1, 'Last name is required'),
+      email: z.string().email('Invalid email address').min(1, 'Email is required'),
+      password: z.string().min(8, 'Password must be at least 8 characters long'),
+      confirmPassword: z.string().min(8, 'Password must be at least 8 characters long'),
+      agreeTerms: z.boolean().refine((val) => val, 'You must agree to the terms and conditions'),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
       message: "Passwords don't match",
-      path: ["confirmPassword"],
-    }
-  );
+      path: ['confirmPassword'],
+    });
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(formSchema),
@@ -69,7 +68,7 @@ const SignUp = () => {
       emailValidation.checkEmail(emailValue);
     }
   }, [emailValue, emailValidation.checkEmail]);
-  
+
   // Trigger password confirmation validation when either password changes
   useEffect(() => {
     if (confirmPasswordValue && passwordValue !== confirmPasswordValue) {
@@ -86,16 +85,17 @@ const SignUp = () => {
   const passwordsMatch = passwordValue === confirmPasswordValue;
   const hasValidEmail = emailValue && emailValue.includes('@') && emailValue.includes('.');
   const hasMinPasswordLength = passwordValue && passwordValue.length >= 8;
-  const allFieldsFilled = firstNameValue && lastNameValue && emailValue && 
-                         passwordValue && confirmPasswordValue && agreeTermsValue;
-  
-  const canSubmit = !emailValidation.exists && 
-                   !emailValidation.hasAccessRequest && 
-                   !emailValidation.isValidating && 
-                   passwordsMatch && 
-                   hasValidEmail &&
-                   hasMinPasswordLength &&
-                   allFieldsFilled;
+  const allFieldsFilled =
+    firstNameValue && lastNameValue && emailValue && passwordValue && confirmPasswordValue && agreeTermsValue;
+
+  const canSubmit =
+    !emailValidation.exists &&
+    !emailValidation.hasAccessRequest &&
+    !emailValidation.isValidating &&
+    passwordsMatch &&
+    hasValidEmail &&
+    hasMinPasswordLength &&
+    allFieldsFilled;
 
   const navigate = useNavigate();
   const { signUp, user } = useAuth();
@@ -114,20 +114,22 @@ const SignUp = () => {
     try {
       const name = `${data.firstName} ${data.lastName}`;
       const success = await signUp(data.email, data.password, name);
-      
+
       if (success) {
         toast.success(t('auth.signUpSuccess') || 'Registration successful!');
         navigate('/sign-in');
       }
     } catch (error: unknown) {
       console.error('Sign up error:', error);
-      
+
       // Check for 409 Conflict (user already exists)
       if (axios.isAxiosError(error) && error.response?.status === 409) {
-        setError(t('auth.emailAlreadyExists') || 'This email is already registered. Please use a different email or sign in.');
+        setError(
+          t('auth.emailAlreadyExists') || 'This email is already registered. Please use a different email or sign in.',
+        );
         return; // Don't navigate or show success message
       }
-      
+
       let errorMessage = t('auth.signUpFailed') || 'Registration failed. Please try again.';
       if (error instanceof Error) {
         errorMessage = error.message;
@@ -255,8 +257,8 @@ const SignUp = () => {
                     hasEmailError
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
                       : emailValue && !emailValidation.isValidating && !hasEmailError
-                      ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
-                      : 'border-gray-300 dark:border-gray-600'
+                        ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
+                        : 'border-gray-300 dark:border-gray-600'
                   }`;
 
                   return (
@@ -278,9 +280,10 @@ const SignUp = () => {
                             {!emailValidation.isValidating && emailValue && hasEmailError && (
                               <AlertCircle className="h-4 w-4 text-red-500" />
                             )}
-                            {!emailValidation.isValidating && emailValue && !hasEmailError && emailValue.includes('@') && (
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                            )}
+                            {!emailValidation.isValidating &&
+                              emailValue &&
+                              !hasEmailError &&
+                              emailValue.includes('@') && <CheckCircle className="h-4 w-4 text-green-500" />}
                           </div>
                         </div>
                       </FormControl>
@@ -288,8 +291,10 @@ const SignUp = () => {
                       {hasEmailError && (
                         <p className="text-sm text-red-600 dark:text-red-400 mt-1">
                           {emailValidation.exists
-                            ? t('auth.emailAlreadyExists') || 'This email is already registered. Please use a different email or sign in.'
-                            : t('auth.emailHasPendingRequest') || 'This email has a pending access request. Please wait for approval or use a different email.'}
+                            ? t('auth.emailAlreadyExists') ||
+                              'This email is already registered. Please use a different email or sign in.'
+                            : t('auth.emailHasPendingRequest') ||
+                              'This email has a pending access request. Please wait for approval or use a different email.'}
                         </p>
                       )}
                     </FormItem>
@@ -321,15 +326,15 @@ const SignUp = () => {
                 render={({ field }) => {
                   const passwordsMatch = passwordValue === confirmPasswordValue && confirmPasswordValue;
                   const passwordsDontMatch = passwordValue !== confirmPasswordValue && confirmPasswordValue;
-                  
+
                   const inputClassName = `h-10 bg-gray-50 dark:bg-gray-700/50 rounded-md transition-colors ${
                     passwordsDontMatch
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
                       : passwordsMatch
-                      ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
-                      : 'border-gray-300 dark:border-gray-600'
+                        ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
+                        : 'border-gray-300 dark:border-gray-600'
                   }`;
-                  
+
                   return (
                     <FormItem>
                       <FormLabel>{t('common.passwordConfirm')}</FormLabel>
@@ -343,12 +348,8 @@ const SignUp = () => {
                             className={inputClassName}
                           />
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                            {passwordsDontMatch && (
-                              <AlertCircle className="h-4 w-4 text-red-500" />
-                            )}
-                            {passwordsMatch && (
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                            )}
+                            {passwordsDontMatch && <AlertCircle className="h-4 w-4 text-red-500" />}
+                            {passwordsMatch && <CheckCircle className="h-4 w-4 text-green-500" />}
                           </div>
                         </div>
                       </FormControl>
@@ -391,9 +392,9 @@ const SignUp = () => {
 
               {error && <p className="text-xs text-red-500">{error}</p>}
 
-              <Button 
-                type="submit" 
-                className="w-full h-10 text-base font-semibold rounded-md" 
+              <Button
+                type="submit"
+                className="w-full h-10 text-base font-semibold rounded-md"
                 disabled={isLoading || !canSubmit}
               >
                 {isLoading ? (

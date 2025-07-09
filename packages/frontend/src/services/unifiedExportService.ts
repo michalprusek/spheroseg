@@ -1,6 +1,6 @@
 /**
  * Unified Export Service
- * 
+ *
  * This service consolidates all export functionality into a single source of truth.
  * It provides comprehensive export capabilities for all data formats.
  */
@@ -44,11 +44,11 @@ export interface ExportOptions {
   includeImages?: boolean;
   includeVisualizations?: boolean;
   includeRawData?: boolean;
-  
+
   // Format options
   annotationFormat?: 'COCO' | 'YOLO' | 'POLYGONS' | 'MASK';
   metricsFormat?: 'EXCEL' | 'CSV' | 'JSON' | 'HTML';
-  
+
   // Advanced options
   generateThumbnails?: boolean;
   compressImages?: boolean;
@@ -83,46 +83,46 @@ export async function exportData(
   format: ExportFormat,
   projectTitle: string = 'project',
   options: ExportOptions = {},
-  onProgress?: (progress: ExportProgress) => void
+  onProgress?: (progress: ExportProgress) => void,
 ): Promise<ExportResult> {
   try {
     logger.info(`Starting export: ${format} format for ${images.length} images`);
-    
+
     // Validate input
     if (!images || images.length === 0) {
       throw new Error('No images selected for export');
     }
-    
+
     // Call appropriate export function based on format
     switch (format) {
       case ExportFormat.EXCEL:
         return await exportAsExcel(images, projectTitle, options, onProgress);
-      
+
       case ExportFormat.CSV:
         return await exportAsCSV(images, projectTitle, options, onProgress);
-      
+
       case ExportFormat.JSON:
         return await exportAsJSON(images, projectTitle, options, onProgress);
-      
+
       case ExportFormat.COCO:
         return await exportAsCOCO(images, projectTitle, options, onProgress);
-      
+
       case ExportFormat.YOLO:
         return await exportAsYOLO(images, projectTitle, options, onProgress);
-      
+
       case ExportFormat.ZIP:
         return await exportAsZIP(images, projectTitle, options, onProgress);
-      
+
       case ExportFormat.HTML:
         return await exportAsHTML(images, projectTitle, options, onProgress);
-      
+
       default:
         throw new Error(`Unsupported export format: ${format}`);
     }
   } catch (error) {
     const errorInfo = handleError(error);
     logger.error('Export failed:', errorInfo);
-    
+
     return {
       success: false,
       error: errorInfo.message,
@@ -137,10 +137,10 @@ async function exportAsExcel(
   images: ProjectImage[],
   projectTitle: string,
   options: ExportOptions,
-  onProgress?: (progress: ExportProgress) => void
+  onProgress?: (progress: ExportProgress) => void,
 ): Promise<ExportResult> {
   const warnings: string[] = [];
-  
+
   try {
     // Prepare metrics data
     const metricsData = await prepareMetricsData(images, options, (current, total) => {
@@ -151,41 +151,41 @@ async function exportAsExcel(
         percentage: (current / total) * 100,
       });
     });
-    
+
     if (metricsData.warnings) {
       warnings.push(...metricsData.warnings);
     }
-    
+
     // Create workbook
     const workbook = utils.book_new();
-    
+
     // Add metrics sheet
     if (options.includeObjectMetrics !== false) {
       const metricsSheet = utils.json_to_sheet(metricsData.metrics);
       configureExcelSheet(metricsSheet);
       utils.book_append_sheet(workbook, metricsSheet, 'Object Metrics');
     }
-    
+
     // Add metadata sheet
     if (options.includeMetadata) {
       const metadataSheet = utils.json_to_sheet(metricsData.metadata);
       utils.book_append_sheet(workbook, metadataSheet, 'Image Metadata');
     }
-    
+
     // Add statistics sheet
     if (options.includeStatistics) {
       const statsData = calculateStatistics(metricsData.metrics);
       const statsSheet = utils.json_to_sheet([statsData]);
       utils.book_append_sheet(workbook, statsSheet, 'Statistics');
     }
-    
+
     // Generate filename and save
     const filename = `${projectTitle}_export_${formatISODate(new Date())}.xlsx`;
     writeFile(workbook, filename);
-    
+
     logger.info(`Excel export completed: ${filename}`);
     toast.success(`Export completed: ${filename}`);
-    
+
     return {
       success: true,
       filename,
@@ -203,7 +203,7 @@ async function exportAsCSV(
   images: ProjectImage[],
   projectTitle: string,
   options: ExportOptions,
-  onProgress?: (progress: ExportProgress) => void
+  onProgress?: (progress: ExportProgress) => void,
 ): Promise<ExportResult> {
   try {
     // Prepare metrics data
@@ -215,18 +215,18 @@ async function exportAsCSV(
         percentage: (current / total) * 100,
       });
     });
-    
+
     // Convert to CSV
     const csvContent = convertToCSV(metricsData.metrics);
-    
+
     // Create blob and save
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const filename = `${projectTitle}_metrics_${formatISODate(new Date())}.csv`;
     saveAs(blob, filename);
-    
+
     logger.info(`CSV export completed: ${filename}`);
     toast.success(`Export completed: ${filename}`);
-    
+
     return {
       success: true,
       filename,
@@ -244,7 +244,7 @@ async function exportAsJSON(
   images: ProjectImage[],
   projectTitle: string,
   options: ExportOptions,
-  onProgress?: (progress: ExportProgress) => void
+  onProgress?: (progress: ExportProgress) => void,
 ): Promise<ExportResult> {
   try {
     const exportData: any = {
@@ -252,12 +252,12 @@ async function exportAsJSON(
       exportDate: formatDateTime(new Date()),
       imageCount: images.length,
     };
-    
+
     // Add requested data
     if (options.includeMetadata !== false) {
       exportData.metadata = await prepareMetadata(images);
     }
-    
+
     if (options.includeObjectMetrics !== false) {
       const metricsData = await prepareMetricsData(images, options, (current, total) => {
         onProgress?.({
@@ -269,7 +269,7 @@ async function exportAsJSON(
       });
       exportData.metrics = metricsData.metrics;
     }
-    
+
     if (options.includeSegmentation) {
       exportData.segmentations = await prepareSegmentations(images, (current, total) => {
         onProgress?.({
@@ -280,16 +280,16 @@ async function exportAsJSON(
         });
       });
     }
-    
+
     // Create blob and save
     const jsonString = JSON.stringify(exportData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
     const filename = `${projectTitle}_data_${formatISODate(new Date())}.json`;
     saveAs(blob, filename);
-    
+
     logger.info(`JSON export completed: ${filename}`);
     toast.success(`Export completed: ${filename}`);
-    
+
     return {
       success: true,
       filename,
@@ -306,7 +306,7 @@ async function exportAsCOCO(
   images: ProjectImage[],
   projectTitle: string,
   options: ExportOptions,
-  onProgress?: (progress: ExportProgress) => void
+  onProgress?: (progress: ExportProgress) => void,
 ): Promise<ExportResult> {
   try {
     const cocoData = {
@@ -328,20 +328,20 @@ async function exportAsCOCO(
         },
       ],
     };
-    
+
     let annotationId = 1;
-    
+
     // Process each image
     for (let i = 0; i < images.length; i++) {
       const image = images[i];
-      
+
       onProgress?.({
         current: i + 1,
         total: images.length,
         message: `Processing ${image.name}`,
         percentage: ((i + 1) / images.length) * 100,
       });
-      
+
       // Add image info
       cocoData.images.push({
         id: i + 1,
@@ -350,28 +350,28 @@ async function exportAsCOCO(
         height: image.height || 600,
         date_captured: image.createdAt,
       });
-      
+
       // Get segmentation data
       const segData = await fetchSegmentationData(image.id);
       if (segData?.polygons) {
         for (const polygon of segData.polygons) {
           const points = polygon.points || [];
           if (points.length < 3) continue;
-          
+
           // Calculate bounding box
-          const xCoords = points.map(p => p.x);
-          const yCoords = points.map(p => p.y);
+          const xCoords = points.map((p) => p.x);
+          const yCoords = points.map((p) => p.y);
           const minX = Math.min(...xCoords);
           const minY = Math.min(...yCoords);
           const maxX = Math.max(...xCoords);
           const maxY = Math.max(...yCoords);
-          
+
           // Flatten points for COCO format
           const segmentation = points.reduce((acc: number[], p) => {
             acc.push(p.x, p.y);
             return acc;
           }, []);
-          
+
           cocoData.annotations.push({
             id: annotationId++,
             image_id: i + 1,
@@ -384,16 +384,16 @@ async function exportAsCOCO(
         }
       }
     }
-    
+
     // Save file
     const jsonString = JSON.stringify(cocoData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
     const filename = `${projectTitle}_coco_${formatISODate(new Date())}.json`;
     saveAs(blob, filename);
-    
+
     logger.info(`COCO export completed: ${filename}`);
     toast.success(`Export completed: ${filename}`);
-    
+
     return {
       success: true,
       filename,
@@ -410,13 +410,13 @@ async function exportAsYOLO(
   images: ProjectImage[],
   projectTitle: string,
   options: ExportOptions,
-  onProgress?: (progress: ExportProgress) => void
+  onProgress?: (progress: ExportProgress) => void,
 ): Promise<ExportResult> {
   try {
     const zip = new JSZip();
     const imagesFolder = zip.folder('images');
     const labelsFolder = zip.folder('labels');
-    
+
     // Add dataset.yaml
     const yamlContent = `# ${projectTitle} Dataset
 # Generated: ${formatDateTime(new Date())}
@@ -429,48 +429,48 @@ names:
   0: spheroid
 `;
     zip.file('dataset.yaml', yamlContent);
-    
+
     // Process each image
     for (let i = 0; i < images.length; i++) {
       const image = images[i];
-      
+
       onProgress?.({
         current: i + 1,
         total: images.length,
         message: `Processing ${image.name}`,
         percentage: ((i + 1) / images.length) * 100,
       });
-      
+
       // Get segmentation data
       const segData = await fetchSegmentationData(image.id);
       if (!segData?.polygons || segData.polygons.length === 0) {
         continue;
       }
-      
+
       // Convert to YOLO format
       const yoloAnnotations: string[] = [];
       const imgWidth = image.width || 800;
       const imgHeight = image.height || 600;
-      
+
       for (const polygon of segData.polygons) {
         const points = polygon.points || [];
         if (points.length < 3) continue;
-        
+
         // Normalize coordinates
-        const normalizedPoints = points.map(p => ({
+        const normalizedPoints = points.map((p) => ({
           x: p.x / imgWidth,
           y: p.y / imgHeight,
         }));
-        
+
         // Format: class_id x1 y1 x2 y2 ... xn yn
-        const pointsStr = normalizedPoints.map(p => `${p.x} ${p.y}`).join(' ');
+        const pointsStr = normalizedPoints.map((p) => `${p.x} ${p.y}`).join(' ');
         yoloAnnotations.push(`0 ${pointsStr}`);
       }
-      
+
       // Add label file
       const labelFilename = image.name.replace(/\.[^/.]+$/, '.txt');
       labelsFolder?.file(labelFilename, yoloAnnotations.join('\n'));
-      
+
       // Optionally include images
       if (options.includeImages) {
         try {
@@ -481,15 +481,15 @@ names:
         }
       }
     }
-    
+
     // Generate and save ZIP
     const content = await zip.generateAsync({ type: 'blob' });
     const filename = `${projectTitle}_yolo_${formatISODate(new Date())}.zip`;
     saveAs(content, filename);
-    
+
     logger.info(`YOLO export completed: ${filename}`);
     toast.success(`Export completed: ${filename}`);
-    
+
     return {
       success: true,
       filename,
@@ -506,24 +506,24 @@ async function exportAsZIP(
   images: ProjectImage[],
   projectTitle: string,
   options: ExportOptions,
-  onProgress?: (progress: ExportProgress) => void
+  onProgress?: (progress: ExportProgress) => void,
 ): Promise<ExportResult> {
   try {
     const zip = new JSZip();
     let totalSteps = 0;
     let currentStep = 0;
-    
+
     // Calculate total steps
     if (options.includeMetadata !== false) totalSteps++;
     if (options.includeObjectMetrics !== false) totalSteps++;
     if (options.includeSegmentation) totalSteps++;
     if (options.includeImages) totalSteps += images.length;
     if (options.includeVisualizations) totalSteps += images.length;
-    
+
     // Add README
     const readmeContent = generateReadme(projectTitle, options);
     zip.file('README.txt', readmeContent);
-    
+
     // Add metadata
     if (options.includeMetadata !== false) {
       onProgress?.({
@@ -532,11 +532,11 @@ async function exportAsZIP(
         message: 'Exporting metadata',
         percentage: (currentStep / totalSteps) * 100,
       });
-      
+
       const metadata = await prepareMetadata(images);
       zip.file('metadata.json', JSON.stringify(metadata, null, 2));
     }
-    
+
     // Add metrics
     if (options.includeObjectMetrics !== false) {
       onProgress?.({
@@ -545,29 +545,29 @@ async function exportAsZIP(
         message: 'Exporting metrics',
         percentage: (currentStep / totalSteps) * 100,
       });
-      
+
       const metricsData = await prepareMetricsData(images, options);
-      
+
       // Add Excel file
       const workbook = utils.book_new();
       const worksheet = utils.json_to_sheet(metricsData.metrics);
       configureExcelSheet(worksheet);
       utils.book_append_sheet(workbook, worksheet, 'Metrics');
-      
+
       const excelBuffer = writeFile(workbook, { bookType: 'xlsx', type: 'array' });
       zip.file(`${projectTitle}_metrics.xlsx`, excelBuffer);
-      
+
       // Add CSV file
       const csvContent = convertToCSV(metricsData.metrics);
       zip.file(`${projectTitle}_metrics.csv`, csvContent);
-      
+
       // Add HTML report
       if (options.metricsFormat === 'HTML' || options.includeRawData) {
         const htmlContent = generateHTMLReport(metricsData.metrics, projectTitle);
         zip.file(`${projectTitle}_report.html`, htmlContent);
       }
     }
-    
+
     // Add segmentations
     if (options.includeSegmentation) {
       onProgress?.({
@@ -576,16 +576,16 @@ async function exportAsZIP(
         message: 'Exporting segmentations',
         percentage: (currentStep / totalSteps) * 100,
       });
-      
+
       const segmentationsFolder = zip.folder('segmentations');
-      
+
       // Export in selected format
       switch (options.annotationFormat) {
         case 'COCO':
           const cocoData = await prepareCocoData(images);
           segmentationsFolder?.file('annotations.json', JSON.stringify(cocoData, null, 2));
           break;
-          
+
         case 'YOLO':
           const yoloFolder = segmentationsFolder?.folder('yolo');
           for (const image of images) {
@@ -595,7 +595,7 @@ async function exportAsZIP(
             }
           }
           break;
-          
+
         case 'POLYGONS':
         default:
           const polygonData = await preparePolygonData(images);
@@ -603,21 +603,21 @@ async function exportAsZIP(
           break;
       }
     }
-    
+
     // Add images
     if (options.includeImages) {
       const imagesFolder = zip.folder('images');
-      
+
       for (let i = 0; i < images.length; i++) {
         const image = images[i];
-        
+
         onProgress?.({
           current: ++currentStep,
           total: totalSteps,
           message: `Adding image ${image.name}`,
           percentage: (currentStep / totalSteps) * 100,
         });
-        
+
         try {
           const imageBlob = await fetchImageBlob(image.url);
           imagesFolder?.file(image.name, imageBlob);
@@ -626,21 +626,21 @@ async function exportAsZIP(
         }
       }
     }
-    
+
     // Add visualizations
     if (options.includeVisualizations) {
       const visualizationsFolder = zip.folder('visualizations');
-      
+
       for (let i = 0; i < images.length; i++) {
         const image = images[i];
-        
+
         onProgress?.({
           current: ++currentStep,
           total: totalSteps,
           message: `Generating visualization for ${image.name}`,
           percentage: (currentStep / totalSteps) * 100,
         });
-        
+
         try {
           const visualization = await generateVisualization(image);
           if (visualization) {
@@ -651,20 +651,20 @@ async function exportAsZIP(
         }
       }
     }
-    
+
     // Generate and save ZIP
-    const content = await zip.generateAsync({ 
+    const content = await zip.generateAsync({
       type: 'blob',
       compression: 'DEFLATE',
-      compressionOptions: { level: 6 }
+      compressionOptions: { level: 6 },
     });
-    
+
     const filename = `${projectTitle}_export_${formatISODate(new Date())}.zip`;
     saveAs(content, filename);
-    
+
     logger.info(`ZIP export completed: ${filename}`);
     toast.success(`Export completed: ${filename}`);
-    
+
     return {
       success: true,
       filename,
@@ -681,7 +681,7 @@ async function exportAsHTML(
   images: ProjectImage[],
   projectTitle: string,
   options: ExportOptions,
-  onProgress?: (progress: ExportProgress) => void
+  onProgress?: (progress: ExportProgress) => void,
 ): Promise<ExportResult> {
   try {
     const metricsData = await prepareMetricsData(images, options, (current, total) => {
@@ -692,20 +692,20 @@ async function exportAsHTML(
         percentage: (current / total) * 100,
       });
     });
-    
+
     const htmlContent = generateHTMLReport(metricsData.metrics, projectTitle, {
       includeCharts: true,
       includeStatistics: options.includeStatistics,
       includeImages: options.includeImages,
     });
-    
+
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const filename = `${projectTitle}_report_${formatISODate(new Date())}.html`;
     saveAs(blob, filename);
-    
+
     logger.info(`HTML export completed: ${filename}`);
     toast.success(`Export completed: ${filename}`);
-    
+
     return {
       success: true,
       filename,
@@ -725,28 +725,28 @@ async function exportAsHTML(
 async function prepareMetricsData(
   images: ProjectImage[],
   options: ExportOptions = {},
-  onProgress?: (current: number, total: number) => void
+  onProgress?: (current: number, total: number) => void,
 ): Promise<{ metrics: any[]; metadata: any[]; warnings?: string[] }> {
   const metrics: any[] = [];
   const metadata: any[] = [];
   const warnings: string[] = [];
-  
+
   for (let i = 0; i < images.length; i++) {
     const image = images[i];
     onProgress?.(i + 1, images.length);
-    
+
     try {
       // Get segmentation data
       const segData = await fetchSegmentationData(image.id);
-      
+
       if (!segData || !segData.polygons || segData.polygons.length === 0) {
         warnings.push(`No segmentation data for image: ${image.name}`);
         continue;
       }
-      
+
       // Calculate metrics
       const imageMetrics = calculateMetrics(segData.polygons);
-      
+
       // Add image metadata
       metadata.push({
         imageId: image.id,
@@ -758,7 +758,7 @@ async function prepareMetricsData(
         segmentationStatus: image.segmentationStatus,
         objectCount: imageMetrics.length,
       });
-      
+
       // Format metrics for export
       imageMetrics.forEach((metric, index) => {
         metrics.push({
@@ -768,13 +768,13 @@ async function prepareMetricsData(
           'Object ID': index + 1,
           'Area (px²)': metric.area?.toFixed(2) || 'N/A',
           'Perimeter (px)': metric.perimeter?.toFixed(2) || 'N/A',
-          'Circularity': metric.circularity?.toFixed(4) || 'N/A',
+          Circularity: metric.circularity?.toFixed(4) || 'N/A',
           'Equivalent Diameter (px)': metric.equivalentDiameter?.toFixed(2) || 'N/A',
           'Aspect Ratio': metric.aspectRatio?.toFixed(4) || 'N/A',
-          'Compactness': metric.compactness?.toFixed(4) || 'N/A',
-          'Convexity': metric.convexity?.toFixed(4) || 'N/A',
-          'Solidity': metric.solidity?.toFixed(4) || 'N/A',
-          'Sphericity': metric.sphericity?.toFixed(4) || 'N/A',
+          Compactness: metric.compactness?.toFixed(4) || 'N/A',
+          Convexity: metric.convexity?.toFixed(4) || 'N/A',
+          Solidity: metric.solidity?.toFixed(4) || 'N/A',
+          Sphericity: metric.sphericity?.toFixed(4) || 'N/A',
           'Feret Diameter Max (px)': metric.feretDiameterMax?.toFixed(2) || 'N/A',
           'Feret Diameter Min (px)': metric.feretDiameterMin?.toFixed(2) || 'N/A',
           'Created At': formatDateTime(image.createdAt || new Date()),
@@ -785,7 +785,7 @@ async function prepareMetricsData(
       warnings.push(`Failed to process image: ${image.name}`);
     }
   }
-  
+
   return { metrics, metadata, warnings: warnings.length > 0 ? warnings : undefined };
 }
 
@@ -793,7 +793,7 @@ async function prepareMetricsData(
  * Prepare metadata for export
  */
 async function prepareMetadata(images: ProjectImage[]): Promise<any[]> {
-  return images.map(image => ({
+  return images.map((image) => ({
     id: image.id,
     name: image.name,
     url: image.url,
@@ -810,14 +810,14 @@ async function prepareMetadata(images: ProjectImage[]): Promise<any[]> {
  */
 async function prepareSegmentations(
   images: ProjectImage[],
-  onProgress?: (current: number, total: number) => void
+  onProgress?: (current: number, total: number) => void,
 ): Promise<any[]> {
   const segmentations: any[] = [];
-  
+
   for (let i = 0; i < images.length; i++) {
     const image = images[i];
     onProgress?.(i + 1, images.length);
-    
+
     try {
       const segData = await fetchSegmentationData(image.id);
       if (segData) {
@@ -832,7 +832,7 @@ async function prepareSegmentations(
       logger.warn(`Failed to fetch segmentation for ${image.name}:`, error);
     }
   }
-  
+
   return segmentations;
 }
 
@@ -865,12 +865,12 @@ async function fetchImageBlob(url: string): Promise<Blob> {
  */
 function convertToCSV(data: any[]): string {
   if (!data || data.length === 0) return '';
-  
+
   const headers = Object.keys(data[0]);
   const csvRows = [headers.join(',')];
-  
+
   for (const row of data) {
-    const values = headers.map(header => {
+    const values = headers.map((header) => {
       const value = row[header];
       // Escape quotes and wrap in quotes if contains comma or newline
       const escaped = String(value || '').replace(/"/g, '""');
@@ -878,7 +878,7 @@ function convertToCSV(data: any[]): string {
     });
     csvRows.push(values.join(','));
   }
-  
+
   return csvRows.join('\n');
 }
 
@@ -905,7 +905,7 @@ function configureExcelSheet(worksheet: any): void {
     { wch: 20 }, // Feret Diameter Min
     { wch: 20 }, // Created At
   ];
-  
+
   worksheet['!cols'] = colWidths;
 }
 
@@ -916,24 +916,30 @@ function calculateStatistics(metrics: any[]): any {
   if (!metrics || metrics.length === 0) {
     return { message: 'No data available for statistics' };
   }
-  
+
   const numericFields = [
-    'Area (px²)', 'Perimeter (px)', 'Circularity', 'Equivalent Diameter (px)',
-    'Aspect Ratio', 'Compactness', 'Convexity', 'Solidity', 'Sphericity',
-    'Feret Diameter Max (px)', 'Feret Diameter Min (px)'
+    'Area (px²)',
+    'Perimeter (px)',
+    'Circularity',
+    'Equivalent Diameter (px)',
+    'Aspect Ratio',
+    'Compactness',
+    'Convexity',
+    'Solidity',
+    'Sphericity',
+    'Feret Diameter Max (px)',
+    'Feret Diameter Min (px)',
   ];
-  
+
   const stats: any = {
     'Total Objects': metrics.length,
-    'Total Images': new Set(metrics.map(m => m['Image Name'])).size,
+    'Total Images': new Set(metrics.map((m) => m['Image Name'])).size,
   };
-  
+
   // Calculate statistics for each numeric field
   for (const field of numericFields) {
-    const values = metrics
-      .map(m => parseFloat(m[field]))
-      .filter(v => !isNaN(v));
-    
+    const values = metrics.map((m) => parseFloat(m[field])).filter((v) => !isNaN(v));
+
     if (values.length > 0) {
       const sum = values.reduce((a, b) => a + b, 0);
       const mean = sum / values.length;
@@ -941,10 +947,8 @@ function calculateStatistics(metrics: any[]): any {
       const median = sorted[Math.floor(sorted.length / 2)];
       const min = sorted[0];
       const max = sorted[sorted.length - 1];
-      const std = Math.sqrt(
-        values.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / values.length
-      );
-      
+      const std = Math.sqrt(values.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / values.length);
+
       stats[`${field} - Mean`] = mean.toFixed(4);
       stats[`${field} - Median`] = median.toFixed(4);
       stats[`${field} - Std Dev`] = std.toFixed(4);
@@ -952,7 +956,7 @@ function calculateStatistics(metrics: any[]): any {
       stats[`${field} - Max`] = max.toFixed(4);
     }
   }
-  
+
   return stats;
 }
 
@@ -960,16 +964,18 @@ function calculateStatistics(metrics: any[]): any {
  * Generate README content for ZIP export
  */
 function generateReadme(projectTitle: string, options: ExportOptions): string {
-  const sections = [`Export for project: ${projectTitle}
+  const sections = [
+    `Export for project: ${projectTitle}
 Generated: ${formatDateTime(new Date())}
 Export Tool: SpherosegV4 Unified Export Service
 
-This archive contains:`];
+This archive contains:`,
+  ];
 
   if (options.includeMetadata !== false) {
     sections.push('- metadata.json: Image metadata and information');
   }
-  
+
   if (options.includeObjectMetrics !== false) {
     sections.push('- *.xlsx: Object metrics in Excel format');
     sections.push('- *.csv: Object metrics in CSV format');
@@ -977,19 +983,19 @@ This archive contains:`];
       sections.push('- *.html: Interactive metrics report');
     }
   }
-  
+
   if (options.includeSegmentation) {
     sections.push(`- segmentations/: Segmentation data in ${options.annotationFormat || 'POLYGONS'} format`);
   }
-  
+
   if (options.includeImages) {
     sections.push('- images/: Original image files');
   }
-  
+
   if (options.includeVisualizations) {
     sections.push('- visualizations/: Segmentation overlay visualizations');
   }
-  
+
   sections.push(`
 File Structure:
 .
@@ -1013,10 +1019,10 @@ For questions or support, please contact the SpherosegV4 team.
 function generateHTMLReport(
   metrics: any[],
   projectTitle: string,
-  options: { includeCharts?: boolean; includeStatistics?: boolean; includeImages?: boolean } = {}
+  options: { includeCharts?: boolean; includeStatistics?: boolean; includeImages?: boolean } = {},
 ): string {
   const stats = options.includeStatistics ? calculateStatistics(metrics) : null;
-  
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1115,20 +1121,29 @@ function generateHTMLReport(
     <div class="metadata">
       <p><strong>Generated:</strong> ${formatDateTime(new Date())}</p>
       <p><strong>Total Objects:</strong> ${metrics.length}</p>
-      <p><strong>Total Images:</strong> ${new Set(metrics.map(m => m['Image Name'])).size}</p>
+      <p><strong>Total Images:</strong> ${new Set(metrics.map((m) => m['Image Name'])).size}</p>
     </div>
     
-    ${options.includeStatistics && stats ? `
+    ${
+      options.includeStatistics && stats
+        ? `
     <h2>Statistics Overview</h2>
     <div class="stats-grid">
-      ${Object.entries(stats).slice(0, 6).map(([key, value]) => `
+      ${Object.entries(stats)
+        .slice(0, 6)
+        .map(
+          ([key, value]) => `
         <div class="stat-card">
           <h3>${key}</h3>
           <p>${value}</p>
         </div>
-      `).join('')}
+      `,
+        )
+        .join('')}
     </div>
-    ` : ''}
+    `
+        : ''
+    }
     
     <h2>Detailed Metrics</h2>
     <input type="text" class="search-box" placeholder="Search metrics..." onkeyup="filterTable(this.value)">
@@ -1137,15 +1152,23 @@ function generateHTMLReport(
       <table id="metricsTable">
         <thead>
           <tr>
-            ${Object.keys(metrics[0] || {}).map(key => `<th>${key}</th>`).join('')}
+            ${Object.keys(metrics[0] || {})
+              .map((key) => `<th>${key}</th>`)
+              .join('')}
           </tr>
         </thead>
         <tbody>
-          ${metrics.map(row => `
+          ${metrics
+            .map(
+              (row) => `
             <tr>
-              ${Object.values(row).map(value => `<td>${value}</td>`).join('')}
+              ${Object.values(row)
+                .map((value) => `<td>${value}</td>`)
+                .join('')}
             </tr>
-          `).join('')}
+          `,
+            )
+            .join('')}
         </tbody>
       </table>
     </div>
@@ -1174,13 +1197,13 @@ function generateHTMLReport(
 function calculatePolygonArea(points: { x: number; y: number }[]): number {
   let area = 0;
   const n = points.length;
-  
+
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
     area += points[i].x * points[j].y;
     area -= points[j].x * points[i].y;
   }
-  
+
   return Math.abs(area) / 2;
 }
 
@@ -1211,10 +1234,10 @@ async function prepareCocoData(images: ProjectImage[]): Promise<any> {
     annotations: [] as any[],
     categories: [{ id: 1, name: 'spheroid', supercategory: 'cell' }],
   };
-  
+
   // Process images...
   // (Implementation details omitted for brevity)
-  
+
   return cocoData;
 }
 
@@ -1225,19 +1248,19 @@ async function prepareYoloData(image: ProjectImage): Promise<string | null> {
   try {
     const segData = await fetchSegmentationData(image.id);
     if (!segData?.polygons) return null;
-    
+
     const yoloLines: string[] = [];
     const width = image.width || 800;
     const height = image.height || 600;
-    
+
     for (const polygon of segData.polygons) {
       const points = polygon.points || [];
       if (points.length < 3) continue;
-      
-      const normalizedPoints = points.map(p => `${p.x / width} ${p.y / height}`).join(' ');
+
+      const normalizedPoints = points.map((p) => `${p.x / width} ${p.y / height}`).join(' ');
       yoloLines.push(`0 ${normalizedPoints}`);
     }
-    
+
     return yoloLines.join('\n');
   } catch (error) {
     logger.error(`Failed to prepare YOLO data for ${image.name}:`, error);
@@ -1250,7 +1273,7 @@ async function prepareYoloData(image: ProjectImage): Promise<string | null> {
  */
 async function preparePolygonData(images: ProjectImage[]): Promise<any[]> {
   const polygonData: any[] = [];
-  
+
   for (const image of images) {
     try {
       const segData = await fetchSegmentationData(image.id);
@@ -1265,7 +1288,7 @@ async function preparePolygonData(images: ProjectImage[]): Promise<any[]> {
       logger.warn(`Failed to fetch polygons for ${image.name}:`, error);
     }
   }
-  
+
   return polygonData;
 }
 

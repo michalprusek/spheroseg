@@ -54,13 +54,15 @@ const createMockAuthRouter = () => {
       // Create user
       const result = await db.query(
         'INSERT INTO users (email, password, name, username) VALUES ($1, $2, $3, $4) RETURNING id, email, name, username',
-        [email, hashedPassword, name, username],
+        [email, hashedPassword, name, username]
       );
 
       const user = result.rows[0];
 
       // Generate token
-      const token = jwt.sign({ id: user.id, email: user.email }, 'test-secret-key', { expiresIn: '1h' });
+      const token = jwt.sign({ id: user.id, email: user.email }, 'test-secret-key', {
+        expiresIn: '1h',
+      });
 
       res.status(201).json({ user, token });
     } catch (error) {
@@ -96,7 +98,9 @@ const createMockAuthRouter = () => {
       }
 
       // Generate token
-      const token = jwt.sign({ id: user.id, email: user.email }, 'test-secret-key', { expiresIn: '1h' });
+      const token = jwt.sign({ id: user.id, email: user.email }, 'test-secret-key', {
+        expiresIn: '1h',
+      });
 
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;

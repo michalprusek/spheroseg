@@ -128,7 +128,7 @@ describe('Large Image Processing Tests', () => {
         width: expect.any(Number),
         height: expect.any(Number),
         fit: 'inside',
-      }),
+      })
     );
   });
 
@@ -156,7 +156,7 @@ describe('Large Image Processing Tests', () => {
     const rssIncrease = finalMemoryUsage.rss - initialMemoryUsage.rss;
 
     console.log(
-      `Memory usage increase - Heap: ${heapUsageIncrease / 1024 / 1024}MB, RSS: ${rssIncrease / 1024 / 1024}MB`,
+      `Memory usage increase - Heap: ${heapUsageIncrease / 1024 / 1024}MB, RSS: ${rssIncrease / 1024 / 1024}MB`
     );
 
     // Memory usage should be reasonable - the exact threshold depends on implementation
@@ -174,7 +174,9 @@ describe('Large Image Processing Tests', () => {
     const result = await processComplexPolygons(complexPolygons);
     const executionTime = Date.now() - startTime;
 
-    console.log(`Complex polygon processing took ${executionTime}ms for ${complexPolygons.length} polygons`);
+    console.log(
+      `Complex polygon processing took ${executionTime}ms for ${complexPolygons.length} polygons`
+    );
 
     // Verify results
     expect(result).toBeDefined();
@@ -182,7 +184,9 @@ describe('Large Image Processing Tests', () => {
 
     // Each simplified polygon should have fewer vertices than the original
     for (let i = 0; i < result.simplifiedPolygons.length; i++) {
-      expect(result.simplifiedPolygons[i].vertices.length).toBeLessThan(complexPolygons[i].vertices.length);
+      expect(result.simplifiedPolygons[i].vertices.length).toBeLessThan(
+        complexPolygons[i].vertices.length
+      );
     }
   });
 

@@ -222,7 +222,9 @@ export class MockDatabase {
         // Parse basic key-value conditions
         const conditionParts = conditions.split('AND').map((part) => part.trim());
         conditionParts.forEach((condition) => {
-          const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/);
+          const match = condition.match(
+            /([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/
+          );
           if (match) {
             const [, column, operator, stringValue, numberValue, placeholder] = match;
 
@@ -294,7 +296,9 @@ export class MockDatabase {
         // Parse basic key-value conditions
         const conditionParts = conditions.split('AND').map((part) => part.trim());
         conditionParts.forEach((condition) => {
-          const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/);
+          const match = condition.match(
+            /([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/
+          );
           if (match) {
             const [, column, operator, stringValue, numberValue, placeholder] = match;
 
@@ -325,7 +329,9 @@ export class MockDatabase {
         // Parse basic key-value conditions
         const conditionParts = conditions.split('AND').map((part) => part.trim());
         conditionParts.forEach((condition) => {
-          const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/);
+          const match = condition.match(
+            /([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/
+          );
           if (match) {
             const [, column, operator, stringValue, numberValue, placeholder] = match;
 
@@ -629,7 +635,9 @@ export function createDbHelpers(db: MockDatabase) {
     },
 
     // Segmentation operations
-    createSegmentation: (segmentationData: Partial<Record<string, any>> = {}): Record<string, any> => {
+    createSegmentation: (
+      segmentationData: Partial<Record<string, any>> = {}
+    ): Record<string, any> => {
       const segmentationId = segmentationData.id || uuidv4();
       const now = new Date().toISOString();
 

@@ -281,11 +281,15 @@ export class FrontendPerformanceMonitoring extends PerformanceMonitoring {
     this.metricsQueue = [];
 
     try {
-      await apiClient.post(this.options.endpoint || '/api/metrics', { metrics }, {
-        headers: {
-          'Content-Type': 'application/json',
+      await apiClient.post(
+        this.options.endpoint || '/api/metrics',
+        { metrics },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
       // Axios throws an error for non-2xx responses, so no need to check response.ok
     } catch (error) {
       console.error('Error sending metrics:', error);

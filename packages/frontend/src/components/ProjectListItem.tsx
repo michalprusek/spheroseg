@@ -44,17 +44,17 @@ const ProjectListItem = ({
 }: ProjectListItemProps) => {
   const { t } = useLanguage();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  
+
   const handleCardClick = () => {
     if (onClick) {
       onClick();
     }
   };
-  
+
   const handleShare = () => {
     setShareDialogOpen(true);
   };
-  
+
   const isShared = isOwner === false;
 
   return (
@@ -90,8 +90,8 @@ const ProjectListItem = ({
         </div>
 
         <div className="flex items-center ml-4 space-x-2">
-          <ProjectActions 
-            projectId={id} 
+          <ProjectActions
+            projectId={id}
             projectTitle={projectName}
             onDelete={onDelete}
             onDuplicate={onDuplicate}
@@ -102,7 +102,7 @@ const ProjectListItem = ({
           </Button>
         </div>
       </div>
-      
+
       {/* Share Dialog */}
       {isOwner && (
         <ShareDialog

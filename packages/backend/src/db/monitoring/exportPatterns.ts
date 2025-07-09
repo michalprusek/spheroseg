@@ -33,8 +33,8 @@ export async function exportPatternsToJson(filePath: string): Promise<void> {
           patterns,
         },
         null,
-        2,
-      ),
+        2
+      )
     );
 
     logger.info('Query patterns exported to JSON', {
@@ -233,7 +233,7 @@ export function generateGrafanaDashboard(): Record<string, unknown> {
  * Export query patterns and dashboard to Grafana
  */
 export async function exportToGrafana(
-  outputDir: string = path.join(process.cwd(), 'monitoring/grafana/dashboards'),
+  outputDir: string = path.join(process.cwd(), 'monitoring/grafana/dashboards')
 ): Promise<void> {
   try {
     // Generate dashboard JSON

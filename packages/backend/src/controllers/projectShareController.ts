@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ApiError } from '../utils/errors';
 import { ProjectShareService } from '../services/projectShareService';
 import db from '../db';
-import { AuthenticatedRequest } from '../security/middleware/auth';;
+import { AuthenticatedRequest } from '../security/middleware/auth';
 
 // Vytvoření instance service
 const projectShareService = new ProjectShareService(db);
@@ -76,7 +76,11 @@ export async function shareProject(req: AuthenticatedRequest, res: Response, nex
 /**
  * Zruší sdílení projektu
  */
-export async function removeProjectShare(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function removeProjectShare(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const { projectId, shareId } = req.params;
     const userId = req.user?.userId;
@@ -102,7 +106,11 @@ export async function removeProjectShare(req: AuthenticatedRequest, res: Respons
 /**
  * Přijme pozvánku ke sdílení projektu
  */
-export async function acceptProjectInvitation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function acceptProjectInvitation(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const { token } = req.params;
     const userId = req.user?.userId;
@@ -125,7 +133,11 @@ export async function acceptProjectInvitation(req: AuthenticatedRequest, res: Re
 /**
  * Získá seznam projektů sdílených s uživatelem
  */
-export async function getSharedProjects(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function getSharedProjects(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const userId = req.user?.userId;
 
@@ -146,7 +158,11 @@ export async function getSharedProjects(req: AuthenticatedRequest, res: Response
 /**
  * Získá seznam sdílení pro konkrétní projekt
  */
-export async function getProjectShares(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function getProjectShares(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const { projectId } = req.params;
     const userId = req.user?.userId;
@@ -168,7 +184,11 @@ export async function getProjectShares(req: AuthenticatedRequest, res: Response,
 /**
  * Kontroluje, zda má uživatel přístup k projektu (používá se jako middleware)
  */
-export async function checkProjectAccess(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function checkProjectAccess(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const { projectId } = req.params;
     const userId = req.user?.userId;
@@ -192,7 +212,11 @@ export async function checkProjectAccess(req: AuthenticatedRequest, res: Respons
 /**
  * Generuje invitation link pro sdílení projektu
  */
-export async function generateInvitationLink(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function generateInvitationLink(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const { projectId } = req.params;
     const userId = req.user?.userId;

@@ -91,7 +91,9 @@ describe('Segmentation Integration Tests', () => {
   // Test získání stavu fronty
   test('should get segmentation queue status', async () => {
     // Získání stavu fronty
-    const response = await request(app).get(`/api/v1/segmentation/queue`).set('Authorization', `Bearer ${authToken}`);
+    const response = await request(app)
+      .get(`/api/v1/segmentation/queue`)
+      .set('Authorization', `Bearer ${authToken}`);
 
     // Kontrola odpovědi
     expect(response.status).toBe(200);

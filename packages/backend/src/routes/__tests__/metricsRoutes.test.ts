@@ -59,7 +59,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called
       expect(metricsService.getPrometheusMetrics).toHaveBeenCalled();
@@ -76,7 +80,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -86,7 +94,9 @@ api_response_time_seconds_count 1970
 
     it('handles errors when retrieving metrics', async () => {
       // Set up mock to throw error
-      vi.mocked(metricsService.getPrometheusMetrics).mockRejectedValue(new Error('Failed to collect metrics'));
+      vi.mocked(metricsService.getPrometheusMetrics).mockRejectedValue(
+        new Error('Failed to collect metrics')
+      );
 
       // Mock request
       mockRequest = {
@@ -94,7 +104,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalled();
@@ -140,7 +154,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getApplicationMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getApplicationMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called
       expect(metricsService.getApplicationMetrics).toHaveBeenCalled();
@@ -157,7 +175,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getApplicationMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getApplicationMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -202,7 +224,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getUserActivityMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getUserActivityMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct userId
       expect(metricsService.getUserActivityMetrics).toHaveBeenCalledWith('user-123');
@@ -236,7 +262,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getUserActivityMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getUserActivityMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called
       expect(metricsService.getUserActivityMetrics).toHaveBeenCalledWith('user-123');
@@ -254,7 +284,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getUserActivityMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getUserActivityMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -263,7 +297,9 @@ api_response_time_seconds_count 1970
 
     it('handles user not found errors', async () => {
       // Set up mock to throw not found error
-      vi.mocked(metricsService.getUserActivityMetrics).mockRejectedValue(new ApiError(404, 'User not found'));
+      vi.mocked(metricsService.getUserActivityMetrics).mockRejectedValue(
+        new ApiError(404, 'User not found')
+      );
 
       // Mock request
       mockRequest = {
@@ -272,7 +308,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getUserActivityMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getUserActivityMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -320,7 +360,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getSystemHealthMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getSystemHealthMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called
       expect(metricsService.getSystemHealthMetrics).toHaveBeenCalled();
@@ -337,7 +381,11 @@ api_response_time_seconds_count 1970
       };
 
       // Call the controller
-      await metricsController.getSystemHealthMetrics(mockRequest as Request, mockResponse as Response, mockNext);
+      await metricsController.getSystemHealthMetrics(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));

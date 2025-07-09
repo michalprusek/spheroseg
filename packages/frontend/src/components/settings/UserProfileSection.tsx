@@ -104,7 +104,7 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
 
       // Check if there are form changes or avatar changes
       const hasFormChanges = Object.keys(dataToSend).length > 0;
-      
+
       if (!hasFormChanges && !hasAvatarChanges) {
         showInfo(t('settings.noChanges') || 'No changes to save');
         setIsLoading(false);
@@ -162,11 +162,11 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({ profile }) => {
         <CardTitle>{t('profile.title')}</CardTitle>
         <CardDescription>{t('profile.description')}</CardDescription>
         <div className="mt-4 flex justify-center">
-          <AvatarUploader 
-            currentAvatarUrl={avatarUrl} 
-            onAvatarChange={handleAvatarChange} 
+          <AvatarUploader
+            currentAvatarUrl={avatarUrl}
+            onAvatarChange={handleAvatarChange}
             onUploadRequest={handleAvatarUploadRequest}
-            size="lg" 
+            size="lg"
           />
         </div>
       </CardHeader>

@@ -1,6 +1,6 @@
 /**
  * Express Application Configuration
- * 
+ *
  * This module configures the Express application with all middleware and routes.
  * Separated from server.ts for better testing and modularity.
  */
@@ -20,20 +20,24 @@ export const createApp = (): Application => {
 
   // Enable trust proxy for proper IP detection behind nginx/docker
   app.set('trust proxy', true);
-  
+
   // CRITICAL: Add body parser FIRST before any other middleware
   // This ensures the body is parsed before security checks
-  app.use(express.json({ 
-    limit: '10mb',
-    verify: (req: express.Request, res: express.Response, buf: Buffer) => {
-      // Store raw body for debugging
-      (req as any).rawBody = buf;
-    },
-  }));
-  app.use(express.urlencoded({ 
-    extended: true, 
-    limit: '10mb',
-  }));
+  app.use(
+    express.json({
+      limit: '10mb',
+      verify: (req: express.Request, res: express.Response, buf: Buffer) => {
+        // Store raw body for debugging
+        (req as any).rawBody = buf;
+      },
+    })
+  );
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: '10mb',
+    })
+  );
 
   // Configure all middleware in the correct order
   configureMiddleware(app);
@@ -42,15 +46,17 @@ export const createApp = (): Application => {
   app.get('/health', async (req, res) => {
     try {
       const health = await performHealthCheck();
-      const statusCode = health.overall === 'healthy' ? 200 : 
-                        health.overall === 'degraded' ? 200 : 503;
-      
+      const statusCode =
+        health.overall === 'healthy' ? 200 : health.overall === 'degraded' ? 200 : 503;
+
       res.status(statusCode).json({
         success: health.overall !== 'unhealthy',
         ...health,
       });
     } catch (error) {
-      logger.error('Health check failed', { error: error instanceof Error ? error.message : String(error) });
+      logger.error('Health check failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       res.status(503).json({
         success: false,
         overall: 'unhealthy',
@@ -59,7 +65,6 @@ export const createApp = (): Application => {
       });
     }
   });
-  
 
   // API routes
   app.use('/api', apiRouter);

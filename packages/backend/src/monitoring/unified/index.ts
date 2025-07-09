@@ -1,11 +1,11 @@
 /**
  * Unified Monitoring System
- * 
+ *
  * This module combines all monitoring functionality from:
  * - General monitoring (logging, HTTP, errors)
  * - Performance monitoring (system metrics, performance tracking)
  * - Database monitoring (query patterns, slow queries, connection pools)
- * 
+ *
  * All metrics use a single Prometheus registry for consistency.
  */
 
@@ -18,8 +18,8 @@ import { EventEmitter } from 'events';
 import { PoolClient, QueryResult } from 'pg';
 import NodeCache from 'node-cache';
 import config from '../../config';
-import { 
-  MetricType, 
+import {
+  MetricType,
   PerformanceMonitoringOptions,
   ApiResponseTimeMetric,
   DatabaseQueryMetric,
@@ -54,7 +54,7 @@ const PATTERN_HISTORY_LENGTH = 100;
 export const unifiedRegistry = new Registry();
 
 // Collect default metrics
-collectDefaultMetrics({ 
+collectDefaultMetrics({
   register: unifiedRegistry,
   prefix: METRICS_PREFIX,
 });
@@ -80,7 +80,7 @@ export const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
-    winston.format.json(),
+    winston.format.json()
   ),
   defaultMeta: { service: 'spheroseg-backend' },
   transports: [
@@ -90,7 +90,7 @@ export const logger = winston.createLogger({
         winston.format.printf(({ timestamp, level, message, ...rest }) => {
           const meta = Object.keys(rest).length ? JSON.stringify(rest) : '';
           return `${timestamp} [${level}]: ${message} ${meta}`;
-        }),
+        })
       ),
     }),
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
@@ -364,7 +364,7 @@ class UnifiedMonitoring {
 
     try {
       const memoryUsage = process.memoryUsage();
-      
+
       memoryHeapTotalGauge.set(memoryUsage.heapTotal);
       memoryHeapUsedGauge.set(memoryUsage.heapUsed);
       memoryRssGauge.set(memoryUsage.rss);
@@ -441,7 +441,7 @@ class UnifiedMonitoring {
     method: string,
     statusCode: number,
     responseTime: number,
-    userId?: string,
+    userId?: string
   ): void {
     if (!this.options.enabled) return;
 
@@ -477,7 +477,12 @@ class UnifiedMonitoring {
     metricsEmitter.emit(MetricType.DATABASE_QUERY, metric);
   }
 
-  recordFileOperation(operation: string, filePath: string, duration: number, fileSize?: number): void {
+  recordFileOperation(
+    operation: string,
+    filePath: string,
+    duration: number,
+    fileSize?: number
+  ): void {
     if (!this.options.enabled) return;
 
     const metric: FileOperationMetric = {
@@ -494,7 +499,12 @@ class UnifiedMonitoring {
     metricsEmitter.emit(MetricType.FILE_OPERATION, metric);
   }
 
-  recordMLInference(model: string, inputSize: number, duration: number, memoryUsage?: number): void {
+  recordMLInference(
+    model: string,
+    inputSize: number,
+    duration: number,
+    memoryUsage?: number
+  ): void {
     if (!this.options.enabled) return;
 
     const metric: MLInferenceMetric = {
@@ -558,7 +568,7 @@ function extractTables(query: string): string[] {
     /\bDELETE\s+FROM\s+([a-zA-Z0-9_"]+)/gi,
   ];
 
-  patterns.forEach(regex => {
+  patterns.forEach((regex) => {
     let match;
     while ((match = regex.exec(normalizedQuery)) !== null) {
       tables.push(match[1].replace(/"/g, '').toLowerCase());
@@ -600,7 +610,11 @@ function generatePatternId(normalizedQuery: string): string {
 /**
  * Update query pattern statistics
  */
-function updateQueryPatternStats(query: string, durationMs: number, rowCount?: number): QueryPatternStats {
+function updateQueryPatternStats(
+  query: string,
+  durationMs: number,
+  rowCount?: number
+): QueryPatternStats {
   const normalizedQuery = normalizeQuery(query);
   const patternId = generatePatternId(normalizedQuery);
   const operation = extractOperationType(query);
@@ -681,7 +695,7 @@ export function requestLoggerMiddleware(req: Request, res: Response, next: NextF
 
     const duration = (Date.now() - startTime) / 1000;
     const logLevel = res.statusCode >= 400 ? 'warn' : 'info';
-    
+
     logger[logLevel](`HTTP ${req.method} ${req.path} ${res.statusCode}`, {
       requestId,
       method: req.method,
@@ -693,12 +707,19 @@ export function requestLoggerMiddleware(req: Request, res: Response, next: NextF
     if (METRICS_ENABLED) {
       const route = req.route?.path || 'unknown';
 
-      httpRequestDurationHistogram.labels(req.method, route, res.statusCode.toString()).observe(duration);
+      httpRequestDurationHistogram
+        .labels(req.method, route, res.statusCode.toString())
+        .observe(duration);
       httpRequestCounter.labels(req.method, route, res.statusCode.toString()).inc();
 
       if (res.statusCode >= 400) {
         httpErrorCounter
-          .labels(req.method, route, res.statusCode.toString(), res.statusCode >= 500 ? 'server_error' : 'client_error')
+          .labels(
+            req.method,
+            route,
+            res.statusCode.toString(),
+            res.statusCode >= 500 ? 'server_error' : 'client_error'
+          )
           .inc();
       }
 
@@ -727,7 +748,7 @@ export function errorHandlerMiddleware(err: any, req: Request, res: Response, ne
 
   // Import ApiError for proper error handling
   const { ApiError } = require('../../utils/ApiError');
-  
+
   // Convert to ApiError if needed
   let apiError = err;
   if (!(err instanceof ApiError)) {
@@ -758,7 +779,9 @@ export function errorHandlerMiddleware(err: any, req: Request, res: Response, ne
 
     httpRequestDurationHistogram.labels(req.method, route, statusCode.toString()).observe(duration);
     httpRequestCounter.labels(req.method, route, statusCode.toString()).inc();
-    httpErrorCounter.labels(req.method, route, statusCode.toString(), apiError.code || 'UNKNOWN_ERROR').inc();
+    httpErrorCounter
+      .labels(req.method, route, statusCode.toString(), apiError.code || 'UNKNOWN_ERROR')
+      .inc();
     activeRequestsGauge.dec();
   }
 
@@ -780,7 +803,7 @@ export function errorHandlerMiddleware(err: any, req: Request, res: Response, ne
 export async function monitorQuery<T>(
   queryText: string,
   params: any[],
-  queryFn: () => Promise<QueryResult<T>>,
+  queryFn: () => Promise<QueryResult<T>>
 ): Promise<QueryResult<T>> {
   const startTime = Date.now();
   const operation = extractOperationType(queryText);
@@ -792,7 +815,10 @@ export async function monitorQuery<T>(
     const durationMs = Date.now() - startTime;
     const durationSec = durationMs / 1000;
 
-    databaseQueryDurationHistogram.observe({ operation, table: primaryTable, status: 'success' }, durationSec);
+    databaseQueryDurationHistogram.observe(
+      { operation, table: primaryTable, status: 'success' },
+      durationSec
+    );
 
     if (result.rows) {
       queryRowsHistogram.observe({ operation, table: primaryTable }, result.rowCount || 0);
@@ -819,8 +845,13 @@ export async function monitorQuery<T>(
     const durationMs = Date.now() - startTime;
     const durationSec = durationMs / 1000;
 
-    databaseQueryDurationHistogram.observe({ operation, table: primaryTable, status: 'error' }, durationSec);
-    databaseErrorCounter.labels(operation, primaryTable, error instanceof Error ? error.name : 'DatabaseError').inc();
+    databaseQueryDurationHistogram.observe(
+      { operation, table: primaryTable, status: 'error' },
+      durationSec
+    );
+    databaseErrorCounter
+      .labels(operation, primaryTable, error instanceof Error ? error.name : 'DatabaseError')
+      .inc();
 
     logger.error('Database query error', {
       query: queryText,
@@ -846,12 +877,12 @@ export function measureDatabaseQuery<T>(queryType: string, queryFn: () => Promis
 
   return queryFn()
     .then((result) => {
-      const duration = (Date.now() - startTime);
+      const duration = Date.now() - startTime;
       monitoring.recordDatabaseQuery(queryType, 'unknown', duration);
       return result;
     })
     .catch((error) => {
-      const duration = (Date.now() - startTime);
+      const duration = Date.now() - startTime;
       logger.error(`Database query error: ${queryType}`, {
         queryType,
         error: error.message,
@@ -866,7 +897,10 @@ export function measureDatabaseQuery<T>(queryType: string, queryFn: () => Promis
 /**
  * Measure ML service request
  */
-export function measureMlServiceRequest<T>(endpoint: string, requestFn: () => Promise<T>): Promise<T> {
+export function measureMlServiceRequest<T>(
+  endpoint: string,
+  requestFn: () => Promise<T>
+): Promise<T> {
   const startTime = Date.now();
 
   return requestFn()
@@ -880,7 +914,7 @@ export function measureMlServiceRequest<T>(endpoint: string, requestFn: () => Pr
       const duration = (Date.now() - startTime) / 1000;
       mlServiceRequestDurationHistogram.labels(endpoint, 'default').observe(duration);
       mlServiceErrorCounter.labels(endpoint, error.name || 'MlServiceError').inc();
-      
+
       logger.error(`ML service request error: ${endpoint}`, {
         endpoint,
         error: error.message,
@@ -899,7 +933,7 @@ export function updateSegmentationQueueSize(
   pendingCount: number,
   processingCount: number,
   completedCount: number,
-  failedCount: number,
+  failedCount: number
 ) {
   if (METRICS_ENABLED) {
     segmentationQueueSizeGauge.labels('pending').set(pendingCount);
@@ -968,7 +1002,9 @@ export function getTopSlowQueries(limit: number = 10): QueryPatternStats[] {
 
 export function getQueryPatternsByTable(table: string): QueryPatternStats[] {
   const patterns = patternCache.keys().map((key) => patternCache.get<QueryPatternStats>(key)!);
-  return patterns.filter((pattern) => pattern.tables.some((t) => t.toLowerCase() === table.toLowerCase()));
+  return patterns.filter((pattern) =>
+    pattern.tables.some((t) => t.toLowerCase() === table.toLowerCase())
+  );
 }
 
 export function getQueryFrequencyStats(): Record<string, number> {
@@ -1041,7 +1077,4 @@ export default {
 };
 
 // Export individual components for compatibility
-export { 
-  monitoring as performanceMonitoring,
-  logger as unifiedLogger,
-};
+export { monitoring as performanceMonitoring, logger as unifiedLogger };

@@ -42,7 +42,7 @@ class RequestDeduplicator {
       method?: string;
       body?: any;
       skipDedup?: boolean;
-    }
+    },
   ): Promise<T> {
     // Skip deduplication if requested
     if (options?.skipDedup) {
@@ -65,11 +65,11 @@ class RequestDeduplicator {
     // Create new request
     console.log(`[RequestDeduplicator] Creating new request for: ${key}`);
     const promise = requestFn();
-    
+
     // Store the pending request
     this.pendingRequests.set(key, {
       promise,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Remove from pending when complete

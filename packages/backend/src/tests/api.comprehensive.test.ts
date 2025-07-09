@@ -56,7 +56,9 @@ describe('Comprehensive API Tests', () => {
     });
 
     it('should get user profile with valid token', async () => {
-      const response = await request(app).get('/api/users/profile').set('Authorization', `Bearer ${authToken}`);
+      const response = await request(app)
+        .get('/api/users/profile')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id');
@@ -65,7 +67,9 @@ describe('Comprehensive API Tests', () => {
     });
 
     it('should not get user profile with invalid token', async () => {
-      const response = await request(app).get('/api/users/profile').set('Authorization', 'Bearer invalid-token');
+      const response = await request(app)
+        .get('/api/users/profile')
+        .set('Authorization', 'Bearer invalid-token');
 
       expect(response.status).toBe(401);
     });
@@ -73,7 +77,9 @@ describe('Comprehensive API Tests', () => {
 
   describe('Project Endpoints', () => {
     it('should get all projects for the user', async () => {
-      const response = await request(app).get('/api/projects').set('Authorization', `Bearer ${authToken}`);
+      const response = await request(app)
+        .get('/api/projects')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -83,7 +89,9 @@ describe('Comprehensive API Tests', () => {
     });
 
     it('should get a specific project by ID', async () => {
-      const response = await request(app).get(`/api/projects/${projectId}`).set('Authorization', `Bearer ${authToken}`);
+      const response = await request(app)
+        .get(`/api/projects/${projectId}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id');
@@ -109,7 +117,9 @@ describe('Comprehensive API Tests', () => {
       expect(response.body.description).toBe(newProject.description);
 
       // Clean up - delete the created project
-      await request(app).delete(`/api/projects/${response.body.id}`).set('Authorization', `Bearer ${authToken}`);
+      await request(app)
+        .delete(`/api/projects/${response.body.id}`)
+        .set('Authorization', `Bearer ${authToken}`);
     });
 
     it('should update a project', async () => {
@@ -137,7 +147,7 @@ describe('Comprehensive API Tests', () => {
       const testImagePath = path.join(__dirname, 'test-image.jpg');
       fs.writeFileSync(
         testImagePath,
-        Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'),
+        Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
       );
 
       const response = await request(app)
@@ -171,7 +181,9 @@ describe('Comprehensive API Tests', () => {
     });
 
     it('should get a specific image by ID', async () => {
-      const response = await request(app).get(`/api/images/${imageId}`).set('Authorization', `Bearer ${authToken}`);
+      const response = await request(app)
+        .get(`/api/images/${imageId}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id');
@@ -213,7 +225,9 @@ describe('Comprehensive API Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('status');
       // Status could be 'pending', 'processing', 'completed', or 'failed'
-      expect(['none', 'pending', 'processing', 'completed', 'failed']).toContain(response.body.status);
+      expect(['none', 'pending', 'processing', 'completed', 'failed']).toContain(
+        response.body.status
+      );
     });
 
     // Note: We can't reliably test getting segmentation results as they might not be ready yet
@@ -262,7 +276,9 @@ describe('Comprehensive API Tests', () => {
 
   describe('User Statistics Endpoints', () => {
     it('should get user statistics', async () => {
-      const response = await request(app).get('/api/users/me/statistics').set('Authorization', `Bearer ${authToken}`);
+      const response = await request(app)
+        .get('/api/users/me/statistics')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('projectsCount');

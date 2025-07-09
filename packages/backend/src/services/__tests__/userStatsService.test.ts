@@ -48,8 +48,8 @@ describe('UserStatsService', () => {
         .mockResolvedValueOnce({ rows: [{ count: '20' }] }) // total images
         .mockResolvedValueOnce({ rows: [{ exists: true }] }) // segmentation_status column exists
         .mockResolvedValueOnce({ rows: [{ count: '15' }] }) // completed segmentations
-        .mockResolvedValueOnce({ 
-          rows: [{ storage_used_bytes: '1000000', storage_limit_bytes: '10737418240' }] 
+        .mockResolvedValueOnce({
+          rows: [{ storage_used_bytes: '1000000', storage_limit_bytes: '10737418240' }],
         }) // storage info
         .mockResolvedValueOnce({ rows: [] }) // recent images
         .mockResolvedValueOnce({ rows: [] }) // recent projects
@@ -63,7 +63,7 @@ describe('UserStatsService', () => {
 
       // Verify segmentation_status column check
       expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('segmentation_status'));
-      
+
       // Verify the correct query was used for completed segmentations
       expect(mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('i.segmentation_status = $2'),
@@ -82,8 +82,8 @@ describe('UserStatsService', () => {
         .mockResolvedValueOnce({ rows: [{ count: '20' }] }) // total images
         .mockResolvedValueOnce({ rows: [{ exists: false }] }) // segmentation_status column doesn't exist
         .mockResolvedValueOnce({ rows: [{ count: '10' }] }) // completed segmentations using status
-        .mockResolvedValueOnce({ 
-          rows: [{ storage_used_bytes: '1000000', storage_limit_bytes: '10737418240' }] 
+        .mockResolvedValueOnce({
+          rows: [{ storage_used_bytes: '1000000', storage_limit_bytes: '10737418240' }],
         }) // storage info
         .mockResolvedValueOnce({ rows: [] }) // recent images
         .mockResolvedValueOnce({ rows: [] }) // recent projects
@@ -96,10 +96,10 @@ describe('UserStatsService', () => {
       const result = await userStatsService.getUserStats(mockPool, userId);
 
       // Verify fallback query was used
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('i.status = $2'),
-        [userId, 'completed']
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('i.status = $2'), [
+        userId,
+        'completed',
+      ]);
 
       // Verify warning was logged
       expect(logger.warn).toHaveBeenCalledWith(
@@ -120,8 +120,8 @@ describe('UserStatsService', () => {
 
       // Continue with other mocks to complete the function
       mockPool.query
-        .mockResolvedValueOnce({ 
-          rows: [{ storage_used_bytes: '1000000', storage_limit_bytes: '10737418240' }] 
+        .mockResolvedValueOnce({
+          rows: [{ storage_used_bytes: '1000000', storage_limit_bytes: '10737418240' }],
         }) // storage info
         .mockResolvedValueOnce({ rows: [] }) // recent images
         .mockResolvedValueOnce({ rows: [] }) // recent projects

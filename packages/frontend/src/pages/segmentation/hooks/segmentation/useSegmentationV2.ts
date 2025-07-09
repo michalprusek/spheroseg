@@ -152,22 +152,22 @@ export const useSegmentationV2 = (
   const backgroundRefreshControllerRef = useRef<AbortController | null>(null);
   const hasFetchedRef = useRef<Set<string>>(new Set());
   const isSavingRef = useRef<boolean>(false);
-  
+
   // Refs for frequently changing values to prevent re-render loops
   const segmentationDataRef = useRef<SegmentationData | null>(segmentationData);
   const interactionStateRef = useRef<InteractionState>(interactionState);
   const transformRef = useRef<TransformState>(transform);
   const fetchDataRef = useRef<() => Promise<void>>();
-  
+
   // Update refs when state changes
   useEffect(() => {
     segmentationDataRef.current = segmentationData;
   }, [segmentationData]);
-  
+
   useEffect(() => {
     interactionStateRef.current = interactionState;
   }, [interactionState]);
-  
+
   useEffect(() => {
     transformRef.current = transform;
   }, [transform]);
@@ -302,9 +302,7 @@ export const useSegmentationV2 = (
 
       // Handle ID mismatch between requested and actual image
       if (imageIdRef.current !== fetchedImageData.id) {
-        logger.warn(
-          `Found different image ID: ${fetchedImageData.id} (requested: ${imageIdRef.current})`,
-        );
+        logger.warn(`Found different image ID: ${fetchedImageData.id} (requested: ${imageIdRef.current})`);
         // Store the actual ID for segmentation fetching
         fetchedImageData.actualId = fetchedImageData.id;
       }
@@ -408,15 +406,16 @@ export const useSegmentationV2 = (
       }
 
       setIsLoading(false);
-      
+
       // Clear the fetch key after successful completion
       setTimeout(() => {
         hasFetchedRef.current.delete(fetchKey);
       }, 5000); // Keep it for 5 seconds to prevent rapid re-fetches
-    } catch (error: any) { // Explicitly type error as any for now
+    } catch (error: any) {
+      // Explicitly type error as any for now
       // Check if component is still mounted before updating state
       if (!isMounted) return;
-      
+
       // Clear the fetch key on error too
       hasFetchedRef.current.delete(fetchKey);
 
@@ -457,11 +456,13 @@ export const useSegmentationV2 = (
     let isMounted = true;
 
     // Skip if no project ID or image ID
-    if (!projectId || !initialImageId) { // Use initialImageId directly here
+    if (!projectId || !initialImageId) {
+      // Use initialImageId directly here
       setIsLoading(false);
-      return () => { isMounted = false; }; // Cleanup for this case
+      return () => {
+        isMounted = false;
+      }; // Cleanup for this case
     }
-
 
     // Store the requested ID in the ref
     imageIdRef.current = initialImageId;
@@ -469,7 +470,8 @@ export const useSegmentationV2 = (
     // Start the fetch with a small delay to avoid race conditions
     // This will call the `fetchData` useCallback function
     const timeoutId = setTimeout(() => {
-      if (isMounted && fetchDataRef.current) { // Only call fetchData if component is mounted
+      if (isMounted && fetchDataRef.current) {
+        // Only call fetchData if component is mounted
         fetchDataRef.current();
       }
     }, 50);
@@ -552,6 +554,54 @@ export const useSegmentationV2 = (
     setLastAutoAddedPoint,
   ]);
 
+  // Listen for real-time segmentation status updates
+  useEffect(() => {
+    const handleSegmentationStatusUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        imageId: string;
+        status: string;
+        error?: string;
+        resultPath?: string;
+      }>;
+
+      const { imageId, status } = customEvent.detail;
+
+      // Check if this update is for our current image
+      if (imageId === imageIdRef.current && segmentationData) {
+        console.log(`[useSegmentationV2] Received status update for current image: ${status}`);
+
+        // Update the segmentation status
+        setSegmentationDataWithHistory(
+          {
+            ...segmentationData,
+            status: status,
+          },
+          false,
+        );
+
+        // If status is completed or failed, and we're resegmenting, stop the spinner
+        if ((status === 'completed' || status === 'failed') && isResegmenting) {
+          setIsResegmenting(false);
+
+          if (status === 'completed') {
+            // Fetch the updated segmentation data
+            fetchDataRef.current?.();
+            toast.success(t('segmentationPage.resegmentationCompleted') || 'Resegmentation completed successfully.');
+          } else if (status === 'failed') {
+            toast.error(t('segmentationPage.resegmentationFailed') || 'Resegmentation failed.');
+          }
+        }
+      }
+    };
+
+    // Listen for the event
+    window.addEventListener('image-status-update', handleSegmentationStatusUpdate);
+
+    return () => {
+      window.removeEventListener('image-status-update', handleSegmentationStatusUpdate);
+    };
+  }, [segmentationData, imageIdRef.current, isResegmenting, setSegmentationDataWithHistory, t]);
+
   // Function to handle mouse down
   const onMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -596,12 +646,10 @@ export const useSegmentationV2 = (
       const currentSegmentationData = segmentationDataRef.current;
       const currentInteractionState = interactionStateRef.current;
       const currentTransform = transformRef.current;
-      
+
       // If we're dragging a vertex, use updateDuringDrag for the new dragging system
       // Otherwise use setSegmentationDataWithHistory for normal operations
-      const updateFn = currentInteractionState.isDraggingVertex
-        ? updateDuringDrag
-        : setSegmentationDataWithHistory;
+      const updateFn = currentInteractionState.isDraggingVertex ? updateDuringDrag : setSegmentationDataWithHistory;
 
       // Call the main mouse move handler with current values from refs
       handleMouseMove(
@@ -651,13 +699,20 @@ export const useSegmentationV2 = (
       const originalPosition = interactionState.originalVertexPosition; // Capture the original position before resetting
 
       // First reset the drag state to stop the dragging
-      handleMouseUp(e, interactionState, setInteractionState, segmentationData, setSegmentationDataWithHistory, finishDragging);
+      handleMouseUp(
+        e,
+        interactionState,
+        setInteractionState,
+        segmentationData,
+        setSegmentationDataWithHistory,
+        finishDragging,
+      );
 
       // The dragging system now handles history management properly
       // No need for additional history management here
 
       // Finally, fully clear the drag state including originalVertexPosition
-      setInteractionState(prevState => ({
+      setInteractionState((prevState) => ({
         ...prevState,
         draggedVertexInfo: null,
         originalVertexPosition: null,
@@ -668,7 +723,8 @@ export const useSegmentationV2 = (
 
   // Function to handle wheel events for zooming
   const handleWheelEvent = useCallback(
-    (e: React.WheelEvent<HTMLDivElement>) => { // Changed type to React.WheelEvent<HTMLDivElement>
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      // Changed type to React.WheelEvent<HTMLDivElement>
       handleWheel(e, transform, canvasRef, setTransform);
     },
     [transform, canvasRef, setTransform],
@@ -680,7 +736,8 @@ export const useSegmentationV2 = (
     let lastWheelTimestamp = 0;
     const throttleDelay = 10; // 10ms throttling for smoother performance
 
-    const wheelEventHandler = (e: React.WheelEvent<HTMLDivElement>) => { // Changed type to React.WheelEvent<HTMLDivElement>
+    const wheelEventHandler = (e: React.WheelEvent<HTMLDivElement>) => {
+      // Changed type to React.WheelEvent<HTMLDivElement>
       const now = performance.now();
 
       // Throttle events for smoother performance, especially on trackpads
@@ -723,23 +780,32 @@ export const useSegmentationV2 = (
       setIsResegmenting(true);
       console.log('[useSegmentationV2] Requesting resegmentation for image:', imageIdRef.current);
 
-      toast.info('Spouštím opětovnou segmentaci pomocí neuronové sítě ResUNet...');
+      toast.info(t('segmentation.startingResegmentation') || 'Starting resegmentation with ResUNet neural network...');
 
-      // Použijeme stejný endpoint a parametry jako v ImageCard
-      await apiClient.post(`/api/segmentations/batch`, {
-        imageIds: [imageIdRef.current],
-        priority: 5, // Vysoká priorita pro re-trigger
-        model_type: 'resunet', // Explicitně specifikujeme model
+      // Use the dedicated resegment endpoint that deletes old data
+      await apiClient.post(`/api/segmentation/${imageIdRef.current}/resegment`, {
+        project_id: projectId,
       });
 
-      toast.success('Úloha opětovné segmentace pomocí neuronové sítě byla úspěšně zařazena.');
+      toast.success(t('segmentation.resegmentQueued') || 'Resegmentation task has been queued successfully.');
 
-      // Neukončujeme isResegmenting stav - tlačítko zůstane v režimu načítání
-      // Místo toho budeme čekat na notifikaci o dokončení segmentace
+      // Update the segmentation status to 'queued' immediately
+      if (segmentationData) {
+        setSegmentationDataWithHistory(
+          {
+            ...segmentationData,
+            status: 'queued',
+          },
+          false,
+        );
+      }
 
-      // Poll for updated segmentation data
-      const POLLING_INTERVAL_MS = 5000;
-      const MAX_POLLING_ATTEMPTS = 60;
+      // Listen for status updates via WebSocket or polling
+      // The isResegmenting state will remain true until we receive a completion status
+
+      // Start polling for status updates
+      const POLLING_INTERVAL_MS = 3000;
+      const MAX_POLLING_ATTEMPTS = 100;
       let attempts = 0;
 
       const pollForUpdates = async () => {
@@ -758,16 +824,27 @@ export const useSegmentationV2 = (
         );
 
         try {
-          // Nejprve zkontrolujeme stav obrázku
+          // Check the segmentation status
           const segmentationResponse = await apiClient.get(`/api/images/${imageIdRef.current}/segmentation`);
           const segmentationStatus = segmentationResponse.data?.status;
 
           console.log(`[useSegmentationV2] Current segmentation status: ${segmentationStatus}`);
 
+          // Update the status in UI
+          if (segmentationData && segmentationStatus !== segmentationData.status) {
+            setSegmentationDataWithHistory(
+              {
+                ...segmentationData,
+                status: segmentationStatus,
+              },
+              false,
+            );
+          }
+
           if (segmentationStatus === 'completed') {
             console.log('[useSegmentationV2] Image segmentation completed, fetching updated data');
 
-            // Načteme aktualizovaná segmentační data
+            // Fetch the complete updated segmentation data
             const refreshedSegmentation = segmentationResponse.data;
 
             // Update the segmentation data
@@ -783,11 +860,11 @@ export const useSegmentationV2 = (
             return;
           }
 
-          // Pokud segmentace stále probíhá, pokračujeme v pollování
+          // Continue polling if status is 'queued' or 'processing'
           setTimeout(pollForUpdates, POLLING_INTERVAL_MS);
         } catch (error) {
           console.error('[useSegmentationV2] Error polling for updated segmentation:', error);
-          // Při chybě ukončíme polling a resetujeme stav
+          // On error, stop polling and reset state
           console.log('[useSegmentationV2] Resetting resegmenting state due to error');
           setIsResegmenting(false);
           toast.error(t('segmentation.resegmentError') || 'Failed to check segmentation status');
@@ -804,6 +881,7 @@ export const useSegmentationV2 = (
   }, [
     segmentationData,
     imageData,
+    projectId,
     t,
     // imageIdRef.current is excluded as it's a ref
     setSegmentationDataWithHistory,

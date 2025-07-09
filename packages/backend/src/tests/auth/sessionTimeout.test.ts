@@ -45,7 +45,10 @@ interface ActivityLog {
 
 // Mock database module with compatible signature for Jest
 // The issue is that jest.fn() expects a more generic function signature
-const mockDbQueryImplementation = async (query: string, params: Array<string | number | Date> = []): Promise<QueryResult> => {
+const mockDbQueryImplementation = async (
+  query: string,
+  params: Array<string | number | Date> = []
+): Promise<QueryResult> => {
   // User lookup
   if (query.includes('SELECT * FROM users WHERE')) {
     return { rows: [MOCK_USER] };
@@ -153,7 +156,10 @@ const mockDbQueryImplementation = async (query: string, params: Array<string | n
 // Use a more generic type for jest.fn()
 const mockDbQuery = jest.fn().mockImplementation((...args: unknown[]) => {
   const [query, params] = args;
-  return mockDbQueryImplementation(query as string, (params as Array<string | number | Date>) || []);
+  return mockDbQueryImplementation(
+    query as string,
+    (params as Array<string | number | Date>) || []
+  );
 });
 
 // Mock collections for state
@@ -162,7 +168,12 @@ const mockSessions = new Map<string, Session>();
 const blacklistedTokens = new Set<string>();
 
 // Create JWT helper with direct stringify approach to avoid type issues
-const createToken = (userId: string, email: string, expiresIn: string = '1h', deviceId?: string): string => {
+const createToken = (
+  userId: string,
+  email: string,
+  expiresIn: string = '1h',
+  deviceId?: string
+): string => {
   // Define the payload
   const payload: Record<string, string | undefined> = {
     id: userId,
@@ -233,7 +244,9 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
     // Check for session timeout (for tokens that are still valid but sessions inactive)
     // Find session for the user and device
-    const sessionKey = decoded.deviceId ? `${decoded.id}-${decoded.deviceId}` : `${decoded.id}-default-device`;
+    const sessionKey = decoded.deviceId
+      ? `${decoded.id}-${decoded.deviceId}`
+      : `${decoded.id}-default-device`;
     const session = mockSessions.get(sessionKey);
 
     if (session) {
@@ -349,7 +362,9 @@ describe('Session Timeout and Token Management', () => {
     await new Promise((resolve) => setTimeout(resolve, 1100));
 
     // Attempt to access a protected resource with expired token
-    const response = await request(app).get('/api/user/profile').set('Authorization', `Bearer ${shortLivedToken}`);
+    const response = await request(app)
+      .get('/api/user/profile')
+      .set('Authorization', `Bearer ${shortLivedToken}`);
 
     expect(response.status).toBe(401);
     expect(response.body).toHaveProperty('message');
@@ -379,7 +394,9 @@ describe('Session Timeout and Token Management', () => {
     }
 
     // Make another request after simulated inactivity
-    const response = await request(app).get('/api/user/profile').set('Authorization', `Bearer ${token}`);
+    const response = await request(app)
+      .get('/api/user/profile')
+      .set('Authorization', `Bearer ${token}`);
 
     // Even though the token is still valid, the session should be considered inactive
     expect(response.status).toBe(401);
@@ -394,7 +411,9 @@ describe('Session Timeout and Token Management', () => {
 
     // Make multiple requests to keep the session active
     for (let i = 0; i < 3; i++) {
-      const response = await request(app).get('/api/user/profile').set('Authorization', `Bearer ${token}`);
+      const response = await request(app)
+        .get('/api/user/profile')
+        .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
 
@@ -412,7 +431,9 @@ describe('Session Timeout and Token Management', () => {
     }
 
     // Verify session remains active
-    const finalResponse = await request(app).get('/api/user/profile').set('Authorization', `Bearer ${token}`);
+    const finalResponse = await request(app)
+      .get('/api/user/profile')
+      .set('Authorization', `Bearer ${token}`);
 
     expect(finalResponse.status).toBe(200);
   });
@@ -424,12 +445,16 @@ describe('Session Timeout and Token Management', () => {
     const desktopToken = createToken(MOCK_USER_ID, MOCK_USER.email, '1h', 'desktop-device');
 
     // Use the mobile token
-    const mobileResponse = await request(app).get('/api/user/profile').set('Authorization', `Bearer ${mobileToken}`);
+    const mobileResponse = await request(app)
+      .get('/api/user/profile')
+      .set('Authorization', `Bearer ${mobileToken}`);
 
     expect(mobileResponse.status).toBe(200);
 
     // Use the desktop token
-    const desktopResponse = await request(app).get('/api/user/profile').set('Authorization', `Bearer ${desktopToken}`);
+    const desktopResponse = await request(app)
+      .get('/api/user/profile')
+      .set('Authorization', `Bearer ${desktopToken}`);
 
     expect(desktopResponse.status).toBe(200);
 
@@ -445,16 +470,21 @@ describe('Session Timeout and Token Management', () => {
     const token = createToken(MOCK_USER_ID, MOCK_USER.email, '1h');
 
     // Make a request to verify the token works
-    const initialResponse = await request(app).get('/api/user/profile').set('Authorization', `Bearer ${token}`);
+    const initialResponse = await request(app)
+      .get('/api/user/profile')
+      .set('Authorization', `Bearer ${token}`);
 
     expect(initialResponse.status).toBe(200);
 
     // Change password
-    await request(app).post('/api/auth/change-password').set('Authorization', `Bearer ${token}`).send({
-      current_password: 'password123',
-      new_password: 'newpassword123',
-      confirm_password: 'newpassword123',
-    });
+    await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        current_password: 'password123',
+        new_password: 'newpassword123',
+        confirm_password: 'newpassword123',
+      });
 
     // Token should be blacklisted
     expect(blacklistedTokens.has(token)).toBe(true);

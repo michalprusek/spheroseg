@@ -99,35 +99,32 @@ class ApiClient {
     });
 
     // Response interceptor for error handling
-    this.addResponseInterceptor(
-      undefined,
-      async (error) => {
-        // Handle 401 Unauthorized
-        if (error.status === 401 && !error.config?.skipAuth) {
-          // Try to refresh token
-          try {
-            await this.refreshToken();
-            // Retry the original request
-            return this.request(error.config!);
-          } catch (refreshError) {
-            // Refresh failed, logout user
-            useStore.getState().logout();
-            if (error.config?.showErrorToast) {
-              toastService.error('Session expired. Please login again.');
-            }
-            throw error;
+    this.addResponseInterceptor(undefined, async (error) => {
+      // Handle 401 Unauthorized
+      if (error.status === 401 && !error.config?.skipAuth) {
+        // Try to refresh token
+        try {
+          await this.refreshToken();
+          // Retry the original request
+          return this.request(error.config!);
+        } catch (refreshError) {
+          // Refresh failed, logout user
+          useStore.getState().logout();
+          if (error.config?.showErrorToast) {
+            toastService.error('Session expired. Please login again.');
           }
+          throw error;
         }
-
-        // Handle other errors
-        if (error.config?.showErrorToast) {
-          const message = this.getErrorMessage(error);
-          toastService.error(message);
-        }
-
-        throw error;
       }
-    );
+
+      // Handle other errors
+      if (error.config?.showErrorToast) {
+        const message = this.getErrorMessage(error);
+        toastService.error(message);
+      }
+
+      throw error;
+    });
   }
 
   /**
@@ -142,7 +139,7 @@ class ApiClient {
    */
   addResponseInterceptor(
     onFulfilled?: (response: ApiResponse) => ApiResponse | Promise<ApiResponse>,
-    onRejected?: (error: ApiError) => any
+    onRejected?: (error: ApiError) => any,
   ) {
     this.responseInterceptors.push({ onFulfilled, onRejected });
   }
@@ -168,9 +165,7 @@ class ApiClient {
 
     // Create abort controller for timeout and cancellation
     const abortController = config.cancelToken || new AbortController();
-    const timeoutId = config.timeout
-      ? setTimeout(() => abortController.abort(), config.timeout)
-      : undefined;
+    const timeoutId = config.timeout ? setTimeout(() => abortController.abort(), config.timeout) : undefined;
 
     // Build URL with params
     const url = this.buildUrl(config.url || '', config.params);
@@ -244,7 +239,7 @@ class ApiClient {
       if (config.retryCount && config.retryCount > 0 && this.shouldRetry(apiError)) {
         const delay = RETRY_DELAY * (config.retryCount || 1);
         await new Promise((resolve) => setTimeout(resolve, delay));
-        
+
         logger.info(`Retrying request: ${requestKey}`);
         return this.request({
           ...config,
@@ -320,11 +315,7 @@ class ApiClient {
   /**
    * Upload file with progress
    */
-  async upload<T = any>(
-    url: string,
-    file: File | FormData,
-    config?: ApiRequestConfig
-  ): Promise<ApiResponse<T>> {
+  async upload<T = any>(url: string, file: File | FormData, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     const formData = file instanceof FormData ? file : new FormData();
     if (file instanceof File) {
       formData.append('file', file);
@@ -368,7 +359,7 @@ class ApiClient {
    */
   private buildUrl(endpoint: string, params?: Record<string, any>): string {
     const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
-    
+
     if (!params || Object.keys(params).length === 0) {
       return url;
     }
@@ -388,15 +379,15 @@ class ApiClient {
    */
   private prepareBody(data: any, headers: any): any {
     if (!data) return undefined;
-    
+
     // FormData should be sent as-is
     if (data instanceof FormData) return data;
-    
+
     // JSON stringify for JSON content type
     if (headers['Content-Type']?.includes('application/json')) {
       return JSON.stringify(data);
     }
-    
+
     return data;
   }
 
@@ -405,7 +396,7 @@ class ApiClient {
    */
   private async parseResponse<T>(response: Response): Promise<T> {
     const contentType = response.headers.get('content-type');
-    
+
     if (contentType?.includes('application/json')) {
       return response.json();
     } else if (contentType?.includes('text/')) {
@@ -453,7 +444,7 @@ class ApiClient {
     if (typeof error.data === 'object' && error.data?.message) {
       return error.data.message;
     }
-    
+
     if (typeof error.data === 'string') {
       return error.data;
     }
@@ -465,7 +456,7 @@ class ApiClient {
       case 401:
         return 'Unauthorized. Please login again.';
       case 403:
-        return 'Access forbidden. You don\'t have permission.';
+        return "Access forbidden. You don't have permission.";
       case 404:
         return 'Resource not found.';
       case 409:
@@ -501,10 +492,14 @@ class ApiClient {
       throw new Error('No refresh token available');
     }
 
-    const response = await this.post('/auth/refresh', { refreshToken }, {
-      skipAuth: true,
-      showErrorToast: false,
-    });
+    const response = await this.post(
+      '/auth/refresh',
+      { refreshToken },
+      {
+        skipAuth: true,
+        showErrorToast: false,
+      },
+    );
 
     const { accessToken, refreshToken: newRefreshToken } = response.data;
     useStore.getState().setTokens({

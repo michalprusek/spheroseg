@@ -60,7 +60,12 @@ export const ImageDisplay = ({
         setCurrentStatus(data.status);
 
         // Trigger queue status update
-        if (data.status === 'processing' || data.status === 'completed' || data.status === 'failed' || data.status === 'queued') {
+        if (
+          data.status === 'processing' ||
+          data.status === 'completed' ||
+          data.status === 'failed' ||
+          data.status === 'queued'
+        ) {
           console.log(`ImageDisplay: Dispatching queue-status-update for image ${data.imageId}`);
 
           // Use setTimeout to ensure the status update is processed first
@@ -143,7 +148,9 @@ export const ImageDisplay = ({
           if (response.data && response.data.status) {
             const apiStatus = response.data.status;
             if (apiStatus !== currentStatus) {
-              console.log(`ImageDisplay: Status polling detected change for image ${image.id}: ${currentStatus} → ${apiStatus}`);
+              console.log(
+                `ImageDisplay: Status polling detected change for image ${image.id}: ${currentStatus} → ${apiStatus}`,
+              );
               setCurrentStatus(apiStatus);
 
               // If status changed to completed, trigger update notification
@@ -152,7 +159,7 @@ export const ImageDisplay = ({
                   detail: {
                     imageId: image.id,
                     status: apiStatus,
-                    forceQueueUpdate: true
+                    forceQueueUpdate: true,
                   },
                 });
                 window.dispatchEvent(imageUpdateEvent);
@@ -266,7 +273,7 @@ export const ImageDisplay = ({
 
   // Determine if image is originally a TIFF based on filename
   const isOriginallyTiff = image.name?.toLowerCase().endsWith('.tiff') || image.name?.toLowerCase().endsWith('.tif');
-  
+
   // Handle image errors
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     console.error(`Failed to load image: ${imageSrc}`);
@@ -323,7 +330,7 @@ export const ImageDisplay = ({
             e.currentTarget.src = directPath;
             return;
           }
-          
+
           // Final fallback
           e.currentTarget.src = isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg';
         })
@@ -419,7 +426,11 @@ export const ImageDisplay = ({
               </div>
             </div>
           ) : (
-            <ImageActions onDelete={() => onDelete(image.id)} onResegment={() => onResegment(image.id)} />
+            <ImageActions
+              onDelete={() => onDelete(image.id)}
+              onResegment={() => onResegment(image.id)}
+              isProcessing={currentStatus === 'queued' || currentStatus === 'processing'}
+            />
           )}
 
           {/* Image preview with segmentation overlay - clickable to open segmentation editor */}
@@ -532,9 +543,7 @@ export const ImageDisplay = ({
       <div className="ml-3 flex-1 min-w-0 cursor-pointer">
         <div className="flex items-center">
           <h4 className="text-sm font-medium truncate">{image.name || t('imageStatus.untitledImage')}</h4>
-          {currentStatus && (
-            <StatusBadge className="ml-2 text-xs" />
-          )}
+          {currentStatus && <StatusBadge className="ml-2 text-xs" />}
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{safeFormatDate(image.createdAt, 'PPP', '')}</p>
         {currentStatus === 'failed' && image.error && (
@@ -555,7 +564,11 @@ export const ImageDisplay = ({
             className="h-5 w-5 rounded border-gray-300"
           />
         ) : (
-          <ImageListActions onDelete={() => onDelete(image.id)} onResegment={() => onResegment(image.id)} />
+          <ImageListActions
+            onDelete={() => onDelete(image.id)}
+            onResegment={() => onResegment(image.id)}
+            isProcessing={currentStatus === 'queued' || currentStatus === 'processing'}
+          />
         )}
       </div>
     </motion.div>

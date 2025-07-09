@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import projectsRouter from './projects';
-import { authenticate as authMiddleware } from '../security/middleware/auth';;
+import { authenticate as authMiddleware } from '../security/middleware/auth';
 import pool from '../db';
 import jwt from 'jsonwebtoken';
 
@@ -70,7 +70,9 @@ describe('Projects API Routes - /api/projects', () => {
       expect(mockDbQuery.mock.calls[0][0]).toContain('SELECT \n                p.*,');
       expect(mockDbQuery.mock.calls[0][1]).toEqual([mockUserId, '10', '0']); // Params from query string
       // Check count query call
-      expect(mockDbQuery.mock.calls[1][0]).toContain('SELECT COUNT(*) FROM projects WHERE user_id = $1');
+      expect(mockDbQuery.mock.calls[1][0]).toContain(
+        'SELECT COUNT(*) FROM projects WHERE user_id = $1'
+      );
       expect(mockDbQuery.mock.calls[1][1]).toEqual([mockUserId]);
     });
 
@@ -109,7 +111,7 @@ describe('Projects API Routes - /api/projects', () => {
       expect(mockDbQuery).toHaveBeenCalledTimes(1);
       expect(mockDbQuery).toHaveBeenCalledWith(
         'INSERT INTO projects (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
-        [mockUserId, newProjectData.title, newProjectData.description],
+        [mockUserId, newProjectData.title, newProjectData.description]
       );
     });
 
@@ -132,7 +134,7 @@ describe('Projects API Routes - /api/projects', () => {
       expect(response.body).toEqual(createdProject);
       expect(mockDbQuery).toHaveBeenCalledWith(
         expect.any(String), // Match query string loosely
-        [mockUserId, newProjectData.title, null], // Check description is null
+        [mockUserId, newProjectData.title, null] // Check description is null
       );
     });
 
@@ -162,10 +164,10 @@ describe('Projects API Routes - /api/projects', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockProject);
-      expect(mockDbQuery).toHaveBeenCalledWith('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        mockUserId,
-      ]);
+      expect(mockDbQuery).toHaveBeenCalledWith(
+        'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, mockUserId]
+      );
     });
 
     it('should return 404 if project not found', async () => {
@@ -208,10 +210,10 @@ describe('Projects API Routes - /api/projects', () => {
       const response = await request(app).delete(`/api/projects/${projectIdToDelete}`);
 
       expect(response.status).toBe(204);
-      expect(mockDbQuery).toHaveBeenCalledWith('DELETE FROM projects WHERE id = $1 AND user_id = $2 RETURNING id', [
-        projectIdToDelete,
-        mockUserId,
-      ]);
+      expect(mockDbQuery).toHaveBeenCalledWith(
+        'DELETE FROM projects WHERE id = $1 AND user_id = $2 RETURNING id',
+        [projectIdToDelete, mockUserId]
+      );
     });
 
     it('should return 404 if project to delete is not found or not owned', async () => {
@@ -282,20 +284,19 @@ describe('Projects API Routes - /api/projects', () => {
       expect(mockClient.query).toHaveBeenCalledWith('BEGIN');
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT title, description FROM projects'),
-        [originalProjectId, mockUserId],
+        [originalProjectId, mockUserId]
       );
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO projects'), [
-        mockUserId,
-        newProject.title,
-        originalProject.description,
-      ]);
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO projects'),
+        [mockUserId, newProject.title, originalProject.description]
+      );
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT name, storage_path, thumbnail_path'),
-        [originalProjectId],
+        [originalProjectId]
       );
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO images'),
-        expect.arrayContaining([newProject.id, mockUserId, originalImages[0].name]),
+        expect.arrayContaining([newProject.id, mockUserId, originalImages[0].name])
       ); // Check relevant args
       expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
       expect(mockClient.release).toHaveBeenCalled();

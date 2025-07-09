@@ -47,7 +47,7 @@ describe('Polygon Utilities', () => {
 
       // Point in the main body
       expect(isPointInPolygon({ x: 2, y: 2 }, lShapePoints)).toBe(true);
-      
+
       // Point in the concave area (outside the L)
       expect(isPointInPolygon({ x: 7, y: 7 }, lShapePoints)).toBe(false);
     });
@@ -57,14 +57,14 @@ describe('Polygon Utilities', () => {
     it('calculates distance between two points correctly', () => {
       const p1: Point = { x: 0, y: 0 };
       const p2: Point = { x: 3, y: 4 };
-      
+
       expect(distance(p1, p2)).toBe(5); // 3-4-5 triangle
     });
 
     it('handles zero distance', () => {
       const p1: Point = { x: 5, y: 5 };
       const p2: Point = { x: 5, y: 5 };
-      
+
       expect(distance(p1, p2)).toBe(0);
     });
   });
@@ -76,9 +76,9 @@ describe('Polygon Utilities', () => {
       for (let i = 0; i <= 100; i++) {
         points.push({ x: i, y: 0 });
       }
-      
+
       const simplified = simplifyPolygon(points, 10);
-      
+
       // Should reduce to just the endpoints
       expect(simplified.length).toBeLessThan(points.length);
       expect(simplified[0]).toEqual({ x: 0, y: 0 });
@@ -91,9 +91,9 @@ describe('Polygon Utilities', () => {
         { x: 10, y: 0 },
         { x: 5, y: 10 },
       ];
-      
+
       const simplified = simplifyPolygon(trianglePoints, 1);
-      
+
       // Should preserve all vertices of the triangle
       expect(simplified.length).toBe(3);
     });
@@ -107,10 +107,10 @@ describe('Polygon Utilities', () => {
         { x: 10, y: 10 },
         { x: 0, y: 10 },
       ];
-      
+
       const polygon1 = createPolygon(points);
       const polygon2 = createPolygon(points);
-      
+
       expect(polygon1.id).toBeDefined();
       expect(polygon2.id).toBeDefined();
       expect(polygon1.id).not.toBe(polygon2.id);
@@ -124,9 +124,9 @@ describe('Polygon Utilities', () => {
         { x: 8, y: 8 },
         { x: 2, y: 8 },
       ];
-      
+
       const polygon = createPolygon(points, 'internal');
-      
+
       expect(polygon.type).toBe('internal');
     });
   });
@@ -139,7 +139,7 @@ describe('Polygon Utilities', () => {
         { x: 10, y: 10 },
         { x: 0, y: 10 },
       ];
-      
+
       expect(calculatePolygonArea(squarePoints)).toBe(100);
     });
 
@@ -149,7 +149,7 @@ describe('Polygon Utilities', () => {
         { x: 10, y: 0 },
         { x: 5, y: 10 },
       ];
-      
+
       expect(calculatePolygonArea(trianglePoints)).toBe(50);
     });
   });
@@ -162,7 +162,7 @@ describe('Polygon Utilities', () => {
         { x: 10, y: 10 },
         { x: 0, y: 10 },
       ];
-      
+
       expect(calculatePolygonPerimeter(squarePoints)).toBe(40);
     });
   });
@@ -175,9 +175,9 @@ describe('Polygon Utilities', () => {
         { x: 15, y: 15 },
         { x: 5, y: 15 },
       ];
-      
+
       const bbox = calculateBoundingBox(points);
-      
+
       expect(bbox).toEqual({
         minX: 5,
         minY: 5,
@@ -188,7 +188,7 @@ describe('Polygon Utilities', () => {
 
     it('handles empty points array', () => {
       const bbox = calculateBoundingBox([]);
-      
+
       expect(bbox).toEqual({
         minX: 0,
         minY: 0,
@@ -206,14 +206,14 @@ describe('Polygon Utilities', () => {
         { x: 10, y: 10 },
         { x: 0, y: 10 },
       ];
-      
+
       const poly2: Point[] = [
         { x: 5, y: 5 },
         { x: 15, y: 5 },
         { x: 15, y: 15 },
         { x: 5, y: 15 },
       ];
-      
+
       expect(doPolygonsIntersect(poly1, poly2)).toBe(true);
     });
 
@@ -224,14 +224,14 @@ describe('Polygon Utilities', () => {
         { x: 10, y: 10 },
         { x: 0, y: 10 },
       ];
-      
+
       const poly2: Point[] = [
         { x: 20, y: 20 },
         { x: 30, y: 20 },
         { x: 30, y: 30 },
         { x: 20, y: 30 },
       ];
-      
+
       expect(doPolygonsIntersect(poly1, poly2)).toBe(false);
     });
 
@@ -242,14 +242,14 @@ describe('Polygon Utilities', () => {
         { x: 20, y: 20 },
         { x: 0, y: 20 },
       ];
-      
+
       const inner: Point[] = [
         { x: 5, y: 5 },
         { x: 15, y: 5 },
         { x: 15, y: 15 },
         { x: 5, y: 15 },
       ];
-      
+
       expect(doPolygonsIntersect(outer, inner)).toBe(true);
     });
   });

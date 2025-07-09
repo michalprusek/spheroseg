@@ -48,7 +48,7 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Check if the request data is FormData
     const isFormData = config.data instanceof FormData;
-    
+
     // If it's FormData, remove the default Content-Type header
     // to let axios set it with the proper boundary
     if (isFormData) {
@@ -56,7 +56,7 @@ apiClient.interceptors.request.use(
         delete config.headers['Content-Type'];
         logger.debug('Removed Content-Type header for FormData request');
       }
-      
+
       // Log FormData details for debugging
       const formDataInfo: any = {};
       if (config.data instanceof FormData) {
@@ -64,15 +64,15 @@ apiClient.interceptors.request.use(
         formDataInfo.fields = entries.length;
         formDataInfo.files = entries.filter(([key, value]) => value instanceof File).length;
       }
-      
+
       logger.debug('Processing FormData request', {
         url: config.url,
         method: config.method,
         formDataInfo,
-        headers: Object.keys(config.headers)
+        headers: Object.keys(config.headers),
       });
     }
-    
+
     // Get token from authService with validation and auto-removal if invalid
     const token = getAccessToken(true, true);
 
@@ -82,15 +82,15 @@ apiClient.interceptors.request.use(
       logger.debug('Added Authorization header with valid token', {
         tokenLength: token.length,
         tokenPrefix: token.substring(0, 20) + '...',
-        headerValue: config.headers.Authorization?.substring(0, 30) + '...'
+        headerValue: config.headers.Authorization?.substring(0, 30) + '...',
       });
-      
+
       // Extra logging for FormData requests
       if (isFormData) {
         logger.info('Authorization header set for FormData request', {
           url: config.url,
           authHeaderLength: config.headers.Authorization?.length,
-          authHeaderPrefix: config.headers.Authorization?.substring(0, 20) + '...'
+          authHeaderPrefix: config.headers.Authorization?.substring(0, 20) + '...',
         });
       }
     } else if (token) {
@@ -207,20 +207,20 @@ apiClient.interceptors.response.use(
       const lastAuthError = window.sessionStorage.getItem('spheroseg_last_auth_error');
       const now = Date.now();
       const AUTH_ERROR_THROTTLE = 5000; // Increased to 5 seconds to reduce spam
-      
-      if (lastAuthError && (now - parseInt(lastAuthError)) < AUTH_ERROR_THROTTLE) {
+
+      if (lastAuthError && now - parseInt(lastAuthError) < AUTH_ERROR_THROTTLE) {
         logger.debug('Suppressing duplicate auth error within throttle period');
         return Promise.reject(error);
       }
-      
+
       // Update last auth error timestamp
       window.sessionStorage.setItem('spheroseg_last_auth_error', now.toString());
-      
+
       logger.warn('Unauthorized access detected', {
         url,
         method,
         status,
-        message: error.response?.data?.message || error.message
+        message: error.response?.data?.message || error.message,
       });
 
       // Check if page is still loading - don't clear tokens during initial load
@@ -233,10 +233,11 @@ apiClient.interceptors.response.use(
       // Only clear tokens if this is a legitimate auth failure
       // Don't clear tokens for malformed requests or other 401 scenarios
       const errorMessage = error.response?.data?.message?.toLowerCase() || '';
-      const shouldClearTokens = errorMessage.includes('token') || 
-                               errorMessage.includes('expired') || 
-                               errorMessage.includes('invalid') ||
-                               errorMessage.includes('unauthorized');
+      const shouldClearTokens =
+        errorMessage.includes('token') ||
+        errorMessage.includes('expired') ||
+        errorMessage.includes('invalid') ||
+        errorMessage.includes('unauthorized');
 
       if (shouldClearTokens) {
         logger.info('Clearing tokens due to auth error');

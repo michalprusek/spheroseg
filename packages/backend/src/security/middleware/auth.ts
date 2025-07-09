@@ -1,10 +1,10 @@
 /**
  * Consolidated Authentication & Authorization Middleware
- * 
+ *
  * This module consolidates all auth-related middleware:
  * - JWT token verification
  * - User authentication
- * - Role-based authorization  
+ * - Role-based authorization
  * - Socket.IO authentication
  * - Development authentication bypass
  */
@@ -60,41 +60,41 @@ const extractAndVerifyToken = async (
   if (!authHeader) {
     throw new Error('Authorization header missing');
   }
-  
+
   if (!authHeader.startsWith('Bearer ')) {
     logger.warn('Invalid authorization header format', {
       headerLength: authHeader.length,
       headerPrefix: authHeader.substring(0, 20),
       startsWithBearer: authHeader.startsWith('Bearer '),
-      headerValue: authHeader
+      headerValue: authHeader,
     });
     throw new Error('Invalid authorization header format');
   }
 
   const token = authHeader.split(' ')[1];
-  
+
   try {
     const payload = await tokenService.verifyToken(token, tokenType);
-    
+
     const user: UserPayload = {
       userId: payload.userId,
       email: payload.email,
       type: payload.type,
       tokenId: payload.jti,
       fingerprint: payload.fingerprint,
-      tokenVersion: payload.tokenVersion
+      tokenVersion: payload.tokenVersion,
     };
 
     const metadata: TokenMetadata = {
       issuedAt: new Date(payload.iat * 1000),
-      expiresAt: new Date(payload.exp * 1000)
+      expiresAt: new Date(payload.exp * 1000),
     };
 
     return { user, metadata };
   } catch (error) {
-    logger.warn('Token verification failed', { 
+    logger.warn('Token verification failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      tokenType 
+      tokenType,
     });
     throw new Error('Invalid or expired token');
   }
@@ -118,9 +118,9 @@ export const authenticate = async (
       authorization: req.headers.authorization,
       allHeaders: Object.keys(req.headers),
       url: req.url,
-      method: req.method
+      method: req.method,
     });
-    
+
     const { user, metadata } = await extractAndVerifyToken(
       req.headers.authorization,
       TokenType.ACCESS
@@ -129,19 +129,19 @@ export const authenticate = async (
     req.user = user;
     req.tokenMetadata = metadata;
 
-    logger.debug('User authenticated successfully', { 
+    logger.debug('User authenticated successfully', {
       userId: user.userId,
-      email: user.email 
+      email: user.email,
     });
 
     next();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Authentication failed';
-    
+
     res.status(401).json({
       success: false,
       message,
-      error: 'AUTHENTICATION_REQUIRED'
+      error: 'AUTHENTICATION_REQUIRED',
     });
   }
 };
@@ -167,12 +167,12 @@ export const optionalAuthenticate = async (
     req.user = user;
     req.tokenMetadata = metadata;
 
-    logger.debug('Optional authentication successful', { 
-      userId: user.userId 
+    logger.debug('Optional authentication successful', {
+      userId: user.userId,
     });
   } catch (error) {
     logger.debug('Optional authentication failed, continuing without user', {
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -192,25 +192,22 @@ export const requireAdmin = async (
   next: NextFunction
 ): Promise<void> => {
   if (!req.user) {
-    return res.status(401).json({ 
+    return res.status(401).json({
       success: false,
       message: 'Authentication required',
-      error: 'NOT_AUTHENTICATED'
+      error: 'NOT_AUTHENTICATED',
     });
   }
 
   try {
     // Fetch current role from database for accuracy
-    const result = await pool.query(
-      'SELECT role FROM users WHERE id = $1',
-      [req.user.userId]
-    );
+    const result = await pool.query('SELECT role FROM users WHERE id = $1', [req.user.userId]);
 
     if (result.rows.length === 0) {
       return res.status(401).json({
         success: false,
         message: 'User not found',
-        error: 'USER_NOT_FOUND'
+        error: 'USER_NOT_FOUND',
       });
     }
 
@@ -219,31 +216,31 @@ export const requireAdmin = async (
         userId: req.user.userId,
         email: req.user.email,
         role: result.rows[0].role,
-        url: req.url
+        url: req.url,
       });
 
       return res.status(403).json({
         success: false,
         message: 'Admin access required',
-        error: 'INSUFFICIENT_PERMISSIONS'
+        error: 'INSUFFICIENT_PERMISSIONS',
       });
     }
 
-    logger.debug('Admin authorization successful', { 
-      userId: req.user.userId 
+    logger.debug('Admin authorization successful', {
+      userId: req.user.userId,
     });
 
     next();
   } catch (error) {
     logger.error('Admin authorization check failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      userId: req.user.userId
+      userId: req.user.userId,
     });
 
     res.status(500).json({
       success: false,
       message: 'Authorization check failed',
-      error: 'AUTHORIZATION_ERROR'
+      error: 'AUTHORIZATION_ERROR',
     });
   }
 };
@@ -260,22 +257,21 @@ export const requireApproved = async (
     return res.status(401).json({
       success: false,
       message: 'Authentication required',
-      error: 'NOT_AUTHENTICATED'
+      error: 'NOT_AUTHENTICATED',
     });
   }
 
   try {
     // Check approval status from database
-    const result = await pool.query(
-      'SELECT is_approved FROM users WHERE id = $1',
-      [req.user.userId]
-    );
+    const result = await pool.query('SELECT is_approved FROM users WHERE id = $1', [
+      req.user.userId,
+    ]);
 
     if (result.rows.length === 0) {
       return res.status(401).json({
         success: false,
         message: 'User not found',
-        error: 'USER_NOT_FOUND'
+        error: 'USER_NOT_FOUND',
       });
     }
 
@@ -283,31 +279,31 @@ export const requireApproved = async (
       logger.warn('Unapproved user attempted to access restricted resource', {
         userId: req.user.userId,
         email: req.user.email,
-        url: req.url
+        url: req.url,
       });
 
       return res.status(403).json({
         success: false,
         message: 'Account not approved',
-        error: 'ACCOUNT_NOT_APPROVED'
+        error: 'ACCOUNT_NOT_APPROVED',
       });
     }
 
-    logger.debug('User approval check successful', { 
-      userId: req.user.userId 
+    logger.debug('User approval check successful', {
+      userId: req.user.userId,
     });
 
     next();
   } catch (error) {
     logger.error('Approval check failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      userId: req.user.userId
+      userId: req.user.userId,
     });
 
     res.status(500).json({
       success: false,
       message: 'Approval check failed',
-      error: 'AUTHORIZATION_ERROR'
+      error: 'AUTHORIZATION_ERROR',
     });
   }
 };
@@ -316,16 +312,12 @@ export const requireApproved = async (
  * Check if user owns the resource
  */
 export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
-  return async (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required',
-        error: 'NOT_AUTHENTICATED'
+        error: 'NOT_AUTHENTICATED',
       });
     }
 
@@ -334,7 +326,7 @@ export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
       return res.status(400).json({
         success: false,
         message: `Resource ID parameter '${resourceIdParam}' is required`,
-        error: 'MISSING_RESOURCE_ID'
+        error: 'MISSING_RESOURCE_ID',
       });
     }
 
@@ -350,7 +342,7 @@ export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
         return res.status(404).json({
           success: false,
           message: 'Resource not found',
-          error: 'RESOURCE_NOT_FOUND'
+          error: 'RESOURCE_NOT_FOUND',
         });
       }
 
@@ -359,19 +351,19 @@ export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
           userId: req.user.userId,
           resourceId,
           resourceOwner: result.rows[0].user_id,
-          url: req.url
+          url: req.url,
         });
 
         return res.status(403).json({
           success: false,
           message: 'Access denied - you do not own this resource',
-          error: 'RESOURCE_ACCESS_DENIED'
+          error: 'RESOURCE_ACCESS_DENIED',
         });
       }
 
       logger.debug('Resource ownership check successful', {
         userId: req.user.userId,
-        resourceId
+        resourceId,
       });
 
       next();
@@ -379,13 +371,13 @@ export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
       logger.error('Resource ownership check failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
         userId: req.user.userId,
-        resourceId
+        resourceId,
       });
 
       res.status(500).json({
         success: false,
         message: 'Ownership check failed',
-        error: 'AUTHORIZATION_ERROR'
+        error: 'AUTHORIZATION_ERROR',
       });
     }
   };
@@ -403,33 +395,34 @@ export const authenticateSocket = async (
   next: (err?: Error) => void
 ): Promise<void> => {
   try {
-    const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
-    
+    const token =
+      socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+
     if (!token) {
       return next(new Error('Authentication token required'));
     }
 
     const payload = await tokenService.verifyToken(token, TokenType.ACCESS);
-    
+
     socket.user = {
       userId: payload.userId,
       email: payload.email,
       type: payload.type,
       tokenId: payload.jti,
       fingerprint: payload.fingerprint,
-      tokenVersion: payload.tokenVersion
+      tokenVersion: payload.tokenVersion,
     };
 
     logger.debug('Socket authentication successful', {
       userId: socket.user.userId,
-      socketId: socket.id
+      socketId: socket.id,
     });
 
     next();
   } catch (error) {
     logger.warn('Socket authentication failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      socketId: socket.id
+      socketId: socket.id,
     });
 
     next(new Error('Invalid or expired token'));
@@ -452,7 +445,7 @@ export const devAuthenticate = (
     return res.status(403).json({
       success: false,
       message: 'Development middleware not available in production',
-      error: 'DEV_MIDDLEWARE_BLOCKED'
+      error: 'DEV_MIDDLEWARE_BLOCKED',
     });
   }
 
@@ -461,17 +454,17 @@ export const devAuthenticate = (
     userId: 'dev-user-id',
     email: 'dev@example.com',
     type: TokenType.ACCESS,
-    role: 'admin'
+    role: 'admin',
   };
 
   req.tokenMetadata = {
     issuedAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
   };
 
   logger.warn('Development authentication bypass used', {
     userId: req.user.userId,
-    url: req.url
+    url: req.url,
   });
 
   next();
@@ -484,13 +477,16 @@ export const devAuthenticate = (
 /**
  * Create authentication middleware with authorization checks
  */
-export const createAuthMiddleware = (options: {
-  requireAuth?: boolean;
-  requireAdmin?: boolean;
-  requireApproved?: boolean;
-  requireOwnership?: string;
-} = {}) => {
-  const middlewares: Array<(req: AuthenticatedRequest, res: Response, next: NextFunction) => void> = [];
+export const createAuthMiddleware = (
+  options: {
+    requireAuth?: boolean;
+    requireAdmin?: boolean;
+    requireApproved?: boolean;
+    requireOwnership?: string;
+  } = {}
+) => {
+  const middlewares: Array<(req: AuthenticatedRequest, res: Response, next: NextFunction) => void> =
+    [];
 
   // Add authentication
   if (options.requireAuth !== false) {
@@ -537,5 +533,5 @@ export {
   requireResourceOwnership,
   authenticateSocket,
   devAuthenticate,
-  createAuthMiddleware
+  createAuthMiddleware,
 };

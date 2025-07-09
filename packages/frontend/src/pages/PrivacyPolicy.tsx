@@ -63,7 +63,11 @@ const PrivacyPolicy = () => {
 
             <h2 className="text-2xl font-bold mt-6 mb-4">{t('privacyPage.contact.title')}</h2>
             <p className="mb-4">{t('privacyPage.contact.paragraph1')}</p>
-            <p className="mb-4"><a href={`mailto:${t('privacyPage.contact.email')}`} className="text-blue-600 hover:underline">{t('privacyPage.contact.email')}</a></p>
+            <p className="mb-4">
+              <a href={`mailto:${t('privacyPage.contact.email')}`} className="text-blue-600 hover:underline">
+                {t('privacyPage.contact.email')}
+              </a>
+            </p>
 
             <p className="text-sm text-gray-500 mt-8 mb-4">{t('privacyPage.lastUpdated')}</p>
           </div>

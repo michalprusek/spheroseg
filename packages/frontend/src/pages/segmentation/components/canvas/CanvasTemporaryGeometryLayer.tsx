@@ -157,10 +157,7 @@ const CanvasTemporaryGeometryLayer: React.FC<CanvasTemporaryGeometryLayerProps> 
             cursorPosition &&
             (() => {
               const selectedPolygon = segmentationData.polygons.find((p) => p.id === selectedPolygonId);
-              if (
-                selectedPolygon &&
-                interactionState.addPointStartVertex.vertexIndex < selectedPolygon.points.length
-              ) {
+              if (selectedPolygon && interactionState.addPointStartVertex.vertexIndex < selectedPolygon.points.length) {
                 const startPoint = selectedPolygon.points[interactionState.addPointStartVertex.vertexIndex];
 
                 if (tempPoints.length > 0) {

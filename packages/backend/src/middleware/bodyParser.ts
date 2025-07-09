@@ -10,7 +10,7 @@ export function setupBodyParser(app: Express): void {
   app.use(
     express.json({
       limit: config.server.maxRequestSize || '100mb',
-    }),
+    })
   );
 
   // Parse URL-encoded bodies (as sent by HTML forms)
@@ -18,7 +18,7 @@ export function setupBodyParser(app: Express): void {
     express.urlencoded({
       extended: true,
       limit: config.server.maxRequestSize || '100mb',
-    }),
+    })
   );
 }
 

@@ -115,9 +115,9 @@ export const uploadFilesWithoutFallback = async (projectId: string, files: File[
  * @returns The uploaded image data
  */
 export const uploadFilesWithFallback = async (
-  projectId: string, 
-  files: File[], 
-  onProgress?: (fileName: string, progress: number, fileIndex: number, totalFiles: number) => void
+  projectId: string,
+  files: File[],
+  onProgress?: (fileName: string, progress: number, fileIndex: number, totalFiles: number) => void,
 ): Promise<ProjectImage[]> => {
   // Kontrola, zda máme nějaké soubory k nahrání
   if (!files || files.length === 0) {
@@ -137,16 +137,16 @@ export const uploadFilesWithFallback = async (
           onProgress(file.name, 50, index, files.length);
         });
       }
-      
+
       const result = await uploadFiles(projectId, files);
-      
+
       // Report completion
       if (onProgress) {
         files.forEach((file, index) => {
           onProgress(file.name, 100, index, files.length);
         });
       }
-      
+
       return result;
     }
 
@@ -277,7 +277,7 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
         // Only try to get dimensions for image types that can be loaded in browser
         const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
         const fileType = file.type.toLowerCase();
-        
+
         if (imageTypes.includes(fileType)) {
           // Create an image element to get dimensions
           const img = new Image();
@@ -288,7 +288,7 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
             const timeout = setTimeout(() => {
               reject(new Error('Image load timeout'));
             }, 5000); // 5 second timeout
-            
+
             img.onload = () => {
               clearTimeout(timeout);
               resolve(undefined);
@@ -339,24 +339,24 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
               };
             });
 
-          const MAX_THUMB_WIDTH = 150;
-          const MAX_THUMB_HEIGHT = 150;
-          let thumbWidth = tempImg.width;
-          let thumbHeight = tempImg.height;
+            const MAX_THUMB_WIDTH = 150;
+            const MAX_THUMB_HEIGHT = 150;
+            let thumbWidth = tempImg.width;
+            let thumbHeight = tempImg.height;
 
-          if (thumbWidth > MAX_THUMB_WIDTH) {
-            thumbHeight = (MAX_THUMB_WIDTH / thumbWidth) * thumbHeight;
-            thumbWidth = MAX_THUMB_WIDTH;
-          }
-          if (thumbHeight > MAX_THUMB_HEIGHT) {
-            thumbWidth = (MAX_THUMB_HEIGHT / thumbHeight) * thumbWidth;
-            thumbHeight = MAX_THUMB_HEIGHT;
-          }
+            if (thumbWidth > MAX_THUMB_WIDTH) {
+              thumbHeight = (MAX_THUMB_WIDTH / thumbWidth) * thumbHeight;
+              thumbWidth = MAX_THUMB_WIDTH;
+            }
+            if (thumbHeight > MAX_THUMB_HEIGHT) {
+              thumbWidth = (MAX_THUMB_HEIGHT / thumbHeight) * thumbWidth;
+              thumbHeight = MAX_THUMB_HEIGHT;
+            }
 
-          canvas.width = thumbWidth;
-          canvas.height = thumbHeight;
-          ctx.drawImage(tempImg, 0, 0, thumbWidth, thumbHeight);
-          thumbnailBase64 = canvas.toDataURL(file.type); // Use original file type if possible
+            canvas.width = thumbWidth;
+            canvas.height = thumbHeight;
+            ctx.drawImage(tempImg, 0, 0, thumbWidth, thumbHeight);
+            thumbnailBase64 = canvas.toDataURL(file.type); // Use original file type if possible
           }
         }
       } catch (thumbError) {

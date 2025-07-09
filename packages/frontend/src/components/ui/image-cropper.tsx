@@ -62,7 +62,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       y: crop.y,
       width: crop.width,
       height: crop.height,
-      unit: 'px' as const
+      unit: 'px' as const,
     };
 
     const canvas = document.createElement('canvas');
@@ -81,7 +81,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         y: (crop.y / 100) * image.height,
         width: (crop.width / 100) * image.width,
         height: (crop.height / 100) * image.height,
-        unit: 'px' as const
+        unit: 'px' as const,
       };
     }
 
@@ -121,9 +121,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   return (
     <div className="flex flex-col items-center space-y-4">
       <div className="relative">
-        <div
-          className="relative max-w-full overflow-hidden"
-        >
+        <div className="relative max-w-full overflow-hidden">
           <ReactCrop
             crop={crop}
             onChange={(c) => setCrop(c)}
@@ -143,14 +141,14 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
             />
           </ReactCrop>
         </div>
-        
+
         {/* Rotate button positioned absolutely in top-right corner */}
         {showRotation && (
-          <Button 
-            type="button" 
-            variant="secondary" 
-            size="icon" 
-            onClick={handleRotate} 
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            onClick={handleRotate}
             className="absolute top-2 right-2 bg-white/80 hover:bg-white/90 backdrop-blur-sm shadow-md"
             title="Rotate image"
           >

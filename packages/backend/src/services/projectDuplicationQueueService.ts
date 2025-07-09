@@ -13,7 +13,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { getIO } from '../socket'; // Import Socket.IO instance
 import logger from '../utils/logger';
 import { createTaskQueue, Task } from './taskQueueService';
-import projectDuplicationService, { DuplicationOptions, Project } from './projectDuplicationService';
+import projectDuplicationService, {
+  DuplicationOptions,
+  Project,
+} from './projectDuplicationService';
 
 /**
  * Interface for project duplication task data
@@ -58,7 +61,10 @@ const projectDuplicationQueue = createTaskQueue<ProjectDuplicationTaskData>({
 /**
  * Register the project duplication task executor
  */
-projectDuplicationQueue.registerExecutor(PROJECT_DUPLICATION_TASK_TYPE, executeProjectDuplicationTask);
+projectDuplicationQueue.registerExecutor(
+  PROJECT_DUPLICATION_TASK_TYPE,
+  executeProjectDuplicationTask
+);
 
 /**
  * Function to update duplication status in DB and notify client
@@ -67,8 +73,13 @@ projectDuplicationQueue.registerExecutor(PROJECT_DUPLICATION_TASK_TYPE, executeP
  * @param taskId ID of the duplication task
  * @param update Progress update data
  */
-export async function updateDuplicationProgress(pool: Pool, update: DuplicationProgressUpdate): Promise<void> {
-  logger.debug(`Updating duplication progress for task ${update.taskId}: ${update.status}, ${update.progress}%`);
+export async function updateDuplicationProgress(
+  pool: Pool,
+  update: DuplicationProgressUpdate
+): Promise<void> {
+  logger.debug(
+    `Updating duplication progress for task ${update.taskId}: ${update.status}, ${update.progress}%`
+  );
 
   try {
     // Update task in database
@@ -139,7 +150,9 @@ export async function updateDuplicationProgress(pool: Pool, update: DuplicationP
       logger.error(`Task ${update.taskId} not found in database when updating progress.`);
     }
   } catch (dbError) {
-    logger.error(`Database error updating status for duplication task ${update.taskId}:`, { error: dbError });
+    logger.error(`Database error updating status for duplication task ${update.taskId}:`, {
+      error: dbError,
+    });
   }
 }
 
@@ -198,7 +211,11 @@ export async function getDuplicationTasks(pool: Pool, userId: string): Promise<a
  * @param userId User ID (for authorization)
  * @returns Duplication task or null if not found
  */
-export async function getDuplicationTask(pool: Pool, taskId: string, userId: string): Promise<any | null> {
+export async function getDuplicationTask(
+  pool: Pool,
+  taskId: string,
+  userId: string
+): Promise<any | null> {
   try {
     const taskQuery = `
       SELECT 
@@ -242,7 +259,11 @@ export async function getDuplicationTask(pool: Pool, taskId: string, userId: str
  * @param userId User ID (for authorization)
  * @returns True if the task was cancelled, false otherwise
  */
-export async function cancelDuplicationTask(pool: Pool, taskId: string, userId: string): Promise<boolean> {
+export async function cancelDuplicationTask(
+  pool: Pool,
+  taskId: string,
+  userId: string
+): Promise<boolean> {
   try {
     // First check if the task exists and belongs to the user
     const taskQuery = `
@@ -312,9 +333,11 @@ export async function triggerProjectDuplication(
   pool: Pool,
   originalProjectId: string,
   userId: string,
-  options: DuplicationOptions = {},
+  options: DuplicationOptions = {}
 ): Promise<string> {
-  logger.info(`Triggering project duplication for projectId: ${originalProjectId}, userId: ${userId}`);
+  logger.info(
+    `Triggering project duplication for projectId: ${originalProjectId}, userId: ${userId}`
+  );
 
   try {
     // Create a task record in the database
@@ -335,7 +358,12 @@ export async function triggerProjectDuplication(
       resetStatus: options.resetStatus !== false, // Default to true
     };
 
-    await pool.query(createTaskQuery, [taskId, userId, originalProjectId, JSON.stringify(taskOptions)]);
+    await pool.query(createTaskQuery, [
+      taskId,
+      userId,
+      originalProjectId,
+      JSON.stringify(taskOptions),
+    ]);
 
     logger.info(`Created duplication task record with ID: ${taskId}`);
 
@@ -351,7 +379,7 @@ export async function triggerProjectDuplication(
       {
         id: taskId, // Use taskId from database as queue task ID
         priority: 1,
-      },
+      }
     );
 
     // Notify the client that the task has been queued
@@ -365,7 +393,9 @@ export async function triggerProjectDuplication(
 
     return taskId;
   } catch (error) {
-    logger.error(`Error triggering project duplication for project ${originalProjectId}:`, { error });
+    logger.error(`Error triggering project duplication for project ${originalProjectId}:`, {
+      error,
+    });
     throw error;
   }
 }
@@ -376,7 +406,9 @@ export async function triggerProjectDuplication(
  * @param task Project duplication task
  * @returns Result of the duplication
  */
-async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskData>): Promise<Project> {
+async function executeProjectDuplicationTask(
+  task: Task<ProjectDuplicationTaskData>
+): Promise<Project> {
   const { taskId, originalProjectId, userId, options } = task.data;
 
   logger.info(`Executing project duplication task ${taskId} for project ${originalProjectId}`);
@@ -435,7 +467,11 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
       RETURNING *
     `;
 
-    const newProjectResult = await pool.query(createProjectQuery, [userId, newTitle, originalProject.description]);
+    const newProjectResult = await pool.query(createProjectQuery, [
+      userId,
+      newTitle,
+      originalProject.description,
+    ]);
 
     const newProject = newProjectResult.rows[0];
 
@@ -461,10 +497,19 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
 
       // Check if the worker file exists
       if (!fs.existsSync(workerPath)) {
-        logger.warn(`Worker file not found at ${workerPath}, falling back to synchronous processing`);
+        logger.warn(
+          `Worker file not found at ${workerPath}, falling back to synchronous processing`
+        );
 
         // Fall back to synchronous processing
-        return processImagesSynchronously(pool, taskId, originalProjectId, newProject.id, userId, options);
+        return processImagesSynchronously(
+          pool,
+          taskId,
+          originalProjectId,
+          newProject.id,
+          userId,
+          options
+        );
       }
 
       // Create worker
@@ -545,7 +590,14 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
       });
     } else {
       // Process images synchronously
-      return processImagesSynchronously(pool, taskId, originalProjectId, newProject.id, userId, options);
+      return processImagesSynchronously(
+        pool,
+        taskId,
+        originalProjectId,
+        newProject.id,
+        userId,
+        options
+      );
     }
   } catch (error) {
     // Handle errors
@@ -567,7 +619,9 @@ async function executeProjectDuplicationTask(task: Task<ProjectDuplicationTaskDa
         error: error instanceof Error ? error.message : String(error),
       });
     } catch (updateError) {
-      logger.error(`Error updating failed status for duplication task ${taskId}:`, { error: updateError });
+      logger.error(`Error updating failed status for duplication task ${taskId}:`, {
+        error: updateError,
+      });
     }
 
     throw error;
@@ -591,7 +645,7 @@ async function processImagesSynchronously(
   originalProjectId: string,
   newProjectId: string,
   userId: string,
-  options: DuplicationOptions,
+  options: DuplicationOptions
 ): Promise<Project> {
   // Fetch images from the original project
   const imagesQuery = `SELECT * FROM images WHERE project_id = $1`;
@@ -635,7 +689,7 @@ async function processImagesSynchronously(
             image,
             newProjectId,
             userId,
-            options,
+            options
           );
 
           // Update progress
@@ -651,10 +705,12 @@ async function processImagesSynchronously(
             newProjectId,
           });
         } catch (error) {
-          logger.error(`Error duplicating image ${image.id} in duplication task ${taskId}:`, { error });
+          logger.error(`Error duplicating image ${image.id} in duplication task ${taskId}:`, {
+            error,
+          });
           // Continue with other images, don't fail the whole task
         }
-      }),
+      })
     );
   }
 

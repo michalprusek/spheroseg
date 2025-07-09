@@ -27,11 +27,11 @@ export class SegmentationErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error details for debugging
     console.error('SegmentationErrorBoundary caught an error:', error, errorInfo);
-    
+
     // Update state with error details
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
   }
 
@@ -52,20 +52,18 @@ export class SegmentationErrorBoundary extends Component<Props, State> {
           <p className="text-gray-600 mb-4 max-w-md">
             An error occurred in the segmentation editor. This might be due to a temporary issue.
           </p>
-          
+
           {/* Show error details in development */}
           {import.meta.env.DEV && this.state.error && (
             <details className="mb-4 text-left max-w-2xl w-full">
-              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                Error details
-              </summary>
+              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">Error details</summary>
               <pre className="mt-2 p-4 bg-gray-100 rounded text-xs overflow-auto">
                 {this.state.error.toString()}
                 {this.state.errorInfo && '\n\nComponent Stack:\n' + this.state.errorInfo.componentStack}
               </pre>
             </details>
           )}
-          
+
           <div className="flex gap-2">
             <Button onClick={this.handleReset} variant="default">
               Try Again

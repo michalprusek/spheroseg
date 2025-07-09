@@ -397,7 +397,10 @@ export class MockAuth {
   /**
    * Create a mock request with authentication
    */
-  public createAuthenticatedRequest(userId: string, additionalData: Record<string, any> = {}): Request {
+  public createAuthenticatedRequest(
+    userId: string,
+    additionalData: Record<string, any> = {}
+  ): Request {
     const tokenData = this.generateToken(userId, additionalData);
     if (!tokenData) {
       throw new Error(`User with ID ${userId} not found`);

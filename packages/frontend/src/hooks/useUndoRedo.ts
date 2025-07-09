@@ -85,14 +85,17 @@ export function useUndoRedo<T>(initialState: T) {
     setTempState(value);
   }, []);
 
-  const finishDragging = useCallback((finalState: T | null = null) => {
-    if (finalState) {
-      // Add the final state to history as a new entry
-      setState(finalState, false);
-    }
-    setTempState(null);
-    setOriginalStateBeforeDrag(null);
-  }, [setState]);
+  const finishDragging = useCallback(
+    (finalState: T | null = null) => {
+      if (finalState) {
+        // Add the final state to history as a new entry
+        setState(finalState, false);
+      }
+      setTempState(null);
+      setOriginalStateBeforeDrag(null);
+    },
+    [setState],
+  );
 
   const cancelDragging = useCallback(() => {
     setTempState(null);

@@ -39,7 +39,11 @@ interface ImageFilePaths {
  * @param userId The ID of the user making the request
  * @returns Result of the deletion operation
  */
-export async function deleteImage(imageId: string, projectId: string, userId: string): Promise<DeleteImageResult> {
+export async function deleteImage(
+  imageId: string,
+  projectId: string,
+  userId: string
+): Promise<DeleteImageResult> {
   // Handle project ID with 'project-' prefix if not already handled by router
   if (projectId && projectId.startsWith('project-')) {
     projectId = projectId.substring(8);
@@ -60,7 +64,7 @@ export async function deleteImage(imageId: string, projectId: string, userId: st
       `SELECT i.id, i.storage_path, i.thumbnail_path, i.file_size
        FROM images i JOIN projects p ON i.project_id = p.id
        WHERE i.id = $1 AND i.project_id = $2 AND p.user_id = $3`,
-      [imageId, projectId, userId],
+      [imageId, projectId, userId]
     );
 
     if (imageCheck.rows.length === 0) {
@@ -100,7 +104,7 @@ export async function deleteImage(imageId: string, projectId: string, userId: st
           // Column exists, update it
           await client.query(
             'UPDATE users SET storage_used_bytes = GREATEST(0, COALESCE(storage_used_bytes, 0) - $1) WHERE id = $2',
-            [imageData.storageSize.toString(), userId],
+            [imageData.storageSize.toString(), userId]
           );
           logger.debug('Updated user storage usage after deletion', {
             userId,
@@ -137,7 +141,10 @@ export async function deleteImage(imageId: string, projectId: string, userId: st
 
     if (imageData.thumbnailPath) {
       try {
-        const thumbnailPath = imageUtils.dbPathToFilesystemPath(imageData.thumbnailPath, UPLOAD_DIR);
+        const thumbnailPath = imageUtils.dbPathToFilesystemPath(
+          imageData.thumbnailPath,
+          UPLOAD_DIR
+        );
         await imageUtils.deleteFile(thumbnailPath);
         logger.debug('Deleted thumbnail file', { path: thumbnailPath });
       } catch (error) {
@@ -209,7 +216,7 @@ export async function deleteImage(imageId: string, projectId: string, userId: st
 export async function deleteMultipleImages(
   imageIds: string[],
   projectId: string,
-  userId: string,
+  userId: string
 ): Promise<DeleteImageResult[]> {
   logger.info('Batch image deletion started', {
     imageCount: imageIds.length,
@@ -251,7 +258,11 @@ export async function deleteMultipleImages(
  * @param userId The ID of the user making the request
  * @returns True if the image can be deleted
  */
-export async function canDeleteImage(imageId: string, projectId: string, userId: string): Promise<boolean> {
+export async function canDeleteImage(
+  imageId: string,
+  projectId: string,
+  userId: string
+): Promise<boolean> {
   try {
     const pool = getPool();
     // Check if user owns the project and the image exists in it
@@ -259,7 +270,7 @@ export async function canDeleteImage(imageId: string, projectId: string, userId:
       `SELECT i.id
        FROM images i JOIN projects p ON i.project_id = p.id
        WHERE i.id = $1 AND i.project_id = $2 AND p.user_id = $3`,
-      [imageId, projectId, userId],
+      [imageId, projectId, userId]
     );
 
     return imageCheck.rows.length > 0;

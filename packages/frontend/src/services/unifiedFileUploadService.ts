@@ -1,6 +1,6 @@
 /**
  * Unified File Upload Service
- * 
+ *
  * This service consolidates all file upload functionality into a single source of truth.
  * It provides comprehensive upload capabilities with validation, progress tracking, and error handling.
  */
@@ -84,15 +84,7 @@ export const UPLOAD_CONFIGS = {
   IMAGE: {
     maxFileSize: 10 * 1024 * 1024, // 10MB
     maxFiles: 50,
-    acceptedTypes: [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/tiff',
-      'image/tif',
-      'image/bmp',
-      'image/webp',
-    ],
+    acceptedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/tif', 'image/bmp', 'image/webp'],
     acceptedExtensions: ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp', '.webp'],
     batchSize: 20,
     generatePreviews: true,
@@ -126,7 +118,7 @@ class UnifiedFileUploadService {
   private uploadQueue: Map<string, UploadFile> = new Map();
   private activeUploads: Map<string, AbortController> = new Map();
   private config: FileUploadConfig = UPLOAD_CONFIGS.IMAGE;
-  
+
   /**
    * Set upload configuration
    */
@@ -134,20 +126,20 @@ class UnifiedFileUploadService {
     this.config = { ...this.config, ...config };
     logger.info('Upload config updated:', this.config);
   }
-  
+
   /**
    * Get current configuration
    */
   public getConfig(): FileUploadConfig {
     return { ...this.config };
   }
-  
+
   /**
    * Validate file before upload
    */
   public async validateFile(file: File): Promise<ValidationResult> {
     const warnings: string[] = [];
-    
+
     try {
       // Check file size
       if (file.size > this.config.maxFileSize) {
@@ -156,21 +148,22 @@ class UnifiedFileUploadService {
           error: `File size ${this.formatFileSize(file.size)} exceeds maximum ${this.formatFileSize(this.config.maxFileSize)}`,
         };
       }
-      
+
       // Check file type
-      const isTypeAccepted = this.config.acceptedTypes.includes(file.type) ||
+      const isTypeAccepted =
+        this.config.acceptedTypes.includes(file.type) ||
         this.config.acceptedTypes.includes(file.type.split('/')[0] + '/*');
-      
+
       const extension = '.' + file.name.split('.').pop()?.toLowerCase();
       const isExtensionAccepted = this.config.acceptedExtensions.includes(extension);
-      
+
       if (!isTypeAccepted && !isExtensionAccepted) {
         return {
           valid: false,
           error: `File type "${file.type}" is not accepted. Accepted types: ${this.config.acceptedExtensions.join(', ')}`,
         };
       }
-      
+
       // Validate image dimensions if needed
       if (file.type.startsWith('image/')) {
         const dimensions = await this.getImageDimensions(file);
@@ -183,12 +176,12 @@ class UnifiedFileUploadService {
           }
         }
       }
-      
+
       // Check for special characters in filename
       if (/[<>:"|?*]/.test(file.name)) {
         warnings.push('Filename contains special characters that may cause issues');
       }
-      
+
       return {
         valid: true,
         warnings: warnings.length > 0 ? warnings : undefined,
@@ -201,54 +194,54 @@ class UnifiedFileUploadService {
       };
     }
   }
-  
+
   /**
    * Validate multiple files
    */
   public async validateFiles(files: File[]): Promise<Map<File, ValidationResult>> {
     const results = new Map<File, ValidationResult>();
-    
+
     // Check total file count
     if (files.length > this.config.maxFiles) {
       const error = `Too many files. Maximum ${this.config.maxFiles} files allowed.`;
-      files.forEach(file => {
+      files.forEach((file) => {
         results.set(file, { valid: false, error });
       });
       return results;
     }
-    
+
     // Validate each file
     for (const file of files) {
       const result = await this.validateFile(file);
       results.set(file, result);
     }
-    
+
     return results;
   }
-  
+
   /**
    * Generate preview for file
    */
   public async generatePreview(file: File): Promise<string | undefined> {
     if (!this.config.generatePreviews) return undefined;
-    
+
     try {
       // Check file extension for better detection (MIME types can be unreliable)
       const ext = file.name.toLowerCase();
       const isTiff = ext.endsWith('.tiff') || ext.endsWith('.tif');
       const isBmp = ext.endsWith('.bmp');
-      
+
       // Handle different file types
       if (file.type.startsWith('image/') || isTiff || isBmp) {
         // Special handling for TIFF/BMP
         if (file.type === 'image/tiff' || file.type === 'image/bmp' || isTiff || isBmp) {
           return await this.generateSpecialPreview(file);
         }
-        
+
         // Standard image preview
         return await this.generateImagePreview(file);
       }
-      
+
       // Add more preview generators for other file types
       return undefined;
     } catch (error) {
@@ -256,7 +249,7 @@ class UnifiedFileUploadService {
       return undefined;
     }
   }
-  
+
   /**
    * Upload single file
    */
@@ -266,7 +259,7 @@ class UnifiedFileUploadService {
       projectId?: string;
       onProgress?: (progress: UploadProgress) => void;
       signal?: AbortSignal;
-    } = {}
+    } = {},
   ): Promise<UploadFile> {
     const uploadFile: UploadFile = {
       id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -277,47 +270,47 @@ class UnifiedFileUploadService {
       status: UploadStatus.PENDING,
       progress: 0,
     };
-    
+
     this.uploadQueue.set(uploadFile.id, uploadFile);
-    
+
     try {
       // Update status
       this.updateFileStatus(uploadFile.id, UploadStatus.VALIDATING);
-      
+
       // Validate file
       const validation = await this.validateFile(file);
       if (!validation.valid) {
         throw new Error(validation.error || 'File validation failed');
       }
-      
+
       // Show warnings if any
-      validation.warnings?.forEach(warning => {
+      validation.warnings?.forEach((warning) => {
         toast.warning(`${file.name}: ${warning}`);
       });
-      
+
       // Generate preview
       if (this.config.generatePreviews) {
         uploadFile.preview = await this.generatePreview(file);
       }
-      
+
       // Update status
       this.updateFileStatus(uploadFile.id, UploadStatus.UPLOADING);
-      
+
       // Create form data
       const formData = new FormData();
       formData.append('file', file);
       formData.append('projectId', options.projectId || this.config.projectId || '');
       formData.append('autoSegment', String(this.config.autoSegment));
-      
+
       // Create abort controller
       const abortController = new AbortController();
       this.activeUploads.set(uploadFile.id, abortController);
-      
+
       // Combine signals if provided
       if (options.signal) {
         options.signal.addEventListener('abort', () => abortController.abort());
       }
-      
+
       // Upload file
       const response = await apiClient.post('/images/upload', formData, {
         headers: {
@@ -325,12 +318,10 @@ class UnifiedFileUploadService {
         },
         signal: abortController.signal,
         onUploadProgress: (progressEvent) => {
-          const progress = progressEvent.total
-            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            : 0;
-          
+          const progress = progressEvent.total ? Math.round((progressEvent.loaded * 100) / progressEvent.total) : 0;
+
           this.updateFileProgress(uploadFile.id, progress);
-          
+
           options.onProgress?.({
             fileId: uploadFile.id,
             fileName: file.name,
@@ -341,16 +332,16 @@ class UnifiedFileUploadService {
           });
         },
       });
-      
+
       // Update status
       this.updateFileStatus(uploadFile.id, UploadStatus.COMPLETE);
       uploadFile.result = response.data;
-      
+
       logger.info(`File uploaded successfully: ${file.name}`);
       return this.uploadQueue.get(uploadFile.id)!;
     } catch (error) {
       const isCancelled = error instanceof Error && error.name === 'CanceledError';
-      
+
       if (isCancelled) {
         this.updateFileStatus(uploadFile.id, UploadStatus.CANCELLED);
         uploadFile.error = 'Upload cancelled';
@@ -362,17 +353,17 @@ class UnifiedFileUploadService {
             severity: ErrorSeverity.ERROR,
           },
         });
-        
+
         this.updateFileStatus(uploadFile.id, UploadStatus.ERROR);
         uploadFile.error = errorInfo.message;
       }
-      
+
       throw error;
     } finally {
       this.activeUploads.delete(uploadFile.id);
     }
   }
-  
+
   /**
    * Upload multiple files
    */
@@ -383,7 +374,7 @@ class UnifiedFileUploadService {
       onProgress?: (progress: UploadProgress) => void;
       onFileComplete?: (file: UploadFile) => void;
       signal?: AbortSignal;
-    } = {}
+    } = {},
   ): Promise<UploadResult> {
     const startTime = Date.now();
     const result: UploadResult = {
@@ -394,14 +385,14 @@ class UnifiedFileUploadService {
       totalSize: files.reduce((sum, file) => sum + file.size, 0),
       duration: 0,
     };
-    
+
     try {
       logger.info(`Starting upload of ${files.length} files`);
-      
+
       // Validate all files first
       const validations = await this.validateFiles(files);
       const validFiles: File[] = [];
-      
+
       for (const [file, validation] of validations) {
         if (validation.valid) {
           validFiles.push(file);
@@ -419,56 +410,52 @@ class UnifiedFileUploadService {
           result.failed.push(uploadFile);
         }
       }
-      
+
       // Upload valid files in batches
       for (let i = 0; i < validFiles.length; i += this.config.batchSize) {
         if (options.signal?.aborted) break;
-        
+
         const batch = validFiles.slice(i, i + this.config.batchSize);
-        const batchPromises = batch.map(file => 
+        const batchPromises = batch.map((file) =>
           this.uploadFile(file, {
             ...options,
             onProgress: (progress) => {
               options.onProgress?.(progress);
             },
-          }).then(uploadFile => {
-            result.successful.push(uploadFile);
-            options.onFileComplete?.(uploadFile);
-          }).catch(error => {
-            if (error.name === 'CanceledError') {
-              const uploadFile = Array.from(this.uploadQueue.values())
-                .find(f => f.file === file);
-              if (uploadFile) {
-                result.cancelled.push(uploadFile);
-              }
-            } else {
-              const uploadFile = Array.from(this.uploadQueue.values())
-                .find(f => f.file === file);
-              if (uploadFile) {
-                result.failed.push(uploadFile);
-              }
-            }
           })
+            .then((uploadFile) => {
+              result.successful.push(uploadFile);
+              options.onFileComplete?.(uploadFile);
+            })
+            .catch((error) => {
+              if (error.name === 'CanceledError') {
+                const uploadFile = Array.from(this.uploadQueue.values()).find((f) => f.file === file);
+                if (uploadFile) {
+                  result.cancelled.push(uploadFile);
+                }
+              } else {
+                const uploadFile = Array.from(this.uploadQueue.values()).find((f) => f.file === file);
+                if (uploadFile) {
+                  result.failed.push(uploadFile);
+                }
+              }
+            }),
         );
-        
+
         await Promise.allSettled(batchPromises);
       }
-      
+
       result.duration = Date.now() - startTime;
-      
+
       // Show summary
       if (result.successful.length > 0) {
-        toast.success(
-          `Successfully uploaded ${result.successful.length} of ${files.length} files`
-        );
+        toast.success(`Successfully uploaded ${result.successful.length} of ${files.length} files`);
       }
-      
+
       if (result.failed.length > 0) {
-        toast.error(
-          `Failed to upload ${result.failed.length} files`
-        );
+        toast.error(`Failed to upload ${result.failed.length} files`);
       }
-      
+
       logger.info('Upload completed:', result);
       return result;
     } catch (error) {
@@ -476,7 +463,7 @@ class UnifiedFileUploadService {
       throw error;
     }
   }
-  
+
   /**
    * Upload with local storage fallback
    */
@@ -485,14 +472,14 @@ class UnifiedFileUploadService {
     options: {
       projectId?: string;
       onProgress?: (progress: UploadProgress) => void;
-    } = {}
+    } = {},
   ): Promise<UploadResult> {
     try {
       // Try normal upload first
       return await this.uploadFiles(files, options);
     } catch (error) {
       logger.warn('Upload failed, falling back to local storage:', error);
-      
+
       // Create local storage entries
       const result: UploadResult = {
         successful: [],
@@ -502,7 +489,7 @@ class UnifiedFileUploadService {
         totalSize: files.reduce((sum, file) => sum + file.size, 0),
         duration: 0,
       };
-      
+
       for (const file of files) {
         try {
           const localImage = await this.createLocalImage(file, options.projectId);
@@ -532,12 +519,12 @@ class UnifiedFileUploadService {
           result.failed.push(uploadFile);
         }
       }
-      
+
       toast.warning('Files saved locally due to connection issues');
       return result;
     }
   }
-  
+
   /**
    * Cancel upload
    */
@@ -550,7 +537,7 @@ class UnifiedFileUploadService {
       logger.info(`Upload cancelled: ${fileId}`);
     }
   }
-  
+
   /**
    * Cancel all uploads
    */
@@ -562,14 +549,14 @@ class UnifiedFileUploadService {
     this.activeUploads.clear();
     logger.info('All uploads cancelled');
   }
-  
+
   /**
    * Get upload queue
    */
   public getUploadQueue(): UploadFile[] {
     return Array.from(this.uploadQueue.values());
   }
-  
+
   /**
    * Clear completed uploads from queue
    */
@@ -580,11 +567,11 @@ class UnifiedFileUploadService {
       }
     }
   }
-  
+
   // ===========================
   // Private Helper Methods
   // ===========================
-  
+
   private updateFileStatus(fileId: string, status: UploadStatus): void {
     const file = this.uploadQueue.get(fileId);
     if (file) {
@@ -594,14 +581,14 @@ class UnifiedFileUploadService {
       }
     }
   }
-  
+
   private updateFileProgress(fileId: string, progress: number): void {
     const file = this.uploadQueue.get(fileId);
     if (file) {
       file.progress = progress;
     }
   }
-  
+
   private formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -609,7 +596,7 @@ class UnifiedFileUploadService {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-  
+
   private async getImageDimensions(file: File): Promise<{ width: number; height: number } | null> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -622,7 +609,7 @@ class UnifiedFileUploadService {
       img.src = URL.createObjectURL(file);
     });
   }
-  
+
   private async generateImagePreview(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -633,18 +620,18 @@ class UnifiedFileUploadService {
       reader.readAsDataURL(file);
     });
   }
-  
+
   private async generateSpecialPreview(file: File): Promise<string> {
     try {
       // Try server-side preview generation for TIFF/BMP
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const response = await apiClient.post('/preview/generate', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         responseType: 'blob',
       });
-      
+
       return URL.createObjectURL(response.data);
     } catch (error) {
       logger.warn('Server preview generation failed, using fallback:', error);
@@ -652,7 +639,7 @@ class UnifiedFileUploadService {
       return this.generateCanvasPreview(file);
     }
   }
-  
+
   private generateCanvasPreview(file: File): string {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -690,14 +677,14 @@ class UnifiedFileUploadService {
 
     return canvas.toDataURL('image/png');
   }
-  
+
   private async createLocalImage(file: File, projectId?: string): Promise<ProjectImage> {
     // Create object URL for local storage
     const url = URL.createObjectURL(file);
-    
+
     // Get image dimensions
     const dimensions = await this.getImageDimensions(file);
-    
+
     // Create local image object
     const localImage: ProjectImage = {
       id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -715,12 +702,12 @@ class UnifiedFileUploadService {
       segmentationStatus: 'pending',
       isLocal: true,
     };
-    
+
     // Store in localStorage
     const localImages = JSON.parse(localStorage.getItem('localImages') || '[]');
     localImages.push(localImage);
     localStorage.setItem('localImages', JSON.stringify(localImages));
-    
+
     return localImage;
   }
 }

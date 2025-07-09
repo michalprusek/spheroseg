@@ -148,7 +148,8 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         // Zajistíme, že queuedImages je vždy pole
         queuedImages: responseData.queuedImages || [],
         // Zajistíme, že máme queueLength
-        queueLength: responseData.queueLength || responseData.pendingTasks?.length || responseData.queuedTasks?.length || 0,
+        queueLength:
+          responseData.queueLength || responseData.pendingTasks?.length || responseData.queuedTasks?.length || 0,
         // Zachováme images data pro počty z databáze
         images: imagesData,
       };
@@ -193,7 +194,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
               ? running.map((taskId: string) => ({
                   id: taskId,
                   name: `Processing ${taskId.substring(0, 8)}...`,
-                  projectId: (responseData.projectId || projectId || 'unknown'),
+                  projectId: responseData.projectId || projectId || 'unknown',
                 }))
               : processingImages;
 
@@ -219,7 +220,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           const endpoints = [
             `/api/segmentation/queue-status/${projectId}`,
             `/api/segmentation/queue-status/${projectId}`,
-            `/api/segmentations/queue/status/${projectId}`
+            `/api/segmentations/queue/status/${projectId}`,
           ];
 
           let success = false;
@@ -255,7 +256,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         const globalEndpoints = [
           '/api/segmentation/queue-status',
           '/api/segmentation/queue',
-          '/api/segmentations/queue/status'
+          '/api/segmentations/queue/status',
         ];
 
         let globalSuccess = false;
@@ -273,14 +274,14 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
               if (projectId) {
                 // Filtrování podle projectId
                 const filteredImages = normalizedData.processingImages.filter(
-                  (img: any) => img.projectId === projectId || img.project_id === projectId
+                  (img: any) => img.projectId === projectId || img.project_id === projectId,
                 );
 
                 const filteredRunning = filteredImages.map((img: any) => img.id);
 
                 // Odhadujeme queueLength pro projekt
-                const newQueueLength = normalizedData.queueLength > 0 ?
-                  Math.max(1, Math.floor(normalizedData.queueLength / 3)) : 0;
+                const newQueueLength =
+                  normalizedData.queueLength > 0 ? Math.max(1, Math.floor(normalizedData.queueLength / 3)) : 0;
 
                 setQueueStatus({
                   ...normalizedData,
@@ -435,7 +436,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
                 ? running.map((taskId: string) => ({
                     id: taskId,
                     name: `Processing ${taskId.substring(0, 8)}...`,
-                    projectId: (responseData.projectId || projectId || 'unknown'),
+                    projectId: responseData.projectId || projectId || 'unknown',
                   }))
                 : processingImages;
 
@@ -445,7 +446,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
                 ? queued.map((taskId: string) => ({
                     id: taskId,
                     name: `Queued ${taskId.substring(0, 8)}...`,
-                    projectId: (responseData.projectId || projectId || 'unknown'),
+                    projectId: responseData.projectId || projectId || 'unknown',
                   }))
                 : queuedImages;
 
@@ -475,10 +476,10 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
             // IMPORTANT: WebSocket sends global queue data without project info
             // We cannot reliably filter it, so we should fetch project-specific data from the API
             console.log('WebSocket data received for project view, fetching project-specific data from API');
-            
+
             // Trigger API call to get accurate project-specific queue status
             updateQueueStatus();
-            
+
             // For now, return without updating the state to avoid showing incorrect global data
             return;
           } else {
@@ -547,12 +548,13 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
 
   if (projectId && displayQueueStatus) {
     // Only log if there are actually some tasks to avoid spam
-    const totalTasks = (displayQueueStatus.processingImages?.length || 0) + 
-                      (displayQueueStatus.queuedImages?.length || 0) + 
-                      (displayQueueStatus.queuedTasks?.length || 0) + 
-                      (displayQueueStatus.pendingTasks?.length || 0) + 
-                      (displayQueueStatus.runningTasks?.length || 0);
-    
+    const totalTasks =
+      (displayQueueStatus.processingImages?.length || 0) +
+      (displayQueueStatus.queuedImages?.length || 0) +
+      (displayQueueStatus.queuedTasks?.length || 0) +
+      (displayQueueStatus.pendingTasks?.length || 0) +
+      (displayQueueStatus.runningTasks?.length || 0);
+
     if (totalTasks > 0) {
       console.log('Filtering queue status for project:', projectId);
       console.log('Original queue status:', {
@@ -565,14 +567,16 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     }
 
     // Filtrujeme obrázky podle projektu
-    const projectImages = displayQueueStatus.processingImages && displayQueueStatus.processingImages.length > 0
-      ? displayQueueStatus.processingImages.filter((img) => img.projectId === projectId)
-      : [];
+    const projectImages =
+      displayQueueStatus.processingImages && displayQueueStatus.processingImages.length > 0
+        ? displayQueueStatus.processingImages.filter((img) => img.projectId === projectId)
+        : [];
 
     // Filtrujeme čekající obrázky podle projektu
-    const queuedProjectImages = displayQueueStatus.queuedImages && displayQueueStatus.queuedImages.length > 0
-      ? displayQueueStatus.queuedImages.filter((img) => img.projectId === projectId)
-      : [];
+    const queuedProjectImages =
+      displayQueueStatus.queuedImages && displayQueueStatus.queuedImages.length > 0
+        ? displayQueueStatus.queuedImages.filter((img) => img.projectId === projectId)
+        : [];
 
     // Vytváříme novou instanci queueStatus s filtrovanými daty
     filteredQueueStatus = {
@@ -690,7 +694,11 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     }
   } else {
     // Pokud nemáme žádné běžící úkoly
-    runningItems = <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">{t('segmentation.queue.noRunningTasks')}</div>;
+    runningItems = (
+      <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+        {t('segmentation.queue.noRunningTasks')}
+      </div>
+    );
   }
 
   // Prepare queued items
@@ -717,7 +725,11 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     ));
   } else {
     // No queued tasks
-    queuedItems = <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">{t('segmentation.queue.noQueuedTasks')}</div>;
+    queuedItems = (
+      <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+        {t('segmentation.queue.noQueuedTasks')}
+      </div>
+    );
   }
 
   return (
@@ -732,8 +744,8 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
             </span>
           ) : queuedTasksCount > 0 ? (
             <span>
-              {queuedTasksCount === 1 
-                ? t('segmentation.queue.statusOnlyQueued_one') 
+              {queuedTasksCount === 1
+                ? t('segmentation.queue.statusOnlyQueued_one')
                 : t('segmentation.queue.statusOnlyQueued', { count: queuedTasksCount })}
             </span>
           ) : (
@@ -754,7 +766,11 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           <div className="p-3 border-b border-gray-100 dark:border-gray-700">
             <h3 className="font-medium text-sm">{t('segmentation.queue.title')}</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {t('segmentation.queue.tasksTotal', { total: totalTasks, running: runningTasksCount, queued: queuedTasksCount })}
+              {t('segmentation.queue.tasksTotal', {
+                total: totalTasks,
+                running: runningTasksCount,
+                queued: queuedTasksCount,
+              })}
             </p>
           </div>
 

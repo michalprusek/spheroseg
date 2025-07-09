@@ -142,7 +142,7 @@ const CanvasV2: React.FC<CanvasV2Props> = ({
     (position: Point | null) => {
       if (position) setCursorPosition(position);
     },
-    50 // 50ms debounce delay - adjust as needed for performance vs responsiveness
+    50, // 50ms debounce delay - adjust as needed for performance vs responsiveness
   );
 
   // Last cursor position for threshold comparison

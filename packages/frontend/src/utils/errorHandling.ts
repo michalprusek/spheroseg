@@ -1,6 +1,6 @@
 /**
  * Legacy Error Handling
- * 
+ *
  * DEPRECATED: This file is maintained for backward compatibility.
  * Please use '@/utils/error' for new code.
  */

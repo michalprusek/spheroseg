@@ -15,7 +15,7 @@ export async function generateTiffPreview(file: File): Promise<string | null> {
     const ext = file.name.toLowerCase();
     const isTiff = ext.endsWith('.tiff') || ext.endsWith('.tif');
     const isBmp = ext.endsWith('.bmp');
-    
+
     if (!isTiff && !isBmp) {
       // For other formats, use regular blob URL
       return URL.createObjectURL(file);

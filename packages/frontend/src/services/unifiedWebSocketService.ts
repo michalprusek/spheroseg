@@ -1,6 +1,6 @@
 /**
  * Unified WebSocket Service
- * 
+ *
  * This service consolidates all WebSocket functionality into a single source of truth.
  * It provides centralized connection management, event handling, and room management.
  */
@@ -77,55 +77,55 @@ class UnifiedWebSocketService {
     lastConnectedAt: null,
     lastDisconnectedAt: null,
   };
-  
+
   private eventSubscriptions: Map<string, EventSubscription[]> = new Map();
   private roomSubscriptions: Map<string, RoomSubscription> = new Map();
   private globalHandlers: Map<string, Set<Function>> = new Map();
-  
+
   // Heartbeat management
   private heartbeatInterval: NodeJS.Timer | null = null;
   private heartbeatTimeout: NodeJS.Timer | null = null;
   private lastPingTime: number = 0;
   private pingTimeouts: number = 0;
-  
+
   // Event emitter for connection state changes
   private stateChangeHandlers: Set<(state: ConnectionState) => void> = new Set();
-  
+
   /**
    * Initialize WebSocket connection
    */
   public async initialize(customConfig?: Partial<WebSocketConfig>): Promise<Socket> {
     try {
       logger.info('Initializing WebSocket connection');
-      
+
       // Merge configurations
       this.config = { ...DEFAULT_CONFIG, ...customConfig };
-      
+
       // Disconnect existing connection
       if (this.socket) {
         logger.info('Disconnecting existing socket');
         await this.disconnect();
       }
-      
+
       // Get authentication token
       const authToken = getAccessToken();
       if (authToken) {
         this.config.auth = { token: authToken };
       }
-      
+
       // Determine socket URL
       const socketUrl = this.config.url || '';
-      
+
       // Create socket instance
       this.updateConnectionState({ isConnecting: true });
       this.socket = io(socketUrl, this.config);
-      
+
       // Set up core event handlers
       this.setupCoreHandlers();
-      
+
       // Start heartbeat
       this.startHeartbeat();
-      
+
       return this.socket;
     } catch (error) {
       const errorInfo = handleError(error, {
@@ -135,30 +135,30 @@ class UnifiedWebSocketService {
           severity: ErrorSeverity.ERROR,
         },
       });
-      
+
       this.updateConnectionState({
         isConnecting: false,
         error: new Error(errorInfo.message),
       });
-      
+
       throw error;
     }
   }
-  
+
   /**
    * Get current socket instance
    */
   public getSocket(): Socket | null {
     return this.socket;
   }
-  
+
   /**
    * Get connection state
    */
   public getConnectionState(): ConnectionState {
     return { ...this.connectionState };
   }
-  
+
   /**
    * Connect to WebSocket server
    */
@@ -167,17 +167,17 @@ class UnifiedWebSocketService {
       await this.initialize();
       return;
     }
-    
+
     if (this.socket.connected) {
       logger.info('Socket already connected');
       return;
     }
-    
+
     logger.info('Connecting socket');
     this.updateConnectionState({ isConnecting: true });
     this.socket.connect();
   }
-  
+
   /**
    * Disconnect from WebSocket server
    */
@@ -186,47 +186,47 @@ class UnifiedWebSocketService {
       logger.warn('No socket to disconnect');
       return;
     }
-    
+
     logger.info('Disconnecting socket');
-    
+
     // Stop heartbeat
     this.stopHeartbeat();
-    
+
     // Leave all rooms
     for (const [room] of this.roomSubscriptions) {
       await this.leaveRoom(room);
     }
-    
+
     // Remove all event handlers
     this.removeAllHandlers();
-    
+
     // Disconnect socket
     this.socket.disconnect();
     this.socket = null;
-    
+
     this.updateConnectionState({
       isConnected: false,
       isConnecting: false,
       lastDisconnectedAt: new Date(),
     });
   }
-  
+
   /**
    * Subscribe to connection state changes
    */
   public onStateChange(handler: (state: ConnectionState) => void): () => void {
     this.stateChangeHandlers.add(handler);
-    
+
     // Return unsubscribe function
     return () => {
       this.stateChangeHandlers.delete(handler);
     };
   }
-  
+
   // ===========================
   // Event Management
   // ===========================
-  
+
   /**
    * Register event handler
    */
@@ -235,41 +235,41 @@ class UnifiedWebSocketService {
       logger.warn(`Cannot register handler for ${event}: Socket not initialized`);
       return '';
     }
-    
+
     const id = `${event}_${Date.now()}_${Math.random()}`;
-    
+
     // Create subscription
     const subscription: EventSubscription = {
       event,
       handler,
       id,
     };
-    
+
     // Add to subscriptions map
     if (!this.eventSubscriptions.has(event)) {
       this.eventSubscriptions.set(event, []);
     }
     this.eventSubscriptions.get(event)!.push(subscription);
-    
+
     // Register with socket
     this.socket.on(event, handler);
-    
+
     logger.debug(`Registered handler for event: ${event}`);
     return id;
   }
-  
+
   /**
    * Remove event handler
    */
   public off(event: string, handlerOrId?: ((...args: any[]) => void) | string): void {
     if (!this.socket) return;
-    
+
     const subscriptions = this.eventSubscriptions.get(event);
     if (!subscriptions) return;
-    
+
     if (typeof handlerOrId === 'string') {
       // Remove by ID
-      const index = subscriptions.findIndex(sub => sub.id === handlerOrId);
+      const index = subscriptions.findIndex((sub) => sub.id === handlerOrId);
       if (index !== -1) {
         const handler = subscriptions[index].handler;
         this.socket.off(event, handler);
@@ -277,22 +277,22 @@ class UnifiedWebSocketService {
       }
     } else if (handlerOrId) {
       // Remove by handler reference
-      const index = subscriptions.findIndex(sub => sub.handler === handlerOrId);
+      const index = subscriptions.findIndex((sub) => sub.handler === handlerOrId);
       if (index !== -1) {
         this.socket.off(event, handlerOrId);
         subscriptions.splice(index, 1);
       }
     } else {
       // Remove all handlers for event
-      subscriptions.forEach(sub => {
+      subscriptions.forEach((sub) => {
         this.socket!.off(event, sub.handler);
       });
       this.eventSubscriptions.delete(event);
     }
-    
+
     logger.debug(`Removed handler(s) for event: ${event}`);
   }
-  
+
   /**
    * Emit event
    */
@@ -301,16 +301,16 @@ class UnifiedWebSocketService {
       logger.warn(`Cannot emit ${event}: Socket not initialized`);
       return;
     }
-    
+
     if (!this.socket.connected) {
       logger.warn(`Cannot emit ${event}: Socket not connected`);
       return;
     }
-    
+
     this.socket.emit(event, ...args);
     logger.debug(`Emitted event: ${event}`, args);
   }
-  
+
   /**
    * Emit event and wait for acknowledgment
    */
@@ -318,16 +318,16 @@ class UnifiedWebSocketService {
     if (!this.socket) {
       throw new Error('Socket not initialized');
     }
-    
+
     if (!this.socket.connected) {
       throw new Error('Socket not connected');
     }
-    
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error(`Timeout waiting for acknowledgment: ${event}`));
       }, this.config.timeout || 10000);
-      
+
       this.socket!.emit(event, ...args, (response: any) => {
         clearTimeout(timeout);
         if (response.error) {
@@ -338,11 +338,11 @@ class UnifiedWebSocketService {
       });
     });
   }
-  
+
   // ===========================
   // Room Management
   // ===========================
-  
+
   /**
    * Join a room
    */
@@ -350,26 +350,26 @@ class UnifiedWebSocketService {
     if (!this.socket || !this.socket.connected) {
       throw new Error('Socket not connected');
     }
-    
+
     logger.info(`Joining room: ${room}`);
-    
+
     try {
       await this.emitWithAck('join_room', { room });
-      
+
       // Track subscription
       this.roomSubscriptions.set(room, {
         room,
         joinedAt: new Date(),
         events: events || [],
       });
-      
+
       logger.info(`Successfully joined room: ${room}`);
     } catch (error) {
       logger.error(`Failed to join room ${room}:`, error);
       throw error;
     }
   }
-  
+
   /**
    * Leave a room
    */
@@ -378,32 +378,32 @@ class UnifiedWebSocketService {
       logger.warn(`Cannot leave room ${room}: Socket not connected`);
       return;
     }
-    
+
     logger.info(`Leaving room: ${room}`);
-    
+
     try {
       await this.emitWithAck('leave_room', { room });
-      
+
       // Remove subscription
       this.roomSubscriptions.delete(room);
-      
+
       logger.info(`Successfully left room: ${room}`);
     } catch (error) {
       logger.error(`Failed to leave room ${room}:`, error);
     }
   }
-  
+
   /**
    * Get current room subscriptions
    */
   public getRooms(): string[] {
     return Array.from(this.roomSubscriptions.keys());
   }
-  
+
   // ===========================
   // Specialized Room Methods
   // ===========================
-  
+
   /**
    * Join project room for real-time updates
    */
@@ -418,36 +418,31 @@ class UnifiedWebSocketService {
       'project_updated',
     ]);
   }
-  
+
   /**
    * Leave project room
    */
   public async leaveProjectRoom(projectId: string): Promise<void> {
     await this.leaveRoom(`project_${projectId}`);
   }
-  
+
   /**
    * Join segmentation queue room
    */
   public async joinSegmentationQueueRoom(): Promise<void> {
-    await this.joinRoom('segmentation_queue', [
-      'queue_updated',
-      'task_started',
-      'task_completed',
-      'task_failed',
-    ]);
+    await this.joinRoom('segmentation_queue', ['queue_updated', 'task_started', 'task_completed', 'task_failed']);
   }
-  
+
   // ===========================
   // Private Methods
   // ===========================
-  
+
   /**
    * Set up core event handlers
    */
   private setupCoreHandlers(): void {
     if (!this.socket) return;
-    
+
     // Connection events
     this.socket.on('connect', () => {
       logger.info(`Socket connected with ID: ${this.socket!.id}`);
@@ -458,11 +453,11 @@ class UnifiedWebSocketService {
         reconnectAttempts: 0,
         lastConnectedAt: new Date(),
       });
-      
+
       // Rejoin rooms after reconnection
       this.rejoinRooms();
     });
-    
+
     this.socket.on('disconnect', (reason) => {
       logger.info(`Socket disconnected: ${reason}`);
       this.updateConnectionState({
@@ -470,14 +465,14 @@ class UnifiedWebSocketService {
         isConnecting: false,
         lastDisconnectedAt: new Date(),
       });
-      
+
       // Handle reconnection logic
       if (reason === 'io server disconnect') {
         // Server initiated disconnect, try to reconnect
         setTimeout(() => this.connect(), this.config.reconnectionDelay);
       }
     });
-    
+
     this.socket.on('connect_error', (error) => {
       logger.error('Socket connection error:', error);
       this.updateConnectionState({
@@ -486,20 +481,20 @@ class UnifiedWebSocketService {
         reconnectAttempts: this.connectionState.reconnectAttempts + 1,
       });
     });
-    
+
     // Heartbeat events
     this.socket.on('pong', (data) => {
       const latency = Date.now() - this.lastPingTime;
       logger.debug(`Heartbeat pong received, latency: ${latency}ms`);
       this.pingTimeouts = 0;
-      
+
       // Clear timeout
       if (this.heartbeatTimeout) {
         clearTimeout(this.heartbeatTimeout);
         this.heartbeatTimeout = null;
       }
     });
-    
+
     // Error events
     this.socket.on('error', (error) => {
       logger.error('Socket error:', error);
@@ -512,7 +507,7 @@ class UnifiedWebSocketService {
       });
     });
   }
-  
+
   /**
    * Update connection state and notify listeners
    */
@@ -521,9 +516,9 @@ class UnifiedWebSocketService {
       ...this.connectionState,
       ...updates,
     };
-    
+
     // Notify state change handlers
-    this.stateChangeHandlers.forEach(handler => {
+    this.stateChangeHandlers.forEach((handler) => {
       try {
         handler(this.getConnectionState());
       } catch (error) {
@@ -531,24 +526,24 @@ class UnifiedWebSocketService {
       }
     });
   }
-  
+
   /**
    * Start heartbeat mechanism
    */
   private startHeartbeat(): void {
     this.stopHeartbeat();
-    
+
     this.heartbeatInterval = setInterval(() => {
       if (!this.socket || !this.socket.connected) return;
-      
+
       this.lastPingTime = Date.now();
       this.emit('ping', { timestamp: this.lastPingTime });
-      
+
       // Set timeout for pong response
       this.heartbeatTimeout = setTimeout(() => {
         this.pingTimeouts++;
         logger.warn(`Heartbeat timeout #${this.pingTimeouts}`);
-        
+
         if (this.pingTimeouts >= 3) {
           logger.error('Multiple heartbeat timeouts, reconnecting...');
           this.socket?.disconnect();
@@ -557,7 +552,7 @@ class UnifiedWebSocketService {
       }, 5000);
     }, 10000); // Ping every 10 seconds
   }
-  
+
   /**
    * Stop heartbeat mechanism
    */
@@ -566,15 +561,15 @@ class UnifiedWebSocketService {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
     }
-    
+
     if (this.heartbeatTimeout) {
       clearTimeout(this.heartbeatTimeout);
       this.heartbeatTimeout = null;
     }
-    
+
     this.pingTimeouts = 0;
   }
-  
+
   /**
    * Rejoin rooms after reconnection
    */
@@ -588,21 +583,21 @@ class UnifiedWebSocketService {
       }
     }
   }
-  
+
   /**
    * Remove all event handlers
    */
   private removeAllHandlers(): void {
     if (!this.socket) return;
-    
+
     // Remove subscription handlers
     for (const [event, subscriptions] of this.eventSubscriptions) {
-      subscriptions.forEach(sub => {
+      subscriptions.forEach((sub) => {
         this.socket!.off(event, sub.handler);
       });
     }
     this.eventSubscriptions.clear();
-    
+
     // Remove core handlers
     this.socket.removeAllListeners();
   }

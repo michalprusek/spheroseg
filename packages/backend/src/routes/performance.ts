@@ -2,7 +2,7 @@ import express from 'express';
 import { Request, Response } from 'express';
 import pool from '../db';
 import logger from '../utils/logger';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 
 const router = express.Router();
 
@@ -47,7 +47,7 @@ router.post('/', async (req: Request, res: Response) => {
             new Date(),
             req.headers['user-agent'] || null,
             JSON.stringify(metrics.metadata || {}),
-          ],
+          ]
         );
       }
     } catch (dbError) {
@@ -94,7 +94,7 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
        WHERE client_id = $1
        ORDER BY timestamp DESC
        LIMIT 100`,
-      [userId],
+      [userId]
     );
 
     res.status(200).json({ metrics: result.rows });

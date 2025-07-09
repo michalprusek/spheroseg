@@ -1,9 +1,9 @@
 /**
  * Legacy Database Module - Optimized
- * 
+ *
  * DEPRECATED: This module is being phased out in favor of the unified database module.
  * Please use 'db/unified' for new code.
- * 
+ *
  * This file now re-exports from the unified module for backward compatibility.
  */
 

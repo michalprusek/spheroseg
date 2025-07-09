@@ -84,8 +84,16 @@ export function scalePolygons(
   }
 
   // Ensure all dimensions are valid positive numbers
-  if (!originalWidth || !originalHeight || !targetWidth || !targetHeight ||
-      originalWidth <= 0 || originalHeight <= 0 || targetWidth <= 0 || targetHeight <= 0) {
+  if (
+    !originalWidth ||
+    !originalHeight ||
+    !targetWidth ||
+    !targetHeight ||
+    originalWidth <= 0 ||
+    originalHeight <= 0 ||
+    targetWidth <= 0 ||
+    targetHeight <= 0
+  ) {
     CLogger.warn('[scalePolygons] Invalid dimensions:', {
       originalWidth,
       originalHeight,
@@ -147,7 +155,7 @@ export function scalePolygons(
         holePoints.map((point: Point) => ({
           x: point.x * scale + offsetX,
           y: point.y * scale + offsetY,
-        }))
+        })),
       );
     }
 
@@ -183,7 +191,8 @@ export function darkenColor(color: string, percent: number): string {
   let g = parseInt(color.substring(3, 5), 16);
   let b = parseInt(color.substring(5, 7), 16);
 
-  if (color.length === 4) { // Handle shorthand #RGB
+  if (color.length === 4) {
+    // Handle shorthand #RGB
     r = parseInt(color.substring(1, 2) + color.substring(1, 2), 16);
     g = parseInt(color.substring(2, 3) + color.substring(2, 3), 16);
     b = parseInt(color.substring(3, 4) + color.substring(3, 4), 16);

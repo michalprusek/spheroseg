@@ -24,7 +24,7 @@ uploadClient.interceptors.request.use(
       logger.info('Upload client: Added Authorization header', {
         url: config.url,
         method: config.method,
-        hasFormData: config.data instanceof FormData
+        hasFormData: config.data instanceof FormData,
       });
     } else {
       logger.warn('Upload client: No valid token available');
@@ -42,7 +42,7 @@ uploadClient.interceptors.request.use(
     logger.debug(`Upload Request: ${config.method?.toUpperCase()} ${config.url}`, {
       requestId,
       headers: Object.keys(config.headers),
-      hasAuth: !!config.headers.Authorization
+      hasAuth: !!config.headers.Authorization,
     });
 
     return config;
@@ -50,7 +50,7 @@ uploadClient.interceptors.request.use(
   (error: AxiosError) => {
     logger.error('Upload request setup error', error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor - handle auth errors same as apiClient
@@ -66,27 +66,29 @@ uploadClient.interceptors.response.use(
 
     logger.error(`Upload Error: ${status || 'Network Error'} ${method} ${url}`, {
       message: error.message,
-      responseData: error.response?.data
+      responseData: error.response?.data,
     });
 
     // Handle authentication errors
     if (status === 401) {
       const errorMessage = (error.response?.data as any)?.message?.toLowerCase() || '';
-      
+
       logger.warn('Upload: Unauthorized access detected', {
         url,
         method,
-        errorMessage
+        errorMessage,
       });
 
       // Only clear tokens for actual auth failures
-      if (errorMessage.includes('token') || 
-          errorMessage.includes('expired') || 
-          errorMessage.includes('invalid') ||
-          errorMessage.includes('unauthorized')) {
+      if (
+        errorMessage.includes('token') ||
+        errorMessage.includes('expired') ||
+        errorMessage.includes('invalid') ||
+        errorMessage.includes('unauthorized')
+      ) {
         logger.info('Upload: Clearing tokens due to auth error');
         removeTokens();
-        
+
         handleError(error, {
           context: `Upload ${method} ${url}`,
           errorInfo: {
@@ -96,14 +98,14 @@ uploadClient.interceptors.response.use(
           },
           showToast: true,
         });
-        
+
         // Dispatch auth expired event
         window.dispatchEvent(new CustomEvent('auth:expired'));
       }
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default uploadClient;

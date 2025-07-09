@@ -29,7 +29,7 @@ const isTest = env === 'test';
 const config = {
   env,
   isDevelopment,
-  isProduction, 
+  isProduction,
   isTest,
 
   server: {
@@ -68,7 +68,9 @@ const config = {
   storage: {
     uploadDir: validatedEnv.UPLOAD_DIR || path.join(ROOT_DIR, 'uploads'),
     maxFileSize: parseInt(validatedEnv.MAX_UPLOAD_SIZE || '50000000', 10),
-    allowedFileTypes: (validatedEnv.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/tiff,image/tif,image/bmp').split(','),
+    allowedFileTypes: (
+      validatedEnv.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/tiff,image/tif,image/bmp'
+    ).split(','),
     // Storage limits and monitoring
     defaultUserStorageLimit: parseInt(validatedEnv.DEFAULT_USER_STORAGE_LIMIT || '10737418240', 10), // 10 GB
     defaultUserLimitBytes: BigInt(validatedEnv.DEFAULT_USER_STORAGE_LIMIT || '10737418240'), // 10 GB as BigInt

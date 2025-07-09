@@ -1,6 +1,6 @@
 /**
  * Security Manager
- * 
+ *
  * Centralized security management class that coordinates all security-related
  * functionality in the application.
  */
@@ -117,10 +117,10 @@ export class SecurityManager {
     this.whitelistedIPs.add('127.0.0.1');
     this.whitelistedIPs.add('::1');
     this.whitelistedIPs.add('localhost');
-    
+
     // Add configured whitelisted IPs
     const configuredWhitelist = config.security?.ipWhitelist || [];
-    configuredWhitelist.forEach(ip => this.whitelistedIPs.add(ip));
+    configuredWhitelist.forEach((ip) => this.whitelistedIPs.add(ip));
   }
 
   /**
@@ -129,7 +129,7 @@ export class SecurityManager {
   public applyToApp(app: Application): void {
     // Add custom security middleware
     app.use(this.securityMiddleware.bind(this));
-    
+
     // Add metrics endpoint (protected)
     app.get('/api/security/metrics', this.requireAdmin.bind(this), (req, res) => {
       res.json(this.getMetrics());
@@ -155,7 +155,7 @@ export class SecurityManager {
       // Check if IP is suspicious
       if (this.suspiciousIPs.has(clientIp)) {
         this.metrics.blockedRequests++;
-        logger.warn('Blocked request from suspicious IP', { 
+        logger.warn('Blocked request from suspicious IP', {
           ip: clientIp,
           url: req.url,
           method: req.method,
@@ -172,12 +172,12 @@ export class SecurityManager {
         } catch (rateLimiterRes) {
           this.metrics.rateLimitHits++;
           logger.warn('Rate limit exceeded', { ip: clientIp });
-          
+
           // Add to suspicious IPs if hitting rate limit frequently
           if (this.metrics.rateLimitHits > 10) {
             this.markAsSuspicious(clientIp);
           }
-          
+
           res.set('Retry-After', String(Math.round(rateLimiterRes.msBeforeNext / 1000)) || '60');
           return res.status(429).json({ error: 'Too many requests' });
         }
@@ -200,7 +200,7 @@ export class SecurityManager {
     this.suspiciousIPs.add(ip);
     this.metrics.suspiciousActivities++;
     logger.warn('IP marked as suspicious', { ip });
-    
+
     // Auto-remove from suspicious list after 1 hour
     setTimeout(() => {
       this.suspiciousIPs.delete(ip);
@@ -218,11 +218,11 @@ export class SecurityManager {
       '/api/auth/register',
       '/api/auth/reset-password',
     ];
-    
-    if (safeEndpoints.some(endpoint => req.url.startsWith(endpoint))) {
+
+    if (safeEndpoints.some((endpoint) => req.url.startsWith(endpoint))) {
       return;
     }
-    
+
     const suspiciousPatterns = [
       /\.\.\//, // Directory traversal
       /<script/i, // XSS attempt
@@ -235,7 +235,7 @@ export class SecurityManager {
     // Check URL separately from body to avoid false positives
     const urlToCheck = req.url;
     const bodyToCheck = req.body ? JSON.stringify(req.body) : '';
-    
+
     // Check URL patterns
     for (const pattern of suspiciousPatterns) {
       if (pattern.test(urlToCheck)) {
@@ -250,7 +250,7 @@ export class SecurityManager {
         return;
       }
     }
-    
+
     // For body, use more intelligent checking to avoid false positives
     if (bodyToCheck) {
       // Check for actual SQL injection attempts, not just field names
@@ -263,7 +263,7 @@ export class SecurityManager {
         /\b(OR|AND)\s+\d+\s*=\s*\d+/i, // SQL injection with numeric comparison
         /['"]\s*(OR|AND)\s+['"]\w+['"]\s*=\s*['"]\w+['"]/i, // SQL injection with string comparison
       ];
-      
+
       for (const pattern of bodySqlPatterns) {
         if (pattern.test(bodyToCheck)) {
           const clientIp = securityHelpers.getClientIp(req);
@@ -285,7 +285,7 @@ export class SecurityManager {
    */
   public recordAuthFailure(ip: string): void {
     this.metrics.authenticationFailures++;
-    
+
     // Mark as suspicious after 5 failed attempts
     if (this.metrics.authenticationFailures % 5 === 0) {
       this.markAsSuspicious(ip);
@@ -330,11 +330,11 @@ export class SecurityManager {
    */
   private requireAdmin(req: Request, res: Response, next: NextFunction): void {
     const user = (req as any).user;
-    
+
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });
     }
-    
+
     next();
   }
 

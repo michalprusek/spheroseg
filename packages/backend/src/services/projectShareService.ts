@@ -387,11 +387,7 @@ export class ProjectShareService {
       RETURNING id
     `;
 
-    await this.pool.query(insertQuery, [
-      projectId,
-      permission,
-      invitationToken,
-    ]);
+    await this.pool.query(insertQuery, [projectId, permission, invitationToken]);
 
     logger.info(`Invitation link generated for project ${projectId}`);
 

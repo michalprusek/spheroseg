@@ -82,14 +82,19 @@ describe('fileCleanupService', () => {
       const result = await cleanupProjectFiles(mockPool, projectId);
 
       // Verify database queries
-      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('FROM images'), [projectId]);
-      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('FROM segmentation_results'), [
-        ['img1', 'img2'],
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('FROM images'), [
+        projectId,
       ]);
+      expect(mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('FROM segmentation_results'),
+        [['img1', 'img2']]
+      );
 
       // Verify files deleted
       expect(imageUtils.deleteFile).toHaveBeenCalledTimes(7); // 2 original + 2 thumbnails + 2 segmentation + 1 extra
-      expect(fs.rmdirSync).toHaveBeenCalledWith('/mock/upload/dir/test-project-id', { recursive: true });
+      expect(fs.rmdirSync).toHaveBeenCalledWith('/mock/upload/dir/test-project-id', {
+        recursive: true,
+      });
 
       // Verify result
       expect(result.success).toBe(true);
@@ -125,7 +130,9 @@ describe('fileCleanupService', () => {
       const result = await cleanupProjectFiles(mockPool, projectId);
 
       // Verify image deletion attempt
-      expect(imageUtils.deleteFile).toHaveBeenCalledWith('/mock/upload/dir/test-project-id/image1.jpg');
+      expect(imageUtils.deleteFile).toHaveBeenCalledWith(
+        '/mock/upload/dir/test-project-id/image1.jpg'
+      );
 
       // Verify result includes failed file
       expect(result.success).toBe(false);

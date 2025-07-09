@@ -335,7 +335,9 @@ describe('Image Routes', () => {
         .redirects(0); // Don't follow redirects
 
       expect(response.status).toBe(307); // Temporary redirect
-      expect(response.headers.location).toBe(`/api/projects/${testProjectId}/images/${testImageId}`);
+      expect(response.headers.location).toBe(
+        `/api/projects/${testProjectId}/images/${testImageId}`
+      );
     });
 
     it('should redirect GET /api/verify/:id to the new route', async () => {
@@ -356,7 +358,9 @@ describe('Image Routes', () => {
         .redirects(0); // Don't follow redirects
 
       expect(response.status).toBe(307); // Temporary redirect
-      expect(response.headers.location).toBe(`/api/projects/${testProjectId}/images/${testImageId}/verify`);
+      expect(response.headers.location).toBe(
+        `/api/projects/${testProjectId}/images/${testImageId}/verify`
+      );
     });
   });
 });

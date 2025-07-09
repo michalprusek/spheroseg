@@ -72,12 +72,14 @@ describe('Auth Routes - /api/auth', () => {
       expect(response.body.user.email).toBe(testEmail);
       expect(response.body.user.isApproved).toBe(false);
       expect(mockPoolQuery).toHaveBeenCalledTimes(2);
-      expect(mockPoolQuery).toHaveBeenNthCalledWith(1, 'SELECT id FROM users WHERE email = $1', [testEmail]);
+      expect(mockPoolQuery).toHaveBeenNthCalledWith(1, 'SELECT id FROM users WHERE email = $1', [
+        testEmail,
+      ]);
       expect(mockBcryptHash).toHaveBeenCalledWith(testPassword, 10); // 10 is SALT_ROUNDS
       expect(mockPoolQuery).toHaveBeenNthCalledWith(
         2,
         'INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING id, email, created_at',
-        [testEmail, hashedPassword, 'Test User'], // Assuming simple split logic
+        [testEmail, hashedPassword, 'Test User'] // Assuming simple split logic
       );
     });
 
@@ -163,11 +165,17 @@ describe('Auth Routes - /api/auth', () => {
       expect(response.body.token).toBe(mockToken);
       expect(response.body.user.id).toBe(userId);
       expect(response.body.user.email).toBe(testEmail);
-      expect(mockPoolQuery).toHaveBeenCalledWith('SELECT * FROM users WHERE email = $1', [testEmail]);
+      expect(mockPoolQuery).toHaveBeenCalledWith('SELECT * FROM users WHERE email = $1', [
+        testEmail,
+      ]);
       expect(mockBcryptCompare).toHaveBeenCalledWith(testPassword, userDbRecord.password_hash);
-      expect(mockJwtSign).toHaveBeenCalledWith({ userId: userId, email: testEmail }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
-      });
+      expect(mockJwtSign).toHaveBeenCalledWith(
+        { userId: userId, email: testEmail },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '1h',
+        }
+      );
     });
 
     it('should return 401 if user email is not found', async () => {

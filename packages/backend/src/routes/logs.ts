@@ -1,7 +1,7 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import { z } from 'zod';
 import logger from '../utils/logger';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import pool from '../db';
 import { monitorQuery } from '../monitoring/unified';
 

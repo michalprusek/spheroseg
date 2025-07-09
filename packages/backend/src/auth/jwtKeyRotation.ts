@@ -1,6 +1,6 @@
 /**
  * JWT Key Rotation s jwks-rsa
- * 
+ *
  * Implementace automatické rotace JWT klíčů pro vyšší bezpečnost
  */
 
@@ -84,7 +84,7 @@ export class JWTKeyManager {
       } else if (this.config.localKeys) {
         // Lokální správa klíčů
         await this.loadLocalKeys();
-        
+
         // Pokud nejsou žádné klíče, vygenerovat nový pár
         if (this.localKeys.size === 0) {
           await this.generateNewKeyPair();
@@ -107,16 +107,16 @@ export class JWTKeyManager {
   private async loadLocalKeys(): Promise<void> {
     try {
       const files = await fs.readdir(this.keysPath);
-      
+
       for (const file of files) {
         if (file.endsWith('.json')) {
           const keyData = await fs.readFile(path.join(this.keysPath, file), 'utf-8');
           const keyPair = JSON.parse(keyData) as KeyPair;
-          
+
           // Kontrola expirace
           if (new Date(keyPair.expiresAt) > new Date()) {
             this.localKeys.set(keyPair.kid, keyPair);
-            
+
             // Nastavit jako aktuální klíč, pokud není žádný
             if (!this.currentKeyId) {
               this.currentKeyId = keyPair.kid;
@@ -137,7 +137,7 @@ export class JWTKeyManager {
    */
   private async generateNewKeyPair(): Promise<KeyPair> {
     const kid = crypto.randomBytes(16).toString('hex');
-    
+
     // Generování RSA klíčů
     const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 2048,
@@ -161,10 +161,7 @@ export class JWTKeyManager {
     };
 
     // Uložit klíč
-    await fs.writeFile(
-      path.join(this.keysPath, `${kid}.json`),
-      JSON.stringify(keyPair, null, 2)
-    );
+    await fs.writeFile(path.join(this.keysPath, `${kid}.json`), JSON.stringify(keyPair, null, 2));
 
     this.localKeys.set(kid, keyPair);
     this.currentKeyId = kid;
@@ -216,7 +213,7 @@ export class JWTKeyManager {
    */
   public getCurrentPrivateKey(): string | null {
     if (!this.currentKeyId) return null;
-    
+
     const keyPair = this.localKeys.get(this.currentKeyId);
     return keyPair ? keyPair.privateKey : null;
   }
@@ -252,10 +249,10 @@ export class JWTKeyManager {
    * Získání JWKS pro veřejný endpoint
    */
   public getJWKS(): any {
-    const keys = Array.from(this.localKeys.values()).map(keyPair => {
+    const keys = Array.from(this.localKeys.values()).map((keyPair) => {
       const keyObject = crypto.createPublicKey(keyPair.publicKey);
       const jwk = keyObject.export({ format: 'jwk' });
-      
+
       return {
         ...jwk,
         kid: keyPair.kid,
@@ -295,7 +292,7 @@ export function getKeyManager(): JWTKeyManager {
       jwksUri: config.auth.jwksUri,
     });
   }
-  
+
   return keyManager;
 }
 
@@ -311,7 +308,7 @@ export function validateJWTWithRotation(req: Request, res: Response, next: NextF
 
   // Dekódovat token pro získání kid
   const decoded = jwt.decode(token, { complete: true });
-  
+
   if (!decoded || typeof decoded === 'string' || !decoded.header.kid) {
     throw new ApiError('Invalid token format', 401);
   }
@@ -320,21 +317,24 @@ export function validateJWTWithRotation(req: Request, res: Response, next: NextF
   const manager = getKeyManager();
 
   // Získat veřejný klíč
-  manager.getPublicKey(kid).then(publicKey => {
-    if (!publicKey) {
-      throw new ApiError('Unknown key ID', 401);
-    }
-
-    // Verifikovat token
-    jwt.verify(token, publicKey, { algorithms: ['RS256', 'RS384', 'RS512'] }, (err, payload) => {
-      if (err) {
-        throw new ApiError('Invalid token', 401);
+  manager
+    .getPublicKey(kid)
+    .then((publicKey) => {
+      if (!publicKey) {
+        throw new ApiError('Unknown key ID', 401);
       }
 
-      (req as any).user = payload;
-      next();
-    });
-  }).catch(next);
+      // Verifikovat token
+      jwt.verify(token, publicKey, { algorithms: ['RS256', 'RS384', 'RS512'] }, (err, payload) => {
+        if (err) {
+          throw new ApiError('Invalid token', 401);
+        }
+
+        (req as any).user = payload;
+        next();
+      });
+    })
+    .catch(next);
 }
 
 /**
@@ -363,7 +363,7 @@ export function signJWTWithRotation(payload: any, options?: jwt.SignOptions): st
 export function jwksEndpoint(req: Request, res: Response): void {
   const manager = getKeyManager();
   const jwks = manager.getJWKS();
-  
+
   res.json(jwks);
 }
 
@@ -374,7 +374,7 @@ export async function rotateKeysEndpoint(req: Request, res: Response): Promise<v
   try {
     const manager = getKeyManager();
     await manager.rotateKeys();
-    
+
     res.json({
       message: 'Keys rotated successfully',
       currentKeyId: manager.getCurrentKeyId(),

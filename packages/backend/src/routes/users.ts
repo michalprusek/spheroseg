@@ -4,7 +4,7 @@
  * This file contains routes for user-related operations.
  */
 import express, { Response, Router, Request } from 'express';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import logger from '../utils/logger';
 import pool from '../db';
 import { v4 as uuidv4 } from 'uuid';
@@ -61,7 +61,9 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
     let profile = null;
     if (profileTableCheck.rows[0].exists) {
       // Get profile from database
-      const profileResult = await pool.query('SELECT * FROM user_profiles WHERE user_id = $1', [userId]);
+      const profileResult = await pool.query('SELECT * FROM user_profiles WHERE user_id = $1', [
+        userId,
+      ]);
       if (profileResult.rows.length > 0) {
         profile = profileResult.rows[0];
       }
@@ -136,7 +138,7 @@ router.post('/register', async (req: Request, res: Response) => {
     // Insert user into database
     const newUser = await pool.query(
       'INSERT INTO users (id, email, name, created_at) VALUES ($1, $2, $3, NOW()) RETURNING *',
-      [userId, email, name],
+      [userId, email, name]
     );
 
     logger.info('User registered successfully', { userId, email });
@@ -194,7 +196,7 @@ router.post('/login', async (req: Request, res: Response) => {
       const userId = uuidv4();
       await pool.query(
         'INSERT INTO users (id, email, name, created_at, is_approved) VALUES ($1, $2, $3, NOW(), TRUE)',
-        [userId, email || 'dev@example.com', 'Development User'],
+        [userId, email || 'dev@example.com', 'Development User']
       );
 
       // Generate JWT using tokenService
@@ -224,14 +226,11 @@ router.post('/login', async (req: Request, res: Response) => {
       const userId = uuidv4();
       await pool.query(
         'INSERT INTO users (id, email, name, created_at, is_approved) VALUES ($1, $2, $3, NOW(), TRUE)',
-        [userId, email, 'Development User'],
+        [userId, email, 'Development User']
       );
 
       // Generate JWT using tokenService
-      const tokenResponse = await tokenService.createTokenResponse(
-        userId,
-        email
-      );
+      const tokenResponse = await tokenService.createTokenResponse(userId, email);
 
       logger.info('Development user created and logged in', { userId, email });
       return res.status(200).json({
@@ -248,10 +247,7 @@ router.post('/login', async (req: Request, res: Response) => {
     const user = userResult.rows[0];
 
     // Generate JWT using tokenService
-    const tokenResponse = await tokenService.createTokenResponse(
-      user.id,
-      user.email
-    );
+    const tokenResponse = await tokenService.createTokenResponse(user.id, user.email);
 
     logger.info('Login successful', { userId: user.id, email: user.email });
     return res.status(200).json({
@@ -279,25 +275,30 @@ router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, r
 
   try {
     // Get projects count
-    const projectsCountResult = await pool.query('SELECT COUNT(*) FROM projects WHERE user_id = $1', [userId]);
+    const projectsCountResult = await pool.query(
+      'SELECT COUNT(*) FROM projects WHERE user_id = $1',
+      [userId]
+    );
     const projectsCount = parseInt(projectsCountResult.rows[0].count, 10) || 0;
 
     // Get images count - join with projects to get all images for this user's projects
     const imagesCountResult = await pool.query(
       'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1',
-      [userId],
+      [userId]
     );
     const imagesCount = parseInt(imagesCountResult.rows[0].count, 10) || 0;
 
     // Get segmentations count - count completed images as segmentations
     const segmentationsCountResult = await pool.query(
       'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.status = $2',
-      [userId, 'completed'],
+      [userId, 'completed']
     );
     const segmentationsCount = parseInt(segmentationsCountResult.rows[0].count, 10) || 0;
 
     // Get storage used
-    const storageResult = await pool.query('SELECT storage_used_bytes FROM users WHERE id = $1', [userId]);
+    const storageResult = await pool.query('SELECT storage_used_bytes FROM users WHERE id = $1', [
+      userId,
+    ]);
     const storageUsed = parseInt(storageResult.rows[0]?.storage_used_bytes, 10) || 0;
     const storageLimit = parseInt(storageResult.rows[0]?.storage_limit_bytes, 10) || 10737418240; // 10GB default
 
@@ -338,7 +339,7 @@ router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, r
       ORDER BY timestamp DESC
       LIMIT 10
     `,
-      [userId],
+      [userId]
     );
 
     const recentActivity = recentActivityResult.rows;
@@ -453,20 +454,23 @@ router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: R
 
   try {
     // Get projects count
-    const projectsCountResult = await pool.query('SELECT COUNT(*) FROM projects WHERE user_id = $1', [userId]);
+    const projectsCountResult = await pool.query(
+      'SELECT COUNT(*) FROM projects WHERE user_id = $1',
+      [userId]
+    );
     const projectsCount = parseInt(projectsCountResult.rows[0].count, 10) || 0;
 
     // Get images count - join with projects to get all images for this user's projects
     const imagesCountResult = await pool.query(
       'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1',
-      [userId],
+      [userId]
     );
     const imagesCount = parseInt(imagesCountResult.rows[0].count, 10) || 0;
 
     // Get segmentations count - count completed images as segmentations
     const segmentationsCountResult = await pool.query(
       'SELECT COUNT(*) FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.status = $2',
-      [userId, 'completed'],
+      [userId, 'completed']
     );
     const segmentationsCount = parseInt(segmentationsCountResult.rows[0].count, 10) || 0;
 

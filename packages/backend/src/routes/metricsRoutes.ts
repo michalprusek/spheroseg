@@ -33,7 +33,7 @@ router.post('/', (req, res) => {
 
     // Frontend metrics are now processed by PrometheusMetricsService
     // This endpoint is kept for backward compatibility
-    
+
     res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error processing metrics:', error);

@@ -1,5 +1,5 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';;
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import { getSegmentationQueueStatus } from '../services/segmentationService';
 import pool from '../db';
 import logger from '../utils/logger';
@@ -24,58 +24,62 @@ router.get('/check', (_req: Request, res: Response) => {
 
 // GET /api/queue-status - Get the current status of the segmentation queue with image details
 // @ts-ignore // TODO: Define AuthenticatedRequest properly if needed
-router.get('/queue-status', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  console.log('GET /api/queue-status called');
-  const userId = req.user?.userId;
+router.get(
+  '/queue-status',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    console.log('GET /api/queue-status called');
+    const userId = req.user?.userId;
 
-  if (!userId) {
-    res.status(401).json({ message: 'Authentication error' });
-    return;
-  }
+    if (!userId) {
+      res.status(401).json({ message: 'Authentication error' });
+      return;
+    }
 
-  try {
-    // Get basic queue status from segmentation service
-    const queueStatus = await getSegmentationQueueStatus();
-    const { queueLength, runningTasks } = queueStatus;
+    try {
+      // Get basic queue status from segmentation service
+      const queueStatus = await getSegmentationQueueStatus();
+      const { queueLength, runningTasks } = queueStatus;
 
-    // Get image details for running tasks
-    const processingImages: {
-      id: string;
-      name: string;
-      projectId: string;
-    }[] = [];
+      // Get image details for running tasks
+      const processingImages: {
+        id: string;
+        name: string;
+        projectId: string;
+      }[] = [];
 
-    if (runningTasks.length > 0) {
-      // Query database to get image names for the running tasks
-      const imagesQuery = await pool.query(
-        `SELECT i.id, i.name, i.project_id
+      if (runningTasks.length > 0) {
+        // Query database to get image names for the running tasks
+        const imagesQuery = await pool.query(
+          `SELECT i.id, i.name, i.project_id
          FROM images i
          JOIN projects p ON i.project_id = p.id
          WHERE i.id = ANY($1::uuid[]) AND p.user_id = $2`,
-        [runningTasks, userId],
-      );
+          [runningTasks, userId]
+        );
 
-      // Map the results to the expected format
-      for (const image of imagesQuery.rows) {
-        processingImages.push({
-          id: image.id,
-          name: image.name,
-          projectId: image.project_id,
-        });
+        // Map the results to the expected format
+        for (const image of imagesQuery.rows) {
+          processingImages.push({
+            id: image.id,
+            name: image.name,
+            projectId: image.project_id,
+          });
+        }
       }
-    }
 
-    // Return enhanced queue status
-    res.status(200).json({
-      queueLength,
-      runningTasks,
-      processingImages,
-    });
-  } catch (error) {
-    console.error('Error fetching queue status:', error);
-    next(error);
+      // Return enhanced queue status
+      res.status(200).json({
+        queueLength,
+        runningTasks,
+        processingImages,
+      });
+    } catch (error) {
+      console.error('Error fetching queue status:', error);
+      next(error);
+    }
   }
-});
+);
 
 // GET /api/queue-status/:projectId - Get queue status filtered by project
 // @ts-ignore
@@ -93,10 +97,10 @@ router.get(
 
     try {
       // Verify project access
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         res.status(404).json({ message: 'Project not found or access denied' });
@@ -112,7 +116,7 @@ router.get(
         `SELECT i.id, i.name
        FROM images i
        WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,
-        [runningTasks, projectId],
+        [runningTasks, projectId]
       );
 
       // Map the results to the expected format
@@ -130,7 +134,7 @@ router.get(
           `SELECT i.id
          FROM images i
          WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,
-          [pendingTasks, projectId],
+          [pendingTasks, projectId]
         );
 
         projectQueuedTasks = queuedImagesQuery.rows.map((row) => row.id);
@@ -157,7 +161,7 @@ router.get(
         timestamp: new Date().toISOString(),
       });
     }
-  },
+  }
 );
 
 // GET /api/mock-queue-status - Get mock queue status for development
@@ -203,7 +207,7 @@ router.get(
       console.error('Error fetching mock queue status:', error);
       next(error);
     }
-  },
+  }
 );
 
 // GET /api/mock-queue-status/:projectId - Get mock queue status for a specific project
@@ -242,7 +246,7 @@ router.get(
       console.error(`Error fetching mock queue status for project ${projectId}:`, error);
       next(error);
     }
-  },
+  }
 );
 
 export default router;

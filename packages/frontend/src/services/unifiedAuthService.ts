@@ -1,6 +1,6 @@
 /**
  * Unified Authentication Service
- * 
+ *
  * This service consolidates all authentication functionality into a single,
  * comprehensive API for managing user authentication, tokens, and sessions.
  */
@@ -87,7 +87,7 @@ const DEFAULT_CONFIG: AuthConfig = {
   maxRetries: 3,
   cookiePath: '/',
   cookieSecure: process.env.NODE_ENV === 'production',
-  cookieSameSite: 'lax'
+  cookieSameSite: 'lax',
 };
 
 // ===========================
@@ -123,41 +123,41 @@ class UnifiedAuthService {
   public async login(credentials: LoginCredentials): Promise<{ user: User; tokens: AuthTokens }> {
     try {
       logger.info('Attempting login', { email: credentials.email });
-      
+
       const response = await apiClient.post(apiPaths.auth.login, {
         email: credentials.email,
-        password: credentials.password
+        password: credentials.password,
       });
-      
+
       const { user, access_token, refresh_token, expires_in } = response.data;
-      
+
       const tokens: AuthTokens = {
         accessToken: access_token,
         refreshToken: refresh_token,
         expiresIn: expires_in || 3600,
-        tokenType: 'Bearer'
+        tokenType: 'Bearer',
       };
-      
+
       // Store tokens and user
       await this.storeAuthData(user, tokens, credentials.rememberMe);
-      
+
       // Setup token refresh
       this.scheduleTokenRefresh(tokens.expiresIn);
-      
+
       // Emit login event
       this.emitAuthEvent({
         type: 'login',
-        user
+        user,
       });
-      
+
       logger.info('Login successful', { userId: user.id });
-      
+
       return { user, tokens };
     } catch (error) {
       logger.error('Login failed', error);
       throw handleError(error, {
         context: 'login',
-        type: ErrorType.AUTHENTICATION
+        type: ErrorType.AUTHENTICATION,
       });
     }
   }
@@ -168,47 +168,47 @@ class UnifiedAuthService {
   public async register(credentials: RegisterCredentials): Promise<{ user: User; tokens: AuthTokens }> {
     try {
       logger.info('Attempting registration', { email: credentials.email });
-      
+
       // Validate passwords match
       if (credentials.confirmPassword && credentials.password !== credentials.confirmPassword) {
         throw new AppError('Passwords do not match', ErrorType.VALIDATION);
       }
-      
+
       const response = await apiClient.post(apiPaths.auth.register, {
         email: credentials.email,
         password: credentials.password,
-        username: credentials.username
+        username: credentials.username,
       });
-      
+
       const { user, access_token, refresh_token, expires_in } = response.data;
-      
+
       const tokens: AuthTokens = {
         accessToken: access_token,
         refreshToken: refresh_token,
         expiresIn: expires_in || 3600,
-        tokenType: 'Bearer'
+        tokenType: 'Bearer',
       };
-      
+
       // Store tokens and user
       await this.storeAuthData(user, tokens, true);
-      
+
       // Setup token refresh
       this.scheduleTokenRefresh(tokens.expiresIn);
-      
+
       // Emit login event
       this.emitAuthEvent({
         type: 'login',
-        user
+        user,
       });
-      
+
       logger.info('Registration successful', { userId: user.id });
-      
+
       return { user, tokens };
     } catch (error) {
       logger.error('Registration failed', error);
       throw handleError(error, {
         context: 'register',
-        type: ErrorType.AUTHENTICATION
+        type: ErrorType.AUTHENTICATION,
       });
     }
   }
@@ -219,10 +219,10 @@ class UnifiedAuthService {
   public async logout(): Promise<void> {
     try {
       logger.info('Attempting logout');
-      
+
       // Get current user for event
       const user = this.getCurrentUser();
-      
+
       // Call logout endpoint (optional - some backends track sessions)
       try {
         await apiClient.post(apiPaths.auth.logout);
@@ -230,28 +230,28 @@ class UnifiedAuthService {
         // Ignore logout endpoint errors - we'll clear local data anyway
         logger.warn('Logout endpoint failed, clearing local data', error);
       }
-      
+
       // Clear all auth data
       await this.clearAuthData();
-      
+
       // Cancel token refresh
       this.cancelTokenRefresh();
-      
+
       // Clear cache
       await cacheService.deleteByTag('user-data');
-      
+
       // Emit logout event
       this.emitAuthEvent({
         type: 'logout',
-        user: user || undefined
+        user: user || undefined,
       });
-      
+
       logger.info('Logout successful');
     } catch (error) {
       logger.error('Logout failed', error);
       throw handleError(error, {
         context: 'logout',
-        type: ErrorType.AUTHENTICATION
+        type: ErrorType.AUTHENTICATION,
       });
     }
   }
@@ -264,23 +264,23 @@ class UnifiedAuthService {
     if (this.refreshPromise) {
       return this.refreshPromise;
     }
-    
+
     this.refreshPromise = this.performTokenRefresh();
-    
+
     try {
       const tokens = await this.refreshPromise;
       this.refreshPromise = null;
-      
+
       // Process queued requests
       this.processRequestQueue(true);
-      
+
       return tokens;
     } catch (error) {
       this.refreshPromise = null;
-      
+
       // Process queued requests with error
       this.processRequestQueue(false);
-      
+
       throw error;
     }
   }
@@ -290,14 +290,15 @@ class UnifiedAuthService {
    */
   public getAccessToken(): string | null {
     // Try multiple storage locations
-    const token = localStorage.getItem(this.config.tokenStorageKey) ||
-                  sessionStorage.getItem(this.config.tokenStorageKey) ||
-                  this.getCookie('auth_token');
-    
+    const token =
+      localStorage.getItem(this.config.tokenStorageKey) ||
+      sessionStorage.getItem(this.config.tokenStorageKey) ||
+      this.getCookie('auth_token');
+
     if (token && this.isTokenValid(token)) {
       return token;
     }
-    
+
     return null;
   }
 
@@ -305,9 +306,11 @@ class UnifiedAuthService {
    * Get current refresh token
    */
   public getRefreshToken(): string | null {
-    return localStorage.getItem(this.config.refreshTokenStorageKey) ||
-           sessionStorage.getItem(this.config.refreshTokenStorageKey) ||
-           this.getCookie('refresh_token');
+    return (
+      localStorage.getItem(this.config.refreshTokenStorageKey) ||
+      sessionStorage.getItem(this.config.refreshTokenStorageKey) ||
+      this.getCookie('refresh_token')
+    );
   }
 
   /**
@@ -315,16 +318,16 @@ class UnifiedAuthService {
    */
   public getCurrentUser(): User | null {
     try {
-      const userStr = localStorage.getItem(this.config.userStorageKey) ||
-                      sessionStorage.getItem(this.config.userStorageKey);
-      
+      const userStr =
+        localStorage.getItem(this.config.userStorageKey) || sessionStorage.getItem(this.config.userStorageKey);
+
       if (userStr) {
         return JSON.parse(userStr);
       }
     } catch (error) {
       logger.error('Failed to parse user data', error);
     }
-    
+
     return null;
   }
 
@@ -342,9 +345,9 @@ class UnifiedAuthService {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
-    
+
     this.eventListeners.get(event)!.add(callback);
-    
+
     // Return unsubscribe function
     return () => {
       this.eventListeners.get(event)?.delete(callback);
@@ -357,15 +360,15 @@ class UnifiedAuthService {
   public async requestPasswordReset(email: string): Promise<void> {
     try {
       logger.info('Requesting password reset', { email });
-      
+
       await apiClient.post(apiPaths.auth.forgotPassword, { email });
-      
+
       logger.info('Password reset requested successfully');
     } catch (error) {
       logger.error('Password reset request failed', error);
       throw handleError(error, {
         context: 'requestPasswordReset',
-        type: ErrorType.AUTHENTICATION
+        type: ErrorType.AUTHENTICATION,
       });
     }
   }
@@ -376,18 +379,18 @@ class UnifiedAuthService {
   public async resetPassword(token: string, newPassword: string): Promise<void> {
     try {
       logger.info('Resetting password');
-      
+
       await apiClient.post(apiPaths.auth.resetPassword, {
         token,
-        password: newPassword
+        password: newPassword,
       });
-      
+
       logger.info('Password reset successful');
     } catch (error) {
       logger.error('Password reset failed', error);
       throw handleError(error, {
         context: 'resetPassword',
-        type: ErrorType.AUTHENTICATION
+        type: ErrorType.AUTHENTICATION,
       });
     }
   }
@@ -398,25 +401,25 @@ class UnifiedAuthService {
   public async updateProfile(updates: Partial<User>): Promise<User> {
     try {
       logger.info('Updating user profile', { userId: updates.id });
-      
+
       const response = await apiClient.patch('/api/users/me', updates);
       const updatedUser = response.data;
-      
+
       // Update stored user
       const currentUser = this.getCurrentUser();
       if (currentUser) {
         const mergedUser = { ...currentUser, ...updatedUser };
         this.storeUser(mergedUser);
       }
-      
+
       logger.info('Profile updated successfully');
-      
+
       return updatedUser;
     } catch (error) {
       logger.error('Profile update failed', error);
       throw handleError(error, {
         context: 'updateProfile',
-        type: ErrorType.AUTHENTICATION
+        type: ErrorType.AUTHENTICATION,
       });
     }
   }
@@ -437,75 +440,75 @@ class UnifiedAuthService {
   private async performTokenRefresh(): Promise<AuthTokens> {
     try {
       const refreshToken = this.getRefreshToken();
-      
+
       if (!refreshToken) {
         throw new AppError('No refresh token available', ErrorType.AUTHENTICATION);
       }
-      
+
       logger.info('Refreshing tokens');
-      
+
       const response = await apiClient.post(apiPaths.auth.refresh, {
-        refresh_token: refreshToken
+        refresh_token: refreshToken,
       });
-      
+
       const { access_token, refresh_token: newRefreshToken, expires_in } = response.data;
-      
+
       const tokens: AuthTokens = {
         accessToken: access_token,
         refreshToken: newRefreshToken || refreshToken,
         expiresIn: expires_in || 3600,
-        tokenType: 'Bearer'
+        tokenType: 'Bearer',
       };
-      
+
       // Store new tokens
       this.storeTokens(tokens);
-      
+
       // Reschedule token refresh
       this.scheduleTokenRefresh(tokens.expiresIn);
-      
+
       // Emit refresh event
       this.emitAuthEvent({
         type: 'refresh',
-        user: this.getCurrentUser() || undefined
+        user: this.getCurrentUser() || undefined,
       });
-      
+
       logger.info('Token refresh successful');
-      
+
       return tokens;
     } catch (error) {
       logger.error('Token refresh failed', error);
-      
+
       // Clear auth data on refresh failure
       await this.clearAuthData();
-      
+
       // Emit expire event
       this.emitAuthEvent({
         type: 'expire',
-        error: error as Error
+        error: error as Error,
       });
-      
+
       throw handleError(error, {
         context: 'refreshTokens',
-        type: ErrorType.AUTHENTICATION
+        type: ErrorType.AUTHENTICATION,
       });
     }
   }
 
   private async storeAuthData(user: User, tokens: AuthTokens, rememberMe?: boolean): Promise<void> {
     const storage = rememberMe ? localStorage : sessionStorage;
-    
+
     // Store tokens
     storage.setItem(this.config.tokenStorageKey, tokens.accessToken);
     storage.setItem(this.config.refreshTokenStorageKey, tokens.refreshToken);
-    
+
     // Store user
     storage.setItem(this.config.userStorageKey, JSON.stringify(user));
-    
+
     // Set persistent login flag
     if (rememberMe) {
       localStorage.setItem(this.config.persistentLoginKey, 'true');
     }
-    
+
     // Also set cookies as fallback
     if (this.config.cookieDomain) {
       this.setCookie('auth_token', tokens.accessToken, {
@@ -513,22 +516,22 @@ class UnifiedAuthService {
         domain: this.config.cookieDomain,
         path: this.config.cookiePath,
         secure: this.config.cookieSecure,
-        sameSite: this.config.cookieSameSite
+        sameSite: this.config.cookieSameSite,
       });
     }
-    
+
     // Cache user data
     await cacheService.set(`user:${user.id}`, user, {
       ttl: tokens.expiresIn * 1000,
       layer: [CacheLayer.MEMORY],
-      tags: ['user-data', `user-${user.id}`]
+      tags: ['user-data', `user-${user.id}`],
     });
   }
 
   private storeTokens(tokens: AuthTokens): void {
     const isPersistent = localStorage.getItem(this.config.persistentLoginKey) === 'true';
     const storage = isPersistent ? localStorage : sessionStorage;
-    
+
     storage.setItem(this.config.tokenStorageKey, tokens.accessToken);
     storage.setItem(this.config.refreshTokenStorageKey, tokens.refreshToken);
   }
@@ -536,20 +539,20 @@ class UnifiedAuthService {
   private storeUser(user: User): void {
     const isPersistent = localStorage.getItem(this.config.persistentLoginKey) === 'true';
     const storage = isPersistent ? localStorage : sessionStorage;
-    
+
     storage.setItem(this.config.userStorageKey, JSON.stringify(user));
   }
 
   private async clearAuthData(): Promise<void> {
     // Clear from all storages
-    [localStorage, sessionStorage].forEach(storage => {
+    [localStorage, sessionStorage].forEach((storage) => {
       storage.removeItem(this.config.tokenStorageKey);
       storage.removeItem(this.config.refreshTokenStorageKey);
       storage.removeItem(this.config.userStorageKey);
     });
-    
+
     localStorage.removeItem(this.config.persistentLoginKey);
-    
+
     // Clear cookies
     this.deleteCookie('auth_token');
     this.deleteCookie('refresh_token');
@@ -557,13 +560,13 @@ class UnifiedAuthService {
 
   private scheduleTokenRefresh(expiresIn: number): void {
     this.cancelTokenRefresh();
-    
+
     // Schedule refresh before token expires
     const refreshTime = (expiresIn - this.config.tokenRefreshThreshold * 60) * 1000;
-    
+
     if (refreshTime > 0) {
       this.tokenRefreshTimer = setTimeout(() => {
-        this.refreshTokens().catch(error => {
+        this.refreshTokens().catch((error) => {
           logger.error('Scheduled token refresh failed', error);
         });
       }, refreshTime);
@@ -582,12 +585,12 @@ class UnifiedAuthService {
       // Decode JWT without verification (for client-side check)
       const parts = token.split('.');
       if (parts.length !== 3) return false;
-      
+
       const payload = JSON.parse(atob(parts[1]));
       const exp = payload.exp;
-      
+
       if (!exp) return true; // No expiration
-      
+
       // Check if token is expired
       return Date.now() < exp * 1000;
     } catch (error) {
@@ -598,7 +601,7 @@ class UnifiedAuthService {
   private processRequestQueue(success: boolean): void {
     const queue = [...this.requestQueue];
     this.requestQueue = [];
-    
+
     queue.forEach(({ resolve, reject }) => {
       if (success) {
         resolve(undefined);
@@ -611,13 +614,12 @@ class UnifiedAuthService {
   private setupStorageSync(): void {
     // Sync auth state across tabs
     window.addEventListener('storage', (event) => {
-      if (event.key === this.config.tokenStorageKey || 
-          event.key === this.config.userStorageKey) {
+      if (event.key === this.config.tokenStorageKey || event.key === this.config.userStorageKey) {
         // Auth state changed in another tab
         if (!event.newValue) {
           // User logged out in another tab
           this.emitAuthEvent({
-            type: 'logout'
+            type: 'logout',
           });
         } else {
           // User logged in or token refreshed in another tab
@@ -625,7 +627,7 @@ class UnifiedAuthService {
           if (user) {
             this.emitAuthEvent({
               type: 'login',
-              user
+              user,
             });
           }
         }
@@ -643,7 +645,7 @@ class UnifiedAuthService {
           const parts = token.split('.');
           const payload = JSON.parse(atob(parts[1]));
           const exp = payload.exp;
-          
+
           if (exp) {
             const expiresIn = Math.max(0, exp - Date.now() / 1000);
             this.scheduleTokenRefresh(expiresIn);
@@ -657,21 +659,21 @@ class UnifiedAuthService {
 
   private emitAuthEvent(payload: AuthEventPayload): void {
     const listeners = this.eventListeners.get('authStateChange') || new Set();
-    listeners.forEach(callback => {
+    listeners.forEach((callback) => {
       try {
         callback(payload);
       } catch (error) {
         logger.error('Auth event listener error', error);
       }
     });
-    
+
     // Also emit as DOM event for non-React components
     window.dispatchEvent(new CustomEvent('auth-state-change', { detail: payload }));
   }
 
   private setCookie(name: string, value: string, options: any = {}): void {
     let cookie = `${name}=${encodeURIComponent(value)}`;
-    
+
     if (options.expires) {
       cookie += `; expires=${options.expires.toUTCString()}`;
     }
@@ -687,7 +689,7 @@ class UnifiedAuthService {
     if (options.sameSite) {
       cookie += `; samesite=${options.sameSite}`;
     }
-    
+
     document.cookie = cookie;
   }
 
@@ -700,7 +702,7 @@ class UnifiedAuthService {
     this.setCookie(name, '', {
       expires: new Date(0),
       path: this.config.cookiePath,
-      domain: this.config.cookieDomain
+      domain: this.config.cookieDomain,
     });
   }
 }

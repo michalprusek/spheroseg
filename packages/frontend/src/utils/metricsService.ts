@@ -131,14 +131,16 @@ class MetricsService {
       if (navigator.sendBeacon) {
         navigator.sendBeacon(this.metricsEndpoint, JSON.stringify(this.buffer));
       } else {
-        apiClient.post(this.metricsEndpoint, this.buffer, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // Axios handles keepalive implicitly for POST requests
-        }).catch((error) => {
-          console.error('Failed to send metrics:', error);
-        });
+        apiClient
+          .post(this.metricsEndpoint, this.buffer, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            // Axios handles keepalive implicitly for POST requests
+          })
+          .catch((error) => {
+            console.error('Failed to send metrics:', error);
+          });
       }
 
       // Clear buffer after sending

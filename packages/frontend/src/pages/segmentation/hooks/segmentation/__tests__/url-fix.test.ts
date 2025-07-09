@@ -5,7 +5,7 @@ describe('URL Processing Fix', () => {
   // Simulate the processImageUrl logic
   const processStoragePath = (storage_path: string): string => {
     const baseUrl = 'http://localhost';
-    
+
     // Check if storage_path is already a full URL
     if (storage_path.startsWith('http://') || storage_path.startsWith('https://')) {
       // It's already a full URL, use it as is

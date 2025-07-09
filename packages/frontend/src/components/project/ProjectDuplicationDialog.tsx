@@ -71,9 +71,7 @@ export const ProjectDuplicationDialog: React.FC<ProjectDuplicationDialogProps> =
             <Copy className="h-5 w-5" />
             {t('project.duplicateProject')}
           </DialogTitle>
-          <DialogDescription>
-            {t('project.duplicateDescription')}
-          </DialogDescription>
+          <DialogDescription>{t('project.duplicateDescription')}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -88,12 +86,7 @@ export const ProjectDuplicationDialog: React.FC<ProjectDuplicationDialogProps> =
           </div>
         </div>
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={duplicateMutation.isPending}
-          >
+          <Button type="button" variant="outline" onClick={onClose} disabled={duplicateMutation.isPending}>
             {t('common.cancel')}
           </Button>
           <Button

@@ -194,39 +194,41 @@ export const loadImagesFromStorage = (projectId: string): ProjectImage[] => {
         .filter((img) => img !== null) as ProjectImage[];
 
       // Asynchronně načteme data z IndexedDB pro obrázky, které to potřebují
-      if (images.some(img => img._needsIndexedDBLoad || img._needsIndexedDBThumbLoad)) {
+      if (images.some((img) => img._needsIndexedDBLoad || img._needsIndexedDBThumbLoad)) {
         console.log(`Some images need to load data from IndexedDB for project ${projectId}`);
 
         // Asynchronně načteme data z IndexedDB
-        import('../utils/indexedDBService').then(({ getImageBlob }) => {
-          images.forEach(async (img) => {
-            try {
-              // Načteme hlavní obrázek z IndexedDB
-              if (img._needsIndexedDBLoad) {
-                const blob = await getImageBlob(img.id);
-                if (blob) {
-                  img.url = URL.createObjectURL(blob);
-                  console.log(`Loaded image ${img.id} from IndexedDB`);
-                  delete img._needsIndexedDBLoad;
+        import('../utils/indexedDBService')
+          .then(({ getImageBlob }) => {
+            images.forEach(async (img) => {
+              try {
+                // Načteme hlavní obrázek z IndexedDB
+                if (img._needsIndexedDBLoad) {
+                  const blob = await getImageBlob(img.id);
+                  if (blob) {
+                    img.url = URL.createObjectURL(blob);
+                    console.log(`Loaded image ${img.id} from IndexedDB`);
+                    delete img._needsIndexedDBLoad;
+                  }
                 }
-              }
 
-              // Načteme thumbnail z IndexedDB
-              if (img._needsIndexedDBThumbLoad) {
-                const blob = await getImageBlob(`thumb-${img.id}`);
-                if (blob) {
-                  img.thumbnail_url = URL.createObjectURL(blob);
-                  console.log(`Loaded thumbnail for image ${img.id} from IndexedDB`);
-                  delete img._needsIndexedDBThumbLoad;
+                // Načteme thumbnail z IndexedDB
+                if (img._needsIndexedDBThumbLoad) {
+                  const blob = await getImageBlob(`thumb-${img.id}`);
+                  if (blob) {
+                    img.thumbnail_url = URL.createObjectURL(blob);
+                    console.log(`Loaded thumbnail for image ${img.id} from IndexedDB`);
+                    delete img._needsIndexedDBThumbLoad;
+                  }
                 }
+              } catch (blobError) {
+                console.error(`Failed to load image ${img.id} from IndexedDB:`, blobError);
               }
-            } catch (blobError) {
-              console.error(`Failed to load image ${img.id} from IndexedDB:`, blobError);
-            }
+            });
+          })
+          .catch((err) => {
+            console.error('Failed to import indexedDBService:', err);
           });
-        }).catch(err => {
-          console.error('Failed to import indexedDBService:', err);
-        });
       }
 
       return images;
@@ -249,18 +251,17 @@ export const saveImagesToStorage = (projectId: string, images: ProjectImage[]): 
     }));
 
     // Rozdělíme obrázky na ty s velkými daty (base64) a metadata
-    const largeImages = imagesToStore.filter(img =>
-      (img.url && img.url.startsWith('data:')) ||
-      (img.thumbnail_url && img.thumbnail_url.startsWith('data:'))
+    const largeImages = imagesToStore.filter(
+      (img) => (img.url && img.url.startsWith('data:')) || (img.thumbnail_url && img.thumbnail_url.startsWith('data:')),
     );
 
     // Pro velké obrázky uložíme pouze metadata do localStorage
-    const metadataImages = imagesToStore.map(img => ({
+    const metadataImages = imagesToStore.map((img) => ({
       ...img,
       // Pokud je URL base64, označíme ji pro IndexedDB a nastavíme prázdný string
-      url: (img.url && img.url.startsWith('data:')) ? '' : img.url,
+      url: img.url && img.url.startsWith('data:') ? '' : img.url,
       // Pokud je thumbnail base64, označíme ho pro IndexedDB a nastavíme null
-      thumbnail_url: (img.thumbnail_url && img.thumbnail_url.startsWith('data:')) ? null : img.thumbnail_url,
+      thumbnail_url: img.thumbnail_url && img.thumbnail_url.startsWith('data:') ? null : img.thumbnail_url,
       // Přidáme flagy pro označení, že data jsou v IndexedDB
       _hasIndexedDBImage: img.url && img.url.startsWith('data:'),
       _hasIndexedDBThumb: img.thumbnail_url && img.thumbnail_url.startsWith('data:'),
@@ -274,29 +275,31 @@ export const saveImagesToStorage = (projectId: string, images: ProjectImage[]): 
       console.log(`Storing ${largeImages.length} large images in IndexedDB for project ${projectId}`);
 
       // Asynchronně uložíme velké obrázky do IndexedDB
-      import('../utils/indexedDBService').then(({ storeImageBlob }) => {
-        largeImages.forEach(async (img) => {
-          try {
-            // Pokud máme base64 URL, převedeme ji na Blob a uložíme
-            if (img.url && img.url.startsWith('data:')) {
-              const response = await fetch(img.url);
-              const blob = await response.blob();
-              await storeImageBlob(img.id, projectId, blob);
-            }
+      import('../utils/indexedDBService')
+        .then(({ storeImageBlob }) => {
+          largeImages.forEach(async (img) => {
+            try {
+              // Pokud máme base64 URL, převedeme ji na Blob a uložíme
+              if (img.url && img.url.startsWith('data:')) {
+                const response = await fetch(img.url);
+                const blob = await response.blob();
+                await storeImageBlob(img.id, projectId, blob);
+              }
 
-            // Pokud máme base64 thumbnail, převedeme ho na Blob a uložíme s prefixem thumb-
-            if (img.thumbnail_url && img.thumbnail_url.startsWith('data:')) {
-              const response = await fetch(img.thumbnail_url);
-              const blob = await response.blob();
-              await storeImageBlob(`thumb-${img.id}`, projectId, blob);
+              // Pokud máme base64 thumbnail, převedeme ho na Blob a uložíme s prefixem thumb-
+              if (img.thumbnail_url && img.thumbnail_url.startsWith('data:')) {
+                const response = await fetch(img.thumbnail_url);
+                const blob = await response.blob();
+                await storeImageBlob(`thumb-${img.id}`, projectId, blob);
+              }
+            } catch (blobError) {
+              console.error(`Failed to store image ${img.id} in IndexedDB:`, blobError);
             }
-          } catch (blobError) {
-            console.error(`Failed to store image ${img.id} in IndexedDB:`, blobError);
-          }
+          });
+        })
+        .catch((err) => {
+          console.error('Failed to import indexedDBService:', err);
         });
-      }).catch(err => {
-        console.error('Failed to import indexedDBService:', err);
-      });
     }
   } catch (error) {
     console.error('Error saving images to localStorage:', error);
@@ -354,29 +357,26 @@ export const cleanImageFromAllStorages = async (projectId: string, imageId: stri
     const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
     const cachedImages = await cacheService.get<ProjectImage[]>(cacheKey);
     if (cachedImages) {
-      const updatedImages = cachedImages.filter(img => img.id !== imageId);
+      const updatedImages = cachedImages.filter((img) => img.id !== imageId);
       await cacheService.set(cacheKey, updatedImages, {
         ttl: CACHE_EXPIRATION,
         layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
-        tags: ['project-data', `project-${cleanProjectId}`, 'images']
+        tags: ['project-data', `project-${cleanProjectId}`, 'images'],
       });
     }
-    
+
     // 2. Clean legacy project images cache
     if (projectImagesCache && projectImagesCache[cleanProjectId]) {
       console.log(`Cleaning image ${imageId} from project images cache`);
       if (projectImagesCache[cleanProjectId].data) {
         projectImagesCache[cleanProjectId].data = projectImagesCache[cleanProjectId].data.filter(
-          (img) => img.id !== imageId
+          (img) => img.id !== imageId,
         );
       }
     }
 
     // 2. Clean localStorage items
-    const storageKeys = [
-      `spheroseg_images_${cleanProjectId}`,
-      `spheroseg_uploaded_images_${cleanProjectId}`,
-    ];
+    const storageKeys = [`spheroseg_images_${cleanProjectId}`, `spheroseg_uploaded_images_${cleanProjectId}`];
 
     for (const key of storageKeys) {
       const storedData = localStorage.getItem(key);
@@ -489,9 +489,9 @@ export const getProjectImages = async (projectId: string): Promise<ProjectImage[
   // Try unified cache first
   const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
   const cachedImages = await cacheService.get<ProjectImage[]>(cacheKey, {
-    layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE]
+    layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
   });
-  
+
   // Only return cached data if it's not an empty array
   // This ensures we always try to fetch from API when there are no images in cache
   if (cachedImages && cachedImages.length > 0) {
@@ -504,27 +504,32 @@ export const getProjectImages = async (projectId: string): Promise<ProjectImage[
     const response = await apiClient.get(`/api/projects/${cleanProjectId}/images`);
     const responseData = response.data;
 
-    if (typeof responseData !== 'object' || responseData === null || !('images' in responseData) || !Array.isArray(responseData.images)) {
-        console.warn(`API returned unexpected data for project ${cleanProjectId}:`, responseData);
-        throw new Error('Invalid data from API');
+    if (
+      typeof responseData !== 'object' ||
+      responseData === null ||
+      !('images' in responseData) ||
+      !Array.isArray(responseData.images)
+    ) {
+      console.warn(`API returned unexpected data for project ${cleanProjectId}:`, responseData);
+      throw new Error('Invalid data from API');
     }
 
     const apiImages = responseData.images;
 
     console.log(`Retrieved ${apiImages.length} images from API for project ${cleanProjectId}`);
     const mappedImages = apiImages.map((image: Image) => {
-        const projectImage = mapApiImageToProjectImage(image);
-        // Removed explicit placeholder assignment for TIFFs as backend now handles conversion
-        return projectImage;
+      const projectImage = mapApiImageToProjectImage(image);
+      // Removed explicit placeholder assignment for TIFFs as backend now handles conversion
+      return projectImage;
     });
 
     // Store in unified cache
     await cacheService.set(cacheKey, mappedImages, {
       ttl: CACHE_EXPIRATION,
       layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
-      tags: ['project-data', `project-${cleanProjectId}`, 'images']
+      tags: ['project-data', `project-${cleanProjectId}`, 'images'],
     });
-    
+
     // Keep legacy cache for backward compatibility
     projectImagesCache[cleanProjectId] = { data: mappedImages, timestamp: Date.now() };
     saveImagesToStorage(cleanProjectId, mappedImages); // Save to local storage

@@ -1,17 +1,17 @@
 /**
  * Unified Export Hook
- * 
+ *
  * This hook provides a simple interface for the unified export service,
  * managing UI state and delegating all export logic to the service.
  */
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import unifiedExportService, { 
-  ExportFormat, 
-  ExportOptions, 
+import unifiedExportService, {
+  ExportFormat,
+  ExportOptions,
   ExportProgress,
-  ExportResult 
+  ExportResult,
 } from '@/services/unifiedExportService';
 import type { ProjectImage } from '@/pages/segmentation/types';
 
@@ -27,14 +27,14 @@ interface UseUnifiedExportReturn {
     images: ProjectImage[],
     format: ExportFormat,
     projectTitle?: string,
-    options?: ExportOptions
+    options?: ExportOptions,
   ) => Promise<void>;
-  
+
   // State
   isExporting: boolean;
   progress: ExportProgress | null;
   lastResult: ExportResult | null;
-  
+
   // Utilities
   cancelExport: () => void;
   resetState: () => void;
@@ -45,94 +45,100 @@ export function useUnifiedExport(options: UseUnifiedExportOptions = {}): UseUnif
   const [progress, setProgress] = useState<ExportProgress | null>(null);
   const [lastResult, setLastResult] = useState<ExportResult | null>(null);
   const [isCancelled, setIsCancelled] = useState(false);
-  
+
   // Handle progress updates
-  const handleProgress = useCallback((progressData: ExportProgress) => {
-    if (isCancelled) return;
-    
-    setProgress(progressData);
-    options.onProgress?.(progressData);
-  }, [isCancelled, options]);
-  
+  const handleProgress = useCallback(
+    (progressData: ExportProgress) => {
+      if (isCancelled) return;
+
+      setProgress(progressData);
+      options.onProgress?.(progressData);
+    },
+    [isCancelled, options],
+  );
+
   // Export data function
-  const exportData = useCallback(async (
-    images: ProjectImage[],
-    format: ExportFormat,
-    projectTitle: string = 'project',
-    exportOptions: ExportOptions = {}
-  ) => {
-    // Reset state
-    setIsExporting(true);
-    setProgress(null);
-    setLastResult(null);
-    setIsCancelled(false);
-    
-    try {
-      // Validate input
-      if (!images || images.length === 0) {
-        throw new Error('No images selected for export');
-      }
-      
-      // Show initial toast
-      toast.info(`Starting ${format} export for ${images.length} images...`);
-      
-      // Call export service
-      const result = await unifiedExportService.exportData(
-        images,
-        format,
-        projectTitle,
-        exportOptions,
-        handleProgress
-      );
-      
-      // Check if cancelled
-      if (isCancelled) {
-        toast.info('Export cancelled');
-        return;
-      }
-      
-      // Update state
-      setLastResult(result);
-      
-      // Handle result
-      if (result.success) {
-        // Show warnings if any
-        if (result.warnings && result.warnings.length > 0) {
-          result.warnings.forEach(warning => toast.warning(warning));
-        }
-        
-        // Call success callback
-        options.onComplete?.(result);
-      } else {
-        throw new Error(result.error || 'Export failed');
-      }
-    } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error('Unknown error');
-      
-      // Update state
-      setLastResult({
-        success: false,
-        error: errorObj.message,
-      });
-      
-      // Show error toast
-      toast.error(`Export failed: ${errorObj.message}`);
-      
-      // Call error callback
-      options.onError?.(errorObj);
-    } finally {
-      setIsExporting(false);
+  const exportData = useCallback(
+    async (
+      images: ProjectImage[],
+      format: ExportFormat,
+      projectTitle: string = 'project',
+      exportOptions: ExportOptions = {},
+    ) => {
+      // Reset state
+      setIsExporting(true);
       setProgress(null);
-    }
-  }, [handleProgress, isCancelled, options]);
-  
+      setLastResult(null);
+      setIsCancelled(false);
+
+      try {
+        // Validate input
+        if (!images || images.length === 0) {
+          throw new Error('No images selected for export');
+        }
+
+        // Show initial toast
+        toast.info(`Starting ${format} export for ${images.length} images...`);
+
+        // Call export service
+        const result = await unifiedExportService.exportData(
+          images,
+          format,
+          projectTitle,
+          exportOptions,
+          handleProgress,
+        );
+
+        // Check if cancelled
+        if (isCancelled) {
+          toast.info('Export cancelled');
+          return;
+        }
+
+        // Update state
+        setLastResult(result);
+
+        // Handle result
+        if (result.success) {
+          // Show warnings if any
+          if (result.warnings && result.warnings.length > 0) {
+            result.warnings.forEach((warning) => toast.warning(warning));
+          }
+
+          // Call success callback
+          options.onComplete?.(result);
+        } else {
+          throw new Error(result.error || 'Export failed');
+        }
+      } catch (error) {
+        const errorObj = error instanceof Error ? error : new Error('Unknown error');
+
+        // Update state
+        setLastResult({
+          success: false,
+          error: errorObj.message,
+        });
+
+        // Show error toast
+        toast.error(`Export failed: ${errorObj.message}`);
+
+        // Call error callback
+        options.onError?.(errorObj);
+      } finally {
+        setIsExporting(false);
+        setProgress(null);
+      }
+    },
+    [handleProgress, isCancelled, options],
+  );
+
   // Cancel export
   const cancelExport = useCallback(() => {
     setIsCancelled(true);
     setIsExporting(false);
     setProgress(null);
   }, []);
-  
+
   // Reset state
   const resetState = useCallback(() => {
     setIsExporting(false);
@@ -140,7 +146,7 @@ export function useUnifiedExport(options: UseUnifiedExportOptions = {}): UseUnif
     setLastResult(null);
     setIsCancelled(false);
   }, []);
-  
+
   return {
     exportData,
     isExporting,
@@ -164,7 +170,7 @@ export const EXPORT_PRESETS = {
     includeImages: false,
     metricsFormat: 'EXCEL' as const,
   },
-  
+
   // Full data export
   FULL_EXPORT: {
     includeMetadata: true,
@@ -175,7 +181,7 @@ export const EXPORT_PRESETS = {
     annotationFormat: 'COCO' as const,
     metricsFormat: 'EXCEL' as const,
   },
-  
+
   // Machine learning export
   ML_EXPORT: {
     includeMetadata: false,
@@ -184,7 +190,7 @@ export const EXPORT_PRESETS = {
     includeImages: true,
     annotationFormat: 'COCO' as const,
   },
-  
+
   // Analysis export
   ANALYSIS_EXPORT: {
     includeMetadata: true,
@@ -203,58 +209,40 @@ export const EXPORT_PRESETS = {
 /**
  * Export metrics as Excel
  */
-export async function exportMetricsAsExcel(
-  images: ProjectImage[],
-  projectTitle?: string
-): Promise<void> {
-  return unifiedExportService.exportData(
-    images,
-    ExportFormat.EXCEL,
-    projectTitle,
-    EXPORT_PRESETS.METRICS_ONLY
-  ).then(result => {
-    if (!result.success) {
-      throw new Error(result.error || 'Export failed');
-    }
-  });
+export async function exportMetricsAsExcel(images: ProjectImage[], projectTitle?: string): Promise<void> {
+  return unifiedExportService
+    .exportData(images, ExportFormat.EXCEL, projectTitle, EXPORT_PRESETS.METRICS_ONLY)
+    .then((result) => {
+      if (!result.success) {
+        throw new Error(result.error || 'Export failed');
+      }
+    });
 }
 
 /**
  * Export metrics as CSV
  */
-export async function exportMetricsAsCSV(
-  images: ProjectImage[],
-  projectTitle?: string
-): Promise<void> {
-  return unifiedExportService.exportData(
-    images,
-    ExportFormat.CSV,
-    projectTitle,
-    EXPORT_PRESETS.METRICS_ONLY
-  ).then(result => {
-    if (!result.success) {
-      throw new Error(result.error || 'Export failed');
-    }
-  });
+export async function exportMetricsAsCSV(images: ProjectImage[], projectTitle?: string): Promise<void> {
+  return unifiedExportService
+    .exportData(images, ExportFormat.CSV, projectTitle, EXPORT_PRESETS.METRICS_ONLY)
+    .then((result) => {
+      if (!result.success) {
+        throw new Error(result.error || 'Export failed');
+      }
+    });
 }
 
 /**
  * Export segmentations as COCO
  */
-export async function exportSegmentationsAsCOCO(
-  images: ProjectImage[],
-  projectTitle?: string
-): Promise<void> {
-  return unifiedExportService.exportData(
-    images,
-    ExportFormat.COCO,
-    projectTitle,
-    { includeSegmentation: true }
-  ).then(result => {
-    if (!result.success) {
-      throw new Error(result.error || 'Export failed');
-    }
-  });
+export async function exportSegmentationsAsCOCO(images: ProjectImage[], projectTitle?: string): Promise<void> {
+  return unifiedExportService
+    .exportData(images, ExportFormat.COCO, projectTitle, { includeSegmentation: true })
+    .then((result) => {
+      if (!result.success) {
+        throw new Error(result.error || 'Export failed');
+      }
+    });
 }
 
 /**
@@ -263,16 +251,13 @@ export async function exportSegmentationsAsCOCO(
 export async function exportAllAsZIP(
   images: ProjectImage[],
   projectTitle?: string,
-  options?: ExportOptions
+  options?: ExportOptions,
 ): Promise<void> {
-  return unifiedExportService.exportData(
-    images,
-    ExportFormat.ZIP,
-    projectTitle,
-    options || EXPORT_PRESETS.FULL_EXPORT
-  ).then(result => {
-    if (!result.success) {
-      throw new Error(result.error || 'Export failed');
-    }
-  });
+  return unifiedExportService
+    .exportData(images, ExportFormat.ZIP, projectTitle, options || EXPORT_PRESETS.FULL_EXPORT)
+    .then((result) => {
+      if (!result.success) {
+        throw new Error(result.error || 'Export failed');
+      }
+    });
 }

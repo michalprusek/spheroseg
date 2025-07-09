@@ -16,29 +16,29 @@ export interface ToastOptions extends ExternalToast {
   // Display options
   duration?: number;
   position?: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
-  
+
   // Action options
   action?: {
     label: string;
     onClick: () => void;
   };
-  
+
   // Styling options
   icon?: IconType | React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
-  
+
   // Behavior options
   dismissible?: boolean;
   persistent?: boolean;
   important?: boolean;
-  
+
   // Progress options (for loading toasts)
   progress?: number;
-  
+
   // Rich content
   description?: string;
-  
+
   // Callbacks
   onDismiss?: (toast: any) => void;
   onAutoClose?: (toast: any) => void;
@@ -156,7 +156,7 @@ class ToastService {
       success: string | ((data: T) => string);
       error: string | ((error: any) => string);
     },
-    options?: ToastOptions
+    options?: ToastOptions,
   ) {
     return sonnerToast.promise(promise, messages, options);
   }
@@ -177,12 +177,7 @@ class ToastService {
   /**
    * Show a confirmation toast with action buttons
    */
-  confirm(
-    message: string,
-    onConfirm: () => void,
-    onCancel?: () => void,
-    options?: ToastOptions
-  ) {
+  confirm(message: string, onConfirm: () => void, onCancel?: () => void, options?: ToastOptions) {
     const id = this.custom(
       <div className="flex flex-col gap-3">
         <p>{message}</p>
@@ -210,7 +205,7 @@ class ToastService {
       {
         duration: Infinity,
         ...options,
-      }
+      },
     );
     return id;
   }
@@ -218,12 +213,7 @@ class ToastService {
   /**
    * Show a multi-line toast with title and description
    */
-  multiline(
-    title: string,
-    description: string,
-    type: ToastType = 'info',
-    options?: ToastOptions
-  ) {
+  multiline(title: string, description: string, type: ToastType = 'info', options?: ToastOptions) {
     const typeMethod = this[type as keyof ToastService] as any;
     if (typeof typeMethod === 'function') {
       return typeMethod.call(this, title, {
@@ -237,11 +227,7 @@ class ToastService {
   /**
    * Show a progress toast
    */
-  progress(
-    message: string,
-    progress: number,
-    options?: ToastOptions
-  ) {
+  progress(message: string, progress: number, options?: ToastOptions) {
     return this.custom(
       <div className="flex flex-col gap-2">
         <p>{message}</p>
@@ -256,7 +242,7 @@ class ToastService {
       {
         duration: Infinity,
         ...options,
-      }
+      },
     );
   }
 
@@ -264,7 +250,8 @@ class ToastService {
    * Show a toast for copy to clipboard
    */
   copyToClipboard(text: string, successMessage = 'Copied to clipboard!') {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard
+      .writeText(text)
       .then(() => this.success(successMessage))
       .catch(() => this.error('Failed to copy to clipboard'));
   }
@@ -287,11 +274,11 @@ class ToastService {
    */
   validationError(errors: string[] | string) {
     const errorList = Array.isArray(errors) ? errors : [errors];
-    
+
     if (errorList.length === 1) {
       return this.error(errorList[0]);
     }
-    
+
     return this.custom(
       <div className="flex flex-col gap-2">
         <p className="font-semibold">Validation errors:</p>
@@ -304,7 +291,7 @@ class ToastService {
       {
         duration: 6000,
         className: 'bg-destructive text-destructive-foreground',
-      }
+      },
     );
   }
 
@@ -331,7 +318,7 @@ class ToastService {
   private mergeOptions(type: ToastType, options?: ToastOptions): ToastOptions {
     const icon = options?.icon !== undefined ? options.icon : DEFAULT_ICONS[type];
     const duration = options?.duration !== undefined ? options.duration : DEFAULT_DURATIONS[type];
-    
+
     return {
       ...this.defaultOptions,
       duration,
@@ -345,17 +332,13 @@ class ToastService {
 export const toastService = new ToastService();
 
 // Export convenience functions for backward compatibility
-export const showSuccess = (message: string, duration?: number) => 
-  toastService.success(message, { duration });
+export const showSuccess = (message: string, duration?: number) => toastService.success(message, { duration });
 
-export const showError = (message: string, duration?: number) => 
-  toastService.error(message, { duration });
+export const showError = (message: string, duration?: number) => toastService.error(message, { duration });
 
-export const showInfo = (message: string, duration?: number) => 
-  toastService.info(message, { duration });
+export const showInfo = (message: string, duration?: number) => toastService.info(message, { duration });
 
-export const showWarning = (message: string, duration?: number) => 
-  toastService.warning(message, { duration });
+export const showWarning = (message: string, duration?: number) => toastService.warning(message, { duration });
 
 // Re-export toast for direct access
 export { sonnerToast as toast };

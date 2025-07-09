@@ -179,7 +179,9 @@ describe('User Routes', () => {
       it('should approve a user as admin', async () => {
         const userId = uuidv4();
 
-        const res = await request(app).put(`/api/users/${userId}/approve`).set('x-user-id', 'admin');
+        const res = await request(app)
+          .put(`/api/users/${userId}/approve`)
+          .set('x-user-id', 'admin');
 
         expect(res.statusCode).toEqual(200);
         expect(res.body).toHaveProperty('message', 'User approved successfully');

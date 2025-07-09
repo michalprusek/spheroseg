@@ -60,7 +60,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(segmentationService.getSegmentation).toHaveBeenCalledWith('image-123');
@@ -72,7 +76,9 @@ describe('Segmentation API Controller', () => {
 
     it('handles errors when segmentation is not found', async () => {
       // Set up mock to throw not found error
-      (segmentationService.getSegmentation as jest.Mock).mockRejectedValue(new ApiError(404, 'Segmentation not found'));
+      (segmentationService.getSegmentation as jest.Mock).mockRejectedValue(
+        new ApiError(404, 'Segmentation not found')
+      );
 
       // Mock request
       mockRequest = {
@@ -80,7 +86,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -94,7 +104,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -133,10 +147,17 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.saveSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.saveSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
-      expect(segmentationService.saveSegmentation).toHaveBeenCalledWith('image-123', mockSegmentationData.polygons);
+      expect(segmentationService.saveSegmentation).toHaveBeenCalledWith(
+        'image-123',
+        mockSegmentationData.polygons
+      );
 
       // Verify response
       expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -154,7 +175,7 @@ describe('Segmentation API Controller', () => {
 
       // Set up mock to throw validation error
       (segmentationService.saveSegmentation as jest.Mock).mockRejectedValue(
-        new ApiError(400, 'Invalid segmentation data'),
+        new ApiError(400, 'Invalid segmentation data')
       );
 
       // Mock request
@@ -164,7 +185,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.saveSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.saveSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -190,7 +215,7 @@ describe('Segmentation API Controller', () => {
 
       // Set up mock to throw authorization error
       (segmentationService.saveSegmentation as jest.Mock).mockRejectedValue(
-        new ApiError(403, 'Unauthorized to modify this segmentation'),
+        new ApiError(403, 'Unauthorized to modify this segmentation')
       );
 
       // Mock request
@@ -200,7 +225,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.saveSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.saveSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -223,7 +252,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.runAutoSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.runAutoSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(segmentationQueueService.queueSegmentationJob).toHaveBeenCalledWith('image-123', {
@@ -242,7 +275,7 @@ describe('Segmentation API Controller', () => {
     it('handles image not found errors when queuing segmentation', async () => {
       // Set up mock to throw not found error
       (segmentationQueueService.queueSegmentationJob as jest.Mock).mockRejectedValue(
-        new ApiError(404, 'Image not found'),
+        new ApiError(404, 'Image not found')
       );
 
       // Mock request
@@ -252,7 +285,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.runAutoSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.runAutoSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -262,7 +299,7 @@ describe('Segmentation API Controller', () => {
     it('handles server errors when segmentation fails', async () => {
       // Set up mock to throw server error
       (segmentationQueueService.queueSegmentationJob as jest.Mock).mockRejectedValue(
-        new Error('ML service unavailable'),
+        new Error('ML service unavailable')
       );
 
       // Mock request
@@ -272,7 +309,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.runAutoSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.runAutoSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalled();
@@ -300,7 +341,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentationStatus(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentationStatus(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(segmentationQueueService.getJobStatus).toHaveBeenCalledWith('job-123');
@@ -312,7 +357,9 @@ describe('Segmentation API Controller', () => {
 
     it('handles job not found errors', async () => {
       // Set up mock to throw not found error
-      (segmentationQueueService.getJobStatus as jest.Mock).mockRejectedValue(new ApiError(404, 'Job not found'));
+      (segmentationQueueService.getJobStatus as jest.Mock).mockRejectedValue(
+        new ApiError(404, 'Job not found')
+      );
 
       // Mock request
       mockRequest = {
@@ -320,7 +367,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentationStatus(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentationStatus(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -342,7 +393,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.cancelSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.cancelSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(segmentationQueueService.cancelJob).toHaveBeenCalledWith('job-123');
@@ -358,7 +413,7 @@ describe('Segmentation API Controller', () => {
     it('handles cancellation of completed jobs', async () => {
       // Set up mock to throw error for already completed job
       (segmentationQueueService.cancelJob as jest.Mock).mockRejectedValue(
-        new ApiError(400, 'Cannot cancel completed job'),
+        new ApiError(400, 'Cannot cancel completed job')
       );
 
       // Mock request
@@ -367,7 +422,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.cancelSegmentation(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.cancelSegmentation(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -411,7 +470,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentationHistory(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentationHistory(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(segmentationService.getSegmentationHistory).toHaveBeenCalledWith('image-123');
@@ -424,7 +487,7 @@ describe('Segmentation API Controller', () => {
     it('handles not found errors for history', async () => {
       // Set up mock to throw not found error
       (segmentationService.getSegmentationHistory as jest.Mock).mockRejectedValue(
-        new ApiError(404, 'Segmentation history not found'),
+        new ApiError(404, 'Segmentation history not found')
       );
 
       // Mock request
@@ -433,7 +496,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentationHistory(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentationHistory(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -471,7 +538,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentationVersion(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentationVersion(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(segmentationService.getSegmentationVersion).toHaveBeenCalledWith('image-123', 2);
@@ -484,7 +555,7 @@ describe('Segmentation API Controller', () => {
     it('handles version not found errors', async () => {
       // Set up mock to throw not found error
       (segmentationService.getSegmentationVersion as jest.Mock).mockRejectedValue(
-        new ApiError(404, 'Segmentation version not found'),
+        new ApiError(404, 'Segmentation version not found')
       );
 
       // Mock request
@@ -493,7 +564,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentationVersion(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentationVersion(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -507,7 +582,11 @@ describe('Segmentation API Controller', () => {
       };
 
       // Call the controller
-      await segmentationController.getSegmentationVersion(mockRequest as Request, mockResponse as Response, mockNext);
+      await segmentationController.getSegmentationVersion(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -525,7 +604,9 @@ describe('Segmentation API Controller', () => {
       };
 
       // Set up mock to return restore result
-      (segmentationService.restoreSegmentationVersion as jest.Mock).mockResolvedValue(mockRestoreResult);
+      (segmentationService.restoreSegmentationVersion as jest.Mock).mockResolvedValue(
+        mockRestoreResult
+      );
 
       // Mock request
       mockRequest = {
@@ -536,7 +617,7 @@ describe('Segmentation API Controller', () => {
       await segmentationController.restoreSegmentationVersion(
         mockRequest as Request,
         mockResponse as Response,
-        mockNext,
+        mockNext
       );
 
       // Verify service was called with correct params
@@ -550,7 +631,7 @@ describe('Segmentation API Controller', () => {
     it('handles version not found errors when restoring', async () => {
       // Set up mock to throw not found error
       (segmentationService.restoreSegmentationVersion as jest.Mock).mockRejectedValue(
-        new ApiError(404, 'Version to restore not found'),
+        new ApiError(404, 'Version to restore not found')
       );
 
       // Mock request
@@ -562,7 +643,7 @@ describe('Segmentation API Controller', () => {
       await segmentationController.restoreSegmentationVersion(
         mockRequest as Request,
         mockResponse as Response,
-        mockNext,
+        mockNext
       );
 
       // Verify error was passed to next

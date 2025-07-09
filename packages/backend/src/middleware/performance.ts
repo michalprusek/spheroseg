@@ -1,6 +1,6 @@
 /**
  * Consolidated Performance Monitoring Middleware
- * 
+ *
  * This module consolidates all performance-related middleware:
  * - Request duration tracking
  * - Memory usage monitoring
@@ -173,7 +173,7 @@ const getNormalizedPath = (originalUrl: string): string => {
  */
 const updateMemoryMetrics = (): void => {
   const memUsage = getMemoryUsage();
-  
+
   memoryUsageBytes.set({ type: 'rss' }, memUsage.rss);
   memoryUsageBytes.set({ type: 'heap_total' }, memUsage.heapTotal);
   memoryUsageBytes.set({ type: 'heap_used' }, memUsage.heapUsed);
@@ -193,19 +193,19 @@ export const createPerformanceMiddleware = (options: PerformanceOptions = {}) =>
     enableLogging = true,
     enableMemoryMonitoring = true,
     enableDatabaseMonitoring = true,
-    thresholds = {}
+    thresholds = {},
   } = options;
 
   const mergedThresholds = {
     duration: { ...DEFAULT_THRESHOLDS.duration, ...thresholds.duration },
-    memory: { ...DEFAULT_THRESHOLDS.memory, ...thresholds.memory }
+    memory: { ...DEFAULT_THRESHOLDS.memory, ...thresholds.memory },
   };
 
   return (req: PerformanceRequest, res: Response, next: NextFunction): void => {
     const startTime = Date.now();
     const startHrTime = process.hrtime();
     const memoryStart = enableMemoryMonitoring ? getMemoryUsage() : undefined;
-    
+
     req.startTime = startTime;
     req.memoryUsageStart = memoryStart;
 
@@ -227,9 +227,12 @@ export const createPerformanceMiddleware = (options: PerformanceOptions = {}) =>
       // Update metrics
       if (enableMetrics) {
         httpRequestsTotal.inc({ method, path: normalizedPath, status });
-        httpRequestDurationSeconds.observe({ method, path: normalizedPath, status }, durationSeconds);
+        httpRequestDurationSeconds.observe(
+          { method, path: normalizedPath, status },
+          durationSeconds
+        );
         httpRequestsActive.dec({ method, path: normalizedPath });
-        
+
         // Update memory metrics periodically
         if (enableMemoryMonitoring) {
           updateMemoryMetrics();
@@ -244,7 +247,7 @@ export const createPerformanceMiddleware = (options: PerformanceOptions = {}) =>
           status: res.statusCode,
           duration: `${duration}ms`,
           userAgent: req.headers['user-agent'],
-          ip: req.ip
+          ip: req.ip,
         };
 
         // Add memory info if monitoring is enabled
@@ -254,22 +257,22 @@ export const createPerformanceMiddleware = (options: PerformanceOptions = {}) =>
             rss: memoryEnd.rss - memoryStart.rss,
             heapUsed: memoryEnd.heapUsed - memoryStart.heapUsed,
             heapTotal: memoryEnd.heapTotal - memoryStart.heapTotal,
-            external: memoryEnd.external - memoryStart.external
+            external: memoryEnd.external - memoryStart.external,
           };
 
           logData.memory = {
             start: {
               rss: formatMemorySize(memoryStart.rss),
-              heapUsed: formatMemorySize(memoryStart.heapUsed)
+              heapUsed: formatMemorySize(memoryStart.heapUsed),
             },
             end: {
               rss: formatMemorySize(memoryEnd.rss),
-              heapUsed: formatMemorySize(memoryEnd.heapUsed)
+              heapUsed: formatMemorySize(memoryEnd.heapUsed),
             },
             delta: {
               rss: formatMemorySize(memoryDelta.rss),
-              heapUsed: formatMemorySize(memoryDelta.heapUsed)
-            }
+              heapUsed: formatMemorySize(memoryDelta.heapUsed),
+            },
           };
 
           // Check memory thresholds
@@ -345,7 +348,7 @@ export const createMetricsHandler = () => {
       res.status(500).json({
         success: false,
         message: 'Failed to generate metrics',
-        error: 'METRICS_ERROR'
+        error: 'METRICS_ERROR',
       });
     }
   };
@@ -389,7 +392,7 @@ export default {
   trackSegmentationTaskStart,
   trackSegmentationTaskComplete,
   trackDatabaseQuery,
-  register
+  register,
 };
 
 // Export metrics for external use
@@ -402,5 +405,5 @@ export {
   databaseConnectionsActive,
   databaseQueryDurationSeconds,
   memoryUsageBytes,
-  register
+  register,
 };

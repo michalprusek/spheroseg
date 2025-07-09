@@ -73,9 +73,7 @@ const PolygonContextMenu = ({ children, onDelete, onSlice, onEdit, polygonId }: 
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('segmentation.contextMenu.confirmDeleteTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('segmentation.contextMenu.confirmDeleteMessage')}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t('segmentation.contextMenu.confirmDeleteMessage')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>

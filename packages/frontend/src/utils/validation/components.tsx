@@ -1,20 +1,13 @@
 /**
  * Reusable Form Components with Built-in Validation
- * 
+ *
  * These components integrate with react-hook-form and provide
  * consistent validation UI across the application.
  */
 
 import React from 'react';
 import { Control, FieldError, FieldValues, Path } from 'react-hook-form';
-import { 
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from '@/components/ui/form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -65,13 +58,7 @@ export function TextField<T extends FieldValues>({
         <FormItem className={className}>
           {label && <FormLabel>{label}</FormLabel>}
           <FormControl>
-            <Input
-              {...field}
-              {...props}
-              type={type}
-              placeholder={placeholder}
-              disabled={disabled}
-            />
+            <Input {...field} {...props} type={type} placeholder={placeholder} disabled={disabled} />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
@@ -87,12 +74,7 @@ export function TextField<T extends FieldValues>({
 
 export function EmailField<T extends FieldValues>(props: BaseFieldProps<T>) {
   return (
-    <TextField
-      {...props}
-      type="email"
-      autoComplete="email"
-      placeholder={props.placeholder || 'Enter your email'}
-    />
+    <TextField {...props} type="email" autoComplete="email" placeholder={props.placeholder || 'Enter your email'} />
   );
 }
 
@@ -139,9 +121,7 @@ export function PasswordField<T extends FieldValues>({
               </Button>
             </div>
           </FormControl>
-          {showStrength && field.value && (
-            <PasswordStrengthIndicator password={field.value} />
-          )}
+          {showStrength && field.value && <PasswordStrengthIndicator password={field.value} />}
           {props.description && <FormDescription>{props.description}</FormDescription>}
           <FormMessage />
         </FormItem>
@@ -156,38 +136,19 @@ export function PasswordField<T extends FieldValues>({
 
 function PasswordStrengthIndicator({ password }: { password: string }) {
   const { score, feedback } = getPasswordStrength(password);
-  
-  const strengthColors = [
-    'bg-red-500',
-    'bg-orange-500',
-    'bg-yellow-500',
-    'bg-lime-500',
-    'bg-green-500',
-  ];
-  
-  const strengthLabels = [
-    'Very Weak',
-    'Weak',
-    'Fair',
-    'Good',
-    'Strong',
-  ];
+
+  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
+
+  const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
 
   return (
     <div className="mt-2 space-y-1">
       <div className="flex gap-1">
         {[...Array(5)].map((_, i) => (
-          <div
-            key={i}
-            className={`h-1 w-full rounded-full ${
-              i < score ? strengthColors[score - 1] : 'bg-muted'
-            }`}
-          />
+          <div key={i} className={`h-1 w-full rounded-full ${i < score ? strengthColors[score - 1] : 'bg-muted'}`} />
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">
-        Strength: {strengthLabels[Math.max(0, score - 1)]}
-      </p>
+      <p className="text-xs text-muted-foreground">Strength: {strengthLabels[Math.max(0, score - 1)]}</p>
       {feedback.length > 0 && (
         <ul className="text-xs text-muted-foreground list-disc list-inside">
           {feedback.map((item, i) => (
@@ -203,10 +164,7 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
 // Textarea Field
 // ===========================
 
-export function TextareaField<T extends FieldValues>({
-  rows = 3,
-  ...props
-}: BaseFieldProps<T> & { rows?: number }) {
+export function TextareaField<T extends FieldValues>({ rows = 3, ...props }: BaseFieldProps<T> & { rows?: number }) {
   return (
     <FormField
       control={props.control}
@@ -215,12 +173,7 @@ export function TextareaField<T extends FieldValues>({
         <FormItem className={props.className}>
           {props.label && <FormLabel>{props.label}</FormLabel>}
           <FormControl>
-            <Textarea
-              {...field}
-              placeholder={props.placeholder}
-              disabled={props.disabled}
-              rows={rows}
-            />
+            <Textarea {...field} placeholder={props.placeholder} disabled={props.disabled} rows={rows} />
           </FormControl>
           {props.description && <FormDescription>{props.description}</FormDescription>}
           <FormMessage />
@@ -249,18 +202,10 @@ export function CheckboxField<T extends FieldValues>({
       render={({ field }) => (
         <FormItem className={`flex flex-row items-start space-x-3 space-y-0 ${className}`}>
           <FormControl>
-            <Checkbox
-              checked={field.value}
-              onCheckedChange={field.onChange}
-              disabled={disabled}
-            />
+            <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={disabled} />
           </FormControl>
           <div className="space-y-1 leading-none">
-            {label && (
-              <FormLabel className="cursor-pointer">
-                {label}
-              </FormLabel>
-            )}
+            {label && <FormLabel className="cursor-pointer">{label}</FormLabel>}
             {description && <FormDescription>{description}</FormDescription>}
             <FormMessage />
           </div>
@@ -291,11 +236,7 @@ export function SelectField<T extends FieldValues>({
       render={({ field }) => (
         <FormItem className={className}>
           {label && <FormLabel>{label}</FormLabel>}
-          <Select
-            onValueChange={field.onChange}
-            defaultValue={field.value}
-            disabled={disabled}
-          >
+          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={disabled}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder={placeholder} />
@@ -360,12 +301,7 @@ export function SubmitButton({
   className?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <Button
-      type="submit"
-      disabled={isSubmitting}
-      className={className}
-      {...props}
-    >
+    <Button type="submit" disabled={isSubmitting} className={className} {...props}>
       {isSubmitting ? loadingLabel : label}
     </Button>
   );

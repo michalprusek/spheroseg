@@ -61,19 +61,24 @@ export interface ThumbnailOptions {
  */
 export async function convertToStandardFormat(
   sourcePath: string,
-  targetFormat: 'jpeg' | 'png' | 'webp' = 'jpeg',
+  targetFormat: 'jpeg' | 'png' | 'webp' = 'jpeg'
 ): Promise<string> {
   const ext = path.extname(sourcePath).toLowerCase();
   if (ext === '.bmp' || ext === '.tiff' || ext === '.tif') {
     const tempFileName = `${path.basename(sourcePath, ext)}_${Date.now()}.${targetFormat}`;
     const tempPath = path.join(path.dirname(sourcePath), tempFileName);
-    logger.info(`Konvertuji ${ext} na ${targetFormat} pro zpracování: ${sourcePath} -> ${tempPath}`);
+    logger.info(
+      `Konvertuji ${ext} na ${targetFormat} pro zpracování: ${sourcePath} -> ${tempPath}`
+    );
     try {
       await sharp(sourcePath).toFormat(targetFormat).toFile(tempPath);
       return tempPath;
     } catch (error) {
       logger.error(`Chyba při konverzi ${ext} na ${targetFormat}:`, { sourcePath, error });
-      throw new ApiError(`Nelze konvertovat soubor ${ext} na ${targetFormat}: ${error.message}`, 500);
+      throw new ApiError(
+        `Nelze konvertovat soubor ${ext} na ${targetFormat}: ${error.message}`,
+        500
+      );
     }
   }
   return sourcePath; // Není potřeba konverze
@@ -173,7 +178,7 @@ export async function getImageMetadata(filePath: string): Promise<ImageMetadata>
 export async function createThumbnail(
   sourcePath: string,
   targetPath: string,
-  options: ThumbnailOptions = {},
+  options: ThumbnailOptions = {}
 ): Promise<string> {
   let processedSourcePath = sourcePath;
   try {
@@ -231,7 +236,7 @@ export async function optimizeImage(
   sourcePath: string,
   targetPath: string,
   format: 'jpeg' | 'png' | 'webp' = 'jpeg',
-  quality: number = 80,
+  quality: number = 80
 ): Promise<string> {
   try {
     // Vytvoření adresáře pro optimalizovaný obrázek, pokud neexistuje

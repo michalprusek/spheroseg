@@ -60,12 +60,8 @@ const ProjectImages = ({
       const { imageId, status, error, resultPath } = customEvent.detail;
 
       // Update the status of the specific image in our local state
-      setLocalImages(prevImages =>
-        prevImages.map(img =>
-          img.id === imageId
-            ? { ...img, segmentationStatus: status, error, resultPath }
-            : img
-        )
+      setLocalImages((prevImages) =>
+        prevImages.map((img) => (img.id === imageId ? { ...img, segmentationStatus: status, error, resultPath } : img)),
       );
     };
 
@@ -81,9 +77,11 @@ const ProjectImages = ({
       console.log(`ProjectImages: Handling image-deleted event for ${imageId}`);
 
       // Immediately remove the deleted image from our local state
-      setLocalImages(prevImages => {
-        const filtered = prevImages.filter(img => img.id !== imageId);
-        console.log(`ProjectImages: Filtered out deleted image. Before: ${prevImages.length}, After: ${filtered.length}`);
+      setLocalImages((prevImages) => {
+        const filtered = prevImages.filter((img) => img.id !== imageId);
+        console.log(
+          `ProjectImages: Filtered out deleted image. Before: ${prevImages.length}, After: ${filtered.length}`,
+        );
         return filtered;
       });
     };

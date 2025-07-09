@@ -1,6 +1,6 @@
 /**
  * Performance Monitoring Compatibility File
- * 
+ *
  * This file is kept for backward compatibility but delegates to the unified monitoring system.
  * All functionality has been moved to the unified monitoring module.
  */
@@ -16,7 +16,8 @@ export class BackendPerformanceMonitoring {
   }
 
   // Delegate all methods to the unified monitoring instance
-  recordApiResponseTimeMetric = performanceMonitoring.recordApiResponseTime.bind(performanceMonitoring);
+  recordApiResponseTimeMetric =
+    performanceMonitoring.recordApiResponseTime.bind(performanceMonitoring);
   recordDatabaseQueryMetric = performanceMonitoring.recordDatabaseQuery.bind(performanceMonitoring);
   recordFileOperationMetric = performanceMonitoring.recordFileOperation.bind(performanceMonitoring);
   recordMLInferenceMetric = performanceMonitoring.recordMLInference.bind(performanceMonitoring);

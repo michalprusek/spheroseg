@@ -13,7 +13,16 @@ vi.mock('framer-motion', () => ({
 
 // Mock the ImageDisplay component
 vi.mock('../ImageDisplay', () => ({
-  ImageDisplay: ({ image, onDelete, onOpen, onResegment, selectionMode, isSelected, onToggleSelection, viewMode }: any) => {
+  ImageDisplay: ({
+    image,
+    onDelete,
+    onOpen,
+    onResegment,
+    selectionMode,
+    isSelected,
+    onToggleSelection,
+    viewMode,
+  }: any) => {
     const isGrid = viewMode === 'grid';
     const testIdPrefix = isGrid ? 'image-card' : 'image-list-item';
     const deleteTestId = isGrid ? `delete-${image.id}` : `delete-list-${image.id}`;
@@ -36,12 +45,7 @@ vi.mock('../ImageDisplay', () => ({
           Resegment
         </button>
         {selectionMode && (
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => onToggleSelection()}
-            data-testid={selectTestId}
-          />
+          <input type="checkbox" checked={isSelected} onChange={() => onToggleSelection()} data-testid={selectTestId} />
         )}
       </div>
     );

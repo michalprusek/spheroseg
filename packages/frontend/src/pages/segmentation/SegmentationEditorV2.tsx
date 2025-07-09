@@ -99,18 +99,18 @@ const SegmentationEditorV2Inner: React.FC<SegmentationEditorV2Props> = ({ projec
       editMode,
       tempPointsLength: tempPoints.length,
       selectedPolygonId,
-      tempPoints
+      tempPoints,
     });
-    
+
     if (editMode === EditMode.Slice && tempPoints.length === 2 && selectedPolygonId) {
       console.log('[SegmentationEditorV2] Slice points ready, triggering slice action');
-      
+
       // Add a configurable delay to ensure state is properly updated
       const timeoutId = setTimeout(() => {
         try {
           // Trigger the slice action with error handling
           const success = handleSliceAction();
-          
+
           if (success) {
             console.log('[SegmentationEditorV2] Slice action completed successfully');
           } else {
@@ -121,7 +121,7 @@ const SegmentationEditorV2Inner: React.FC<SegmentationEditorV2Props> = ({ projec
           toast.error(t('segmentation.sliceError') || 'An error occurred while slicing the polygon');
         }
       }, SLICE_ACTION_DELAY);
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [editMode, tempPoints, selectedPolygonId, handleSliceAction, SLICE_ACTION_DELAY]);
@@ -188,7 +188,9 @@ const SegmentationEditorV2Inner: React.FC<SegmentationEditorV2Props> = ({ projec
         canUndo={canUndo}
         canRedo={canRedo}
         isSaving={isSaving}
-        isResegmenting={isResegmenting}
+        isResegmenting={
+          isResegmenting || segmentationData?.status === 'queued' || segmentationData?.status === 'processing'
+        }
       />
 
       <div className="flex-1 relative" id="canvas-container">

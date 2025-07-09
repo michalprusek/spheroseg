@@ -86,11 +86,9 @@ export const useProjectData = (projectId: string | undefined) => {
       for (const endpoint of projectEndpoints) {
         try {
           console.log(`Trying to fetch project data from endpoint: ${endpoint}`);
-          projectResponse = await requestDeduplicator.execute(
-            endpoint,
-            () => apiClient.get<Project>(endpoint),
-            { method: 'GET' }
-          );
+          projectResponse = await requestDeduplicator.execute(endpoint, () => apiClient.get<Project>(endpoint), {
+            method: 'GET',
+          });
           console.log(`Successfully retrieved project data from API endpoint ${endpoint}`, projectResponse.data);
           break; // Exit the loop if successful
         } catch (endpointError) {
@@ -264,25 +262,25 @@ export const useProjectData = (projectId: string | undefined) => {
   const refreshData = useCallback(() => {
     console.log('Manually refreshing project data');
     fetchProjectData();
-    
+
     // When refreshing data, also check for any ongoing segmentations
     if (projectId) {
       const cleanedProjectId = cleanProjectId(projectId);
-      
+
       // Try different API endpoints to get current segmentation status
       const endpoints = [
         `/api/segmentation/queue-status/${cleanedProjectId}`,
         `/api/segmentation/queue-status/${cleanedProjectId}`,
-        `/api/segmentations/queue/status/${cleanedProjectId}`
+        `/api/segmentations/queue/status/${cleanedProjectId}`,
       ];
-      
+
       // Try each endpoint until one works
       (async () => {
         for (const endpoint of endpoints) {
           try {
             console.log(`Checking segmentation status from ${endpoint}`);
             const response = await apiClient.get(endpoint);
-            
+
             if (response.data) {
               console.log('Got segmentation status data:', response.data);
               // If we have images with processing status, update local state
@@ -336,13 +334,13 @@ export const useProjectData = (projectId: string | undefined) => {
       window.removeEventListener('image-deleted', handleImageDeleted);
     };
   }, [projectId, cleanProjectId]);
-  
+
   // Second event listener for image-status-update
   useEffect(() => {
     if (!projectId) {
       return;
     }
-    
+
     // Define the handler for image-status-update events
     const handleImageStatusUpdate = (event: Event) => {
       const customEvent = event as CustomEvent<{
@@ -355,7 +353,7 @@ export const useProjectData = (projectId: string | undefined) => {
       const { imageId, status, error, resultPath } = customEvent.detail;
 
       console.log(`Received image-status-update event for image ${imageId} with status ${status}`);
-      
+
       // Update the image status directly
       updateImageStatus(imageId, status, resultPath, error);
 
@@ -365,10 +363,10 @@ export const useProjectData = (projectId: string | undefined) => {
         refreshData();
       }
     };
-    
+
     // Add event listener
     window.addEventListener('image-status-update', handleImageStatusUpdate);
-    
+
     // Clean up
     return () => {
       window.removeEventListener('image-status-update', handleImageStatusUpdate);

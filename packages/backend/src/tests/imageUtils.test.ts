@@ -24,8 +24,12 @@ describe('imageUtils', () => {
       const origin = 'http://localhost:3000';
       const result = formatImagePaths(image, origin);
 
-      expect(result.storage_path_full).toBe('http://localhost:3000/uploads/test-project/test-image.jpg');
-      expect(result.thumbnail_path_full).toBe('http://localhost:3000/uploads/test-project/thumb-test-image.jpg');
+      expect(result.storage_path_full).toBe(
+        'http://localhost:3000/uploads/test-project/test-image.jpg'
+      );
+      expect(result.thumbnail_path_full).toBe(
+        'http://localhost:3000/uploads/test-project/thumb-test-image.jpg'
+      );
       expect(result.src).toBe('http://localhost:3000/uploads/test-project/test-image.jpg');
     });
 
@@ -63,7 +67,9 @@ describe('imageUtils', () => {
       const origin = 'http://localhost:3000';
       const result = formatImagePaths(image, origin);
 
-      expect(result.storage_path_full).toBe('http://localhost:3000/uploads/test-project/test-image.jpg');
+      expect(result.storage_path_full).toBe(
+        'http://localhost:3000/uploads/test-project/test-image.jpg'
+      );
       expect(result.thumbnail_path_full).toBeUndefined();
       expect(result.src).toBe('http://localhost:3000/uploads/test-project/test-image.jpg');
     });

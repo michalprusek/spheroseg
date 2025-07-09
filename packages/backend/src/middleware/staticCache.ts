@@ -13,7 +13,7 @@ const etagCache = new Map<string, { etag: string; mtime: number }>();
 
 export const staticCacheMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const urlPath = req.path.toLowerCase();
-  
+
   // Set cache headers based on file type
   if (urlPath.match(/\.(jpg|jpeg|png|gif|svg|webp|ico)$/)) {
     // Images - cache for 30 days
@@ -28,7 +28,7 @@ export const staticCacheMiddleware = async (req: Request, res: Response, next: N
     // JSON files - no cache
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   }
-  
+
   // Add proper ETag support based on file content
   // Note: In production, this would be handled by the static file middleware
   // This is a fallback for development
@@ -37,7 +37,7 @@ export const staticCacheMiddleware = async (req: Request, res: Response, next: N
       // Construct the file path (configurable static root)
       const staticRoot = process.env.STATIC_ROOT || path.join(process.cwd(), 'public');
       const filePath = path.join(staticRoot, req.path);
-      
+
       // Check cache first
       const cached = etagCache.get(filePath);
       if (cached) {
@@ -53,15 +53,15 @@ export const staticCacheMiddleware = async (req: Request, res: Response, next: N
           etagCache.delete(filePath);
         }
       }
-      
+
       // Generate ETag based on file stats
       try {
         const stats = await fs.stat(filePath);
         const etag = `"${stats.size}-${stats.mtime.getTime()}"`;
-        
+
         // Cache the ETag
         etagCache.set(filePath, { etag, mtime: stats.mtime.getTime() });
-        
+
         res.setHeader('ETag', etag);
       } catch {
         // File doesn't exist - no ETag
@@ -70,6 +70,6 @@ export const staticCacheMiddleware = async (req: Request, res: Response, next: N
       // Silently ignore errors - ETag is optional
     }
   }
-  
+
   next();
 };

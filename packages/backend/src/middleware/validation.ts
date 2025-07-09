@@ -1,6 +1,6 @@
 /**
  * Express-validator middleware
- * 
+ *
  * Poskytuje validaci a sanitizaci vstupů pro API endpointy
  */
 
@@ -13,9 +13,9 @@ import { ApiError } from '../utils/ApiError';
  */
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction): void => {
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
-    const formattedErrors = errors.array().map(error => ({
+    const formattedErrors = errors.array().map((error) => ({
       field: error.param,
       message: error.msg,
       value: error.value,
@@ -23,7 +23,7 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
 
     throw new ApiError('Validation failed', 400, formattedErrors);
   }
-  
+
   next();
 };
 
@@ -32,12 +32,8 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
  */
 export const validators = {
   // Email validace
-  email: () => 
-    body('email')
-      .isEmail()
-      .withMessage('Neplatný formát emailu')
-      .normalizeEmail()
-      .toLowerCase(),
+  email: () =>
+    body('email').isEmail().withMessage('Neplatný formát emailu').normalizeEmail().toLowerCase(),
 
   // Heslo validace
   password: () =>
@@ -48,18 +44,11 @@ export const validators = {
       .withMessage('Heslo musí obsahovat malé písmeno, velké písmeno a číslo'),
 
   // ID validace (UUID)
-  uuid: (field: string = 'id') =>
-    param(field)
-      .isUUID()
-      .withMessage('Neplatné ID'),
+  uuid: (field: string = 'id') => param(field).isUUID().withMessage('Neplatné ID'),
 
   // Stránkování
   pagination: () => [
-    query('page')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Stránka musí být kladné číslo')
-      .toInt(),
+    query('page').optional().isInt({ min: 1 }).withMessage('Stránka musí být kladné číslo').toInt(),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
@@ -79,10 +68,7 @@ export const validators = {
 
   // Telefonní číslo
   phone: () =>
-    body('phone')
-      .optional()
-      .isMobilePhone('any')
-      .withMessage('Neplatné telefonní číslo'),
+    body('phone').optional().isMobilePhone('any').withMessage('Neplatné telefonní číslo'),
 
   // URL
   url: (field: string = 'url') =>
@@ -93,19 +79,11 @@ export const validators = {
 
   // Datum
   date: (field: string) =>
-    body(field)
-      .optional()
-      .isISO8601()
-      .withMessage('Neplatný formát data')
-      .toDate(),
+    body(field).optional().isISO8601().withMessage('Neplatný formát data').toDate(),
 
   // Boolean
   boolean: (field: string) =>
-    body(field)
-      .optional()
-      .isBoolean()
-      .withMessage(`${field} musí být true nebo false`)
-      .toBoolean(),
+    body(field).optional().isBoolean().withMessage(`${field} musí být true nebo false`).toBoolean(),
 
   // Číslo
   number: (field: string, options: { min?: number; max?: number } = {}) =>
@@ -113,7 +91,7 @@ export const validators = {
       .isNumeric()
       .withMessage(`${field} musí být číslo`)
       .toFloat()
-      .custom(value => {
+      .custom((value) => {
         if (options.min !== undefined && value < options.min) {
           throw new Error(`${field} musí být alespoň ${options.min}`);
         }
@@ -140,31 +118,27 @@ export const validators = {
 
   // JSON
   json: (field: string) =>
-    body(field)
-      .optional()
-      .isJSON()
-      .withMessage(`${field} musí být platný JSON`),
+    body(field).optional().isJSON().withMessage(`${field} musí být platný JSON`),
 
   // File upload
   file: (field: string, options: { mimeTypes?: string[]; maxSize?: number } = {}) =>
-    body(field)
-      .custom((value, { req }) => {
-        if (!req.file && !req.files) {
-          throw new Error('Soubor je povinný');
-        }
+    body(field).custom((value, { req }) => {
+      if (!req.file && !req.files) {
+        throw new Error('Soubor je povinný');
+      }
 
-        const file = req.file || (req.files as any)[field];
-        
-        if (options.mimeTypes && !options.mimeTypes.includes(file.mimetype)) {
-          throw new Error(`Nepovolený typ souboru. Povolené: ${options.mimeTypes.join(', ')}`);
-        }
+      const file = req.file || (req.files as any)[field];
 
-        if (options.maxSize && file.size > options.maxSize) {
-          throw new Error(`Soubor je příliš velký. Maximum: ${options.maxSize / 1024 / 1024}MB`);
-        }
+      if (options.mimeTypes && !options.mimeTypes.includes(file.mimetype)) {
+        throw new Error(`Nepovolený typ souboru. Povolené: ${options.mimeTypes.join(', ')}`);
+      }
 
-        return true;
-      }),
+      if (options.maxSize && file.size > options.maxSize) {
+        throw new Error(`Soubor je příliš velký. Maximum: ${options.maxSize / 1024 / 1024}MB`);
+      }
+
+      return true;
+    }),
 };
 
 /**
@@ -221,10 +195,7 @@ export const validationRules = {
   ],
 
   // Pagination
-  pagination: [
-    ...validators.pagination(),
-    handleValidationErrors,
-  ],
+  pagination: [...validators.pagination(), handleValidationErrors],
 };
 
 /**
@@ -271,14 +242,14 @@ export const customValidators = {
  */
 function calculatePasswordStrength(password: string): number {
   let strength = 0;
-  
+
   if (password.length >= 8) strength++;
   if (password.length >= 12) strength++;
   if (/[a-z]/.test(password)) strength++;
   if (/[A-Z]/.test(password)) strength++;
   if (/[0-9]/.test(password)) strength++;
   if (/[^a-zA-Z0-9]/.test(password)) strength++;
-  
+
   return strength;
 }
 
@@ -288,35 +259,29 @@ function calculatePasswordStrength(password: string): number {
 export const sanitizers = {
   // HTML sanitizace
   html: (field: string) =>
-    body(field)
-      .customSanitizer(value => {
-        // Odstranění nebezpečných HTML tagů
-        return value
-          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-          .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-          .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
-          .replace(/on\w+\s*=\s*'[^']*'/gi, '');
-      }),
+    body(field).customSanitizer((value) => {
+      // Odstranění nebezpečných HTML tagů
+      return value
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+        .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
+        .replace(/on\w+\s*=\s*'[^']*'/gi, '');
+    }),
 
   // SQL sanitizace
   sql: (field: string) =>
-    body(field)
-      .customSanitizer(value => {
-        // Základní ochrana proti SQL injection
-        return value
-          .replace(/'/g, "''")
-          .replace(/;/g, '')
-          .replace(/--/g, '');
-      }),
+    body(field).customSanitizer((value) => {
+      // Základní ochrana proti SQL injection
+      return value.replace(/'/g, "''").replace(/;/g, '').replace(/--/g, '');
+    }),
 
   // Filename sanitizace
   filename: (field: string) =>
-    body(field)
-      .customSanitizer(value => {
-        // Odstranění nebezpečných znaků z názvů souborů
-        return value
-          .replace(/[^a-zA-Z0-9._-]/g, '_')
-          .replace(/\.{2,}/g, '.')
-          .substring(0, 255);
-      }),
+    body(field).customSanitizer((value) => {
+      // Odstranění nebezpečných znaků z názvů souborů
+      return value
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+        .replace(/\.{2,}/g, '.')
+        .substring(0, 255);
+    }),
 };

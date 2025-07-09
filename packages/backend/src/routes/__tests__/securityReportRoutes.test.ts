@@ -75,7 +75,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getSecurityAuditReport(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getSecurityAuditReport(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called
       expect(securityService.getSecurityAuditReport).toHaveBeenCalled();
@@ -92,7 +96,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getSecurityAuditReport(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getSecurityAuditReport(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -146,7 +154,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getSecurityIssueById(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getSecurityIssueById(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct id
       expect(securityService.getSecurityIssueById).toHaveBeenCalledWith('issue-1');
@@ -159,7 +171,7 @@ describe('Security Report API Controller', () => {
     it('handles issue not found errors', async () => {
       // Set up mock to throw not found error
       (securityService.getSecurityIssueById as jest.Mock).mockRejectedValue(
-        new ApiError(404, 'Security issue not found'),
+        new ApiError(404, 'Security issue not found')
       );
 
       // Mock request
@@ -169,7 +181,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getSecurityIssueById(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getSecurityIssueById(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -184,7 +200,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getSecurityIssueById(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getSecurityIssueById(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -222,10 +242,18 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.updateSecurityIssue(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.updateSecurityIssue(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
-      expect(securityService.updateSecurityIssue).toHaveBeenCalledWith('issue-1', mockUpdateData, 'admin-123');
+      expect(securityService.updateSecurityIssue).toHaveBeenCalledWith(
+        'issue-1',
+        mockUpdateData,
+        'admin-123'
+      );
 
       // Verify response
       expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -235,7 +263,7 @@ describe('Security Report API Controller', () => {
     it('handles issue not found errors when updating', async () => {
       // Set up mock to throw not found error
       (securityService.updateSecurityIssue as jest.Mock).mockRejectedValue(
-        new ApiError(404, 'Security issue not found'),
+        new ApiError(404, 'Security issue not found')
       );
 
       // Mock request
@@ -246,7 +274,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.updateSecurityIssue(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.updateSecurityIssue(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -255,7 +287,9 @@ describe('Security Report API Controller', () => {
 
     it('handles validation errors when updating', async () => {
       // Set up mock to throw validation error
-      (securityService.updateSecurityIssue as jest.Mock).mockRejectedValue(new ApiError(400, 'Invalid status value'));
+      (securityService.updateSecurityIssue as jest.Mock).mockRejectedValue(
+        new ApiError(400, 'Invalid status value')
+      );
 
       // Mock request with invalid status
       mockRequest = {
@@ -265,7 +299,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.updateSecurityIssue(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.updateSecurityIssue(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -281,7 +319,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.updateSecurityIssue(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.updateSecurityIssue(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -351,7 +393,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getVulnerabilityScans(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getVulnerabilityScans(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with default params
       expect(securityService.getVulnerabilityScans).toHaveBeenCalledWith({
@@ -383,7 +429,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getVulnerabilityScans(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getVulnerabilityScans(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with filter params
       expect(securityService.getVulnerabilityScans).toHaveBeenCalledWith({
@@ -401,7 +451,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getVulnerabilityScans(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getVulnerabilityScans(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -459,7 +513,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getScanDetails(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getScanDetails(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct id
       expect(securityService.getScanById).toHaveBeenCalledWith('scan-1');
@@ -471,7 +529,9 @@ describe('Security Report API Controller', () => {
 
     it('handles scan not found errors', async () => {
       // Set up mock to throw not found error
-      (securityService.getScanById as jest.Mock).mockRejectedValue(new ApiError(404, 'Scan not found'));
+      (securityService.getScanById as jest.Mock).mockRejectedValue(
+        new ApiError(404, 'Scan not found')
+      );
 
       // Mock request
       mockRequest = {
@@ -480,7 +540,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getScanDetails(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getScanDetails(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -495,7 +559,11 @@ describe('Security Report API Controller', () => {
       };
 
       // Call the controller
-      await securityController.getScanDetails(mockRequest as Request, mockResponse as Response, mockNext);
+      await securityController.getScanDetails(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify permission error
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));

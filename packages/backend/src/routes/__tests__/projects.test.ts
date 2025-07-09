@@ -60,7 +60,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.getAllProjects(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getAllProjects(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(projectService.getAllProjects).toHaveBeenCalledWith('user-123');
@@ -75,7 +79,11 @@ describe('Projects API Controller', () => {
       mockRequest = {};
 
       // Call the controller
-      await projectController.getAllProjects(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getAllProjects(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -84,7 +92,9 @@ describe('Projects API Controller', () => {
 
     it('handles server errors when fetching projects', async () => {
       // Set up mock to throw server error
-      vi.mocked(projectService.getAllProjects).mockRejectedValue(new Error('Database connection error'));
+      vi.mocked(projectService.getAllProjects).mockRejectedValue(
+        new Error('Database connection error')
+      );
 
       // Mock request with user
       mockRequest = {
@@ -92,7 +102,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.getAllProjects(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getAllProjects(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalled();
@@ -122,7 +136,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.getProjectById(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getProjectById(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(projectService.getProjectById).toHaveBeenCalledWith('project-1', 'user-123');
@@ -134,7 +152,9 @@ describe('Projects API Controller', () => {
 
     it('handles project not found errors', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.getProjectById).mockRejectedValue(new ApiError(404, 'Project not found'));
+      vi.mocked(projectService.getProjectById).mockRejectedValue(
+        new ApiError(404, 'Project not found')
+      );
 
       // Mock request
       mockRequest = {
@@ -143,7 +163,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.getProjectById(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getProjectById(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -152,7 +176,9 @@ describe('Projects API Controller', () => {
 
     it('handles unauthorized access errors', async () => {
       // Set up mock to throw unauthorized error
-      vi.mocked(projectService.getProjectById).mockRejectedValue(new ApiError(403, 'Unauthorized access to project'));
+      vi.mocked(projectService.getProjectById).mockRejectedValue(
+        new ApiError(403, 'Unauthorized access to project')
+      );
 
       // Mock request with different user
       mockRequest = {
@@ -161,7 +187,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.getProjectById(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getProjectById(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -197,7 +227,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.createProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.createProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(projectService.createProject).toHaveBeenCalledWith({
@@ -217,7 +251,9 @@ describe('Projects API Controller', () => {
       };
 
       // Set up mock to throw validation error
-      vi.mocked(projectService.createProject).mockRejectedValue(new ApiError(400, 'Project name is required'));
+      vi.mocked(projectService.createProject).mockRejectedValue(
+        new ApiError(400, 'Project name is required')
+      );
 
       // Mock request
       mockRequest = {
@@ -226,7 +262,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.createProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.createProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -240,7 +280,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.createProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.createProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -277,10 +321,18 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.updateProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.updateProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
-      expect(projectService.updateProject).toHaveBeenCalledWith('project-1', mockUpdateData, 'user-123');
+      expect(projectService.updateProject).toHaveBeenCalledWith(
+        'project-1',
+        mockUpdateData,
+        'user-123'
+      );
 
       // Verify response
       expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -289,7 +341,9 @@ describe('Projects API Controller', () => {
 
     it('handles project not found errors when updating', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.updateProject).mockRejectedValue(new ApiError(404, 'Project not found'));
+      vi.mocked(projectService.updateProject).mockRejectedValue(
+        new ApiError(404, 'Project not found')
+      );
 
       // Mock request
       mockRequest = {
@@ -299,7 +353,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.updateProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.updateProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -309,7 +367,7 @@ describe('Projects API Controller', () => {
     it('handles unauthorized update attempts', async () => {
       // Set up mock to throw unauthorized error
       vi.mocked(projectService.updateProject).mockRejectedValue(
-        new ApiError(403, 'Unauthorized to update this project'),
+        new ApiError(403, 'Unauthorized to update this project')
       );
 
       // Mock request with different user
@@ -320,7 +378,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.updateProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.updateProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -342,7 +404,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.deleteProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.deleteProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(projectService.deleteProject).toHaveBeenCalledWith('project-1', 'user-123');
@@ -354,7 +420,9 @@ describe('Projects API Controller', () => {
 
     it('handles project not found errors when deleting', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.deleteProject).mockRejectedValue(new ApiError(404, 'Project not found'));
+      vi.mocked(projectService.deleteProject).mockRejectedValue(
+        new ApiError(404, 'Project not found')
+      );
 
       // Mock request
       mockRequest = {
@@ -363,7 +431,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.deleteProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.deleteProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -373,7 +445,7 @@ describe('Projects API Controller', () => {
     it('handles unauthorized delete attempts', async () => {
       // Set up mock to throw unauthorized error
       vi.mocked(projectService.deleteProject).mockRejectedValue(
-        new ApiError(403, 'Unauthorized to delete this project'),
+        new ApiError(403, 'Unauthorized to delete this project')
       );
 
       // Mock request with different user
@@ -383,7 +455,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.deleteProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.deleteProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -414,7 +490,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.getProjectStats(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getProjectStats(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
       expect(projectService.getProjectStats).toHaveBeenCalledWith('project-1', 'user-123');
@@ -426,7 +506,9 @@ describe('Projects API Controller', () => {
 
     it('handles project not found errors when getting stats', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.getProjectStats).mockRejectedValue(new ApiError(404, 'Project not found'));
+      vi.mocked(projectService.getProjectStats).mockRejectedValue(
+        new ApiError(404, 'Project not found')
+      );
 
       // Mock request
       mockRequest = {
@@ -435,7 +517,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.getProjectStats(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getProjectStats(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -478,10 +564,17 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.getProjectActivity(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getProjectActivity(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
-      expect(projectService.getProjectActivity).toHaveBeenCalledWith('project-1', 'user-123', { limit: 10, offset: 0 });
+      expect(projectService.getProjectActivity).toHaveBeenCalledWith('project-1', 'user-123', {
+        limit: 10,
+        offset: 0,
+      });
 
       // Verify response
       expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -497,13 +590,17 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.getProjectActivity(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.getProjectActivity(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Should use default values
       expect(projectService.getProjectActivity).toHaveBeenCalledWith(
         'project-1',
         'user-123',
-        { limit: 20, offset: 0 }, // Default values
+        { limit: 20, offset: 0 } // Default values
       );
     });
   });
@@ -539,10 +636,18 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.duplicateProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.duplicateProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify service was called with correct params
-      expect(projectService.duplicateProject).toHaveBeenCalledWith('project-1', mockDuplicateData, 'user-123');
+      expect(projectService.duplicateProject).toHaveBeenCalledWith(
+        'project-1',
+        mockDuplicateData,
+        'user-123'
+      );
 
       // Verify response
       expect(mockResponse.status).toHaveBeenCalledWith(201);
@@ -551,7 +656,9 @@ describe('Projects API Controller', () => {
 
     it('handles source project not found errors', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.duplicateProject).mockRejectedValue(new ApiError(404, 'Source project not found'));
+      vi.mocked(projectService.duplicateProject).mockRejectedValue(
+        new ApiError(404, 'Source project not found')
+      );
 
       // Mock request
       mockRequest = {
@@ -561,7 +668,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.duplicateProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.duplicateProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
@@ -571,7 +682,7 @@ describe('Projects API Controller', () => {
     it('handles unauthorized duplication attempts', async () => {
       // Set up mock to throw unauthorized error
       vi.mocked(projectService.duplicateProject).mockRejectedValue(
-        new ApiError(403, 'Unauthorized to duplicate this project'),
+        new ApiError(403, 'Unauthorized to duplicate this project')
       );
 
       // Mock request with different user
@@ -582,7 +693,11 @@ describe('Projects API Controller', () => {
       };
 
       // Call the controller
-      await projectController.duplicateProject(mockRequest as Request, mockResponse as Response, mockNext);
+      await projectController.duplicateProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
 
       // Verify error was passed to next
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));

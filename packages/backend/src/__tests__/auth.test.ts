@@ -33,7 +33,9 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should return 400 if password is missing', async () => {
-      const response = await request(app).post('/api/auth/login').send({ email: 'test@example.com' });
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'test@example.com' });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
@@ -98,14 +100,16 @@ describe('Authentication Endpoints', () => {
       // but we can check that the query was called correctly
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT'),
-        expect.arrayContaining(['test@example.com']),
+        expect.arrayContaining(['test@example.com'])
       );
     });
   });
 
   describe('POST /api/auth/register', () => {
     it('should return 400 if required fields are missing', async () => {
-      const response = await request(app).post('/api/auth/register').send({ email: 'test@example.com' }); // Missing password
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send({ email: 'test@example.com' }); // Missing password
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
@@ -159,7 +163,9 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should return 401 if token is invalid', async () => {
-      const response = await request(app).get('/api/auth/me').set('Authorization', 'Bearer invalid_token');
+      const response = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', 'Bearer invalid_token');
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
@@ -181,7 +187,9 @@ describe('Authentication Endpoints', () => {
         ],
       });
 
-      const response = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
+      const response = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id', '123');
@@ -209,7 +217,9 @@ describe('Authentication Middleware', () => {
       rows: [],
     });
 
-    const response = await request(app).get('/api/projects').set('Authorization', `Bearer ${token}`);
+    const response = await request(app)
+      .get('/api/projects')
+      .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
   });

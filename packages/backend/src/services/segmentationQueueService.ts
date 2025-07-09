@@ -182,20 +182,20 @@ class SegmentationQueueService extends EventEmitter {
     try {
       this.connection = await amqp.connect(RABBITMQ_URL);
       this.channel = await this.connection.createChannel();
-      
+
       // Vytvoření fronty, pokud neexistuje
       await this.channel.assertQueue(RABBITMQ_QUEUE, {
-        durable: true
+        durable: true,
       });
-      
+
       logger.info('Připojeno k RabbitMQ');
-      
+
       // Nastavení handlerů pro události
       this.connection.on('error', (err) => {
         logger.error('RabbitMQ connection error:', err);
         this.reconnectRabbitMQ();
       });
-      
+
       this.connection.on('close', () => {
         logger.warn('RabbitMQ connection closed, attempting to reconnect...');
         this.reconnectRabbitMQ();
@@ -282,7 +282,7 @@ class SegmentationQueueService extends EventEmitter {
   private async updateQueueStatus(): Promise<void> {
     try {
       const dbPool = pool.getPool();
-    const client = await dbPool.connect();
+      const client = await dbPool.connect();
       try {
         // Získání počtu úloh podle stavu
         const pendingResult = await client.query(`
@@ -317,7 +317,9 @@ class SegmentationQueueService extends EventEmitter {
             timestamp: new Date().toISOString(),
           });
         } catch (socketError) {
-          logger.error('Chyba při odesílání aktualizace fronty přes WebSocket:', { error: socketError });
+          logger.error('Chyba při odesílání aktualizace fronty přes WebSocket:', {
+            error: socketError,
+          });
         }
       } finally {
         client.release();
@@ -339,7 +341,7 @@ class SegmentationQueueService extends EventEmitter {
 
     try {
       const dbPool = pool.getPool();
-    const client = await dbPool.connect();
+      const client = await dbPool.connect();
       try {
         // Získání úloh ke zpracování
         const result = await client.query(
@@ -350,7 +352,7 @@ class SegmentationQueueService extends EventEmitter {
           ORDER BY priority DESC, created_at ASC
           LIMIT $1
         `,
-          [MAX_CONCURRENT_TASKS],
+          [MAX_CONCURRENT_TASKS]
         );
 
         if (result.rows.length === 0) {
@@ -360,7 +362,7 @@ class SegmentationQueueService extends EventEmitter {
 
         // Zpracování úloh paralelně
         const processingPromises = result.rows.map((task) =>
-          this.processTask(task.id, task.image_id, task.image_path, task.parameters, task.retries),
+          this.processTask(task.id, task.image_id, task.image_path, task.parameters, task.retries)
         );
 
         await Promise.all(processingPromises);
@@ -382,7 +384,7 @@ class SegmentationQueueService extends EventEmitter {
     imageId: string,
     imagePath: string,
     parameters: any,
-    retries: number,
+    retries: number
   ): Promise<void> {
     const dbPool = pool.getPool();
     const client = await dbPool.connect();
@@ -394,7 +396,7 @@ class SegmentationQueueService extends EventEmitter {
         SET status = 'processing', started_at = NOW(), updated_at = NOW()
         WHERE id = $1
       `,
-        [taskId],
+        [taskId]
       );
 
       // Aktualizace stavu segmentace v databázi
@@ -421,7 +423,7 @@ class SegmentationQueueService extends EventEmitter {
         SET status = 'failed', error = $1, completed_at = NOW(), updated_at = NOW()
         WHERE id = $2
       `,
-        [error.message, taskId],
+        [error.message, taskId]
       );
 
       // Aktualizace stavu segmentace
@@ -439,7 +441,7 @@ class SegmentationQueueService extends EventEmitter {
     imageId: string,
     imagePath: string,
     parameters: any,
-    retries: number,
+    retries: number
   ): Promise<void> {
     if (!this.channel) {
       throw new Error('RabbitMQ channel is not available.');
@@ -472,7 +474,7 @@ class SegmentationQueueService extends EventEmitter {
     client: PoolClient,
     imageId: string,
     status: string,
-    errorMessage?: string,
+    errorMessage?: string
   ): Promise<void> {
     try {
       // Kontrola existence záznamu
@@ -480,7 +482,7 @@ class SegmentationQueueService extends EventEmitter {
         `
         SELECT 1 FROM segmentation_results WHERE image_id = $1
       `,
-        [imageId],
+        [imageId]
       );
 
       if (checkResult.rows.length === 0) {
@@ -490,7 +492,7 @@ class SegmentationQueueService extends EventEmitter {
           INSERT INTO segmentation_results (image_id, status, error)
           VALUES ($1, $2, $3)
         `,
-          [imageId, status, errorMessage || null],
+          [imageId, status, errorMessage || null]
         );
       } else {
         // Aktualizace existujícího záznamu
@@ -500,7 +502,7 @@ class SegmentationQueueService extends EventEmitter {
           SET status = $1, error = $2, updated_at = NOW()
           WHERE image_id = $3
         `,
-          [status, errorMessage || null, imageId],
+          [status, errorMessage || null, imageId]
         );
       }
 
@@ -511,7 +513,7 @@ class SegmentationQueueService extends EventEmitter {
         SET status = $1, updated_at = NOW()
         WHERE id = $2
       `,
-        [status, imageId],
+        [status, imageId]
       );
 
       // Odeslání notifikace přes WebSocket
@@ -521,7 +523,7 @@ class SegmentationQueueService extends EventEmitter {
           `
           SELECT user_id FROM images WHERE id = $1
         `,
-          [imageId],
+          [imageId]
         );
 
         if (userQuery.rows.length > 0) {
@@ -552,7 +554,11 @@ class SegmentationQueueService extends EventEmitter {
   /**
    * Aktualizuje výsledek segmentace v databázi
    */
-  private async updateSegmentationResult(client: PoolClient, imageId: string, resultData: any): Promise<void> {
+  private async updateSegmentationResult(
+    client: PoolClient,
+    imageId: string,
+    resultData: any
+  ): Promise<void> {
     try {
       // Uložení celého objektu resultData do databáze
       await client.query(
@@ -561,7 +567,7 @@ class SegmentationQueueService extends EventEmitter {
         SET result_data = $1, updated_at = NOW()
         WHERE image_id = $2
       `,
-        [resultData, imageId],
+        [resultData, imageId]
       );
     } catch (error) {
       logger.error('Chyba při aktualizaci výsledku segmentace:', {
@@ -578,7 +584,7 @@ class SegmentationQueueService extends EventEmitter {
     imageId: string,
     imagePath: string,
     parameters: any = {},
-    priority: TaskPriority = TaskPriority.NORMAL,
+    priority: TaskPriority = TaskPriority.NORMAL
   ): Promise<string> {
     const dbPool = pool.getPool();
     const client = await dbPool.connect();
@@ -589,7 +595,7 @@ class SegmentationQueueService extends EventEmitter {
         SELECT id, status FROM segmentation_tasks
         WHERE image_id = $1 AND status IN ('queued', 'processing')
       `,
-        [imageId],
+        [imageId]
       );
 
       if (checkResult.rows.length > 0) {
@@ -603,7 +609,7 @@ class SegmentationQueueService extends EventEmitter {
             SET priority = $1, parameters = $2, updated_at = NOW()
             WHERE id = $3
           `,
-            [priority, parameters, existingTask.id],
+            [priority, parameters, existingTask.id]
           );
 
           logger.info('Existující úloha segmentace byla aktualizována:', {
@@ -632,7 +638,7 @@ class SegmentationQueueService extends EventEmitter {
         )
         VALUES ($1, $2, $3, $4, $5, 'queued', NOW(), NOW())
       `,
-        [taskId, imageId, imagePath, parameters, priority],
+        [taskId, imageId, imagePath, parameters, priority]
       );
 
       logger.info('Nová úloha segmentace byla přidána do fronty:', {
@@ -676,7 +682,7 @@ class SegmentationQueueService extends EventEmitter {
         WHERE image_id = $1 AND status IN ('queued', 'processing')
         RETURNING id
       `,
-        [imageId],
+        [imageId]
       );
 
       if (result.rows.length === 0) {
@@ -720,7 +726,7 @@ class SegmentationQueueService extends EventEmitter {
         `
         SELECT * FROM segmentation_tasks WHERE id = $1
       `,
-        [taskId],
+        [taskId]
       );
 
       if (result.rows.length === 0) {

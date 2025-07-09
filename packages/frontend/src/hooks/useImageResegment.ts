@@ -235,7 +235,7 @@ export const useImageResegment = (options: UseImageResegmentOptions = {}): UseIm
 
         // Rozdělení ID na menší dávky
         for (let i = 0; i < imageIds.length; i += batchSize) {
-            batches.push(imageIds.slice(i, i + batchSize));
+          batches.push(imageIds.slice(i, i + batchSize));
         }
 
         logger.info(`Rozdělení ${imageIds.length} obrázků do ${batches.length} dávek po max ${batchSize}`);
@@ -245,27 +245,27 @@ export const useImageResegment = (options: UseImageResegmentOptions = {}): UseIm
         let failCount = 0;
 
         for (let i = 0; i < batches.length; i++) {
-            const batch = batches[i];
-            logger.info(`Zpracování dávky ${i+1}/${batches.length} s ${batch.length} obrázky`);
+          const batch = batches[i];
+          logger.info(`Zpracování dávky ${i + 1}/${batches.length} s ${batch.length} obrázky`);
 
-            try {
-                await apiClient.post('/api/segmentations/batch', {
-                    imageIds: batch,
-                    priority,
-                    model_type: modelType,
-                });
+          try {
+            await apiClient.post('/api/segmentations/batch', {
+              imageIds: batch,
+              priority,
+              model_type: modelType,
+            });
 
-                logger.info(`Batch ${i+1} trigger response success`);
-                successCount += batch.length;
-            } catch (batchErr) {
-                logger.error(`Failed to trigger batch ${i+1}`, {
-                    count: batch.length,
-                    error: batchErr,
-                });
-                failCount += batch.length;
+            logger.info(`Batch ${i + 1} trigger response success`);
+            successCount += batch.length;
+          } catch (batchErr) {
+            logger.error(`Failed to trigger batch ${i + 1}`, {
+              count: batch.length,
+              error: batchErr,
+            });
+            failCount += batch.length;
 
-                // Nepřerušujeme zpracování při chybě jedné dávky
-            }
+            // Nepřerušujeme zpracování při chybě jedné dávky
+          }
         }
 
         logger.info('Batch resegmentation results', {
@@ -277,9 +277,7 @@ export const useImageResegment = (options: UseImageResegmentOptions = {}): UseIm
         if (successCount > 0) {
           if (showToasts) {
             if (failCount > 0) {
-              toast.warning(
-                `Resegmentation queued for ${successCount} images, failed for ${failCount} images`,
-              );
+              toast.warning(`Resegmentation queued for ${successCount} images, failed for ${failCount} images`);
             } else {
               toast.success(
                 t('segmentation.resegmentMultipleSuccess', {
