@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { emailSchema, nameSchema, optionalStringSchema } from './commonValidators';
+import { emailSchema, nameSchema } from './commonValidators';
 
 export const createAccessRequestSchema = z.object({
   body: z.object({

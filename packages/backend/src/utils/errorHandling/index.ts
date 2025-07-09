@@ -1,6 +1,6 @@
 /**
  * Centralized Error Handling Module
- * 
+ *
  * This module provides a unified approach to error handling across the application.
  * It exports all error-related utilities, classes, and middleware for consistent
  * error management.
@@ -47,11 +47,11 @@ export const sanitizeErrorMessage = (error: Error, isDevelopment: boolean): stri
   if (isDevelopment) {
     return error.message;
   }
-  
+
   if (error instanceof ApiErrorClass && error.isOperational) {
     return error.message; // Operational errors are safe to expose
   }
-  
+
   return 'An unexpected error occurred'; // Generic message for production
 };
 
@@ -108,18 +108,18 @@ export const errorHelpers = (req: any, res: any, next: any) => {
   req.throwValidationError = (message: string, details?: any) => {
     throw ApiErrorClass.validation(message, details);
   };
-  
+
   req.throwNotFound = (message: string) => {
     throw ApiErrorClass.notFound(message);
   };
-  
+
   req.throwUnauthorized = (message: string) => {
     throw ApiErrorClass.unauthorized(message);
   };
-  
+
   req.throwForbidden = (message: string) => {
     throw ApiErrorClass.forbidden(message);
   };
-  
+
   next();
 };

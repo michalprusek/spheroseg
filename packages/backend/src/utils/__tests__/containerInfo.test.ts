@@ -113,9 +113,7 @@ describe('Container Info Utilities', () => {
 
       const limit = getEffectiveMemoryLimit(512);
       expect(limit).toBe(256);
-      expect(logger.info).toHaveBeenCalledWith(
-        'Using detected container memory limit: 256MB'
-      );
+      expect(logger.info).toHaveBeenCalledWith('Using detected container memory limit: 256MB');
     });
 
     it('should use default limit when no container limit detected', () => {
@@ -123,9 +121,7 @@ describe('Container Info Utilities', () => {
 
       const limit = getEffectiveMemoryLimit(512);
       expect(limit).toBe(512);
-      expect(logger.info).toHaveBeenCalledWith(
-        'Using default memory limit: 512MB'
-      );
+      expect(logger.info).toHaveBeenCalledWith('Using default memory limit: 512MB');
     });
 
     it('should prefer detected limit over default', () => {

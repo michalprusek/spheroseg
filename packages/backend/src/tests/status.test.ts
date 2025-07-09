@@ -43,7 +43,7 @@ app.get('/api/queue-status', authMiddleware, async (req, res) => {
     const result = await pool.query(
       `SELECT i.id, i.name, i.project_id FROM images i 
        WHERE i.id = ANY($1::uuid[]) AND i.user_id = $2`,
-      [status.runningTasks, req.user.userId],
+      [status.runningTasks, req.user.userId]
     );
 
     status.processingImages = result.rows.map((row) => ({
@@ -78,7 +78,7 @@ app.get('/api/queue-status/:projectId', authMiddleware, async (req, res) => {
     const result = await pool.query(
       `SELECT i.id, i.name FROM images i 
        WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,
-      [status.runningTasks, projectId],
+      [status.runningTasks, projectId]
     );
 
     filteredStatus.runningTasks = result.rows.map((row) => row.id);
@@ -95,7 +95,7 @@ describe('Status API', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   const mockToken = jwt.sign(
     { userId: mockUserId, email: 'test@example.com' },
-    process.env.JWT_SECRET || 'test-secret',
+    process.env.JWT_SECRET || 'test-secret'
   );
 
   beforeEach(() => {
@@ -124,7 +124,9 @@ describe('Status API', () => {
         ],
       });
 
-      const response = await request(app).get('/api/queue-status').set('Authorization', `Bearer ${mockToken}`);
+      const response = await request(app)
+        .get('/api/queue-status')
+        .set('Authorization', `Bearer ${mockToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -137,10 +139,10 @@ describe('Status API', () => {
       });
 
       // Verify the database was queried correctly
-      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT i.id, i.name, i.project_id'), [
-        ['image-123', 'image-456'],
-        mockUserId,
-      ]);
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT i.id, i.name, i.project_id'),
+        [['image-123', 'image-456'], mockUserId]
+      );
     });
 
     it('should handle empty running tasks', async () => {
@@ -151,7 +153,9 @@ describe('Status API', () => {
         queuedTasks: [],
       });
 
-      const response = await request(app).get('/api/queue-status').set('Authorization', `Bearer ${mockToken}`);
+      const response = await request(app)
+        .get('/api/queue-status')
+        .set('Authorization', `Bearer ${mockToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({

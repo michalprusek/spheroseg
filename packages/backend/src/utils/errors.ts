@@ -1,6 +1,6 @@
 /**
  * Legacy error classes for backward compatibility
- * 
+ *
  * @deprecated Use ApiError from './ApiError' instead
  * This file is kept for backward compatibility with existing code.
  * New code should use the unified ApiError class.

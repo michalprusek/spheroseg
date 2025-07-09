@@ -73,7 +73,7 @@ export function listFiles(
   options: {
     recursive?: boolean;
     filter?: (filename: string) => boolean;
-  } = {},
+  } = {}
 ): string[] {
   if (!fs.existsSync(directory)) {
     return [];

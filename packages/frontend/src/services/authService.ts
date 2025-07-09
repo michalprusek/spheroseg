@@ -181,7 +181,19 @@ export const getRefreshToken = (): string | null => {
 export const setAccessToken = (token: string): void => {
   try {
     if (typeof window === 'undefined') return;
+    logger.debug('[authService] Setting access token in localStorage:', {
+      key: ACCESS_TOKEN_KEY,
+      tokenLength: token.length,
+      tokenPrefix: token.substring(0, 20) + '...',
+    });
     localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    // Verify it was saved
+    const saved = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (saved === token) {
+      logger.debug('[authService] Access token successfully saved to localStorage');
+    } else {
+      logger.error('[authService] Access token was NOT saved correctly to localStorage');
+    }
   } catch (error) {
     logger.error('[authService] Error setting access token:', error);
   }

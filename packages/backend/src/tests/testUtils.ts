@@ -8,7 +8,7 @@ export async function createTestUser() {
 
   const result = await pool.query(
     'INSERT INTO users (email, password, name, role) VALUES ($1, $2, $3, $4) RETURNING *',
-    [email, hashedPassword, 'Test User', 'user'],
+    [email, hashedPassword, 'Test User', 'user']
   );
 
   return result.rows[0];
@@ -19,11 +19,10 @@ export async function deleteTestUser(userId: string) {
 }
 
 export async function createTestProject(userId: string) {
-  const result = await pool.query('INSERT INTO projects (name, description, user_id) VALUES ($1, $2, $3) RETURNING *', [
-    'Test Project',
-    'Test Description',
-    userId,
-  ]);
+  const result = await pool.query(
+    'INSERT INTO projects (name, description, user_id) VALUES ($1, $2, $3) RETURNING *',
+    ['Test Project', 'Test Description', userId]
+  );
 
   return result.rows[0];
 }
@@ -33,11 +32,10 @@ export async function deleteTestProject(projectId: string) {
 }
 
 export async function createTestImage(projectId: string) {
-  const result = await pool.query('INSERT INTO images (project_id, filename, url) VALUES ($1, $2, $3) RETURNING *', [
-    projectId,
-    'test_image.png',
-    '/uploads/test_image.png',
-  ]);
+  const result = await pool.query(
+    'INSERT INTO images (project_id, filename, url) VALUES ($1, $2, $3) RETURNING *',
+    [projectId, 'test_image.png', '/uploads/test_image.png']
+  );
 
   return result.rows[0];
 }
@@ -47,10 +45,10 @@ export async function deleteTestImage(imageId: string) {
 }
 
 export async function createTestSegmentation(imageId: string) {
-  const result = await pool.query('INSERT INTO segmentations (image_id, polygons) VALUES ($1, $2) RETURNING *', [
-    imageId,
-    JSON.stringify([{ type: 'external', points: [{ x: 0, y: 0 }] }]),
-  ]);
+  const result = await pool.query(
+    'INSERT INTO segmentations (image_id, polygons) VALUES ($1, $2) RETURNING *',
+    [imageId, JSON.stringify([{ type: 'external', points: [{ x: 0, y: 0 }] }])]
+  );
 
   return result.rows[0];
 }

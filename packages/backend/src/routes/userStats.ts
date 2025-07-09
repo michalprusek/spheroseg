@@ -28,9 +28,10 @@ router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: R
       completedSegmentations: stats.completedSegmentations,
       storageUsedBytes: stats.storageUsedBytes.toString(),
       storageLimitBytes: stats.storageLimitBytes.toString(),
-      storageUsedMB: Number(stats.storageUsedBytes) > 0
-        ? Math.round((Number(stats.storageUsedBytes) / (1024 * 1024)) * 100) / 100
-        : 0.01, // Use a small non-zero value if no storage used
+      storageUsedMB:
+        Number(stats.storageUsedBytes) > 0
+          ? Math.round((Number(stats.storageUsedBytes) / (1024 * 1024)) * 100) / 100
+          : 0.01, // Use a small non-zero value if no storage used
       recentActivity: stats.recentActivity,
       recentProjects: stats.recentProjects,
       recentImages: stats.recentImages,
@@ -47,9 +48,10 @@ router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: R
       projects_count: stats.totalProjects,
       images_count: stats.totalImages,
       segmentations_count: stats.completedSegmentations,
-      storage_used_mb: Number(stats.storageUsedBytes) > 0
-        ? Math.round((Number(stats.storageUsedBytes) / (1024 * 1024)) * 100) / 100
-        : 0.01, // Use a small non-zero value if no storage used
+      storage_used_mb:
+        Number(stats.storageUsedBytes) > 0
+          ? Math.round((Number(stats.storageUsedBytes) / (1024 * 1024)) * 100) / 100
+          : 0.01, // Use a small non-zero value if no storage used
       storage_used_bytes: stats.storageUsedBytes.toString(),
       storage_limit_bytes: stats.storageLimitBytes.toString(),
       last_login: new Date().toISOString(),
@@ -91,9 +93,10 @@ router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, r
       completedSegmentations: stats.completedSegmentations,
       storageUsedBytes: stats.storageUsedBytes.toString(),
       storageLimitBytes: stats.storageLimitBytes.toString(),
-      storageUsedMB: Number(stats.storageUsedBytes) > 0
-        ? Math.round((Number(stats.storageUsedBytes) / (1024 * 1024)) * 100) / 100
-        : 0.01, // Use a small non-zero value if no storage used
+      storageUsedMB:
+        Number(stats.storageUsedBytes) > 0
+          ? Math.round((Number(stats.storageUsedBytes) / (1024 * 1024)) * 100) / 100
+          : 0.01, // Use a small non-zero value if no storage used
       recentActivity: stats.recentActivity,
       recentProjects: stats.recentProjects,
       recentImages: stats.recentImages,
@@ -110,9 +113,10 @@ router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, r
       projects_count: stats.totalProjects,
       images_count: stats.totalImages,
       segmentations_count: stats.completedSegmentations,
-      storage_used_mb: Number(stats.storageUsedBytes) > 0
-        ? Math.round((Number(stats.storageUsedBytes) / (1024 * 1024)) * 100) / 100
-        : 0.01, // Use a small non-zero value if no storage used
+      storage_used_mb:
+        Number(stats.storageUsedBytes) > 0
+          ? Math.round((Number(stats.storageUsedBytes) / (1024 * 1024)) * 100) / 100
+          : 0.01, // Use a small non-zero value if no storage used
       storage_used_bytes: stats.storageUsedBytes.toString(),
       storage_limit_bytes: stats.storageLimitBytes.toString(),
       last_login: new Date().toISOString(),

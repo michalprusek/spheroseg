@@ -87,7 +87,9 @@ describe('Segmentation Workflow Integration', () => {
     });
 
     it('should check segmentation queue status', async () => {
-      const response = await authRequest(user.token).get('/api/segmentation/status').query({ projectId });
+      const response = await authRequest(user.token)
+        .get('/api/segmentation/status')
+        .query({ projectId });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('queueLength');
@@ -95,7 +97,9 @@ describe('Segmentation Workflow Integration', () => {
     });
 
     it('should retrieve segmentation status for a specific image', async () => {
-      const response = await authRequest(user.token).get(`/api/images/${imageId}/segmentation/status`);
+      const response = await authRequest(user.token).get(
+        `/api/images/${imageId}/segmentation/status`
+      );
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('status');
@@ -162,14 +166,16 @@ describe('Segmentation Workflow Integration', () => {
           expect(Array.isArray(response.body.polygons)).toBe(true);
         }
       },
-      MAX_SEGMENTATION_WAIT + 5000,
+      MAX_SEGMENTATION_WAIT + 5000
     ); // Add extra time for the test itself
   });
 
   describe('3. Segmentation Result Modification', () => {
     it('should modify segmentation results if available', async () => {
       // Check if segmentation results are available
-      const checkResponse = await authRequest(user.token).get(`/api/images/${imageId}/segmentation`);
+      const checkResponse = await authRequest(user.token).get(
+        `/api/images/${imageId}/segmentation`
+      );
 
       // Skip test if segmentation not completed
       if (checkResponse.status !== 200 || !checkResponse.body.polygons) {
@@ -185,7 +191,7 @@ describe('Segmentation Workflow Integration', () => {
       interface Polygon {
         id: string;
         type: string;
-        points: Array<{x: number; y: number}>;
+        points: Array<{ x: number; y: number }>;
         [key: string]: unknown; // For additional properties
       }
 
@@ -211,15 +217,19 @@ describe('Segmentation Workflow Integration', () => {
       });
 
       // Update segmentation results
-      const updateResponse = await authRequest(user.token).put(`/api/images/${imageId}/segmentation`).send({
-        polygons: modifiedPolygons,
-      });
+      const updateResponse = await authRequest(user.token)
+        .put(`/api/images/${imageId}/segmentation`)
+        .send({
+          polygons: modifiedPolygons,
+        });
 
       expect(updateResponse.status).toBe(200);
       expect(updateResponse.body).toHaveProperty('updated', true);
 
       // Verify the update
-      const verifyResponse = await authRequest(user.token).get(`/api/images/${imageId}/segmentation`);
+      const verifyResponse = await authRequest(user.token).get(
+        `/api/images/${imageId}/segmentation`
+      );
 
       expect(verifyResponse.status).toBe(200);
       expect(verifyResponse.body).toHaveProperty('polygons');
@@ -227,7 +237,9 @@ describe('Segmentation Workflow Integration', () => {
       expect(verifyResponse.body.polygons).toHaveLength(modifiedPolygons.length);
 
       // Check for the modified flag
-      const hasModified = verifyResponse.body.polygons.some((polygon: Polygon) => polygon.modified === true);
+      const hasModified = verifyResponse.body.polygons.some(
+        (polygon: Polygon) => polygon.modified === true
+      );
       expect(hasModified).toBe(true);
     });
   });
@@ -235,7 +247,9 @@ describe('Segmentation Workflow Integration', () => {
   describe('4. Segmentation Export', () => {
     it('should export segmentation results in COCO format', async () => {
       // Skip if no segmentation results
-      const checkResponse = await authRequest(user.token).get(`/api/images/${imageId}/segmentation`);
+      const checkResponse = await authRequest(user.token).get(
+        `/api/images/${imageId}/segmentation`
+      );
 
       if (checkResponse.status !== 200 || !checkResponse.body.polygons) {
         // Skip test with a message for test reports
@@ -256,13 +270,17 @@ describe('Segmentation Workflow Integration', () => {
       expect(Array.isArray(exportResponse.body.annotations)).toBe(true);
 
       // Check if our image is included
-      const imageIncluded = exportResponse.body.images.some((img: any) => img.id.toString() === imageId);
+      const imageIncluded = exportResponse.body.images.some(
+        (img: any) => img.id.toString() === imageId
+      );
       expect(imageIncluded).toBe(true);
     });
 
     it('should export segmentation metrics', async () => {
       // Skip if no segmentation results
-      const checkResponse = await authRequest(user.token).get(`/api/images/${imageId}/segmentation`);
+      const checkResponse = await authRequest(user.token).get(
+        `/api/images/${imageId}/segmentation`
+      );
 
       if (checkResponse.status !== 200 || !checkResponse.body.polygons) {
         // Skip test with a message for test reports

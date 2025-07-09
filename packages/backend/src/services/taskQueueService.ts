@@ -56,7 +56,7 @@ export interface Task<T> {
   createdAt: Date;
   startedAt?: Date;
   completedAt?: Date;
-  timeoutTimer?: NodeJS.Timeout;
+  timeoutTimer?: ReturnType<typeof setTimeout>;
   onProgress?: (progress: number) => void;
   onComplete?: (result: any) => void;
   onError?: (error: Error) => void;

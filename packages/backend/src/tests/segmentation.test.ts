@@ -29,7 +29,10 @@ describe('Segmentation Service Tests', () => {
 
     // Create a test image file
     testImagePath = path.join(__dirname, 'test-image.jpg');
-    fs.writeFileSync(testImagePath, Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
+    fs.writeFileSync(
+      testImagePath,
+      Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
+    );
 
     // Upload the test image
     const imageResponse = await request(app)
@@ -177,7 +180,9 @@ describe('Segmentation Service Tests', () => {
     const newImageId = newImageResponse.body.id;
 
     // Trigger segmentation
-    await request(app).post(`/api/images/${newImageId}/segmentation`).set('Authorization', `Bearer ${authToken}`);
+    await request(app)
+      .post(`/api/images/${newImageId}/segmentation`)
+      .set('Authorization', `Bearer ${authToken}`);
 
     // Update the segmentation status to 'processing'
     await request(app)

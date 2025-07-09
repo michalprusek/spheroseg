@@ -1,6 +1,6 @@
 /**
  * API Response Utilities
- * 
+ *
  * Standardized response formats for consistent API responses across the application.
  * Provides utility functions for common response patterns.
  */
@@ -87,7 +87,7 @@ export const sendPaginated = <T>(
 ): Response => {
   const { page, limit, total } = pagination;
   const totalPages = Math.ceil(total / limit);
-  
+
   const meta: ApiResponseMeta = {
     page,
     limit,
@@ -156,10 +156,7 @@ export const sendForbidden = (
 /**
  * Send not found error response
  */
-export const sendNotFound = (
-  res: Response,
-  message: string = 'Resource not found'
-): Response => {
+export const sendNotFound = (res: Response, message: string = 'Resource not found'): Response => {
   return sendError(res, 'RESOURCE_NOT_FOUND', message, 404);
 };
 
@@ -191,19 +188,14 @@ export const extractPagination = (query: any) => {
   const page = Math.max(1, parseInt(query.page) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 10));
   const offset = (page - 1) * limit;
-  
+
   return { page, limit, offset };
 };
 
 /**
  * Helper to format database results for API response
  */
-export const formatListResponse = <T>(
-  items: T[],
-  total: number,
-  page: number,
-  limit: number
-) => {
+export const formatListResponse = <T>(items: T[], total: number, page: number, limit: number) => {
   return {
     items,
     pagination: {

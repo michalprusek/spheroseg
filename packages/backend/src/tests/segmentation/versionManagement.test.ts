@@ -128,7 +128,11 @@ vi.mock('../../db', () => ({
     }
 
     // Mock image checks
-    if (query.includes('SELECT i.id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1')) {
+    if (
+      query.includes(
+        'SELECT i.id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1'
+      )
+    ) {
       return {
         rows: [{ id: params[0] }],
       };
@@ -208,7 +212,9 @@ describe('Segmentation Version Management', () => {
   });
 
   it('should support pagination for history versions', async () => {
-    const response = await request(app).get(`/api/images/${testImageId}/segmentation/history?limit=2&offset=1`);
+    const response = await request(app).get(
+      `/api/images/${testImageId}/segmentation/history?limit=2&offset=1`
+    );
 
     expect(response.status).toBe(200);
     expect(response.body.versions).toHaveLength(2);
@@ -220,7 +226,9 @@ describe('Segmentation Version Management', () => {
 
   it('should retrieve a specific version of segmentation data', async () => {
     const version = 3;
-    const response = await request(app).get(`/api/images/${testImageId}/segmentation/history/${version}`);
+    const response = await request(app).get(
+      `/api/images/${testImageId}/segmentation/history/${version}`
+    );
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('version', version);
@@ -317,7 +325,7 @@ describe('Segmentation Version Management', () => {
     const version2 = 2;
 
     const response = await request(app).get(
-      `/api/images/${testImageId}/segmentation/history/compare?version1=${version1}&version2=${version2}`,
+      `/api/images/${testImageId}/segmentation/history/compare?version1=${version1}&version2=${version2}`
     );
 
     expect(response.status).toBe(200);
@@ -351,10 +359,12 @@ describe('Segmentation Version Management', () => {
     const snapshotName = 'Important milestone';
     const snapshotDescription = 'Completed initial segmentation review';
 
-    const response = await request(app).post(`/api/images/${testImageId}/segmentation/snapshot`).send({
-      name: snapshotName,
-      description: snapshotDescription,
-    });
+    const response = await request(app)
+      .post(`/api/images/${testImageId}/segmentation/snapshot`)
+      .send({
+        name: snapshotName,
+        description: snapshotDescription,
+      });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('success', true);
@@ -429,12 +439,14 @@ describe('Segmentation Version Management', () => {
       ],
     };
 
-    const response = await request(app).post(`/api/images/${testImageId}/segmentation/branch`).send({
-      base_version: baseVersion,
-      branch_name: newBranchName,
-      result_data: newSegmentationData,
-      change_description: 'Created experimental branch with larger polygon',
-    });
+    const response = await request(app)
+      .post(`/api/images/${testImageId}/segmentation/branch`)
+      .send({
+        base_version: baseVersion,
+        branch_name: newBranchName,
+        result_data: newSegmentationData,
+        change_description: 'Created experimental branch with larger polygon',
+      });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('success', true);
@@ -500,10 +512,12 @@ describe('Project-level Segmentation Version Management', () => {
     const snapshotName = 'Project milestone';
     const snapshotDescription = 'All segmentations reviewed by expert';
 
-    const response = await request(app).post(`/api/projects/${testProjectId}/segmentations/snapshot`).send({
-      name: snapshotName,
-      description: snapshotDescription,
-    });
+    const response = await request(app)
+      .post(`/api/projects/${testProjectId}/segmentations/snapshot`)
+      .send({
+        name: snapshotName,
+        description: snapshotDescription,
+      });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('success', true);

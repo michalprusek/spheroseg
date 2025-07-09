@@ -28,7 +28,7 @@ export function getContainerLimits(): ContainerLimits {
     if (fs.existsSync('/.dockerenv')) {
       result.isContainerized = true;
     }
-    
+
     // Also check for container-specific cgroup files
     if (fs.existsSync('/proc/self/cgroup')) {
       const cgroup = fs.readFileSync('/proc/self/cgroup', 'utf8');
@@ -46,7 +46,7 @@ export function getContainerLimits(): ContainerLimits {
     if (fs.existsSync(cgroupV1Path)) {
       const limitStr = fs.readFileSync(cgroupV1Path, 'utf8').trim();
       const limitBytes = parseInt(limitStr, 10);
-      
+
       // Check if limit is not the default "unlimited" value
       if (limitBytes < 9223372036854775807) {
         result.memoryLimitBytes = limitBytes;
@@ -64,7 +64,7 @@ export function getContainerLimits(): ContainerLimits {
     const cgroupV2Path = '/sys/fs/cgroup/memory.max';
     if (fs.existsSync(cgroupV2Path)) {
       const limitStr = fs.readFileSync(cgroupV2Path, 'utf8').trim();
-      
+
       if (limitStr !== 'max') {
         const limitBytes = parseInt(limitStr, 10);
         result.memoryLimitBytes = limitBytes;
@@ -96,12 +96,12 @@ export function getContainerLimits(): ContainerLimits {
  */
 export function getEffectiveMemoryLimit(defaultLimitMB: number): number {
   const containerLimits = getContainerLimits();
-  
+
   if (containerLimits.memoryLimitMB) {
     logger.info(`Using detected container memory limit: ${containerLimits.memoryLimitMB}MB`);
     return containerLimits.memoryLimitMB;
   }
-  
+
   logger.info(`Using default memory limit: ${defaultLimitMB}MB`);
   return defaultLimitMB;
 }

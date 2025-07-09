@@ -48,7 +48,7 @@ const runPerformanceTest = async (
   method: 'get' | 'post' | 'put' | 'delete',
   endpoint: string,
   token?: string,
-  body?: any,
+  body?: any
 ) => {
   const responseTimes: number[] = [];
 
@@ -141,7 +141,9 @@ describe('API Performance Tests', () => {
     it('should handle project detail retrieval efficiently', async () => {
       const startTime = Date.now();
 
-      await request(app).get(`/api/projects/${projectId}`).set('Authorization', `Bearer ${authToken}`);
+      await request(app)
+        .get(`/api/projects/${projectId}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       const endTime = Date.now();
       const duration = endTime - startTime;
@@ -191,17 +193,27 @@ describe('API Performance Tests', () => {
 
   describe('Segmentation Endpoints Performance', () => {
     it('should have acceptable performance for segmentation retrieval', async () => {
-      const stats = await runPerformanceTest('get', `/api/images/${imageId}/segmentation`, authToken);
+      const stats = await runPerformanceTest(
+        'get',
+        `/api/images/${imageId}/segmentation`,
+        authToken
+      );
 
       console.log(`GET /api/images/${imageId}/segmentation performance stats:`, stats);
 
       // Segmentation retrieval might be slower due to data size
       expect(stats.avg).toBeLessThan(PERFORMANCE_CONFIG.maxAvgResponseTime * 1.5);
-      expect(stats.percentile95).toBeLessThan(PERFORMANCE_CONFIG.max95thPercentileResponseTime * 1.5);
+      expect(stats.percentile95).toBeLessThan(
+        PERFORMANCE_CONFIG.max95thPercentileResponseTime * 1.5
+      );
     });
 
     it('should have acceptable performance for segmentation triggering', async () => {
-      const stats = await runPerformanceTest('post', `/api/images/${imageId}/segmentation`, authToken);
+      const stats = await runPerformanceTest(
+        'post',
+        `/api/images/${imageId}/segmentation`,
+        authToken
+      );
 
       console.log(`POST /api/images/${imageId}/segmentation performance stats:`, stats);
 

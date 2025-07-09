@@ -68,7 +68,7 @@ describe('imageUtils', () => {
     it('should handle BMP files with PNG output', async () => {
       const sourcePath = '/test/image.bmp';
       const targetPath = '/test/thumb.png';
-      
+
       // Mock util.promisify
       const util = require('util');
       util.promisify = jest.fn(() => jest.fn().mockResolvedValue({ stdout: '', stderr: '' }));
@@ -93,7 +93,7 @@ describe('imageUtils', () => {
       const sharpInstance = (sharp as jest.Mock).mock.results[0].value;
       expect(sharpInstance.png).toHaveBeenCalledWith({
         compressionLevel: 9,
-        adaptiveFiltering: true
+        adaptiveFiltering: true,
       });
     });
 
@@ -105,18 +105,21 @@ describe('imageUtils', () => {
       const sharpInstance = {
         resize: jest.fn().mockReturnThis(),
         png: jest.fn().mockReturnThis(),
-        toFile: jest.fn()
+        toFile: jest
+          .fn()
           .mockRejectedValueOnce(new Error('TIFF not supported'))
           .mockResolvedValueOnce(undefined),
       };
-      
+
       (sharp as jest.Mock)
         .mockReturnValueOnce(sharpInstance) // First call fails
-        .mockReturnValueOnce({ // Second call for temp conversion
+        .mockReturnValueOnce({
+          // Second call for temp conversion
           png: jest.fn().mockReturnThis(),
           toFile: jest.fn().mockResolvedValue(undefined),
         })
-        .mockReturnValueOnce({ // Third call for thumbnail from temp
+        .mockReturnValueOnce({
+          // Third call for thumbnail from temp
           resize: jest.fn().mockReturnThis(),
           png: jest.fn().mockReturnThis(),
           toFile: jest.fn().mockResolvedValue(undefined),

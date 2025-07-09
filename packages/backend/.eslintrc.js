@@ -7,10 +7,7 @@ module.exports = {
   plugins: ['@typescript-eslint'],
   extends: [
     'eslint:recommended',
-    // Note: To enable TypeScript linting, install:
-    // npm install --save-dev @typescript-eslint/eslint-plugin @typescript-eslint/parser
-    // Then uncomment the line below:
-    // '@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
   ],
   root: true,
   env: {
@@ -23,6 +20,12 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': ['error', { 
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_',
+      ignoreRestSiblings: true
+    }],
+    'no-unused-vars': 'off', // Disable base rule as it conflicts with @typescript-eslint/no-unused-vars
+    'no-undef': 'off', // TypeScript handles this
   },
 };

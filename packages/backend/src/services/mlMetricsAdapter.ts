@@ -235,7 +235,7 @@ async function fetchAndUpdateMlMetrics(): Promise<void> {
 /**
  * Start metrics polling
  */
-function startMetricsPolling(): NodeJS.Timeout {
+function startMetricsPolling(): ReturnType<typeof setTimeout> {
   // Fetch metrics immediately
   fetchAndUpdateMlMetrics();
 
@@ -243,7 +243,7 @@ function startMetricsPolling(): NodeJS.Timeout {
   return setInterval(fetchAndUpdateMlMetrics, POLLING_INTERVAL);
 }
 
-let pollingInterval: NodeJS.Timeout | null = null;
+let pollingInterval: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Initialize the ML metrics adapter

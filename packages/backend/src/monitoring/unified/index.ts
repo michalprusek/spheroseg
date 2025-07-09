@@ -261,7 +261,7 @@ let cpuUsageLastSample: {
 class UnifiedMonitoring {
   private static instance: UnifiedMonitoring | null = null;
   private metricsQueue: any[] = [];
-  private flushInterval: NodeJS.Timer | null = null;
+  private flushInterval: ReturnType<typeof setInterval> | null = null;
   private options: PerformanceMonitoringOptions;
 
   constructor(options: Partial<PerformanceMonitoringOptions> = {}) {

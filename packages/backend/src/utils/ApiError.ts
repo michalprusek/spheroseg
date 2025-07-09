@@ -1,6 +1,6 @@
 /**
  * Custom API Error Class
- * 
+ *
  * Standardized error handling for the API with proper HTTP status codes
  * and consistent error response format.
  */
@@ -13,7 +13,7 @@ export enum ErrorCode {
   RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
   RESOURCE_CONFLICT = 'RESOURCE_CONFLICT',
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
-  
+
   // Server Errors (5xx)
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
   DATABASE_ERROR = 'DATABASE_ERROR',
@@ -43,7 +43,7 @@ export class ApiError extends Error {
     isOperational: boolean = true
   ) {
     super(message);
-    
+
     this.name = 'ApiError';
     this.statusCode = statusCode;
     this.code = code;
@@ -61,68 +61,42 @@ export class ApiError extends Error {
    * Create a validation error
    */
   static validation(message: string, details?: ErrorDetails[]): ApiError {
-    return new ApiError(
-      message,
-      400,
-      ErrorCode.VALIDATION_ERROR,
-      details
-    );
+    return new ApiError(message, 400, ErrorCode.VALIDATION_ERROR, details);
   }
 
   /**
    * Create an authentication error
    */
   static unauthorized(message: string = 'Authentication required'): ApiError {
-    return new ApiError(
-      message,
-      401,
-      ErrorCode.AUTHENTICATION_REQUIRED
-    );
+    return new ApiError(message, 401, ErrorCode.AUTHENTICATION_REQUIRED);
   }
 
   /**
    * Create a forbidden error
    */
   static forbidden(message: string = 'Insufficient permissions'): ApiError {
-    return new ApiError(
-      message,
-      403,
-      ErrorCode.INSUFFICIENT_PERMISSIONS
-    );
+    return new ApiError(message, 403, ErrorCode.INSUFFICIENT_PERMISSIONS);
   }
 
   /**
    * Create a not found error
    */
   static notFound(message: string = 'Resource not found'): ApiError {
-    return new ApiError(
-      message,
-      404,
-      ErrorCode.RESOURCE_NOT_FOUND
-    );
+    return new ApiError(message, 404, ErrorCode.RESOURCE_NOT_FOUND);
   }
 
   /**
    * Create a conflict error
    */
   static conflict(message: string, details?: ErrorDetails[]): ApiError {
-    return new ApiError(
-      message,
-      409,
-      ErrorCode.RESOURCE_CONFLICT,
-      details
-    );
+    return new ApiError(message, 409, ErrorCode.RESOURCE_CONFLICT, details);
   }
 
   /**
    * Create a rate limit error
    */
   static rateLimit(message: string = 'Rate limit exceeded'): ApiError {
-    return new ApiError(
-      message,
-      429,
-      ErrorCode.RATE_LIMIT_EXCEEDED
-    );
+    return new ApiError(message, 429, ErrorCode.RATE_LIMIT_EXCEEDED);
   }
 
   /**
@@ -141,11 +115,7 @@ export class ApiError extends Error {
    * Create a storage error
    */
   static storage(message: string): ApiError {
-    return new ApiError(
-      message,
-      500,
-      ErrorCode.STORAGE_ERROR
-    );
+    return new ApiError(message, 500, ErrorCode.STORAGE_ERROR);
   }
 
   /**

@@ -45,7 +45,7 @@ export interface PerformanceThresholds {
 
 export interface PerformanceRequest extends Request {
   startTime?: number;
-  memoryUsageStart?: NodeJS.MemoryUsage;
+  memoryUsageStart?: ReturnType<typeof process.memoryUsage>;
 }
 
 // =============================================================================
@@ -139,7 +139,7 @@ const DEFAULT_THRESHOLDS: Required<PerformanceThresholds> = {
 /**
  * Get current memory usage
  */
-const getMemoryUsage = (): NodeJS.MemoryUsage => {
+const getMemoryUsage = (): ReturnType<typeof process.memoryUsage> => {
   return process.memoryUsage();
 };
 

@@ -47,7 +47,7 @@ export class JWTKeyManager {
   private localKeys: Map<string, KeyPair> = new Map();
   private currentKeyId: string | null = null;
   private keysPath: string;
-  private rotationInterval: NodeJS.Timeout | null = null;
+  private rotationInterval: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private config: JWKSConfig = {

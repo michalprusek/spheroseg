@@ -142,13 +142,13 @@ router.post('/', mockAuthMiddleware, mockValidate(), async (req: Request, res: R
         AND table_name = 'projects'
       )
     `,
-      [],
+      []
     );
 
     // Insert new project
     const result = await mockDbQuery(
       'INSERT INTO projects (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
-      [userId, title, description || null],
+      [userId, title, description || null]
     );
 
     if (result.rows && result.rows.length > 0) {
@@ -162,31 +162,36 @@ router.post('/', mockAuthMiddleware, mockValidate(), async (req: Request, res: R
 });
 
 // Project duplication route
-router.post('/:id/duplicate', mockAuthMiddleware, mockValidate(), async (req: Request, res: Response) => {
-  const userId = (req as any).user?.userId;
-  const projectId = req.params.id;
-  const { newTitle } = req.body;
+router.post(
+  '/:id/duplicate',
+  mockAuthMiddleware,
+  mockValidate(),
+  async (req: Request, res: Response) => {
+    const userId = (req as any).user?.userId;
+    const projectId = req.params.id;
+    const { newTitle } = req.body;
 
-  try {
-    // Check if project exists and belongs to user
-    const projectCheck = await mockDbQuery('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
-      projectId,
-      userId,
-    ]);
+    try {
+      // Check if project exists and belongs to user
+      const projectCheck = await mockDbQuery(
+        'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
-    if (!projectCheck.rows || projectCheck.rows.length === 0) {
-      return res.status(404).json({ message: 'Project not found or access denied' });
+      if (!projectCheck.rows || projectCheck.rows.length === 0) {
+        return res.status(404).json({ message: 'Project not found or access denied' });
+      }
+
+      // Duplicate the project - we don't actually pass parameters here in the mock version
+      // since it's just going to return a fixed test object
+      const newProject = await mockDuplicateProject();
+
+      res.status(201).json(newProject);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
     }
-
-    // Duplicate the project - we don't actually pass parameters here in the mock version
-    // since it's just going to return a fixed test object
-    const newProject = await mockDuplicateProject();
-
-    res.status(201).json(newProject);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
   }
-});
+);
 
 describe('Project Creation API', () => {
   let app: express.Application;

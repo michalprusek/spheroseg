@@ -42,12 +42,8 @@ async function ensureLogsTableExists() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
     `;
-    
-    await monitorQuery(
-      createTableQuery,
-      [],
-      () => pool.query(createTableQuery)
-    );
+
+    await monitorQuery(createTableQuery, [], () => pool.query(createTableQuery));
     logger.info('Logs table created or already exists');
   } catch (error) {
     logger.error('Error creating logs table:', { error });
@@ -121,7 +117,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
           data ? JSON.stringify(data) : null,
           new Date(timestamp),
           userAgent || null,
-        ],
+        ]
       );
     } catch (dbError) {
       logger.error('Error saving log to database:', { error: dbError });
@@ -176,7 +172,9 @@ async function handleBatchLogs(req: Request, res: Response, next: NextFunction) 
       // Log with appropriate level (but with less detail in console for batch processing)
       if (level === 0) {
         // ERROR
-        logger.error(`[${source}] ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`);
+        logger.error(
+          `[${source}] ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`
+        );
       } else if (level === 1) {
         // WARN
         logger.warn(`[${source}] ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`);
@@ -205,7 +203,7 @@ async function handleBatchLogs(req: Request, res: Response, next: NextFunction) 
               data ? JSON.stringify(data) : null,
               new Date(timestamp),
               userAgent || null,
-            ],
+            ]
           );
         }
       }
@@ -353,7 +351,8 @@ router.delete('/admin', authMiddleware, async (req: AuthenticatedRequest, res: R
     if (all !== 'true' && !olderThan && level === undefined && !source) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide at least one filter (olderThan, level, source) or set all=true to delete all logs',
+        message:
+          'Please provide at least one filter (olderThan, level, source) or set all=true to delete all logs',
       });
     }
 

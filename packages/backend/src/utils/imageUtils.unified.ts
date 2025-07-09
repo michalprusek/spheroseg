@@ -280,13 +280,13 @@ const fsReaddir = (path: string, options?: { withFileTypes?: boolean }): Promise
   return new Promise((resolve, reject) => {
     if (options?.withFileTypes) {
       // Pokud požadujeme Dirent objekty, použijeme správný callback typ
-      fs.readdir(path, { withFileTypes: true }, (err: NodeJS.ErrnoException | null, files: fs.Dirent[]) => {
+      fs.readdir(path, { withFileTypes: true }, (err: Error | null, files: fs.Dirent[]) => {
         if (err) reject(err);
         else resolve(files);
       });
     } else {
       // Jinak zpracujeme jen stringy
-      fs.readdir(path, (err: NodeJS.ErrnoException | null, files: string[]) => {
+      fs.readdir(path, (err: Error | null, files: string[]) => {
         if (err) reject(err);
         else resolve(files);
       });

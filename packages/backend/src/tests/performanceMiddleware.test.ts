@@ -97,7 +97,7 @@ describe('Performance Monitoring Middleware', () => {
           current: expect.any(Object),
           diff: expect.any(Object),
         }),
-      }),
+      })
     );
   });
 

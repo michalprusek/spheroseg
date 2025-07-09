@@ -50,7 +50,7 @@ export const createTestUser = async (): Promise<TestUser> => {
     INSERT INTO users (id, email, password_hash, name)
     VALUES ($1, $2, crypt($3, gen_salt('bf')), $4)
   `,
-    [userId, email, password, name],
+    [userId, email, password, name]
   );
 
   // Create profile
@@ -59,7 +59,7 @@ export const createTestUser = async (): Promise<TestUser> => {
     INSERT INTO profiles (user_id, preferred_language)
     VALUES ($1, 'en')
   `,
-    [userId],
+    [userId]
   );
 
   // Create token
@@ -90,7 +90,7 @@ export const createTestProject = async (userId: string): Promise<TestProject> =>
     INSERT INTO projects (id, name, description, user_id)
     VALUES ($1, $2, $3, $4)
   `,
-    [projectId, name, description, userId],
+    [projectId, name, description, userId]
   );
 
   return {
@@ -118,7 +118,7 @@ export const createTestImage = async (projectId: string): Promise<TestImage> => 
     INSERT INTO images (id, name, url, thumbnail_url, width, height, project_id)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
   `,
-    [imageId, name, url, thumbnail_url, width, height, projectId],
+    [imageId, name, url, thumbnail_url, width, height, projectId]
   );
 
   return {
@@ -158,7 +158,7 @@ export const createTestSegmentation = async (imageId: string): Promise<void> => 
     SET segmentation_result = $1, segmentation_status = 'completed'
     WHERE id = $2
   `,
-    [JSON.stringify(segmentationData), imageId],
+    [JSON.stringify(segmentationData), imageId]
   );
 };
 
@@ -177,7 +177,7 @@ export const cleanupTestData = async (userId: string): Promise<void> => {
       DELETE FROM images
       WHERE project_id IN (${projectIds.map((_, i) => `$${i + 1}`).join(',')})
     `,
-      projectIds,
+      projectIds
     );
   }
 

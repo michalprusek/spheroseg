@@ -95,7 +95,7 @@ describe('Rate Limiting Middleware', () => {
         error: expect.objectContaining({
           message: 'Too many requests, please try again later',
         }),
-      }),
+      })
     );
     expect(mockResponse.set).toHaveBeenCalledWith('Retry-After', expect.any(String));
   });

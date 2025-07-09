@@ -73,7 +73,9 @@ afterAll(async () => {
   // Clean up - delete test data
   if (createdProjectId) {
     try {
-      await request(app).delete(`/api/projects/${createdProjectId}`).set('Authorization', `Bearer ${authToken}`);
+      await request(app)
+        .delete(`/api/projects/${createdProjectId}`)
+        .set('Authorization', `Bearer ${authToken}`);
       // eslint-disable-next-line no-console
       console.log('Cleaned up test project');
     } catch (error) {
@@ -113,7 +115,9 @@ describe('Project Workflow Integration', () => {
     });
 
     it('should access protected endpoints with auth token', async () => {
-      const response = await request(app).get('/api/users/profile').set('Authorization', `Bearer ${authToken}`);
+      const response = await request(app)
+        .get('/api/users/profile')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('email', testUser.email);
@@ -166,13 +170,17 @@ describe('Project Workflow Integration', () => {
     });
 
     it('should list all user projects', async () => {
-      const response = await request(app).get('/api/projects').set('Authorization', `Bearer ${authToken}`);
+      const response = await request(app)
+        .get('/api/projects')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
 
       // The newly created project should be in the list
-      const projectFound = response.body.some((project: { id: string }) => project.id === createdProjectId);
+      const projectFound = response.body.some(
+        (project: { id: string }) => project.id === createdProjectId
+      );
       expect(projectFound).toBe(true);
     });
   });
@@ -209,7 +217,9 @@ describe('Project Workflow Integration', () => {
 
       if (uploadedImageId) {
         // The uploaded image should be in the list
-        const imageFound = response.body.some((image: { id: string }) => image.id === uploadedImageId);
+        const imageFound = response.body.some(
+          (image: { id: string }) => image.id === uploadedImageId
+        );
         expect(imageFound).toBe(true);
       }
     });
@@ -251,7 +261,9 @@ describe('Project Workflow Integration', () => {
     });
 
     it('should check segmentation status', async () => {
-      const response = await request(app).get('/api/segmentation/status').set('Authorization', `Bearer ${authToken}`);
+      const response = await request(app)
+        .get('/api/segmentation/status')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('queueLength');
@@ -274,7 +286,9 @@ describe('Project Workflow Integration', () => {
       expect(response.status).toBe(200);
 
       // Status should be one of: pending, processing, completed, or failed
-      expect(['pending', 'processing', 'completed', 'failed']).toContain(response.body.segmentationStatus);
+      expect(['pending', 'processing', 'completed', 'failed']).toContain(
+        response.body.segmentationStatus
+      );
     });
   });
 

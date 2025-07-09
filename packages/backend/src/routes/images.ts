@@ -98,7 +98,7 @@ const storage = multer.diskStorage({
   destination: function (
     req: MulterRequest,
     _file: Express.Multer.File,
-    cb: (error: Error | null, destination: string) => void,
+    cb: (error: Error | null, destination: string) => void
   ) {
     // Store files in a subdirectory based on project ID
     const projectId = req.params.projectId;
@@ -120,7 +120,7 @@ const storage = multer.diskStorage({
   filename: function (
     _req: MulterRequest,
     file: Express.Multer.File,
-    cb: (error: Error | null, filename: string) => void,
+    cb: (error: Error | null, filename: string) => void
   ) {
     // Keep original filename + add timestamp to avoid conflicts
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -132,13 +132,7 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 200 * 1024 * 1024 }, // Increased limit to 200MB
   fileFilter: (_req, file, cb) => {
-    const allowedMimeTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/tiff',
-      'image/tif',
-      'image/bmp',
-    ];
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/tiff', 'image/tif', 'image/bmp'];
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
@@ -153,7 +147,7 @@ async function processAndStoreImage(
   file: Express.Multer.File,
   projectId: string,
   userId: string,
-  client: PoolClient,
+  client: PoolClient
 ): Promise<ImageData> {
   let thumbnailPath = null;
   let width = null;
@@ -258,14 +252,16 @@ async function processAndStoreImage(
 
     throw new ApiError(
       `Failed to process image: ${file.originalname} - ${processError.message || 'Unknown error'}`,
-      500,
+      500
     );
   }
 
   // Normalize paths for database storage
   // Use finalStoragePath for the main image path
   const relativePath = imageUtils.normalizePathForDb(finalStoragePath, UPLOAD_DIR);
-  const relativeThumbnailPath = thumbnailPath ? imageUtils.normalizePathForDb(thumbnailPath, UPLOAD_DIR) : null;
+  const relativeThumbnailPath = thumbnailPath
+    ? imageUtils.normalizePathForDb(thumbnailPath, UPLOAD_DIR)
+    : null;
 
   logger.debug('Storing paths in database', {
     originalFilePath: file.path, // Original uploaded file path
@@ -314,7 +310,7 @@ async function processAndStoreImage(
       { originalSize: file.size, originalFormat: file.mimetype }, // Store original size and format
       // If TIFF was converted, we store the size of the converted JPEG, not the original TIFF
       (await fs.promises.stat(finalStoragePath)).size,
-    ],
+    ]
   );
 
   return imageResult.rows[0];
@@ -360,7 +356,7 @@ router.post(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Get database pool at the beginning
     const pool = getPool();
-    
+
     // Validate user ID
     const requestingUserId = req.user?.userId;
     if (!requestingUserId || typeof requestingUserId !== 'string') {
@@ -406,7 +402,7 @@ router.post(
       try {
         const storageInfoRes = await pool.query(
           'SELECT storage_limit_bytes, storage_used_bytes FROM users WHERE id = $1',
-          [requestingUserId],
+          [requestingUserId]
         );
 
         if (storageInfoRes.rows.length === 0) {
@@ -415,7 +411,9 @@ router.post(
           });
         } else {
           // Use values from database if columns exist
-          storageLimitBytes = BigInt(storageInfoRes.rows[0].storage_limit_bytes || defaultLimitBytes);
+          storageLimitBytes = BigInt(
+            storageInfoRes.rows[0].storage_limit_bytes || defaultLimitBytes
+          );
           storageUsedBytes = BigInt(storageInfoRes.rows[0].storage_used_bytes || 0);
         }
       } catch (error) {
@@ -434,7 +432,10 @@ router.post(
           files.forEach((file) => {
             fs.unlink(file.path, (err) => {
               if (err)
-                logger.error('Failed to clean up file after storage limit exceeded', { path: file.path, error: err });
+                logger.error('Failed to clean up file after storage limit exceeded', {
+                  path: file.path,
+                  error: err,
+                });
             });
           });
         }
@@ -445,15 +446,15 @@ router.post(
 
         throw new ApiError(
           `Storage limit exceeded. Limit: ${limitMB} MB, Used: ${usedMB.toFixed(2)} MB, Incoming: ${incomingMB.toFixed(2)} MB. Available: ${availableMB.toFixed(2)} MB.`,
-          413, // Payload Too Large
+          413 // Payload Too Large
         );
       }
       // --- Storage Limit Check --- END
 
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        requestingUserId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, requestingUserId]
+      );
 
       if (projectCheck.rows.length === 0) {
         if (files) files.forEach((file) => allUploadedFilePaths.push(file.path));
@@ -473,7 +474,9 @@ router.post(
         logger.debug('Transaction started for image upload', { projectId });
 
         // Přímo použijeme requestingUserId jako string (UUID)
-        const processingPromises = files.map((file) => processAndStoreImage(file, projectId, requestingUserId, client));
+        const processingPromises = files.map((file) =>
+          processAndStoreImage(file, projectId, requestingUserId, client)
+        );
 
         const insertedImages = await Promise.all(processingPromises);
 
@@ -495,7 +498,10 @@ router.post(
         // --- Update User Storage Usage (Outside Transaction) --- START
         // It's generally safer to update the aggregate count *after* the main transaction succeeds.
         // Calculate the total size of *successfully* processed and inserted images.
-        const successfullyUploadedSize = insertedImages.reduce((sum, img) => sum + BigInt(img.file_size || 0), 0n);
+        const successfullyUploadedSize = insertedImages.reduce(
+          (sum, img) => sum + BigInt(img.file_size || 0),
+          0n
+        );
 
         if (successfullyUploadedSize > 0n) {
           try {
@@ -511,7 +517,7 @@ router.post(
               // Column exists, update it
               await pool.query(
                 'UPDATE users SET storage_used_bytes = COALESCE(storage_used_bytes, 0) + $1 WHERE id = $2',
-                [successfullyUploadedSize.toString(), requestingUserId],
+                [successfullyUploadedSize.toString(), requestingUserId]
               );
               logger.info('User storage usage updated successfully', {
                 userId: requestingUserId,
@@ -535,7 +541,9 @@ router.post(
 
         // Format results before sending
         const origin = req.get('origin') || config.baseUrl;
-        const formattedImages = insertedImages.map((img) => imageUtils.formatImageForApi(img, origin));
+        const formattedImages = insertedImages.map((img) =>
+          imageUtils.formatImageForApi(img, origin)
+        );
 
         res.status(201).json(formattedImages);
       } catch (transactionError) {
@@ -551,15 +559,18 @@ router.post(
         logger.debug('Database client released', { projectId });
       }
     } catch (error) {
-      logger.error('Error uploading images', { 
-        error: error instanceof Error ? {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
-        } : error,
+      logger.error('Error uploading images', {
+        error:
+          error instanceof Error
+            ? {
+                message: error.message,
+                stack: error.stack,
+                name: error.name,
+              }
+            : error,
         projectId,
         filesCount: files?.length || 0,
-        userId: requestingUserId
+        userId: requestingUserId,
       });
       allUploadedFilePaths.forEach((filePath) => {
         if (fs.existsSync(filePath)) {
@@ -578,7 +589,7 @@ router.post(
       });
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -620,7 +631,7 @@ router.delete(
         projectId,
         userId,
       });
-      
+
       // Try to find the actual image by name or storage_filename pattern
       try {
         const imageRes = await pool.query(
@@ -631,19 +642,19 @@ router.delete(
            LIMIT 1`,
           [projectId, `%${imageId}%`, `%${imageId}%`]
         );
-        
+
         if (imageRes.rows.length > 0) {
           const actualImageId = imageRes.rows[0].id;
           logger.info('Found actual image ID for frontend-generated ID', {
             frontendId: imageId,
             actualId: actualImageId,
             filename: imageRes.rows[0].storage_filename,
-            name: imageRes.rows[0].name
+            name: imageRes.rows[0].name,
           });
-          
+
           // Use the actual ID for deletion
           const result = await imageDeleteService.deleteImage(actualImageId, projectId, userId!);
-          
+
           if (!result.success) {
             if (result.error?.includes('not found') || result.error?.includes('access denied')) {
               logger.warn('Image deletion denied', {
@@ -660,7 +671,7 @@ router.delete(
             });
             return res.status(500).json({ message: result.error || 'Failed to delete image' });
           }
-          
+
           // Return success with no content
           return res.status(204).send();
         }
@@ -668,10 +679,10 @@ router.delete(
         logger.error('Error looking up image by frontend ID', {
           frontendId: imageId,
           projectId,
-          error: lookupError
+          error: lookupError,
         });
       }
-      
+
       return res.status(404).json({
         error: 'ImageNotFound',
         message: 'Image with this ID does not exist in the database',
@@ -707,15 +718,15 @@ router.delete(
       // Return success with no content
       res.status(204).send();
     } catch (error) {
-      logger.error('Error deleting image', { 
-        projectId, 
-        imageId, 
+      logger.error('Error deleting image', {
+        projectId,
+        imageId,
         error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       });
       next(error);
     }
-  },
+  }
 );
 
 // POST /api/projects/:projectId/images/upload-batch - Upload multiple images to a project in a batch
@@ -727,7 +738,7 @@ router.post(
     // Forward to the main image upload endpoint
     req.url = `/projects/${req.params.projectId}/images`;
     return router(req, res, next);
-  },
+  }
 );
 
 // DELETE /api/projects/:projectId/images/:imageId - Delete an image from a project
@@ -758,7 +769,7 @@ router.delete(
         imageId,
         userId,
       });
-      
+
       // Try to find the actual image by storage_filename pattern
       try {
         const imageRes = await pool.query(
@@ -771,22 +782,22 @@ router.delete(
            LIMIT 1`,
           [userId, `%${imageId}%`, `%${imageId}%`]
         );
-        
+
         if (imageRes.rows.length > 0) {
           const actualImageId = imageRes.rows[0].id;
           const projectId = imageRes.rows[0].project_id;
-          
+
           logger.info('Found actual image ID for frontend-generated ID (legacy route)', {
             frontendId: imageId,
             actualId: actualImageId,
             projectId: projectId,
             filename: imageRes.rows[0].storage_filename,
-            name: imageRes.rows[0].name
+            name: imageRes.rows[0].name,
           });
-          
+
           // Use the service to delete the image
           const result = await imageDeleteService.deleteImage(actualImageId, projectId, userId!);
-          
+
           if (!result.success) {
             logger.error('Deprecated route: Failed to delete image', {
               imageId: actualImageId,
@@ -797,17 +808,17 @@ router.delete(
               message: result.error || 'Could not delete image',
             });
           }
-          
+
           // Return success with no content
           return res.status(204).send();
         }
       } catch (lookupError) {
         logger.error('Error looking up image by frontend ID (legacy route)', {
           frontendId: imageId,
-          error: lookupError
+          error: lookupError,
         });
       }
-      
+
       return res.status(404).json({
         error: 'ImageNotFound',
         message: 'Image with this ID does not exist in the database',
@@ -818,7 +829,7 @@ router.delete(
       // First, find which project this image belongs to
       const imageRes = await pool.query(
         'SELECT i.id, i.project_id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
-        [imageId, userId],
+        [imageId, userId]
       );
 
       if (imageRes.rows.length === 0) {
@@ -850,7 +861,7 @@ router.delete(
         message: 'Could not delete image',
       });
     }
-  },
+  }
 );
 
 /**
@@ -902,10 +913,10 @@ router.get(
 
     try {
       const pool = getPool();
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         logger.warn('Project access denied', {
@@ -941,7 +952,7 @@ router.get(
       });
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -981,10 +992,10 @@ router.get(
 
     try {
       const pool = getPool();
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         logger.warn('Project access denied', {
@@ -1013,7 +1024,7 @@ router.get(
             LEFT JOIN segmentation_results sr ON i.id = sr.image_id
             WHERE i.project_id = $1 
             ORDER BY i.created_at DESC`,
-        name ? [projectId, name] : [projectId],
+        name ? [projectId, name] : [projectId]
       );
 
       logger.debug('Image query results', { count: imageResult.rows.length });
@@ -1032,13 +1043,17 @@ router.get(
       const verifyFiles = req.query.verifyFiles === 'true';
 
       const origin = req.get('origin') || '';
-      let processedImages = imageResult.rows.map((image: ImageData) => imageUtils.formatImageForApi(image, origin));
+      let processedImages = imageResult.rows.map((image: ImageData) =>
+        imageUtils.formatImageForApi(image, origin)
+      );
 
       if (verifyFiles) {
         logger.debug('Verifying file existence for images', {
           count: processedImages.length,
         });
-        processedImages = processedImages.map((image) => imageUtils.verifyImageFilesForApi(image, UPLOAD_DIR));
+        processedImages = processedImages.map((image) =>
+          imageUtils.verifyImageFilesForApi(image, UPLOAD_DIR)
+        );
 
         const filterMissing = req.query.filterMissing === 'true';
         if (filterMissing) {
@@ -1059,7 +1074,7 @@ router.get(
       });
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -1097,10 +1112,10 @@ router.get(
 
     try {
       const pool = getPool();
-      const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
-        projectId,
-        userId,
-      ]);
+      const projectCheck = await pool.query(
+        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+        [projectId, userId]
+      );
 
       if (projectCheck.rows.length === 0) {
         logger.warn('Project access denied', {
@@ -1111,10 +1126,10 @@ router.get(
         throw new ApiError('Project not found or access denied', 404);
       }
 
-      const imageResult = await pool.query('SELECT id, storage_path FROM images WHERE id = $1 AND project_id = $2', [
-        imageId,
-        projectId,
-      ]);
+      const imageResult = await pool.query(
+        'SELECT id, storage_path FROM images WHERE id = $1 AND project_id = $2',
+        [imageId, projectId]
+      );
 
       if (imageResult.rows.length === 0) {
         logger.warn('Image not found in project', { imageId, projectId });
@@ -1142,7 +1157,7 @@ router.get(
       logger.error('Image verification error', { projectId, imageId, error });
       next(error);
     }
-  },
+  }
 );
 
 // Legacy route for backward compatibility - will be deprecated
@@ -1160,7 +1175,7 @@ router.get('/verify/:id', authMiddleware, async (req: AuthenticatedRequest, res:
     const pool = getPool();
     const imageResult = await pool.query(
       'SELECT i.id, i.project_id, i.storage_path FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
-      [imageId, userId],
+      [imageId, userId]
     );
 
     if (imageResult.rows.length === 0) {
@@ -1198,10 +1213,12 @@ router.get(
 
     try {
       let imageResult;
-      
+
       // Check if imageId looks like a UUID
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(imageId);
-      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        imageId
+      );
+
       if (isUUID) {
         // Try to find by UUID
         imageResult = await pool.query(
@@ -1234,9 +1251,9 @@ router.get(
 
       if (imageResult.rows.length === 0) {
         logger.warn('Image not found or access denied', { imageId, userId, isUUID });
-        return res.status(404).json({ 
+        return res.status(404).json({
           message: 'Image not found or access denied',
-          error: 'NOT_FOUND'
+          error: 'NOT_FOUND',
         });
       }
 
@@ -1265,10 +1282,12 @@ router.get(
 
     try {
       let imageResult;
-      
+
       // Check if imageId looks like a UUID
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(imageId);
-      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        imageId
+      );
+
       if (isUUID) {
         // Try to find by UUID
         imageResult = await pool.query(
@@ -1284,10 +1303,14 @@ router.get(
       }
 
       if (imageResult.rows.length === 0) {
-        logger.warn('Image not found or access denied for segmentation', { imageId, userId, isUUID });
-        return res.status(404).json({ 
+        logger.warn('Image not found or access denied for segmentation', {
+          imageId,
+          userId,
+          isUUID,
+        });
+        return res.status(404).json({
           message: 'Image not found or access denied',
-          error: 'NOT_FOUND'
+          error: 'NOT_FOUND',
         });
       }
 
@@ -1307,7 +1330,7 @@ router.get(
         logger.warn('Segmentation results table does not exist');
         return res.status(404).json({
           message: 'Segmentation not found',
-          error: 'NOT_FOUND'
+          error: 'NOT_FOUND',
         });
       }
 
@@ -1321,12 +1344,16 @@ router.get(
         logger.info('No segmentation found for image', { imageId, actualImageId });
         return res.status(404).json({
           message: 'Segmentation not found for this image',
-          error: 'NOT_FOUND'
+          error: 'NOT_FOUND',
         });
       }
 
       const segmentation = segmentationResult.rows[0];
-      logger.info('Segmentation found for image', { imageId, actualImageId, segmentationId: segmentation.id });
+      logger.info('Segmentation found for image', {
+        imageId,
+        actualImageId,
+        segmentationId: segmentation.id,
+      });
 
       res.status(200).json(segmentation);
     } catch (error) {

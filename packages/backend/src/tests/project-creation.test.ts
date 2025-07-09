@@ -97,10 +97,10 @@ describe('Project Service - createProject', () => {
 
     // Verify that the database was called correctly
     expect(mockClient.query).toHaveBeenCalledWith('BEGIN');
-    expect(mockClient.query).toHaveBeenCalledWith('SELECT id FROM projects WHERE user_id = $1 AND title = $2', [
-      'test-user-id',
-      'Test Project',
-    ]);
+    expect(mockClient.query).toHaveBeenCalledWith(
+      'SELECT id FROM projects WHERE user_id = $1 AND title = $2',
+      ['test-user-id', 'Test Project']
+    );
     expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
     expect(mockClient.release).toHaveBeenCalled();
   });
@@ -156,7 +156,7 @@ describe('Project Service - createProject', () => {
         title: '',
         description: 'Test Description',
         userId: 'test-user-id',
-      }),
+      })
     ).rejects.toThrow(ApiError);
   });
 
@@ -176,7 +176,7 @@ describe('Project Service - createProject', () => {
         title: 'Test Project',
         description: 'Test Description',
         userId: 'test-user-id',
-      }),
+      })
     ).rejects.toThrow(ApiError);
   });
 });

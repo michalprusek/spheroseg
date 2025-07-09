@@ -64,7 +64,7 @@ export const getPerformanceMetrics = (): PerformanceMetrics => {
  * Performance monitoring middleware
  */
 let lastMetrics: PerformanceMetrics | null = null;
-let metricsInterval: NodeJS.Timeout | null = null;
+let metricsInterval: ReturnType<typeof setInterval> | null = null;
 
 export const startPerformanceMonitoring = (intervalMs: number = 60000) => {
   if (metricsInterval) {

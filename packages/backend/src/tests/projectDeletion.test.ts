@@ -115,14 +115,14 @@ router.delete('/:id', mockAuthMiddleware, mockValidate(), async (req: Request, r
         AND table_name = 'projects'
       )
     `,
-      [],
+      []
     );
 
     // Delete the project
-    const result = await mockDbQuery('DELETE FROM projects WHERE id = $1 AND user_id = $2 RETURNING id', [
-      projectId,
-      userId,
-    ]);
+    const result = await mockDbQuery(
+      'DELETE FROM projects WHERE id = $1 AND user_id = $2 RETURNING id',
+      [projectId, userId]
+    );
 
     if (result.rowCount > 0) {
       // Return 204 No Content on successful deletion as per REST conventions

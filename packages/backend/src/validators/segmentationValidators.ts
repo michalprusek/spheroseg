@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { imageIdParams, projectIdParams } from './commonValidators';
+import { imageIdParams } from './commonValidators';
 
 // Schema for GET /api/images/:id/segmentation
 export const getSegmentationSchema = z.object({
