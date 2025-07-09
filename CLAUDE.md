@@ -132,11 +132,19 @@ Frontend <-> NGINX <-> Backend <-> ML Service
 VITE_API_URL=http://localhost:5001
 VITE_API_BASE_URL=/api
 VITE_ASSETS_URL=http://localhost:8080
+# Logging (optional - defaults shown)
+VITE_LOG_LEVEL=INFO               # DEBUG, INFO, WARN, ERROR, NONE
+VITE_ENABLE_CONSOLE_LOGS=true     # Enable/disable console output
+VITE_ENABLE_LOG_SHIPPING=false    # Ship logs to backend
 
 # Backend (.env)
 DATABASE_URL=postgresql://postgres:postgres@db:5432/spheroseg
 JWT_SECRET=your-secret-key
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost
+# Logging (optional - defaults shown)
+LOG_LEVEL=info                    # error, warn, info, http, verbose, debug, silly
+LOG_TO_FILE=false                 # Enable file logging
+LOG_DIR=./logs                    # Directory for log files
 
 # ML Service
 MODEL_PATH=/app/checkpoint_epoch_9.pth.tar

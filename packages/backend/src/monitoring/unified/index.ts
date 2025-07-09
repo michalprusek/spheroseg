@@ -73,6 +73,32 @@ const levels = {
   silly: 6,
 };
 
+// Create transports array based on configuration
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.printf(({ timestamp, level, message, ...rest }) => {
+        const meta = Object.keys(rest).length ? JSON.stringify(rest) : '';
+        return `${timestamp} [${level}]: ${message} ${meta}`;
+      })
+    ),
+  }),
+];
+
+// Add file transports only if file logging is enabled
+if (config.logging.logToFile) {
+  transports.push(
+    new winston.transports.File({ 
+      filename: `${config.logging.logDir}/error.log`, 
+      level: 'error' 
+    }),
+    new winston.transports.File({ 
+      filename: `${config.logging.logDir}/combined.log` 
+    })
+  );
+}
+
 // Initialize Winston logger
 export const logger = winston.createLogger({
   level: LOG_LEVEL,
@@ -83,19 +109,7 @@ export const logger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: { service: 'spheroseg-backend' },
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.printf(({ timestamp, level, message, ...rest }) => {
-          const meta = Object.keys(rest).length ? JSON.stringify(rest) : '';
-          return `${timestamp} [${level}]: ${message} ${meta}`;
-        })
-      ),
-    }),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
-  ],
+  transports,
 });
 
 // Create all metrics with single registry

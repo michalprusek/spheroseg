@@ -44,14 +44,35 @@ export interface LoggerConfig {
 // Default Configuration
 // ===========================
 
+// Parse log level from environment variable
+const getLogLevelFromEnv = (): LogLevel => {
+  const envLevel = import.meta.env.VITE_LOG_LEVEL?.toUpperCase();
+  
+  switch (envLevel) {
+    case 'DEBUG':
+      return LogLevel.DEBUG;
+    case 'INFO':
+      return LogLevel.INFO;
+    case 'WARN':
+      return LogLevel.WARN;
+    case 'ERROR':
+      return LogLevel.ERROR;
+    case 'NONE':
+      return LogLevel.NONE;
+    default:
+      // Default to INFO in production, DEBUG in development
+      return import.meta.env.PROD ? LogLevel.INFO : LogLevel.DEBUG;
+  }
+};
+
 const DEFAULT_CONFIG: LoggerConfig = {
-  level: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
-  enableConsole: true,
+  level: getLogLevelFromEnv(),
+  enableConsole: import.meta.env.VITE_ENABLE_CONSOLE_LOGS !== 'false',
   enableMemoryStorage: true,
-  enableServerShipping: false, // Temporarily disabled due to backend issues
-  maxMemoryLogs: 1000,
-  serverEndpoint: '/api/logs',
-  shipInterval: 30000, // 30 seconds
+  enableServerShipping: import.meta.env.VITE_ENABLE_LOG_SHIPPING === 'true',
+  maxMemoryLogs: parseInt(import.meta.env.VITE_MAX_MEMORY_LOGS || '1000', 10),
+  serverEndpoint: import.meta.env.VITE_LOG_SERVER_ENDPOINT || '/api/logs',
+  shipInterval: parseInt(import.meta.env.VITE_LOG_SHIP_INTERVAL || '30000', 10),
   namespace: 'app',
 };
 
