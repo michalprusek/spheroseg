@@ -92,11 +92,11 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
           polygons: response.data.polygons || (response.data.result_data ? response.data.result_data.polygons : []),
         };
 
-        console.log('[DEBUG] Final segmentation data with dimensions:', {
-          imageWidth: segData.imageWidth,
-          imageHeight: segData.imageHeight,
-          polygonsCount: segData.polygons ? segData.polygons.length : 0,
-        });
+        // console.log('[DEBUG] Final segmentation data with dimensions:', {
+        //   imageWidth: segData.imageWidth,
+        //   imageHeight: segData.imageHeight,
+        //   polygonsCount: segData.polygons ? segData.polygons.length : 0,
+        // });
 
         setSegmentationData(segData);
       } catch (err) {

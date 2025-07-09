@@ -798,16 +798,9 @@ router.post(
 
       logger.info(`Starting resegmentation for image ${imageId}`);
 
-      // First, delete old segmentation results and cells
+      // First, delete old segmentation results
       await pool.query('BEGIN');
       try {
-        // Delete associated cells first (foreign key constraint)
-        const deleteCellsResult = await pool.query(
-          'DELETE FROM cells WHERE segmentation_result_id IN (SELECT id FROM segmentation_results WHERE image_id = $1)',
-          [imageId]
-        );
-        logger.info(`Deleted ${deleteCellsResult.rowCount} cells for image ${imageId}`);
-
         // Delete old segmentation results
         const deleteSegmentationResult = await pool.query(
           'DELETE FROM segmentation_results WHERE image_id = $1',

@@ -101,6 +101,7 @@ export default {
     resegmentButton: 'Resegment',
     completedSegmentation: 'Completed',
     resegmentButtonTooltip: 'Resegment with Neural Network',
+    processingImage: 'Processing image...',
     helpTips: {
       title: 'Tips:',
       edit: {
