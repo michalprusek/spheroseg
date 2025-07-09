@@ -779,7 +779,7 @@ router.post(
             SELECT i.id, i.storage_path, i.project_id
             FROM images i
             JOIN projects p ON i.project_id = p.id
-            WHERE i.id = $1 AND (p.user_id = $2 OR p.is_public = true)
+            WHERE i.id = $1 AND (p.user_id = $2 OR p.public = true)
         `;
       const imageResult = await pool.query(imageQuery, [imageId, userId]);
 

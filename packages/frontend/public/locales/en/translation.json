@@ -161,7 +161,8 @@
       "description": "This project doesn't have any images yet. Upload images to get started with segmentation.",
       "uploadButton": "Upload Images"
     },
-    "errorLoading": "Error loading project"
+    "errorLoading": "Error loading project",
+    "resegmentImage": "Resegment Image"
   },
   "segmentation": {
     "imageNotFound": "Image not found",
@@ -186,6 +187,7 @@
     "loadError": "Failed to load segmentation",
     "resegmentSuccess": "Re-segmentation triggered successfully",
     "resegmentError": "Failed to trigger re-segmentation",
+    "processingImage": "Processing image...",
     "queue": {
       "statusReady": "Ready",
       "statusProcessing": "Processing",
