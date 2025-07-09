@@ -8,6 +8,8 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only --no-notify --no-deps --ignore-watch node_modules -r tsconfig-paths/register src/server.ts",
     "test": "jest",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:unit": "jest --testPathIgnorePatterns=integration",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage",
     "clean": "rimraf dist",
