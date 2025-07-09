@@ -830,8 +830,10 @@ export const useSegmentationV2 = (
       toast.success(t('segmentation.saveSuccess') || 'Segmentation saved successfully');
       console.log('[useSegmentationV2] Save successful.');
 
-      // Update the current segmentation data without resetting history
-      // This preserves the current zoom and translation
+      // Don't refresh data after save to prevent canvas reload
+      // The data is already up to date in the frontend
+      // Commented out to prevent unnecessary canvas refresh
+      /*
       try {
         const refreshedSegmentation = await fetchSegmentationData(saveId);
         console.log('Refreshed segmentation data after save:', refreshedSegmentation);
@@ -853,6 +855,7 @@ export const useSegmentationV2 = (
       } catch (refreshError) {
         console.error('Error refreshing segmentation data after save:', refreshError);
       }
+      */
 
       setIsLoading(false);
       isSavingRef.current = false;

@@ -20,13 +20,16 @@ const CanvasImageLayer: React.FC<CanvasImageLayerProps> = ({
   imageData,
   transform,
 }) => {
+  // Use a stable cache buster based on image data, not current time
+  const [stableCacheBuster] = React.useState(() => Date.now());
+  
   const {
     image,
     isLoading: isImageLoading,
     error: imageError,
   } = useImageLoader(imageData?.src || null, {
     crossOrigin: 'anonymous',
-    cacheBuster: true,
+    cacheBuster: false, // Disable automatic cache busting
     maxRetries: 5,
     timeout: 60000,
     alternativeUrls: imageData?.alternativeUrls || [],

@@ -436,10 +436,9 @@ export const saveSegmentationData = async (
 
   logger.info(`Saving ${processedPolygons.length} valid polygons for imageId=${imageId}`);
 
-  // Prepare the data for saving
+  // Prepare the data for saving - backend expects status field
   const dataToSave = {
-    ...segmentationData,
-    image_id: imageId,
+    status: 'completed', // Backend requires this field
     result_data: {
       polygons: processedPolygons,
       metadata: {
