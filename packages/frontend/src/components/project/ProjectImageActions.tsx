@@ -6,6 +6,7 @@ import apiClient from '@/lib/apiClient';
 import axios from 'axios';
 import { deleteImageFromDB } from '@/utils/indexedDBService';
 import cacheService from '@/services/unifiedCacheService';
+import { SEGMENTATION_STATUS } from '@/constants/segmentationStatus';
 
 interface UseProjectImageActionsProps {
   projectId?: string;
@@ -446,7 +447,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         // 1. Update image status to 'queued' in UI for better UX
         const updatedImagesInitial = images.map((img: ProjectImage) => {
           if (img.id === imageId) {
-            return { ...img, segmentationStatus: 'queued' as ImageStatus };
+            return { ...img, segmentationStatus: SEGMENTATION_STATUS.QUEUED as ImageStatus };
           }
           return img;
         });
@@ -462,7 +463,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         const updateEvent = new CustomEvent('image-status-update', {
           detail: {
             imageId,
-            status: 'queued',
+            status: SEGMENTATION_STATUS.QUEUED,
             forceQueueUpdate: true,
           },
         });
@@ -493,7 +494,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
 
             // Update status to 'queued' after successful API call
             const updateEvent = new CustomEvent('image-status-update', {
-              detail: { imageId, status: 'queued' },
+              detail: { imageId, status: SEGMENTATION_STATUS.QUEUED },
             });
             window.dispatchEvent(updateEvent);
 
@@ -535,7 +536,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                   if (img.id === imageId) {
                     return {
                       ...img,
-                      segmentationStatus: img.segmentationStatus || ('without_segmentation' as ImageStatus),
+                      segmentationStatus: img.segmentationStatus || (SEGMENTATION_STATUS.WITHOUT_SEGMENTATION as ImageStatus),
                     };
                   }
                   return img;

@@ -46,3 +46,6 @@ export { default as polygonUtils } from './utils/polygonUtils';
 
 // Export monitoring utilities
 export * from './monitoring';
+
+// Export segmentation status constants
+export * from './constants/segmentationStatus';

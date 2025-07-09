@@ -14,6 +14,7 @@ import DebugSegmentationThumbnail from './DebugSegmentationThumbnail';
 import useSocketConnection from '@/hooks/useSocketConnection';
 import apiClient from '@/lib/apiClient';
 import { useTranslations } from '@/hooks/useTranslations';
+import { SEGMENTATION_STATUS, isProcessingStatus } from '@/constants/segmentationStatus';
 
 interface ImageDisplayProps {
   image: ProjectImage;
@@ -40,11 +41,11 @@ export const ImageDisplay = ({
 }: ImageDisplayProps) => {
   const { t } = useTranslations();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [currentStatus, setCurrentStatus] = useState<string>(image.segmentationStatus || 'pending');
+  const [currentStatus, setCurrentStatus] = useState<string>(image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION);
 
   // Track segmentation status changes
   useEffect(() => {
-    setCurrentStatus(image.segmentationStatus || 'pending');
+    setCurrentStatus(image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION);
   }, [image.segmentationStatus]);
 
   // Get socket connection
@@ -61,10 +62,10 @@ export const ImageDisplay = ({
 
         // Trigger queue status update
         if (
-          data.status === 'processing' ||
-          data.status === 'completed' ||
-          data.status === 'failed' ||
-          data.status === 'queued'
+          data.status === SEGMENTATION_STATUS.PROCESSING ||
+          data.status === SEGMENTATION_STATUS.COMPLETED ||
+          data.status === SEGMENTATION_STATUS.FAILED ||
+          data.status === SEGMENTATION_STATUS.QUEUED
         ) {
           console.log(`ImageDisplay: Dispatching queue-status-update for image ${data.imageId}`);
 
@@ -137,7 +138,7 @@ export const ImageDisplay = ({
   // Periodically check status for processing images to catch missed updates
   useEffect(() => {
     // Only set up polling for processing status and avoid infinite loops
-    if (currentStatus === 'processing') {
+    if (currentStatus === SEGMENTATION_STATUS.PROCESSING) {
       console.log(`ImageDisplay: Setting up status polling for processing image ${image.id}`);
 
       // Function to check current image status through API
@@ -154,7 +155,7 @@ export const ImageDisplay = ({
               setCurrentStatus(apiStatus);
 
               // If status changed to completed, trigger update notification
-              if (apiStatus === 'completed') {
+              if (apiStatus === SEGMENTATION_STATUS.COMPLETED) {
                 const imageUpdateEvent = new CustomEvent('image-status-update', {
                   detail: {
                     imageId: image.id,
@@ -205,7 +206,7 @@ export const ImageDisplay = ({
         setCurrentStatus(status);
 
         // If forceQueueUpdate is true or status is 'processing' or 'queued', update the queue indicator
-        if (forceQueueUpdate || status === 'processing' || status === 'queued') {
+        if (forceQueueUpdate || status === SEGMENTATION_STATUS.PROCESSING || status === SEGMENTATION_STATUS.QUEUED) {
           console.log(`ImageDisplay: Dispatching queue-status-update for image ${imageId}`);
 
           // Use setTimeout to ensure the status update is processed first
@@ -353,35 +354,35 @@ export const ImageDisplay = ({
     <Badge
       className={cn(
         badgeClassName,
-        currentStatus === 'completed'
+        currentStatus === SEGMENTATION_STATUS.COMPLETED
           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-          : currentStatus === 'processing'
+          : currentStatus === SEGMENTATION_STATUS.PROCESSING
             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
-            : currentStatus === 'queued'
+            : currentStatus === SEGMENTATION_STATUS.QUEUED
               ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
-              : currentStatus === 'failed'
+              : currentStatus === SEGMENTATION_STATUS.FAILED
                 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-                : currentStatus === 'without_segmentation'
+                : currentStatus === SEGMENTATION_STATUS.WITHOUT_SEGMENTATION
                   ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
                   : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100',
       )}
       title={image.error ? `${t('common.error')}: ${image.error}` : undefined}
     >
-      {currentStatus === 'completed' ? (
+      {currentStatus === SEGMENTATION_STATUS.COMPLETED ? (
         t('segmentation.status.completed')
-      ) : currentStatus === 'processing' ? (
+      ) : currentStatus === SEGMENTATION_STATUS.PROCESSING ? (
         <span className="flex items-center">
           <span className="animate-pulse mr-1">●</span> {t('segmentation.status.processing')}
         </span>
-      ) : currentStatus === 'queued' ? (
+      ) : currentStatus === SEGMENTATION_STATUS.QUEUED ? (
         <span className="flex items-center">
           <span className="mr-1">⏱</span> {t('segmentation.status.queued')}
         </span>
-      ) : currentStatus === 'failed' ? (
+      ) : currentStatus === SEGMENTATION_STATUS.FAILED ? (
         <span className="flex items-center">
           <span className="mr-1">⚠️</span> {t('segmentation.status.failed')}
         </span>
-      ) : currentStatus === 'without_segmentation' ? (
+      ) : currentStatus === SEGMENTATION_STATUS.WITHOUT_SEGMENTATION ? (
         t('segmentation.status.withoutSegmentation')
       ) : (
         t('segmentation.status.pending')
@@ -429,7 +430,7 @@ export const ImageDisplay = ({
             <ImageActions
               onDelete={() => onDelete(image.id)}
               onResegment={() => onResegment(image.id)}
-              isProcessing={currentStatus === 'queued' || currentStatus === 'processing'}
+              isProcessing={isProcessingStatus(currentStatus)}
             />
           )}
 
@@ -449,7 +450,7 @@ export const ImageDisplay = ({
                   loading="lazy"
                 />
                 {/* Debug overlay for segmentation - bright red to make it visible */}
-                {currentStatus === 'completed' && (
+                {currentStatus === SEGMENTATION_STATUS.COMPLETED && (
                   <div className="absolute inset-0">
                     <DebugSegmentationThumbnail
                       imageId={image.id}
@@ -478,7 +479,7 @@ export const ImageDisplay = ({
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 {safeFormatDate(image.createdAt, 'PPP', 'Unknown date')}
               </p>
-              {currentStatus === 'failed' && image.error && (
+              {currentStatus === SEGMENTATION_STATUS.FAILED && image.error && (
                 <div className="mt-1 text-xs text-red-500 truncate" title={image.error}>
                   <span className="font-medium">{t('common.error')}:</span> {image.error.substring(0, 50)}
                   {image.error.length > 50 ? '...' : ''}
@@ -514,7 +515,7 @@ export const ImageDisplay = ({
     >
       {/* Thumbnail with segmentation overlay for completed images */}
       <div className="h-10 w-10 rounded overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0 cursor-pointer">
-        {(currentStatus === 'completed' || currentStatus === 'processing') && image.id ? (
+        {(currentStatus === SEGMENTATION_STATUS.COMPLETED || currentStatus === SEGMENTATION_STATUS.PROCESSING) && image.id ? (
           <SegmentationThumbnail
             imageId={image.id}
             projectId={image.project_id || ''}
@@ -546,7 +547,7 @@ export const ImageDisplay = ({
           {currentStatus && <StatusBadge className="ml-2 text-xs" />}
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{safeFormatDate(image.createdAt, 'PPP', '')}</p>
-        {currentStatus === 'failed' && image.error && (
+        {currentStatus === SEGMENTATION_STATUS.FAILED && image.error && (
           <div className="mt-1 text-xs text-red-500 truncate" title={image.error}>
             <span className="font-medium">{t('common.error')}:</span> {image.error.substring(0, 50)}
             {image.error.length > 50 ? '...' : ''}
@@ -567,7 +568,7 @@ export const ImageDisplay = ({
           <ImageListActions
             onDelete={() => onDelete(image.id)}
             onResegment={() => onResegment(image.id)}
-            isProcessing={currentStatus === 'queued' || currentStatus === 'processing'}
+            isProcessing={isProcessingStatus(currentStatus)}
           />
         )}
       </div>

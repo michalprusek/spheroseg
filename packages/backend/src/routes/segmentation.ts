@@ -16,6 +16,7 @@ import {
   triggerProjectBatchSegmentationSchema, // Added import
   // createSegmentationJobSchema // Commented out as it seems missing from validator file
 } from '../validators/segmentationValidators';
+import { SEGMENTATION_STATUS } from '../constants/segmentationStatus';
 
 const router: Router = express.Router();
 
@@ -76,7 +77,7 @@ router.get(
         // If no segmentation result found, return an empty result instead of 404
         const emptyResult = {
           image_id: imageId,
-          status: 'without_segmentation',
+          status: SEGMENTATION_STATUS.WITHOUT_SEGMENTATION,
           result_data: {
             polygons: [],
           },
@@ -156,14 +157,14 @@ router.post(
       }
 
       // Update image status to 'queued' in the database
-      await pool.query("UPDATE images SET status = 'queued', updated_at = NOW() WHERE id = $1", [
+      await pool.query(`UPDATE images SET status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`, [
         imageId,
       ]);
       // Also update or create segmentation_results entry
       await pool.query(
         `INSERT INTO segmentation_results (image_id, status, parameters)
-              VALUES ($1, 'queued', $2)
-              ON CONFLICT (image_id) DO UPDATE SET status = 'queued', parameters = $2, updated_at = NOW()`,
+              VALUES ($1, '${SEGMENTATION_STATUS.QUEUED}', $2)
+              ON CONFLICT (image_id) DO UPDATE SET status = '${SEGMENTATION_STATUS.QUEUED}', parameters = $2, updated_at = NOW()`,
         [imageId, { ...segmentationParams, priority }]
       );
 
@@ -182,11 +183,11 @@ router.post(
       console.error('Error triggering segmentation:', error);
       // Attempt to revert status if triggering failed
       try {
-        await pool.query("UPDATE images SET status = 'failed', updated_at = NOW() WHERE id = $1", [
+        await pool.query(`UPDATE images SET status = '${SEGMENTATION_STATUS.FAILED}', updated_at = NOW() WHERE id = $1`, [
           imageId,
         ]);
         await pool.query(
-          "UPDATE segmentation_results SET status = 'failed', updated_at = NOW() WHERE image_id = $1",
+          `UPDATE segmentation_results SET status = '${SEGMENTATION_STATUS.FAILED}', updated_at = NOW() WHERE image_id = $1`,
           [imageId]
         );
       } catch (revertError) {
@@ -290,14 +291,14 @@ async function handleBatchSegmentation(
       if (imageData) {
         // Update status in DB
         segmentationPromises.push(
-          pool.query("UPDATE images SET status = 'queued', updated_at = NOW() WHERE id = $1", [
+          pool.query(`UPDATE images SET status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`, [
             imageId,
           ])
         );
         segmentationPromises.push(
           pool.query(
-            `INSERT INTO segmentation_results (image_id, status, parameters) VALUES ($1, 'queued', $2)
-                          ON CONFLICT (image_id) DO UPDATE SET status = 'queued', parameters = $2, updated_at = NOW()`,
+            `INSERT INTO segmentation_results (image_id, status, parameters) VALUES ($1, '${SEGMENTATION_STATUS.QUEUED}', $2)
+                          ON CONFLICT (image_id) DO UPDATE SET status = '${SEGMENTATION_STATUS.QUEUED}', parameters = $2, updated_at = NOW()`,
             [imageId, combinedParameters] // Použijeme kompletní parametry
           )
         );
@@ -415,13 +416,13 @@ router.put(
       res.status(401).json({ message: 'Authentication error' });
       return;
     }
-    if (!status || !['completed', 'failed'].includes(status)) {
+    if (!status || ![SEGMENTATION_STATUS.COMPLETED, SEGMENTATION_STATUS.FAILED].includes(status)) {
       res.status(400).json({
         message: 'Invalid status provided. Must be completed or failed.',
       });
       return;
     }
-    if (status === 'completed' && !result_data) {
+    if (status === SEGMENTATION_STATUS.COMPLETED && !result_data) {
       res.status(400).json({ message: 'Result data is required for completed status' });
       return;
     }
@@ -642,10 +643,10 @@ router.get(
       // Get queue status for this project
       const queueQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE st.status = 'queued') AS pending_count,
-                COUNT(*) FILTER (WHERE st.status = 'processing') AS processing_count,
-                COUNT(*) FILTER (WHERE st.status = 'completed') AS completed_count,
-                COUNT(*) FILTER (WHERE st.status = 'failed') AS failed_count,
+                COUNT(*) FILTER (WHERE st.status = '${SEGMENTATION_STATUS.QUEUED}') AS pending_count,
+                COUNT(*) FILTER (WHERE st.status = '${SEGMENTATION_STATUS.PROCESSING}') AS processing_count,
+                COUNT(*) FILTER (WHERE st.status = '${SEGMENTATION_STATUS.COMPLETED}') AS completed_count,
+                COUNT(*) FILTER (WHERE st.status = '${SEGMENTATION_STATUS.FAILED}') AS failed_count,
                 COUNT(*) AS total_count
             FROM segmentation_tasks st
             JOIN images i ON st.image_id = i.id
@@ -663,10 +664,10 @@ router.get(
       // Get image segmentation status for this project
       const imageStatsQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE segmentation_status = 'queued') AS pending_count,
-                COUNT(*) FILTER (WHERE segmentation_status = 'processing') AS processing_count,
-                COUNT(*) FILTER (WHERE segmentation_status = 'completed') AS completed_count,
-                COUNT(*) FILTER (WHERE segmentation_status = 'failed') AS failed_count,
+                COUNT(*) FILTER (WHERE segmentation_status = '${SEGMENTATION_STATUS.QUEUED}') AS pending_count,
+                COUNT(*) FILTER (WHERE segmentation_status = '${SEGMENTATION_STATUS.PROCESSING}') AS processing_count,
+                COUNT(*) FILTER (WHERE segmentation_status = '${SEGMENTATION_STATUS.COMPLETED}') AS completed_count,
+                COUNT(*) FILTER (WHERE segmentation_status = '${SEGMENTATION_STATUS.FAILED}') AS failed_count,
                 COUNT(*) AS total_count
             FROM images
             WHERE project_id = $1
@@ -818,14 +819,14 @@ router.post(
 
         // Update image status to queued
         await pool.query(
-          "UPDATE images SET segmentation_status = 'queued', updated_at = NOW() WHERE id = $1",
+          `UPDATE images SET segmentation_status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`,
           [imageId]
         );
 
         // Create new segmentation result entry with queued status
         await pool.query(
           `INSERT INTO segmentation_results (image_id, status, parameters)
-           VALUES ($1, 'queued', $2)`,
+           VALUES ($1, '${SEGMENTATION_STATUS.QUEUED}', $2)`,
           [imageId, { model_type: 'resunet', force_resegment: true }]
         );
 
@@ -852,7 +853,7 @@ router.post(
       res.status(200).json({
         message: 'Resegmentation started successfully',
         imageId,
-        status: 'queued',
+        status: SEGMENTATION_STATUS.QUEUED,
       });
     } catch (error) {
       console.error('Error triggering resegmentation:', error);
