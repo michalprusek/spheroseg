@@ -223,34 +223,46 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
-// Mock useLanguage hook
-vi.mock('@/contexts/LanguageContext', () => ({
-  useLanguage: () => ({
-    language: 'en',
-    setLanguage: vi.fn(),
-    t: vi.fn((key) => key),
-    availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
-  }),
-  LanguageProvider: ({ children }) => children,
-}));
+// Mock useLanguage hook with proper React component
+vi.mock('@/contexts/LanguageContext', () => {
+  return {
+    useLanguage: () => ({
+      language: 'en',
+      setLanguage: vi.fn(),
+      t: vi.fn((key) => key),
+      availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
+    }),
+    LanguageProvider: ({ children }: { children: React.ReactNode }) => {
+      return React.createElement('div', { 'data-testid': 'language-provider' }, children);
+    },
+  };
+});
 
-// Mock useAuth hook
-vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({
-    user: null,
-    isAuthenticated: false,
-    login: vi.fn(),
-    logout: vi.fn(),
-    refreshToken: vi.fn(),
-  }),
-  AuthProvider: ({ children }) => children,
-}));
+// Mock useAuth hook with proper React component
+vi.mock('@/contexts/AuthContext', () => {
+  return {
+    useAuth: () => ({
+      user: null,
+      isAuthenticated: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshToken: vi.fn(),
+    }),
+    AuthProvider: ({ children }: { children: React.ReactNode }) => {
+      return React.createElement('div', { 'data-testid': 'auth-provider' }, children);
+    },
+  };
+});
 
-// Mock useTheme hook
-vi.mock('@/contexts/ThemeContext', () => ({
-  useTheme: () => ({
-    theme: 'light',
-    setTheme: vi.fn(),
-  }),
-  ThemeProvider: ({ children }) => children,
-}));
+// Mock useTheme hook with proper React component
+vi.mock('@/contexts/ThemeContext', () => {
+  return {
+    useTheme: () => ({
+      theme: 'light',
+      setTheme: vi.fn(),
+    }),
+    ThemeProvider: ({ children }: { children: React.ReactNode }) => {
+      return React.createElement('div', { 'data-testid': 'theme-provider' }, children);
+    },
+  };
+});

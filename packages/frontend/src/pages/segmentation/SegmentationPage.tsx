@@ -25,6 +25,9 @@ export const SegmentationPage: React.FC = () => {
 
   // Create a ref for the canvas
   const canvasRef = useRef<HTMLDivElement>(null);
+  
+  // Track if we're actively placing slice points
+  const isPlacingSlicePoints = useRef(false);
 
   const { images: projectImages, loading: projectLoading } = useProjectData(projectId);
 
@@ -122,10 +125,29 @@ export const SegmentationPage: React.FC = () => {
     }
   }, [selectedPolygonId, handleDeletePolygon]);
 
+  // Clear temp points when entering slice mode
+  useEffect(() => {
+    if (editMode === EditMode.Slice) {
+      // Clear any existing temp points when entering slice mode
+      setTempPoints([]);
+      // Reset the flag
+      isPlacingSlicePoints.current = true;
+    } else {
+      // Reset flag when leaving slice mode
+      isPlacingSlicePoints.current = false;
+    }
+  }, [editMode, setTempPoints]);
+
+  // Track temp points changes to know when user is actively placing points
+  const prevTempPointsLength = useRef(0);
+  
   // Trigger slice when we have 2 points in Slice mode
   useEffect(() => {
-    if (editMode === EditMode.Slice && tempPoints.length === 2 && selectedPolygonId) {
-      console.log('[SegmentationPage] Slice points ready, triggering slice action');
+    // Only trigger if we just went from less than 2 points to exactly 2 points
+    const justPlacedSecondPoint = prevTempPointsLength.current < 2 && tempPoints.length === 2;
+    
+    if (editMode === EditMode.Slice && justPlacedSecondPoint && selectedPolygonId && isPlacingSlicePoints.current) {
+      console.log('[SegmentationPage] Second slice point just placed, triggering slice action');
       
       // Add a small delay to ensure state is properly updated
       const timeoutId = setTimeout(() => {
@@ -136,6 +158,8 @@ export const SegmentationPage: React.FC = () => {
 
           if (success) {
             console.log('[SegmentationPage] Slice action completed successfully');
+            // Reset the flag after successful slice
+            isPlacingSlicePoints.current = false;
           } else {
             console.log('[SegmentationPage] Slice action failed');
           }
@@ -150,6 +174,9 @@ export const SegmentationPage: React.FC = () => {
         clearTimeout(timeoutId);
       };
     }
+    
+    // Update the previous length for next render
+    prevTempPointsLength.current = tempPoints.length;
   }, [editMode, tempPoints.length, selectedPolygonId, handleSliceAction, t]);
 
   // Setup keyboard shortcuts - disabled as V2 system now handles its own keyboard shortcuts
