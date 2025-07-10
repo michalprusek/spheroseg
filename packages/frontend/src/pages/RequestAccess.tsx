@@ -14,6 +14,7 @@ import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { ArrowLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useEmailValidation } from '@/hooks/useEmailValidation';
+import { appConfig } from '@/config/app.config';
 
 const RequestAccess = () => {
   const [email, setEmail] = useState('');
@@ -59,7 +60,7 @@ const RequestAccess = () => {
       reason,
     };
 
-    console.log('Sending access request email to spheroseg@utia.cas.cz with data:', requestData);
+    console.log(`Sending access request email to ${appConfig.contact.email} with data:`, requestData);
 
     try {
       await apiClient.post('/api/access-requests', requestData);

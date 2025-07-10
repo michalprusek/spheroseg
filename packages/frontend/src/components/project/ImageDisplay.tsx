@@ -41,7 +41,9 @@ export const ImageDisplay = ({
 }: ImageDisplayProps) => {
   const { t } = useTranslations();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [currentStatus, setCurrentStatus] = useState<string>(image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION);
+  const [currentStatus, setCurrentStatus] = useState<string>(
+    image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION,
+  );
 
   // Track segmentation status changes
   useEffect(() => {
@@ -515,7 +517,8 @@ export const ImageDisplay = ({
     >
       {/* Thumbnail with segmentation overlay for completed images */}
       <div className="h-10 w-10 rounded overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0 cursor-pointer">
-        {(currentStatus === SEGMENTATION_STATUS.COMPLETED || currentStatus === SEGMENTATION_STATUS.PROCESSING) && image.id ? (
+        {(currentStatus === SEGMENTATION_STATUS.COMPLETED || currentStatus === SEGMENTATION_STATUS.PROCESSING) &&
+        image.id ? (
           <SegmentationThumbnail
             imageId={image.id}
             projectId={image.project_id || ''}

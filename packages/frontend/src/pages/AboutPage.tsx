@@ -5,6 +5,7 @@ import { Container } from '@/components/ui/container';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Mail, Github, Twitter } from 'lucide-react';
+import { appConfig } from '@/config/app.config';
 
 const AboutPage: React.FC = () => {
   const { t } = useTranslation();
@@ -68,19 +69,19 @@ const AboutPage: React.FC = () => {
           <p className="text-lg mb-6">{t('about.contact.description')}</p>
           <div className="flex flex-col md:flex-row gap-4">
             <Button asChild variant="outline" className="flex items-center gap-2">
-              <a href="mailto:contact@spheroseg.com">
+              <a href={`mailto:${appConfig.contact.email}`}>
                 <Mail className="h-4 w-4" />
                 {t('about.contact.email')}
               </a>
             </Button>
             <Button asChild variant="outline" className="flex items-center gap-2">
-              <a href="https://github.com/spheroseg" target="_blank" rel="noopener noreferrer">
+              <a href={appConfig.social.github.url} target="_blank" rel="noopener noreferrer">
                 <Github className="h-4 w-4" />
                 {t('about.contact.github')}
               </a>
             </Button>
             <Button asChild variant="outline" className="flex items-center gap-2">
-              <a href="https://twitter.com/spheroseg" target="_blank" rel="noopener noreferrer">
+              <a href={appConfig.social.twitter.url} target="_blank" rel="noopener noreferrer">
                 <Twitter className="h-4 w-4" />
                 {t('about.contact.twitter')}
               </a>
@@ -92,7 +93,9 @@ const AboutPage: React.FC = () => {
       <footer className="bg-muted py-8">
         <Container>
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-muted-foreground mb-4 md:mb-0">© 2023 Spheroid Segmentation Platform</p>
+            <p className="text-muted-foreground mb-4 md:mb-0">
+              © {new Date().getFullYear()} {appConfig.app.fullName}
+            </p>
             <div className="flex gap-6">
               <Link to="/privacy" className="text-muted-foreground hover:text-foreground">
                 {t('common.privacyPolicy')}

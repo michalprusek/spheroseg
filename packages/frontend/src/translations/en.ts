@@ -1392,6 +1392,7 @@ export default {
     title: 'About SpheroSeg',
     mission: {
       title: 'Our Mission',
+<<<<<<< HEAD
       description: 'SpheroSeg is an advanced platform specifically designed for the segmentation and analysis of cell spheroids in microscopic images. We combine cutting-edge artificial intelligence algorithms with an intuitive interface to provide researchers with precise spheroid boundary detection and analytical capabilities.',
       vision: 'Our vision is to accelerate scientific discovery by making advanced image analysis accessible to researchers worldwide, enabling them to focus on their research rather than technical challenges.',
     },
@@ -1408,12 +1409,14 @@ export default {
       },
       feature3: {
         title: 'Comprehensive Analysis',
-        description: 'Extract detailed metrics including area, perimeter, circularity, and more for each segmented spheroid.',
+        description:
+          'Extract detailed metrics including area, perimeter, circularity, and more for each segmented spheroid.',
       },
     },
     team: {
       title: 'Our Team',
-      description: 'SpheroSeg was developed by a dedicated team of researchers and engineers passionate about advancing biomedical research.',
+      description:
+        'SpheroSeg was developed by a dedicated team of researchers and engineers passionate about advancing biomedical research',
       member1: {
         name: 'Michal Průšek',
         role: 'Lead Developer, FNSPE CTU Prague',
@@ -1429,7 +1432,7 @@ export default {
     },
     contact: {
       title: 'Contact Us',
-      description: 'Have questions or need support? We\'re here to help!',
+      description: "Have questions or need support? We're here to help!",
       email: 'Contact via Email',
       github: 'View on GitHub',
       twitter: 'Follow on Twitter',

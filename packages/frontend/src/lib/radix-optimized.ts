@@ -86,10 +86,7 @@ export {
 } from '@radix-ui/react-tabs';
 
 // Progress optimized imports
-export {
-  Root as ProgressRoot,
-  Indicator as ProgressIndicator,
-} from '@radix-ui/react-progress';
+export { Root as ProgressRoot, Indicator as ProgressIndicator } from '@radix-ui/react-progress';
 
 // Radio Group optimized imports
 export {
@@ -99,12 +96,9 @@ export {
 } from '@radix-ui/react-radio-group';
 
 // Switch optimized imports
-export {
-  Root as SwitchRoot,
-  Thumb as SwitchThumb,
-} from '@radix-ui/react-switch';
+export { Root as SwitchRoot, Thumb as SwitchThumb } from '@radix-ui/react-switch';
 
-// ScrollArea optimized imports
+// Scroll Area optimized imports
 export {
   Root as ScrollAreaRoot,
   Viewport as ScrollAreaViewport,
@@ -113,23 +107,21 @@ export {
   Corner as ScrollAreaCorner,
 } from '@radix-ui/react-scroll-area';
 
-// Alert Dialog optimized imports  
+// Alert Dialog optimized imports
 export {
   Root as AlertDialogRoot,
   Trigger as AlertDialogTrigger,
   Portal as AlertDialogPortal,
   Overlay as AlertDialogOverlay,
   Content as AlertDialogContent,
-  Header as AlertDialogHeader,
-  Footer as AlertDialogFooter,
   Title as AlertDialogTitle,
   Description as AlertDialogDescription,
   Action as AlertDialogAction,
   Cancel as AlertDialogCancel,
 } from '@radix-ui/react-alert-dialog';
 
-// Label optimized import
-export { Root as Label } from '@radix-ui/react-label';
+// Label optimized imports
+export { Root as Label, Root as LabelRoot } from '@radix-ui/react-label';
 
 // Slot optimized import
 export { Slot } from '@radix-ui/react-slot';

@@ -62,8 +62,14 @@ export const updateProjectSchema = z.object({
       .min(3, 'Title must be at least 3 characters long')
       .max(100, 'Title must be at most 100 characters long')
       .optional(),
-    description: z.string().max(1000, 'Description must be at most 1000 characters long').optional(),
-    thumbnail_url: z.string().max(2048, 'Thumbnail URL must be at most 2048 characters long').optional(),
+    description: z
+      .string()
+      .max(1000, 'Description must be at most 1000 characters long')
+      .optional(),
+    thumbnail_url: z
+      .string()
+      .max(2048, 'Thumbnail URL must be at most 2048 characters long')
+      .optional(),
   }),
 });
 

@@ -536,7 +536,8 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                   if (img.id === imageId) {
                     return {
                       ...img,
-                      segmentationStatus: img.segmentationStatus || (SEGMENTATION_STATUS.WITHOUT_SEGMENTATION as ImageStatus),
+                      segmentationStatus:
+                        img.segmentationStatus || (SEGMENTATION_STATUS.WITHOUT_SEGMENTATION as ImageStatus),
                     };
                   }
                   return img;

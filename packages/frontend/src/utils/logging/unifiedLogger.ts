@@ -47,7 +47,7 @@ export interface LoggerConfig {
 // Parse log level from environment variable
 const getLogLevelFromEnv = (): LogLevel => {
   const envLevel = import.meta.env.VITE_LOG_LEVEL?.toUpperCase();
-  
+
   switch (envLevel) {
     case 'DEBUG':
       return LogLevel.DEBUG;

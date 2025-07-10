@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from '@/hooks/useTranslations';
 import getAssetUrl from '@/utils/getAssetUrl';
+import { appConfig } from '@/config/app.config';
 
 const About = () => {
   const { t } = useTranslations();
@@ -37,8 +38,8 @@ const About = () => {
                 <p className="text-gray-600 dark:text-gray-300">{t('index.about.paragraph2')}</p>
                 <p className="text-gray-600 dark:text-gray-300">{t('index.about.paragraph3')}</p>
                 <p className="text-gray-600 dark:text-gray-300">
-                  <a href="mailto:spheroseg@utia.cas.cz" className="text-blue-600 dark:text-blue-400 hover:underline">
-                    spheroseg@utia.cas.cz
+                  <a href={`mailto:${appConfig.contact.email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                    {appConfig.contact.email}
                   </a>
                 </p>
               </div>

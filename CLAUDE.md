@@ -181,6 +181,31 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 6. **Date Utilities**: Unified date formatting
 7. **Export Functions**: Centralized export logic
 8. **WebSocket Management**: Single connection manager
+9. **Application Configuration**: Centralized in `packages/frontend/src/config/app.config.ts`
+   - All contact information, URLs, and organization details
+   - Feature flags and environment-specific settings
+   - Type-safe configuration with helper functions
+
+## Code Quality Patterns
+
+### Import Management
+- **Lazy Loading**: All page components use React.lazy() with error boundaries
+- **Import Validation**: Pre-commit hooks validate all imports
+- **Path Aliases**: Use `@/` for src imports, avoid relative paths
+- **Import Order**: External deps → Internal modules → Local files → Types
+
+### Testing Patterns
+- **E2E Tests**: Playwright for user flows and navigation
+- **Unit Tests**: Vitest for components, utilities, and services
+- **Test Organization**: Tests in `__tests__` folders next to source
+- **Test Coverage**: Aim for >80% on critical paths
+- **Mock Strategy**: Mock external dependencies, use real implementations when possible
+
+### Configuration Management
+- **Centralized Config**: All app settings in `app.config.ts`
+- **Environment Variables**: Use for secrets and environment-specific values
+- **Type Safety**: Configuration object is fully typed with const assertion
+- **Helper Functions**: Provide getters for common config values
 
 ## Development Tips
 
@@ -191,6 +216,8 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 5. **API Changes**: Update both backend routes and frontend services
 6. **ML Model Updates**: Test with sample images before deploying
 7. **Using Context7**: Frequently use the Context7 MCP tool to get up-to-date documentation for libraries and frameworks
+8. **Pre-commit Hooks**: Automatically run import checks, linting, and tests
+9. **Configuration Changes**: Update `app.config.ts` for any contact info or URLs
 
 ## System Credentials
 
@@ -528,6 +555,28 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
    - Calculates usage against actual container limits, not heap size
    - Added optional manual garbage collection with performance tracking
 
+### Recently Implemented (2025-07-10)
+1. **E2E Testing Infrastructure**: Comprehensive Playwright tests for routing
+   - Created `e2e/routing/public-routes.spec.ts` with full navigation tests
+   - Added Playwright configuration with multiple browser support
+   - Tests cover all public pages and verify content loads correctly
+   - Added WCAG accessibility compliance tests
+   - Implemented performance benchmarks with baselines
+   - Added test result caching for faster development cycles
+
+2. **ESLint Import Validation**: Comprehensive import checking rules
+   - Created custom ESLint rule for enforcing lazy imports in App.tsx
+   - Added pre-commit hooks for import validation
+   - Created documentation in `docs/eslint-import-rules.md`
+   - Converted check-imports script to async for better performance
+
+3. **Centralized Configuration with Validation**: All app settings in one place
+   - Created `config/app.config.validated.ts` with Zod schema validation
+   - Runtime validation ensures configuration integrity
+   - Updated all components to use centralized configuration
+   - Added comprehensive tests for configuration
+   - Type-safe configuration with helper functions
+
 ### Current Architecture Patterns
 
 #### Performance Patterns
@@ -536,6 +585,7 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
 - **Virtual Lists**: For rendering large datasets efficiently
 - **Debouncing/Throttling**: For search inputs and scroll handlers
 - **Static Asset Caching**: Aggressive caching for images, fonts, and scripts
+- **Test Caching**: MD5-based test result caching for faster test runs
 
 #### Error Handling Patterns
 - **Graceful Degradation**: Fallback components for lazy loading failures
@@ -548,6 +598,7 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
 - **Mock First**: External dependencies are mocked by default
 - **Integration Tests**: Critical paths have full integration tests
 - **Performance Tests**: Memory leak detection and performance benchmarks
+- **Accessibility Tests**: WCAG compliance testing for all public pages
 
 ### Development Environment Setup
 
@@ -587,6 +638,7 @@ The application includes built-in performance monitoring:
 - Database query performance logging
 - API endpoint response time tracking
 - WebSocket connection monitoring
+- Test performance tracking with caching metrics
 
 Enable detailed monitoring:
 ```bash
@@ -594,3 +646,19 @@ Enable detailed monitoring:
 ENABLE_PERFORMANCE_MONITORING=true
 PERFORMANCE_LOG_LEVEL=debug
 ```
+
+### Current Issues Resolved
+1. **High Memory Usage**: Backend memory optimization implemented
+   - Container-aware memory tracking
+   - Optional manual garbage collection
+   - Performance configuration centralized
+
+2. **TypeScript Errors**: All type errors fixed
+   - Removed all 'as any' casts
+   - Created type-safe utilities
+   - Updated test files with proper types
+
+3. **ESLint Configuration**: All dependencies properly configured
+   - Custom ESLint rules for import validation
+   - Pre-commit hooks ensure code quality
+   - Comprehensive documentation provided

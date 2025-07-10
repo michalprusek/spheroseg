@@ -1,6 +1,6 @@
 /**
  * Health Check Utilities
- * 
+ *
  * Provides dynamic health check functions for various services
  * to give accurate real-time status information.
  */
@@ -36,12 +36,12 @@ export interface SystemHealth {
  */
 export const checkDatabaseHealth = async (): Promise<HealthStatus> => {
   const startTime = Date.now();
-  
+
   try {
     // Simple query to test connectivity
     const result = await dbPool.query('SELECT NOW() as current_time, version() as version');
     const responseTime = Date.now() - startTime;
-    
+
     if (responseTime > performanceConfig.healthCheck.slowResponseMs) {
       return {
         status: 'degraded',
@@ -50,14 +50,13 @@ export const checkDatabaseHealth = async (): Promise<HealthStatus> => {
         lastChecked: new Date().toISOString(),
       };
     }
-    
+
     return {
       status: 'healthy',
       message: `Connected to ${result.rows[0]?.version?.split(' ')[0] || 'PostgreSQL'}`,
       responseTime,
       lastChecked: new Date().toISOString(),
     };
-    
   } catch (error: any) {
     return {
       status: 'unhealthy',
@@ -74,7 +73,7 @@ export const checkDatabaseHealth = async (): Promise<HealthStatus> => {
 export const checkStorageHealth = async (): Promise<HealthStatus> => {
   try {
     const uploadDir = config.storage.uploadDir;
-    
+
     // Check if upload directory exists and is writable
     if (!fs.existsSync(uploadDir)) {
       return {
@@ -83,7 +82,7 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
         lastChecked: new Date().toISOString(),
       };
     }
-    
+
     // Test write access
     const testFile = `${uploadDir}/.health-check-${Date.now()}.tmp`;
     try {
@@ -96,7 +95,7 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
         lastChecked: new Date().toISOString(),
       };
     }
-    
+
     // Check disk space (if available)
     try {
       const stats = fs.statSync(uploadDir);
@@ -112,7 +111,6 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
         lastChecked: new Date().toISOString(),
       };
     }
-    
   } catch (error: any) {
     return {
       status: 'unhealthy',
@@ -129,32 +127,36 @@ export const checkMemoryHealth = (): HealthStatus => {
   const memUsage = process.memoryUsage();
   const usedMemory = memUsage.rss; // Resident Set Size - total memory allocated for the process
   const usedMemoryMB = usedMemory / 1024 / 1024;
-  
+
   // Get effective container limit (detected or configured)
   const containerLimit = getEffectiveMemoryLimit(performanceConfig.memory.containerLimitMB);
   const memoryUsagePercent = (usedMemoryMB / containerLimit) * 100;
-  
+
   // Also check heap usage
   const heapUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
-  
-  if (memoryUsagePercent > performanceConfig.memory.thresholds.unhealthy || 
-      heapUsagePercent > performanceConfig.memory.thresholds.heapUnhealthy) {
+
+  if (
+    memoryUsagePercent > performanceConfig.memory.thresholds.unhealthy ||
+    heapUsagePercent > performanceConfig.memory.thresholds.heapUnhealthy
+  ) {
     return {
       status: 'unhealthy',
       message: `High memory usage: ${usedMemoryMB.toFixed(0)}MB / ${containerLimit}MB (${memoryUsagePercent.toFixed(1)}%), Heap: ${heapUsagePercent.toFixed(1)}%`,
       lastChecked: new Date().toISOString(),
     };
   }
-  
-  if (memoryUsagePercent > performanceConfig.memory.thresholds.degraded || 
-      heapUsagePercent > performanceConfig.memory.thresholds.heapDegraded) {
+
+  if (
+    memoryUsagePercent > performanceConfig.memory.thresholds.degraded ||
+    heapUsagePercent > performanceConfig.memory.thresholds.heapDegraded
+  ) {
     return {
       status: 'degraded',
       message: `Elevated memory usage: ${usedMemoryMB.toFixed(0)}MB / ${containerLimit}MB (${memoryUsagePercent.toFixed(1)}%), Heap: ${heapUsagePercent.toFixed(1)}%`,
       lastChecked: new Date().toISOString(),
     };
   }
-  
+
   return {
     status: 'healthy',
     message: `Memory usage: ${usedMemoryMB.toFixed(0)}MB / ${containerLimit}MB (${memoryUsagePercent.toFixed(1)}%), Heap: ${heapUsagePercent.toFixed(1)}%`,
@@ -166,18 +168,15 @@ export const checkMemoryHealth = (): HealthStatus => {
  * Perform comprehensive health check
  */
 export const performHealthCheck = async (): Promise<SystemHealth> => {
-  const [database, storage] = await Promise.all([
-    checkDatabaseHealth(),
-    checkStorageHealth(),
-  ]);
-  
+  const [database, storage] = await Promise.all([checkDatabaseHealth(), checkStorageHealth()]);
+
   const memory = checkMemoryHealth();
-  
+
   // Determine overall health
   const services = { database, storage, memory };
-  const hasUnhealthy = Object.values(services).some(s => s.status === 'unhealthy');
-  const hasDegraded = Object.values(services).some(s => s.status === 'degraded');
-  
+  const hasUnhealthy = Object.values(services).some((s) => s.status === 'unhealthy');
+  const hasDegraded = Object.values(services).some((s) => s.status === 'degraded');
+
   let overall: 'healthy' | 'unhealthy' | 'degraded';
   if (hasUnhealthy) {
     overall = 'unhealthy';
@@ -186,7 +185,7 @@ export const performHealthCheck = async (): Promise<SystemHealth> => {
   } else {
     overall = 'healthy';
   }
-  
+
   return {
     overall,
     services,

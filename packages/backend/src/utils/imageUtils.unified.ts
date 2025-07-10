@@ -74,7 +74,9 @@ const pathUtils = {
     const cleanPath = dbPath.replace(/^\/?(uploads\/)?/, '');
 
     // Join with the upload directory - ensure uploadDir is absolute
-    const absoluteUploadDir = path.isAbsolute(uploadDir) ? uploadDir : path.resolve(process.cwd(), uploadDir);
+    const absoluteUploadDir = path.isAbsolute(uploadDir)
+      ? uploadDir
+      : path.resolve(process.cwd(), uploadDir);
 
     const fullPath = path.join(absoluteUploadDir, cleanPath);
 
@@ -102,7 +104,9 @@ const pathUtils = {
     const normalizedAbsolutePath = absolutePath.replace(/\\/g, '/');
 
     // Convert uploadDir to absolute path if it's not already
-    const absoluteUploadDir = path.isAbsolute(uploadDir) ? uploadDir : path.resolve(process.cwd(), uploadDir);
+    const absoluteUploadDir = path.isAbsolute(uploadDir)
+      ? uploadDir
+      : path.resolve(process.cwd(), uploadDir);
 
     const normalizedUploadDir = absoluteUploadDir.replace(/\\/g, '/');
 
@@ -185,7 +189,8 @@ const pathUtils = {
 
     // Ensure the path starts with /uploads
     if (!relativePath.startsWith('/uploads')) {
-      relativePath = '/uploads' + (relativePath.startsWith('/') ? relativePath : `/${relativePath}`);
+      relativePath =
+        '/uploads' + (relativePath.startsWith('/') ? relativePath : `/${relativePath}`);
     }
 
     // Log the path conversion for debugging
@@ -242,7 +247,7 @@ const pathUtils = {
     const uniqueFilename = pathUtils.generateUniqueFilename(
       pathUtils.extractBaseName(originalFilename),
       pathUtils.extractExtension(originalFilename) || 'png',
-      'img',
+      'img'
     );
     return path.join('uploads', projectId, uniqueFilename);
   },
@@ -251,7 +256,7 @@ const pathUtils = {
     const uniqueFilename = pathUtils.generateUniqueFilename(
       pathUtils.extractBaseName(originalFilename),
       'png', // Always use png extension for thumbnails since they're saved as PNG
-      'thumb',
+      'thumb'
     );
     return path.join('uploads', projectId, uniqueFilename);
   },
@@ -276,7 +281,10 @@ const fsMkdir = (path: string, options?: fs.MakeDirectoryOptions): Promise<void>
 };
 
 // Specifická implementace pro fs.readdir s lepším typováním
-const fsReaddir = (path: string, options?: { withFileTypes?: boolean }): Promise<string[] | fs.Dirent[]> => {
+const fsReaddir = (
+  path: string,
+  options?: { withFileTypes?: boolean }
+): Promise<string[] | fs.Dirent[]> => {
   return new Promise((resolve, reject) => {
     if (options?.withFileTypes) {
       // Pokud požadujeme Dirent objekty, použijeme správný callback typ
@@ -343,11 +351,11 @@ export const ensureDirectoryExists = async (dirPath: string): Promise<void> => {
  * Get image metadata using sharp
  */
 export const getImageMetadata = async (
-  filePath: string,
+  filePath: string
 ): Promise<{ width: number; height: number; format: string }> => {
   try {
     const ext = path.extname(filePath).toLowerCase();
-    
+
     // Special handling for BMP and TIFF files
     if (ext === '.bmp' || ext === '.tiff' || ext === '.tif') {
       const format = ext === '.bmp' ? 'bmp' : 'tiff';
@@ -361,7 +369,9 @@ export const getImageMetadata = async (
         };
       } catch (sharpError) {
         // If Sharp fails, return basic info
-        logger.warn(`Sharp cannot read ${format.toUpperCase()} metadata, using basic info`, { filePath });
+        logger.warn(`Sharp cannot read ${format.toUpperCase()} metadata, using basic info`, {
+          filePath,
+        });
         return {
           width: 0,
           height: 0,
@@ -369,7 +379,7 @@ export const getImageMetadata = async (
         };
       }
     }
-    
+
     // Get metadata using sharp for other formats
     const metadata = await sharp(filePath).metadata();
     return {
@@ -393,11 +403,11 @@ export const getImageMetadata = async (
 export const createThumbnail = async (
   sourcePath: string,
   targetPath: string,
-  options: { width?: number; height?: number; fit?: keyof sharp.FitEnum } = {},
+  options: { width?: number; height?: number; fit?: keyof sharp.FitEnum } = {}
 ): Promise<void> => {
   try {
     const { width = 300, height = 300, fit = 'inside' } = options;
-    
+
     // Validate that target path has .png extension
     if (!targetPath.toLowerCase().endsWith('.png')) {
       throw new Error(`Thumbnail target path must have .png extension, got: ${targetPath}`);
@@ -409,7 +419,7 @@ export const createThumbnail = async (
       const { exec } = require('child_process');
       const util = require('util');
       const execAsync = util.promisify(exec);
-      
+
       const pythonScript = `
 import sys
 from PIL import Image
@@ -418,13 +428,15 @@ img.thumbnail((${width}, ${height}), Image.Resampling.LANCZOS)
 # Save as PNG for lossless compression
 img.save(sys.argv[2], 'PNG', optimize=True)
 `;
-      
+
       try {
         // Escape single quotes in paths and use single quotes for the script
         const escapedScript = pythonScript.replace(/'/g, "'\"'\"'");
         const escapedSource = sourcePath.replace(/'/g, "'\"'\"'");
         const escapedTarget = targetPath.replace(/'/g, "'\"'\"'");
-        const result = await execAsync(`python3 -c '${escapedScript}' '${escapedSource}' '${escapedTarget}'`);
+        const result = await execAsync(
+          `python3 -c '${escapedScript}' '${escapedSource}' '${escapedTarget}'`
+        );
         if (result.stderr) {
           logger.warn(`Python thumbnail creation had stderr output`, { stderr: result.stderr });
         }
@@ -438,29 +450,31 @@ img.save(sys.argv[2], 'PNG', optimize=True)
         // Try to create thumbnail directly for TIFF
         await sharp(sourcePath)
           .resize({ width, height, fit })
-          .png({ 
+          .png({
             compressionLevel: 9, // Maximum compression (still lossless)
-            adaptiveFiltering: true 
+            adaptiveFiltering: true,
           })
           .toFile(targetPath);
       } catch (sharpError) {
         // If Sharp fails with TIFF, try conversion through PNG
-        logger.warn(`Direct conversion of ${ext} failed, trying through temporary file`, { sourcePath });
-        
+        logger.warn(`Direct conversion of ${ext} failed, trying through temporary file`, {
+          sourcePath,
+        });
+
         const tempPath = path.join(path.dirname(sourcePath), `temp_${Date.now()}.png`);
         try {
           // First convert TIFF to PNG
           await sharp(sourcePath).png().toFile(tempPath);
-          
+
           // Then create thumbnail from PNG
           await sharp(tempPath)
             .resize({ width, height, fit })
-            .png({ 
+            .png({
               compressionLevel: 9,
-              adaptiveFiltering: true 
+              adaptiveFiltering: true,
             })
             .toFile(targetPath);
-            
+
           // Delete temporary file
           try {
             await fs.promises.unlink(tempPath);
@@ -468,7 +482,10 @@ img.save(sys.argv[2], 'PNG', optimize=True)
             logger.warn('Failed to delete temporary file', { tempPath });
           }
         } catch (conversionError) {
-          logger.error(`${ext} conversion failed completely`, { sourcePath, error: conversionError });
+          logger.error(`${ext} conversion failed completely`, {
+            sourcePath,
+            error: conversionError,
+          });
           throw new Error(`Cannot process ${ext} file: ${(conversionError as Error).message}`);
         }
       }
@@ -476,9 +493,9 @@ img.save(sys.argv[2], 'PNG', optimize=True)
       // Create thumbnail for other formats
       await sharp(sourcePath)
         .resize({ width, height, fit })
-        .png({ 
+        .png({
           compressionLevel: 9, // Maximum compression (still lossless)
-          adaptiveFiltering: true 
+          adaptiveFiltering: true,
         })
         .toFile(targetPath);
     }
@@ -511,7 +528,10 @@ export const normalizePathForDb = (absolutePath: string, uploadDir: string): str
 /**
  * Format image data for API responses
  */
-export const formatImageForApi = (image: Record<string, unknown>, baseUrl: string): Record<string, unknown> => {
+export const formatImageForApi = (
+  image: Record<string, unknown>,
+  baseUrl: string
+): Record<string, unknown> => {
   if (!image) return {} as Record<string, unknown>;
 
   // Add full URLs for storage_path and thumbnail_path if they exist
@@ -526,7 +546,7 @@ export const formatImageForApi = (image: Record<string, unknown>, baseUrl: strin
     result.segmentationStatus = image.segmentation_status;
     delete result.segmentation_status;
   }
-  
+
   // If the SQL alias worked and we have segmentationStatus directly, keep it
   if ('segmentationStatus' in image && !('segmentationStatus' in result)) {
     logger.debug('Found segmentationStatus directly in image', {
@@ -537,7 +557,10 @@ export const formatImageForApi = (image: Record<string, unknown>, baseUrl: strin
 
   if (image.storage_path && typeof image.storage_path === 'string') {
     // If the storage_path is already a full URL with internal Docker hostname, extract the path
-    if (image.storage_path.includes('://backend:') || image.storage_path.includes('://spheroseg-backend:')) {
+    if (
+      image.storage_path.includes('://backend:') ||
+      image.storage_path.includes('://spheroseg-backend:')
+    ) {
       try {
         const url = new URL(image.storage_path);
         // Extract just the pathname part
@@ -550,22 +573,33 @@ export const formatImageForApi = (image: Record<string, unknown>, baseUrl: strin
           extracted: cleanPath,
         });
       } catch (error) {
-        logger.warn('Failed to parse internal URL, using as-is', { path: image.storage_path, error });
+        logger.warn('Failed to parse internal URL, using as-is', {
+          path: image.storage_path,
+          error,
+        });
         result.storage_path = image.storage_path;
       }
-    } else if (image.storage_path.startsWith('http://') || image.storage_path.startsWith('https://')) {
+    } else if (
+      image.storage_path.startsWith('http://') ||
+      image.storage_path.startsWith('https://')
+    ) {
       // For other full URLs, keep them as-is
       result.storage_path = image.storage_path;
     } else {
       // For relative paths, ensure they start with /
-      const cleanPath = image.storage_path.startsWith('/') ? image.storage_path : `/${image.storage_path}`;
+      const cleanPath = image.storage_path.startsWith('/')
+        ? image.storage_path
+        : `/${image.storage_path}`;
       result.storage_path = cleanPath;
     }
   }
 
   if (image.thumbnail_path && typeof image.thumbnail_path === 'string') {
     // Apply same logic for thumbnail_path
-    if (image.thumbnail_path.includes('://backend:') || image.thumbnail_path.includes('://spheroseg-backend:')) {
+    if (
+      image.thumbnail_path.includes('://backend:') ||
+      image.thumbnail_path.includes('://spheroseg-backend:')
+    ) {
       try {
         const url = new URL(image.thumbnail_path);
         const pathname = url.pathname;
@@ -576,13 +610,21 @@ export const formatImageForApi = (image: Record<string, unknown>, baseUrl: strin
           extracted: cleanPath,
         });
       } catch (error) {
-        logger.warn('Failed to parse internal thumbnail URL, using as-is', { path: image.thumbnail_path, error });
+        logger.warn('Failed to parse internal thumbnail URL, using as-is', {
+          path: image.thumbnail_path,
+          error,
+        });
         result.thumbnail_path = image.thumbnail_path;
       }
-    } else if (image.thumbnail_path.startsWith('http://') || image.thumbnail_path.startsWith('https://')) {
+    } else if (
+      image.thumbnail_path.startsWith('http://') ||
+      image.thumbnail_path.startsWith('https://')
+    ) {
       result.thumbnail_path = image.thumbnail_path;
     } else {
-      const cleanPath = image.thumbnail_path.startsWith('/') ? image.thumbnail_path : `/${image.thumbnail_path}`;
+      const cleanPath = image.thumbnail_path.startsWith('/')
+        ? image.thumbnail_path
+        : `/${image.thumbnail_path}`;
       result.thumbnail_path = cleanPath;
     }
   }
@@ -628,7 +670,7 @@ export const deleteFile = async (filePath: string): Promise<void> => {
  */
 export const getFilesInDirectory = async (
   dirPath: string,
-  options: { recursive?: boolean; filter?: (filename: string) => boolean } = {},
+  options: { recursive?: boolean; filter?: (filename: string) => boolean } = {}
 ): Promise<string[]> => {
   try {
     const { recursive = false, filter } = options;
@@ -668,7 +710,7 @@ export const getFilesInDirectory = async (
 export const processBatch = async <T>(
   items: T[],
   batchSize: number,
-  processFn: (batch: T[]) => Promise<void>,
+  processFn: (batch: T[]) => Promise<void>
 ): Promise<void> => {
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
@@ -691,7 +733,7 @@ export const generateUniqueImageFilename = (originalFilename: string, prefix?: s
  */
 export const generateImagePaths = (
   projectId: string,
-  originalFilename: string,
+  originalFilename: string
 ): { storagePath: string; thumbnailPath: string } => {
   const storagePath = pathUtils.generateStoragePath(projectId, originalFilename);
   const thumbnailPath = pathUtils.generateThumbnailPath(projectId, originalFilename);
@@ -702,7 +744,10 @@ export const generateImagePaths = (
 /**
  * Verify that image files exist on the filesystem
  */
-export const verifyImageFilesForApi = (image: Record<string, unknown>, uploadDir: string): Record<string, unknown> => {
+export const verifyImageFilesForApi = (
+  image: Record<string, unknown>,
+  uploadDir: string
+): Record<string, unknown> => {
   if (!image) return {} as Record<string, unknown>;
 
   const result = { ...image, file_exists: true };
@@ -732,18 +777,18 @@ export const verifyImageFilesForApi = (image: Record<string, unknown>, uploadDir
  */
 export const convertTiffToWebFriendly = async (
   sourcePath: string,
-  targetPath: string,
+  targetPath: string
 ): Promise<void> => {
   const ext = path.extname(sourcePath).toLowerCase();
   const formatName = ext === '.bmp' ? 'BMP' : 'TIFF';
-  
+
   try {
     // For BMP files, use Python PIL since Sharp doesn't support BMP natively
     if (ext === '.bmp') {
       const { exec } = require('child_process');
       const util = require('util');
       const execAsync = util.promisify(exec);
-      
+
       const pythonScript = `
 import sys
 from PIL import Image
@@ -751,29 +796,36 @@ img = Image.open(sys.argv[1])
 # Save as PNG for lossless compression
 img.save(sys.argv[2], 'PNG', optimize=True)
 `;
-      
+
       // Escape single quotes in paths and use single quotes for the script
       const escapedScript = pythonScript.replace(/'/g, "'\"'\"'");
       const escapedSource = sourcePath.replace(/'/g, "'\"'\"'");
       const escapedTarget = targetPath.replace(/'/g, "'\"'\"'");
-      const result = await execAsync(`python3 -c '${escapedScript}' '${escapedSource}' '${escapedTarget}'`);
+      const result = await execAsync(
+        `python3 -c '${escapedScript}' '${escapedSource}' '${escapedTarget}'`
+      );
       if (result.stderr) {
         logger.warn(`Python conversion had stderr output`, { stderr: result.stderr });
       }
-      logger.debug(`Converted ${formatName} to web-friendly PNG using PIL: ${sourcePath} -> ${targetPath}`);
+      logger.debug(
+        `Converted ${formatName} to web-friendly PNG using PIL: ${sourcePath} -> ${targetPath}`
+      );
     } else {
       // For TIFF and other formats, use Sharp directly
       await sharp(sourcePath)
-        .png({ 
+        .png({
           compressionLevel: 9, // Maximum compression (still lossless)
           adaptiveFiltering: true, // Better compression for some images
-          palette: false // Use full color depth
+          palette: false, // Use full color depth
         })
         .toFile(targetPath);
       logger.debug(`Converted ${formatName} to web-friendly PNG: ${sourcePath} -> ${targetPath}`);
     }
   } catch (error) {
-    logger.error(`Error converting ${formatName} to web-friendly format: ${sourcePath} -> ${targetPath}`, error);
+    logger.error(
+      `Error converting ${formatName} to web-friendly format: ${sourcePath} -> ${targetPath}`,
+      error
+    );
     throw error;
   }
 };

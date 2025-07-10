@@ -89,12 +89,12 @@ const transports: winston.transport[] = [
 // Add file transports only if file logging is enabled
 if (config.logging.logToFile) {
   transports.push(
-    new winston.transports.File({ 
-      filename: `${config.logging.logDir}/error.log`, 
-      level: 'error' 
+    new winston.transports.File({
+      filename: `${config.logging.logDir}/error.log`,
+      level: 'error',
     }),
-    new winston.transports.File({ 
-      filename: `${config.logging.logDir}/combined.log` 
+    new winston.transports.File({
+      filename: `${config.logging.logDir}/combined.log`,
     })
   );
 }

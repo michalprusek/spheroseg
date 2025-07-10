@@ -1,6 +1,6 @@
 /**
  * Integration tests for resegmentation workflow
- * 
+ *
  * These tests verify the complete resegmentation process:
  * - Initial image upload and segmentation
  * - Resegmentation endpoint functionality
@@ -82,7 +82,12 @@ beforeAll(async () => {
         polygons: [
           {
             id: 'polygon-1',
-            points: [[100, 100], [200, 100], [200, 200], [100, 200]],
+            points: [
+              [100, 100],
+              [200, 100],
+              [200, 200],
+              [100, 200],
+            ],
             properties: { area: 10000, perimeter: 400 },
           },
         ],
@@ -98,7 +103,14 @@ beforeAll(async () => {
      WHERE sr.image_id = $5`,
     [
       uuidv4(),
-      { points: [[100, 100], [200, 100], [200, 200], [100, 200]] },
+      {
+        points: [
+          [100, 100],
+          [200, 100],
+          [200, 200],
+          [100, 200],
+        ],
+      },
       10000,
       400,
       testImageId,
@@ -125,15 +137,18 @@ afterAll(async () => {
   }
 
   // Clean up test data
-  await pool.query('DELETE FROM cells WHERE segmentation_result_id IN (SELECT id FROM segmentation_results WHERE image_id = $1)', [testImageId]);
+  await pool.query(
+    'DELETE FROM cells WHERE segmentation_result_id IN (SELECT id FROM segmentation_results WHERE image_id = $1)',
+    [testImageId]
+  );
   await pool.query('DELETE FROM segmentation_results WHERE image_id = $1', [testImageId]);
   await pool.query('DELETE FROM segmentation_queue WHERE image_id = $1', [testImageId]);
   await pool.query('DELETE FROM segmentation_tasks WHERE image_id = $1', [testImageId]);
   await pool.query('DELETE FROM images WHERE id = $1', [testImageId]);
   await pool.query('DELETE FROM projects WHERE id = $1', [testProjectId]);
   await pool.query('DELETE FROM users WHERE id = $1', [testUserId]);
-  
-  await pool.closePool();
+
+  await pool.end();
 });
 
 // Mock authentication middleware for testing
@@ -211,7 +226,7 @@ describe('Resegmentation Integration Tests', () => {
 
     // Verify old segmentation result was deleted
     const oldSegmentationResult = await pool.query(
-      'SELECT * FROM segmentation_results WHERE image_id = $1 AND result_data->\'polygons\' @> $2',
+      "SELECT * FROM segmentation_results WHERE image_id = $1 AND result_data->'polygons' @> $2",
       [testImageId, JSON.stringify([{ id: 'polygon-1' }])]
     );
     expect(oldSegmentationResult.rows).toHaveLength(0);
@@ -224,15 +239,14 @@ describe('Resegmentation Integration Tests', () => {
     expect(newSegmentationResult.rows).toHaveLength(1);
 
     // Verify image status was updated
-    const imageResult = await pool.query(
-      'SELECT segmentation_status FROM images WHERE id = $1',
-      [testImageId]
-    );
+    const imageResult = await pool.query('SELECT segmentation_status FROM images WHERE id = $1', [
+      testImageId,
+    ]);
     expect(imageResult.rows[0].segmentation_status).toBe(SEGMENTATION_STATUS.QUEUED);
 
     // Wait for WebSocket updates
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Verify WebSocket updates were sent
     expect(statusUpdates).toContain(SEGMENTATION_STATUS.QUEUED);
   });
@@ -374,7 +388,7 @@ describe('Resegmentation Integration Tests', () => {
     expect(response.body).toHaveProperty('project_id', testProjectId);
     expect(response.body).toHaveProperty('queue_status');
     expect(response.body).toHaveProperty('image_stats');
-    
+
     // Verify at least one image is in queued status (from our resegmentation)
     const queuedCount = response.body.queue_status.pending_count || 0;
     const imageQueuedCount = response.body.image_stats.pending_count || 0;
@@ -424,20 +438,25 @@ describe('Resegmentation Status Update Flow', () => {
       });
 
     // Simulate ML service updating status to processing
-    await pool.query(
-      `UPDATE images SET segmentation_status = $1 WHERE id = $2`,
-      [SEGMENTATION_STATUS.PROCESSING, flowImageId]
-    );
-    await pool.query(
-      `UPDATE segmentation_results SET status = $1 WHERE image_id = $2`,
-      [SEGMENTATION_STATUS.PROCESSING, flowImageId]
-    );
+    await pool.query(`UPDATE images SET segmentation_status = $1 WHERE id = $2`, [
+      SEGMENTATION_STATUS.PROCESSING,
+      flowImageId,
+    ]);
+    await pool.query(`UPDATE segmentation_results SET status = $1 WHERE image_id = $2`, [
+      SEGMENTATION_STATUS.PROCESSING,
+      flowImageId,
+    ]);
 
     // Simulate ML service completing segmentation
     const newPolygons = [
       {
         id: 'new-polygon-1',
-        points: [[150, 150], [250, 150], [250, 250], [150, 250]],
+        points: [
+          [150, 150],
+          [250, 150],
+          [250, 250],
+          [150, 250],
+        ],
         properties: { area: 10000, perimeter: 400 },
       },
     ];
@@ -448,10 +467,10 @@ describe('Resegmentation Status Update Flow', () => {
        WHERE image_id = $3`,
       [SEGMENTATION_STATUS.COMPLETED, { polygons: newPolygons }, flowImageId]
     );
-    await pool.query(
-      `UPDATE images SET segmentation_status = $1 WHERE id = $2`,
-      [SEGMENTATION_STATUS.COMPLETED, flowImageId]
-    );
+    await pool.query(`UPDATE images SET segmentation_status = $1 WHERE id = $2`, [
+      SEGMENTATION_STATUS.COMPLETED,
+      flowImageId,
+    ]);
 
     // Verify final segmentation result
     const finalResponse = await request(app)
