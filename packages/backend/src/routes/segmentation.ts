@@ -5,6 +5,7 @@ import { authenticate as authMiddleware, AuthenticatedRequest } from '../securit
 import {
   triggerSegmentationTask,
   getSegmentationQueueStatus,
+  cancelSegmentationTask,
 } from '../services/segmentationService';
 import { validate } from '../middleware/validationMiddleware';
 import { z } from 'zod';
@@ -1260,6 +1261,64 @@ router.get(
         },
         timestamp: new Date().toISOString(),
       });
+    }
+  }
+);
+
+// DELETE /api/segmentation/task/:imageId - Cancel a segmentation task
+router.delete(
+  '/task/:imageId',
+  authMiddleware,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { imageId } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Authentication error' });
+      return;
+    }
+
+    try {
+      // First check if the user owns this image
+      const imageCheck = await pool.query(
+        'SELECT id FROM images WHERE id = $1 AND user_id = $2',
+        [imageId, userId]
+      );
+
+      if (imageCheck.rows.length === 0) {
+        res.status(404).json({ message: 'Image not found or access denied' });
+        return;
+      }
+
+      // Cancel the segmentation task
+      const cancelled = await cancelSegmentationTask(imageId);
+
+      if (cancelled) {
+        // Update image status to without_segmentation
+        await pool.query(
+          `UPDATE images SET segmentation_status = '${SEGMENTATION_STATUS.WITHOUT_SEGMENTATION}', updated_at = NOW() WHERE id = $1`,
+          [imageId]
+        );
+
+        // Delete any queued/processing segmentation results
+        await pool.query(
+          `DELETE FROM segmentation_results WHERE image_id = $1 AND status IN ('queued', 'processing')`,
+          [imageId]
+        );
+
+        res.status(200).json({ 
+          success: true, 
+          message: 'Segmentation task cancelled successfully' 
+        });
+      } else {
+        res.status(404).json({ 
+          success: false, 
+          message: 'Task not found in queue' 
+        });
+      }
+    } catch (error) {
+      console.error('Error cancelling segmentation task:', error);
+      next(error);
     }
   }
 );

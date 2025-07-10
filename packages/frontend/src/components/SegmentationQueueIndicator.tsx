@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { fetchQueueStatus, clearQueueStatusCache } from '@/api/segmentationQueue';
 import { useSocket } from '@/hooks/useSocketConnection';
 import { formatTime } from '@/utils/dateUtils';
+import { X } from 'lucide-react';
+import apiClient from '@/lib/apiClient';
+import { toast } from '@/hooks/useToast';
 
 interface QueueStatusData {
   pendingTasks: string[];
@@ -24,6 +27,44 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
   const [hasActiveJobs, setHasActiveJobs] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
+  const [isCancelling, setIsCancelling] = useState<Record<string, boolean>>({});
+
+  // Function to cancel a segmentation task
+  const cancelTask = useCallback(async (imageId: string) => {
+    setIsCancelling(prev => ({ ...prev, [imageId]: true }));
+    
+    try {
+      // Call backend to cancel the task
+      await apiClient.delete(`/api/segmentation/task/${imageId}`);
+      
+      // Update local state immediately
+      setQueueData(prevData => {
+        if (!prevData) return prevData;
+        
+        return {
+          ...prevData,
+          pendingTasks: prevData.pendingTasks.filter(id => id !== imageId),
+          runningTasks: prevData.runningTasks.filter(id => id !== imageId),
+          queueLength: Math.max(0, prevData.queueLength - 1),
+          activeTasksCount: Math.max(0, prevData.activeTasksCount - 1),
+        };
+      });
+      
+      toast.success('Segmentation task cancelled');
+      
+      // Refresh queue data
+      // Will be refreshed by the interval
+    } catch (error) {
+      console.error('Error cancelling task:', error);
+      toast.error('Failed to cancel segmentation task');
+    } finally {
+      setIsCancelling(prev => {
+        const newState = { ...prev };
+        delete newState[imageId];
+        return newState;
+      });
+    }
+  }, []);
 
   // Funkce pro aktualizaci dat fronty
   const fetchData = useCallback(async () => {
@@ -374,25 +415,66 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
   // Regular version with more details
   if (hasActiveJobs) {
     return (
-      <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-800">
-        <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
-        <div className="flex-1">
-          <div className="font-medium">Image Segmentation Status</div>
-          <div className="text-sm flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <span className="font-semibold">{queueData?.runningTasks?.length || 0}</span>
-              <span>processing</span>
-            </span>
-            <span className="text-gray-400">•</span>
-            <span className="flex items-center gap-1">
-              <span className="font-semibold">{queueData?.pendingTasks?.length || 0}</span>
-              <span>queued</span>
-            </span>
+      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
+          <div className="flex-1">
+            <div className="font-medium">Image Segmentation Status</div>
+            <div className="text-sm flex items-center gap-4">
+              <span className="flex items-center gap-1">
+                <span className="font-semibold">{queueData?.runningTasks?.length || 0}</span>
+                <span>processing</span>
+              </span>
+              <span className="text-gray-400">•</span>
+              <span className="flex items-center gap-1">
+                <span className="font-semibold">{queueData?.pendingTasks?.length || 0}</span>
+                <span>queued</span>
+              </span>
+            </div>
           </div>
-          {queueData?.timestamp && (
-            <div className="text-xs text-blue-400 mt-1">Last updated: {formatTime(queueData.timestamp)}</div>
-          )}
         </div>
+        
+        {/* Show list of tasks with cancel buttons */}
+        <div className="space-y-2 max-h-40 overflow-y-auto">
+          {queueData?.runningTasks?.map((taskId) => (
+            <div key={taskId} className="flex items-center justify-between text-sm bg-blue-100 dark:bg-blue-800/30 px-2 py-1 rounded">
+              <span className="truncate flex-1">Processing: {taskId.substring(0, 8)}...</span>
+              <button
+                onClick={() => cancelTask(taskId)}
+                disabled={isCancelling[taskId]}
+                className="ml-2 p-1 hover:bg-blue-200 dark:hover:bg-blue-700 rounded transition-colors disabled:opacity-50"
+                title="Cancel segmentation"
+              >
+                {isCancelling[taskId] ? (
+                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <X className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          ))}
+          {queueData?.pendingTasks?.map((taskId) => (
+            <div key={taskId} className="flex items-center justify-between text-sm bg-gray-100 dark:bg-gray-800/30 px-2 py-1 rounded">
+              <span className="truncate flex-1">Queued: {taskId.substring(0, 8)}...</span>
+              <button
+                onClick={() => cancelTask(taskId)}
+                disabled={isCancelling[taskId]}
+                className="ml-2 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
+                title="Cancel segmentation"
+              >
+                {isCancelling[taskId] ? (
+                  <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <X className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+        
+        {queueData?.timestamp && (
+          <div className="text-xs text-blue-400 mt-2">Last updated: {formatTime(queueData.timestamp)}</div>
+        )}
       </div>
     );
   } else {
