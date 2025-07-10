@@ -45,10 +45,34 @@ export const ImageDisplay = ({
     image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION,
   );
 
-  // Track segmentation status changes
+  // Track segmentation status changes and force check on mount
   useEffect(() => {
     setCurrentStatus(image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION);
-  }, [image.segmentationStatus]);
+    
+    // Force check the actual status from API when component mounts or image changes
+    const checkInitialStatus = async () => {
+      try {
+        const response = await apiClient.get(`/api/images/${image.id}/segmentation`);
+        if (response.data && response.data.status) {
+          const apiStatus = response.data.status;
+          if (apiStatus !== currentStatus) {
+            console.log(`ImageDisplay: Initial status check - updating from ${currentStatus} to ${apiStatus}`);
+            setCurrentStatus(apiStatus);
+          }
+        }
+      } catch (error: any) {
+        // Silently ignore 404 errors (no segmentation yet)
+        if (error?.response?.status !== 404) {
+          console.debug(`ImageDisplay: Error checking initial segmentation status for image ${image.id}`);
+        }
+      }
+    };
+    
+    // Check status after a short delay to avoid race conditions
+    const timeoutId = setTimeout(checkInitialStatus, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [image.segmentationStatus, image.id]);
 
   // Get socket connection
   const { socket, isConnected } = useSocketConnection();
@@ -178,10 +202,10 @@ export const ImageDisplay = ({
       };
 
       // Check after a delay to avoid initial burst of requests
-      const timeoutId = setTimeout(checkImageStatus, 5000);
+      const timeoutId = setTimeout(checkImageStatus, 2000);
 
-      // Set up polling interval - check every 30 seconds (increased to reduce API load)
-      const intervalId = setInterval(checkImageStatus, 30000);
+      // Set up polling interval - check every 5 seconds for processing images
+      const intervalId = setInterval(checkImageStatus, 5000);
 
       return () => {
         clearTimeout(timeoutId);
@@ -450,17 +474,21 @@ export const ImageDisplay = ({
                   onError={handleImageError}
                   loading="lazy"
                 />
-                {/* Debug overlay for segmentation - disabled to prevent excessive API calls */}
-                {/* currentStatus === SEGMENTATION_STATUS.COMPLETED && (
-                  <div className="absolute inset-0">
-                    <DebugSegmentationThumbnail
+                {/* Segmentation overlay for completed images */}
+                {currentStatus === SEGMENTATION_STATUS.COMPLETED && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    <SegmentationThumbnail
                       imageId={image.id}
                       projectId={image.project_id || ''}
+                      thumbnailUrl={imageSrc || undefined}
+                      fallbackSrc="/placeholder.svg"
+                      altText={image.name || 'Image'}
+                      className="w-full h-full"
                       width={300}
                       height={300}
                     />
                   </div>
-                ) */}
+                )}
               </>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">

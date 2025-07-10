@@ -220,8 +220,33 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
           };
         });
       } else if (data && (data.status === 'completed' || data.status === 'failed')) {
-        // Refresh queue data immediately when an image is completed or failed
-        fetchData();
+        // Update queue data to remove the completed/failed image
+        setQueueData((prevData) => {
+          if (!prevData) return prevData;
+          
+          // Remove from running tasks
+          const runningTasks = (prevData.runningTasks || []).filter(id => id !== data.imageId);
+          // Remove from pending tasks
+          const pendingTasks = (prevData.pendingTasks || []).filter(id => id !== data.imageId);
+          
+          const newData = {
+            ...prevData,
+            runningTasks,
+            pendingTasks,
+            queueLength: pendingTasks.length,
+            activeTasksCount: runningTasks.length,
+            timestamp: new Date().toISOString(),
+          };
+          
+          // Update hasActiveJobs based on new data
+          const activeJobCount = runningTasks.length + pendingTasks.length;
+          setHasActiveJobs(activeJobCount > 0);
+          
+          return newData;
+        });
+        
+        // Also refresh queue data from server to ensure consistency
+        setTimeout(() => fetchData(), 1000);
       }
 
       setLastUpdateTime(Date.now());
