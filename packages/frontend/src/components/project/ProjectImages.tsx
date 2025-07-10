@@ -176,7 +176,7 @@ const ProjectImages = ({
     }
 
     return (
-      <div style={{ ...style, padding: '12px' }}>
+      <div style={{ ...style, padding: '8px' }}>
         <ImageDisplay
           image={{ ...image, id: imageId }}
           onDelete={onDelete}
@@ -201,7 +201,7 @@ const ProjectImages = ({
     }
 
     return (
-      <div style={{ ...style, padding: '8px 0' }}>
+      <div style={{ ...style, padding: '4px 8px' }}>
         <ImageDisplay
           image={{ ...image, id: imageId }}
           onDelete={onDelete}
@@ -232,10 +232,10 @@ const ProjectImages = ({
         >
           <Grid
             columnCount={columnCount}
-            columnWidth={window.innerWidth / columnCount - 24} // Account for padding
+            columnWidth={window.innerWidth / columnCount - 16} // Account for padding
             height={windowHeight}
             rowCount={rowCount}
-            rowHeight={280} // Fixed height for grid items
+            rowHeight={320} // Fixed height for grid items
             width={window.innerWidth - 48} // Account for container padding
             overscanRowCount={2} // Render 2 extra rows for smoother scrolling
           >
@@ -259,7 +259,7 @@ const ProjectImages = ({
         <List
           height={windowHeight}
           itemCount={localImages.length}
-          itemSize={() => 120} // Fixed height for list items
+          itemSize={() => 80} // Fixed height for list items
           width="100%"
           overscanCount={5} // Render 5 extra items for smoother scrolling
         >
