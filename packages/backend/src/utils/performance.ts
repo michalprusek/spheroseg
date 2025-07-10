@@ -1,6 +1,6 @@
 /**
  * Performance Monitoring Utilities
- * 
+ *
  * Provides utilities for monitoring application performance,
  * memory usage, and detecting potential bottlenecks.
  */
@@ -26,7 +26,7 @@ export interface PerformanceMetrics {
  */
 export const getMemoryMetrics = () => {
   const memUsage = process.memoryUsage();
-  
+
   return {
     used: Math.round(memUsage.heapUsed / 1024 / 1024), // MB
     total: Math.round(memUsage.heapTotal / 1024 / 1024), // MB
@@ -42,7 +42,7 @@ export const getCpuMetrics = () => {
   const cpuUsage = process.cpuUsage();
   const total = cpuUsage.user + cpuUsage.system;
   const uptime = process.uptime() * 1000000; // Convert to microseconds
-  
+
   return {
     usage: Math.round((total / uptime) * 100),
   };
@@ -73,7 +73,7 @@ export const startPerformanceMonitoring = (intervalMs: number = 60000) => {
 
   metricsInterval = setInterval(() => {
     const metrics = getPerformanceMetrics();
-    
+
     // Log warning if memory usage is high
     if (metrics.memory.usage > 85) {
       logger.warn('High memory usage detected', {
@@ -82,18 +82,18 @@ export const startPerformanceMonitoring = (intervalMs: number = 60000) => {
         total: `${metrics.memory.total}MB`,
       });
     }
-    
+
     // Log performance metrics for monitoring
     logger.debug('Performance Metrics', {
       metric: 'system_performance',
       ...metrics,
     });
-    
+
     lastMetrics = metrics;
   }, intervalMs);
-  
-  logger.info('Performance monitoring started', { 
-    interval: `${intervalMs}ms` 
+
+  logger.info('Performance monitoring started', {
+    interval: `${intervalMs}ms`,
   });
 };
 
@@ -110,16 +110,13 @@ export const getLastMetrics = () => lastMetrics;
 /**
  * Function execution timer
  */
-export const measureExecutionTime = async <T>(
-  name: string,
-  fn: () => Promise<T>
-): Promise<T> => {
+export const measureExecutionTime = async <T>(name: string, fn: () => Promise<T>): Promise<T> => {
   const start = Date.now();
-  
+
   try {
     const result = await fn();
     const duration = Date.now() - start;
-    
+
     if (duration > 1000) {
       logger.warn('Slow function execution', {
         function: name,
@@ -131,7 +128,7 @@ export const measureExecutionTime = async <T>(
         duration: `${duration}ms`,
       });
     }
-    
+
     return result;
   } catch (error) {
     const duration = Date.now() - start;
@@ -149,13 +146,13 @@ export const measureExecutionTime = async <T>(
  */
 export function measureTime(target: any, propertyName: string, descriptor: PropertyDescriptor) {
   const originalMethod = descriptor.value;
-  
+
   descriptor.value = async function (...args: any[]) {
     const className = target.constructor.name;
     const methodName = `${className}.${propertyName}`;
-    
+
     return measureExecutionTime(methodName, () => originalMethod.apply(this, args));
   };
-  
+
   return descriptor;
 }

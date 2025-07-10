@@ -1,6 +1,6 @@
 /**
  * Integration tests for resegmentation workflow in frontend
- * 
+ *
  * These tests verify:
  * - Resegment button behavior
  * - Status updates and spinner animation
@@ -63,19 +63,14 @@ describe('Resegmentation Frontend Integration Tests', () => {
     it('should show resegment button with normal state when image is completed', () => {
       render(
         <BrowserRouter>
-          <ImageDisplay
-            image={mockImage}
-            onDelete={vi.fn()}
-            onResegment={vi.fn()}
-            viewMode="grid"
-          />
-        </BrowserRouter>
+          <ImageDisplay image={mockImage} onDelete={vi.fn()} onResegment={vi.fn()} viewMode="grid" />
+        </BrowserRouter>,
       );
 
       const resegmentButton = screen.getByLabelText('Resegment image');
       expect(resegmentButton).toBeInTheDocument();
       expect(resegmentButton).not.toBeDisabled();
-      
+
       // Check that spinner is not present
       const icon = resegmentButton.querySelector('svg');
       expect(icon).not.toHaveClass('animate-spin');
@@ -89,18 +84,13 @@ describe('Resegmentation Frontend Integration Tests', () => {
 
       render(
         <BrowserRouter>
-          <ImageDisplay
-            image={queuedImage}
-            onDelete={vi.fn()}
-            onResegment={vi.fn()}
-            viewMode="grid"
-          />
-        </BrowserRouter>
+          <ImageDisplay image={queuedImage} onDelete={vi.fn()} onResegment={vi.fn()} viewMode="grid" />
+        </BrowserRouter>,
       );
 
       const resegmentButton = screen.getByLabelText('Resegment image');
       expect(resegmentButton).toBeDisabled();
-      
+
       // Check that spinner is present
       const icon = resegmentButton.querySelector('svg');
       expect(icon).toHaveClass('animate-spin');
@@ -114,18 +104,13 @@ describe('Resegmentation Frontend Integration Tests', () => {
 
       render(
         <BrowserRouter>
-          <ImageDisplay
-            image={processingImage}
-            onDelete={vi.fn()}
-            onResegment={vi.fn()}
-            viewMode="grid"
-          />
-        </BrowserRouter>
+          <ImageDisplay image={processingImage} onDelete={vi.fn()} onResegment={vi.fn()} viewMode="grid" />
+        </BrowserRouter>,
       );
 
       const resegmentButton = screen.getByLabelText('Resegment image');
       expect(resegmentButton).toBeDisabled();
-      
+
       // Check that spinner is present
       const icon = resegmentButton.querySelector('svg');
       expect(icon).toHaveClass('animate-spin');
@@ -134,22 +119,15 @@ describe('Resegmentation Frontend Integration Tests', () => {
     it('should update status when receiving WebSocket updates', async () => {
       const { rerender } = render(
         <BrowserRouter>
-          <ImageDisplay
-            image={mockImage}
-            onDelete={vi.fn()}
-            onResegment={vi.fn()}
-            viewMode="grid"
-          />
-        </BrowserRouter>
+          <ImageDisplay image={mockImage} onDelete={vi.fn()} onResegment={vi.fn()} viewMode="grid" />
+        </BrowserRouter>,
       );
 
       // Simulate WebSocket connection
       expect(mockSocket.on).toHaveBeenCalledWith('segmentation_update', expect.any(Function));
-      
+
       // Get the segmentation_update handler
-      const updateHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'segmentation_update'
-      )?.[1];
+      const updateHandler = mockSocket.on.mock.calls.find((call) => call[0] === 'segmentation_update')?.[1];
 
       // Simulate receiving status update
       await waitFor(() => {
@@ -178,7 +156,7 @@ describe('Resegmentation Frontend Integration Tests', () => {
           status: SEGMENTATION_STATUS.QUEUED,
         },
       };
-      
+
       (apiClient.post as any).mockResolvedValueOnce(mockApiResponse);
 
       const { handleResegment } = ProjectImageActions({
@@ -190,12 +168,9 @@ describe('Resegmentation Frontend Integration Tests', () => {
       await handleResegment(mockImage.id);
 
       // Verify API call
-      expect(apiClient.post).toHaveBeenCalledWith(
-        `/api/segmentation/${mockImage.id}/resegment`,
-        {
-          project_id: mockImage.project_id,
-        }
-      );
+      expect(apiClient.post).toHaveBeenCalledWith(`/api/segmentation/${mockImage.id}/resegment`, {
+        project_id: mockImage.project_id,
+      });
 
       // Verify images were updated with queued status
       expect(mockOnImagesChange).toHaveBeenCalled();
@@ -206,7 +181,7 @@ describe('Resegmentation Frontend Integration Tests', () => {
     it('should dispatch custom events for status updates', async () => {
       const mockOnImagesChange = vi.fn();
       const dispatchEventSpy = vi.spyOn(window, 'dispatchEvent');
-      
+
       (apiClient.post as any).mockResolvedValueOnce({
         data: {
           message: 'Resegmentation started successfully',
@@ -226,9 +201,9 @@ describe('Resegmentation Frontend Integration Tests', () => {
       await waitFor(() => {
         // Check for image-status-update event
         const statusUpdateEvent = dispatchEventSpy.mock.calls.find(
-          call => call[0].type === 'image-status-update'
+          (call) => call[0].type === 'image-status-update',
         )?.[0];
-        
+
         expect(statusUpdateEvent).toBeDefined();
         expect(statusUpdateEvent.detail).toEqual({
           imageId: mockImage.id,
@@ -238,9 +213,9 @@ describe('Resegmentation Frontend Integration Tests', () => {
 
         // Check for queue-status-update event
         const queueUpdateEvent = dispatchEventSpy.mock.calls.find(
-          call => call[0].type === 'queue-status-update'
+          (call) => call[0].type === 'queue-status-update',
         )?.[0];
-        
+
         expect(queueUpdateEvent).toBeDefined();
         expect(queueUpdateEvent.detail.refresh).toBe(true);
       });
@@ -249,7 +224,7 @@ describe('Resegmentation Frontend Integration Tests', () => {
     it('should handle resegmentation errors gracefully', async () => {
       const mockOnImagesChange = vi.fn();
       const mockError = new Error('ML service unavailable');
-      
+
       (apiClient.post as any).mockRejectedValueOnce(mockError);
 
       const { handleResegment } = ProjectImageActions({
@@ -262,7 +237,7 @@ describe('Resegmentation Frontend Integration Tests', () => {
 
       // Verify image status was reset
       const resetCall = mockOnImagesChange.mock.calls.find(
-        call => call[0][0].segmentationStatus === SEGMENTATION_STATUS.WITHOUT_SEGMENTATION
+        (call) => call[0][0].segmentationStatus === SEGMENTATION_STATUS.WITHOUT_SEGMENTATION,
       );
       expect(resetCall).toBeDefined();
     });
@@ -285,19 +260,16 @@ describe('Resegmentation Frontend Integration Tests', () => {
             }}
             projectId={processingImage.project_id}
           />
-        </BrowserRouter>
+        </BrowserRouter>,
       );
 
       // Look for spinner in the resegment button
-      const resegmentButtons = screen.getAllByRole('button').filter(
-        btn => btn.textContent?.includes('resegment') || 
-               btn.querySelector('.animate-spin')
-      );
-      
+      const resegmentButtons = screen
+        .getAllByRole('button')
+        .filter((btn) => btn.textContent?.includes('resegment') || btn.querySelector('.animate-spin'));
+
       expect(resegmentButtons.length).toBeGreaterThan(0);
-      const spinningButton = resegmentButtons.find(
-        btn => btn.querySelector('.animate-spin')
-      );
+      const spinningButton = resegmentButtons.find((btn) => btn.querySelector('.animate-spin'));
       expect(spinningButton).toBeDefined();
     });
 
@@ -310,27 +282,24 @@ describe('Resegmentation Frontend Integration Tests', () => {
       });
 
       // Directly test the hook since the component is complex
-      const { handleResegment } = await import(
-        '@/pages/segmentation/hooks/segmentation/useSegmentationV2'
-      ).then(mod => {
-        // Mock the hook implementation
-        return {
-          handleResegment: async (imageId: string, projectId: string) => {
-            await apiClient.post(`/api/segmentation/${imageId}/resegment`, {
-              project_id: projectId,
-            });
-          },
-        };
-      });
+      const { handleResegment } = await import('@/pages/segmentation/hooks/segmentation/useSegmentationV2').then(
+        (mod) => {
+          // Mock the hook implementation
+          return {
+            handleResegment: async (imageId: string, projectId: string) => {
+              await apiClient.post(`/api/segmentation/${imageId}/resegment`, {
+                project_id: projectId,
+              });
+            },
+          };
+        },
+      );
 
       await handleResegment(mockImage.id, mockImage.project_id);
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        `/api/segmentation/${mockImage.id}/resegment`,
-        {
-          project_id: mockImage.project_id,
-        }
-      );
+      expect(apiClient.post).toHaveBeenCalledWith(`/api/segmentation/${mockImage.id}/resegment`, {
+        project_id: mockImage.project_id,
+      });
     });
   });
 
@@ -352,9 +321,20 @@ describe('Resegmentation Frontend Integration Tests', () => {
           return Promise.resolve({
             data: {
               status: currentStatus,
-              polygons: currentStatus === SEGMENTATION_STATUS.COMPLETED
-                ? [{ id: 'new-polygon', points: [[0, 0], [100, 0], [100, 100], [0, 100]] }]
-                : [],
+              polygons:
+                currentStatus === SEGMENTATION_STATUS.COMPLETED
+                  ? [
+                      {
+                        id: 'new-polygon',
+                        points: [
+                          [0, 0],
+                          [100, 0],
+                          [100, 100],
+                          [0, 100],
+                        ],
+                      },
+                    ]
+                  : [],
             },
           });
         }
@@ -364,20 +344,20 @@ describe('Resegmentation Frontend Integration Tests', () => {
       const { rerender } = render(
         <BrowserRouter>
           <ImageDisplay
-            image={{...mockImage, segmentationStatus: currentStatus}}
+            image={{ ...mockImage, segmentationStatus: currentStatus }}
             onDelete={vi.fn()}
             onResegment={async (imageId) => {
               // Simulate resegment action
               currentStatus = SEGMENTATION_STATUS.QUEUED;
-              mockOnImagesChange([{...mockImage, segmentationStatus: currentStatus}]);
-              
+              mockOnImagesChange([{ ...mockImage, segmentationStatus: currentStatus }]);
+
               await apiClient.post(`/api/segmentation/${imageId}/resegment`, {
                 project_id: mockImage.project_id,
               });
             }}
             viewMode="grid"
           />
-        </BrowserRouter>
+        </BrowserRouter>,
       );
 
       // Click resegment button
@@ -393,12 +373,12 @@ describe('Resegmentation Frontend Integration Tests', () => {
       rerender(
         <BrowserRouter>
           <ImageDisplay
-            image={{...mockImage, segmentationStatus: currentStatus}}
+            image={{ ...mockImage, segmentationStatus: currentStatus }}
             onDelete={vi.fn()}
             onResegment={vi.fn()}
             viewMode="grid"
           />
-        </BrowserRouter>
+        </BrowserRouter>,
       );
 
       // Verify spinner is shown
@@ -407,10 +387,8 @@ describe('Resegmentation Frontend Integration Tests', () => {
 
       // Simulate WebSocket update to processing
       currentStatus = SEGMENTATION_STATUS.PROCESSING;
-      const updateHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'segmentation_update'
-      )?.[1];
-      
+      const updateHandler = mockSocket.on.mock.calls.find((call) => call[0] === 'segmentation_update')?.[1];
+
       updateHandler({
         imageId: mockImage.id,
         status: SEGMENTATION_STATUS.PROCESSING,
@@ -427,12 +405,12 @@ describe('Resegmentation Frontend Integration Tests', () => {
       rerender(
         <BrowserRouter>
           <ImageDisplay
-            image={{...mockImage, segmentationStatus: currentStatus}}
+            image={{ ...mockImage, segmentationStatus: currentStatus }}
             onDelete={vi.fn()}
             onResegment={vi.fn()}
             viewMode="grid"
           />
-        </BrowserRouter>
+        </BrowserRouter>,
       );
 
       // Verify button is enabled again

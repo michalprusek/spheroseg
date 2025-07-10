@@ -83,7 +83,11 @@ function sendProgress(progress: number, processedItems: number, totalItems: numb
 /**
  * Function to send completion notification back to the parent thread
  */
-function sendComplete(result: Record<string, unknown>, processedItems: number, totalItems: number): void {
+function sendComplete(
+  result: Record<string, unknown>,
+  processedItems: number,
+  totalItems: number
+): void {
   sendMessage({
     type: 'complete',
     result,
@@ -129,7 +133,9 @@ async function setupDatabase(): Promise<boolean> {
     return true;
   } catch (error) {
     // Log error and send it to parent process
-    sendError('Failed to connect to database: ' + (error instanceof Error ? error.message : String(error)));
+    sendError(
+      'Failed to connect to database: ' + (error instanceof Error ? error.message : String(error))
+    );
     return false;
   }
 }
@@ -137,7 +143,11 @@ async function setupDatabase(): Promise<boolean> {
 /**
  * Function to copy a file with error handling
  */
-async function copyImageFile(sourcePath: string, targetPath: string, baseDir: string): Promise<boolean> {
+async function copyImageFile(
+  sourcePath: string,
+  targetPath: string,
+  baseDir: string
+): Promise<boolean> {
   try {
     // Normalize paths
     const normalizedSourcePath = sourcePath.startsWith('/') ? sourcePath.substring(1) : sourcePath;
@@ -165,7 +175,7 @@ async function copyImageFile(sourcePath: string, targetPath: string, baseDir: st
         progress: 0,
         processedItems: 0,
         totalItems: 0,
-        message: `Source file not found: ${fullSourcePath}`
+        message: `Source file not found: ${fullSourcePath}`,
       });
       return false;
     }
@@ -173,7 +183,7 @@ async function copyImageFile(sourcePath: string, targetPath: string, baseDir: st
     // Log error through parent process
     sendMessage({
       type: 'error',
-      error: `Error copying file: ${error instanceof Error ? error.message : String(error)}`
+      error: `Error copying file: ${error instanceof Error ? error.message : String(error)}`,
     });
     return false;
   }
@@ -185,7 +195,7 @@ async function copyImageFile(sourcePath: string, targetPath: string, baseDir: st
 function generateNewFilePaths(
   originalStoragePath: string,
   originalThumbnailPath?: string,
-  newProjectId?: string,
+  newProjectId?: string
 ): { newStoragePath: string; newThumbnailPath?: string } {
   // Generate timestamp and random suffix for uniqueness
   const timestamp = Date.now();
@@ -224,7 +234,7 @@ async function processBatch(
   userId: string,
   options: DuplicationWorkerData['options'],
   processedItems: number,
-  totalItems: number,
+  totalItems: number
 ): Promise<number> {
   // Process files in parallel
   const fileOperations = [];
@@ -236,7 +246,7 @@ async function processBatch(
       const { newStoragePath, newThumbnailPath } = generateNewFilePaths(
         image.storage_path,
         image.thumbnail_path,
-        newProjectId,
+        newProjectId
       );
 
       // Prepare segmentation variables
@@ -261,7 +271,7 @@ async function processBatch(
           segmentationOperation = copyImageFile(
             image.segmentation_result_path,
             newSegmentationPath,
-            path.join(baseDir, 'public'),
+            path.join(baseDir, 'public')
           );
         }
 
@@ -274,11 +284,15 @@ async function processBatch(
         const baseDir = options.baseDir || process.cwd();
 
         // Copy main image
-        fileOperations.push(copyImageFile(image.storage_path, newStoragePath, path.join(baseDir, 'public')));
+        fileOperations.push(
+          copyImageFile(image.storage_path, newStoragePath, path.join(baseDir, 'public'))
+        );
 
         // Copy thumbnail if exists
         if (image.thumbnail_path && newThumbnailPath) {
-          fileOperations.push(copyImageFile(image.thumbnail_path, newThumbnailPath, path.join(baseDir, 'public')));
+          fileOperations.push(
+            copyImageFile(image.thumbnail_path, newThumbnailPath, path.join(baseDir, 'public'))
+          );
         }
 
         // Add segmentation file copy operation
@@ -312,7 +326,7 @@ async function processBatch(
       // Log error through parent process
       sendMessage({
         type: 'error',
-        error: `Error preparing image duplication for ${image.id}: ${imageError instanceof Error ? imageError.message : String(imageError)}`
+        error: `Error preparing image duplication for ${image.id}: ${imageError instanceof Error ? imageError.message : String(imageError)}`,
       });
       // Continue with other images, don't fail the whole task
     }
@@ -339,7 +353,7 @@ async function processBatch(
       // Log error through parent process
       sendMessage({
         type: 'error',
-        error: `Error executing database operation: ${dbError instanceof Error ? dbError.message : String(dbError)}`
+        error: `Error executing database operation: ${dbError instanceof Error ? dbError.message : String(dbError)}`,
       });
       // Continue with other operations, don't fail the whole task
     }
@@ -369,7 +383,7 @@ async function processProjectDuplication(): Promise<void> {
       progress: 0,
       processedItems: 0,
       totalItems: initialTotalItems || 0,
-      message: `Starting project duplication task ${taskId}`
+      message: `Starting project duplication task ${taskId}`,
     });
 
     // Setup database connection
@@ -385,7 +399,9 @@ async function processProjectDuplication(): Promise<void> {
     }
 
     // Fetch images from the original project
-    const imagesResult = await pool.query('SELECT * FROM images WHERE project_id = $1', [originalProjectId]);
+    const imagesResult = await pool.query('SELECT * FROM images WHERE project_id = $1', [
+      originalProjectId,
+    ]);
 
     const originalImages = imagesResult.rows;
     const totalItems = initialTotalItems || originalImages.length + 1; // +1 for project creation
@@ -397,7 +413,7 @@ async function processProjectDuplication(): Promise<void> {
       progress: processedItems / totalItems,
       processedItems,
       totalItems,
-      message: `Processing ${originalImages.length} images for duplication task ${taskId}`
+      message: `Processing ${originalImages.length} images for duplication task ${taskId}`,
     });
 
     // Create project directory if copying files
@@ -413,7 +429,7 @@ async function processProjectDuplication(): Promise<void> {
           progress: processedItems / totalItems,
           processedItems,
           totalItems,
-          message: `Created directory for new project: ${projectDir}`
+          message: `Created directory for new project: ${projectDir}`,
         });
       }
     }
@@ -448,18 +464,28 @@ async function processProjectDuplication(): Promise<void> {
           progress: processedItems / totalItems,
           processedItems,
           totalItems,
-          message: `Processing batch ${i + 1}/${batches} for duplication task ${taskId}`
+          message: `Processing batch ${i + 1}/${batches} for duplication task ${taskId}`,
         });
 
         // Process this batch
-        processedItems = await processBatch(client, batch, newProjectId, userId, options, processedItems, totalItems);
+        processedItems = await processBatch(
+          client,
+          batch,
+          newProjectId,
+          userId,
+          options,
+          processedItems,
+          totalItems
+        );
       }
 
       // Commit the transaction
       await client.query('COMMIT');
 
       // Get the updated project after all images are processed
-      const updatedProjectResult = await pool.query('SELECT * FROM projects WHERE id = $1', [newProjectId]);
+      const updatedProjectResult = await pool.query('SELECT * FROM projects WHERE id = $1', [
+        newProjectId,
+      ]);
 
       const updatedProject = updatedProjectResult.rows[0];
 
@@ -473,7 +499,7 @@ async function processProjectDuplication(): Promise<void> {
         error instanceof Error ? error : String(error),
         Math.floor((processedItems / totalItems) * 100),
         processedItems,
-        totalItems,
+        totalItems
       );
     } finally {
       // Release the client
@@ -499,7 +525,7 @@ if (parentPort) {
         progress: 100,
         processedItems: 0,
         totalItems: 0,
-        message: 'Received cancel message, shutting down worker'
+        message: 'Received cancel message, shutting down worker',
       });
       process.exit(0);
     }

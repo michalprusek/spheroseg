@@ -44,8 +44,6 @@ export const deleteImageSchema = z.object({
 export const batchDeleteImagesSchema = z.object({
   params: projectIdParams,
   body: z.object({
-    imageIds: z
-      .array(uuidSchema)
-      .min(1, { message: 'At least one image ID is required' }),
+    imageIds: z.array(uuidSchema).min(1, { message: 'At least one image ID is required' }),
   }),
 });

@@ -157,9 +157,10 @@ router.post(
       }
 
       // Update image status to 'queued' in the database
-      await pool.query(`UPDATE images SET status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`, [
-        imageId,
-      ]);
+      await pool.query(
+        `UPDATE images SET status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`,
+        [imageId]
+      );
       // Also update or create segmentation_results entry
       await pool.query(
         `INSERT INTO segmentation_results (image_id, status, parameters)
@@ -183,9 +184,10 @@ router.post(
       console.error('Error triggering segmentation:', error);
       // Attempt to revert status if triggering failed
       try {
-        await pool.query(`UPDATE images SET status = '${SEGMENTATION_STATUS.FAILED}', updated_at = NOW() WHERE id = $1`, [
-          imageId,
-        ]);
+        await pool.query(
+          `UPDATE images SET status = '${SEGMENTATION_STATUS.FAILED}', updated_at = NOW() WHERE id = $1`,
+          [imageId]
+        );
         await pool.query(
           `UPDATE segmentation_results SET status = '${SEGMENTATION_STATUS.FAILED}', updated_at = NOW() WHERE image_id = $1`,
           [imageId]
@@ -291,9 +293,10 @@ async function handleBatchSegmentation(
       if (imageData) {
         // Update status in DB
         segmentationPromises.push(
-          pool.query(`UPDATE images SET status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`, [
-            imageId,
-          ])
+          pool.query(
+            `UPDATE images SET status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`,
+            [imageId]
+          )
         );
         segmentationPromises.push(
           pool.query(

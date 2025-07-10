@@ -78,7 +78,7 @@ describe('ImageDisplay - isProcessing prop', () => {
 
   it('passes isProcessing=true when segmentation_status is queued', () => {
     const queuedImage = { ...mockImage, segmentation_status: 'queued' as const };
-    
+
     render(<ImageDisplay {...defaultProps} images={[queuedImage]} />);
 
     expect(imageActionsProps?.isProcessing).toBe(true);
@@ -86,7 +86,7 @@ describe('ImageDisplay - isProcessing prop', () => {
 
   it('passes isProcessing=true when segmentation_status is processing', () => {
     const processingImage = { ...mockImage, segmentation_status: 'processing' as const };
-    
+
     render(<ImageDisplay {...defaultProps} images={[processingImage]} />);
 
     expect(imageActionsProps?.isProcessing).toBe(true);
@@ -94,7 +94,7 @@ describe('ImageDisplay - isProcessing prop', () => {
 
   it('passes isProcessing=false when segmentation_status is completed', () => {
     const completedImage = { ...mockImage, segmentation_status: 'completed' as const };
-    
+
     render(<ImageDisplay {...defaultProps} images={[completedImage]} />);
 
     expect(imageActionsProps?.isProcessing).toBe(false);
@@ -102,7 +102,7 @@ describe('ImageDisplay - isProcessing prop', () => {
 
   it('passes isProcessing=false when segmentation_status is failed', () => {
     const failedImage = { ...mockImage, segmentation_status: 'failed' as const };
-    
+
     render(<ImageDisplay {...defaultProps} images={[failedImage]} />);
 
     expect(imageActionsProps?.isProcessing).toBe(false);
@@ -110,7 +110,7 @@ describe('ImageDisplay - isProcessing prop', () => {
 
   it('passes isProcessing=false when segmentation_status is without_segmentation', () => {
     const withoutSegImage = { ...mockImage, segmentation_status: 'without_segmentation' as const };
-    
+
     render(<ImageDisplay {...defaultProps} images={[withoutSegImage]} />);
 
     expect(imageActionsProps?.isProcessing).toBe(false);
@@ -118,7 +118,7 @@ describe('ImageDisplay - isProcessing prop', () => {
 
   it('passes same isProcessing value to list view actions', () => {
     const processingImage = { ...mockImage, segmentation_status: 'processing' as const };
-    
+
     render(<ImageDisplay {...defaultProps} images={[processingImage]} viewMode="list" />);
 
     expect(imageListActionsProps?.isProcessing).toBe(true);
@@ -126,19 +126,19 @@ describe('ImageDisplay - isProcessing prop', () => {
 
   it('updates isProcessing when image status changes', () => {
     const { rerender } = render(<ImageDisplay {...defaultProps} />);
-    
+
     expect(imageActionsProps?.isProcessing).toBe(false);
 
     // Update to processing status
     const processingImage = { ...mockImage, segmentation_status: 'processing' as const };
     rerender(<ImageDisplay {...defaultProps} images={[processingImage]} />);
-    
+
     expect(imageActionsProps?.isProcessing).toBe(true);
 
     // Update back to completed
     const completedImage = { ...mockImage, segmentation_status: 'completed' as const };
     rerender(<ImageDisplay {...defaultProps} images={[completedImage]} />);
-    
+
     expect(imageActionsProps?.isProcessing).toBe(false);
   });
 });

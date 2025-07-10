@@ -92,7 +92,9 @@ const AboutPage: React.FC = () => {
       <footer className="bg-muted py-8">
         <Container>
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-muted-foreground mb-4 md:mb-0">© 2023 Spheroid Segmentation Platform</p>
+            <p className="text-muted-foreground mb-4 md:mb-0">
+              © {new Date().getFullYear()} Spheroid Segmentation Platform
+            </p>
             <div className="flex gap-6">
               <Link to="/privacy" className="text-muted-foreground hover:text-foreground">
                 {t('common.privacyPolicy')}

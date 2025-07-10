@@ -112,6 +112,12 @@ const Documentation = lazy(() =>
     return import('./pages/NotFound');
   }),
 );
+const AboutPage = lazy(() =>
+  import('./pages/AboutPage').catch(() => {
+    // Error handled by returning NotFound page
+    return import('./pages/NotFound');
+  }),
+);
 const ProjectExport = lazy(() =>
   import('./pages/export/ProjectExport').catch(() => {
     // Error handled by returning NotFound page

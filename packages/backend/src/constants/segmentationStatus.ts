@@ -10,7 +10,7 @@ export const SEGMENTATION_STATUS = {
   FAILED: 'failed',
 } as const;
 
-export type SegmentationStatus = typeof SEGMENTATION_STATUS[keyof typeof SEGMENTATION_STATUS];
+export type SegmentationStatus = (typeof SEGMENTATION_STATUS)[keyof typeof SEGMENTATION_STATUS];
 
 // Helper arrays for common status checks
 export const PROCESSING_STATUSES = [
@@ -25,11 +25,11 @@ export const FINAL_STATUSES = [
 ] as const;
 
 // Type guards
-export function isProcessingStatus(status: string): status is typeof PROCESSING_STATUSES[number] {
+export function isProcessingStatus(status: string): status is (typeof PROCESSING_STATUSES)[number] {
   return PROCESSING_STATUSES.includes(status as SegmentationStatus);
 }
 
-export function isFinalStatus(status: string): status is typeof FINAL_STATUSES[number] {
+export function isFinalStatus(status: string): status is (typeof FINAL_STATUSES)[number] {
   return FINAL_STATUSES.includes(status as SegmentationStatus);
 }
 
