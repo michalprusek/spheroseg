@@ -161,10 +161,10 @@ export const ImageDisplay = ({
     }
   }, [socket, isConnected, handleSegmentationUpdate, image.id, image.project_id]);
 
-  // Periodically check status for processing images to catch missed updates
+  // Periodically check status for processing/queued images to catch missed updates
   useEffect(() => {
-    // Only set up polling for processing status and avoid infinite loops
-    if (currentStatus === SEGMENTATION_STATUS.PROCESSING) {
+    // Set up polling for processing or queued status
+    if (currentStatus === SEGMENTATION_STATUS.PROCESSING || currentStatus === SEGMENTATION_STATUS.QUEUED) {
 
       // Function to check current image status through API
       const checkImageStatus = async () => {
