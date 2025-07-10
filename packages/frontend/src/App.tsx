@@ -62,12 +62,7 @@ const Dashboard = lazy(() =>
     return import('./pages/NotFound');
   }),
 );
-const ProjectDetail = lazy(() =>
-  import('./pages/ProjectDetail').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
+const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
 const SegmentationPage = createLazyComponent(
   () => import('./pages/segmentation/SegmentationPage'),
   () => import('./pages/NotFound'),

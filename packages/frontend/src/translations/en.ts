@@ -1392,9 +1392,10 @@ export default {
     title: 'About SpheroSeg',
     mission: {
       title: 'Our Mission',
-<<<<<<< HEAD
-      description: 'SpheroSeg is an advanced platform specifically designed for the segmentation and analysis of cell spheroids in microscopic images. We combine cutting-edge artificial intelligence algorithms with an intuitive interface to provide researchers with precise spheroid boundary detection and analytical capabilities.',
-      vision: 'Our vision is to accelerate scientific discovery by making advanced image analysis accessible to researchers worldwide, enabling them to focus on their research rather than technical challenges.',
+      description:
+        'SpheroSeg is an advanced platform specifically designed for the segmentation and analysis of cell spheroids in microscopic images. We combine cutting-edge artificial intelligence algorithms with an intuitive interface to provide researchers with precise spheroid boundary detection and analytical capabilities.',
+      vision:
+        'Our vision is to accelerate scientific discovery by making advanced image analysis accessible to researchers worldwide, enabling them to focus on their research rather than technical challenges.',
     },
     technology: {
       title: 'Our Technology',

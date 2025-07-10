@@ -208,13 +208,13 @@ export function useApiCache<T = any>(endpoint: string, options?: Partial<UseCach
         const response = await apiClient.get<T>(endpoint);
         
         // Add diagnostic logging for user statistics endpoint
-        if (endpoint.includes('user-stats') || endpoint.includes('statistics')) {
-          logger.info(`API Response for ${endpoint}:`, {
-            status: response.status,
-            data: response.data,
-            headers: response.headers,
-          });
-        }
+        // if (endpoint.includes('user-stats') || endpoint.includes('statistics')) {
+        //   logger.info(`API Response for ${endpoint}:`, {
+        //     status: response.status,
+        //     data: response.data,
+        //     headers: response.headers,
+        //   });
+        // }
         
         return response.data;
       } catch (error: any) {

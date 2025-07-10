@@ -39,7 +39,7 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  logger.debug('ProjectDetail: Received projectId from URL:', id);
+  // logger.debug('ProjectDetail: Received projectId from URL:', id);
   useAuth();
   const { socket, isConnected } = useSocket();
 
