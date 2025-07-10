@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { createCachedConfig, testCache } from './playwright-cache.config';
 
 /**
  * Read environment variables from file.
@@ -6,10 +7,26 @@ import { defineConfig, devices } from '@playwright/test';
  */
 // require('dotenv').config();
 
+// Clear cache if requested via environment variable
+if (process.env.CLEAR_TEST_CACHE) {
+  console.log('Clearing test cache...');
+  testCache.clearAllCache();
+}
+
+// Show cache statistics
+if (process.env.SHOW_CACHE_STATS) {
+  const stats = testCache.getStats();
+  console.log('Test Cache Statistics:');
+  console.log(`- Total cached: ${stats.total}`);
+  console.log(`- Passed: ${stats.passed}`);
+  console.log(`- Failed: ${stats.failed}`);
+  console.log(`- Time saved: ${(stats.totalDuration / 1000).toFixed(2)}s`);
+}
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
-export default defineConfig({
+const baseConfig = defineConfig({
   testDir: './e2e',
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -24,6 +41,7 @@ export default defineConfig({
     ['html', { outputFolder: 'playwright-report' }],
     ['junit', { outputFile: 'playwright-report/results.xml' }],
     ['list'],
+    ['./test-cache-reporter.ts'],
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -86,3 +104,6 @@ export default defineConfig({
     timeout: 120 * 1000,
   },
 });
+
+// Export cached configuration if caching is enabled
+export default process.env.DISABLE_TEST_CACHE ? baseConfig : createCachedConfig(baseConfig);
