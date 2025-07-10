@@ -1,0 +1,14 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run import checks for frontend
+cd packages/frontend && node scripts/check-imports.js
+
+# Run linting
+npm run lint
+
+# Run type checking
+cd packages/frontend && npx tsc --noEmit
+
+# Run tests for changed files
+npm run test:fast -- --changed

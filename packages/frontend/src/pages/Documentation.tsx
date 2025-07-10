@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { FileText, Code, Info, BookOpen, Microscope, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { constructUrl } from '@/lib/urlUtils';
+import { appConfig } from '@/config/app.config';
 
 const Documentation = () => {
   const { t } = useLanguage();
@@ -240,8 +241,8 @@ const Documentation = () => {
 
                   <p className="mb-4">
                     {t('documentation.apiReference.contactPrefix')}{' '}
-                    <a href="mailto:prusemic@cvut.cz" className="text-blue-600 hover:underline">
-                      prusemic@cvut.cz
+                    <a href={`mailto:${appConfig.contact.developer.email}`} className="text-blue-600 hover:underline">
+                      {appConfig.contact.developer.email}
                     </a>
                     .
                   </p>

@@ -187,6 +187,31 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 6. **Date Utilities**: Unified date formatting
 7. **Export Functions**: Centralized export logic
 8. **WebSocket Management**: Single connection manager
+9. **Application Configuration**: Centralized in `packages/frontend/src/config/app.config.ts`
+   - All contact information, URLs, and organization details
+   - Feature flags and environment-specific settings
+   - Type-safe configuration with helper functions
+
+## Code Quality Patterns
+
+### Import Management
+- **Lazy Loading**: All page components use React.lazy() with error boundaries
+- **Import Validation**: Pre-commit hooks validate all imports
+- **Path Aliases**: Use `@/` for src imports, avoid relative paths
+- **Import Order**: External deps → Internal modules → Local files → Types
+
+### Testing Patterns
+- **E2E Tests**: Playwright for user flows and navigation
+- **Unit Tests**: Vitest for components, utilities, and services
+- **Test Organization**: Tests in `__tests__` folders next to source
+- **Test Coverage**: Aim for >80% on critical paths
+- **Mock Strategy**: Mock external dependencies, use real implementations when possible
+
+### Configuration Management
+- **Centralized Config**: All app settings in `app.config.ts`
+- **Environment Variables**: Use for secrets and environment-specific values
+- **Type Safety**: Configuration object is fully typed with const assertion
+- **Helper Functions**: Provide getters for common config values
 
 ## Development Tips
 
@@ -197,6 +222,8 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 5. **API Changes**: Update both backend routes and frontend services
 6. **ML Model Updates**: Test with sample images before deploying
 7. **Using Context7**: Frequently use the Context7 MCP tool to get up-to-date documentation for libraries and frameworks
+8. **Pre-commit Hooks**: Automatically run import checks, linting, and tests
+9. **Configuration Changes**: Update `app.config.ts` for any contact info or URLs
 
 ## System Credentials
 
@@ -228,6 +255,21 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
    - Created missing `polygonOperations.ts` module
    - Fixed polygon splitting algorithm implementation
    - Replaced Czech error messages with English
+
+### Recently Implemented (2025-07-10)
+1. **E2E Testing Infrastructure**: Comprehensive Playwright tests for routing
+   - Created `e2e/routing/public-routes.spec.ts` with full navigation tests
+   - Added Playwright configuration with multiple browser support
+   - Tests cover all public pages and verify content loads correctly
+2. **ESLint Import Validation**: Comprehensive import checking rules
+   - Created custom ESLint rule for enforcing lazy imports in App.tsx
+   - Added pre-commit hooks for import validation
+   - Created documentation in `docs/eslint-import-rules.md`
+3. **Centralized Configuration**: All app settings in one place
+   - Created `config/app.config.ts` with all contact info, URLs, and settings
+   - Updated all components to use centralized configuration
+   - Added comprehensive tests for configuration
+   - Type-safe configuration with helper functions
 
 ### Current Issues
 1. **High Memory Usage**: Backend showing 92.5% memory utilization
