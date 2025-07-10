@@ -43,6 +43,8 @@ const triggerBatchSchema = z.object({
 // -----------------------------------------
 
 // GET /api/images/:id/segmentation - Get segmentation result for an image
+// This endpoint returns the segmentation status from the images table to ensure consistency
+// with the image list view. The segmentation_results table may have stale status.
 // @ts-ignore // TS2769: No overload matches this call.
 router.get(
   '/images/:id/segmentation',
@@ -58,9 +60,9 @@ router.get(
     }
 
     try {
-      // Verify user has access to the image via project ownership and fetch image dimensions
+      // Verify user has access to the image via project ownership and fetch image dimensions AND segmentation_status
       const imageCheck = await pool.query(
-        'SELECT i.id, i.width, i.height FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
+        'SELECT i.id, i.width, i.height, i.segmentation_status FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
         [imageId, userId]
       );
       if (imageCheck.rows.length === 0) {
@@ -76,10 +78,13 @@ router.get(
       ]);
 
       if (result.rows.length === 0) {
-        // If no segmentation result found, return an empty result instead of 404
+        // If no segmentation result found, check the image's segmentation_status
+        // Use the status from the images table if available
+        const imageStatus = imageInfo.segmentation_status || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION;
+        
         const emptyResult = {
           image_id: imageId,
-          status: SEGMENTATION_STATUS.WITHOUT_SEGMENTATION,
+          status: imageStatus, // Use the status from images table
           result_data: {
             polygons: [],
           },
@@ -95,6 +100,12 @@ router.get(
 
       // Format the result
       const segmentationResult = result.rows[0];
+
+      // Use the status from the images table if it's more up-to-date
+      // This handles cases where the segmentation_results table might have stale status
+      if (imageInfo.segmentation_status) {
+        segmentationResult.status = imageInfo.segmentation_status;
+      }
 
       // Ensure polygons are available in the expected format
       if (segmentationResult.result_data && segmentationResult.result_data.polygons) {
