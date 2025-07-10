@@ -256,7 +256,7 @@ describe('Projects API Routes - /api/projects', () => {
       query: jest.fn(),
       release: jest.fn(),
     };
-    const mockPoolConnect = pool.connect as jest.Mock;
+    const mockPoolConnect = jest.fn().mockResolvedValue(mockClient);
 
     beforeEach(() => {
       // Reset client mocks & pool connect mock

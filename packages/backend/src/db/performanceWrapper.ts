@@ -16,25 +16,26 @@ export function wrapPoolClient(client: PoolClient): PoolClient {
   const originalQuery = client.query.bind(client);
 
   // Create a new query function that tracks performance
-  const wrappedQuery = async function (text: string, values?: any[], callback?: any): Promise<any> {
+  const wrappedQuery = async function (...args: any[]): Promise<any> {
     const startTime = Date.now();
-
+    let queryText = 'Unknown query';
+    
     try {
-      // Call original query method
-      let result: QueryResult;
-
-      if (typeof text === 'string') {
-        // Text query format
-        result = await originalQuery(text, values, callback);
-      } else {
-        // Query config object format
-        result = await originalQuery(text, values, callback);
+      // Extract query text based on argument format
+      if (args.length > 0) {
+        if (typeof args[0] === 'string') {
+          queryText = args[0];
+        } else if (args[0] && typeof args[0] === 'object' && 'text' in args[0]) {
+          queryText = args[0].text;
+        }
       }
+
+      // Call original query method with all arguments
+      const result = await originalQuery.apply(client, args);
 
       // Calculate duration
       const duration = Date.now() - startTime;
-      const queryText = typeof text === 'string' ? text : text.text || 'Unknown query';
-      const rowCount = result.rowCount || 0;
+      const rowCount = result?.rowCount || 0;
 
       // Record the metric
       performanceMonitor.recordDatabaseMetric(queryText, duration, rowCount);
@@ -45,7 +46,6 @@ export function wrapPoolClient(client: PoolClient): PoolClient {
           query: queryText.substring(0, 200),
           duration,
           rowCount,
-          values: values?.slice(0, 5), // Log first 5 values only
         });
       }
 
@@ -53,7 +53,6 @@ export function wrapPoolClient(client: PoolClient): PoolClient {
     } catch (error) {
       // Still track failed queries
       const duration = Date.now() - startTime;
-      const queryText = typeof text === 'string' ? text : text.text || 'Unknown query';
 
       performanceMonitor.recordDatabaseMetric(queryText, duration, 0);
 
@@ -88,16 +87,26 @@ export function wrapPool(pool: Pool): Pool {
   // Also wrap the pool's direct query method
   const originalQuery = pool.query.bind(pool);
 
-  pool.query = async function (text: string | any, values?: any[], callback?: any): Promise<any> {
+  pool.query = async function (...args: any[]): Promise<any> {
     const startTime = Date.now();
-
+    let queryText = 'Unknown query';
+    
     try {
-      const result = await originalQuery(text, values, callback);
+      // Extract query text based on argument format
+      if (args.length > 0) {
+        if (typeof args[0] === 'string') {
+          queryText = args[0];
+        } else if (args[0] && typeof args[0] === 'object' && 'text' in args[0]) {
+          queryText = args[0].text;
+        }
+      }
+
+      // Call original query method with all arguments
+      const result = await originalQuery.apply(pool, args);
 
       // Calculate duration
       const duration = Date.now() - startTime;
-      const queryText = typeof text === 'string' ? text : text.text || 'Unknown query';
-      const rowCount = result.rowCount || 0;
+      const rowCount = result?.rowCount || 0;
 
       // Record the metric
       performanceMonitor.recordDatabaseMetric(queryText, duration, rowCount);
@@ -106,7 +115,6 @@ export function wrapPool(pool: Pool): Pool {
     } catch (error) {
       // Still track failed queries
       const duration = Date.now() - startTime;
-      const queryText = typeof text === 'string' ? text : text.text || 'Unknown query';
 
       performanceMonitor.recordDatabaseMetric(queryText, duration, 0);
 

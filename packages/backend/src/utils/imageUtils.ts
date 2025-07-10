@@ -7,7 +7,7 @@
  * @deprecated For new code, use @shared/utils/imageUtils instead
  */
 
-import sharedImageUtils from '@spheroseg/shared/utils/imageUtils';
+import { imageUtils as sharedImageUtils } from '@spheroseg/shared';
 import imageUtils from './imageUtils.unified';
 import * as fs from 'fs';
 
@@ -19,7 +19,7 @@ export type {
   ImageBase,
   ImageDimensions,
   ImageLoadOptions,
-} from '@spheroseg/shared/utils/imageUtils';
+} from '@spheroseg/shared';
 
 // For backward compatibility
 export interface ImageData {
@@ -47,7 +47,7 @@ export interface ImageData {
  * @deprecated Use formatImageForApi from imageUtils.unified.ts instead
  */
 export const formatImagePaths = (image: ImageData, origin: string): ImageData => {
-  return imageUtils.formatImageForApi(image, origin);
+  return imageUtils.formatImageForApi(image, origin) as ImageData;
 };
 
 /**

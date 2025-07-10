@@ -14,8 +14,8 @@ import {
   getSegmentationSchema,
   triggerSegmentationSchema,
   updateSegmentationSchema,
-  triggerProjectBatchSegmentationSchema, // Added import
-  // createSegmentationJobSchema // Commented out as it seems missing from validator file
+  triggerProjectBatchSegmentationSchema,
+  createSegmentationJobSchema
 } from '../validators/segmentationValidators';
 import { SEGMENTATION_STATUS } from '../constants/segmentationStatus';
 import { broadcastSegmentationUpdate } from '../services/socketService';

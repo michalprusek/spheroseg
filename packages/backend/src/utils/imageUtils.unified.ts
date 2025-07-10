@@ -16,6 +16,8 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 // Import the local logger instead of shared library for tests
 import logger from './logger';
 
@@ -416,9 +418,7 @@ export const createThumbnail = async (
 
     // Special handling for BMP files using Python PIL
     if (ext === '.bmp') {
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execAsync = util.promisify(exec);
+      const execAsync = promisify(exec);
 
       const pythonScript = `
 import sys
@@ -530,7 +530,7 @@ export const normalizePathForDb = (absolutePath: string, uploadDir: string): str
  */
 export const formatImageForApi = (
   image: Record<string, unknown>,
-  baseUrl: string
+  _baseUrl: string
 ): Record<string, unknown> => {
   if (!image) return {} as Record<string, unknown>;
 
@@ -785,8 +785,6 @@ export const convertTiffToWebFriendly = async (
   try {
     // For BMP files, use Python PIL since Sharp doesn't support BMP natively
     if (ext === '.bmp') {
-      const { exec } = require('child_process');
-      const util = require('util');
       const execAsync = util.promisify(exec);
 
       const pythonScript = `

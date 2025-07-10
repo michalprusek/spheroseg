@@ -37,6 +37,15 @@ export const updateSegmentationSchema = z.object({
     ),
 });
 
+// Schema for POST /api/segmentation/job
+export const createSegmentationJobSchema = z.object({
+  body: z.object({
+    imageIds: z.array(z.string().uuid()),
+    priority: z.number().int().min(0).max(10).optional().default(1),
+    parameters: z.record(z.any()).optional(),
+  }),
+});
+
 // Schema for POST /api/projects/:projectId/segmentation/batch-trigger
 export const triggerProjectBatchSegmentationSchema = z.object({
   params: z.object({
@@ -64,3 +73,4 @@ export const triggerProjectBatchSegmentationSchema = z.object({
     })
     .passthrough(),
 });
+

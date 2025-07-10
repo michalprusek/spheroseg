@@ -48,7 +48,7 @@ export function getContainerLimits(): ContainerLimits {
       const limitBytes = parseInt(limitStr, 10);
 
       // Check if limit is not the default "unlimited" value
-      if (limitBytes < 9223372036854775807) {
+      if (limitBytes < Number.MAX_SAFE_INTEGER) {
         result.memoryLimitBytes = limitBytes;
         result.memoryLimitMB = Math.floor(limitBytes / (1024 * 1024));
         logger.debug(`Detected cgroup v1 memory limit: ${result.memoryLimitMB}MB`);

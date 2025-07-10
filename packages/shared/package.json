@@ -5,6 +5,20 @@
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./utils/imageUtils": {
+      "types": "./dist/utils/imageUtils.d.ts",
+      "default": "./dist/utils/imageUtils.js"
+    },
+    "./utils/pathUtils": {
+      "types": "./dist/utils/pathUtils.d.ts",
+      "default": "./dist/utils/pathUtils.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest --passWithNoTests",

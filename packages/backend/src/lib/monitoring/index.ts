@@ -11,7 +11,7 @@ import { performanceMonitoring } from '../../monitoring/unified';
 export { performanceMonitoring };
 
 // Export the create function for compatibility
-export function createPerformanceMonitoring(options?: any) {
+export function createPerformanceMonitoring(options?: any): any {
   // The unified monitoring is already a singleton, so just return it
   return performanceMonitoring;
 }
@@ -44,4 +44,4 @@ export class BackendPerformanceMonitoring {
 }
 
 // Export the default implementation directly to avoid TypeScript error TS4094
-export const monitoring = performanceMonitoring;
+export const monitoring: any = performanceMonitoring;

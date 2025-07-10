@@ -1,13 +1,13 @@
 /**
- * Vylepšená služba pro frontu segmentace
+ * Enhanced segmentation queue service
  *
- * Tato služba poskytuje robustní implementaci fronty pro segmentační úlohy:
- * - Perzistentní ukládání úloh do databáze
- * - Prioritní zpracování úloh
- * - Automatické opakování neúspěšných úloh
- * - Monitorování stavu ML služby
- * - Škálovatelné zpracování úloh
- * - Detailní logování a metriky
+ * This service provides a robust queue implementation for segmentation tasks:
+ * - Persistent task storage in database
+ * - Priority task processing
+ * - Automatic retry for failed tasks
+ * - ML service status monitoring
+ * - Scalable task processing
+ * - Detailed logging and metrics
  */
 
 import amqp from 'amqplib';
@@ -102,17 +102,17 @@ class SegmentationQueueService extends EventEmitter {
       // Ověření existence tabulky
       await this.ensureTaskTableExists();
 
-      // Připojení k RabbitMQ
+      // Connect to RabbitMQ
       await this.connectRabbitMQ();
 
-      // Spuštění pravidelných kontrol
+      // Start periodic checks
       this.startHealthCheck();
       this.startQueueProcessor();
       this.startQueueStatusUpdater();
 
-      logger.info('Služba fronty segmentace byla inicializována');
+      logger.info('Segmentation queue service initialized');
     } catch (error) {
-      logger.error('Chyba při inicializaci služby fronty segmentace:', {
+      logger.error('Error initializing segmentation queue service:', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -121,7 +121,7 @@ class SegmentationQueueService extends EventEmitter {
   }
 
   /**
-   * Zajistí existenci tabulky pro úlohy
+   * Ensure task table exists
    */
   private async ensureTaskTableExists(): Promise<void> {
     const dbPool = pool.getPool();
@@ -188,7 +188,7 @@ class SegmentationQueueService extends EventEmitter {
         durable: true,
       });
 
-      logger.info('Připojeno k RabbitMQ');
+      logger.info('Connected to RabbitMQ');
 
       // Nastavení handlerů pro události
       this.connection.on('error', (err: any) => {
@@ -398,7 +398,7 @@ class SegmentationQueueService extends EventEmitter {
           return;
         }
 
-        // Zpracování úloh paralelně
+        // Process tasks in parallel
         const processingPromises = result.rows.map((task) =>
           this.processTask(task.id, task.image_id, task.image_path, task.parameters, task.retries)
         );

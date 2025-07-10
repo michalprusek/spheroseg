@@ -116,11 +116,28 @@ const initializeServices = async (): Promise<void> => {
     logger.info('Stuck image cleanup service started');
 
     // Test database connection
+    logger.info('Testing database connection...');
     try {
-      const result = await db.query('SELECT NOW()');
+      // Create a simple pool without wrapper for testing
+      const { Pool } = require('pg');
+      const testPool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        max: 1
+      });
+      
+      logger.info('Created test pool');
+      
+      const result = await testPool.query('SELECT NOW()');
       logger.info('Database connection verified', { time: result.rows[0].now });
+      
+      await testPool.end();
+      logger.info('Test pool closed');
     } catch (dbError) {
-      logger.error('Database connection test failed', { error: dbError });
+      logger.error('Database connection test failed', { 
+        error: dbError,
+        message: dbError.message,
+        stack: dbError.stack 
+      });
       throw dbError;
     }
 

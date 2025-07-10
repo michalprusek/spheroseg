@@ -248,6 +248,8 @@ services:
     restart: always
     depends_on:
       - rabbitmq # ML service now depends on RabbitMQ
+    ports:
+      - "5002:5002"  # Expose ML service port
     deploy:
       resources:
         limits:

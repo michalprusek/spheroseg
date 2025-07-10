@@ -8,6 +8,7 @@ import {
   projectIdSchema,
   deleteProjectSchema,
   duplicateProjectSchema,
+  updateProjectSchema,
 } from '../validators/projectValidators';
 import logger from '../utils/logger';
 import * as projectService from '../services/projectService';
@@ -307,6 +308,94 @@ router.get(
       return res.status(200).json(project);
     } catch (error) {
       logger.error('Error fetching project', { error, projectId, userId });
+      next(error);
+    }
+  }
+);
+
+// PUT /api/projects/:id - Update a project by ID
+// @ts-ignore
+router.put(
+  '/:id',
+  authMiddleware,
+  validate(updateProjectSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    const { id: projectId } = req.params;
+    const updates = req.body;
+
+    if (!userId) return res.status(401).json({ message: 'Authentication error' });
+
+    try {
+      logger.info('Processing update project request', { userId, projectId, updates });
+
+      // Check project ownership
+      const ownershipCheck = await getPool().query(
+        'SELECT user_id FROM projects WHERE id = $1',
+        [projectId]
+      );
+
+      if (ownershipCheck.rows.length === 0) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+
+      if (ownershipCheck.rows[0].user_id !== userId) {
+        return res.status(403).json({ message: 'Not authorized to update this project' });
+      }
+
+      // Update the project
+      const updateFields = [];
+      const values = [];
+      let paramCount = 1;
+
+      if (updates.title !== undefined) {
+        updateFields.push(`title = $${paramCount++}`);
+        values.push(updates.title);
+      }
+
+      if (updates.description !== undefined) {
+        updateFields.push(`description = $${paramCount++}`);
+        values.push(updates.description);
+      }
+
+      if (updates.tags !== undefined) {
+        updateFields.push(`tags = $${paramCount++}`);
+        values.push(updates.tags);
+      }
+
+      if (updates.public !== undefined) {
+        updateFields.push(`public = $${paramCount++}`);
+        values.push(updates.public);
+      }
+
+      if (updateFields.length === 0) {
+        return res.status(400).json({ message: 'No valid fields to update' });
+      }
+
+      updateFields.push(`updated_at = NOW()`);
+      values.push(projectId);
+
+      const updateQuery = `
+        UPDATE projects 
+        SET ${updateFields.join(', ')}
+        WHERE id = $${values.length}
+        RETURNING *
+      `;
+
+      const result = await getPool().query(updateQuery, values);
+
+      // Clear cache for the project
+      await cacheService.clearProjectCache(projectId);
+      await cacheService.clearUserProjectsCache(userId);
+
+      logger.info('Project updated successfully', { projectId });
+      res.json(result.rows[0]);
+    } catch (error: any) {
+      logger.error('Error updating project', { 
+        error: error?.message || error, 
+        stack: error?.stack,
+        projectId 
+      });
       next(error);
     }
   }
