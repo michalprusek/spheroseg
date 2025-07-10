@@ -141,7 +141,6 @@ export const ImageDisplay = ({
   useEffect(() => {
     // Only set up polling for processing status and avoid infinite loops
     if (currentStatus === SEGMENTATION_STATUS.PROCESSING) {
-      console.log(`ImageDisplay: Setting up status polling for processing image ${image.id}`);
 
       // Function to check current image status through API
       const checkImageStatus = async () => {
@@ -151,9 +150,6 @@ export const ImageDisplay = ({
           if (response.data && response.data.status) {
             const apiStatus = response.data.status;
             if (apiStatus !== currentStatus) {
-              console.log(
-                `ImageDisplay: Status polling detected change for image ${image.id}: ${currentStatus} → ${apiStatus}`,
-              );
               setCurrentStatus(apiStatus);
 
               // If status changed to completed, trigger update notification
@@ -169,23 +165,26 @@ export const ImageDisplay = ({
               }
             }
           }
-        } catch (error) {
-          // Don't spam the console with 401 errors, just log once
-          if (error?.response?.status === 401) {
-            console.warn(`ImageDisplay: Authentication required for image ${image.id}, stopping polling`);
-            return; // Stop polling on auth errors
+        } catch (error: any) {
+          // Silently ignore 401 and 429 errors
+          if (error?.response?.status === 401 || error?.response?.status === 429) {
+            return; // Stop polling on auth or rate limit errors
           }
-          console.warn(`ImageDisplay: Error checking segmentation status for image ${image.id}:`, error);
+          // Only log other errors once
+          if (error?.response?.status !== 404) {
+            console.debug(`ImageDisplay: Error checking segmentation status for image ${image.id}`);
+          }
         }
       };
 
-      // Check immediately on mount
-      checkImageStatus();
+      // Check after a delay to avoid initial burst of requests
+      const timeoutId = setTimeout(checkImageStatus, 5000);
 
-      // Set up polling interval - check every 15 seconds (increased to reduce spam)
-      const intervalId = setInterval(checkImageStatus, 15000);
+      // Set up polling interval - check every 30 seconds (increased to reduce API load)
+      const intervalId = setInterval(checkImageStatus, 30000);
 
       return () => {
+        clearTimeout(timeoutId);
         clearInterval(intervalId);
       };
     }
@@ -451,8 +450,8 @@ export const ImageDisplay = ({
                   onError={handleImageError}
                   loading="lazy"
                 />
-                {/* Debug overlay for segmentation - bright red to make it visible */}
-                {currentStatus === SEGMENTATION_STATUS.COMPLETED && (
+                {/* Debug overlay for segmentation - disabled to prevent excessive API calls */}
+                {/* currentStatus === SEGMENTATION_STATUS.COMPLETED && (
                   <div className="absolute inset-0">
                     <DebugSegmentationThumbnail
                       imageId={image.id}
@@ -461,7 +460,7 @@ export const ImageDisplay = ({
                       height={300}
                     />
                   </div>
-                )}
+                ) */}
               </>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">

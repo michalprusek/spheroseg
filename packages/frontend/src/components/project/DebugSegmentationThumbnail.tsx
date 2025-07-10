@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import apiClient from '@/lib/apiClient';
 import { scalePolygons, createSvgPath } from '@/lib/svgUtils';
-import { createNamespacedLogger } from '@/utils/logger';
 
-const CLogger = createNamespacedLogger('DebugSegmentationThumbnail');
+// Simple in-memory cache for segmentation data
+const segmentationCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 interface Point {
   x: number;
@@ -39,12 +40,22 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
 }) => {
   const [segmentationData, setSegmentationData] = useState<SegmentationData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchSegmentation = async () => {
+      // Check cache first
+      const cacheKey = `${projectId}-${imageId}`;
+      const cached = segmentationCache.get(cacheKey);
+      
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        setSegmentationData(cached.data);
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        console.log(`[DEBUG] Fetching segmentation for image ${imageId} in project ${projectId}`);
 
         // First, try to get the original image dimensions from the image API
         let originalWidth = 0;
@@ -55,27 +66,17 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
           if (imageResponse.data && imageResponse.data.width && imageResponse.data.height) {
             originalWidth = imageResponse.data.width;
             originalHeight = imageResponse.data.height;
-            console.log('[DEBUG] Got original image dimensions from image API:', {
-              width: originalWidth,
-              height: originalHeight,
-            });
           }
         } catch (imageErr) {
-          console.warn('[DEBUG] Could not get image dimensions from image API:', imageErr);
+          // Silently ignore - will try to get dimensions from segmentation data
         }
 
         // Then get the segmentation data
         const response = await apiClient.get(`/api/images/${imageId}/segmentation`);
-        console.log('[DEBUG] Segmentation API response:', response.data);
 
         // Check if segmentation data includes dimensions
         if (response.data && response.data.result_data) {
           if (response.data.result_data.imageWidth && response.data.result_data.imageHeight) {
-            console.log('[DEBUG] API provided image dimensions in result_data:', {
-              width: response.data.result_data.imageWidth,
-              height: response.data.result_data.imageHeight,
-            });
-
             // Use these dimensions if we didn't get them from the image API
             if (originalWidth === 0 || originalHeight === 0) {
               originalWidth = response.data.result_data.imageWidth;
@@ -92,30 +93,34 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
           polygons: response.data.polygons || (response.data.result_data ? response.data.result_data.polygons : []),
         };
 
-        // console.log('[DEBUG] Final segmentation data with dimensions:', {
-        //   imageWidth: segData.imageWidth,
-        //   imageHeight: segData.imageHeight,
-        //   polygonsCount: segData.polygons ? segData.polygons.length : 0,
-        // });
-
+        // Cache the result
+        segmentationCache.set(cacheKey, { data: segData, timestamp: Date.now() });
+        
         setSegmentationData(segData);
-      } catch (err) {
-        console.error('[DEBUG] Error fetching segmentation:', err);
-        setError('Failed to load segmentation data');
+        setIsLoading(false);
+      } catch (err: any) {
+        // Only set error for non-429 errors or show nothing for rate limits
+        if (err?.response?.status === 429) {
+          // Don't show error for rate limiting, just hide the component
+          setError(null);
+        } else {
+          setError('Failed to load segmentation');
+        }
+        setIsLoading(false);
       }
     };
 
     fetchSegmentation();
   }, [imageId, projectId]);
 
-  if (error) {
-    console.log('[DEBUG] Rendering error state');
-    return <div style={{ color: 'red' }}>{error}</div>;
+  // Don't render anything if rate limited or error
+  if (error || (!segmentationData && !isLoading)) {
+    return null;
   }
 
+  // Don't render loading state - just return null
   if (!segmentationData) {
-    console.log('[DEBUG] Rendering loading state');
-    return <div>Loading segmentation data...</div>;
+    return null;
   }
 
   // Use available dimensions from the API or fallback to defaults
@@ -135,28 +140,6 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
     containerWidth,
     containerHeight,
   );
-
-  CLogger.debug('Rendering polygons with dimensions:', {
-    originalWidth,
-    originalHeight,
-    containerWidth,
-    containerHeight,
-    polygonsCount: segmentationData.polygons.length,
-    scaledPolygonsCount: scaledPolygons.length,
-  });
-
-  // Log first polygon for debugging
-  if (segmentationData.polygons.length > 0) {
-    const firstPoly = segmentationData.polygons[0];
-    CLogger.debug('First polygon sample:', {
-      id: firstPoly.id,
-      type: firstPoly.type,
-      class: firstPoly.class,
-      pointCount: firstPoly.points.length,
-      firstPoint: firstPoly.points[0],
-      hasHoles: firstPoly.holes && firstPoly.holes.length > 0,
-    });
-  }
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
@@ -184,13 +167,6 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
               ? createSvgPath(polygon.points, polygon.holes)
               : createSvgPath(polygon.points);
 
-          CLogger.debug(`Polygon ${index}:`, {
-            id: polygon.id,
-            type: polygon.type || 'external',
-            class: polygon.class,
-            pointCount: polygon.points.length,
-            hasHoles: polygon.holes && polygon.holes.length > 0,
-          });
 
           // Always use path for consistency
           return (
