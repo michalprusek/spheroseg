@@ -521,7 +521,8 @@ export const useSegmentationV2 = (
             break;
           case 's':
             e.preventDefault();
-            handleSave();
+            // Trigger save via custom event to avoid dependency issues
+            window.dispatchEvent(new Event('segmentation-save'));
             break;
           case '+':
           case '=':
@@ -617,7 +618,6 @@ export const useSegmentationV2 = (
     setSegmentationDataWithHistory,
     redo,
     undo,
-    handleSave,
     setIsShiftPressed,
     setLastAutoAddedPoint,
     setTransform,
@@ -1015,6 +1015,19 @@ export const useSegmentationV2 = (
       isSavingRef.current = false;
     }
   }, [segmentationData, imageData, projectId, t, setSegmentationDataWithHistory]);
+
+  // Listen for save events triggered by keyboard shortcuts
+  useEffect(() => {
+    const handleSaveEvent = () => {
+      handleSave();
+    };
+
+    window.addEventListener('segmentation-save', handleSaveEvent);
+    
+    return () => {
+      window.removeEventListener('segmentation-save', handleSaveEvent);
+    };
+  }, [handleSave]);
 
   // Return all the necessary state and functions
   return {
