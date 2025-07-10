@@ -1,6 +1,6 @@
 /**
  * Performance Monitoring Service
- * 
+ *
  * Provides comprehensive performance monitoring and metrics collection
  * for the SpherosegV4 application.
  */
@@ -82,7 +82,7 @@ class PerformanceMonitor extends EventEmitter {
    */
   private startEventLoopMonitoring(): void {
     let lastCheck = performance.now();
-    
+
     setInterval(() => {
       const now = performance.now();
       const expectedDelay = 100; // We expect this to run every 100ms
@@ -99,11 +99,12 @@ class PerformanceMonitor extends EventEmitter {
     try {
       // CPU usage
       const cpus = os.cpus();
-      const cpuUsage = cpus.reduce((acc, cpu) => {
-        const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
-        const idle = cpu.times.idle;
-        return acc + ((total - idle) / total) * 100;
-      }, 0) / cpus.length;
+      const cpuUsage =
+        cpus.reduce((acc, cpu) => {
+          const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
+          const idle = cpu.times.idle;
+          return acc + ((total - idle) / total) * 100;
+        }, 0) / cpus.length;
 
       // Memory usage
       const containerInfo = await getContainerInfo();
@@ -153,7 +154,6 @@ class PerformanceMonitor extends EventEmitter {
         this.emit('high-event-loop-lag', { lag: this.eventLoopLag });
         logger.warn('High event loop lag detected', { lag: this.eventLoopLag });
       }
-
     } catch (error) {
       logger.error('Error collecting system metrics', { error });
     }
@@ -231,15 +231,15 @@ class PerformanceMonitor extends EventEmitter {
     const recentWindow = 300000; // Last 5 minutes
 
     // API metrics summary
-    const recentApiMetrics = this.apiMetrics.filter(m => now - m.timestamp < recentWindow);
+    const recentApiMetrics = this.apiMetrics.filter((m) => now - m.timestamp < recentWindow);
     const apiSummary = this.calculateApiSummary(recentApiMetrics);
 
     // Database metrics summary
-    const recentDbMetrics = this.dbMetrics.filter(m => now - m.timestamp < recentWindow);
+    const recentDbMetrics = this.dbMetrics.filter((m) => now - m.timestamp < recentWindow);
     const dbSummary = this.calculateDbSummary(recentDbMetrics);
 
     // System metrics summary
-    const recentSystemMetrics = this.systemMetrics.filter(m => now - m.timestamp < recentWindow);
+    const recentSystemMetrics = this.systemMetrics.filter((m) => now - m.timestamp < recentWindow);
     const systemSummary = this.calculateSystemSummary(recentSystemMetrics);
 
     // Cache statistics
@@ -267,21 +267,24 @@ class PerformanceMonitor extends EventEmitter {
       return { totalRequests: 0 };
     }
 
-    const responseTimes = metrics.map(m => m.responseTime);
-    const successfulRequests = metrics.filter(m => m.statusCode < 400).length;
-    const errorRequests = metrics.filter(m => m.statusCode >= 400).length;
+    const responseTimes = metrics.map((m) => m.responseTime);
+    const successfulRequests = metrics.filter((m) => m.statusCode < 400).length;
+    const errorRequests = metrics.filter((m) => m.statusCode >= 400).length;
 
     // Group by endpoint
-    const byEndpoint = metrics.reduce((acc, m) => {
-      const key = `${m.method} ${m.endpoint}`;
-      if (!acc[key]) {
-        acc[key] = { count: 0, totalTime: 0, errors: 0 };
-      }
-      acc[key].count++;
-      acc[key].totalTime += m.responseTime;
-      if (m.statusCode >= 400) acc[key].errors++;
-      return acc;
-    }, {} as Record<string, any>);
+    const byEndpoint = metrics.reduce(
+      (acc, m) => {
+        const key = `${m.method} ${m.endpoint}`;
+        if (!acc[key]) {
+          acc[key] = { count: 0, totalTime: 0, errors: 0 };
+        }
+        acc[key].count++;
+        acc[key].totalTime += m.responseTime;
+        if (m.statusCode >= 400) acc[key].errors++;
+        return acc;
+      },
+      {} as Record<string, any>
+    );
 
     // Calculate top slow endpoints
     const slowEndpoints = Object.entries(byEndpoint)
@@ -315,7 +318,7 @@ class PerformanceMonitor extends EventEmitter {
       return { totalQueries: 0 };
     }
 
-    const durations = metrics.map(m => m.duration);
+    const durations = metrics.map((m) => m.duration);
 
     return {
       totalQueries: metrics.length,
@@ -324,10 +327,10 @@ class PerformanceMonitor extends EventEmitter {
       p95Duration: this.percentile(durations, 95),
       p99Duration: this.percentile(durations, 99),
       slowQueries: metrics
-        .filter(m => m.duration > 100)
+        .filter((m) => m.duration > 100)
         .sort((a, b) => b.duration - a.duration)
         .slice(0, 5)
-        .map(m => ({
+        .map((m) => ({
           query: m.query,
           duration: m.duration,
           rowCount: m.rowCount,
@@ -344,10 +347,10 @@ class PerformanceMonitor extends EventEmitter {
     }
 
     const latest = metrics[metrics.length - 1];
-    const cpuValues = metrics.map(m => m.cpuUsage);
-    const memoryValues = metrics.map(m => m.memoryUsage.percentage);
-    const heapValues = metrics.map(m => m.heapUsage.percentage);
-    const eventLoopLags = metrics.map(m => m.eventLoopLag);
+    const cpuValues = metrics.map((m) => m.cpuUsage);
+    const memoryValues = metrics.map((m) => m.memoryUsage.percentage);
+    const heapValues = metrics.map((m) => m.heapUsage.percentage);
+    const eventLoopLags = metrics.map((m) => m.eventLoopLag);
 
     return {
       current: {
@@ -395,7 +398,7 @@ class PerformanceMonitor extends EventEmitter {
    */
   private percentile(values: number[], percentile: number): number {
     if (values.length === 0) return 0;
-    
+
     const sorted = values.slice().sort((a, b) => a - b);
     const index = Math.ceil((percentile / 100) * sorted.length) - 1;
     return sorted[index];
@@ -407,10 +410,10 @@ class PerformanceMonitor extends EventEmitter {
   private cleanupOldMetrics(): void {
     const cutoffTime = Date.now() - this.metricsRetentionMs;
 
-    this.metrics = this.metrics.filter(m => m.timestamp > cutoffTime);
-    this.apiMetrics = this.apiMetrics.filter(m => m.timestamp > cutoffTime);
-    this.dbMetrics = this.dbMetrics.filter(m => m.timestamp > cutoffTime);
-    this.systemMetrics = this.systemMetrics.filter(m => m.timestamp > cutoffTime);
+    this.metrics = this.metrics.filter((m) => m.timestamp > cutoffTime);
+    this.apiMetrics = this.apiMetrics.filter((m) => m.timestamp > cutoffTime);
+    this.dbMetrics = this.dbMetrics.filter((m) => m.timestamp > cutoffTime);
+    this.systemMetrics = this.systemMetrics.filter((m) => m.timestamp > cutoffTime);
   }
 
   /**

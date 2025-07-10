@@ -52,54 +52,45 @@ const TIME_RANGES = {
   '7d': { label: 'Last 7 days', days: 7 },
   '30d': { label: 'Last 30 days', days: 30 },
   '90d': { label: 'Last 90 days', days: 90 },
-  'custom': { label: 'Custom range', days: 0 },
+  custom: { label: 'Custom range', days: 0 },
 } as const;
 
 // Memoized sub-components
-const StatCard = memo(({ 
-  title, 
-  value, 
-  description, 
-  icon: Icon, 
-  trend 
-}: {
-  title: string;
-  value: string | number;
-  description?: string;
-  icon: React.ElementType;
-  trend?: { value: number; isPositive: boolean };
-}) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <Icon className="h-4 w-4 text-muted-foreground" />
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-      {description && (
-        <p className="text-xs text-muted-foreground">{description}</p>
-      )}
-      {trend && (
-        <div className={cn(
-          "flex items-center text-xs mt-1",
-          trend.isPositive ? "text-green-600" : "text-red-600"
-        )}>
-          <TrendingUp className="h-3 w-3 mr-1" />
-          {trend.value}%
-        </div>
-      )}
-    </CardContent>
-  </Card>
-));
+const StatCard = memo(
+  ({
+    title,
+    value,
+    description,
+    icon: Icon,
+    trend,
+  }: {
+    title: string;
+    value: string | number;
+    description?: string;
+    icon: React.ElementType;
+    trend?: { value: number; isPositive: boolean };
+  }) => (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        {trend && (
+          <div className={cn('flex items-center text-xs mt-1', trend.isPositive ? 'text-green-600' : 'text-red-600')}>
+            <TrendingUp className="h-3 w-3 mr-1" />
+            {trend.value}%
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  ),
+);
 StatCard.displayName = 'StatCard';
 
-const ChartContainer = memo(({ 
-  title, 
-  children 
-}: { 
-  title: string; 
-  children: React.ReactNode;
-}) => (
+const ChartContainer = memo(({ title, children }: { title: string; children: React.ReactNode }) => (
   <Card>
     <CardHeader>
       <CardTitle>{title}</CardTitle>
@@ -140,15 +131,21 @@ export const AnalyticsDashboard = memo(() => {
       setDateRange(newRange);
       setTimeRange('custom');
     }, 500),
-    []
+    [],
   );
 
   // Optimized data fetching with React Query
-  const { data: analyticsData, isLoading, error } = useQuery({
+  const {
+    data: analyticsData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['analytics', effectiveDateRange, refreshKey],
     queryFn: async () => {
       // Simulated API call - replace with actual analytics endpoint
-      const response = await fetch(`/api/analytics?from=${effectiveDateRange.from.toISOString()}&to=${effectiveDateRange.to.toISOString()}`);
+      const response = await fetch(
+        `/api/analytics?from=${effectiveDateRange.from.toISOString()}&to=${effectiveDateRange.to.toISOString()}`,
+      );
       if (!response.ok) throw new Error('Failed to fetch analytics');
       return response.json();
     },
@@ -185,7 +182,7 @@ export const AnalyticsDashboard = memo(() => {
 
   // Memoized handlers
   const handleRefresh = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   }, []);
 
   const handleExport = useCallback(() => {
@@ -231,7 +228,7 @@ export const AnalyticsDashboard = memo(() => {
       {/* Header Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
-        
+
         <div className="flex items-center gap-2">
           <Select value={timeRange} onValueChange={(value) => setTimeRange(value as keyof typeof TIME_RANGES)}>
             <SelectTrigger className="w-[180px]">
@@ -245,18 +242,13 @@ export const AnalyticsDashboard = memo(() => {
               ))}
             </SelectContent>
           </Select>
-          
-          {timeRange === 'custom' && (
-            <DatePickerWithRange
-              date={dateRange}
-              onDateChange={handleDateRangeChange}
-            />
-          )}
-          
+
+          {timeRange === 'custom' && <DatePickerWithRange date={dateRange} onDateChange={handleDateRangeChange} />}
+
           <Button variant="outline" size="icon" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-          
+
           <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -310,14 +302,7 @@ export const AnalyticsDashboard = memo(() => {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Area
-                type="monotone"
-                dataKey="images"
-                stackId="1"
-                stroke="#8b5cf6"
-                fill="#8b5cf6"
-                fillOpacity={0.6}
-              />
+              <Area type="monotone" dataKey="images" stackId="1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.6} />
               <Area
                 type="monotone"
                 dataKey="segmentations"
@@ -372,27 +357,9 @@ export const AnalyticsDashboard = memo(() => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="cpu"
-                stroke="#8b5cf6"
-                name="CPU %"
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="memory"
-                stroke="#3b82f6"
-                name="Memory %"
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="responseTime"
-                stroke="#10b981"
-                name="Response Time (ms)"
-                strokeWidth={2}
-              />
+              <Line type="monotone" dataKey="cpu" stroke="#8b5cf6" name="CPU %" strokeWidth={2} />
+              <Line type="monotone" dataKey="memory" stroke="#3b82f6" name="Memory %" strokeWidth={2} />
+              <Line type="monotone" dataKey="responseTime" stroke="#10b981" name="Response Time (ms)" strokeWidth={2} />
             </LineChart>
           </ChartContainer>
         </TabsContent>
@@ -426,14 +393,9 @@ export const AnalyticsDashboard = memo(() => {
                     <span>7.2 GB / 10 GB</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full"
-                      style={{ width: '72%' }}
-                    />
+                    <div className="bg-primary h-2 rounded-full" style={{ width: '72%' }} />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    28% storage remaining
-                  </p>
+                  <p className="text-xs text-muted-foreground">28% storage remaining</p>
                 </div>
               </CardContent>
             </Card>

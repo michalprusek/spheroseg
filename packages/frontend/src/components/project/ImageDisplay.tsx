@@ -188,7 +188,7 @@ export const ImageDisplay = ({
     if (currentStatus === SEGMENTATION_STATUS.PROCESSING || currentStatus === SEGMENTATION_STATUS.QUEUED) {
       const pollId = `image-status-${image.id}`;
       const endpoint = `/api/images/${image.id}/segmentation`;
-      
+
       // Callback when poll receives data
       const handlePollData = (data: any) => {
         if (data && data.status) {
@@ -204,7 +204,7 @@ export const ImageDisplay = ({
             // If status changed to completed or failed, unregister polling
             if (apiStatus === SEGMENTATION_STATUS.COMPLETED || apiStatus === SEGMENTATION_STATUS.FAILED) {
               pollingManager.unregister(pollId);
-              
+
               const imageUpdateEvent = new CustomEvent('image-status-update', {
                 detail: {
                   imageId: image.id,
@@ -218,14 +218,14 @@ export const ImageDisplay = ({
           }
         }
       };
-      
+
       // Register with polling manager - it will handle rate limiting and backoff
       pollingManager.register(
         pollId,
         endpoint,
         handlePollData,
         15000, // Poll every 15 seconds (will be enforced to minimum by manager)
-        30 // Max 30 attempts
+        30, // Max 30 attempts
       );
 
       return () => {

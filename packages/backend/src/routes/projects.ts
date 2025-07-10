@@ -66,8 +66,8 @@ router.get(
 
       // Try to get from cache first
       const cacheKey = `project_list:${userId}:${limit}:${offset}:${includeShared}`;
-      const cached = await cacheService.get<{ projects: any[], total: number }>(cacheKey);
-      
+      const cached = await cacheService.get<{ projects: any[]; total: number }>(cacheKey);
+
       if (cached) {
         logger.debug('Returning cached project list', { userId, limit, offset });
         return res.status(200).json(cached);
@@ -274,7 +274,7 @@ router.get(
 
       // Try to get from cache first
       const cachedProject = await cacheService.getCachedProject(projectId);
-      
+
       if (cachedProject) {
         // Verify user has access even for cached project
         if (cachedProject.user_id !== userId && !cachedProject.is_shared) {

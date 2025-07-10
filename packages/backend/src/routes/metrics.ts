@@ -1,6 +1,6 @@
 /**
  * Performance Metrics API
- * 
+ *
  * Provides endpoints for accessing performance metrics and system health information.
  */
 
@@ -16,7 +16,7 @@ const router: Router = express.Router();
 
 /**
  * GET /api/metrics/performance
- * 
+ *
  * Returns comprehensive performance metrics including:
  * - API endpoint performance statistics
  * - Database query performance
@@ -27,7 +27,7 @@ const router: Router = express.Router();
 router.get('/performance', async (req: Request, res: Response) => {
   try {
     const summary = await performanceMonitor.getPerformanceSummary();
-    
+
     res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -44,7 +44,7 @@ router.get('/performance', async (req: Request, res: Response) => {
 
 /**
  * GET /api/metrics/health
- * 
+ *
  * Health check endpoint that returns system status
  */
 router.get('/health', async (req: Request, res: Response) => {
@@ -52,7 +52,7 @@ router.get('/health', async (req: Request, res: Response) => {
     // Check database connection
     let dbStatus = 'unknown';
     let dbLatency = 0;
-    
+
     try {
       const startTime = Date.now();
       await getPool().query('SELECT 1');
@@ -66,7 +66,7 @@ router.get('/health', async (req: Request, res: Response) => {
     // Check Redis connection
     let redisStatus = 'unknown';
     let redisLatency = 0;
-    
+
     try {
       const startTime = Date.now();
       await cacheService.ping();
@@ -85,15 +85,14 @@ router.get('/health', async (req: Request, res: Response) => {
       platform: process.platform,
       cpuCount: os.cpus().length,
       totalMemory: containerInfo.isContainer ? containerInfo.memoryLimit : os.totalmem(),
-      freeMemory: containerInfo.isContainer 
-        ? containerInfo.memoryLimit - containerInfo.memoryUsage 
+      freeMemory: containerInfo.isContainer
+        ? containerInfo.memoryLimit - containerInfo.memoryUsage
         : os.freemem(),
       loadAverage: os.loadavg(),
     };
 
-    const overallStatus = dbStatus === 'healthy' && redisStatus === 'healthy' 
-      ? 'healthy' 
-      : 'degraded';
+    const overallStatus =
+      dbStatus === 'healthy' && redisStatus === 'healthy' ? 'healthy' : 'degraded';
 
     res.json({
       status: overallStatus,
@@ -121,13 +120,13 @@ router.get('/health', async (req: Request, res: Response) => {
 
 /**
  * GET /api/metrics/summary
- * 
+ *
  * Returns a simplified performance summary suitable for dashboards
  */
 router.get('/summary', async (req: Request, res: Response) => {
   try {
     const summary = await performanceMonitor.getPerformanceSummary();
-    
+
     // Extract key metrics for dashboard
     const dashboardMetrics = {
       timestamp: summary.timestamp,
@@ -166,14 +165,14 @@ router.get('/summary', async (req: Request, res: Response) => {
 
 /**
  * GET /api/metrics/slow-queries
- * 
+ *
  * Returns list of slow database queries for optimization
  */
 router.get('/slow-queries', async (req: Request, res: Response) => {
   try {
     const summary = await performanceMonitor.getPerformanceSummary();
     const slowQueries = summary.database?.slowQueries || [];
-    
+
     res.json({
       timestamp: new Date().toISOString(),
       slowQueries,
@@ -195,14 +194,14 @@ router.get('/slow-queries', async (req: Request, res: Response) => {
 
 /**
  * GET /api/metrics/endpoints
- * 
+ *
  * Returns performance statistics for all API endpoints
  */
 router.get('/endpoints', async (req: Request, res: Response) => {
   try {
     const summary = await performanceMonitor.getPerformanceSummary();
     const slowEndpoints = summary.api?.slowEndpoints || [];
-    
+
     res.json({
       timestamp: new Date().toISOString(),
       totalRequests: summary.api?.totalRequests || 0,

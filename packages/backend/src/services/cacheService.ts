@@ -1,6 +1,6 @@
 /**
  * Redis Cache Service
- * 
+ *
  * Provides a centralized caching layer for frequently accessed data
  * to improve performance and reduce database load.
  */
@@ -47,7 +47,7 @@ class CacheService {
   private connect(): void {
     try {
       const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-      
+
       this.redis = new Redis(redisUrl, {
         maxRetriesPerRequest: 3,
         enableReadyCheck: true,
@@ -76,7 +76,6 @@ class CacheService {
         logger.warn('Redis cache connection closed');
         this.isConnected = false;
       });
-
     } catch (error) {
       logger.error('Failed to connect to Redis cache', { error });
       this.redis = null;
@@ -213,7 +212,12 @@ class CacheService {
   /**
    * Cache image list
    */
-  async cacheImageList(projectId: string, page: number, limit: number, images: any[]): Promise<void> {
+  async cacheImageList(
+    projectId: string,
+    page: number,
+    limit: number,
+    images: any[]
+  ): Promise<void> {
     const key = `${CACHE_PREFIXES.IMAGE_LIST}${projectId}:${page}:${limit}`;
     await this.set(key, images, CACHE_TTL.IMAGE_LIST);
   }
@@ -315,19 +319,20 @@ class CacheService {
     try {
       const info = await this.redis.info('stats');
       const dbSize = await this.redis.dbsize();
-      
+
       // Parse cache hit/miss statistics from Redis info
       const stats = this.parseRedisStats(info);
-      
+
       return {
         available: true,
         connected: this.isConnected,
         dbSize,
         hits: stats.keyspace_hits || 0,
         misses: stats.keyspace_misses || 0,
-        hitRate: stats.keyspace_hits && stats.keyspace_misses 
-          ? (stats.keyspace_hits / (stats.keyspace_hits + stats.keyspace_misses)) * 100
-          : 0,
+        hitRate:
+          stats.keyspace_hits && stats.keyspace_misses
+            ? (stats.keyspace_hits / (stats.keyspace_hits + stats.keyspace_misses)) * 100
+            : 0,
         info,
       };
     } catch (error) {
@@ -342,8 +347,8 @@ class CacheService {
   private parseRedisStats(info: string): Record<string, number> {
     const stats: Record<string, number> = {};
     const lines = info.split('\r\n');
-    
-    lines.forEach(line => {
+
+    lines.forEach((line) => {
       if (line.includes(':')) {
         const [key, value] = line.split(':');
         const numValue = parseInt(value, 10);
@@ -352,7 +357,7 @@ class CacheService {
         }
       }
     });
-    
+
     return stats;
   }
 
@@ -363,7 +368,7 @@ class CacheService {
     if (!this.redis) {
       throw new Error('Redis not connected');
     }
-    
+
     await this.redis.ping();
   }
 }

@@ -13,7 +13,7 @@ const pipelineAsync = promisify(pipeline);
 
 /**
  * GET /api/download/image/:imageId - Stream download of image file
- * 
+ *
  * This endpoint provides streaming download for large image files,
  * reducing memory usage compared to loading entire file into memory.
  */
@@ -59,7 +59,7 @@ router.get(
       res.setHeader('Content-Type', image.mime_type || 'application/octet-stream');
       res.setHeader('Content-Length', fileSize.toString());
       res.setHeader('Content-Disposition', `attachment; filename="${image.filename}"`);
-      
+
       // Enable partial content support for large files
       res.setHeader('Accept-Ranges', 'bytes');
 
@@ -69,7 +69,7 @@ router.get(
         const parts = range.replace(/bytes=/, '').split('-');
         const start = parseInt(parts[0], 10);
         const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const chunksize = (end - start) + 1;
+        const chunksize = end - start + 1;
 
         res.status(206); // Partial Content
         res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
@@ -77,7 +77,7 @@ router.get(
 
         // Create read stream with range
         const stream = fs.createReadStream(filePath, { start, end });
-        
+
         // Stream the file
         stream.on('error', (error) => {
           logger.error('Error streaming file', { imageId, error });
@@ -90,7 +90,7 @@ router.get(
       } else {
         // Stream entire file
         const stream = fs.createReadStream(filePath, {
-          highWaterMark: 64 * 1024 // 64KB chunks
+          highWaterMark: 64 * 1024, // 64KB chunks
         });
 
         // Handle stream errors
@@ -107,13 +107,12 @@ router.get(
 
       // Log successful download
       stream.on('end', () => {
-        logger.info('Image streamed successfully', { 
-          imageId, 
+        logger.info('Image streamed successfully', {
+          imageId,
           fileSize,
-          userId 
+          userId,
         });
       });
-
     } catch (error) {
       logger.error('Error in download endpoint', { imageId, error });
       next(error);
@@ -123,7 +122,7 @@ router.get(
 
 /**
  * GET /api/download/project/:projectId/export - Stream download of project export
- * 
+ *
  * This endpoint streams a ZIP file containing all project data
  */
 router.get(
@@ -152,14 +151,14 @@ router.get(
 
       // Import archiver dynamically
       const archiver = require('archiver');
-      
+
       // Set headers for ZIP download
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader('Content-Disposition', `attachment; filename="${project.title}-export.zip"`);
 
       // Create archive
       const archive = archiver('zip', {
-        zlib: { level: 6 } // Compression level (0-9)
+        zlib: { level: 6 }, // Compression level (0-9)
       });
 
       // Handle archive errors
@@ -183,7 +182,7 @@ router.get(
       const metadata = {
         project: project,
         exportDate: new Date().toISOString(),
-        imageCount: imagesResult.rows.length
+        imageCount: imagesResult.rows.length,
       };
 
       archive.append(JSON.stringify(metadata, null, 2), { name: 'project-metadata.json' });
@@ -192,15 +191,15 @@ router.get(
       for (const image of imagesResult.rows) {
         if (fs.existsSync(image.storage_path)) {
           const stream = fs.createReadStream(image.storage_path);
-          archive.append(stream, { 
+          archive.append(stream, {
             name: `images/${image.filename}`,
-            date: new Date(image.created_at)
+            date: new Date(image.created_at),
           });
         }
 
         // Add image metadata
-        archive.append(JSON.stringify(image, null, 2), { 
-          name: `metadata/${image.id}.json` 
+        archive.append(JSON.stringify(image, null, 2), {
+          name: `metadata/${image.id}.json`,
         });
       }
 
@@ -215,21 +214,19 @@ router.get(
 
       // Add segmentation results
       if (segmentationResult.rows.length > 0) {
-        archive.append(
-          JSON.stringify(segmentationResult.rows, null, 2), 
-          { name: 'segmentation-results.json' }
-        );
+        archive.append(JSON.stringify(segmentationResult.rows, null, 2), {
+          name: 'segmentation-results.json',
+        });
       }
 
       // Finalize the archive
       await archive.finalize();
 
-      logger.info('Project export streamed successfully', { 
+      logger.info('Project export streamed successfully', {
         projectId,
         imageCount: imagesResult.rows.length,
-        userId 
+        userId,
       });
-
     } catch (error) {
       logger.error('Error in project export', { projectId, error });
       next(error);

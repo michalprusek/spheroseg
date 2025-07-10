@@ -18,7 +18,7 @@ import socketService from './services/socketService';
 import scheduledTaskService from './services/scheduledTaskService';
 import segmentationQueueService from './services/segmentationQueueService';
 import stuckImageCleanupService from './services/stuckImageCleanup';
-import dbPool from './db';
+import db, { getPool } from './db';
 import { startPerformanceMonitoring, stopPerformanceMonitoring } from './utils/performance';
 import { monitorQuery } from './monitoring/unified';
 import performanceConfig from './config/performance';
@@ -108,16 +108,21 @@ const initializeServices = async (): Promise<void> => {
     logger.info('Segmentation queue service initialized');
 
     // Initialize scheduled tasks
-    scheduledTaskService.initialize(dbPool);
+    scheduledTaskService.initialize(getPool());
     logger.info('Scheduled task service initialized');
-    
+
     // Start stuck image cleanup service
     stuckImageCleanupService.start();
     logger.info('Stuck image cleanup service started');
 
     // Test database connection
-    await monitorQuery('SELECT NOW()', [], () => dbPool.query('SELECT NOW()'));
-    logger.info('Database connection verified');
+    try {
+      const result = await db.query('SELECT NOW()');
+      logger.info('Database connection verified', { time: result.rows[0].now });
+    } catch (dbError) {
+      logger.error('Database connection test failed', { error: dbError });
+      throw dbError;
+    }
 
     // Start performance monitoring
     if (config.monitoring?.metricsEnabled) {
@@ -187,10 +192,10 @@ const shutdown = async (signal: string): Promise<void> => {
         // Shutdown services in reverse order
         performanceMonitor.stop();
         logger.info('Performance monitoring stopped');
-        
+
         stuckImageCleanupService.stop();
         logger.info('Stuck image cleanup service stopped');
-        
+
         if (scheduledTaskService && typeof scheduledTaskService.shutdown === 'function') {
           await scheduledTaskService.shutdown();
           logger.info('Scheduled tasks stopped');
@@ -199,10 +204,8 @@ const shutdown = async (signal: string): Promise<void> => {
         // Socket.IO will be closed when HTTP server closes
         logger.info('Socket.IO server will close with HTTP server');
 
-        if (dbPool && typeof dbPool.end === 'function') {
-          await dbPool.end();
-          logger.info('Database connections closed');
-        }
+        await db.closePool();
+        logger.info('Database connections closed');
 
         clearTimeout(shutdownTimeout);
         logger.info('Graceful shutdown completed');

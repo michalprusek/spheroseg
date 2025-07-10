@@ -172,10 +172,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      rabbitmq:
-        condition: service_started
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
     ports:
       - "5001:5001"
     deploy:

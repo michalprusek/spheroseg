@@ -40,7 +40,7 @@ describe('imageUtils', () => {
       extract: jest.fn().mockReturnThis(),
       trim: jest.fn().mockReturnThis(),
     };
-    
+
     (sharp as unknown as jest.Mock).mockImplementation(() => mockSharpInstance);
   });
 

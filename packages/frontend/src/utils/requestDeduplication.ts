@@ -25,8 +25,15 @@ interface CachedResponse {
 class RequestDeduplicator {
   private pendingRequests: Map<string, PendingRequest> = new Map();
   private responseCache: Map<string, CachedResponse> = new Map();
-  private cacheTimeout: number = 5 * 60 * 1000; // 5 minutes default
-  private deduplicationTimeout: number = 30 * 1000; // 30 seconds
+  
+  // Constants
+  private static readonly DEFAULT_CACHE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+  private static readonly DEFAULT_DEDUP_TIMEOUT_MS = 30 * 1000; // 30 seconds
+  private static readonly CLEANUP_PROBABILITY = 0.1; // 10% chance
+  private static readonly ONE_HOUR_MS = 60 * 60 * 1000;
+  
+  private cacheTimeout: number = RequestDeduplicator.DEFAULT_CACHE_TIMEOUT_MS;
+  private deduplicationTimeout: number = RequestDeduplicator.DEFAULT_DEDUP_TIMEOUT_MS;
 
   /**
    * Generate a unique key for the request
@@ -104,82 +111,107 @@ class RequestDeduplicator {
     config: AxiosRequestConfig,
     requestFn: (config: AxiosRequestConfig) => Promise<AxiosResponse>
   ): Promise<AxiosResponse> {
-    const key = this.generateRequestKey(config);
-    
-    // Check cache first for GET requests
-    if (config.method?.toLowerCase() === 'get') {
-      const cached = this.responseCache.get(key);
-      if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
-        logger.debug('Returning cached response', { url: config.url });
-        return {
-          data: cached.data,
-          headers: cached.headers,
-          status: cached.status,
-          statusText: cached.statusText,
-          config,
-        } as AxiosResponse;
-      }
-    }
-    
-    // Check if request is already pending
-    const pending = this.pendingRequests.get(key);
-    if (pending && Date.now() - pending.timestamp < this.deduplicationTimeout) {
-      logger.debug('Deduplicating request', { url: config.url });
-      return pending.promise;
-    }
-    
-    // Create abort controller
-    const abortController = new AbortController();
-    if (config.signal) {
-      // Link existing signal to our controller
-      config.signal.addEventListener('abort', () => abortController.abort());
-    }
-    config.signal = abortController.signal;
-    
-    // Execute new request
-    const promise = requestFn(config)
-      .then(response => {
-        // Remove from pending
-        this.pendingRequests.delete(key);
-        
-        // Cache if appropriate
-        if (this.isCacheable(config, response)) {
-          const cacheDuration = this.getCacheDuration(response);
-          this.responseCache.set(key, {
-            data: response.data,
-            timestamp: Date.now(),
-            headers: response.headers,
-            status: response.status,
-            statusText: response.statusText,
-          });
-          
-          // Schedule cache cleanup
-          setTimeout(() => {
-            this.responseCache.delete(key);
-          }, cacheDuration);
+    try {
+      const key = this.generateRequestKey(config);
+      
+      // Check cache first for GET requests
+      if (config.method?.toLowerCase() === 'get') {
+        const cached = this.responseCache.get(key);
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+          logger.debug('Returning cached response', { url: config.url });
+          return {
+            data: cached.data,
+            headers: cached.headers,
+            status: cached.status,
+            statusText: cached.statusText,
+            config,
+          } as AxiosResponse;
         }
-        
-        return response;
-      })
-      .catch(error => {
-        // Remove from pending on error
-        this.pendingRequests.delete(key);
-        throw error;
+      }
+      
+      // Check if request is already pending
+      const pending = this.pendingRequests.get(key);
+      if (pending && Date.now() - pending.timestamp < this.deduplicationTimeout) {
+        logger.debug('Deduplicating request', { url: config.url });
+        return pending.promise;
+      }
+      
+      // Create abort controller
+      const abortController = new AbortController();
+      if (config.signal) {
+        // Link existing signal to our controller
+        try {
+          config.signal.addEventListener('abort', () => abortController.abort());
+        } catch (error) {
+          logger.warn('Failed to link abort signals', error);
+        }
+      }
+      config.signal = abortController.signal;
+      
+      // Execute new request
+      const promise = requestFn(config)
+        .then(response => {
+          // Remove from pending
+          this.pendingRequests.delete(key);
+          
+          // Cache if appropriate
+          try {
+            if (this.isCacheable(config, response)) {
+              const cacheDuration = this.getCacheDuration(response);
+              this.responseCache.set(key, {
+                data: response.data,
+                timestamp: Date.now(),
+                headers: response.headers,
+                status: response.status,
+                statusText: response.statusText,
+              });
+              
+              // Schedule cache cleanup
+              setTimeout(() => {
+                this.responseCache.delete(key);
+              }, cacheDuration);
+            }
+          } catch (cacheError) {
+            logger.error('Failed to cache response', cacheError);
+            // Continue without caching
+          }
+          
+          return response;
+        })
+        .catch(error => {
+          // Remove from pending on error
+          this.pendingRequests.delete(key);
+          
+          // Clean up abort controller
+          if (pending?.abortController) {
+            try {
+              pending.abortController.abort();
+            } catch (abortError) {
+              logger.warn('Failed to abort pending request', abortError);
+            }
+          }
+          
+          throw error;
+        });
+      
+      // Store pending request
+      this.pendingRequests.set(key, {
+        promise,
+        timestamp: Date.now(),
+        abortController,
       });
-    
-    // Store pending request
-    this.pendingRequests.set(key, {
-      promise,
-      timestamp: Date.now(),
-      abortController,
-    });
-    
-    // Periodic cleanup
-    if (Math.random() < 0.1) {
-      this.cleanup();
+      
+      // Periodic cleanup
+      if (Math.random() < RequestDeduplicator.CLEANUP_PROBABILITY) {
+        this.cleanup();
+      }
+      
+      return promise;
+    } catch (error) {
+      // If deduplication logic fails, fall back to direct request
+      logger.error('Request deduplication failed, falling back to direct request', error);
+      return requestFn(config);
     }
-    
-    return promise;
   }
 
   /**

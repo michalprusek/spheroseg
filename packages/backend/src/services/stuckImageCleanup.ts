@@ -31,10 +31,12 @@ class StuckImageCleanupService {
     }
 
     logger.info('Starting stuck image cleanup service');
-    
-    // Run immediately on start
-    this.checkAndFixStuckImages();
-    
+
+    // Delay first run to allow server to fully start
+    setTimeout(() => {
+      this.checkAndFixStuckImages();
+    }, 10000); // 10 seconds delay
+
     // Then run periodically
     this.cleanupInterval = setInterval(() => {
       this.checkAndFixStuckImages();
@@ -58,7 +60,7 @@ class StuckImageCleanupService {
   private async checkAndFixStuckImages(): Promise<void> {
     const dbPool = pool.getPool();
     const client = await dbPool.connect();
-    
+
     try {
       // Find images that are stuck in 'queued' or 'processing' status
       const stuckImagesQuery = `
@@ -93,7 +95,7 @@ class StuckImageCleanupService {
       `;
 
       const result = await client.query<StuckImage>(stuckImagesQuery);
-      
+
       if (result.rows.length === 0) {
         logger.debug('No stuck images found');
         return;
@@ -104,7 +106,6 @@ class StuckImageCleanupService {
       for (const image of result.rows) {
         await this.fixStuckImage(client, image);
       }
-
     } catch (error) {
       logger.error('Error checking for stuck images:', error);
     } finally {
@@ -171,7 +172,6 @@ class StuckImageCleanupService {
       }
 
       logger.info(`Successfully reset stuck image ${image.id} to 'without_segmentation'`);
-
     } catch (error) {
       await client.query('ROLLBACK');
       logger.error(`Failed to fix stuck image ${image.id}:`, error);
@@ -185,7 +185,7 @@ class StuckImageCleanupService {
     logger.info('Manually triggering stuck image cleanup');
     const dbPool = pool.getPool();
     const client = await dbPool.connect();
-    
+
     try {
       const stuckImagesQuery = `
         SELECT COUNT(*) as count
@@ -208,11 +208,11 @@ class StuckImageCleanupService {
 
       const result = await client.query(stuckImagesQuery);
       const count = parseInt(result.rows[0].count);
-      
+
       if (count > 0) {
         await this.checkAndFixStuckImages();
       }
-      
+
       return count;
     } finally {
       client.release();

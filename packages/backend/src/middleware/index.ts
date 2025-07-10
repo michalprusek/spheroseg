@@ -41,19 +41,19 @@ export const configurePerformanceMiddleware = (app: Application): void => {
         if (req.headers['cache-control'] && req.headers['cache-control'].includes('no-transform')) {
           return false;
         }
-        
+
         // Always compress JSON responses
         const contentType = res.getHeader('Content-Type')?.toString() || '';
         if (contentType.includes('application/json')) {
           return true;
         }
-        
+
         // Use default compression filter for other content types
         return compression.filter(req, res);
       },
     })
   );
-  
+
   logger.info('Compression middleware configured', {
     level: performanceConfig.compression.level,
     threshold: performanceConfig.compression.threshold,

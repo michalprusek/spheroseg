@@ -1,6 +1,6 @@
 /**
  * Async File Operations Utilities
- * 
+ *
  * Provides async/await alternatives to synchronous file operations
  * to prevent blocking the Node.js event loop
  */
@@ -62,7 +62,7 @@ export async function copyFile(src: string, dest: string): Promise<void> {
   // Ensure destination directory exists
   const destDir = path.dirname(dest);
   await ensureDir(destDir);
-  
+
   // Copy the file
   await fs.copyFile(src, dest);
 }
@@ -103,16 +103,16 @@ export async function stat(filePath: string): Promise<fsSync.Stats> {
  * Write file with atomic operation (async)
  */
 export async function writeFileAtomic(
-  filePath: string, 
+  filePath: string,
   data: string | Buffer,
   options?: { encoding?: BufferEncoding }
 ): Promise<void> {
   const tempPath = `${filePath}.tmp.${Date.now()}`;
-  
+
   try {
     // Write to temp file
     await fs.writeFile(tempPath, data, options);
-    
+
     // Atomically rename to target
     await fs.rename(tempPath, filePath);
   } catch (error) {
@@ -130,14 +130,14 @@ export async function writeFileAtomic(
  * Ensure multiple directories exist (async, parallel)
  */
 export async function ensureDirs(dirPaths: string[]): Promise<void> {
-  await Promise.all(dirPaths.map(dirPath => ensureDir(dirPath)));
+  await Promise.all(dirPaths.map((dirPath) => ensureDir(dirPath)));
 }
 
 /**
  * Remove multiple files (async, parallel)
  */
 export async function removeFiles(filePaths: string[]): Promise<void> {
-  await Promise.all(filePaths.map(filePath => remove(filePath)));
+  await Promise.all(filePaths.map((filePath) => remove(filePath)));
 }
 
 /**
@@ -170,39 +170,30 @@ export async function setupUploadDirectories(uploadDir: string): Promise<void> {
   await ensureDir(uploadDir);
 
   // Create subdirectories in parallel
-  const subdirs = [
-    'images',
-    'thumbnails',
-    'temp',
-    'exports',
-    'segmentations'
-  ];
+  const subdirs = ['images', 'thumbnails', 'temp', 'exports', 'segmentations'];
 
-  await ensureDirs(subdirs.map(subdir => path.join(uploadDir, subdir)));
-  
+  await ensureDirs(subdirs.map((subdir) => path.join(uploadDir, subdir)));
+
   logger.info('Upload directories created successfully', { uploadDir });
 }
 
 /**
  * Clean up temporary files older than specified age (async)
  */
-export async function cleanupOldFiles(
-  directory: string,
-  maxAgeMs: number
-): Promise<number> {
+export async function cleanupOldFiles(directory: string, maxAgeMs: number): Promise<number> {
   let deletedCount = 0;
   const now = Date.now();
 
   try {
     const files = await readDir(directory);
-    
+
     await Promise.all(
       files.map(async (file) => {
         const filePath = path.join(directory, file);
         try {
           const stats = await stat(filePath);
           const age = now - stats.mtimeMs;
-          
+
           if (age > maxAgeMs && stats.isFile()) {
             await remove(filePath);
             deletedCount++;
@@ -213,12 +204,12 @@ export async function cleanupOldFiles(
         }
       })
     );
-    
+
     logger.info('Cleanup completed', { directory, deletedCount });
   } catch (error) {
     logger.error('Failed to clean up old files', { directory, error });
   }
-  
+
   return deletedCount;
 }
 

@@ -15,7 +15,11 @@ import * as fs from 'fs';
 export * from './imageUtils.unified';
 
 // Re-export types and functions from shared utilities
-export type { ImageBase, ImageDimensions, ImageLoadOptions } from '@spheroseg/shared/utils/imageUtils';
+export type {
+  ImageBase,
+  ImageDimensions,
+  ImageLoadOptions,
+} from '@spheroseg/shared/utils/imageUtils';
 
 // For backward compatibility
 export interface ImageData {

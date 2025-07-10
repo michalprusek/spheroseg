@@ -73,8 +73,8 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
 
     // Combine running and pending tasks with their type
     const allTasks = [
-      ...queueData.runningTasks.map(id => ({ id, type: 'running' as const })),
-      ...queueData.pendingTasks.map(id => ({ id, type: 'pending' as const }))
+      ...queueData.runningTasks.map((id) => ({ id, type: 'running' as const })),
+      ...queueData.pendingTasks.map((id) => ({ id, type: 'pending' as const })),
     ];
 
     if (allTasks.length === 0) return null;
@@ -87,9 +87,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
             <div
               key={id}
               className={`flex items-center justify-between text-sm px-2 py-1 rounded ${
-                type === 'running' 
-                  ? 'bg-blue-100 dark:bg-blue-800/30' 
-                  : 'bg-gray-100 dark:bg-gray-800/30'
+                type === 'running' ? 'bg-blue-100 dark:bg-blue-800/30' : 'bg-gray-100 dark:bg-gray-800/30'
               }`}
             >
               <span className="truncate flex-1">
@@ -106,9 +104,11 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
                 title="Cancel segmentation"
               >
                 {isCancelling[id] ? (
-                  <div className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${
-                    type === 'running' ? 'border-blue-500' : 'border-gray-500'
-                  }`} />
+                  <div
+                    className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${
+                      type === 'running' ? 'border-blue-500' : 'border-gray-500'
+                    }`}
+                  />
                 ) : (
                   <X className="w-4 h-4" />
                 )}
@@ -126,9 +126,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
         <div style={style}>
           <div
             className={`flex items-center justify-between text-sm px-2 py-1 rounded mx-1 ${
-              type === 'running' 
-                ? 'bg-blue-100 dark:bg-blue-800/30' 
-                : 'bg-gray-100 dark:bg-gray-800/30'
+              type === 'running' ? 'bg-blue-100 dark:bg-blue-800/30' : 'bg-gray-100 dark:bg-gray-800/30'
             }`}
           >
             <span className="truncate flex-1">
@@ -145,9 +143,11 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
               title="Cancel segmentation"
             >
               {isCancelling[id] ? (
-                <div className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${
-                  type === 'running' ? 'border-blue-500' : 'border-gray-500'
-                }`} />
+                <div
+                  className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${
+                    type === 'running' ? 'border-blue-500' : 'border-gray-500'
+                  }`}
+                />
               ) : (
                 <X className="w-4 h-4" />
               )}

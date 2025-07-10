@@ -2,18 +2,26 @@ import { Pool } from 'pg';
 import logger from '../utils/logger';
 
 /**
+ * Interface for database operations
+ */
+export interface IDatabase {
+  query(text: string, params?: any[]): Promise<any>;
+}
+
+/**
  * Optimized Service for handling user statistics
  * Reduces database queries from 15+ to just 2-3
  */
 export class UserStatsServiceOptimized {
+  constructor(private readonly pool: Pool | IDatabase) {}
+
   /**
    * Get comprehensive user statistics with minimal database queries
-   * @param pool Database connection pool
    * @param userId User ID
    */
-  async getUserStats(pool: Pool, userId: string) {
+  async getUserStats(userId: string) {
     const startTime = Date.now();
-    
+
     try {
       logger.debug('Fetching optimized user stats', { userId });
 
@@ -81,8 +89,8 @@ export class UserStatsServiceOptimized {
           (SELECT json_agg(row_to_json(recent_images.*)) FROM recent_images) AS recent_images
       `;
 
-      const result = await pool.query(statsQuery, [userId]);
-      
+      const result = await this.pool.query(statsQuery, [userId]);
+
       if (result.rows.length === 0 || !result.rows[0].stats) {
         throw new Error('Failed to fetch user statistics');
       }
@@ -92,7 +100,7 @@ export class UserStatsServiceOptimized {
       // Get user storage limits from users table (separate query for compatibility)
       let storageLimitBytes = BigInt(10 * 1024 * 1024 * 1024); // 10GB default
       try {
-        const userRes = await pool.query(
+        const userRes = await this.pool.query(
           'SELECT storage_limit_bytes FROM users WHERE id = $1',
           [userId]
         );
@@ -130,7 +138,7 @@ export class UserStatsServiceOptimized {
       return finalStats;
     } catch (error) {
       logger.error('Error fetching optimized user stats', { userId, error });
-      
+
       // Return default stats on error
       return {
         totalProjects: 0,
@@ -152,7 +160,7 @@ export class UserStatsServiceOptimized {
   /**
    * Get basic user stats with a single query (for frequent polling)
    */
-  async getBasicStats(pool: Pool, userId: string) {
+  async getBasicStats(userId: string) {
     const query = `
       SELECT 
         COUNT(DISTINCT p.id) AS total_projects,
@@ -164,8 +172,8 @@ export class UserStatsServiceOptimized {
       WHERE p.user_id = $1
     `;
 
-    const result = await pool.query(query, [userId]);
-    
+    const result = await this.pool.query(query, [userId]);
+
     return {
       totalProjects: parseInt(result.rows[0].total_projects || 0, 10),
       totalImages: parseInt(result.rows[0].total_images || 0, 10),
@@ -175,5 +183,28 @@ export class UserStatsServiceOptimized {
   }
 }
 
-// Export a singleton instance
-export const userStatsServiceOptimized = new UserStatsServiceOptimized();
+// Factory function for creating service instances
+export function createUserStatsService(pool: Pool | IDatabase): UserStatsServiceOptimized {
+  return new UserStatsServiceOptimized(pool);
+}
+
+// Legacy compatibility export - requires pool injection
+export const userStatsServiceOptimized = {
+  /**
+   * Get user stats with pool injection
+   * @deprecated Use createUserStatsService instead
+   */
+  getUserStats: async (pool: Pool | IDatabase, userId: string) => {
+    const service = createUserStatsService(pool);
+    return service.getUserStats(userId);
+  },
+
+  /**
+   * Get basic stats with pool injection
+   * @deprecated Use createUserStatsService instead
+   */
+  getBasicStats: async (pool: Pool | IDatabase, userId: string) => {
+    const service = createUserStatsService(pool);
+    return service.getBasicStats(userId);
+  },
+};

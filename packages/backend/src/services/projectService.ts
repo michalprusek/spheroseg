@@ -217,7 +217,7 @@ export async function getProjectById(
   // Try to get from cache first
   const cacheKey = `project:${projectId}:${userId}`;
   const cached = await cacheService.getCachedProject(cacheKey);
-  
+
   if (cached) {
     logger.debug('Returning cached project', { projectId, userId });
     return cached;
@@ -233,10 +233,10 @@ export async function getProjectById(
       ...ownedProject.rows[0],
       is_owner: true,
     };
-    
+
     // Cache the project
     await cacheService.cacheProject(cacheKey, project);
-    
+
     return project;
   }
 
@@ -256,10 +256,10 @@ export async function getProjectById(
 
     if (sharedProject.rows.length > 0) {
       const project = sharedProject.rows[0];
-      
+
       // Cache the project
       await cacheService.cacheProject(cacheKey, project);
-      
+
       return project;
     }
   } catch (error) {
@@ -294,7 +294,7 @@ export async function getUserProjects(
   // Try to get from cache first
   const cacheKey = `project_list:${userId}:${limit}:${offset}:${includeShared}`;
   const cached = await cacheService.get<{ projects: ProjectResponse[]; total: number }>(cacheKey);
-  
+
   if (cached) {
     logger.debug('Returning cached project list', { userId, limit, offset });
     return cached;
@@ -604,7 +604,7 @@ export async function deleteProject(
     // Only attempt to delete files after database records are successfully deleted
     // and transaction is committed
     await client.query('COMMIT');
-    
+
     // Invalidate all caches related to this project and user
     await cacheService.invalidateProject(projectId);
     await cacheService.delPattern(`project_list:${userId}:*`);

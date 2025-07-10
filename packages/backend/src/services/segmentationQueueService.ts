@@ -487,8 +487,9 @@ class SegmentationQueueService extends EventEmitter {
     }
 
     // Use internal Docker service name for ML service callback
-    const internalBackendUrl = process.env.NODE_ENV === 'production' ? 'http://backend:5001' : config.appUrl;
-    
+    const internalBackendUrl =
+      process.env.NODE_ENV === 'production' ? 'http://backend:5001' : config.appUrl;
+
     const taskPayload = {
       taskId,
       imageId,

@@ -1,6 +1,6 @@
 /**
  * Performance Tracking Middleware
- * 
+ *
  * Automatically tracks API endpoint performance metrics including
  * response times, status codes, and request counts.
  */
@@ -30,22 +30,17 @@ export function trackAPIPerformance() {
 
     // Override res.end to capture when response is complete
     const originalEnd = res.end;
-    res.end = function(...args: any[]) {
+    res.end = function (...args: any[]) {
       // Restore original end function
       res.end = originalEnd;
-      
+
       // Calculate response time
       const responseTime = Date.now() - startTime;
       const statusCode = res.statusCode;
 
       // Record the metric
       try {
-        performanceMonitor.recordAPIMetric(
-          endpoint,
-          method,
-          statusCode,
-          responseTime
-        );
+        performanceMonitor.recordAPIMetric(endpoint, method, statusCode, responseTime);
 
         // Log slow requests
         if (responseTime > 1000) {
@@ -79,11 +74,11 @@ export function addResponseTimeHeader() {
 
     // Override res.end to add header before sending
     const originalEnd = res.end;
-    res.end = function(...args: any[]) {
+    res.end = function (...args: any[]) {
       // Calculate response time in milliseconds
       const endTime = process.hrtime.bigint();
       const responseTime = Number((endTime - startTime) / 1000000n);
-      
+
       // Add header if not already sent
       if (!res.headersSent) {
         res.setHeader('X-Response-Time', `${responseTime}ms`);
@@ -112,9 +107,9 @@ export function trackMemoryUsage(endpoints: string[] = []) {
 
     // Override res.end to capture memory after request
     const originalEnd = res.end;
-    res.end = function(...args: any[]) {
+    res.end = function (...args: any[]) {
       res.end = originalEnd;
-      
+
       const endMemory = process.memoryUsage();
       const memoryDelta = {
         heapUsed: endMemory.heapUsed - startMemory.heapUsed,
@@ -124,17 +119,13 @@ export function trackMemoryUsage(endpoints: string[] = []) {
       };
 
       // Record significant memory increases
-      if (memoryDelta.heapUsed > 10 * 1024 * 1024) { // 10MB
-        performanceMonitor.recordMetric(
-          'memory',
-          'heap_increase',
-          memoryDelta.heapUsed,
-          {
-            endpoint: req.path,
-            method: req.method,
-            statusCode: res.statusCode,
-          }
-        );
+      if (memoryDelta.heapUsed > 10 * 1024 * 1024) {
+        // 10MB
+        performanceMonitor.recordMetric('memory', 'heap_increase', memoryDelta.heapUsed, {
+          endpoint: req.path,
+          method: req.method,
+          statusCode: res.statusCode,
+        });
 
         logger.warn('Significant memory increase detected', {
           endpoint: req.path,

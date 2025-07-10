@@ -13,7 +13,7 @@ import { exists, ensureDir } from '../utils/fileOperationsAsync';
 // Async version of upload directory setup
 export async function setupUploadDirectory(): Promise<void> {
   const UPLOAD_DIR = config.storage.uploadDir;
-  
+
   try {
     const dirExists = await exists(UPLOAD_DIR);
     if (!dirExists) {
@@ -23,9 +23,9 @@ export async function setupUploadDirectory(): Promise<void> {
       logger.debug('Upload directory already exists', { path: UPLOAD_DIR });
     }
   } catch (error) {
-    logger.error('Failed to create upload directory', { 
-      path: UPLOAD_DIR, 
-      error: error instanceof Error ? error.message : String(error) 
+    logger.error('Failed to create upload directory', {
+      path: UPLOAD_DIR,
+      error: error instanceof Error ? error.message : String(error),
     });
     throw error;
   }
@@ -54,7 +54,7 @@ export async function cleanupUploadedFiles(filePaths: string[]): Promise<void> {
 // Async version of project directory creation
 export async function ensureProjectDirectory(projectId: string): Promise<string> {
   const projectDir = path.join(config.storage.uploadDir, 'uploads', projectId);
-  
+
   try {
     await ensureDir(projectDir);
     logger.debug('Ensured project directory exists', { projectId, path: projectDir });

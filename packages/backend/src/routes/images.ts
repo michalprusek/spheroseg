@@ -1004,7 +1004,11 @@ router.get(
     try {
       // Try to get from cache first (only if no filters)
       if (!name && !req.query.verifyFiles) {
-        const cached = await cacheService.getCachedImageList(projectId, Number(page || 1), Number(limit));
+        const cached = await cacheService.getCachedImageList(
+          projectId,
+          Number(page || 1),
+          Number(limit)
+        );
         if (cached) {
           logger.debug('Returning cached image list', { projectId, page, limit });
           return res.status(200).json(cached);
@@ -1097,7 +1101,7 @@ router.get(
         }
       }
 
-      const response = { 
+      const response = {
         data: processedImages,
         total: totalCount,
         pagination: {
@@ -1105,8 +1109,8 @@ router.get(
           offset: Number(offset),
           page: page ? Number(page) : Math.floor(Number(offset) / Number(limit)) + 1,
           totalPages: Math.ceil(totalCount / Number(limit)),
-          hasMore: Number(offset) + processedImages.length < totalCount
-        }
+          hasMore: Number(offset) + processedImages.length < totalCount,
+        },
       };
 
       // Cache the response (only if no filters)

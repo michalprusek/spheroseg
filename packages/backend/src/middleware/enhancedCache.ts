@@ -35,7 +35,7 @@ export function generateETag(stats: fs.Stats, content?: Buffer): string {
  */
 export function getCachePolicyByFileType(filePath: string): CacheOptions {
   const ext = path.extname(filePath).toLowerCase();
-  
+
   // Immutable assets (with hash in filename)
   if (filePath.match(/\.[a-f0-9]{8,}\./)) {
     return {
@@ -149,7 +149,7 @@ export function staticCacheMiddleware(staticDir: string) {
     // Check if file exists
     try {
       const stats = await fs.promises.stat(filePath);
-      
+
       if (!stats.isFile()) {
         return next();
       }
@@ -206,15 +206,15 @@ export function apiCacheMiddleware(defaultMaxAge: number = 300) {
 
     // Cache successful responses
     const originalJson = res.json;
-    res.json = function(data: any) {
+    res.json = function (data: any) {
       // Only cache successful responses
       if (res.statusCode >= 200 && res.statusCode < 300) {
         const isPrivate = !!req.headers.authorization;
         const maxAge = res.locals.cacheMaxAge || defaultMaxAge;
-        
+
         res.set({
           'Cache-Control': `${isPrivate ? 'private' : 'public'}, max-age=${maxAge}, stale-while-revalidate=60`,
-          'Vary': 'Accept-Encoding, Authorization',
+          Vary: 'Accept-Encoding, Authorization',
         });
 
         // Generate ETag from response data
@@ -246,7 +246,7 @@ export function imageCacheMiddleware() {
     // Set optimal cache headers for images
     res.set({
       'Cache-Control': 'public, max-age=604800, stale-while-revalidate=86400', // 1 week, 1 day SWR
-      'Vary': 'Accept-Encoding',
+      Vary: 'Accept-Encoding',
       'X-Content-Type-Options': 'nosniff',
     });
     next();

@@ -536,47 +536,53 @@ router.put(
                error = CASE WHEN $1 = 'failed' THEN $3 ELSE NULL END
            WHERE image_id = $4 AND status IN ('queued', 'processing')
            RETURNING id`,
-          [status, result_data || null, status === SEGMENTATION_STATUS.FAILED ? 'Segmentation failed' : null, imageId]
+          [
+            status,
+            result_data || null,
+            status === SEGMENTATION_STATUS.FAILED ? 'Segmentation failed' : null,
+            imageId,
+          ]
         );
-        
+
         if (taskUpdateResult.rows.length === 0) {
           logger.warn('No segmentation task found to update', {
             imageId,
             status,
-            lookingForStatuses: ['queued', 'processing']
+            lookingForStatuses: ['queued', 'processing'],
           });
-          
+
           // Check if task exists in a different status
           const existingTask = await pool.query(
             'SELECT id, status FROM segmentation_tasks WHERE image_id = $1 ORDER BY created_at DESC LIMIT 1',
             [imageId]
           );
-          
+
           if (existingTask.rows.length > 0) {
             logger.warn('Found task in different status', {
               imageId,
               taskId: existingTask.rows[0].id,
               currentStatus: existingTask.rows[0].status,
-              attemptedStatus: status
+              attemptedStatus: status,
             });
           }
         } else {
           logger.info('Successfully updated segmentation task', {
             imageId,
             taskId: taskUpdateResult.rows[0].id,
-            newStatus: status
+            newStatus: status,
           });
         }
-        
+
         logger.info('Updated segmentation task status', {
           imageId,
           status,
-          taskUpdateResult: 'completed'
+          taskUpdateResult: 'completed',
         });
-        
+
         // Trigger immediate queue status update
         try {
-          const segmentationQueueService = (await import('../services/segmentationQueueService')).default;
+          const segmentationQueueService = (await import('../services/segmentationQueueService'))
+            .default;
           // Force an immediate queue status update
           await segmentationQueueService.forceQueueUpdate();
         } catch (queueError) {
