@@ -350,6 +350,14 @@ const routes = createRoutesFromElements(
       }
     />
     <Route
+      path="/about"
+      element={
+        <ErrorBoundary componentName="AboutPage">
+          <AboutPage />
+        </ErrorBoundary>
+      }
+    />
+    <Route
       path="/terms-of-service"
       element={
         <ErrorBoundary componentName="TermsOfServicePage">
