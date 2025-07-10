@@ -28,7 +28,7 @@ describe('ProtectedRoute Component', () => {
 
   const renderWithRouter = (authState: AuthState) => {
     // Set up the mock implementation for useAuth
-    (useAuth as jest.Mock).mockReturnValue(authState);
+    (useAuth as vi.Mock).mockReturnValue(authState);
 
     return render(
       <MemoryRouter initialEntries={['/protected']}>

@@ -3,39 +3,39 @@ import { usePerformance } from '@/hooks/usePerformance';
 import { markPerformance, measurePerformance } from '@/utils/performance';
 
 // Mock the performance utilities
-jest.mock('@/utils/performance', () => ({
-  markPerformance: jest.fn(),
-  measurePerformance: jest.fn(() => 100), // Mock return value of 100ms
-  clearPerformanceMarks: jest.fn(),
+vi.mock('@/utils/performance', () => ({
+  markPerformance: vi.fn(),
+  measurePerformance: vi.fn(() => 100), // Mock return value of 100ms
+  clearPerformanceMarks: vi.fn(),
 }));
 
 // Mock the logger
-jest.mock('@/utils/logger', () => ({
+vi.mock('@/utils/logger', () => ({
   logger: {
-    debug: jest.fn(),
-    info: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
   },
 }));
 
 describe('usePerformance', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Mock performance.now
     if (!window.performance) {
       Object.defineProperty(window, 'performance', {
         value: {
-          now: jest.fn(() => Date.now()),
-          mark: jest.fn(),
-          measure: jest.fn(),
-          getEntriesByName: jest.fn(() => [{ duration: 100 }]),
-          clearMarks: jest.fn(),
-          clearMeasures: jest.fn(),
+          now: vi.fn(() => Date.now()),
+          mark: vi.fn(),
+          measure: vi.fn(),
+          getEntriesByName: vi.fn(() => [{ duration: 100 }]),
+          clearMarks: vi.fn(),
+          clearMeasures: vi.fn(),
         },
         writable: true,
       });
     } else {
-      window.performance.now = jest.fn(() => Date.now());
+      window.performance.now = vi.fn(() => Date.now());
     }
   });
 
@@ -56,7 +56,7 @@ describe('usePerformance', () => {
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-unmount-start');
 
     // Wait for setTimeout to complete
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     // Should have marked unmount end
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-unmount-end');

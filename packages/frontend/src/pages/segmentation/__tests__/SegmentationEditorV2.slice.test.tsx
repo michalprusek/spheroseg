@@ -5,37 +5,37 @@ import { EditMode } from '../hooks/segmentation';
 import { toast } from 'sonner';
 
 // Mock dependencies
-jest.mock('react-router-dom', () => ({
-  useNavigate: () => jest.fn(),
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
 }));
 
-jest.mock('react-i18next', () => ({
+vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
-    i18n: { changeLanguage: jest.fn() },
+    i18n: { changeLanguage: vi.fn() },
   }),
 }));
 
-jest.mock('sonner', () => ({
+vi.mock('sonner', () => ({
   toast: {
-    error: jest.fn(),
-    success: jest.fn(),
+    error: vi.fn(),
+    success: vi.fn(),
   },
 }));
 
-jest.mock('@/lib/apiClient', () => ({
+vi.mock('@/lib/apiClient', () => ({
   default: {
-    get: jest.fn(),
-    post: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
   },
 }));
 
 // Mock the hooks
-const mockHandleSliceAction = jest.fn();
-const mockSetEditMode = jest.fn();
-const mockSetTempPoints = jest.fn();
+const mockHandleSliceAction = vi.fn();
+const mockSetEditMode = vi.fn();
+const mockSetTempPoints = vi.fn();
 
-jest.mock('../hooks/segmentation', () => ({
+vi.mock('../hooks/segmentation', () => ({
   EditMode: {
     View: 'view',
     Slice: 'slice',
@@ -57,26 +57,26 @@ jest.mock('../hooks/segmentation', () => ({
     canUndo: false,
     canRedo: false,
     setEditMode: mockSetEditMode,
-    setSelectedPolygonId: jest.fn(),
-    setTransform: jest.fn(),
+    setSelectedPolygonId: vi.fn(),
+    setTransform: vi.fn(),
     setTempPoints: mockSetTempPoints,
-    setInteractionState: jest.fn(),
-    setHoveredVertex: jest.fn(),
-    fetchData: jest.fn(),
-    setSegmentationDataWithHistory: jest.fn(),
-    handleSave: jest.fn(),
-    handleResegment: jest.fn(),
-    undo: jest.fn(),
-    redo: jest.fn(),
-    onMouseDown: jest.fn(),
-    onMouseMove: jest.fn(),
-    onMouseUp: jest.fn(),
-    getCanvasCoordinates: jest.fn(),
-    handleWheelEvent: jest.fn(),
+    setInteractionState: vi.fn(),
+    setHoveredVertex: vi.fn(),
+    fetchData: vi.fn(),
+    setSegmentationDataWithHistory: vi.fn(),
+    handleSave: vi.fn(),
+    handleResegment: vi.fn(),
+    undo: vi.fn(),
+    redo: vi.fn(),
+    onMouseDown: vi.fn(),
+    onMouseMove: vi.fn(),
+    onMouseUp: vi.fn(),
+    getCanvasCoordinates: vi.fn(),
+    handleWheelEvent: vi.fn(),
   }),
 }));
 
-jest.mock('../hooks/useSlicing', () => ({
+vi.mock('../hooks/useSlicing', () => ({
   useSlicing: () => ({
     handleSliceAction: mockHandleSliceAction,
   }),
@@ -84,7 +84,7 @@ jest.mock('../hooks/useSlicing', () => ({
 
 describe('SegmentationEditorV2 - Slice Timing', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Mock environment variable
     (import.meta as any).env = {
       VITE_SLICE_ACTION_DELAY: undefined, // Use default
@@ -95,8 +95,8 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
-    jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
+      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -131,8 +131,8 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
-    jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
+      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -161,8 +161,8 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
-    jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
+      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -193,8 +193,8 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     const { unmount } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
-    jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
+      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -213,8 +213,8 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
 
   it('should not trigger slice action without selected polygon', async () => {
     // Mock the hook with no selected polygon
-    jest.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...jest.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
+      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
       selectedPolygonId: null,
       tempPoints: [
         { x: 100, y: 100 },

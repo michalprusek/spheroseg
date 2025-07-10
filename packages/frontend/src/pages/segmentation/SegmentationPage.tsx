@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSegmentationV2, EditMode } from './hooks/segmentation';
 import { useSegmentationKeyboard } from './hooks/useSegmentationKeyboard';
+import { useSlicing } from './hooks/useSlicing';
 import CanvasV2 from './components/canvas/CanvasV2';
 import { ToolbarV2 } from './components/toolbar/ToolbarV2';
 import { StatusBarV2 } from './components/statusbar/StatusBarV2';
@@ -57,7 +58,20 @@ export const SegmentationPage: React.FC = () => {
     undo,
     redo,
     handleDeletePolygon,
+    setSegmentationDataWithHistory,
   } = useSegmentationV2(projectId, imageId, canvasRef, t);
+
+  // Use the slicing hook
+  const { handleSliceAction } = useSlicing({
+    segmentationData,
+    setSegmentationData: setSegmentationDataWithHistory,
+    selectedPolygonId,
+    setSelectedPolygonId,
+    tempPoints,
+    setTempPoints,
+    setInteractionState,
+    setEditMode,
+  });
 
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -107,6 +121,36 @@ export const SegmentationPage: React.FC = () => {
       handleDeletePolygon();
     }
   }, [selectedPolygonId, handleDeletePolygon]);
+
+  // Trigger slice when we have 2 points in Slice mode
+  useEffect(() => {
+    if (editMode === EditMode.Slice && tempPoints.length === 2 && selectedPolygonId) {
+      console.log('[SegmentationPage] Slice points ready, triggering slice action');
+      
+      // Add a small delay to ensure state is properly updated
+      const timeoutId = setTimeout(() => {
+        console.log('[SegmentationPage] Calling handleSliceAction now');
+        try {
+          // Trigger the slice action with error handling
+          const success = handleSliceAction();
+
+          if (success) {
+            console.log('[SegmentationPage] Slice action completed successfully');
+          } else {
+            console.log('[SegmentationPage] Slice action failed');
+          }
+        } catch (error) {
+          console.error('[SegmentationPage] Error during slice action:', error);
+          toast.error(t('segmentation.sliceError') || 'An error occurred while slicing the polygon');
+        }
+      }, 100); // 100ms delay
+
+      return () => {
+        console.log('[SegmentationPage] Cleanup: clearing timeout');
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [editMode, tempPoints.length, selectedPolygonId, handleSliceAction, t]);
 
   // Setup keyboard shortcuts - disabled as V2 system now handles its own keyboard shortcuts
   // Keeping only for zoom handlers which aren't in V2 yet

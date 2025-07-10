@@ -10,7 +10,7 @@ import ProjectImages from '../project/ProjectImages';
 import { ProjectImage } from '@spheroseg/types';
 
 // Mock react-window
-jest.mock('react-window', () => ({
+vi.mock('react-window', () => ({
   FixedSizeGrid: ({ children, columnCount, rowCount, overscanRowCount }: any) => {
     // Simulate virtual scrolling - only render visible items
     const visibleRows = 2; // Simulate 2 visible rows
@@ -51,7 +51,7 @@ jest.mock('react-window', () => ({
 }));
 
 // Mock other dependencies
-jest.mock('../project/ImageDisplay', () => ({
+vi.mock('../project/ImageDisplay', () => ({
   ImageDisplay: ({ image }: { image: ProjectImage }) => <div data-testid={`image-${image.id}`}>{image.filename}</div>,
 }));
 
@@ -75,9 +75,9 @@ describe('ProjectImages Performance Tests', () => {
 
   const defaultProps = {
     images: [],
-    onDelete: jest.fn(),
-    onOpen: jest.fn(),
-    onResegment: jest.fn(),
+    onDelete: vi.fn(),
+    onOpen: vi.fn(),
+    onResegment: vi.fn(),
     viewMode: 'grid' as const,
   };
 
@@ -142,7 +142,7 @@ describe('ProjectImages Performance Tests', () => {
           viewMode="grid"
           selectionMode={true}
           selectedImages={selectedImages}
-          onToggleSelection={jest.fn()}
+          onToggleSelection={vi.fn()}
         />,
       );
 

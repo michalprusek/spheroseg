@@ -4,37 +4,37 @@ import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 
 // Mock dependencies
-jest.mock('sonner', () => ({
+vi.mock('sonner', () => ({
   toast: {
-    success: jest.fn(),
-    error: jest.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
   },
 }));
 
-jest.mock('@/lib/apiClient', () => ({
-  post: jest.fn(),
+vi.mock('@/lib/apiClient', () => ({
+  post: vi.fn(),
 }));
 
-jest.mock('@/contexts/AuthContext', () => ({
+vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'test-user-id' },
   }),
 }));
 
-jest.mock('@/contexts/LanguageContext', () => ({
+vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({
     t: (key: string) => key, // Return the key as the translation
   }),
 }));
 
 describe('Project Creation', () => {
-  const mockOnClose = jest.fn();
-  const mockOnSuccess = jest.fn();
+  const mockOnClose = vi.fn();
+  const mockOnSuccess = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Mock successful API response
-    (apiClient.post as jest.Mock).mockResolvedValue({
+    (apiClient.post as vi.Mock).mockResolvedValue({
       data: {
         id: 'test-project-id',
         title: 'Test Project',
@@ -52,7 +52,7 @@ describe('Project Creation', () => {
 
     // Create form event
     const mockEvent = {
-      preventDefault: jest.fn(),
+      preventDefault: vi.fn(),
     } as unknown as React.FormEvent<HTMLFormElement>;
 
     // Submit the form
@@ -84,7 +84,7 @@ describe('Project Creation', () => {
 
     // Create form event
     const mockEvent = {
-      preventDefault: jest.fn(),
+      preventDefault: vi.fn(),
     } as unknown as React.FormEvent<HTMLFormElement>;
 
     // Submit the form

@@ -3,12 +3,12 @@ import { render, screen } from '@testing-library/react';
 import { SkipLink } from '@/components/a11y';
 
 // Mock the useLanguage hook
-jest.mock('@/contexts/LanguageContext', () => ({
-  ...jest.requireActual('@/contexts/LanguageContext'),
+vi.mock('@/contexts/LanguageContext', () => ({
+  ...vi.requireActual('@/contexts/LanguageContext'),
   useLanguage: () => ({
     t: (key: string, fallback: string) => fallback,
     language: 'en',
-    setLanguage: jest.fn(),
+    setLanguage: vi.fn(),
   }),
   LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
