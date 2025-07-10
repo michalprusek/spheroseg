@@ -129,20 +129,6 @@ const ProjectDetail = () => {
       // Okamžitě načteme data projektu při otevření stránky
       refreshData();
 
-      apiClient
-        .get(`/api/projects/${cleanedId}`)
-        .then(() => {
-          logger.info(`Project ${cleanedId} verified as existing`);
-        })
-        .catch((err) => {
-          if (axios.isAxiosError(err) && err.response?.status === 404) {
-            logger.info(`Project ${cleanedId} not found, redirecting to dashboard`);
-            navigate('/dashboard', { replace: true });
-            return;
-          }
-          logger.warn('Error verifying project:', err);
-        });
-
       const handleSegmentationUpdate = (data: any) => {
         if (!isComponentMounted) return;
 
@@ -736,6 +722,33 @@ const ProjectDetail = () => {
     animate: { opacity: 1, transition: { duration: 0.3 } },
     exit: { opacity: 0, transition: { duration: 0.2 } },
   };
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (projectError || !id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Project Not Found</h1>
+          <p className="text-gray-600 mb-4">{projectError || 'The requested project could not be found.'}</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
