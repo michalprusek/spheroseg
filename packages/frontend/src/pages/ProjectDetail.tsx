@@ -568,11 +568,7 @@ const ProjectDetail = () => {
           );
         }
 
-        // Refresh data to sync with server state
-        setTimeout(() => {
-          refreshData();
-        }, 500);
-        
+        // Don't refresh entire gallery - images are already removed from UI
         setSelectedImages({});
         setSelectAll(false);
       })();

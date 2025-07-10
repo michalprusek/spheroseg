@@ -92,6 +92,12 @@ services:
     image: postgres:14-alpine
     container_name: spheroseg-db
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M  # PostgreSQL memory limit
+        reservations:
+          memory: 256M
     environment:
       POSTGRES_DB: spheroseg
       POSTGRES_USER: postgres
@@ -124,6 +130,37 @@ services:
     networks:
       - spheroseg-network
 
+  # Redis cache service
+  redis:
+    profiles: ["dev", "prod"]
+    image: redis:7-alpine
+    container_name: spheroseg-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    command: >
+      redis-server
+      --maxmemory 200mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --save 300 10
+      --save 900 100
+    volumes:
+      - redis_data:/data
+    networks:
+      - spheroseg-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Backend API using TypeScript server
   backend:
     profiles: ["dev", "prod"]
@@ -137,14 +174,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+      redis:
+        condition: service_healthy
     ports:
       - "5001:5001"
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 1024M  # Increased from 512M for better performance
         reservations:
-          memory: 256M
+          memory: 512M   # Increased from 256M
     environment:
       # Environment variables are now primarily managed in backend/src/config/index.ts
       # Only critical overrides or Docker-specific settings should be here.
@@ -156,6 +195,7 @@ services:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@${DB_HOST:-db}:${DB_PORT:-5432}/${DB_NAME:-spheroseg}
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@${RABBITMQ_HOST:-rabbitmq}:${RABBITMQ_PORT:-5672}
       - RABBITMQ_QUEUE=${RABBITMQ_QUEUE:-segmentation_tasks}
+      - REDIS_URL=redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3003,http://localhost:3005,http://frontend:3000,http://frontend:80,*}
       - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE:-100mb}
       - EMAIL_FROM=${EMAIL_FROM:-spheroseg@utia.cas.cz}
@@ -168,6 +208,21 @@ services:
       - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-500}
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-60}
       - ENABLE_RATE_LIMIT=${ENABLE_RATE_LIMIT:-true}
+      # Performance settings
+      - CONTAINER_MEMORY_LIMIT_MB=${CONTAINER_MEMORY_LIMIT_MB:-1024}
+      - ENABLE_MANUAL_GC=${ENABLE_MANUAL_GC:-false}
+      - NODE_OPTIONS=--max-old-space-size=768
+      - ENABLE_PERFORMANCE_MONITORING=${ENABLE_PERFORMANCE_MONITORING:-true}
+      - COMPRESSION_LEVEL=${COMPRESSION_LEVEL:-6}
+      - DB_POOL_MAX=${DB_POOL_MAX:-10}
+      - DB_POOL_MIN=${DB_POOL_MIN:-2}
+      # Cache settings
+      - REDIS_CACHE_TTL=${REDIS_CACHE_TTL:-300}
+      - ENABLE_REDIS_CACHE=${ENABLE_REDIS_CACHE:-true}
+      - CACHE_TTL_PROJECT=${CACHE_TTL_PROJECT:-300}
+      - CACHE_TTL_IMAGE_LIST=${CACHE_TTL_IMAGE_LIST:-60}
+      - CACHE_TTL_USER=${CACHE_TTL_USER:-600}
+      - CACHE_TTL_QUEUE_STATUS=${CACHE_TTL_QUEUE_STATUS:-5}
     volumes:
       - ./packages/backend/src:/app/src
       - ./packages/backend/package.json:/app/package.json
@@ -180,7 +235,7 @@ services:
       bash -c "
         echo 'Skipping database initialization (already initialized)...' &&
         echo 'Starting development server with hot reload using nodemon...' &&
-        NODE_OPTIONS='--max-old-space-size=384' DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/spheroseg APP_URL=http://backend:5001 ML_API_URL=http://ml:5002 npm run dev
+        NODE_OPTIONS='--max-old-space-size=768' DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/spheroseg APP_URL=http://backend:5001 ML_API_URL=http://ml:5002 npm run dev
       "
 
   # ML Service
@@ -193,6 +248,12 @@ services:
     restart: always
     depends_on:
       - rabbitmq # ML service now depends on RabbitMQ
+    deploy:
+      resources:
+        limits:
+          memory: 2048M  # ML service needs more memory for model loading
+        reservations:
+          memory: 1024M
     volumes:
       - ./packages/ml:/ML
       - uploads_data:/ML/uploads
@@ -206,6 +267,7 @@ services:
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
       - RABBITMQ_QUEUE=segmentation_tasks
+      - RABBITMQ_PREFETCH_COUNT=4
     networks:
       - spheroseg-network
 
@@ -255,6 +317,12 @@ services:
     depends_on:
       - backend
       - assets
+    deploy:
+      resources:
+        limits:
+          memory: 256M  # Static nginx server needs less memory
+        reservations:
+          memory: 128M
     ports:
       - "3000:80"
     networks:
@@ -293,6 +361,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   uploads_data:
   frontend_uploads:
   frontend_node_modules:

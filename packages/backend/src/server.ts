@@ -17,10 +17,12 @@ import logger from './utils/logger';
 import socketService from './services/socketService';
 import scheduledTaskService from './services/scheduledTaskService';
 import segmentationQueueService from './services/segmentationQueueService';
+import stuckImageCleanupService from './services/stuckImageCleanup';
 import dbPool from './db';
 import { startPerformanceMonitoring, stopPerformanceMonitoring } from './utils/performance';
 import { monitorQuery } from './monitoring/unified';
 import performanceConfig from './config/performance';
+import performanceMonitor from './services/performanceMonitor';
 
 // Memory optimization settings
 // Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized
@@ -108,6 +110,10 @@ const initializeServices = async (): Promise<void> => {
     // Initialize scheduled tasks
     scheduledTaskService.initialize(dbPool);
     logger.info('Scheduled task service initialized');
+    
+    // Start stuck image cleanup service
+    stuckImageCleanupService.start();
+    logger.info('Stuck image cleanup service started');
 
     // Test database connection
     await monitorQuery('SELECT NOW()', [], () => dbPool.query('SELECT NOW()'));
@@ -179,6 +185,12 @@ const shutdown = async (signal: string): Promise<void> => {
 
       try {
         // Shutdown services in reverse order
+        performanceMonitor.stop();
+        logger.info('Performance monitoring stopped');
+        
+        stuckImageCleanupService.stop();
+        logger.info('Stuck image cleanup service stopped');
+        
         if (scheduledTaskService && typeof scheduledTaskService.shutdown === 'function') {
           await scheduledTaskService.shutdown();
           logger.info('Scheduled tasks stopped');

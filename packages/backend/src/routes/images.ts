@@ -21,6 +21,7 @@ import imageUtils from '../utils/imageUtils.unified';
 import { ImageData } from '../utils/imageUtils';
 import config from '../config';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
+import cacheService from '../services/cacheService';
 
 // Type definition for multer request with params
 interface MulterRequest extends Express.Request {
@@ -540,6 +541,9 @@ router.post(
         }
         // --- Update User Storage Usage --- END
 
+        // Invalidate image list cache for this project
+        await cacheService.invalidateImageList(projectId);
+
         // Format results before sending
         const origin = req.get('origin') || config.baseUrl;
         const formattedImages = insertedImages.map((img) =>
@@ -981,7 +985,9 @@ router.get(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
-    const { name } = req.query;
+    const { name, limit = 50, page } = req.query;
+    // Calculate offset from page if provided, otherwise use offset
+    const offset = page ? (Number(page) - 1) * Number(limit) : Number(req.query.offset || 0);
 
     // No need to handle project- prefix anymore as it's been removed from the frontend
     const originalProjectId = projectId;
@@ -991,9 +997,20 @@ router.get(
       projectId,
       originalProjectId,
       nameFilter: name || undefined,
+      limit,
+      offset,
     });
 
     try {
+      // Try to get from cache first (only if no filters)
+      if (!name && !req.query.verifyFiles) {
+        const cached = await cacheService.getCachedImageList(projectId, Number(page || 1), Number(limit));
+        if (cached) {
+          logger.debug('Returning cached image list', { projectId, page, limit });
+          return res.status(200).json(cached);
+        }
+      }
+
       const pool = getPool();
       const projectCheck = await getPool().query(
         'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
@@ -1009,6 +1026,16 @@ router.get(
         throw new ApiError('Project not found or access denied', 404);
       }
 
+      // Get total count for pagination metadata
+      const countResult = await getPool().query(
+        name
+          ? `SELECT COUNT(*) FROM images WHERE project_id = $1 AND name = $2`
+          : `SELECT COUNT(*) FROM images WHERE project_id = $1`,
+        name ? [projectId, name] : [projectId]
+      );
+      const totalCount = parseInt(countResult.rows[0].count, 10);
+
+      // Get paginated images
       const imageResult = await getPool().query(
         name
           ? `SELECT 
@@ -1018,7 +1045,8 @@ router.get(
             FROM images i
             LEFT JOIN segmentation_results sr ON i.id = sr.image_id
             WHERE i.project_id = $1 AND i.name = $2 
-            ORDER BY i.created_at DESC`
+            ORDER BY i.created_at DESC
+            LIMIT $3 OFFSET $4`
           : `SELECT 
               i.*,
               COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as "segmentationStatus",
@@ -1026,8 +1054,9 @@ router.get(
             FROM images i
             LEFT JOIN segmentation_results sr ON i.id = sr.image_id
             WHERE i.project_id = $1 
-            ORDER BY i.created_at DESC`,
-        name ? [projectId, name] : [projectId]
+            ORDER BY i.created_at DESC
+            LIMIT $2 OFFSET $3`,
+        name ? [projectId, name, limit, offset] : [projectId, limit, offset]
       );
 
       logger.debug('Image query results', { count: imageResult.rows.length });
@@ -1068,7 +1097,24 @@ router.get(
         }
       }
 
-      res.status(200).json({ images: processedImages });
+      const response = { 
+        data: processedImages,
+        total: totalCount,
+        pagination: {
+          limit: Number(limit),
+          offset: Number(offset),
+          page: page ? Number(page) : Math.floor(Number(offset) / Number(limit)) + 1,
+          totalPages: Math.ceil(totalCount / Number(limit)),
+          hasMore: Number(offset) + processedImages.length < totalCount
+        }
+      };
+
+      // Cache the response (only if no filters)
+      if (!name && !req.query.verifyFiles) {
+        await cacheService.cacheImageList(projectId, Number(page || 1), Number(limit), response);
+      }
+
+      res.status(200).json(response);
     } catch (error) {
       logger.error('Error fetching images', {
         projectId,

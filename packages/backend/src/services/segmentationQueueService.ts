@@ -284,45 +284,53 @@ class SegmentationQueueService extends EventEmitter {
       const dbPool = pool.getPool();
       const client = await dbPool.connect();
       try {
-        // Získání počtu úloh podle stavu
-        const pendingResult = await client.query(`
-          SELECT st.id, st.image_id, i.project_id 
+        // Get all active tasks in a single query
+        const tasksResult = await client.query(`
+          SELECT 
+            st.id, 
+            st.image_id, 
+            st.status,
+            i.project_id,
+            st.priority,
+            st.created_at
           FROM segmentation_tasks st
           JOIN images i ON st.image_id = i.id
-          WHERE st.status = 'queued'
-          ORDER BY st.priority DESC, st.created_at ASC
+          WHERE st.status IN ('queued', 'processing')
+          ORDER BY 
+            st.status DESC, -- processing tasks first
+            st.priority DESC, 
+            st.created_at ASC
         `);
 
-        const runningResult = await client.query(`
-          SELECT st.id, st.image_id, i.project_id 
-          FROM segmentation_tasks st
-          JOIN images i ON st.image_id = i.id
-          WHERE st.status = 'processing'
-        `);
-
-        // Seskupení úloh podle projektu
+        // Group tasks by project and status
         const tasksByProject = new Map<string, { pending: string[]; running: string[] }>();
+        const pendingTasks: string[] = [];
+        const runningTasks: string[] = [];
 
-        pendingResult.rows.forEach((row) => {
+        // Process all tasks in a single pass
+        tasksResult.rows.forEach((row) => {
+          // Initialize project entry if needed
           if (!tasksByProject.has(row.project_id)) {
             tasksByProject.set(row.project_id, { pending: [], running: [] });
           }
-          tasksByProject.get(row.project_id)!.pending.push(row.id);
-        });
 
-        runningResult.rows.forEach((row) => {
-          if (!tasksByProject.has(row.project_id)) {
-            tasksByProject.set(row.project_id, { pending: [], running: [] });
+          // Add task to appropriate list
+          const projectTasks = tasksByProject.get(row.project_id)!;
+          if (row.status === 'queued') {
+            projectTasks.pending.push(row.id);
+            pendingTasks.push(row.id);
+          } else if (row.status === 'processing') {
+            projectTasks.running.push(row.id);
+            runningTasks.push(row.id);
           }
-          tasksByProject.get(row.project_id)!.running.push(row.id);
         });
 
         // Aktualizace globálního stavu fronty
         this.queueStatus = {
-          pendingTasks: pendingResult.rows.map((row) => row.id),
-          runningTasks: runningResult.rows.map((row) => row.id),
-          queueLength: pendingResult.rows.length,
-          activeTasksCount: runningResult.rows.length,
+          pendingTasks: pendingTasks,
+          runningTasks: runningTasks,
+          queueLength: pendingTasks.length,
+          activeTasksCount: runningTasks.length,
           mlServiceStatus: this.mlServiceAvailable ? 'online' : 'offline',
           lastUpdated: new Date(),
         };
@@ -478,13 +486,16 @@ class SegmentationQueueService extends EventEmitter {
       throw new Error('RabbitMQ channel is not available.');
     }
 
+    // Use internal Docker service name for ML service callback
+    const internalBackendUrl = process.env.NODE_ENV === 'production' ? 'http://backend:5001' : config.appUrl;
+    
     const taskPayload = {
       taskId,
       imageId,
       imagePath,
       parameters,
       retries,
-      callbackUrl: `${config.appUrl}/api/images/${imageId}/segmentation`, // Callback URL for ML service
+      callbackUrl: `${internalBackendUrl}/api/images/${imageId}/segmentation`, // Callback URL for ML service
     };
 
     try {
@@ -541,7 +552,7 @@ class SegmentationQueueService extends EventEmitter {
       await client.query(
         `
         UPDATE images
-        SET status = $1, updated_at = NOW()
+        SET segmentation_status = $1, updated_at = NOW()
         WHERE id = $2
       `,
         [status, imageId]
@@ -780,7 +791,18 @@ class SegmentationQueueService extends EventEmitter {
     try {
       const result = await client.query(
         `
-        SELECT * FROM segmentation_tasks WHERE id = $1
+        SELECT 
+          id, 
+          image_id, 
+          status, 
+          priority, 
+          created_at, 
+          updated_at,
+          error_message,
+          parameters,
+          result_data
+        FROM segmentation_tasks 
+        WHERE id = $1
       `,
         [taskId]
       );

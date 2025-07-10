@@ -12,10 +12,12 @@ import path from 'path';
 import fs from 'fs';
 
 import config from '../config';
+import performanceConfig from '../config/performance';
 import logger from '../utils/logger';
 import { errorHandler } from './errorHandler';
 import { configureSecurity } from '../security';
 import { requestLoggerMiddleware } from '../monitoring/unified';
+import { trackAPIPerformance, addResponseTimeHeader } from './performanceTracking';
 
 /**
  * Security middleware configuration
@@ -31,18 +33,32 @@ export const configurePerformanceMiddleware = (app: Application): void => {
   // Compression for response payloads
   app.use(
     compression({
-      level: 6, // Balance between compression ratio and CPU usage
-      threshold: 1024, // Only compress responses larger than 1KB
+      level: performanceConfig.compression.level,
+      threshold: performanceConfig.compression.threshold,
+      memLevel: performanceConfig.compression.memLevel,
       filter: (req: express.Request, res: express.Response) => {
         // Don't compress if the request includes a Cache-Control no-transform directive
         if (req.headers['cache-control'] && req.headers['cache-control'].includes('no-transform')) {
           return false;
         }
-        // Use compression filter function
+        
+        // Always compress JSON responses
+        const contentType = res.getHeader('Content-Type')?.toString() || '';
+        if (contentType.includes('application/json')) {
+          return true;
+        }
+        
+        // Use default compression filter for other content types
         return compression.filter(req, res);
       },
     })
   );
+  
+  logger.info('Compression middleware configured', {
+    level: performanceConfig.compression.level,
+    threshold: performanceConfig.compression.threshold,
+    memLevel: performanceConfig.compression.memLevel,
+  });
 };
 
 /**
@@ -155,7 +171,11 @@ export const configureMiddleware = (app: Application): void => {
   // 5. Request monitoring middleware (unified monitoring system)
   app.use(requestLoggerMiddleware);
 
-  // 6. Static files middleware
+  // 6. Performance tracking middleware
+  app.use(addResponseTimeHeader());
+  app.use(trackAPIPerformance());
+
+  // 7. Static files middleware
   configureStaticFilesMiddleware(app);
 
   logger.info('All middleware configured successfully');

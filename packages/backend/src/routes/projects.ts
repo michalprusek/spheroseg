@@ -12,6 +12,7 @@ import {
 import logger from '../utils/logger';
 import * as projectService from '../services/projectService';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
+import cacheService from '../services/cacheService';
 
 const router: Router = express.Router();
 
@@ -63,6 +64,15 @@ router.get(
         });
       }
 
+      // Try to get from cache first
+      const cacheKey = `project_list:${userId}:${limit}:${offset}:${includeShared}`;
+      const cached = await cacheService.get<{ projects: any[], total: number }>(cacheKey);
+      
+      if (cached) {
+        logger.debug('Returning cached project list', { userId, limit, offset });
+        return res.status(200).json(cached);
+      }
+
       // Get projects using the service
       const result = await projectService.getUserProjects(
         getPool(),
@@ -76,6 +86,9 @@ router.get(
         count: result.projects.length,
         total: result.total,
       });
+
+      // Cache the result
+      await cacheService.set(cacheKey, result, 60); // 1 minute TTL
 
       res.status(200).json({
         projects: result.projects,
@@ -259,6 +272,18 @@ router.get(
         });
       }
 
+      // Try to get from cache first
+      const cachedProject = await cacheService.getCachedProject(projectId);
+      
+      if (cachedProject) {
+        // Verify user has access even for cached project
+        if (cachedProject.user_id !== userId && !cachedProject.is_shared) {
+          return res.status(404).json({ message: 'Project not found or access denied' });
+        }
+        logger.debug('Returning cached project', { projectId });
+        return res.status(200).json(cachedProject);
+      }
+
       // Get project using the service
       const project = await projectService.getProjectById(getPool(), projectId, userId);
 
@@ -275,6 +300,9 @@ router.get(
         title: project.title,
         isOwner: project.is_owner,
       });
+
+      // Cache the project
+      await cacheService.cacheProject(projectId, project);
 
       return res.status(200).json(project);
     } catch (error) {
@@ -322,6 +350,9 @@ router.delete(
       await projectService.deleteProject(getPool(), projectId, userId);
 
       logger.info('Project deleted successfully', { projectId });
+
+      // Invalidate cache for this project
+      await cacheService.invalidateProject(projectId);
 
       // Return 204 No Content on successful deletion
       res.status(204).send();

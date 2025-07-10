@@ -407,9 +407,12 @@ const authOrInternalMiddleware = async (
     req.headers['user-agent']?.includes('python-requests') ||
     req.ip?.includes('172.') || // Docker network
     req.hostname === 'ml' ||
-    req.ip === '172.22.0.5' || // ML service IP
+    req.ip === '172.22.0.5' || // ML service IP (old)
+    req.ip === '172.22.0.6' || // ML service IP (current)
     req.ip === '::ffff:172.22.0.5' ||
-    req.headers['x-forwarded-for']?.includes('172.22.0.5');
+    req.ip === '::ffff:172.22.0.6' ||
+    req.headers['x-forwarded-for']?.includes('172.22.0.5') ||
+    req.headers['x-forwarded-for']?.includes('172.22.0.6');
 
   if (isInternalRequest) {
     logger.info('Internal request detected, skipping auth');
@@ -524,16 +527,46 @@ router.put(
 
       // Update the segmentation task status if it exists
       if (status === SEGMENTATION_STATUS.COMPLETED || status === SEGMENTATION_STATUS.FAILED) {
-        await pool.query(
+        const taskUpdateResult = await pool.query(
           `UPDATE segmentation_tasks 
            SET status = $1::task_status, 
                completed_at = NOW(), 
                updated_at = NOW(),
                result = CASE WHEN $1 = 'completed' THEN $2::jsonb ELSE NULL END,
                error = CASE WHEN $1 = 'failed' THEN $3 ELSE NULL END
-           WHERE image_id = $4 AND status IN ('queued', 'processing')`,
+           WHERE image_id = $4 AND status IN ('queued', 'processing')
+           RETURNING id`,
           [status, result_data || null, status === SEGMENTATION_STATUS.FAILED ? 'Segmentation failed' : null, imageId]
         );
+        
+        if (taskUpdateResult.rows.length === 0) {
+          logger.warn('No segmentation task found to update', {
+            imageId,
+            status,
+            lookingForStatuses: ['queued', 'processing']
+          });
+          
+          // Check if task exists in a different status
+          const existingTask = await pool.query(
+            'SELECT id, status FROM segmentation_tasks WHERE image_id = $1 ORDER BY created_at DESC LIMIT 1',
+            [imageId]
+          );
+          
+          if (existingTask.rows.length > 0) {
+            logger.warn('Found task in different status', {
+              imageId,
+              taskId: existingTask.rows[0].id,
+              currentStatus: existingTask.rows[0].status,
+              attemptedStatus: status
+            });
+          }
+        } else {
+          logger.info('Successfully updated segmentation task', {
+            imageId,
+            taskId: taskUpdateResult.rows[0].id,
+            newStatus: status
+          });
+        }
         
         logger.info('Updated segmentation task status', {
           imageId,

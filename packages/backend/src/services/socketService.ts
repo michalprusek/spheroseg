@@ -8,6 +8,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import logger from '../utils/logger';
 import { initializeSocketIO as initSocket, getIO } from '../socket';
+import { createThrottledEmit } from '../utils/socketThrottle';
 
 // Socket.IO server instance
 let io: SocketIOServer | null = null;
@@ -152,6 +153,9 @@ export function getSocketIO(): SocketIOServer | null {
  * @param resultPath Optional path to the segmentation result
  * @param error Optional error message if segmentation failed
  */
+// Cache throttled emit functions per room
+const throttledEmitCache = new Map<string, (event: string, data: unknown) => void>();
+
 export function broadcastSegmentationUpdate(
   projectId: string,
   imageId: string,
@@ -191,11 +195,25 @@ export function broadcastSegmentationUpdate(
       newStatus: status,
     };
 
-    // Broadcast to all clients in the project room
-    io.to(roomName).emit('segmentation_update', updateData);
+    // Get or create throttled emit function for this room
+    let throttledEmit = throttledEmitCache.get(roomName);
+    if (!throttledEmit) {
+      throttledEmit = createThrottledEmit(
+        (event: string, data: unknown) => io!.to(roomName).emit(event, data),
+        roomName
+      );
+      throttledEmitCache.set(roomName, throttledEmit);
+    }
 
-    // Also send backward compatible version
-    io.to(roomName).emit('segmentation_update_legacy', backwardCompatibleData);
+    // Use throttled emit for high-frequency updates (processing status)
+    if (status === 'processing' || status === 'queued') {
+      throttledEmit('segmentation_update', updateData);
+      throttledEmit('segmentation_update_legacy', backwardCompatibleData);
+    } else {
+      // Emit immediately for important status changes (completed, failed)
+      io.to(roomName).emit('segmentation_update', updateData);
+      io.to(roomName).emit('segmentation_update_legacy', backwardCompatibleData);
+    }
   } catch (error) {
     logger.error('Error broadcasting segmentation update', {
       projectId,
