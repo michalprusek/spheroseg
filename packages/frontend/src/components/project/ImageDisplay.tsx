@@ -56,6 +56,13 @@ export const ImageDisplay = ({
         if (response.data && response.data.status) {
           const apiStatus = response.data.status;
           setCurrentStatus(apiStatus);
+          
+          // Update the cache with the correct status from API
+          if (image.project_id) {
+            import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
+              updateImageStatusInCache(image.project_id, image.id, apiStatus, response.data.resultPath);
+            });
+          }
         }
       } catch (error: any) {
         // Silently ignore 404 errors (no segmentation yet)
@@ -82,6 +89,13 @@ export const ImageDisplay = ({
 
         // Update image status
         setCurrentStatus(data.status);
+
+        // Update the cache to prevent stale data
+        if (image.project_id) {
+          import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
+            updateImageStatusInCache(image.project_id, data.imageId, data.status, data.resultPath);
+          });
+        }
 
         // Trigger queue status update
         if (
@@ -173,6 +187,13 @@ export const ImageDisplay = ({
             if (apiStatus !== currentStatus) {
               setCurrentStatus(apiStatus);
 
+              // Update the cache to prevent stale data
+              if (image.project_id) {
+                import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
+                  updateImageStatusInCache(image.project_id, image.id, apiStatus, response.data.resultPath);
+                });
+              }
+
               // If status changed to completed, trigger update notification
               if (apiStatus === SEGMENTATION_STATUS.COMPLETED) {
                 const imageUpdateEvent = new CustomEvent('image-status-update', {
@@ -226,6 +247,13 @@ export const ImageDisplay = ({
 
         // Update image status
         setCurrentStatus(status);
+
+        // Update the cache to prevent stale data
+        if (image.project_id) {
+          import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
+            updateImageStatusInCache(image.project_id, imageId, status, customEvent.detail.resultPath);
+          });
+        }
 
         // If forceQueueUpdate is true or status is 'processing' or 'queued', update the queue indicator
         if (forceQueueUpdate || status === SEGMENTATION_STATUS.PROCESSING || status === SEGMENTATION_STATUS.QUEUED) {

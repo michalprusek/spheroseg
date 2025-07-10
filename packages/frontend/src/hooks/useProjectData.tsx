@@ -241,16 +241,16 @@ export const useProjectData = (projectId: string | undefined) => {
           return image;
         });
 
-        // After updating images in memory, save to localStorage
+        // After updating images in memory, update all caches
         try {
           const projectIdToUse = project?.id || projectId;
           if (projectIdToUse) {
-            import('@/api/projectImages').then(({ storeUploadedImages }) => {
-              storeUploadedImages(projectIdToUse, updatedImages);
+            import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
+              updateImageStatusInCache(projectIdToUse, imageId, status, resultPath);
             });
           }
         } catch (storageError) {
-          console.error('Failed to save updated images to localStorage:', storageError);
+          console.error('Failed to update image status in caches:', storageError);
         }
 
         return updatedImages;
