@@ -597,7 +597,7 @@ class SegmentationQueueService extends EventEmitter {
           });
         }
       } catch (socketError) {
-        logger.error('Chyba při odesílání notifikace o stavu segmentace:', {
+        logger.error('Error sending segmentation status notification:', {
           error: socketError,
           imageId,
         });

@@ -11,18 +11,24 @@ vi.mock('../AuthContext', () => ({
 }));
 
 vi.mock('i18next', () => ({
-  init: vi.fn(),
-  changeLanguage: vi.fn().mockResolvedValue(undefined),
-  t: vi.fn((key) => `translated:${key}`),
-  language: 'en',
-  options: {
-    resources: {
-      en: {},
-      cs: {},
-      de: {},
-      es: {},
-      fr: {},
-      zh: {},
+  default: {
+    init: vi.fn(),
+    changeLanguage: vi.fn().mockResolvedValue(undefined),
+    t: vi.fn((key) => `translated:${key}`),
+    language: 'en',
+    use: vi.fn().mockReturnThis(),
+    on: vi.fn(),
+    off: vi.fn(),
+    emit: vi.fn(),
+    options: {
+      resources: {
+        en: {},
+        cs: {},
+        de: {},
+        es: {},
+        fr: {},
+        zh: {},
+      },
     },
   },
 }));
@@ -230,4 +236,3 @@ describe('LanguageContext', () => {
     });
   });
 });
-EOF < /dev/llnu;

@@ -385,8 +385,7 @@ router.put(
       const result = await getPool().query(updateQuery, values);
 
       // Clear cache for the project
-      await cacheService.clearProjectCache(projectId);
-      await cacheService.clearUserProjectsCache(userId);
+      await cacheService.invalidateProject(projectId);
 
       logger.info('Project updated successfully', { projectId });
       res.json(result.rows[0]);

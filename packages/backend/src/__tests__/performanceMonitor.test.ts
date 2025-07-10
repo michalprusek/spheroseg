@@ -161,8 +161,8 @@ describe('Performance Monitor', () => {
 
       // Manually trigger metrics collection with mocked high values
       const originalCollect = performanceMonitor['collectSystemMetrics'];
-      performanceMonitor['collectSystemMetrics'] = async function () {
-        this.systemMetrics.push({
+      performanceMonitor['collectSystemMetrics'] = async () => {
+        performanceMonitor['systemMetrics'].push({
           cpuUsage: 95,
           memoryUsage: { total: 100, used: 90, percentage: 90 },
           heapUsage: { total: 100, used: 50, percentage: 50 },
@@ -171,10 +171,10 @@ describe('Performance Monitor', () => {
         });
 
         // Emit the warnings
-        this.emit('high-memory-usage', { percentage: 90 });
-        this.emit('high-cpu-usage', { usage: 95 });
-        this.emit('high-event-loop-lag', { lag: 100 });
-      }.bind(performanceMonitor);
+        performanceMonitor.emit('high-memory-usage', { percentage: 90 });
+        performanceMonitor.emit('high-cpu-usage', { usage: 95 });
+        performanceMonitor.emit('high-event-loop-lag', { lag: 100 });
+      };
 
       performanceMonitor['collectSystemMetrics']();
 

@@ -60,7 +60,7 @@ class PerformanceMonitor extends EventEmitter {
 
   private readonly maxQueryHistory = PerformanceMonitor.MAX_QUERY_HISTORY;
   private readonly maxMemoryHistory = PerformanceMonitor.MAX_MEMORY_HISTORY;
-  private memoryCheckInterval?: NodeJS.Timer;
+  private memoryCheckInterval?: NodeJS.Timeout;
   private isUnderMemoryPressure = false;
 
   constructor() {
@@ -522,7 +522,7 @@ export function createMonitoredPool(pool: Pool): Pool {
     const query = typeof args[0] === 'string' ? args[0] : args[0].text;
 
     try {
-      const result = await originalQuery(...args);
+      const result = await originalQuery.apply(pool, args);
       const duration = Date.now() - startTime;
 
       performanceMonitor.trackQuery(query, duration, result.rowCount || 0);

@@ -42,7 +42,34 @@ class UserProfileService {
    */
   private safeSetLocalStorage(key: string, value: string): boolean {
     try {
-      localStorage.setItem(key, value);
+      // Detect and fix over-escaped JSON strings
+      let cleanValue = value;
+      if (key === 'theme' || key === 'language') {
+        // Keep trying to parse until we get a non-JSON string or valid theme/language value
+        let parsed = value;
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        while (attempts < maxAttempts) {
+          try {
+            parsed = JSON.parse(parsed);
+            attempts++;
+            // If we get a valid value, use it
+            if (typeof parsed === 'string' && ['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(parsed)) {
+              cleanValue = JSON.stringify(parsed);
+              break;
+            }
+          } catch {
+            // Not JSON anymore, check if it's a valid value
+            if (typeof parsed === 'string' && ['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(parsed)) {
+              cleanValue = JSON.stringify(parsed);
+            }
+            break;
+          }
+        }
+      }
+      
+      localStorage.setItem(key, cleanValue);
       return true;
     } catch (error) {
       if (error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22)) {
@@ -53,7 +80,7 @@ class UserProfileService {
 
         // Try one more time after cleanup
         try {
-          localStorage.setItem(key, value);
+          localStorage.setItem(key, cleanValue);
           return true;
         } catch (retryError) {
           console.error(`[UserProfileService] Failed to set ${key} even after cleanup:`, retryError);

@@ -164,6 +164,12 @@
     "errorLoading": "Error loading project",
     "resegmentImage": "Resegment Image"
   },
+  "uploader": {
+    "generatingPreviews": "Generating previews...",
+    "previewsGenerated": "Previews generated",
+    "processing": "Processing...",
+    "uploadSuccess": "Upload successful"
+  },
   "segmentation": {
     "imageNotFound": "Image not found",
     "returnToProject": "Return to project",

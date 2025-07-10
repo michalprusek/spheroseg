@@ -18,6 +18,7 @@ import path from 'path';
 import sharp from 'sharp';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as util from 'util';
 // Import the local logger instead of shared library for tests
 import logger from './logger';
 

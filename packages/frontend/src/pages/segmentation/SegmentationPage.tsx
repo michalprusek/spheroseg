@@ -108,16 +108,17 @@ export const SegmentationPage: React.FC = () => {
     }
   }, [selectedPolygonId, handleDeletePolygon]);
 
-  // Setup keyboard shortcuts
+  // Setup keyboard shortcuts - disabled as V2 system now handles its own keyboard shortcuts
+  // Keeping only for zoom handlers which aren't in V2 yet
   const { isShiftPressed } = useSegmentationKeyboard({
     editMode,
-    setEditMode,
+    setEditMode: () => {}, // Disabled - V2 handles this
     canUndo,
     canRedo,
-    onUndo: undo,
-    onRedo: redo,
-    onSave: handleSave,
-    onDelete: handleDelete,
+    onUndo: () => {}, // Disabled - V2 handles this
+    onRedo: () => {}, // Disabled - V2 handles this
+    onSave: () => {}, // Disabled - V2 handles this
+    onDelete: () => {}, // Disabled - V2 handles this
     onZoomIn: handleZoomIn,
     onZoomOut: handleZoomOut,
     onResetView: handleResetView,

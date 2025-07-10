@@ -36,10 +36,18 @@ export function useSlicing({
    * @returns boolean indicating if the slice was successful
    */
   const handleSliceAction = useCallback(() => {
+    console.log('[handleSliceAction] Called with:', {
+      selectedPolygonId,
+      tempPointsLength: tempPoints.length,
+      tempPoints,
+      hasSegmentationData: !!segmentationData,
+    });
+    
     if (!selectedPolygonId || tempPoints.length !== 2 || !segmentationData) {
-      console.log('Cannot slice: missing data', {
+      console.log('[handleSliceAction] Cannot slice: missing data', {
         selectedPolygonId,
         tempPointsLength: tempPoints.length,
+        hasSegmentationData: !!segmentationData,
       });
       return false;
     }

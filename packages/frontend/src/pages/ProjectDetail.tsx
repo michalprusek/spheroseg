@@ -470,7 +470,7 @@ const ProjectDetail = () => {
         }
       }
 
-      logger.info(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
+      logger.info(`Total result: ${successCount} successful, ${failCount} failed`);
 
       // Zobrazíme celkový výsledek
       if (successCount > 0 && failCount > 0) {
@@ -719,7 +719,7 @@ const ProjectDetail = () => {
           }
         }
 
-        logger.info(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
+        logger.info(`Total result: ${successCount} successful, ${failCount} failed`);
 
         // Zobrazíme celkový výsledek
         if (successCount > 0 && failCount > 0) {

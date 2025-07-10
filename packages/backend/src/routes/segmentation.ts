@@ -881,14 +881,63 @@ router.get(
   }
 );
 
-/* // Commented out route due to missing schema import
 // POST /api/segmentation/job - Create a new segmentation job
 // @ts-ignore // TS2769: No overload matches this call.
-router.post('/job', authMiddleware, validate(createSegmentationJobSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    console.log('POST /api/segmentation/job called');
-    res.status(501).json({ message: 'Not Implemented' });
-});
-*/
+router.post(
+  '/job',
+  authMiddleware,
+  validate(createSegmentationJobSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { imageIds, priority = 1, parameters = {} } = req.body;
+      const userId = req.user?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      logger.info('Creating segmentation job', { imageIds, priority, userId });
+      
+      // Import the segmentation queue service
+      const segmentationQueueService = (await import('../services/segmentationQueueService')).default;
+      
+      // Create tasks for each image
+      const taskIds = [];
+      for (const imageId of imageIds) {
+        // Get image details
+        const imageQuery = await pool.getPool().query(
+          'SELECT id, storage_path FROM images WHERE id = $1',
+          [imageId]
+        );
+        
+        if (imageQuery.rows.length === 0) {
+          logger.warn('Image not found for segmentation job', { imageId });
+          continue;
+        }
+        
+        const image = imageQuery.rows[0];
+        const taskId = await segmentationQueueService.addTask(
+          image.id,
+          image.storage_path,
+          parameters,
+          priority
+        );
+        taskIds.push(taskId);
+      }
+      
+      logger.info('Segmentation job created', { taskIds });
+      
+      res.status(201).json({
+        success: true,
+        taskIds,
+        message: `Created ${taskIds.length} segmentation tasks`
+      });
+    } catch (error) {
+      logger.error('Error creating segmentation job', { error });
+      next(error);
+    }
+  }
+);
 
 // DELETE /api/segmentation/job/:jobId - Delete a segmentation job
 // @ts-ignore // Keep ignore for now

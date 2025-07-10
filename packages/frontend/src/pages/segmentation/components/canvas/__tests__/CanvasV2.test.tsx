@@ -115,17 +115,19 @@ describe('CanvasV2 Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Add getBoundingClientRect to mock canvas element
-    mockProps.canvasRef.current.getBoundingClientRect = () => ({
-      left: 0,
-      top: 0,
-      right: 800,
-      bottom: 600,
-      width: 800,
-      height: 600,
-      x: 0,
-      y: 0,
-      toJSON: () => {},
-    });
+    if (mockProps.canvasRef.current) {
+      mockProps.canvasRef.current.getBoundingClientRect = () => ({
+        left: 0,
+        top: 0,
+        right: 800,
+        bottom: 600,
+        width: 800,
+        height: 600,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      });
+    }
   });
 
   it('renders the canvas with the image', () => {
@@ -530,17 +532,19 @@ describe('CanvasV2 Component', () => {
 
   it('calculates cursor position correctly', () => {
     // We need to mock the getBoundingClientRect method of the canvasRef
-    mockProps.canvasRef.current.getBoundingClientRect = () => ({
-      left: 50,
-      top: 50,
-      right: 850,
-      bottom: 650,
-      width: 800,
-      height: 600,
-      x: 50,
-      y: 50,
-      toJSON: () => {},
-    });
+    if (mockProps.canvasRef.current) {
+      mockProps.canvasRef.current.getBoundingClientRect = () => ({
+        left: 50,
+        top: 50,
+        right: 850,
+        bottom: 650,
+        width: 800,
+        height: 600,
+        x: 50,
+        y: 50,
+        toJSON: () => {},
+      });
+    }
 
     // Use a transform to test coordinate calculations
     const transformedProps = {
