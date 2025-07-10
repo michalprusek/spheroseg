@@ -765,6 +765,13 @@ class SegmentationQueueService extends EventEmitter {
   }
 
   /**
+   * Manually trigger a queue status update
+   */
+  public async forceQueueUpdate(): Promise<void> {
+    await this.updateQueueStatus();
+  }
+
+  /**
    * Získá stav úlohy
    */
   public async getTaskStatus(taskId: string): Promise<SegmentationTask | null> {

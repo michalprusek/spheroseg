@@ -555,6 +555,27 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
    - Calculates usage against actual container limits, not heap size
    - Added optional manual garbage collection with performance tracking
 
+### Recently Fixed Issues (2025-07-10 - Latest)
+1. **Batch Image Deletion UI Sync**: Fixed issue where images remained visible after batch deletion
+   - Modified `handleBatchDelete` in `ProjectDetail.tsx` to only update UI after successful API calls
+   - Added proper cache cleanup for deleted images using `cleanImageFromAllStorages`
+   - Dispatches `image-deleted` events for each successfully deleted image
+   - Only removes successfully deleted images from UI, keeps failed ones
+
+2. **Rate Limiting (429 Errors) Prevention**: Fixed excessive API calls causing rate limit errors
+   - Created centralized `pollingManager.ts` to coordinate all API polling
+   - Implemented exponential backoff with maximum intervals
+   - Added global rate limit cooldown (1 minute after 429 error)
+   - Changed polling intervals: initial 10s → max 60s with exponential increase
+   - Limited polling to 30 attempts per image to prevent infinite polling
+   - Added random initial delay (2-5s) to prevent request bursts on page load
+   - Only polls for images in 'processing' or 'queued' status
+
+3. **WebSocket Optimization**: Reduced reliance on polling by improving WebSocket integration
+   - WebSocket remains primary method for real-time updates
+   - Polling now serves as fallback mechanism only
+   - Proper cleanup of WebSocket listeners on component unmount
+
 ### Recently Implemented (2025-07-10)
 1. **E2E Testing Infrastructure**: Comprehensive Playwright tests for routing
    - Created `e2e/routing/public-routes.spec.ts` with full navigation tests

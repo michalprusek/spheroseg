@@ -522,6 +522,35 @@ router.put(
         [status, imageId]
       );
 
+      // Update the segmentation task status if it exists
+      if (status === SEGMENTATION_STATUS.COMPLETED || status === SEGMENTATION_STATUS.FAILED) {
+        await pool.query(
+          `UPDATE segmentation_tasks 
+           SET status = $1::task_status, 
+               completed_at = NOW(), 
+               updated_at = NOW(),
+               result = CASE WHEN $1 = 'completed' THEN $2::jsonb ELSE NULL END,
+               error = CASE WHEN $1 = 'failed' THEN $3 ELSE NULL END
+           WHERE image_id = $4 AND status IN ('queued', 'processing')`,
+          [status, result_data || null, status === SEGMENTATION_STATUS.FAILED ? 'Segmentation failed' : null, imageId]
+        );
+        
+        logger.info('Updated segmentation task status', {
+          imageId,
+          status,
+          taskUpdateResult: 'completed'
+        });
+        
+        // Trigger immediate queue status update
+        try {
+          const segmentationQueueService = (await import('../services/segmentationQueueService')).default;
+          // Force an immediate queue status update
+          await segmentationQueueService.forceQueueUpdate();
+        } catch (queueError) {
+          logger.error('Failed to trigger queue status update:', queueError);
+        }
+      }
+
       if (updateResult.rows.length === 0) {
         // This might happen if the segmentation_results record didn't exist yet for some reason
         // Maybe try an INSERT ON CONFLICT here instead or handle it differently?

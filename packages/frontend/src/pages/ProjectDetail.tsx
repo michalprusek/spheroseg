@@ -501,8 +501,9 @@ const ProjectDetail = () => {
     if (window.confirm(t('project.detail.deleteConfirmation', { count: selectedImageIds.length }))) {
       toast.info(t('project.detail.deletingImages', { count: selectedImageIds.length }));
 
-      const remainingImages = images.filter((img) => !selectedImageIds.includes(img.id));
-      onImagesChange(remainingImages);
+      // Don't update UI immediately - wait for API success
+      // const remainingImages = images.filter((img) => !selectedImageIds.includes(img.id));
+      // onImagesChange(remainingImages);
 
       (async () => {
         const results = await Promise.allSettled(
@@ -526,11 +527,37 @@ const ProjectDetail = () => {
           }),
         );
 
-        const successCount = results.filter((r) => r.status === 'fulfilled' && (r.value as any).success).length;
-        const failCount = results.length - successCount;
+        const successfulDeletions = results
+          .filter((r) => r.status === 'fulfilled' && (r.value as any).success)
+          .map((r) => (r.value as any).imageId);
+        const failCount = results.length - successfulDeletions.length;
 
-        if (successCount > 0) {
-          toast.success(t('project.detail.deleteSuccess', { count: successCount }));
+        if (successfulDeletions.length > 0) {
+          toast.success(t('project.detail.deleteSuccess', { count: successfulDeletions.length }));
+          
+          // Update UI only for successfully deleted images
+          const remainingImages = images.filter((img) => !successfulDeletions.includes(img.id));
+          onImagesChange(remainingImages);
+          
+          // Clean up caches for deleted images
+          for (const imageId of successfulDeletions) {
+            try {
+              const { cleanImageFromAllStorages } = await import('@/api/projectImages');
+              await cleanImageFromAllStorages(id!, imageId);
+              
+              // Dispatch image-deleted event for each successfully deleted image
+              const event = new CustomEvent('image-deleted', {
+                detail: {
+                  imageId: imageId,
+                  projectId: id,
+                  forceRefresh: false,
+                },
+              });
+              window.dispatchEvent(event);
+            } catch (cleanupError) {
+              logger.error(`Failed to clean up storage for image ${imageId}:`, cleanupError);
+            }
+          }
         }
 
         if (failCount > 0) {
@@ -541,7 +568,11 @@ const ProjectDetail = () => {
           );
         }
 
-        refreshData();
+        // Refresh data to sync with server state
+        setTimeout(() => {
+          refreshData();
+        }, 500);
+        
         setSelectedImages({});
         setSelectAll(false);
       })();
