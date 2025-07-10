@@ -55,10 +55,7 @@ export const ImageDisplay = ({
         const response = await apiClient.get(`/api/images/${image.id}/segmentation`);
         if (response.data && response.data.status) {
           const apiStatus = response.data.status;
-          if (apiStatus !== currentStatus) {
-            console.log(`ImageDisplay: Initial status check - updating from ${currentStatus} to ${apiStatus}`);
-            setCurrentStatus(apiStatus);
-          }
+          setCurrentStatus(apiStatus);
         }
       } catch (error: any) {
         // Silently ignore 404 errors (no segmentation yet)
@@ -72,7 +69,7 @@ export const ImageDisplay = ({
     const timeoutId = setTimeout(checkInitialStatus, 500);
     
     return () => clearTimeout(timeoutId);
-  }, [image.segmentationStatus, image.id]);
+  }, [image.segmentationStatus, image.id]); // currentStatus removed to avoid infinite loop
 
   // Get socket connection
   const { socket, isConnected } = useSocketConnection();

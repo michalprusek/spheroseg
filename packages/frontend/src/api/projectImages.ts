@@ -119,7 +119,7 @@ export const mapApiImageToProjectImage = (apiImage: Image): ProjectImage => {
     updatedAt: new Date(apiImage.updated_at),
     width: apiImage.width || null,
     height: apiImage.height || null,
-    segmentationStatus: apiImage.segmentationStatus || apiImage.status || 'pending',
+    segmentationStatus: apiImage.segmentation_status || apiImage.segmentationStatus || apiImage.status || 'without_segmentation',
     segmentationResultPath: segmentationResultPathValue,
   };
 };
