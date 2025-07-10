@@ -33,6 +33,22 @@ if (typeof window !== 'undefined') {
 // This file runs before any test files, ensuring the flags are set
 console.log('React Router Future Flags set and warnings patched in test-setup.ts');
 
+// Mock i18n.ts module to avoid initialization
+vi.mock('@/i18n', () => ({
+  i18nInitializedPromise: Promise.resolve({
+    language: 'en',
+    changeLanguage: vi.fn().mockResolvedValue(undefined),
+    t: vi.fn((key) => key),
+    isInitialized: true,
+  }),
+  default: {
+    language: 'en',
+    changeLanguage: vi.fn().mockResolvedValue(undefined),
+    t: vi.fn((key) => key),
+    isInitialized: true,
+  },
+}));
+
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -61,9 +77,9 @@ vi.mock('react-i18next', () => ({
 }));
 
 // Mock i18next
-vi.mock('i18next', () => ({
-  default: {
-    use: vi.fn().mockReturnThis(),
+vi.mock('i18next', () => {
+  const mockI18next = {
+    use: vi.fn(),
     init: vi.fn().mockResolvedValue(undefined),
     changeLanguage: vi.fn().mockResolvedValue(undefined),
     t: vi.fn((key) => key),
@@ -79,39 +95,63 @@ vi.mock('i18next', () => ({
     loadNamespaces: vi.fn().mockResolvedValue(undefined),
     loadLanguages: vi.fn().mockResolvedValue(undefined),
     reloadResources: vi.fn().mockResolvedValue(undefined),
+    isInitialized: true,
     options: {
       resources: {},
+      lng: 'en',
+    },
+  };
+  
+  // Make use() return the instance for chaining
+  mockI18next.use.mockReturnValue(mockI18next);
+  
+  return {
+    default: mockI18next,
+  };
+});
+
+// Mock axios with proper structure
+const mockAxiosInstance = {
+  get: vi.fn().mockResolvedValue({ data: {} }),
+  post: vi.fn().mockResolvedValue({ data: {} }),
+  put: vi.fn().mockResolvedValue({ data: {} }),
+  delete: vi.fn().mockResolvedValue({ data: {} }),
+  patch: vi.fn().mockResolvedValue({ data: {} }),
+  interceptors: {
+    request: {
+      use: vi.fn(),
+      eject: vi.fn(),
+    },
+    response: {
+      use: vi.fn(),
+      eject: vi.fn(),
     },
   },
-}));
+};
 
-// Mock axios
-vi.mock('axios', () => ({
-  default: {
-    create: vi.fn(() => ({
+vi.mock('axios', () => {
+  return {
+    default: {
+      create: vi.fn(() => mockAxiosInstance),
       get: vi.fn().mockResolvedValue({ data: {} }),
       post: vi.fn().mockResolvedValue({ data: {} }),
       put: vi.fn().mockResolvedValue({ data: {} }),
       delete: vi.fn().mockResolvedValue({ data: {} }),
       patch: vi.fn().mockResolvedValue({ data: {} }),
-      interceptors: {
-        request: {
-          use: vi.fn(),
-          eject: vi.fn(),
-        },
-        response: {
-          use: vi.fn(),
-          eject: vi.fn(),
-        },
+      isAxiosError: vi.fn((error) => error && error.isAxiosError === true),
+      AxiosError: class AxiosError extends Error {
+        isAxiosError = true;
+        constructor(message, code, config, request, response) {
+          super(message);
+          this.code = code;
+          this.config = config;
+          this.request = request;
+          this.response = response;
+        }
       },
-    })),
-    get: vi.fn().mockResolvedValue({ data: {} }),
-    post: vi.fn().mockResolvedValue({ data: {} }),
-    put: vi.fn().mockResolvedValue({ data: {} }),
-    delete: vi.fn().mockResolvedValue({ data: {} }),
-    patch: vi.fn().mockResolvedValue({ data: {} }),
-  },
-}));
+    },
+  };
+});
 
 // Mock react-hot-toast
 vi.mock('react-hot-toast', () => ({
@@ -155,16 +195,20 @@ vi.mock('@tanstack/react-query', async () => {
 });
 
 // Mock userProfileService
-vi.mock('@/services/userProfileService', () => ({
-  userProfileService: {
+vi.mock('@/services/userProfileService', () => {
+  const mockService = {
     getUserSetting: vi.fn().mockResolvedValue('en'),
     saveUserSetting: vi.fn().mockResolvedValue(undefined),
     getLanguage: vi.fn().mockResolvedValue('en'),
     setLanguage: vi.fn().mockResolvedValue(undefined),
     getTheme: vi.fn().mockResolvedValue('light'),
     setTheme: vi.fn().mockResolvedValue(undefined),
-  },
-}));
+  };
+  return {
+    userProfileService: mockService,
+    default: mockService,
+  };
+});
 
 // Mock @/lib/apiClient
 vi.mock('@/lib/apiClient', () => ({

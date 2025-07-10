@@ -6,6 +6,7 @@ import { EditMode, InteractionState } from '../../../hooks/segmentation';
 import '@testing-library/jest-dom';
 
 // Mock dependencies
+import useImageLoader from '@/hooks/useImageLoader';
 vi.mock('@/hooks/useImageLoader', () => ({
   default: vi.fn(() => ({
     image: { src: 'test-image-url', width: 800, height: 600 },
@@ -210,7 +211,7 @@ describe('CanvasV2 Component', () => {
 
   it('shows loading state when image is loading', () => {
     // Override the useImageLoader mock for this test
-    vi.mocked(require('@/hooks/useImageLoader').default).mockReturnValueOnce({
+    vi.mocked(useImageLoader).mockReturnValueOnce({
       image: null,
       isLoading: true,
       error: null,
@@ -224,7 +225,7 @@ describe('CanvasV2 Component', () => {
 
   it('shows error state when image fails to load', () => {
     // Override the useImageLoader mock for this test
-    vi.mocked(require('@/hooks/useImageLoader').default).mockReturnValueOnce({
+    vi.mocked(useImageLoader).mockReturnValueOnce({
       image: null,
       isLoading: false,
       error: new Error('Failed to load image'),

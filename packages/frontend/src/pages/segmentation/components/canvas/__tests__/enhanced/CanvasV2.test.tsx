@@ -4,6 +4,7 @@ import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
 import CanvasV2 from '../../CanvasV2';
 import { EditMode, InteractionState } from '@/pages/segmentation/hooks/segmentation';
 import userEvent from '@testing-library/user-event';
+import useImageLoader from '@/hooks/useImageLoader';
 
 // Mock the external dependencies
 vi.mock('@/hooks/useImageLoader', () => ({
@@ -161,8 +162,7 @@ describe('CanvasV2 Component', () => {
 
   it('renders canvas with image when image is available', async () => {
     // Override the image loader mock for this test
-    const useImageLoader = require('@/hooks/useImageLoader').default;
-    useImageLoader.mockReturnValueOnce({
+    vi.mocked(useImageLoader).mockReturnValueOnce({
       image: {
         src: mockImageData.src,
         width: mockImageData.width,
@@ -194,8 +194,7 @@ describe('CanvasV2 Component', () => {
 
   it('renders loading state when image is loading', async () => {
     // Override the image loader mock for this test
-    const useImageLoader = require('@/hooks/useImageLoader').default;
-    useImageLoader.mockReturnValueOnce({
+    vi.mocked(useImageLoader).mockReturnValueOnce({
       image: null,
       isLoading: true,
       error: null,
@@ -209,8 +208,7 @@ describe('CanvasV2 Component', () => {
 
   it('renders error state when image loading fails', async () => {
     // Override the image loader mock for this test
-    const useImageLoader = require('@/hooks/useImageLoader').default;
-    useImageLoader.mockReturnValueOnce({
+    vi.mocked(useImageLoader).mockReturnValueOnce({
       image: null,
       isLoading: false,
       error: new Error('Failed to load image'),

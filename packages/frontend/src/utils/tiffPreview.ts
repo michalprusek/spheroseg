@@ -24,11 +24,11 @@ export async function generateTiffPreview(file: File): Promise<string | null> {
     // For TIFF files, we need server-side conversion
     // Send to backend for conversion
     const formData = new FormData();
-    formData.append('avatar', file); // Backend expects 'avatar' field name
+    formData.append('file', file); // Backend expects 'file' field name
 
     try {
-      // Use the avatar preview endpoint which handles TIFF conversion
-      const response = await apiClient.post('/api/user-profile/avatar/preview', formData, {
+      // Use the preview endpoint which handles TIFF/BMP conversion
+      const response = await apiClient.post('/api/preview/generate', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
