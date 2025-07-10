@@ -235,7 +235,7 @@ services:
       bash -c "
         echo 'Skipping database initialization (already initialized)...' &&
         echo 'Starting development server with hot reload using nodemon...' &&
-        NODE_OPTIONS='--max-old-space-size=768' DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/spheroseg APP_URL=http://backend:5001 ML_API_URL=http://ml:5002 npm run dev
+        NODE_OPTIONS='--max-old-space-size=768' DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/spheroseg APP_URL=https://spherosegapp.utia.cas.cz ML_API_URL=http://ml:5002 npm run dev
       "
 
   # ML Service

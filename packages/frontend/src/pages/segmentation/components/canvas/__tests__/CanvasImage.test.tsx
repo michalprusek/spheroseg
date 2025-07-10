@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { CanvasImage } from '../CanvasImage';
+import CanvasImage from '../CanvasImage';
 import { EditMode } from '@spheroseg/types';
 
 // Mock custom hooks

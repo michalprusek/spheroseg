@@ -218,12 +218,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       // Create a progress callback function
       const onProgress = (fileName: string, progress: number, fileIndex: number, totalFiles: number) => {
         setCurrentFileName(fileName);
-        // Calculate overall progress: each file contributes equally to total progress
-        // When a file is completed (progress = 100), we count it as fully completed
-        const completedFiles = progress === 100 ? fileIndex + 1 : fileIndex;
-        const currentFileProgress = progress === 100 ? 0 : progress;
-        const overallProgress = (completedFiles / totalFiles) * 100 + currentFileProgress / totalFiles;
-        setUploadProgress(Math.min(overallProgress, 100));
+        // Calculate overall progress based on completed files and current file progress
+        // Each file contributes equally to the total progress
+        const completedFilesProgress = (fileIndex / totalFiles) * 100;
+        const currentFileContribution = (progress / 100) * (100 / totalFiles);
+        const overallProgress = completedFilesProgress + currentFileContribution;
+        setUploadProgress(Math.min(Math.round(overallProgress), 100));
       };
 
       // Použijeme uploadFilesWithFallback s progress callback

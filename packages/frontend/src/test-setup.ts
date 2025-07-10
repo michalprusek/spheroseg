@@ -68,8 +68,8 @@ vi.mock('react-i18next', () => ({
       emit: vi.fn(),
     },
   }),
-  Trans: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  I18nextProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  Trans: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
+  I18nextProvider: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
   initReactI18next: {
     type: '3rdParty',
     init: vi.fn(),
@@ -129,6 +129,24 @@ const mockAxiosInstance = {
   },
 };
 
+// Create AxiosError class
+class MockAxiosError extends Error {
+  isAxiosError = true;
+  code?: string;
+  config?: any;
+  request?: any;
+  response?: any;
+  
+  constructor(message: string, code?: string, config?: any, request?: any, response?: any) {
+    super(message);
+    this.name = 'AxiosError';
+    this.code = code;
+    this.config = config;
+    this.request = request;
+    this.response = response;
+  }
+}
+
 vi.mock('axios', () => {
   return {
     default: {
@@ -139,17 +157,10 @@ vi.mock('axios', () => {
       delete: vi.fn().mockResolvedValue({ data: {} }),
       patch: vi.fn().mockResolvedValue({ data: {} }),
       isAxiosError: vi.fn((error) => error && error.isAxiosError === true),
-      AxiosError: class AxiosError extends Error {
-        isAxiosError = true;
-        constructor(message, code, config, request, response) {
-          super(message);
-          this.code = code;
-          this.config = config;
-          this.request = request;
-          this.response = response;
-        }
-      },
+      AxiosError: MockAxiosError,
     },
+    AxiosError: MockAxiosError,
+    isAxiosError: vi.fn((error) => error && error.isAxiosError === true),
   };
 });
 
@@ -267,17 +278,36 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
-// Mock useLanguage hook with proper React component
+// Mock LanguageContext with proper provider
+const mockLanguageContext = React.createContext({
+  language: 'en',
+  setLanguage: vi.fn(),
+  t: vi.fn((key) => key),
+  availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
+});
+
 vi.mock('@/contexts/LanguageContext', () => {
   return {
-    useLanguage: () => ({
-      language: 'en',
-      setLanguage: vi.fn(),
-      t: vi.fn((key) => key),
-      availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
-    }),
+    useLanguage: () => {
+      const context = React.useContext(mockLanguageContext);
+      if (!context) {
+        throw new Error('useLanguage must be used within a LanguageProvider');
+      }
+      return context;
+    },
     LanguageProvider: ({ children }: { children: React.ReactNode }) => {
-      return React.createElement('div', { 'data-testid': 'language-provider' }, children);
+      return React.createElement(
+        mockLanguageContext.Provider,
+        {
+          value: {
+            language: 'en',
+            setLanguage: vi.fn(),
+            t: vi.fn((key) => key),
+            availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
+          },
+        },
+        children
+      );
     },
   };
 });

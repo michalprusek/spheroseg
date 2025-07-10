@@ -751,7 +751,7 @@ class AuthService {
       );
 
       // Send email with verification link
-      const verificationUrl = `${config.server.frontendUrl}/verify-email?token=${token}`;
+      const verificationUrl = `${config.appUrl || 'https://spherosegapp.utia.cas.cz'}/verify-email?token=${token}`;
 
       // Import email service
       const { sendVerificationEmail } = await import('./emailService');

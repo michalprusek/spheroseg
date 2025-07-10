@@ -132,7 +132,7 @@ export const ToolbarV2: React.FC<ToolbarV2Props> = ({
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setEditMode(EditMode.AddPoints)}
+        onClick={() => setEditMode(editMode === EditMode.AddPoints ? EditMode.View : EditMode.AddPoints)}
         className={getButtonClasses(EditMode.AddPoints, editMode)}
         title={t('segmentation.modes.addPoints') || 'Add Points (A)'}
       >
@@ -141,7 +141,7 @@ export const ToolbarV2: React.FC<ToolbarV2Props> = ({
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setEditMode(EditMode.CreatePolygon)}
+        onClick={() => setEditMode(editMode === EditMode.CreatePolygon ? EditMode.View : EditMode.CreatePolygon)}
         className={getButtonClasses(EditMode.CreatePolygon, editMode)}
         title={t('segmentation.modes.createPolygon') || 'Create Polygon (N)'}
       >
@@ -150,7 +150,7 @@ export const ToolbarV2: React.FC<ToolbarV2Props> = ({
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setEditMode(EditMode.Slice)}
+        onClick={() => setEditMode(editMode === EditMode.Slice ? EditMode.View : EditMode.Slice)}
         className={getButtonClasses(EditMode.Slice, editMode)}
         title={t('segmentation.modes.slice') || 'Slice Polygon (S)'}
       >
@@ -159,7 +159,7 @@ export const ToolbarV2: React.FC<ToolbarV2Props> = ({
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setEditMode(EditMode.DeletePolygon)}
+        onClick={() => setEditMode(editMode === EditMode.DeletePolygon ? EditMode.View : EditMode.DeletePolygon)}
         className={getButtonClasses(EditMode.DeletePolygon, editMode)}
         title={t('segmentation.modes.deletePolygon') || 'Delete Polygon (D)'}
       >

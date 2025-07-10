@@ -86,26 +86,6 @@ export const deleteProjectSchema = z.object({
   }),
 });
 
-/**
- * Schema for project duplication
- */
-export const duplicateProjectSchema = z.object({
-  params: z.object({
-    id: uuidSchema,
-  }),
-  body: z.object({
-    newTitle: z
-      .string()
-      .min(3, 'Title must be at least 3 characters long')
-      .max(100, 'Title must be at most 100 characters long')
-      .optional(),
-    copyFiles: z.boolean().optional().default(true),
-    copySegmentations: z.boolean().optional().default(false),
-    resetStatus: z.boolean().optional().default(true),
-    async: z.boolean().optional().default(false),
-  }),
-});
-
 
 /**
  * Schema for getting project images

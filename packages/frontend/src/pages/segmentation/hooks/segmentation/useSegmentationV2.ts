@@ -558,26 +558,31 @@ export const useSegmentationV2 = (
         return;
       }
 
-      // Single key shortcuts
+      // Single key shortcuts with toggle behavior
       switch (e.key.toLowerCase()) {
         case 'v':
           setEditMode(EditMode.View);
           setTempPoints([]);
           break;
         case 'e':
-          setEditMode(EditMode.EditVertices);
+          setEditMode(editMode === EditMode.EditVertices ? EditMode.View : EditMode.EditVertices);
+          if (editMode === EditMode.EditVertices) setTempPoints([]);
           break;
         case 'a':
-          setEditMode(EditMode.AddPoints);
+          setEditMode(editMode === EditMode.AddPoints ? EditMode.View : EditMode.AddPoints);
+          if (editMode === EditMode.AddPoints) setTempPoints([]);
           break;
         case 'n':
-          setEditMode(EditMode.CreatePolygon);
+          setEditMode(editMode === EditMode.CreatePolygon ? EditMode.View : EditMode.CreatePolygon);
+          if (editMode === EditMode.CreatePolygon) setTempPoints([]);
           break;
         case 's':
-          setEditMode(EditMode.Slice);
+          setEditMode(editMode === EditMode.Slice ? EditMode.View : EditMode.Slice);
+          if (editMode === EditMode.Slice) setTempPoints([]);
           break;
         case 'd':
-          setEditMode(EditMode.DeletePolygon);
+          setEditMode(editMode === EditMode.DeletePolygon ? EditMode.View : EditMode.DeletePolygon);
+          if (editMode === EditMode.DeletePolygon) setTempPoints([]);
           break;
         case 'delete':
           if (selectedPolygonId) {
