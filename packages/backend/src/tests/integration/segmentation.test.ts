@@ -35,7 +35,7 @@ beforeAll(async () => {
   testProjectId = await createTestProject(testUserId, {
     title: 'Test Project',
     description: 'Test project description',
-    public: false
+    public: false,
   });
 });
 

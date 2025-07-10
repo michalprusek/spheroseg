@@ -250,7 +250,13 @@ const StatsOverview: React.FC = () => {
   const [showExtended, setShowExtended] = useState(false);
 
   // Use the updated useExtendedUserStatistics hook with unified cache
-  const { data: rawStats, isLoading, error, refetch: fetchStatistics, invalidate: clearCache } = useExtendedUserStatistics();
+  const {
+    data: rawStats,
+    isLoading,
+    error,
+    refetch: fetchStatistics,
+    invalidate: clearCache,
+  } = useExtendedUserStatistics();
 
   // Transform the data to match the expected format
   const stats: UserStats | undefined = rawStats

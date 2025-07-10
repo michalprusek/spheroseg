@@ -9,8 +9,8 @@ export const cacheControl = {
   noCache: (_req: Request, res: Response, next: NextFunction) => {
     res.set({
       'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
+      Pragma: 'no-cache',
+      Expires: '0',
     });
     next();
   },
@@ -19,7 +19,7 @@ export const cacheControl = {
   short: (_req: Request, res: Response, next: NextFunction) => {
     res.set({
       'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
-      'Vary': 'Accept-Encoding, Authorization'
+      Vary: 'Accept-Encoding, Authorization',
     });
     next();
   },
@@ -28,7 +28,7 @@ export const cacheControl = {
   medium: (_req: Request, res: Response, next: NextFunction) => {
     res.set({
       'Cache-Control': 'public, max-age=3600, stale-while-revalidate=300',
-      'Vary': 'Accept-Encoding, Authorization'
+      Vary: 'Accept-Encoding, Authorization',
     });
     next();
   },
@@ -37,7 +37,7 @@ export const cacheControl = {
   long: (_req: Request, res: Response, next: NextFunction) => {
     res.set({
       'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
-      'Vary': 'Accept-Encoding'
+      Vary: 'Accept-Encoding',
     });
     next();
   },
@@ -46,7 +46,7 @@ export const cacheControl = {
   immutable: (_req: Request, res: Response, next: NextFunction) => {
     res.set({
       'Cache-Control': 'public, max-age=31536000, immutable',
-      'Vary': 'Accept-Encoding'
+      Vary: 'Accept-Encoding',
     });
     next();
   },
@@ -57,13 +57,13 @@ export const cacheControl = {
       // Private cache for authenticated requests
       res.set({
         'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
-        'Vary': 'Accept-Encoding, Authorization'
+        Vary: 'Accept-Encoding, Authorization',
       });
     } else {
       // Public cache for non-authenticated requests
       res.set({
         'Cache-Control': 'public, max-age=600, stale-while-revalidate=120',
-        'Vary': 'Accept-Encoding'
+        Vary: 'Accept-Encoding',
       });
     }
     next();
@@ -72,34 +72,36 @@ export const cacheControl = {
   // ETag support for conditional requests
   etag: (req: Request, res: Response, next: NextFunction) => {
     const originalSend = res.send;
-    
-    res.send = function(data: any) {
+
+    res.send = function (data: any) {
       // Generate simple ETag based on content
-      if (data && typeof data === 'string' || Buffer.isBuffer(data)) {
+      if ((data && typeof data === 'string') || Buffer.isBuffer(data)) {
         const etag = `"${Buffer.from(data).length}-${Date.now()}"`;
         res.set('ETag', etag);
-        
+
         // Check if client has matching ETag
         if (req.headers['if-none-match'] === etag) {
           res.status(304).end();
           return res;
         }
       }
-      
+
       return originalSend.call(this, data);
     };
-    
+
     next();
-  }
+  },
 };
 
 /**
  * Helper to combine multiple cache strategies
  */
-export const combineCacheStrategies = (...strategies: Array<(req: Request, res: Response, next: NextFunction) => void>) => {
+export const combineCacheStrategies = (
+  ...strategies: Array<(req: Request, res: Response, next: NextFunction) => void>
+) => {
   return (req: Request, res: Response, next: NextFunction) => {
     let index = 0;
-    
+
     const runNext = () => {
       if (index < strategies.length) {
         const strategy = strategies[index++];
@@ -108,7 +110,7 @@ export const combineCacheStrategies = (...strategies: Array<(req: Request, res: 
         next();
       }
     };
-    
+
     runNext();
   };
 };

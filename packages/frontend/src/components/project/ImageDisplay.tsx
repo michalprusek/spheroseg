@@ -15,6 +15,7 @@ import useSocketConnection from '@/hooks/useSocketConnection';
 import apiClient from '@/lib/apiClient';
 import { useTranslations } from '@/hooks/useTranslations';
 import { SEGMENTATION_STATUS, isProcessingStatus } from '@/constants/segmentationStatus';
+import { debouncedCacheUpdate } from '@/utils/debounce';
 
 interface ImageDisplayProps {
   image: ProjectImage;
@@ -47,21 +48,27 @@ export const ImageDisplay = ({
 
   // Track segmentation status changes and force check on mount
   useEffect(() => {
-    setCurrentStatus(image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION);
-    
+    // Only update if the status actually changed
+    const newStatus = image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION;
+    if (currentStatus !== newStatus) {
+      setCurrentStatus(newStatus);
+    }
+
     // Force check the actual status from API when component mounts or image changes
     const checkInitialStatus = async () => {
       try {
         const response = await apiClient.get(`/api/images/${image.id}/segmentation`);
         if (response.data && response.data.status) {
           const apiStatus = response.data.status;
-          setCurrentStatus(apiStatus);
-          
-          // Update the cache with the correct status from API
-          if (image.project_id) {
-            import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
-              updateImageStatusInCache(image.project_id, image.id, apiStatus, response.data.resultPath);
-            });
+
+          // Only update if status is different from current
+          if (apiStatus !== currentStatus) {
+            setCurrentStatus(apiStatus);
+
+            // Update the cache with the correct status from API (debounced)
+            if (image.project_id) {
+              debouncedCacheUpdate(image.project_id, image.id, apiStatus, response.data.resultPath);
+            }
           }
         }
       } catch (error: any) {
@@ -71,12 +78,12 @@ export const ImageDisplay = ({
         }
       }
     };
-    
+
     // Check status after a short delay to avoid race conditions
     const timeoutId = setTimeout(checkInitialStatus, 500);
-    
+
     return () => clearTimeout(timeoutId);
-  }, [image.segmentationStatus, image.id]); // currentStatus removed to avoid infinite loop
+  }, [image.segmentationStatus, image.id, image.project_id]); // currentStatus removed to avoid infinite loop
 
   // Get socket connection
   const { socket, isConnected } = useSocketConnection();
@@ -90,11 +97,9 @@ export const ImageDisplay = ({
         // Update image status
         setCurrentStatus(data.status);
 
-        // Update the cache to prevent stale data
+        // Update the cache to prevent stale data (debounced)
         if (image.project_id) {
-          import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
-            updateImageStatusInCache(image.project_id, data.imageId, data.status, data.resultPath);
-          });
+          debouncedCacheUpdate(image.project_id, data.imageId, data.status, data.resultPath);
         }
 
         // Trigger queue status update
@@ -176,7 +181,6 @@ export const ImageDisplay = ({
   useEffect(() => {
     // Set up polling for processing or queued status
     if (currentStatus === SEGMENTATION_STATUS.PROCESSING || currentStatus === SEGMENTATION_STATUS.QUEUED) {
-
       // Function to check current image status through API
       const checkImageStatus = async () => {
         try {
@@ -187,11 +191,9 @@ export const ImageDisplay = ({
             if (apiStatus !== currentStatus) {
               setCurrentStatus(apiStatus);
 
-              // Update the cache to prevent stale data
+              // Update the cache to prevent stale data (debounced)
               if (image.project_id) {
-                import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
-                  updateImageStatusInCache(image.project_id, image.id, apiStatus, response.data.resultPath);
-                });
+                debouncedCacheUpdate(image.project_id, image.id, apiStatus, response.data.resultPath);
               }
 
               // If status changed to completed, trigger update notification
@@ -201,6 +203,7 @@ export const ImageDisplay = ({
                     imageId: image.id,
                     status: apiStatus,
                     forceQueueUpdate: true,
+                    resultPath: response.data.resultPath,
                   },
                 });
                 window.dispatchEvent(imageUpdateEvent);
@@ -230,7 +233,7 @@ export const ImageDisplay = ({
         clearInterval(intervalId);
       };
     }
-  }, [image.id]); // Removed currentStatus from dependencies to prevent infinite loops
+  }, [currentStatus, image.id, image.project_id]); // Added currentStatus back with proper checks
 
   // Listen for custom events (fallback mechanism)
   useEffect(() => {
@@ -248,11 +251,9 @@ export const ImageDisplay = ({
         // Update image status
         setCurrentStatus(status);
 
-        // Update the cache to prevent stale data
+        // Update the cache to prevent stale data (debounced)
         if (image.project_id) {
-          import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
-            updateImageStatusInCache(image.project_id, imageId, status, customEvent.detail.resultPath);
-          });
+          debouncedCacheUpdate(image.project_id, imageId, status, customEvent.detail.resultPath);
         }
 
         // If forceQueueUpdate is true or status is 'processing' or 'queued', update the queue indicator

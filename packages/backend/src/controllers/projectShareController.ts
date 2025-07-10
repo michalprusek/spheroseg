@@ -39,7 +39,7 @@ export async function shareProject(req: AuthenticatedRequest, res: Response, nex
     const validationResult = shareProjectSchema.safeParse(req.body);
 
     if (!validationResult.success) {
-      throw new ApiError(validationResult.error.errors.map(e => e.message).join(', '), 400);
+      throw new ApiError(validationResult.error.errors.map((e) => e.message).join(', '), 400);
     }
 
     const { email, permission } = validationResult.data;
@@ -229,7 +229,7 @@ export async function generateInvitationLink(
     const validationResult = generateInvitationLinkSchema.safeParse(req.body);
 
     if (!validationResult.success) {
-      throw new ApiError(validationResult.error.errors.map(e => e.message).join(', '), 400);
+      throw new ApiError(validationResult.error.errors.map((e) => e.message).join(', '), 400);
     }
 
     const { permission } = validationResult.data;

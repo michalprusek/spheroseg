@@ -108,6 +108,16 @@ export const mapApiImageToProjectImage = (apiImage: Image): ProjectImage => {
     segmentationResultPathValue = ensuredPath === undefined ? null : ensuredPath;
   }
 
+  // Prioritize segmentation_status field from database
+  let finalStatus = 'without_segmentation';
+  if (apiImage.segmentation_status) {
+    finalStatus = apiImage.segmentation_status;
+  } else if (apiImage.segmentationStatus) {
+    finalStatus = apiImage.segmentationStatus;
+  } else if (apiImage.status) {
+    finalStatus = apiImage.status;
+  }
+
   return {
     id: apiImage.id,
     project_id: apiImage.project_id,
@@ -119,8 +129,9 @@ export const mapApiImageToProjectImage = (apiImage: Image): ProjectImage => {
     updatedAt: new Date(apiImage.updated_at),
     width: apiImage.width || null,
     height: apiImage.height || null,
-    segmentationStatus: apiImage.segmentation_status || apiImage.segmentationStatus || apiImage.status || 'without_segmentation',
+    segmentationStatus: finalStatus,
     segmentationResultPath: segmentationResultPathValue,
+    segmentation_status: apiImage.segmentation_status, // Keep original field for reference
   };
 };
 
@@ -354,7 +365,7 @@ export const updateImageStatusInCache = async (
   projectId: string,
   imageId: string,
   status: string,
-  resultPath?: string | null
+  resultPath?: string | null,
 ): Promise<void> => {
   // Clean projectId to ensure consistent format
   const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
@@ -559,21 +570,23 @@ export const storeUploadedImages = async (projectId: string, imagesToStore: Proj
   );
 };
 
-export const getProjectImages = async (projectId: string): Promise<ProjectImage[]> => {
+export const getProjectImages = async (projectId: string, skipCache: boolean = false): Promise<ProjectImage[]> => {
   const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
   cleanLocalStorageFromBlobUrls(cleanProjectId);
 
-  // Try unified cache first
-  const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
-  const cachedImages = await cacheService.get<ProjectImage[]>(cacheKey, {
-    layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
-  });
+  // Try unified cache first unless skipCache is true
+  if (!skipCache) {
+    const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
+    const cachedImages = await cacheService.get<ProjectImage[]>(cacheKey, {
+      layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
+    });
 
-  // Only return cached data if it's not an empty array
-  // This ensures we always try to fetch from API when there are no images in cache
-  if (cachedImages && cachedImages.length > 0) {
-    console.log(`Retrieved ${cachedImages.length} images from unified cache for project ${cleanProjectId}`);
-    return cachedImages;
+    // Only return cached data if it's not an empty array
+    // This ensures we always try to fetch from API when there are no images in cache
+    if (cachedImages && cachedImages.length > 0) {
+      console.log(`Retrieved ${cachedImages.length} images from unified cache for project ${cleanProjectId}`);
+      return cachedImages;
+    }
   }
 
   try {
@@ -601,6 +614,7 @@ export const getProjectImages = async (projectId: string): Promise<ProjectImage[
     });
 
     // Store in unified cache
+    const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
     await cacheService.set(cacheKey, mappedImages, {
       ttl: CACHE_EXPIRATION,
       layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],

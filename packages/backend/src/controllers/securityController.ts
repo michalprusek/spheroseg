@@ -12,7 +12,11 @@ import { ApiError } from '../utils/errors';
  * @route GET /api/security/audit
  * @access Admin only
  */
-export const getSecurityAuditReport = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getSecurityAuditReport = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {
@@ -31,7 +35,11 @@ export const getSecurityAuditReport = async (req: AuthenticatedRequest, res: Res
  * @route GET /api/security/issues/:id
  * @access Admin only
  */
-export const getSecurityIssueById = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getSecurityIssueById = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {
@@ -50,7 +58,11 @@ export const getSecurityIssueById = async (req: AuthenticatedRequest, res: Respo
  * @route PATCH /api/security/issues/:id
  * @access Admin only
  */
-export const updateSecurityIssue = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const updateSecurityIssue = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {
@@ -74,7 +86,11 @@ export const updateSecurityIssue = async (req: AuthenticatedRequest, res: Respon
  * @route GET /api/security/scans
  * @access Admin only
  */
-export const getVulnerabilityScans = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getVulnerabilityScans = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {
@@ -99,7 +115,11 @@ export const getVulnerabilityScans = async (req: AuthenticatedRequest, res: Resp
  * @route GET /api/security/scans/:id
  * @access Admin only
  */
-export const getScanDetails = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getScanDetails = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {

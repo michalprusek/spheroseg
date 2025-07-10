@@ -48,7 +48,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
       // Check cache first
       const cacheKey = `${projectId}-${imageId}`;
       const cached = segmentationCache.get(cacheKey);
-      
+
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
         setSegmentationData(cached.data);
         setIsLoading(false);
@@ -56,7 +56,6 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
       }
 
       try {
-
         // First, try to get the original image dimensions from the image API
         let originalWidth = 0;
         let originalHeight = 0;
@@ -95,7 +94,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
 
         // Cache the result
         segmentationCache.set(cacheKey, { data: segData, timestamp: Date.now() });
-        
+
         setSegmentationData(segData);
         setIsLoading(false);
       } catch (err: any) {
@@ -166,7 +165,6 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
             polygon.holes && polygon.holes.length > 0
               ? createSvgPath(polygon.points, polygon.holes)
               : createSvgPath(polygon.points);
-
 
           // Always use path for consistency
           return (

@@ -1,5 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { appConfig, getConfig, getContactEmail, getSupportEmail, getAppName, getAppFullName, getOrganizationName, getGithubUrl } from '../app.config';
+import {
+  appConfig,
+  getConfig,
+  getContactEmail,
+  getSupportEmail,
+  getAppName,
+  getAppFullName,
+  getOrganizationName,
+  getGithubUrl,
+} from '../app.config';
 
 describe('App Configuration', () => {
   beforeEach(() => {
@@ -72,7 +81,7 @@ describe('App Configuration', () => {
     it('should be type-safe', () => {
       const appSection = getConfig('app');
       expect(appSection.name).toBe('SpheroSeg');
-      
+
       const contactSection = getConfig('contact');
       expect(contactSection.email).toBe('spheroseg@utia.cas.cz');
     });
@@ -108,7 +117,7 @@ describe('App Configuration', () => {
     it('should use environment variables when available', () => {
       // Test that config respects environment variables
       const originalEnv = import.meta.env;
-      
+
       // Since import.meta.env is read-only, we can't modify it directly
       // This test verifies the structure is correct
       expect(appConfig.api.baseUrl).toBeDefined();
@@ -116,5 +125,4 @@ describe('App Configuration', () => {
       expect(appConfig.development.enableDevTools).toBeDefined();
     });
   });
-
 });

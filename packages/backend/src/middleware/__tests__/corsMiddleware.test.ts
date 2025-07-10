@@ -31,7 +31,7 @@ describe('CORS Middleware', () => {
         .get('/test')
         .set('Origin', config.server.corsOrigins[0])
         .expect(200);
-      
+
       expect(response.headers['access-control-allow-origin']).toBeDefined();
     });
 
@@ -41,25 +41,23 @@ describe('CORS Middleware', () => {
         .set('Origin', config.server.corsOrigins[0])
         .set('Access-Control-Request-Method', 'POST')
         .expect(204);
-      
+
       expect(response.headers['access-control-allow-methods']).toBeDefined();
       expect(response.headers['access-control-allow-headers']).toBeDefined();
     });
 
     it('should reject requests from unauthorized origins', async () => {
-      const response = await request(app)
-        .get('/test')
-        .set('Origin', 'https://malicious-site.com');
-      
+      const response = await request(app).get('/test').set('Origin', 'https://malicious-site.com');
+
       // The request might still succeed, but CORS headers should not be set
-      expect(response.headers['access-control-allow-origin']).not.toBe('https://malicious-site.com');
+      expect(response.headers['access-control-allow-origin']).not.toBe(
+        'https://malicious-site.com'
+      );
     });
 
     it('should handle requests without origin header', async () => {
-      const response = await request(app)
-        .get('/test')
-        .expect(200);
-      
+      const response = await request(app).get('/test').expect(200);
+
       expect(response.body).toHaveProperty('message', 'Test successful');
     });
   });

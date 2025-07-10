@@ -217,19 +217,21 @@ let appConfig: AppConfig;
 
 try {
   appConfig = AppConfigSchema.parse(rawConfig);
-  
+
   if (import.meta.env.DEV) {
     console.log('✅ App configuration validated successfully');
   }
 } catch (error) {
   if (error instanceof z.ZodError) {
     console.error('❌ Configuration validation failed:', error.errors);
-    
+
     // In development, throw error to catch issues early
     if (import.meta.env.DEV) {
-      throw new Error(`Configuration validation failed: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`);
+      throw new Error(
+        `Configuration validation failed: ${error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`,
+      );
     }
-    
+
     // In production, log error and use defaults
     console.warn('Using default configuration due to validation errors');
     appConfig = rawConfig as AppConfig; // Fallback to raw config
@@ -242,9 +244,7 @@ try {
 export { appConfig };
 
 // Type-safe config getter
-export function getConfig<T extends keyof AppConfig>(
-  section: T
-): AppConfig[T] {
+export function getConfig<T extends keyof AppConfig>(section: T): AppConfig[T] {
   return appConfig[section];
 }
 
@@ -273,25 +273,22 @@ export const getOrganizationName = () => appConfig.organization.primary.name;
 export const getGithubUrl = () => appConfig.social.github.url;
 
 // Configuration update function (for runtime updates)
-export function updateConfig<K extends keyof AppConfig>(
-  section: K,
-  updates: Partial<AppConfig[K]>
-): void {
+export function updateConfig<K extends keyof AppConfig>(section: K, updates: Partial<AppConfig[K]>): void {
   const newSection = { ...appConfig[section], ...updates };
-  
+
   // Validate the updated section
   try {
     const sectionSchema = AppConfigSchema.shape[section];
     const validated = sectionSchema.parse(newSection);
     appConfig[section] = validated;
-    
+
     if (import.meta.env.DEV) {
       console.log(`✅ Configuration section '${section}' updated successfully`);
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error(`❌ Configuration update failed for '${section}':`, error.errors);
-      throw new Error(`Invalid configuration update: ${error.errors.map(e => e.message).join(', ')}`);
+      throw new Error(`Invalid configuration update: ${error.errors.map((e) => e.message).join(', ')}`);
     }
     throw error;
   }

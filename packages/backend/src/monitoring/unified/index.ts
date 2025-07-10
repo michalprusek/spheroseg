@@ -852,7 +852,12 @@ export async function monitorQuery<T extends Record<string, any> = any>(
     }
 
     updateQueryPatternStats(queryText, durationMs, result.rowCount ?? undefined);
-    monitoring.recordDatabaseQuery(operation, primaryTable, durationMs, result.rowCount ?? undefined);
+    monitoring.recordDatabaseQuery(
+      operation,
+      primaryTable,
+      durationMs,
+      result.rowCount ?? undefined
+    );
 
     return result;
   } catch (error) {
@@ -978,11 +983,18 @@ export function updatePoolMetrics(pool: any) {
 export function wrapClientQuery(client: PoolClient): PoolClient {
   const originalQuery = client.query.bind(client);
 
-  client.query = function <T extends Record<string, any> = any>(textOrConfig: string | any, values?: any): Promise<QueryResult<T>> {
+  client.query = function <T extends Record<string, any> = any>(
+    textOrConfig: string | any,
+    values?: any
+  ): Promise<QueryResult<T>> {
     const queryText = typeof textOrConfig === 'string' ? textOrConfig : textOrConfig.text;
     const params = values || (typeof textOrConfig === 'string' ? [] : textOrConfig.values || []);
 
-    return monitorQuery<T>(queryText, params, () => originalQuery(textOrConfig, values) as unknown as Promise<QueryResult<T>>);
+    return monitorQuery<T>(
+      queryText,
+      params,
+      () => originalQuery(textOrConfig, values) as unknown as Promise<QueryResult<T>>
+    );
   };
 
   return client;

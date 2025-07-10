@@ -90,7 +90,10 @@ export function getPool(): Pool {
 /**
  * Execute a database query with monitoring
  */
-export async function query<T extends Record<string, any> = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
+export async function query<T extends Record<string, any> = any>(
+  text: string,
+  params?: any[]
+): Promise<QueryResult<T>> {
   const pool = getPool();
   return monitorQuery(text, params || [], () => pool.query(text, params));
 }

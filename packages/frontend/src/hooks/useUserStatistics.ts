@@ -43,7 +43,7 @@ export const useUserStatistics = () => {
 
   // Map API data to frontend format
   const mappedData = apiData ? mapApiToUserStatistics(apiData) : null;
-  
+
   // Log the actual data being returned
   if (mappedData) {
     logger.debug('Returning mapped user statistics:', mappedData);

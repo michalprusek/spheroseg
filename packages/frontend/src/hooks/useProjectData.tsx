@@ -218,6 +218,20 @@ export const useProjectData = (projectId: string | undefined) => {
   // Function to handle image status updates (defined before the effect that uses it)
   const updateImageStatus = useCallback(
     (imageId: string, status: ImageStatus, resultPath?: string | null, error?: string) => {
+      // Immediately update all caches to prevent stale data issues
+      const projectIdToUse = project?.id || projectId;
+      if (projectIdToUse) {
+        import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
+          updateImageStatusInCache(projectIdToUse, imageId, status, resultPath)
+            .then(() => {
+              console.log(`Successfully updated cache for image ${imageId} with status ${status}`);
+            })
+            .catch((err) => {
+              console.error('Failed to update image status in cache:', err);
+            });
+        });
+      }
+
       setImages((prevImages) => {
         const updatedImages = prevImages.map((image) => {
           if (image.id === imageId) {
@@ -227,7 +241,7 @@ export const useProjectData = (projectId: string | undefined) => {
             };
 
             // Update segmentation result path if provided
-            if (resultPath) {
+            if (resultPath !== undefined) {
               updatedImage.segmentationResultPath = resultPath;
             }
 
@@ -240,18 +254,6 @@ export const useProjectData = (projectId: string | undefined) => {
           }
           return image;
         });
-
-        // After updating images in memory, update all caches
-        try {
-          const projectIdToUse = project?.id || projectId;
-          if (projectIdToUse) {
-            import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
-              updateImageStatusInCache(projectIdToUse, imageId, status, resultPath);
-            });
-          }
-        } catch (storageError) {
-          console.error('Failed to update image status in caches:', storageError);
-        }
 
         return updatedImages;
       });
@@ -360,7 +362,10 @@ export const useProjectData = (projectId: string | undefined) => {
       // Only refresh data for completed status to avoid infinite loops
       if (status === 'completed') {
         console.log('Image completed, refreshing project data');
-        refreshData();
+        // Delay refresh to ensure cache updates are processed
+        setTimeout(() => {
+          refreshData();
+        }, 1000);
       }
     };
 

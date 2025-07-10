@@ -1165,40 +1165,45 @@ router.get(
 );
 
 // Legacy route for backward compatibility - will be deprecated
-router.get('/verify/:id', authMiddleware, cacheControl.noCache, async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user?.userId;
-  const imageId = req.params.id;
+router.get(
+  '/verify/:id',
+  authMiddleware,
+  cacheControl.noCache,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?.userId;
+    const imageId = req.params.id;
 
-  logger.warn('Using deprecated route', {
-    route: '/verify/:id',
-    method: 'GET',
-    imageId,
-  });
-
-  try {
-    const pool = getPool();
-    const imageResult = await getPool().query(
-      'SELECT i.id, i.project_id, i.storage_path FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
-      [imageId, userId]
-    );
-
-    if (imageResult.rows.length === 0) {
-      logger.warn('Image not found for verification', { imageId });
-      return res.status(404).json({ exists: false });
-    }
-
-    const projectId = imageResult.rows[0].project_id;
-
-    return res.redirect(307, `/api/projects/${projectId}/images/${imageId}/verify`);
-  } catch (error) {
-    logger.error('Error in deprecated verify route', { imageId, error });
-
-    res.status(500).json({
-      error: 'VerificationFailed',
-      message: 'Could not verify image existence',
+    logger.warn('Using deprecated route', {
+      route: '/verify/:id',
+      method: 'GET',
+      imageId,
     });
+
+    try {
+      const pool = getPool();
+      const imageResult = await getPool().query(
+        'SELECT i.id, i.project_id, i.storage_path FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
+        [imageId, userId]
+      );
+
+      if (imageResult.rows.length === 0) {
+        logger.warn('Image not found for verification', { imageId });
+        return res.status(404).json({ exists: false });
+      }
+
+      const projectId = imageResult.rows[0].project_id;
+
+      return res.redirect(307, `/api/projects/${projectId}/images/${imageId}/verify`);
+    } catch (error) {
+      logger.error('Error in deprecated verify route', { imageId, error });
+
+      res.status(500).json({
+        error: 'VerificationFailed',
+        message: 'Could not verify image existence',
+      });
+    }
   }
-});
+);
 
 // Direct image access routes (legacy compatibility)
 // GET /api/images/:imageId - Get image by ID directly

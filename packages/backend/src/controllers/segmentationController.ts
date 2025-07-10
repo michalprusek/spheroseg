@@ -12,7 +12,11 @@ import { ApiError } from '../utils/errors';
  * Get segmentation for an image
  * @route GET /api/images/:imageId/segmentation
  */
-export const getSegmentation = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getSegmentation = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const imageId = req.params.imageId;
 
@@ -31,7 +35,11 @@ export const getSegmentation = async (req: AuthenticatedRequest, res: Response, 
  * Save segmentation data for an image
  * @route PUT /api/images/:imageId/segmentation
  */
-export const saveSegmentation = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const saveSegmentation = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const imageId = req.params.imageId;
     const { polygons } = req.body;
@@ -56,7 +64,11 @@ export const saveSegmentation = async (req: AuthenticatedRequest, res: Response,
  * Run auto-segmentation on an image
  * @route POST /api/images/:imageId/auto-segmentation
  */
-export const runAutoSegmentation = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const runAutoSegmentation = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const imageId = req.params.imageId;
     const { options } = req.body;
@@ -76,7 +88,11 @@ export const runAutoSegmentation = async (req: AuthenticatedRequest, res: Respon
  * Get segmentation job status
  * @route GET /api/segmentation/jobs/:jobId
  */
-export const getSegmentationStatus = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getSegmentationStatus = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const jobId = req.params.jobId;
 
@@ -95,7 +111,11 @@ export const getSegmentationStatus = async (req: AuthenticatedRequest, res: Resp
  * Cancel segmentation job
  * @route DELETE /api/segmentation/jobs/:jobId
  */
-export const cancelSegmentation = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const cancelSegmentation = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const jobId = req.params.jobId;
 
@@ -114,7 +134,11 @@ export const cancelSegmentation = async (req: AuthenticatedRequest, res: Respons
  * Get segmentation version history
  * @route GET /api/images/:imageId/segmentation/history
  */
-export const getSegmentationHistory = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getSegmentationHistory = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const imageId = req.params.imageId;
 
@@ -133,7 +157,11 @@ export const getSegmentationHistory = async (req: AuthenticatedRequest, res: Res
  * Get specific segmentation version
  * @route GET /api/images/:imageId/segmentation/versions/:version
  */
-export const getSegmentationVersion = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getSegmentationVersion = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const imageId = req.params.imageId;
     const versionStr = req.params.version;
@@ -184,7 +212,11 @@ export const restoreSegmentationVersion = async (
       throw new ApiError('Invalid version number', 400);
     }
 
-    const result = await segmentationService.restoreSegmentationVersion(imageId, req.user?.userId || '', version);
+    const result = await segmentationService.restoreSegmentationVersion(
+      imageId,
+      req.user?.userId || '',
+      version
+    );
     res.status(200).json(result);
   } catch (error) {
     next(error);

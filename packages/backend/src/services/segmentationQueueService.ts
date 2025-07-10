@@ -301,16 +301,16 @@ class SegmentationQueueService extends EventEmitter {
         `);
 
         // Seskupení úloh podle projektu
-        const tasksByProject = new Map<string, { pending: string[], running: string[] }>();
-        
-        pendingResult.rows.forEach(row => {
+        const tasksByProject = new Map<string, { pending: string[]; running: string[] }>();
+
+        pendingResult.rows.forEach((row) => {
           if (!tasksByProject.has(row.project_id)) {
             tasksByProject.set(row.project_id, { pending: [], running: [] });
           }
           tasksByProject.get(row.project_id)!.pending.push(row.id);
         });
-        
-        runningResult.rows.forEach(row => {
+
+        runningResult.rows.forEach((row) => {
           if (!tasksByProject.has(row.project_id)) {
             tasksByProject.set(row.project_id, { pending: [], running: [] });
           }
@@ -333,7 +333,7 @@ class SegmentationQueueService extends EventEmitter {
         // Odeslání aktualizace přes WebSocket - do project-specific rooms
         try {
           const io = getIO();
-          
+
           // Odeslat update do každého projektu
           tasksByProject.forEach((tasks, projectId) => {
             io.to(`project-${projectId}`).emit('segmentation_queue_update', {
@@ -581,7 +581,7 @@ class SegmentationQueueService extends EventEmitter {
             projectId,
             imageId,
             status,
-            rooms: [`project-${projectId}`, `image-${imageId}`]
+            rooms: [`project-${projectId}`, `image-${imageId}`],
           });
         }
       } catch (socketError) {
@@ -801,7 +801,12 @@ export default segmentationQueueService;
 
 // Also export the individual methods for backward compatibility
 export const queueSegmentationJob = async (imageId: string, options: any) => {
-  return segmentationQueueService.addTask(imageId, options.imagePath || '', options.parameters || {}, options.priority || 1);
+  return segmentationQueueService.addTask(
+    imageId,
+    options.imagePath || '',
+    options.parameters || {},
+    options.priority || 1
+  );
 };
 
 export const getJobStatus = async (jobId: string) => {

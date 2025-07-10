@@ -276,9 +276,15 @@ export const createPerformanceMiddleware = (options: PerformanceOptions = {}) =>
           };
 
           // Check memory thresholds
-          if (mergedThresholds.memory?.error && memoryEnd.heapUsed > mergedThresholds.memory.error) {
+          if (
+            mergedThresholds.memory?.error &&
+            memoryEnd.heapUsed > mergedThresholds.memory.error
+          ) {
             logger.error('High memory usage detected', logData);
-          } else if (mergedThresholds.memory?.warn && memoryEnd.heapUsed > mergedThresholds.memory.warn) {
+          } else if (
+            mergedThresholds.memory?.warn &&
+            memoryEnd.heapUsed > mergedThresholds.memory.warn
+          ) {
             logger.warn('Elevated memory usage detected', logData);
           }
         }

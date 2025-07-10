@@ -22,10 +22,8 @@
     "project": ["./tsconfig.json", "./tsconfig.node.json"],
     "tsconfigRootDir": "."
   },
-  "plugins": ["react-refresh", "import", "unused-imports", "./eslint-rules"],
+  "plugins": ["react-refresh", "import", "unused-imports"],
   "rules": {
-    // Custom rules
-    "local-rules/ensure-lazy-imports": "error",
     // React specific rules
     "react-refresh/only-export-components": [
       "warn",

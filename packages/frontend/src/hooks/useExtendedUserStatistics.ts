@@ -52,7 +52,7 @@ export const useExtendedUserStatistics = () => {
 
   // Map API data to frontend format
   const mappedData = apiData ? mapApiToExtendedStatistics(apiData) : null;
-  
+
   // Log the actual data being returned
   if (mappedData) {
     logger.debug('Returning mapped extended user statistics:', mappedData);

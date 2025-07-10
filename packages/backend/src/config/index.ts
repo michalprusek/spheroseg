@@ -33,7 +33,10 @@ const config = {
   isTest,
 
   server: {
-    port: typeof validatedEnv.PORT === 'number' ? validatedEnv.PORT : parseInt(validatedEnv.PORT || '5001', 10),
+    port:
+      typeof validatedEnv.PORT === 'number'
+        ? validatedEnv.PORT
+        : parseInt(validatedEnv.PORT || '5001', 10),
     host: validatedEnv.HOST || '0.0.0.0',
     corsOrigins: validatedEnv.ALLOWED_ORIGINS
       ? validatedEnv.ALLOWED_ORIGINS.split(',')
@@ -46,7 +49,10 @@ const config = {
 
   db: {
     host: validatedEnv.DB_HOST || 'localhost',
-    port: typeof validatedEnv.DB_PORT === 'number' ? validatedEnv.DB_PORT : parseInt(validatedEnv.DB_PORT || '5432', 10),
+    port:
+      typeof validatedEnv.DB_PORT === 'number'
+        ? validatedEnv.DB_PORT
+        : parseInt(validatedEnv.DB_PORT || '5432', 10),
     database: validatedEnv.DB_NAME || 'spheroseg',
     user: validatedEnv.DB_USER || 'postgres',
     password: validatedEnv.DB_PASSWORD || 'postgres',
@@ -73,9 +79,10 @@ const config = {
       validatedEnv.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/tiff,image/tif,image/bmp'
     ).split(','),
     // Storage limits and monitoring
-    defaultUserStorageLimit: typeof validatedEnv.DEFAULT_USER_STORAGE_LIMIT === 'number' 
-      ? validatedEnv.DEFAULT_USER_STORAGE_LIMIT 
-      : parseInt(validatedEnv.DEFAULT_USER_STORAGE_LIMIT || '10737418240', 10), // 10 GB
+    defaultUserStorageLimit:
+      typeof validatedEnv.DEFAULT_USER_STORAGE_LIMIT === 'number'
+        ? validatedEnv.DEFAULT_USER_STORAGE_LIMIT
+        : parseInt(validatedEnv.DEFAULT_USER_STORAGE_LIMIT || '10737418240', 10), // 10 GB
     defaultUserLimitBytes: BigInt(validatedEnv.DEFAULT_USER_STORAGE_LIMIT || '10737418240'), // 10 GB as BigInt
     maxTotalStorageBytes: parseInt(validatedEnv.MAX_TOTAL_STORAGE_BYTES || '107374182400', 10), // 100 GB
     storageWarningThreshold: parseFloat(validatedEnv.STORAGE_WARNING_THRESHOLD || '0.8'), // 80%
@@ -118,12 +125,14 @@ const config = {
   },
 
   security: {
-    rateLimitRequests: typeof validatedEnv.RATE_LIMIT_REQUESTS === 'number'
-      ? validatedEnv.RATE_LIMIT_REQUESTS
-      : parseInt(validatedEnv.RATE_LIMIT_REQUESTS || '100', 10),
-    rateLimitWindow: typeof validatedEnv.RATE_LIMIT_WINDOW === 'number'
-      ? validatedEnv.RATE_LIMIT_WINDOW
-      : parseInt(validatedEnv.RATE_LIMIT_WINDOW || '60', 10), // seconds
+    rateLimitRequests:
+      typeof validatedEnv.RATE_LIMIT_REQUESTS === 'number'
+        ? validatedEnv.RATE_LIMIT_REQUESTS
+        : parseInt(validatedEnv.RATE_LIMIT_REQUESTS || '100', 10),
+    rateLimitWindow:
+      typeof validatedEnv.RATE_LIMIT_WINDOW === 'number'
+        ? validatedEnv.RATE_LIMIT_WINDOW
+        : parseInt(validatedEnv.RATE_LIMIT_WINDOW || '60', 10), // seconds
     enableHelmet: validatedEnv.ENABLE_HELMET !== 'false',
     enableRateLimit: validatedEnv.ENABLE_RATE_LIMIT !== 'false',
     csrfEnabled: validatedEnv.CSRF_ENABLED !== 'false',

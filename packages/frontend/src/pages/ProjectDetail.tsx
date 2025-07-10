@@ -307,11 +307,16 @@ const ProjectDetail = () => {
       // Pokud je status "completed", zobrazíme úspěšnou zprávu
       if (status === 'completed') {
         toast.success(`Image segmentation completed for ${imageId.substring(0, 8)}...`);
-      }
 
-      // Pro completed nebo failed stavy aktualizujeme statistiky bez refreshování celé stránky
-      if (status === 'completed' || status === 'failed') {
-        // Pouze aktualizujeme statistiky nebo jiná potřebná data, nikoliv celý seznam obrázků
+        // For completed status, ensure cache is updated before refreshing
+        import('@/api/projectImages').then(({ updateImageStatusInCache }) => {
+          updateImageStatusInCache(id!, imageId, status, resultPath).then(() => {
+            // Pouze aktualizujeme statistiky nebo jiná potřebná data, nikoliv celý seznam obrázků
+            updateProjectStatistics();
+          });
+        });
+      } else if (status === 'failed') {
+        // Pro failed status také aktualizujeme statistiky
         updateProjectStatistics();
       }
     };

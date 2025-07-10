@@ -10,7 +10,7 @@ import { Socket } from 'socket.io';
  */
 export const createMockPool = (): jest.Mocked<Pool> => {
   const mockClient = createMockPoolClient();
-  
+
   return {
     query: jest.fn(),
     connect: jest.fn().mockResolvedValue(mockClient),
@@ -50,7 +50,9 @@ export const createMockPoolClient = (): jest.Mocked<PoolClient> => {
 /**
  * Create a mock query result
  */
-export const createMockQueryResult = <T extends Record<string, any> = any>(rows: T[]): QueryResult<T> => {
+export const createMockQueryResult = <T extends Record<string, any> = any>(
+  rows: T[]
+): QueryResult<T> => {
   return {
     rows,
     command: 'SELECT',
@@ -154,7 +156,7 @@ export const createMockSharpInstance = () => {
 export const createMockSharp = () => {
   const mockSharpInstance = createMockSharpInstance();
   const mockSharp = jest.fn(() => mockSharpInstance);
-  
+
   // Add static methods
   Object.assign(mockSharp, {
     format: {
@@ -169,7 +171,7 @@ export const createMockSharp = () => {
       sharp: '0.29.3',
     },
   });
-  
+
   return mockSharp;
 };
 

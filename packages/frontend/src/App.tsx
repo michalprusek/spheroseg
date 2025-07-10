@@ -41,9 +41,7 @@ const Index = lazy(() =>
     return import('./pages/NotFound');
   }),
 );
-const SignIn = lazy(() =>
-  import('./pages/SignIn'),
-);
+const SignIn = lazy(() => import('./pages/SignIn'));
 const SignUp = lazy(() =>
   import('./pages/SignUp').catch(() => {
     // Error handled by returning NotFound page

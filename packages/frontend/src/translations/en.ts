@@ -1399,14 +1399,17 @@ export default {
     },
     technology: {
       title: 'Our Technology',
-      description: 'Built on state-of-the-art deep learning models and computer vision techniques, SpheroSeg offers unparalleled accuracy in spheroid segmentation.',
+      description:
+        'Built on state-of-the-art deep learning models and computer vision techniques, SpheroSeg offers unparalleled accuracy in spheroid segmentation.',
       feature1: {
         title: 'AI-Powered Segmentation',
-        description: 'Advanced deep learning models trained on diverse spheroid images ensure accurate and reliable segmentation results.',
+        description:
+          'Advanced deep learning models trained on diverse spheroid images ensure accurate and reliable segmentation results.',
       },
       feature2: {
         title: 'Real-Time Processing',
-        description: 'Optimized algorithms provide fast processing times, allowing you to analyze large datasets efficiently.',
+        description:
+          'Optimized algorithms provide fast processing times, allowing you to analyze large datasets efficiently.',
       },
       feature3: {
         title: 'Comprehensive Analysis',

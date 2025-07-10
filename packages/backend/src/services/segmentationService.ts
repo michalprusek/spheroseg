@@ -59,11 +59,11 @@ export const getSegmentation = async (imageId: string) => {
     'SELECT * FROM segmentation_results WHERE image_id = $1 ORDER BY created_at DESC LIMIT 1',
     [imageId]
   );
-  
+
   if (result.rows.length === 0) {
     return null;
   }
-  
+
   return result.rows[0];
 };
 
@@ -77,7 +77,7 @@ export const saveSegmentation = async (imageId: string, userId: string, segmenta
      RETURNING *`,
     [imageId, userId, JSON.stringify(segmentationData)]
   );
-  
+
   return result.rows[0];
 };
 
@@ -89,7 +89,7 @@ export const getSegmentationHistory = async (imageId: string) => {
     'SELECT * FROM segmentation_results WHERE image_id = $1 ORDER BY created_at DESC',
     [imageId]
   );
-  
+
   return result.rows;
 };
 
@@ -101,25 +101,29 @@ export const getSegmentationVersion = async (imageId: string, version: number) =
     'SELECT * FROM segmentation_results WHERE image_id = $1 ORDER BY created_at DESC LIMIT 1 OFFSET $2',
     [imageId, version - 1]
   );
-  
+
   if (result.rows.length === 0) {
     return null;
   }
-  
+
   return result.rows[0];
 };
 
 /**
  * Restore a specific version of segmentation
  */
-export const restoreSegmentationVersion = async (imageId: string, userId: string, version: number) => {
+export const restoreSegmentationVersion = async (
+  imageId: string,
+  userId: string,
+  version: number
+) => {
   // Get the specific version
   const versionData = await getSegmentationVersion(imageId, version);
-  
+
   if (!versionData) {
     throw new ApiError('Segmentation version not found', 404);
   }
-  
+
   // Create a new segmentation entry with the old data
   const result = await pool.query(
     `INSERT INTO segmentation_results (image_id, user_id, result_data, status) 
@@ -127,6 +131,6 @@ export const restoreSegmentationVersion = async (imageId: string, userId: string
      RETURNING *`,
     [imageId, userId, versionData.result_data]
   );
-  
+
   return result.rows[0];
 };

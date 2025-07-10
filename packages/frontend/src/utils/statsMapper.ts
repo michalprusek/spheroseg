@@ -93,7 +93,7 @@ export function mapApiToUserStatistics(apiData: ApiUserStatistics | null): UserS
   };
 
   logger.debug('Mapped UserStatistics:', mapped);
-  
+
   return mapped;
 }
 

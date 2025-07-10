@@ -45,7 +45,7 @@ describe('Logs API Controller', () => {
         { timestamp: '2023-01-01', level: 'info', message: 'Test log 1' },
         { timestamp: '2023-01-02', level: 'error', message: 'Test log 2' },
       ];
-      
+
       mockRequest = {
         query: {
           startDate: '2023-01-01',
@@ -64,11 +64,7 @@ describe('Logs API Controller', () => {
       });
 
       // Act
-      await logsController.getLogs(
-        mockRequest as Request,
-        mockResponse as Response,
-        mockNext
-      );
+      await logsController.getLogs(mockRequest as Request, mockResponse as Response, mockNext);
 
       // Assert
       expect(logger.getLogs).toHaveBeenCalledWith({
@@ -96,11 +92,7 @@ describe('Logs API Controller', () => {
       };
 
       // Act
-      await logsController.getLogs(
-        mockRequest as Request,
-        mockResponse as Response,
-        mockNext
-      );
+      await logsController.getLogs(mockRequest as Request, mockResponse as Response, mockNext);
 
       // Assert
       expect(mockNext).toHaveBeenCalledWith(
@@ -118,11 +110,7 @@ describe('Logs API Controller', () => {
       logger.getLogs.mockRejectedValue(error);
 
       // Act
-      await logsController.getLogs(
-        mockRequest as Request,
-        mockResponse as Response,
-        mockNext
-      );
+      await logsController.getLogs(mockRequest as Request, mockResponse as Response, mockNext);
 
       // Assert
       expect(mockNext).toHaveBeenCalledWith(error);
@@ -140,11 +128,7 @@ describe('Logs API Controller', () => {
       logger.getLog.mockResolvedValue(mockLogContent);
 
       // Act
-      await logsController.getLogFile(
-        mockRequest as Request,
-        mockResponse as Response,
-        mockNext
-      );
+      await logsController.getLogFile(mockRequest as Request, mockResponse as Response, mockNext);
 
       // Assert
       expect(logger.getLog).toHaveBeenCalledWith('app-2023-01-01.log');
@@ -160,11 +144,7 @@ describe('Logs API Controller', () => {
       logger.getLog.mockResolvedValue(null);
 
       // Act
-      await logsController.getLogFile(
-        mockRequest as Request,
-        mockResponse as Response,
-        mockNext
-      );
+      await logsController.getLogFile(mockRequest as Request, mockResponse as Response, mockNext);
 
       // Assert
       expect(mockNext).toHaveBeenCalledWith(
@@ -182,11 +162,7 @@ describe('Logs API Controller', () => {
       };
 
       // Act
-      await logsController.getLogFile(
-        mockRequest as Request,
-        mockResponse as Response,
-        mockNext
-      );
+      await logsController.getLogFile(mockRequest as Request, mockResponse as Response, mockNext);
 
       // Assert
       expect(mockNext).toHaveBeenCalledWith(

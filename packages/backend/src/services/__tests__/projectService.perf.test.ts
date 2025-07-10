@@ -36,7 +36,7 @@ describe('ProjectService Performance Tests', () => {
           is_owner: true,
           permission: null,
           image_count: 10,
-          thumbnail_url: '/thumbnails/1.jpg'
+          thumbnail_url: '/thumbnails/1.jpg',
         },
         {
           id: '2',
@@ -48,22 +48,22 @@ describe('ProjectService Performance Tests', () => {
           is_owner: true,
           permission: null,
           image_count: 5,
-          thumbnail_url: '/thumbnails/2.jpg'
-        }
+          thumbnail_url: '/thumbnails/2.jpg',
+        },
       ];
 
       // Mock table existence check
       (mockPool.query as jest.Mock)
         .mockResolvedValueOnce({
-          rows: [{ images_exists: true, shares_exists: true }]
+          rows: [{ images_exists: true, shares_exists: true }],
         })
         // Mock the main CTE query
         .mockResolvedValueOnce({
-          rows: mockProjects
+          rows: mockProjects,
         })
         // Mock the count query
         .mockResolvedValueOnce({
-          rows: [{ total: 2 }]
+          rows: [{ total: 2 }],
         });
 
       const result = await getUserProjects(mockPool, 'user123', 10, 0, true);
@@ -97,18 +97,18 @@ describe('ProjectService Performance Tests', () => {
         is_owner: true,
         permission: null,
         image_count: Math.floor(Math.random() * 100),
-        thumbnail_url: `/thumbnails/${i}.jpg`
+        thumbnail_url: `/thumbnails/${i}.jpg`,
       }));
 
       (mockPool.query as jest.Mock)
         .mockResolvedValueOnce({
-          rows: [{ images_exists: true, shares_exists: true }]
+          rows: [{ images_exists: true, shares_exists: true }],
         })
         .mockResolvedValueOnce({
-          rows: mockProjects.slice(0, 10) // Paginated results
+          rows: mockProjects.slice(0, 10), // Paginated results
         })
         .mockResolvedValueOnce({
-          rows: [{ total: 100 }]
+          rows: [{ total: 100 }],
         });
 
       const startTime = Date.now();
@@ -138,19 +138,19 @@ describe('ProjectService Performance Tests', () => {
           is_owner: true,
           permission: null,
           image_count: 0,
-          thumbnail_url: null
-        }
+          thumbnail_url: null,
+        },
       ];
 
       (mockPool.query as jest.Mock)
         .mockResolvedValueOnce({
-          rows: [{ images_exists: true, shares_exists: false }]
+          rows: [{ images_exists: true, shares_exists: false }],
         })
         .mockResolvedValueOnce({
-          rows: mockProjects
+          rows: mockProjects,
         })
         .mockResolvedValueOnce({
-          rows: [{ total: 1 }]
+          rows: [{ total: 1 }],
         });
 
       const result = await getUserProjects(mockPool, 'user123', 10, 0, false);

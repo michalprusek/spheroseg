@@ -29,13 +29,13 @@ describe('Validated App Configuration', () => {
   describe('Configuration Validation', () => {
     it('should validate correct configuration successfully', async () => {
       const { appConfig, AppConfigSchema } = await import('../app.config.validated');
-      
+
       expect(() => AppConfigSchema.parse(appConfig)).not.toThrow();
     });
 
     it('should fail validation for invalid email', () => {
       const { AppConfigSchema } = require('../app.config.validated');
-      
+
       const invalidConfig = {
         app: { name: 'Test', fullName: 'Test App', description: 'Test', version: '1.0.0' },
         contact: {
@@ -46,13 +46,13 @@ describe('Validated App Configuration', () => {
         },
         // ... other required fields
       };
-      
+
       expect(() => AppConfigSchema.parse(invalidConfig)).toThrow(z.ZodError);
     });
 
     it('should fail validation for invalid version format', () => {
       const { AppConfigSchema } = require('../app.config.validated');
-      
+
       const invalidConfig = {
         app: {
           name: 'Test',
@@ -62,13 +62,13 @@ describe('Validated App Configuration', () => {
         },
         // ... other required fields
       };
-      
+
       expect(() => AppConfigSchema.shape.app.parse(invalidConfig.app)).toThrow(z.ZodError);
     });
 
     it('should fail validation for invalid URL', () => {
       const { AppConfigSchema } = require('../app.config.validated');
-      
+
       const invalidConfig = {
         organization: {
           primary: {
@@ -78,13 +78,15 @@ describe('Validated App Configuration', () => {
           },
         },
       };
-      
-      expect(() => AppConfigSchema.shape.organization.shape.primary.parse(invalidConfig.organization.primary)).toThrow(z.ZodError);
+
+      expect(() => AppConfigSchema.shape.organization.shape.primary.parse(invalidConfig.organization.primary)).toThrow(
+        z.ZodError,
+      );
     });
 
     it('should fail validation for invalid Twitter username', () => {
       const { AppConfigSchema } = require('../app.config.validated');
-      
+
       const invalidConfig = {
         social: {
           twitter: {
@@ -93,13 +95,13 @@ describe('Validated App Configuration', () => {
           },
         },
       };
-      
+
       expect(() => AppConfigSchema.shape.social.shape.twitter.parse(invalidConfig.social.twitter)).toThrow(z.ZodError);
     });
 
     it('should fail validation for invalid date format', () => {
       const { AppConfigSchema } = require('../app.config.validated');
-      
+
       const invalidConfig = {
         legal: {
           privacyPolicyUrl: '/privacy',
@@ -108,13 +110,13 @@ describe('Validated App Configuration', () => {
           lastUpdated: '2025/01/07', // Wrong format
         },
       };
-      
+
       expect(() => AppConfigSchema.shape.legal.parse(invalidConfig.legal)).toThrow(z.ZodError);
     });
 
     it('should fail validation for invalid timeout', () => {
       const { AppConfigSchema } = require('../app.config.validated');
-      
+
       const invalidConfig = {
         api: {
           baseUrl: '/api',
@@ -122,13 +124,13 @@ describe('Validated App Configuration', () => {
           retryAttempts: 3,
         },
       };
-      
+
       expect(() => AppConfigSchema.shape.api.parse(invalidConfig.api)).toThrow(z.ZodError);
     });
 
     it('should fail validation for invalid retry attempts', () => {
       const { AppConfigSchema } = require('../app.config.validated');
-      
+
       const invalidConfig = {
         api: {
           baseUrl: '/api',
@@ -136,13 +138,13 @@ describe('Validated App Configuration', () => {
           retryAttempts: 10, // Too high
         },
       };
-      
+
       expect(() => AppConfigSchema.shape.api.parse(invalidConfig.api)).toThrow(z.ZodError);
     });
 
     it('should fail validation for invalid language code', () => {
       const { AppConfigSchema } = require('../app.config.validated');
-      
+
       const invalidConfig = {
         ui: {
           defaultTheme: 'system',
@@ -153,13 +155,13 @@ describe('Validated App Configuration', () => {
           acceptedImageFormats: ['image/jpeg'],
         },
       };
-      
+
       expect(() => AppConfigSchema.shape.ui.parse(invalidConfig.ui)).toThrow(z.ZodError);
     });
 
     it('should fail validation for empty supported languages', () => {
       const { AppConfigSchema } = require('../app.config.validated');
-      
+
       const invalidConfig = {
         ui: {
           defaultTheme: 'system',
@@ -170,7 +172,7 @@ describe('Validated App Configuration', () => {
           acceptedImageFormats: ['image/jpeg'],
         },
       };
-      
+
       expect(() => AppConfigSchema.shape.ui.parse(invalidConfig.ui)).toThrow(z.ZodError);
     });
   });
@@ -178,18 +180,18 @@ describe('Validated App Configuration', () => {
   describe('Configuration Update Function', () => {
     it('should update configuration section successfully', async () => {
       const { updateConfig, getConfig } = await import('../app.config.validated');
-      
+
       updateConfig('features', {
         maintenanceMode: true,
       });
-      
+
       const features = getConfig('features');
       expect(features.maintenanceMode).toBe(true);
     });
 
     it('should fail to update with invalid data', async () => {
       const { updateConfig } = await import('../app.config.validated');
-      
+
       expect(() => {
         updateConfig('api', {
           timeout: -1000, // Invalid
@@ -199,13 +201,13 @@ describe('Validated App Configuration', () => {
 
     it('should validate partial updates', async () => {
       const { updateConfig, getConfig } = await import('../app.config.validated');
-      
+
       const originalTimeout = getConfig('api').timeout;
-      
+
       updateConfig('api', {
         retryAttempts: 2,
       });
-      
+
       const api = getConfig('api');
       expect(api.retryAttempts).toBe(2);
       expect(api.timeout).toBe(originalTimeout); // Unchanged
@@ -215,14 +217,14 @@ describe('Validated App Configuration', () => {
   describe('Helper Functions with Validation', () => {
     it('should return valid contact email', async () => {
       const { getContactEmail } = await import('../app.config.validated');
-      
+
       const email = getContactEmail();
       expect(email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
     });
 
     it('should return valid support email', async () => {
       const { getSupportEmail } = await import('../app.config.validated');
-      
+
       const email = getSupportEmail();
       expect(email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
     });
@@ -230,14 +232,14 @@ describe('Validated App Configuration', () => {
     it('should handle invalid email gracefully', async () => {
       // Mock console.warn
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       // This would require mocking the appConfig object with invalid email
       // For now, we'll just verify the function exists and returns a string
       const { getContactEmail } = await import('../app.config.validated');
       const email = getContactEmail();
-      
+
       expect(typeof email).toBe('string');
-      
+
       warnSpy.mockRestore();
     });
   });
@@ -245,7 +247,7 @@ describe('Validated App Configuration', () => {
   describe('Environment Variable Integration', () => {
     it('should use environment variables correctly', async () => {
       const { appConfig } = await import('../app.config.validated');
-      
+
       expect(appConfig.app.version).toBe('2.0.0');
       expect(appConfig.api.baseUrl).toBe('/api/v2');
       expect(appConfig.features.enableRegistration).toBe(true);
@@ -260,11 +262,11 @@ describe('Validated App Configuration', () => {
   describe('Type Safety', () => {
     it('should provide correct types through getConfig', async () => {
       const { getConfig } = await import('../app.config.validated');
-      
+
       const app = getConfig('app');
       const contact = getConfig('contact');
       const features = getConfig('features');
-      
+
       // TypeScript would catch these at compile time
       // but we verify the runtime values match expected types
       expect(typeof app.name).toBe('string');
@@ -276,13 +278,13 @@ describe('Validated App Configuration', () => {
   describe('Error Handling', () => {
     it('should log validation errors in development', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       // This test would require mocking the module to provide invalid config
       // For now, we verify the error handling structure exists
-      
+
       const { appConfig } = await import('../app.config.validated');
       expect(appConfig).toBeDefined();
-      
+
       errorSpy.mockRestore();
     });
   });
@@ -290,7 +292,7 @@ describe('Validated App Configuration', () => {
   describe('Schema Export', () => {
     it('should export AppConfigSchema for external use', async () => {
       const { AppConfigSchema } = await import('../app.config.validated');
-      
+
       expect(AppConfigSchema).toBeDefined();
       expect(AppConfigSchema).toBeInstanceOf(z.ZodObject);
     });

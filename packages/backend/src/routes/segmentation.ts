@@ -80,8 +80,9 @@ router.get(
       if (result.rows.length === 0) {
         // If no segmentation result found, check the image's segmentation_status
         // Use the status from the images table if available
-        const imageStatus = imageInfo.segmentation_status || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION;
-        
+        const imageStatus =
+          imageInfo.segmentation_status || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION;
+
         const emptyResult = {
           image_id: imageId,
           status: imageStatus, // Use the status from images table
@@ -189,11 +190,7 @@ router.post(
 
       // Broadcast the status update
       const projectId = imageCheck.rows[0].project_id;
-      broadcastSegmentationUpdate(
-        projectId,
-        imageId,
-        SEGMENTATION_STATUS.QUEUED
-      );
+      broadcastSegmentationUpdate(projectId, imageId, SEGMENTATION_STATUS.QUEUED);
 
       // Get current queue status
       const queueStatus = getSegmentationQueueStatus();
@@ -214,7 +211,7 @@ router.post(
           `UPDATE segmentation_results SET status = '${SEGMENTATION_STATUS.FAILED}', updated_at = NOW() WHERE image_id = $1`,
           [imageId]
         );
-        
+
         // Broadcast the failure
         const projectId = imageCheck?.rows[0]?.project_id;
         broadcastSegmentationUpdate(
@@ -362,11 +359,7 @@ async function handleBatchSegmentation(
       for (const row of projectQuery.rows) {
         const projectId = row.project_id;
         for (const imageId of successfullyTriggered) {
-          broadcastSegmentationUpdate(
-            projectId,
-            imageId,
-            SEGMENTATION_STATUS.QUEUED
-          );
+          broadcastSegmentationUpdate(projectId, imageId, SEGMENTATION_STATUS.QUEUED);
         }
       }
     } catch (broadcastError) {
@@ -537,14 +530,13 @@ router.put(
       }
 
       // Get the project ID for the image to emit to the correct room
-      const projectResult = await pool.query(
-        'SELECT project_id FROM images WHERE id = $1',
-        [imageId]
-      );
+      const projectResult = await pool.query('SELECT project_id FROM images WHERE id = $1', [
+        imageId,
+      ]);
 
       if (projectResult.rows.length > 0) {
         const projectId = projectResult.rows[0].project_id;
-        
+
         // Broadcast the segmentation update to all clients in the project room
         broadcastSegmentationUpdate(
           projectId,
@@ -553,11 +545,11 @@ router.put(
           status === SEGMENTATION_STATUS.COMPLETED ? updateResult.rows[0].result_path : undefined,
           status === SEGMENTATION_STATUS.FAILED ? updateResult.rows[0].error : undefined
         );
-        
+
         logger.info('Broadcasted segmentation update', {
           projectId,
           imageId,
-          status
+          status,
         });
       }
 
@@ -1291,10 +1283,10 @@ router.delete(
 
     try {
       // First check if the user owns this image
-      const imageCheck = await pool.query(
-        'SELECT id FROM images WHERE id = $1 AND user_id = $2',
-        [imageId, userId]
-      );
+      const imageCheck = await pool.query('SELECT id FROM images WHERE id = $1 AND user_id = $2', [
+        imageId,
+        userId,
+      ]);
 
       if (imageCheck.rows.length === 0) {
         res.status(404).json({ message: 'Image not found or access denied' });
@@ -1317,14 +1309,14 @@ router.delete(
           [imageId]
         );
 
-        res.status(200).json({ 
-          success: true, 
-          message: 'Segmentation task cancelled successfully' 
+        res.status(200).json({
+          success: true,
+          message: 'Segmentation task cancelled successfully',
         });
       } else {
-        res.status(404).json({ 
-          success: false, 
-          message: 'Task not found in queue' 
+        res.status(404).json({
+          success: false,
+          message: 'Task not found in queue',
         });
       }
     } catch (error) {

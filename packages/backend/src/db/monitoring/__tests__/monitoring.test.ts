@@ -15,7 +15,7 @@ jest.mock('../../unified', () => {
     query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
     release: jest.fn(),
   };
-  
+
   const mockPool = {
     query: jest.fn().mockImplementation(async (text, params) => {
       if (text.includes('SELECT') && params && params[0] === 1) {
@@ -29,7 +29,7 @@ jest.mock('../../unified', () => {
     idleCount: 5,
     waitingCount: 0,
   };
-  
+
   return {
     getPool: jest.fn(() => mockPool),
     withTransaction: jest.fn().mockImplementation(async (fn) => {
@@ -159,7 +159,7 @@ describe('Database Monitoring Module', () => {
     it('should handle transactions', async () => {
       // Get mocked withTransaction
       const mockUnified = jest.requireMock('../../unified');
-      
+
       // Execute a transaction
       const result = await dbMonitoring.withTransaction(async (client) => {
         await client.query('INSERT INTO users (name) VALUES ($1)', ['Test User']);
@@ -174,7 +174,7 @@ describe('Database Monitoring Module', () => {
     it('should rollback on transaction error', async () => {
       // Get mocked withTransaction
       const mockUnified = jest.requireMock('../../unified');
-      
+
       // Execute a transaction that will fail
       await expect(
         dbMonitoring.withTransaction(async () => {

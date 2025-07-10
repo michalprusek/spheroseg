@@ -37,46 +37,50 @@ jest.mock('../../db', () => ({
     if (query.includes('information_schema.tables')) {
       return { rows: [{ exists: true }] };
     }
-    
+
     // Mock user queries
     if (query.includes('SELECT') && query.includes('FROM users')) {
       const userId = params?.[0] || '550e8400-e29b-41d4-a716-446655440000';
       return {
-        rows: [{
-          id: userId,
-          email: 'test@example.com',
-          name: 'Test User',
-          username: 'testuser',
-          full_name: 'Test Full Name',
-          preferred_language: 'en',
-          role: userId === '550e8400-e29b-41d4-a716-446655440001' ? 'admin' : 'user',
-          is_approved: true,
-          created_at: new Date(),
-          updated_at: new Date(),
-        }],
+        rows: [
+          {
+            id: userId,
+            email: 'test@example.com',
+            name: 'Test User',
+            username: 'testuser',
+            full_name: 'Test Full Name',
+            preferred_language: 'en',
+            role: userId === '550e8400-e29b-41d4-a716-446655440001' ? 'admin' : 'user',
+            is_approved: true,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ],
         rowCount: 1,
       };
     }
-    
+
     // Mock update queries
     if (query.includes('UPDATE users')) {
       return {
-        rows: [{
-          id: params?.[4] || '550e8400-e29b-41d4-a716-446655440000',
-          email: 'test@example.com',
-          name: params?.[0] || 'Updated Name',
-          username: params?.[1] || 'updatedUsername',
-          full_name: params?.[2] || 'Updated Full Name',
-          preferred_language: params?.[3] || 'cs',
-          role: 'user',
-          is_approved: true,
-          created_at: new Date(),
-          updated_at: new Date(),
-        }],
+        rows: [
+          {
+            id: params?.[4] || '550e8400-e29b-41d4-a716-446655440000',
+            email: 'test@example.com',
+            name: params?.[0] || 'Updated Name',
+            username: params?.[1] || 'updatedUsername',
+            full_name: params?.[2] || 'Updated Full Name',
+            preferred_language: params?.[3] || 'cs',
+            role: 'user',
+            is_approved: true,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ],
         rowCount: 1,
       };
     }
-    
+
     // Mock project count queries
     if (query.includes('COUNT(*)') && query.includes('FROM projects')) {
       return {
@@ -84,7 +88,7 @@ jest.mock('../../db', () => ({
         rowCount: 1,
       };
     }
-    
+
     // Mock image count queries
     if (query.includes('COUNT(*)') && query.includes('FROM images')) {
       return {
@@ -92,7 +96,7 @@ jest.mock('../../db', () => ({
         rowCount: 1,
       };
     }
-    
+
     // Mock user profile queries
     if (query.includes('FROM user_profiles')) {
       return {
@@ -100,18 +104,20 @@ jest.mock('../../db', () => ({
         rowCount: 0,
       };
     }
-    
+
     // Mock storage queries
     if (query.includes('storage_used_bytes') && query.includes('FROM users')) {
       return {
-        rows: [{
-          storage_used_bytes: '104857600', // 100MB
-          storage_limit_bytes: '10737418240', // 10GB
-        }],
+        rows: [
+          {
+            storage_used_bytes: '104857600', // 100MB
+            storage_limit_bytes: '10737418240', // 10GB
+          },
+        ],
         rowCount: 1,
       };
     }
-    
+
     // Mock recent activity queries
     if (query.includes('project_created') || query.includes('UNION ALL')) {
       return {
@@ -119,7 +125,7 @@ jest.mock('../../db', () => ({
         rowCount: 0,
       };
     }
-    
+
     // Default empty result
     return { rows: [], rowCount: 0 };
   }),
@@ -130,7 +136,10 @@ jest.mock('../../security/middleware/auth', () => ({
   authenticate: (req: any, res: any, next: any) => {
     // Set user based on test headers
     req.user = {
-      userId: req.headers['x-user-id'] === 'admin' ? '550e8400-e29b-41d4-a716-446655440001' : '550e8400-e29b-41d4-a716-446655440000',
+      userId:
+        req.headers['x-user-id'] === 'admin'
+          ? '550e8400-e29b-41d4-a716-446655440001'
+          : '550e8400-e29b-41d4-a716-446655440000',
       email: 'test@example.com',
       role: req.headers['x-user-id'] === 'admin' ? 'ADMIN' : 'USER',
     };

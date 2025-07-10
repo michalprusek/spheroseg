@@ -31,34 +31,34 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
 
   // Function to cancel a segmentation task
   const cancelTask = useCallback(async (imageId: string) => {
-    setIsCancelling(prev => ({ ...prev, [imageId]: true }));
-    
+    setIsCancelling((prev) => ({ ...prev, [imageId]: true }));
+
     try {
       // Call backend to cancel the task
       await apiClient.delete(`/api/segmentation/task/${imageId}`);
-      
+
       // Update local state immediately
-      setQueueData(prevData => {
+      setQueueData((prevData) => {
         if (!prevData) return prevData;
-        
+
         return {
           ...prevData,
-          pendingTasks: prevData.pendingTasks.filter(id => id !== imageId),
-          runningTasks: prevData.runningTasks.filter(id => id !== imageId),
+          pendingTasks: prevData.pendingTasks.filter((id) => id !== imageId),
+          runningTasks: prevData.runningTasks.filter((id) => id !== imageId),
           queueLength: Math.max(0, prevData.queueLength - 1),
           activeTasksCount: Math.max(0, prevData.activeTasksCount - 1),
         };
       });
-      
+
       toast.success('Segmentation task cancelled');
-      
+
       // Refresh queue data
       // Will be refreshed by the interval
     } catch (error) {
       console.error('Error cancelling task:', error);
       toast.error('Failed to cancel segmentation task');
     } finally {
-      setIsCancelling(prev => {
+      setIsCancelling((prev) => {
         const newState = { ...prev };
         delete newState[imageId];
         return newState;
@@ -264,12 +264,12 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
         // Update queue data to remove the completed/failed image
         setQueueData((prevData) => {
           if (!prevData) return prevData;
-          
+
           // Remove from running tasks
-          const runningTasks = (prevData.runningTasks || []).filter(id => id !== data.imageId);
+          const runningTasks = (prevData.runningTasks || []).filter((id) => id !== data.imageId);
           // Remove from pending tasks
-          const pendingTasks = (prevData.pendingTasks || []).filter(id => id !== data.imageId);
-          
+          const pendingTasks = (prevData.pendingTasks || []).filter((id) => id !== data.imageId);
+
           const newData = {
             ...prevData,
             runningTasks,
@@ -278,14 +278,14 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
             activeTasksCount: runningTasks.length,
             timestamp: new Date().toISOString(),
           };
-          
+
           // Update hasActiveJobs based on new data
           const activeJobCount = runningTasks.length + pendingTasks.length;
           setHasActiveJobs(activeJobCount > 0);
-          
+
           return newData;
         });
-        
+
         // Also refresh queue data from server to ensure consistency
         setTimeout(() => fetchData(), 1000);
       }
@@ -433,11 +433,14 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
             </div>
           </div>
         </div>
-        
+
         {/* Show list of tasks with cancel buttons */}
         <div className="space-y-2 max-h-40 overflow-y-auto">
           {queueData?.runningTasks?.map((taskId) => (
-            <div key={taskId} className="flex items-center justify-between text-sm bg-blue-100 dark:bg-blue-800/30 px-2 py-1 rounded">
+            <div
+              key={taskId}
+              className="flex items-center justify-between text-sm bg-blue-100 dark:bg-blue-800/30 px-2 py-1 rounded"
+            >
               <span className="truncate flex-1">Processing: {taskId.substring(0, 8)}...</span>
               <button
                 onClick={() => cancelTask(taskId)}
@@ -454,7 +457,10 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
             </div>
           ))}
           {queueData?.pendingTasks?.map((taskId) => (
-            <div key={taskId} className="flex items-center justify-between text-sm bg-gray-100 dark:bg-gray-800/30 px-2 py-1 rounded">
+            <div
+              key={taskId}
+              className="flex items-center justify-between text-sm bg-gray-100 dark:bg-gray-800/30 px-2 py-1 rounded"
+            >
               <span className="truncate flex-1">Queued: {taskId.substring(0, 8)}...</span>
               <button
                 onClick={() => cancelTask(taskId)}
@@ -471,7 +477,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
             </div>
           ))}
         </div>
-        
+
         {queueData?.timestamp && (
           <div className="text-xs text-blue-400 mt-2">Last updated: {formatTime(queueData.timestamp)}</div>
         )}

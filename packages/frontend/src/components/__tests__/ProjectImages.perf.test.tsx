@@ -21,7 +21,7 @@ jest.mock('react-window', () => ({
         items.push(
           <div key={`${row}-${col}`} data-testid={`grid-item-${index}`}>
             {children({ columnIndex: col, rowIndex: row, style: {} })}
-          </div>
+          </div>,
         );
       }
     }
@@ -39,7 +39,7 @@ jest.mock('react-window', () => ({
       items.push(
         <div key={i} data-testid={`list-item-${i}`}>
           {children({ index: i, style: {} })}
-        </div>
+        </div>,
       );
     }
     return (
@@ -52,23 +52,25 @@ jest.mock('react-window', () => ({
 
 // Mock other dependencies
 jest.mock('../project/ImageDisplay', () => ({
-  ImageDisplay: ({ image }: { image: ProjectImage }) => (
-    <div data-testid={`image-${image.id}`}>{image.filename}</div>
-  ),
+  ImageDisplay: ({ image }: { image: ProjectImage }) => <div data-testid={`image-${image.id}`}>{image.filename}</div>,
 }));
 
 describe('ProjectImages Performance Tests', () => {
   const createMockImages = (count: number): ProjectImage[] => {
-    return Array.from({ length: count }, (_, i) => ({
-      id: `image-${i}`,
-      filename: `test-${i}.jpg`,
-      filepath: `/uploads/test-${i}.jpg`,
-      thumbnailPath: `/thumbnails/test-${i}.jpg`,
-      projectId: 'project-1',
-      segmentationStatus: 'completed',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    } as ProjectImage));
+    return Array.from(
+      { length: count },
+      (_, i) =>
+        ({
+          id: `image-${i}`,
+          filename: `test-${i}.jpg`,
+          filepath: `/uploads/test-${i}.jpg`,
+          thumbnailPath: `/thumbnails/test-${i}.jpg`,
+          projectId: 'project-1',
+          segmentationStatus: 'completed',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }) as ProjectImage,
+    );
   };
 
   const defaultProps = {
@@ -82,9 +84,7 @@ describe('ProjectImages Performance Tests', () => {
   describe('Virtual Scrolling Performance', () => {
     it('should only render visible items in grid view with large datasets', () => {
       const largeImageSet = createMockImages(1000);
-      const { container } = render(
-        <ProjectImages {...defaultProps} images={largeImageSet} viewMode="grid" />
-      );
+      const { container } = render(<ProjectImages {...defaultProps} images={largeImageSet} viewMode="grid" />);
 
       // Verify virtual grid is used
       const virtualGrid = screen.getByTestId('virtual-grid');
@@ -99,9 +99,7 @@ describe('ProjectImages Performance Tests', () => {
 
     it('should only render visible items in list view with large datasets', () => {
       const largeImageSet = createMockImages(500);
-      const { container } = render(
-        <ProjectImages {...defaultProps} images={largeImageSet} viewMode="list" />
-      );
+      const { container } = render(<ProjectImages {...defaultProps} images={largeImageSet} viewMode="list" />);
 
       // Verify virtual list is used
       const virtualList = screen.getByTestId('virtual-list');
@@ -122,9 +120,7 @@ describe('ProjectImages Performance Tests', () => {
     });
 
     it('should handle empty image list efficiently', () => {
-      const { container } = render(
-        <ProjectImages {...defaultProps} images={[]} viewMode="grid" />
-      );
+      const { container } = render(<ProjectImages {...defaultProps} images={[]} viewMode="grid" />);
 
       // Should still create virtual grid structure
       const virtualGrid = screen.getByTestId('virtual-grid');
@@ -138,16 +134,16 @@ describe('ProjectImages Performance Tests', () => {
     it('should maintain performance with selection mode enabled', () => {
       const largeImageSet = createMockImages(1000);
       const selectedImages = { 'image-0': true, 'image-1': true };
-      
+
       const { container } = render(
-        <ProjectImages 
-          {...defaultProps} 
-          images={largeImageSet} 
+        <ProjectImages
+          {...defaultProps}
+          images={largeImageSet}
           viewMode="grid"
           selectionMode={true}
           selectedImages={selectedImages}
           onToggleSelection={jest.fn()}
-        />
+        />,
       );
 
       // Should still use virtual scrolling
@@ -163,11 +159,9 @@ describe('ProjectImages Performance Tests', () => {
   describe('Memory Efficiency', () => {
     it('should handle 10,000 images without rendering all DOM nodes', () => {
       const hugeImageSet = createMockImages(10000);
-      
+
       const startTime = Date.now();
-      const { container } = render(
-        <ProjectImages {...defaultProps} images={hugeImageSet} viewMode="grid" />
-      );
+      const { container } = render(<ProjectImages {...defaultProps} images={hugeImageSet} viewMode="grid" />);
       const renderTime = Date.now() - startTime;
 
       // Render time should be fast even with 10k images

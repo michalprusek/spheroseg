@@ -39,7 +39,7 @@ describe('Metrics API Controller', () => {
         totalCells: 100,
         avgCellsPerImage: 10,
       };
-      
+
       mockRequest = {
         params: { projectId: 'project-123' },
       };
@@ -63,7 +63,7 @@ describe('Metrics API Controller', () => {
       mockRequest = {
         params: { projectId: 'project-123' },
       };
-      
+
       const error = new Error('Service error');
       (metricsService.getProjectMetrics as jest.Mock).mockRejectedValue(error);
 
@@ -88,7 +88,7 @@ describe('Metrics API Controller', () => {
         minCellArea: 50,
         maxCellArea: 200,
       };
-      
+
       mockRequest = {
         params: { imageId: 'image-123' },
       };
@@ -112,7 +112,7 @@ describe('Metrics API Controller', () => {
     it('should export metrics as CSV', async () => {
       // Arrange
       const mockCsvData = 'id,area,perimeter\n1,100,40\n2,150,50';
-      
+
       mockRequest = {
         params: { projectId: 'project-123' },
         query: { format: 'csv' },

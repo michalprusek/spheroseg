@@ -148,7 +148,7 @@ export async function createProject(
         fs.mkdir(imagesDir, { recursive: true }),
         fs.mkdir(segmentationsDir, { recursive: true }),
         fs.mkdir(thumbnailsDir, { recursive: true }),
-        fs.mkdir(exportsDir, { recursive: true })
+        fs.mkdir(exportsDir, { recursive: true }),
       ]);
 
       logger.info('Project directories created', {
@@ -285,7 +285,7 @@ export async function getUserProjects(
           WHERE table_schema = 'public' AND table_name = 'project_shares'
         ) as shares_exists
     `);
-    
+
     imagesTableExists = tableCheckResult.rows[0].images_exists;
     sharesTableExists = tableCheckResult.rows[0].shares_exists;
   } catch (error) {
@@ -358,7 +358,7 @@ export async function getUserProjects(
   finalQuery += `
     SELECT 
       up.*`;
-  
+
   if (imagesTableExists) {
     finalQuery += `,
       COALESCE(img_stats.image_count, 0) as image_count,
@@ -387,7 +387,7 @@ export async function getUserProjects(
     WITH project_counts AS (
       SELECT COUNT(*) as count FROM projects WHERE user_id = $1
   `;
-  
+
   if (includeShared && sharesTableExists) {
     countQuery += `
       UNION ALL
@@ -396,12 +396,12 @@ export async function getUserProjects(
       WHERE ps.user_id = $1 AND ps.invitation_token IS NULL
     `;
   }
-  
+
   countQuery += `
     )
     SELECT SUM(count)::int as total FROM project_counts
   `;
-  
+
   const countResult = await pool.query(countQuery, [userId]);
   const totalProjects = countResult.rows[0].total || 0;
 
