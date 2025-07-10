@@ -142,30 +142,45 @@ const ProjectImages = ({
     );
   };
 
-  // Calculate grid dimensions
-  const getColumnCount = useCallback(() => {
-    const width = window.innerWidth;
-    if (width < 640) return 1; // sm
-    if (width < 768) return 2; // md
-    if (width < 1024) return 3; // lg
-    return 4; // xl and above
-  }, []);
-
-  const [columnCount, setColumnCount] = useState(getColumnCount());
-  const [windowHeight, setWindowHeight] = useState(window.innerHeight - 200); // Account for header/footer
+  // Fixed 4 columns as requested
+  const FIXED_COLUMN_COUNT = 4;
+  const GRID_GAP = 16; // Gap between cards
+  const CONTAINER_PADDING = 32; // Container horizontal padding
+  
+  // Calculate dimensions based on container width
+  const [dimensions, setDimensions] = useState(() => {
+    const containerWidth = window.innerWidth - CONTAINER_PADDING;
+    const columnWidth = Math.floor((containerWidth - (GRID_GAP * (FIXED_COLUMN_COUNT - 1))) / FIXED_COLUMN_COUNT);
+    const rowHeight = Math.floor(columnWidth * 1.2); // Aspect ratio 1:1.2 for cards
+    return { 
+      columnWidth,
+      rowHeight,
+      windowHeight: window.innerHeight - 200
+    };
+  });
 
   useEffect(() => {
     const handleResize = () => {
-      setColumnCount(getColumnCount());
-      setWindowHeight(window.innerHeight - 200);
+      const containerWidth = window.innerWidth - CONTAINER_PADDING;
+      const columnWidth = Math.floor((containerWidth - (GRID_GAP * (FIXED_COLUMN_COUNT - 1))) / FIXED_COLUMN_COUNT);
+      const rowHeight = Math.floor(columnWidth * 1.2); // Maintain aspect ratio
+      setDimensions({
+        columnWidth,
+        rowHeight,
+        windowHeight: window.innerHeight - 200
+      });
     };
+    
+    // Initial calculation
+    handleResize();
+    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [getColumnCount]);
+  }, []);
 
   // Cell renderer for grid view
   const GridCell = useCallback(({ columnIndex, rowIndex, style }: { columnIndex: number; rowIndex: number; style: React.CSSProperties }) => {
-    const index = rowIndex * columnCount + columnIndex;
+    const index = rowIndex * FIXED_COLUMN_COUNT + columnIndex;
     if (index >= localImages.length) return null;
 
     const image = localImages[index];
@@ -176,7 +191,7 @@ const ProjectImages = ({
     }
 
     return (
-      <div style={{ ...style, padding: '8px' }}>
+      <div style={{ ...style, padding: `${GRID_GAP / 2}px` }}>
         <ImageDisplay
           image={{ ...image, id: imageId }}
           onDelete={onDelete}
@@ -189,7 +204,7 @@ const ProjectImages = ({
         />
       </div>
     );
-  }, [localImages, columnCount, onDelete, onOpen, handleResegment, selectionMode, selectedImages, onToggleSelection]);
+  }, [localImages, onDelete, onOpen, handleResegment, selectionMode, selectedImages, onToggleSelection]);
 
   // Row renderer for list view
   const ListRow = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => {
@@ -217,7 +232,7 @@ const ProjectImages = ({
   }, [localImages, onDelete, onOpen, handleResegment, selectionMode, selectedImages, onToggleSelection]);
 
   // Calculate row count for grid
-  const rowCount = Math.ceil(localImages.length / columnCount);
+  const rowCount = Math.ceil(localImages.length / FIXED_COLUMN_COUNT);
 
   if (viewMode === 'grid') {
     return (
@@ -228,15 +243,15 @@ const ProjectImages = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          style={{ height: windowHeight }}
+          style={{ height: dimensions.windowHeight }}
         >
           <Grid
-            columnCount={columnCount}
-            columnWidth={window.innerWidth / columnCount - 16} // Account for padding
-            height={windowHeight}
+            columnCount={FIXED_COLUMN_COUNT}
+            columnWidth={dimensions.columnWidth}
+            height={dimensions.windowHeight}
             rowCount={rowCount}
-            rowHeight={320} // Fixed height for grid items
-            width={window.innerWidth - 48} // Account for container padding
+            rowHeight={dimensions.rowHeight}
+            width={window.innerWidth - CONTAINER_PADDING} // Container width
             overscanRowCount={2} // Render 2 extra rows for smoother scrolling
           >
             {GridCell}
@@ -254,10 +269,10 @@ const ProjectImages = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        style={{ height: windowHeight }}
+        style={{ height: dimensions.windowHeight }}
       >
         <List
-          height={windowHeight}
+          height={dimensions.windowHeight}
           itemCount={localImages.length}
           itemSize={() => 80} // Fixed height for list items
           width="100%"

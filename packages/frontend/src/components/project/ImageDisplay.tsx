@@ -401,10 +401,11 @@ export const ImageDisplay = ({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
         layout
+        className="h-full"
       >
         <Card
           className={cn(
-            'overflow-hidden border-gray-200 dark:border-gray-700 transition-all group hover:shadow-md relative',
+            'overflow-hidden border-gray-200 dark:border-gray-700 transition-all group hover:shadow-md relative h-full flex flex-col',
             isSelected ? 'ring-2 ring-blue-500' : '',
             className,
           )}
@@ -438,8 +439,8 @@ export const ImageDisplay = ({
 
           {/* Image preview with segmentation overlay - clickable to open segmentation editor */}
           <div
-            className="bg-gray-100 dark:bg-gray-800 relative overflow-hidden cursor-pointer flex items-center justify-center w-full aspect-square"
-            style={{ width: '100%', height: '100%', margin: '0' }}
+            className="bg-gray-100 dark:bg-gray-800 relative overflow-hidden cursor-pointer flex items-center justify-center w-full flex-1"
+            style={{ margin: '0' }}
           >
             {imageSrc ? (
               <>
@@ -447,7 +448,6 @@ export const ImageDisplay = ({
                   src={imageSrc || (isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg')}
                   alt={image.name || 'Image'}
                   className="w-full h-full object-cover"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onError={handleImageError}
                   loading="lazy"
                 />
