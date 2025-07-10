@@ -53,20 +53,18 @@ jest.mock('fs', () => ({
   // Add other fs methods used by your code if necessary
 }));
 
-// Mock sharp module
+// Mock sharp module with proper factory
 jest.mock('sharp');
+import { createMockSharp } from '../../test-utils/mockFactories';
 
 // Mock the database
 let db: IMemoryDb;
 
-// --- Import Fixed Mock IDs from setup ---
-const {
-  MOCK_USER_ID: testUserId, // Rename for consistency with existing tests
-  MOCK_VALID_PROJECT_ID: validProjectId,
-  MOCK_IMAGE_TO_DELETE_ID: imageToDeleteId, // Use the correct source name
-  MOCK_NEW_IMAGE_ID: newImageId,
-} = require('../../../jest.setup.js'); // Adjust path as needed
-// ---
+// --- Define test constants ---
+const testUserId = '550e8400-e29b-41d4-a716-446655440000';
+const validProjectId = '660e8400-e29b-41d4-a716-446655440001';
+const imageToDeleteId = '770e8400-e29b-41d4-a716-446655440002';
+const newImageId = '880e8400-e29b-41d4-a716-446655440003';
 
 // Define a type for the specific query overload we are mocking
 type SimpleQuery = <R extends QueryResultRow = any, I extends any[] = any[]>(
@@ -159,10 +157,10 @@ describe('Image Routes', () => {
   const app = express();
 
   // Mock authentication middleware to always set the user ID
-  app.use((req: Express.Request, res: Express.Response, next: () => void) => {
+  app.use((req: any, res: any, next: () => void) => {
     req.user = {
       userId: testUserId,
-    } as Express.User;
+    };
     next();
   });
 
@@ -171,7 +169,7 @@ describe('Image Routes', () => {
   app.use('/api/images', imageRoutes);
 
   // Add error handler
-  app.use((err: any, req: Express.Request, res: Express.Response, next: () => void) => {
+  app.use((err: any, req: any, res: any, next: any) => {
     res.status(err.statusCode || 500).json({
       message: err.message || 'Internal Server Error',
       errors: err.errors,
@@ -185,14 +183,9 @@ describe('Image Routes', () => {
     (fs.mkdirSync as jest.Mock).mockReset();
     (fs.unlinkSync as jest.Mock).mockReset();
 
-    // Mock sharp processing
-    const mockSharpInstance = {
-      metadata: jest.fn().mockResolvedValue({ width: 100, height: 100 }),
-      resize: jest.fn().mockReturnThis(),
-      toFile: jest.fn().mockResolvedValue({}), // Simulate successful save
-    };
-    // Reset and configure sharp mock for each test
-    (sharp as unknown as jest.Mock).mockClear().mockImplementation(() => mockSharpInstance);
+    // Setup sharp mock using factory
+    const mockSharp = createMockSharp();
+    (sharp as unknown as jest.Mock) = mockSharp;
   });
 
   afterEach(() => {

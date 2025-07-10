@@ -86,8 +86,8 @@ const extractAndVerifyToken = async (
     };
 
     const metadata: TokenMetadata = {
-      issuedAt: new Date(payload.iat * 1000),
-      expiresAt: new Date(payload.exp * 1000),
+      issuedAt: payload.iat ? new Date(payload.iat * 1000) : new Date(),
+      expiresAt: payload.exp ? new Date(payload.exp * 1000) : new Date(Date.now() + 3600000),
     };
 
     return { user, metadata };
@@ -192,11 +192,12 @@ export const requireAdmin = async (
   next: NextFunction
 ): Promise<void> => {
   if (!req.user) {
-    return res.status(401).json({
+    res.status(401).json({
       success: false,
       message: 'Authentication required',
       error: 'NOT_AUTHENTICATED',
     });
+    return;
   }
 
   try {
@@ -204,11 +205,12 @@ export const requireAdmin = async (
     const result = await pool.query('SELECT role FROM users WHERE id = $1', [req.user.userId]);
 
     if (result.rows.length === 0) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'User not found',
         error: 'USER_NOT_FOUND',
       });
+      return;
     }
 
     if (result.rows[0].role !== 'admin') {
@@ -219,11 +221,12 @@ export const requireAdmin = async (
         url: req.url,
       });
 
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         message: 'Admin access required',
         error: 'INSUFFICIENT_PERMISSIONS',
       });
+      return;
     }
 
     logger.debug('Admin authorization successful', {
@@ -254,11 +257,12 @@ export const requireApproved = async (
   next: NextFunction
 ): Promise<void> => {
   if (!req.user) {
-    return res.status(401).json({
+    res.status(401).json({
       success: false,
       message: 'Authentication required',
       error: 'NOT_AUTHENTICATED',
     });
+    return;
   }
 
   try {
@@ -268,11 +272,12 @@ export const requireApproved = async (
     ]);
 
     if (result.rows.length === 0) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'User not found',
         error: 'USER_NOT_FOUND',
       });
+      return;
     }
 
     if (!result.rows[0].is_approved) {
@@ -282,11 +287,12 @@ export const requireApproved = async (
         url: req.url,
       });
 
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         message: 'Account not approved',
         error: 'ACCOUNT_NOT_APPROVED',
       });
+      return;
     }
 
     logger.debug('User approval check successful', {
@@ -314,7 +320,7 @@ export const requireApproved = async (
 export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Authentication required',
         error: 'NOT_AUTHENTICATED',
@@ -323,11 +329,12 @@ export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
 
     const resourceId = req.params[resourceIdParam];
     if (!resourceId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: `Resource ID parameter '${resourceIdParam}' is required`,
         error: 'MISSING_RESOURCE_ID',
       });
+      return;
     }
 
     try {
@@ -339,30 +346,32 @@ export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           message: 'Resource not found',
           error: 'RESOURCE_NOT_FOUND',
         });
+        return;
       }
 
-      if (result.rows[0].user_id !== req.user.userId) {
+      if (!req.user || result.rows[0].user_id !== req.user.userId) {
         logger.warn('User attempted to access resource they do not own', {
-          userId: req.user.userId,
+          userId: req.user?.userId,
           resourceId,
           resourceOwner: result.rows[0].user_id,
           url: req.url,
         });
 
-        return res.status(403).json({
+        res.status(403).json({
           success: false,
           message: 'Access denied - you do not own this resource',
           error: 'RESOURCE_ACCESS_DENIED',
         });
+        return;
       }
 
       logger.debug('Resource ownership check successful', {
-        userId: req.user.userId,
+        userId: req.user?.userId,
         resourceId,
       });
 
@@ -370,7 +379,7 @@ export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
     } catch (error) {
       logger.error('Resource ownership check failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
-        userId: req.user.userId,
+        userId: req.user?.userId,
         resourceId,
       });
 
@@ -442,11 +451,12 @@ export const devAuthenticate = (
   next: NextFunction
 ): void => {
   if (process.env.NODE_ENV !== 'development') {
-    return res.status(403).json({
+    res.status(403).json({
       success: false,
       message: 'Development middleware not available in production',
       error: 'DEV_MIDDLEWARE_BLOCKED',
     });
+    return;
   }
 
   // Create a mock development user
@@ -524,14 +534,4 @@ export const isUserApproved = requireApproved;
 export const socketAuthMiddleware = authenticateSocket;
 export const devAuthMiddleware = devAuthenticate;
 
-// New consolidated exports
-export {
-  authenticate,
-  optionalAuthenticate,
-  requireAdmin,
-  requireApproved,
-  requireResourceOwnership,
-  authenticateSocket,
-  devAuthenticate,
-  createAuthMiddleware,
-};
+// Note: Functions are already exported with 'export const' above

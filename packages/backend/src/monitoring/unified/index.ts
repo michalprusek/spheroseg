@@ -276,7 +276,7 @@ class UnifiedMonitoring {
   private static instance: UnifiedMonitoring | null = null;
   private metricsQueue: any[] = [];
   private flushInterval: ReturnType<typeof setInterval> | null = null;
-  private options: PerformanceMonitoringOptions;
+  private options!: PerformanceMonitoringOptions;
 
   constructor(options: Partial<PerformanceMonitoringOptions> = {}) {
     this.options = {
@@ -340,7 +340,7 @@ class UnifiedMonitoring {
 
     this.metricsQueue.push(metric);
 
-    if (this.metricsQueue.length >= this.options.maxMetricsInQueue) {
+    if (this.metricsQueue.length >= (this.options?.maxMetricsInQueue || 1000)) {
       this.flushMetrics();
     }
 
@@ -814,7 +814,7 @@ export function errorHandlerMiddleware(err: any, req: Request, res: Response, ne
 /**
  * Monitor database query
  */
-export async function monitorQuery<T>(
+export async function monitorQuery<T extends Record<string, any> = any>(
   queryText: string,
   params: any[],
   queryFn: () => Promise<QueryResult<T>>
@@ -851,8 +851,8 @@ export async function monitorQuery<T>(
       });
     }
 
-    updateQueryPatternStats(queryText, durationMs, result.rowCount);
-    monitoring.recordDatabaseQuery(operation, primaryTable, durationMs, result.rowCount);
+    updateQueryPatternStats(queryText, durationMs, result.rowCount ?? undefined);
+    monitoring.recordDatabaseQuery(operation, primaryTable, durationMs, result.rowCount ?? undefined);
 
     return result;
   } catch (error) {
@@ -978,11 +978,11 @@ export function updatePoolMetrics(pool: any) {
 export function wrapClientQuery(client: PoolClient): PoolClient {
   const originalQuery = client.query.bind(client);
 
-  client.query = function <T>(textOrConfig: string | any, values?: any): Promise<QueryResult<T>> {
+  client.query = function <T extends Record<string, any> = any>(textOrConfig: string | any, values?: any): Promise<QueryResult<T>> {
     const queryText = typeof textOrConfig === 'string' ? textOrConfig : textOrConfig.text;
     const params = values || (typeof textOrConfig === 'string' ? [] : textOrConfig.values || []);
 
-    return monitorQuery(queryText, params, () => originalQuery(textOrConfig, values));
+    return monitorQuery<T>(queryText, params, () => originalQuery(textOrConfig, values) as unknown as Promise<QueryResult<T>>);
   };
 
   return client;

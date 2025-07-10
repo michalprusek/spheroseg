@@ -5,7 +5,7 @@ import pool from '../../db';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { createTestApp, createTestRequest, TEST_IDS } from '../../test-utils';
-import { createUserFixture } from '../../../../shared/test-utils/fixtures';
+// Fixtures are created inline in tests
 
 // Mock dependencies
 jest.mock('../../db'); // Mock the database pool
@@ -28,10 +28,13 @@ const mockJwtSign = jwt.sign as jest.Mock;
 
 describe('Auth Routes - /api/auth', () => {
   // Create test user fixture
-  const testUser = createUserFixture({
+  const testUser = {
     id: TEST_IDS.USER_ID,
     email: 'test@example.com',
-  });
+    name: 'Test User',
+    role: 'user',
+    is_approved: true,
+  };
   const testEmail = testUser.email;
   const testPassword = 'password123';
   const testName = testUser.name || 'Test User';

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { FixedSizeGrid as Grid, VariableSizeList as List } from 'react-window';
 import { ImageDisplay } from './ImageDisplay';
 import { ProjectImage } from '@spheroseg/types';
 import ImageDebugger from './ImageDebugger';
@@ -141,40 +142,105 @@ const ProjectImages = ({
     );
   };
 
+  // Calculate grid dimensions
+  const getColumnCount = useCallback(() => {
+    const width = window.innerWidth;
+    if (width < 640) return 1; // sm
+    if (width < 768) return 2; // md
+    if (width < 1024) return 3; // lg
+    return 4; // xl and above
+  }, []);
+
+  const [columnCount, setColumnCount] = useState(getColumnCount());
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight - 200); // Account for header/footer
+
+  useEffect(() => {
+    const handleResize = () => {
+      setColumnCount(getColumnCount());
+      setWindowHeight(window.innerHeight - 200);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [getColumnCount]);
+
+  // Cell renderer for grid view
+  const GridCell = useCallback(({ columnIndex, rowIndex, style }: { columnIndex: number; rowIndex: number; style: React.CSSProperties }) => {
+    const index = rowIndex * columnCount + columnIndex;
+    if (index >= localImages.length) return null;
+
+    const image = localImages[index];
+    const imageId = image.id || `img-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    if (!image.id) {
+      console.warn('Image missing ID in ProjectImages component:', image);
+    }
+
+    return (
+      <div style={{ ...style, padding: '12px' }}>
+        <ImageDisplay
+          image={{ ...image, id: imageId }}
+          onDelete={onDelete}
+          onOpen={selectionMode ? undefined : onOpen}
+          onResegment={handleResegment}
+          selectionMode={selectionMode}
+          isSelected={!!selectedImages[imageId]}
+          onToggleSelection={(event) => onToggleSelection?.(imageId, event)}
+          viewMode="grid"
+        />
+      </div>
+    );
+  }, [localImages, columnCount, onDelete, onOpen, handleResegment, selectionMode, selectedImages, onToggleSelection]);
+
+  // Row renderer for list view
+  const ListRow = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const image = localImages[index];
+    const imageId = image.id || `img-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    if (!image.id) {
+      console.warn('Image missing ID in ProjectImages list view:', image);
+    }
+
+    return (
+      <div style={{ ...style, padding: '8px 0' }}>
+        <ImageDisplay
+          image={{ ...image, id: imageId }}
+          onDelete={onDelete}
+          onOpen={selectionMode ? undefined : onOpen}
+          onResegment={handleResegment}
+          selectionMode={selectionMode}
+          isSelected={!!selectedImages[imageId]}
+          onToggleSelection={(event) => onToggleSelection?.(imageId, event)}
+          viewMode="list"
+        />
+      </div>
+    );
+  }, [localImages, onDelete, onOpen, handleResegment, selectionMode, selectedImages, onToggleSelection]);
+
+  // Calculate row count for grid
+  const rowCount = Math.ceil(localImages.length / columnCount);
+
   if (viewMode === 'grid') {
     return (
       <>
         {renderBatchActionsPanel()}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
+          style={{ height: windowHeight }}
         >
-          {localImages.map((image) => {
-            // Ensure each image has a valid ID for the key prop
-            const imageId = image.id || `img-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-
-            // Log any images without IDs for debugging
-            if (!image.id) {
-              console.warn('Image missing ID in ProjectImages component:', image);
-            }
-
-            return (
-              <ImageDisplay
-                key={imageId}
-                image={{ ...image, id: imageId }} // Ensure image has an ID
-                onDelete={onDelete}
-                onOpen={selectionMode ? undefined : onOpen}
-                onResegment={handleResegment}
-                selectionMode={selectionMode}
-                isSelected={!!selectedImages[imageId]}
-                onToggleSelection={(event) => onToggleSelection?.(imageId, event)}
-                viewMode="grid"
-              />
-            );
-          })}
+          <Grid
+            columnCount={columnCount}
+            columnWidth={window.innerWidth / columnCount - 24} // Account for padding
+            height={windowHeight}
+            rowCount={rowCount}
+            rowHeight={280} // Fixed height for grid items
+            width={window.innerWidth - 48} // Account for container padding
+            overscanRowCount={2} // Render 2 extra rows for smoother scrolling
+          >
+            {GridCell}
+          </Grid>
         </motion.div>
       </>
     );
@@ -184,35 +250,21 @@ const ProjectImages = ({
     <>
       {renderBatchActionsPanel()}
       <motion.div
-        className="space-y-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
+        style={{ height: windowHeight }}
       >
-        {localImages.map((image) => {
-          // Ensure each image has a valid ID for the key prop
-          const imageId = image.id || `img-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-
-          // Log any images without IDs for debugging
-          if (!image.id) {
-            console.warn('Image missing ID in ProjectImages list view:', image);
-          }
-
-          return (
-            <ImageDisplay
-              key={imageId}
-              image={{ ...image, id: imageId }} // Ensure image has an ID
-              onDelete={onDelete}
-              onOpen={selectionMode ? undefined : onOpen}
-              onResegment={handleResegment}
-              selectionMode={selectionMode}
-              isSelected={!!selectedImages[imageId]}
-              onToggleSelection={(event) => onToggleSelection?.(imageId, event)}
-              viewMode="list"
-            />
-          );
-        })}
+        <List
+          height={windowHeight}
+          itemCount={localImages.length}
+          itemSize={() => 120} // Fixed height for list items
+          width="100%"
+          overscanCount={5} // Render 5 extra items for smoother scrolling
+        >
+          {ListRow}
+        </List>
       </motion.div>
     </>
   );

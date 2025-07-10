@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import { Container } from '@/components/ui/container';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Mail, GitHub, Twitter } from 'lucide-react';
+import { Mail, Github, Twitter } from 'lucide-react';
 
 const AboutPage: React.FC = () => {
   const { t } = useTranslation();
@@ -75,7 +75,7 @@ const AboutPage: React.FC = () => {
             </Button>
             <Button asChild variant="outline" className="flex items-center gap-2">
               <a href="https://github.com/spheroseg" target="_blank" rel="noopener noreferrer">
-                <GitHub className="h-4 w-4" />
+                <Github className="h-4 w-4" />
                 {t('about.contact.github')}
               </a>
             </Button>

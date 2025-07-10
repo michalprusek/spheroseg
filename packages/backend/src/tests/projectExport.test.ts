@@ -110,7 +110,7 @@ const mockDbQuery = jest.fn(queryMock);
 const mockExcelBuffer = Buffer.from('Mock Excel File');
 
 // Mock all required dependencies
-jest.mock('../middleware/authMiddleware', () => ({
+jest.mock('../security/middleware/auth', () => ({
   __esModule: true,
   default: mockAuthMiddleware,
 }));

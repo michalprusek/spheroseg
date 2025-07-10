@@ -25,6 +25,14 @@ export interface TokenPayload {
   version?: number; // Token format version
   fid?: string; // Family ID for refresh tokens
   device?: string; // Device identifier for refresh tokens
+  tokenVersion?: number; // Token version number
+  // Standard JWT claims
+  iat?: number; // Issued at
+  exp?: number; // Expiration time
+  nbf?: number; // Not before
+  iss?: string; // Issuer
+  sub?: string; // Subject
+  aud?: string; // Audience
 }
 
 // Define TokenResponse interface

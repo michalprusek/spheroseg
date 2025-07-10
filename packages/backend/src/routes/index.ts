@@ -24,6 +24,7 @@ import previewRoutes from './preview';
 import logsRoutes from './logs';
 import performanceRoutes from './performance';
 import accessRequestsRoutes from './accessRequests';
+import debugRoutes from './debug';
 
 // Create main router
 const router: Router = express.Router();
@@ -65,6 +66,11 @@ router.use('/preview', previewRoutes);
 
 // Access requests routes
 router.use('/access-requests', accessRequestsRoutes);
+
+// Debug routes (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  router.use('/debug', debugRoutes);
+}
 
 // Add a default route for root
 router.get('/', (req, res) => {

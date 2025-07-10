@@ -2,7 +2,8 @@
  * Security Controller
  * Handles security-related API endpoints
  */
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
+import { AuthenticatedRequest } from '../security/middleware/auth';
 import * as securityService from '../services/securityService';
 import { ApiError } from '../utils/errors';
 
@@ -11,11 +12,11 @@ import { ApiError } from '../utils/errors';
  * @route GET /api/security/audit
  * @access Admin only
  */
-export const getSecurityAuditReport = async (req: Request, res: Response, next: NextFunction) => {
+export const getSecurityAuditReport = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {
-      throw new ApiError(403, 'Only admin users can access security audit reports');
+      throw new ApiError('Only admin users can access security audit reports', 403);
     }
 
     const report = await securityService.getSecurityAuditReport();
@@ -30,11 +31,11 @@ export const getSecurityAuditReport = async (req: Request, res: Response, next: 
  * @route GET /api/security/issues/:id
  * @access Admin only
  */
-export const getSecurityIssueById = async (req: Request, res: Response, next: NextFunction) => {
+export const getSecurityIssueById = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {
-      throw new ApiError(403, 'Only admin users can access security issue details');
+      throw new ApiError('Only admin users can access security issue details', 403);
     }
 
     const issue = await securityService.getSecurityIssueById(req.params.id);
@@ -49,17 +50,17 @@ export const getSecurityIssueById = async (req: Request, res: Response, next: Ne
  * @route PATCH /api/security/issues/:id
  * @access Admin only
  */
-export const updateSecurityIssue = async (req: Request, res: Response, next: NextFunction) => {
+export const updateSecurityIssue = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {
-      throw new ApiError(403, 'Only admin users can update security issues');
+      throw new ApiError('Only admin users can update security issues', 403);
     }
 
     const updatedIssue = await securityService.updateSecurityIssue(
       req.params.id,
       req.body,
-      req.user.id
+      req.user.userId
     );
 
     res.status(200).json(updatedIssue);
@@ -73,11 +74,11 @@ export const updateSecurityIssue = async (req: Request, res: Response, next: Nex
  * @route GET /api/security/scans
  * @access Admin only
  */
-export const getVulnerabilityScans = async (req: Request, res: Response, next: NextFunction) => {
+export const getVulnerabilityScans = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {
-      throw new ApiError(403, 'Only admin users can access vulnerability scans');
+      throw new ApiError('Only admin users can access vulnerability scans', 403);
     }
 
     const options = {
@@ -98,11 +99,11 @@ export const getVulnerabilityScans = async (req: Request, res: Response, next: N
  * @route GET /api/security/scans/:id
  * @access Admin only
  */
-export const getScanDetails = async (req: Request, res: Response, next: NextFunction) => {
+export const getScanDetails = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // Check if user has admin role
     if (req.user?.role !== 'admin') {
-      throw new ApiError(403, 'Only admin users can access scan details');
+      throw new ApiError('Only admin users can access scan details', 403);
     }
 
     const scan = await securityService.getScanById(req.params.id);

@@ -42,10 +42,7 @@ const Index = lazy(() =>
   }),
 );
 const SignIn = lazy(() =>
-  import('./pages/SignIn').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
+  import('./pages/SignIn'),
 );
 const SignUp = lazy(() =>
   import('./pages/SignUp').catch(() => {
@@ -108,6 +105,12 @@ const RequestAccess = lazy(() =>
 );
 const Documentation = lazy(() =>
   import('./pages/Documentation').catch(() => {
+    // Error handled by returning NotFound page
+    return import('./pages/NotFound');
+  }),
+);
+const AboutPage = lazy(() =>
+  import('./pages/AboutPage').catch(() => {
     // Error handled by returning NotFound page
     return import('./pages/NotFound');
   }),
@@ -346,6 +349,14 @@ const routes = createRoutesFromElements(
       element={
         <ErrorBoundary componentName="DocumentationPage">
           <Documentation />
+        </ErrorBoundary>
+      }
+    />
+    <Route
+      path="/about"
+      element={
+        <ErrorBoundary componentName="AboutPage">
+          <AboutPage />
         </ErrorBoundary>
       }
     />

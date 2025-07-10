@@ -195,5 +195,50 @@
       "statusFailed": "Failed",
       "statusPending": "Pending"
     }
+  },
+  "about": {
+    "title": "About",
+    "mission": {
+      "title": "Our Mission",
+      "description": "We are dedicated to advancing cell biology research through cutting-edge AI technology.",
+      "vision": "Our vision is to make cell analysis more accessible and accurate for researchers worldwide."
+    },
+    "technology": {
+      "title": "Our Technology",
+      "description": "We leverage state-of-the-art deep learning models for precise cell segmentation.",
+      "feature1": {
+        "title": "AI-Powered",
+        "description": "Advanced neural networks for accurate cell detection"
+      },
+      "feature2": {
+        "title": "User-Friendly",
+        "description": "Intuitive interface designed for researchers"
+      },
+      "feature3": {
+        "title": "Scalable",
+        "description": "Process thousands of images efficiently"
+      }
+    },
+    "team": {
+      "title": "Our Team",
+      "description": "We are a diverse team of scientists and engineers passionate about advancing research.",
+      "member1": {
+        "name": "Team Member 1",
+        "role": "Lead Developer"
+      },
+      "member2": {
+        "name": "Team Member 2",
+        "role": "Research Scientist"
+      },
+      "member3": {
+        "name": "Team Member 3",
+        "role": "Machine Learning Engineer"
+      }
+    },
+    "contact": {
+      "title": "Get in Touch",
+      "description": "We'd love to hear from you. Reach out with questions or feedback.",
+      "email": "contact@spheroseg.com"
+    }
   }
 }

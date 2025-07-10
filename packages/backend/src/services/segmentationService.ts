@@ -51,5 +51,82 @@ export const cancelSegmentationTask = async (imageId: string): Promise<boolean> 
 };
 
 // Optional: Add functions to get or update results if needed directly by service
-// export const getSegmentationResult = async (imageId: string) => { ... };
-// export const updateSegmentationResult = async (imageId: string, result: any) => { ... };
+/**
+ * Get segmentation data for an image
+ */
+export const getSegmentation = async (imageId: string) => {
+  const result = await pool.query(
+    'SELECT * FROM segmentation_results WHERE image_id = $1 ORDER BY created_at DESC LIMIT 1',
+    [imageId]
+  );
+  
+  if (result.rows.length === 0) {
+    return null;
+  }
+  
+  return result.rows[0];
+};
+
+/**
+ * Save segmentation data
+ */
+export const saveSegmentation = async (imageId: string, userId: string, segmentationData: any) => {
+  const result = await pool.query(
+    `INSERT INTO segmentation_results (image_id, user_id, result_data, status) 
+     VALUES ($1, $2, $3, 'completed') 
+     RETURNING *`,
+    [imageId, userId, JSON.stringify(segmentationData)]
+  );
+  
+  return result.rows[0];
+};
+
+/**
+ * Get segmentation history for an image
+ */
+export const getSegmentationHistory = async (imageId: string) => {
+  const result = await pool.query(
+    'SELECT * FROM segmentation_results WHERE image_id = $1 ORDER BY created_at DESC',
+    [imageId]
+  );
+  
+  return result.rows;
+};
+
+/**
+ * Get a specific version of segmentation
+ */
+export const getSegmentationVersion = async (imageId: string, version: number) => {
+  const result = await pool.query(
+    'SELECT * FROM segmentation_results WHERE image_id = $1 ORDER BY created_at DESC LIMIT 1 OFFSET $2',
+    [imageId, version - 1]
+  );
+  
+  if (result.rows.length === 0) {
+    return null;
+  }
+  
+  return result.rows[0];
+};
+
+/**
+ * Restore a specific version of segmentation
+ */
+export const restoreSegmentationVersion = async (imageId: string, userId: string, version: number) => {
+  // Get the specific version
+  const versionData = await getSegmentationVersion(imageId, version);
+  
+  if (!versionData) {
+    throw new ApiError('Segmentation version not found', 404);
+  }
+  
+  // Create a new segmentation entry with the old data
+  const result = await pool.query(
+    `INSERT INTO segmentation_results (image_id, user_id, result_data, status) 
+     VALUES ($1, $2, $3, 'completed') 
+     RETURNING *`,
+    [imageId, userId, versionData.result_data]
+  );
+  
+  return result.rows[0];
+};

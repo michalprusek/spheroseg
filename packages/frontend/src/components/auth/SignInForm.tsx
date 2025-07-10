@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import AuthFormLayout from '@/shared/components/auth/AuthFormLayout';
-import { EmailField, PasswordField, SubmitButton } from '@/shared/components/form/FormFields';
+import { EmailField, PasswordField, SubmitButton } from '@/utils/validation/components';
 import { useSignInForm } from '@/shared/hooks/useAuthForm';
 
 const SignInForm: React.FC = () => {

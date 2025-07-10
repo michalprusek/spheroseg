@@ -5,18 +5,32 @@
  */
 
 import request from 'supertest';
-import { app } from '../server';
+import app from '../app';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import db from '../db';
 
 // Mock database queries
 jest.mock('../db', () => {
-  const mockPool = {
-    query: jest.fn(),
+  const mockQuery = jest.fn();
+  return {
+    __esModule: true,
+    default: {
+      query: mockQuery,
+    },
+    query: mockQuery,
   };
-  return { pool: mockPool };
 });
+
+// Mock bcryptjs
+jest.mock('bcryptjs', () => ({
+  hash: jest.fn(),
+  compare: jest.fn(),
+}));
+
+// Get the mocked functions
+const mockQuery = require('../db').default.query;
+const mockBcrypt = require('bcryptjs');
 
 describe('Authentication Endpoints', () => {
   // Clear mock calls before each test
@@ -43,65 +57,65 @@ describe('Authentication Endpoints', () => {
 
     it('should return 401 if user not found', async () => {
       // Mock query to return empty result
-      (pool.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+      mockQuery.mockResolvedValueOnce({ rows: [] });
 
       const response = await request(app)
         .post('/api/auth/login')
         .send({ email: 'nonexistent@example.com', password: 'password123' });
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error');
-      expect(pool.query).toHaveBeenCalledTimes(1);
+      expect(response.body).toHaveProperty('message');
+      expect(mockQuery).toHaveBeenCalledTimes(1);
     });
 
     it('should return 401 if password is incorrect', async () => {
       // Mock user found but password check fails
-      (pool.query as jest.Mock).mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({
         rows: [
           {
             id: '123',
             email: 'test@example.com',
-            password_hash: 'hashedPasswordInvalid', // Password check will fail
+            password_hash: 'hashedPasswordInvalid',
           },
         ],
       });
+
+      // Mock bcrypt.compare to return false (password doesn't match)
+      mockBcrypt.compare.mockResolvedValueOnce(false);
 
       const response = await request(app)
         .post('/api/auth/login')
         .send({ email: 'test@example.com', password: 'wrongpassword' });
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty('message');
     });
 
     it('should return 200 with token if login successful', async () => {
-      // Mock user found and bcrypt.compare to succeed
+      // Mock user found
       const mockUser = {
         id: '123',
         email: 'test@example.com',
-        password_hash: '$2a$10$xVqYLKW9CdMAKGh2tSP5Lek4vcWKRvDYXITk4kMahCFe9hBIlVvzC', // Hash for 'password123'
+        password_hash: 'hashedPassword',
       };
 
       // Mock successful user query
-      (pool.query as jest.Mock).mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({
         rows: [mockUser],
       });
 
-      // Mock bcrypt.compare to return true
-      jest.mock('bcryptjs', () => ({
-        compare: jest.fn().mockResolvedValue(true),
-      }));
+      // Mock bcrypt.compare to return true (password matches)
+      mockBcrypt.compare.mockResolvedValueOnce(true);
 
-      await request(app)
+      const response = await request(app)
         .post('/api/auth/login')
         .send({ email: 'test@example.com', password: 'password123' });
 
-      // This will actually fail in the test because the real bcrypt comparison happens,
-      // but we can check that the query was called correctly
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT'),
-        expect.arrayContaining(['test@example.com'])
-      );
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('token');
+      expect(response.body).toHaveProperty('refreshToken');
+      expect(mockQuery).toHaveBeenCalled();
+      expect(mockBcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword');
     });
   });
 
@@ -116,8 +130,8 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should return 409 if email already exists', async () => {
-      // Mock query to check if email exists
-      (pool.query as jest.Mock).mockResolvedValueOnce({
+      // Mock query to check if email exists - returns user found
+      mockQuery.mockResolvedValueOnce({
         rows: [{ email: 'existing@example.com' }],
       });
 
@@ -128,19 +142,26 @@ describe('Authentication Endpoints', () => {
       });
 
       expect(response.status).toBe(409);
-      expect(response.body).toHaveProperty('error');
-      expect(pool.query).toHaveBeenCalledTimes(1);
+      expect(response.body).toHaveProperty('message');
+      expect(mockQuery).toHaveBeenCalledTimes(1);
     });
 
     it('should return 201 if registration successful', async () => {
       // Mock queries for registration
-      (pool.query as jest.Mock)
+      mockQuery
         // First query: check if email exists (return empty result)
         .mockResolvedValueOnce({ rows: [] })
-        // Second query: insert user (return user ID)
+        // Second query: start transaction
+        .mockResolvedValueOnce({})
+        // Third query: insert user (return user ID)
         .mockResolvedValueOnce({ rows: [{ id: '123' }] })
-        // Third query: insert profile
-        .mockResolvedValueOnce({ rows: [{ user_id: '123' }] });
+        // Fourth query: insert profile
+        .mockResolvedValueOnce({ rows: [{ user_id: '123' }] })
+        // Fifth query: commit transaction
+        .mockResolvedValueOnce({});
+
+      // Mock bcrypt.hash for password
+      mockBcrypt.hash.mockResolvedValueOnce('hashedPassword');
 
       const response = await request(app).post('/api/auth/register').send({
         email: 'new@example.com',
@@ -150,7 +171,8 @@ describe('Authentication Endpoints', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('token');
-      expect(pool.query).toHaveBeenCalledTimes(3);
+      expect(response.body).toHaveProperty('refreshToken');
+      expect(mockBcrypt.hash).toHaveBeenCalledWith('password123', expect.any(Number));
     });
   });
 
@@ -177,7 +199,7 @@ describe('Authentication Endpoints', () => {
       const token = jwt.sign(user, config.auth.jwtSecret, { expiresIn: '1h' });
 
       // Mock user query
-      (pool.query as jest.Mock).mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({
         rows: [
           {
             id: '123',
@@ -194,7 +216,7 @@ describe('Authentication Endpoints', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id', '123');
       expect(response.body).toHaveProperty('email', 'test@example.com');
-      expect(pool.query).toHaveBeenCalledTimes(1);
+      expect(mockQuery).toHaveBeenCalledTimes(1);
     });
   });
 });
@@ -213,7 +235,7 @@ describe('Authentication Middleware', () => {
     const token = jwt.sign(user, config.auth.jwtSecret, { expiresIn: '1h' });
 
     // Mock project query
-    (pool.query as jest.Mock).mockResolvedValueOnce({
+    mockQuery.mockResolvedValueOnce({
       rows: [],
     });
 

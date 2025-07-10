@@ -17,6 +17,7 @@ import {
   // createSegmentationJobSchema // Commented out as it seems missing from validator file
 } from '../validators/segmentationValidators';
 import { SEGMENTATION_STATUS } from '../constants/segmentationStatus';
+import { broadcastSegmentationUpdate } from '../services/socketService';
 
 const router: Router = express.Router();
 
@@ -139,10 +140,11 @@ router.post(
       return;
     }
 
+    let imageCheck;
     try {
       // Verify user has access to the image
-      const imageCheck = await pool.query(
-        'SELECT i.id, i.storage_path, p.user_id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
+      imageCheck = await pool.query(
+        'SELECT i.id, i.storage_path, i.project_id, p.user_id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
         [imageId, userId]
       );
       if (imageCheck.rows.length === 0) {
@@ -172,6 +174,14 @@ router.post(
       // No need to await, the service handles status updates internally
       triggerSegmentationTask(imageId, imagePath, segmentationParams, priority);
 
+      // Broadcast the status update
+      const projectId = imageCheck.rows[0].project_id;
+      broadcastSegmentationUpdate(
+        projectId,
+        imageId,
+        SEGMENTATION_STATUS.QUEUED
+      );
+
       // Get current queue status
       const queueStatus = getSegmentationQueueStatus();
 
@@ -189,6 +199,16 @@ router.post(
         await pool.query(
           `UPDATE segmentation_results SET status = '${SEGMENTATION_STATUS.FAILED}', updated_at = NOW() WHERE image_id = $1`,
           [imageId]
+        );
+        
+        // Broadcast the failure
+        const projectId = imageCheck?.rows[0]?.project_id;
+        broadcastSegmentationUpdate(
+          projectId,
+          imageId,
+          SEGMENTATION_STATUS.FAILED,
+          undefined,
+          error instanceof Error ? error.message : String(error)
         );
       } catch (revertError) {
         console.error('Failed to revert status after trigger error:', revertError);
@@ -315,6 +335,28 @@ async function handleBatchSegmentation(
 
     // Wait for all DB updates to finish (optional, but safer)
     await Promise.all(segmentationPromises);
+
+    // Get project IDs for successfully triggered images and broadcast updates
+    try {
+      const projectQuery = await pool.query(
+        'SELECT DISTINCT project_id FROM images WHERE id = ANY($1)',
+        [successfullyTriggered]
+      );
+
+      // Broadcast status updates for each project
+      for (const row of projectQuery.rows) {
+        const projectId = row.project_id;
+        for (const imageId of successfullyTriggered) {
+          broadcastSegmentationUpdate(
+            projectId,
+            imageId,
+            SEGMENTATION_STATUS.QUEUED
+          );
+        }
+      }
+    } catch (broadcastError) {
+      logger.error('Error broadcasting batch segmentation updates:', { error: broadcastError });
+    }
 
     // Get current queue status
     const queueStatus = getSegmentationQueueStatus();
@@ -477,6 +519,31 @@ router.put(
         // Maybe try an INSERT ON CONFLICT here instead or handle it differently?
         res.status(404).json({ message: 'Segmentation record not found for image' });
         return;
+      }
+
+      // Get the project ID for the image to emit to the correct room
+      const projectResult = await pool.query(
+        'SELECT project_id FROM images WHERE id = $1',
+        [imageId]
+      );
+
+      if (projectResult.rows.length > 0) {
+        const projectId = projectResult.rows[0].project_id;
+        
+        // Broadcast the segmentation update to all clients in the project room
+        broadcastSegmentationUpdate(
+          projectId,
+          imageId,
+          status,
+          status === SEGMENTATION_STATUS.COMPLETED ? updateResult.rows[0].result_path : undefined,
+          status === SEGMENTATION_STATUS.FAILED ? updateResult.rows[0].error : undefined
+        );
+        
+        logger.info('Broadcasted segmentation update', {
+          projectId,
+          imageId,
+          status
+        });
       }
 
       res.status(200).json(updateResult.rows[0]);

@@ -1,14 +1,14 @@
 import request from 'supertest';
 import express from 'express';
-import projectsRouter from './projects';
-import { authenticate as authMiddleware } from '../security/middleware/auth';
-import pool from '../db';
+import projectsRouter from '../../routes/projects';
+import { authenticate as authMiddleware } from '../../security/middleware/auth';
+import pool from '../../db';
 import jwt from 'jsonwebtoken';
 
 // Mock dependencies
-jest.mock('../db');
-jest.mock('../middleware/authMiddleware'); // Mock auth middleware
-jest.mock('../middleware/validationMiddleware', () => ({
+jest.mock('../../db');
+jest.mock('../../security/middleware/auth'); // Mock auth middleware
+jest.mock('../../middleware/validationMiddleware', () => ({
   validate: () => (req: any, res: any, next: any) => next(), // Mock validate to just call next
 }));
 jest.mock('jsonwebtoken');

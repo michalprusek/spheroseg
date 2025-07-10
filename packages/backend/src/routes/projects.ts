@@ -11,6 +11,7 @@ import {
 } from '../validators/projectValidators';
 import logger from '../utils/logger';
 import * as projectService from '../services/projectService';
+import { cacheControl, combineCacheStrategies } from '../middleware/cache';
 
 const router: Router = express.Router();
 
@@ -19,6 +20,7 @@ const router: Router = express.Router();
 router.get(
   '/',
   authMiddleware,
+  combineCacheStrategies(cacheControl.short, cacheControl.etag),
   validate(listProjectsSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -211,6 +213,7 @@ router.post(
 router.get(
   '/:id',
   authMiddleware,
+  combineCacheStrategies(cacheControl.short, cacheControl.etag),
   validate(projectIdSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -539,6 +542,7 @@ router.post(
 router.get(
   '/:id/images',
   authMiddleware,
+  combineCacheStrategies(cacheControl.short, cacheControl.etag),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { id: projectId } = req.params;

@@ -6,40 +6,36 @@ import { Request, Response } from 'express';
 import { staticCacheMiddleware } from '../staticCache';
 
 describe('Static Cache Middleware', () => {
-  let req: Partial<Request>;
   let res: Partial<Response>;
   let next: jest.Mock;
 
   beforeEach(() => {
-    req = {
-      path: '/test.txt',
-    };
     res = {
       setHeader: jest.fn(),
     };
     next = jest.fn();
   });
 
-  it('should set cache headers for images', () => {
+  it('should set cache headers for images', async () => {
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico'];
 
-    imageExtensions.forEach((ext) => {
-      req.path = `/image.${ext}`;
-      staticCacheMiddleware(req as Request, res as Response, next);
+    for (const ext of imageExtensions) {
+      const req = { path: `/image.${ext}` } as Request;
+      await staticCacheMiddleware(req, res as Response, next);
 
       expect(res.setHeader).toHaveBeenCalledWith(
         'Cache-Control',
         'public, max-age=2592000, immutable'
       );
-    });
+    }
   });
 
-  it('should set cache headers for CSS and JS files', () => {
+  it('should set cache headers for CSS and JS files', async () => {
     const scriptExtensions = ['css', 'js', 'mjs'];
 
-    scriptExtensions.forEach((ext) => {
-      req.path = `/script.${ext}`;
-      staticCacheMiddleware(req as Request, res as Response, next);
+    for (const ext of scriptExtensions) {
+      const req = { path: `/script.${ext}` } as Request;
+      await staticCacheMiddleware(req, res as Response, next);
 
       expect(res.setHeader).toHaveBeenCalledWith(
         'Cache-Control',
@@ -52,8 +48,8 @@ describe('Static Cache Middleware', () => {
     const fontExtensions = ['woff', 'woff2', 'ttf', 'otf', 'eot'];
 
     fontExtensions.forEach((ext) => {
-      req.path = `/font.${ext}`;
-      staticCacheMiddleware(req as Request, res as Response, next);
+      const req = { path: `/font.${ext}` } as Request;
+      staticCacheMiddleware(req, res as Response, next);
 
       expect(res.setHeader).toHaveBeenCalledWith(
         'Cache-Control',
@@ -63,8 +59,8 @@ describe('Static Cache Middleware', () => {
   });
 
   it('should set no-cache for JSON files', () => {
-    req.path = '/data.json';
-    staticCacheMiddleware(req as Request, res as Response, next);
+    const req = { path: '/data.json' } as Request;
+    staticCacheMiddleware(req, res as Response, next);
 
     expect(res.setHeader).toHaveBeenCalledWith(
       'Cache-Control',
@@ -73,18 +69,19 @@ describe('Static Cache Middleware', () => {
   });
 
   it('should not set cache headers for other files', () => {
-    req.path = '/document.pdf';
-    staticCacheMiddleware(req as Request, res as Response, next);
+    const req = { path: '/document.pdf' } as Request;
+    staticCacheMiddleware(req, res as Response, next);
 
-    expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', expect.anything());
+    // Middleware doesn't set cache headers for PDF files
+    expect(res.setHeader).not.toHaveBeenCalledWith('Cache-Control', expect.anything());
   });
 
-  it('should add ETag header in development', () => {
+  it('should add ETag header in development', async () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
 
-    req.path = '/test.jpg';
-    staticCacheMiddleware(req as Request, res as Response, next);
+    const req = { path: '/test.jpg' } as Request;
+    await staticCacheMiddleware(req, res as Response, next);
 
     // In development, ETag is only set if file exists
     // Since we're mocking, we don't expect ETag to be set
@@ -93,16 +90,16 @@ describe('Static Cache Middleware', () => {
     process.env.NODE_ENV = originalEnv;
   });
 
-  it('should call next', () => {
-    req.path = '/test.jpg';
-    staticCacheMiddleware(req as Request, res as Response, next);
+  it('should call next', async () => {
+    const req = { path: '/test.jpg' } as Request;
+    await staticCacheMiddleware(req, res as Response, next);
 
     expect(next).toHaveBeenCalled();
   });
 
   it('should be case insensitive', () => {
-    req.path = '/IMAGE.JPG';
-    staticCacheMiddleware(req as Request, res as Response, next);
+    const req = { path: '/IMAGE.JPG' } as Request;
+    staticCacheMiddleware(req, res as Response, next);
 
     expect(res.setHeader).toHaveBeenCalledWith(
       'Cache-Control',

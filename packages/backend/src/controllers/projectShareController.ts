@@ -32,14 +32,14 @@ export async function shareProject(req: AuthenticatedRequest, res: Response, nex
     const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError(401, 'You must be logged in to share projects');
+      throw new ApiError('You must be logged in to share projects', 401);
     }
 
     // Validace vstupních dat
     const validationResult = shareProjectSchema.safeParse(req.body);
 
     if (!validationResult.success) {
-      throw new ApiError(400, validationResult.error.message);
+      throw new ApiError(validationResult.error.errors.map(e => e.message).join(', '), 400);
     }
 
     const { email, permission } = validationResult.data;
@@ -47,7 +47,7 @@ export async function shareProject(req: AuthenticatedRequest, res: Response, nex
     // Kontrola, zda uživatel nesdílí sám se sebou
     const isSelfSharing = await isUserEmail(userId, email);
     if (isSelfSharing) {
-      throw new ApiError(400, 'You cannot share a project with yourself');
+      throw new ApiError('You cannot share a project with yourself', 400);
     }
 
     // Sdílení projektu
@@ -86,13 +86,13 @@ export async function removeProjectShare(
     const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError(401, 'You must be logged in to manage shared projects');
+      throw new ApiError('You must be logged in to manage shared projects', 401);
     }
 
     const result = await projectShareService.removeProjectShare(projectId, shareId, userId);
 
     if (!result) {
-      throw new ApiError(404, 'Share not found or already removed');
+      throw new ApiError('Share not found or already removed', 404);
     }
 
     res.json({
@@ -116,7 +116,7 @@ export async function acceptProjectInvitation(
     const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError(401, 'You must be logged in to accept project invitations');
+      throw new ApiError('You must be logged in to accept project invitations', 401);
     }
 
     const project = await projectShareService.acceptProjectInvitation(token, userId);
@@ -142,7 +142,7 @@ export async function getSharedProjects(
     const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError(401, 'You must be logged in to view shared projects');
+      throw new ApiError('You must be logged in to view shared projects', 401);
     }
 
     const projects = await projectShareService.getProjectsSharedWithUser(userId);
@@ -168,7 +168,7 @@ export async function getProjectShares(
     const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError(401, 'You must be logged in to view project shares');
+      throw new ApiError('You must be logged in to view project shares', 401);
     }
 
     const shares = await projectShareService.getProjectShares(projectId, userId);
@@ -194,13 +194,13 @@ export async function checkProjectAccess(
     const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError(401, 'You must be logged in to access projects');
+      throw new ApiError('You must be logged in to access projects', 401);
     }
 
     const hasAccess = await projectShareService.hasUserAccessToProject(projectId, userId);
 
     if (!hasAccess) {
-      throw new ApiError(403, 'You do not have access to this project');
+      throw new ApiError('You do not have access to this project', 403);
     }
 
     next();
@@ -222,14 +222,14 @@ export async function generateInvitationLink(
     const userId = req.user?.userId;
 
     if (!userId) {
-      throw new ApiError(401, 'You must be logged in to generate invitation links');
+      throw new ApiError('You must be logged in to generate invitation links', 401);
     }
 
     // Validace vstupních dat
     const validationResult = generateInvitationLinkSchema.safeParse(req.body);
 
     if (!validationResult.success) {
-      throw new ApiError(400, validationResult.error.message);
+      throw new ApiError(validationResult.error.errors.map(e => e.message).join(', '), 400);
     }
 
     const { permission } = validationResult.data;
@@ -262,7 +262,7 @@ export async function generateInvitationLink(
 /**
  * Ověří, zda email patří uživateli
  */
-async function isUserEmail(userId: string, email: string): Promise<boolean> {
+async function isUserEmail(userId: string | number, email: string): Promise<boolean> {
   const query = `SELECT id FROM users WHERE id = $1 AND email = $2`;
   const result = await db.query(query, [userId, email]);
   return (result.rowCount ?? 0) > 0;

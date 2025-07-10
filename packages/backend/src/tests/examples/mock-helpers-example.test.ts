@@ -145,6 +145,9 @@ describe('Example API with Mock Helpers', () => {
             .query('SELECT * FROM images WHERE project_id = $1', [id])
             .then((imagesResult) => {
               res.status(200).json(imagesResult.rows);
+            })
+            .catch((err) => {
+              res.status(500).json({ error: err.message });
             });
         })
         .catch((err) => {

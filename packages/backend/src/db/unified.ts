@@ -90,15 +90,15 @@ export function getPool(): Pool {
 /**
  * Execute a database query with monitoring
  */
-export async function query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
+export async function query<T extends Record<string, any> = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
   const pool = getPool();
-  return monitorQuery(text, params || [], () => pool.query<T>(text, params));
+  return monitorQuery(text, params || [], () => pool.query(text, params));
 }
 
 /**
  * Execute a cached query
  */
-export async function cachedQuery<T = any>(
+export async function cachedQuery<T extends Record<string, any> = any>(
   text: string,
   params?: any[],
   ttl?: number
@@ -106,7 +106,7 @@ export async function cachedQuery<T = any>(
   const cacheKey = `query:${text}:${JSON.stringify(params || [])}`;
 
   // Check cache first
-  const cached = unifiedCache.get<QueryResult<T>>(cacheKey);
+  const cached = unifiedCache.get(cacheKey) as QueryResult<T> | undefined;
   if (cached) {
     return cached;
   }

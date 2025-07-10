@@ -23,10 +23,8 @@ jest.mock('fs', () => {
 });
 
 import config from '../../config';
-import {
-  setupSegmentationQueue,
-  triggerSegmentationTask,
-} from '../../services/segmentationQueueService';
+import segmentationQueueService from '../../services/segmentationQueueService';
+const { triggerSegmentationTask } = segmentationQueueService;
 
 // Mock necessary modules
 jest.mock('../../db');

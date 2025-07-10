@@ -2,12 +2,20 @@
  * Tests for container information utilities
  */
 
-import fs from 'fs';
+jest.mock('../logger');
+
+// Manual mocks for fs module
+const mockExistsSync = jest.fn();
+const mockReadFileSync = jest.fn();
+
+jest.mock('fs', () => ({
+  existsSync: mockExistsSync,
+  readFileSync: mockReadFileSync,
+  mkdirSync: jest.fn(),
+}));
+
 import { getContainerLimits, getEffectiveMemoryLimit } from '../containerInfo';
 import logger from '../logger';
-
-jest.mock('fs');
-jest.mock('../logger');
 
 describe('Container Info Utilities', () => {
   beforeEach(() => {
@@ -17,7 +25,7 @@ describe('Container Info Utilities', () => {
 
   describe('getContainerLimits', () => {
     it('should detect Docker environment', () => {
-      (fs.existsSync as jest.Mock).mockImplementation((path) => {
+      mockExistsSync.mockImplementation((path) => {
         return path === '/.dockerenv';
       });
 
@@ -26,10 +34,10 @@ describe('Container Info Utilities', () => {
     });
 
     it('should detect container from cgroup', () => {
-      (fs.existsSync as jest.Mock).mockImplementation((path) => {
+      mockExistsSync.mockImplementation((path) => {
         return path === '/proc/self/cgroup';
       });
-      (fs.readFileSync as jest.Mock).mockReturnValue('1:name=systemd:/docker/abc123');
+      mockReadFileSync.mockReturnValue('1:name=systemd:/docker/abc123');
 
       const result = getContainerLimits();
       expect(result.isContainerized).toBe(true);
@@ -37,10 +45,13 @@ describe('Container Info Utilities', () => {
 
     it('should read cgroup v1 memory limit', () => {
       const limitBytes = 536870912; // 512MB
-      (fs.existsSync as jest.Mock).mockImplementation((path) => {
-        return path === '/sys/fs/cgroup/memory/memory.limit_in_bytes';
+      mockExistsSync.mockImplementation((path) => {
+        if (path === '/.dockerenv') return false;
+        if (path === '/proc/self/cgroup') return false;
+        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
+        return false;
       });
-      (fs.readFileSync as jest.Mock).mockReturnValue(limitBytes.toString());
+      mockReadFileSync.mockReturnValue(limitBytes.toString());
 
       const result = getContainerLimits();
       expect(result.memoryLimitBytes).toBe(limitBytes);
@@ -48,10 +59,13 @@ describe('Container Info Utilities', () => {
     });
 
     it('should ignore unlimited cgroup v1 value', () => {
-      (fs.existsSync as jest.Mock).mockImplementation((path) => {
-        return path === '/sys/fs/cgroup/memory/memory.limit_in_bytes';
+      mockExistsSync.mockImplementation((path) => {
+        if (path === '/.dockerenv') return false;
+        if (path === '/proc/self/cgroup') return false;
+        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
+        return false;
       });
-      (fs.readFileSync as jest.Mock).mockReturnValue('9223372036854775807');
+      mockReadFileSync.mockReturnValue('9223372036854775807');
 
       const result = getContainerLimits();
       expect(result.memoryLimitBytes).toBeNull();
@@ -60,11 +74,14 @@ describe('Container Info Utilities', () => {
 
     it('should read cgroup v2 memory limit', () => {
       const limitBytes = 1073741824; // 1GB
-      (fs.existsSync as jest.Mock).mockImplementation((path) => {
+      mockExistsSync.mockImplementation((path) => {
+        if (path === '/.dockerenv') return false;
+        if (path === '/proc/self/cgroup') return false;
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return false;
-        return path === '/sys/fs/cgroup/memory.max';
+        if (path === '/sys/fs/cgroup/memory.max') return true;
+        return false;
       });
-      (fs.readFileSync as jest.Mock).mockReturnValue(limitBytes.toString());
+      mockReadFileSync.mockReturnValue(limitBytes.toString());
 
       const result = getContainerLimits();
       expect(result.memoryLimitBytes).toBe(limitBytes);
@@ -72,11 +89,14 @@ describe('Container Info Utilities', () => {
     });
 
     it('should ignore max value in cgroup v2', () => {
-      (fs.existsSync as jest.Mock).mockImplementation((path) => {
+      mockExistsSync.mockImplementation((path) => {
+        if (path === '/.dockerenv') return false;
+        if (path === '/proc/self/cgroup') return false;
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return false;
-        return path === '/sys/fs/cgroup/memory.max';
+        if (path === '/sys/fs/cgroup/memory.max') return true;
+        return false;
       });
-      (fs.readFileSync as jest.Mock).mockReturnValue('max');
+      mockReadFileSync.mockReturnValue('max');
 
       const result = getContainerLimits();
       expect(result.memoryLimitBytes).toBeNull();
@@ -84,7 +104,7 @@ describe('Container Info Utilities', () => {
     });
 
     it('should use environment variable as fallback', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      mockExistsSync.mockReturnValue(false);
       process.env.CONTAINER_MEMORY_LIMIT_MB = '256';
 
       const result = getContainerLimits();
@@ -93,8 +113,14 @@ describe('Container Info Utilities', () => {
     });
 
     it('should handle file system errors gracefully', () => {
-      (fs.existsSync as jest.Mock).mockImplementation(() => {
-        throw new Error('Permission denied');
+      let callCount = 0;
+      mockExistsSync.mockImplementation(() => {
+        callCount++;
+        // Only throw error on first call to avoid infinite loop
+        if (callCount === 1) {
+          throw new Error('Permission denied');
+        }
+        return false;
       });
 
       const result = getContainerLimits();
@@ -106,10 +132,13 @@ describe('Container Info Utilities', () => {
 
   describe('getEffectiveMemoryLimit', () => {
     it('should use detected container limit', () => {
-      (fs.existsSync as jest.Mock).mockImplementation((path) => {
-        return path === '/sys/fs/cgroup/memory/memory.limit_in_bytes';
+      mockExistsSync.mockImplementation((path) => {
+        if (path === '/.dockerenv') return false;
+        if (path === '/proc/self/cgroup') return false;
+        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
+        return false;
       });
-      (fs.readFileSync as jest.Mock).mockReturnValue('268435456'); // 256MB
+      mockReadFileSync.mockReturnValue('268435456'); // 256MB
 
       const limit = getEffectiveMemoryLimit(512);
       expect(limit).toBe(256);
@@ -117,7 +146,7 @@ describe('Container Info Utilities', () => {
     });
 
     it('should use default limit when no container limit detected', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      mockExistsSync.mockReturnValue(false);
 
       const limit = getEffectiveMemoryLimit(512);
       expect(limit).toBe(512);
@@ -125,10 +154,13 @@ describe('Container Info Utilities', () => {
     });
 
     it('should prefer detected limit over default', () => {
-      (fs.existsSync as jest.Mock).mockImplementation((path) => {
-        return path === '/sys/fs/cgroup/memory/memory.limit_in_bytes';
+      mockExistsSync.mockImplementation((path) => {
+        if (path === '/.dockerenv') return false;
+        if (path === '/proc/self/cgroup') return false;
+        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
+        return false;
       });
-      (fs.readFileSync as jest.Mock).mockReturnValue('1073741824'); // 1GB
+      mockReadFileSync.mockReturnValue('1073741824'); // 1GB
 
       const limit = getEffectiveMemoryLimit(512);
       expect(limit).toBe(1024);

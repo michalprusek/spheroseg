@@ -20,6 +20,7 @@ import logger from '../utils/logger';
 import imageUtils from '../utils/imageUtils.unified';
 import { ImageData } from '../utils/imageUtils';
 import config from '../config';
+import { cacheControl, combineCacheStrategies } from '../middleware/cache';
 
 // Type definition for multer request with params
 interface MulterRequest extends Express.Request {
@@ -400,7 +401,7 @@ router.post(
       let storageUsedBytes = BigInt(0);
 
       try {
-        const storageInfoRes = await pool.query(
+        const storageInfoRes = await getPool().query(
           'SELECT storage_limit_bytes, storage_used_bytes FROM users WHERE id = $1',
           [requestingUserId]
         );
@@ -451,7 +452,7 @@ router.post(
       }
       // --- Storage Limit Check --- END
 
-      const projectCheck = await pool.query(
+      const projectCheck = await getPool().query(
         'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
         [projectId, requestingUserId]
       );
@@ -511,11 +512,11 @@ router.post(
                             FROM information_schema.columns
                             WHERE table_name = 'users' AND column_name = 'storage_used_bytes'
                         `;
-            const columnCheck = await pool.query(checkColumnQuery);
+            const columnCheck = await getPool().query(checkColumnQuery);
 
             if (columnCheck.rows.length > 0) {
               // Column exists, update it
-              await pool.query(
+              await getPool().query(
                 'UPDATE users SET storage_used_bytes = COALESCE(storage_used_bytes, 0) + $1 WHERE id = $2',
                 [successfullyUploadedSize.toString(), requestingUserId]
               );
@@ -634,7 +635,7 @@ router.delete(
 
       // Try to find the actual image by name or storage_filename pattern
       try {
-        const imageRes = await pool.query(
+        const imageRes = await getPool().query(
           `SELECT i.id, i.storage_filename, i.name FROM images i 
            WHERE i.project_id = $1 
            AND (i.storage_filename LIKE $2 OR i.name LIKE $3)
@@ -772,7 +773,7 @@ router.delete(
 
       // Try to find the actual image by storage_filename pattern
       try {
-        const imageRes = await pool.query(
+        const imageRes = await getPool().query(
           `SELECT i.id, i.project_id, i.storage_filename, i.name 
            FROM images i 
            JOIN projects p ON i.project_id = p.id
@@ -827,7 +828,7 @@ router.delete(
 
     try {
       // First, find which project this image belongs to
-      const imageRes = await pool.query(
+      const imageRes = await getPool().query(
         'SELECT i.id, i.project_id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
         [imageId, userId]
       );
@@ -888,6 +889,7 @@ router.delete(
 router.get(
   '/:projectId/images/:imageId',
   authMiddleware,
+  combineCacheStrategies(cacheControl.short, cacheControl.etag),
   validate(imageDetailSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -913,7 +915,7 @@ router.get(
 
     try {
       const pool = getPool();
-      const projectCheck = await pool.query(
+      const projectCheck = await getPool().query(
         'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
         [projectId, userId]
       );
@@ -927,7 +929,7 @@ router.get(
         throw new ApiError('Project not found or access denied', 404);
       }
 
-      const imageResult = await pool.query(
+      const imageResult = await getPool().query(
         `SELECT 
           i.*,
           COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
@@ -974,6 +976,7 @@ router.get(
 router.get(
   '/:projectId/images',
   authMiddleware,
+  combineCacheStrategies(cacheControl.short, cacheControl.etag),
   validate(listImagesSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
@@ -992,7 +995,7 @@ router.get(
 
     try {
       const pool = getPool();
-      const projectCheck = await pool.query(
+      const projectCheck = await getPool().query(
         'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
         [projectId, userId]
       );
@@ -1006,7 +1009,7 @@ router.get(
         throw new ApiError('Project not found or access denied', 404);
       }
 
-      const imageResult = await pool.query(
+      const imageResult = await getPool().query(
         name
           ? `SELECT 
               i.*,
@@ -1095,6 +1098,7 @@ router.get(
 router.get(
   '/:projectId/images/:imageId/verify',
   authMiddleware,
+  cacheControl.noCache,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
@@ -1112,7 +1116,7 @@ router.get(
 
     try {
       const pool = getPool();
-      const projectCheck = await pool.query(
+      const projectCheck = await getPool().query(
         'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
         [projectId, userId]
       );
@@ -1126,7 +1130,7 @@ router.get(
         throw new ApiError('Project not found or access denied', 404);
       }
 
-      const imageResult = await pool.query(
+      const imageResult = await getPool().query(
         'SELECT id, storage_path FROM images WHERE id = $1 AND project_id = $2',
         [imageId, projectId]
       );
@@ -1161,7 +1165,7 @@ router.get(
 );
 
 // Legacy route for backward compatibility - will be deprecated
-router.get('/verify/:id', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/verify/:id', authMiddleware, cacheControl.noCache, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
   const imageId = req.params.id;
 
@@ -1173,7 +1177,7 @@ router.get('/verify/:id', authMiddleware, async (req: AuthenticatedRequest, res:
 
   try {
     const pool = getPool();
-    const imageResult = await pool.query(
+    const imageResult = await getPool().query(
       'SELECT i.id, i.project_id, i.storage_path FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
       [imageId, userId]
     );
@@ -1201,6 +1205,7 @@ router.get('/verify/:id', authMiddleware, async (req: AuthenticatedRequest, res:
 router.get(
   '/:imageId',
   authMiddleware,
+  combineCacheStrategies(cacheControl.short, cacheControl.etag),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const imageId = req.params.imageId;
@@ -1221,7 +1226,7 @@ router.get(
 
       if (isUUID) {
         // Try to find by UUID
-        imageResult = await pool.query(
+        imageResult = await getPool().query(
           `SELECT 
             i.*, 
             p.user_id,
@@ -1235,7 +1240,7 @@ router.get(
         );
       } else {
         // Try to find by storage_filename pattern or name
-        imageResult = await pool.query(
+        imageResult = await getPool().query(
           `SELECT 
             i.*, 
             p.user_id,
@@ -1270,6 +1275,7 @@ router.get(
 router.get(
   '/:imageId/segmentation',
   authMiddleware,
+  combineCacheStrategies(cacheControl.medium, cacheControl.etag),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const imageId = req.params.imageId;
@@ -1290,13 +1296,13 @@ router.get(
 
       if (isUUID) {
         // Try to find by UUID
-        imageResult = await pool.query(
+        imageResult = await getPool().query(
           'SELECT i.id, i.project_id, p.user_id FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
           [imageId, userId]
         );
       } else {
         // Try to find by storage_filename pattern or name
-        imageResult = await pool.query(
+        imageResult = await getPool().query(
           'SELECT i.id, i.project_id, p.user_id FROM images i JOIN projects p ON i.project_id = p.id WHERE (i.storage_filename LIKE $1 OR i.name = $2) AND p.user_id = $3',
           [`%${imageId}%`, imageId, userId]
         );
@@ -1317,7 +1323,7 @@ router.get(
       const actualImageId = imageResult.rows[0].id; // Get the actual UUID
 
       // Check if segmentation_results table exists
-      const segmentationResultsTableCheck = await pool.query(`
+      const segmentationResultsTableCheck = await getPool().query(`
         SELECT EXISTS (
           SELECT 1
           FROM information_schema.tables
@@ -1335,7 +1341,7 @@ router.get(
       }
 
       // Get segmentation data for this image using the actual UUID
-      const segmentationResult = await pool.query(
+      const segmentationResult = await getPool().query(
         'SELECT * FROM segmentation_results WHERE image_id = $1 ORDER BY created_at DESC LIMIT 1',
         [actualImageId]
       );

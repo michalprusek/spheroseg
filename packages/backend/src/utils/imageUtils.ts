@@ -7,7 +7,7 @@
  * @deprecated For new code, use @shared/utils/imageUtils instead
  */
 
-import sharedImageUtils from '@shared/utils/imageUtils';
+import sharedImageUtils from '@spheroseg/shared/utils/imageUtils';
 import imageUtils from './imageUtils.unified';
 import * as fs from 'fs';
 
@@ -15,7 +15,7 @@ import * as fs from 'fs';
 export * from './imageUtils.unified';
 
 // Re-export types and functions from shared utilities
-export type { ImageBase, ImageDimensions, ImageLoadOptions } from '@shared/utils/imageUtils';
+export type { ImageBase, ImageDimensions, ImageLoadOptions } from '@spheroseg/shared/utils/imageUtils';
 
 // For backward compatibility
 export interface ImageData {

@@ -30,7 +30,7 @@ describe('Comprehensive API Tests', () => {
   afterAll(async () => {
     // Clean up
     await deleteTestUser(testUser.id);
-    await pool.end();
+    await pool.closePool();
   });
 
   describe('Authentication Endpoints', () => {

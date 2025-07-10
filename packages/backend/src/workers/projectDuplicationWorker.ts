@@ -37,6 +37,29 @@ interface DuplicationWorkerData {
   totalItems?: number;
 }
 
+// Interface for image data from database
+interface ImageRow {
+  id: string;
+  project_id: string;
+  name: string;
+  filename: string;
+  original_filename: string;
+  storage_path: string;
+  thumbnail_path: string | null;
+  width: number;
+  height: number;
+  file_size: number;
+  mime_type: string;
+  checksum: string;
+  status: string;
+  metadata: any;
+  segmentation_status: string;
+  segmentation_result_path: string | null;
+  segmentation_task_id: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
 // Message types
 type WorkerMessage =
   | {
@@ -44,6 +67,7 @@ type WorkerMessage =
       progress: number;
       processedItems: number;
       totalItems: number;
+      message?: string;
     }
   | {
       type: 'complete';
@@ -219,7 +243,7 @@ function generateNewFilePaths(
  */
 async function processBatch(
   client: PoolClient,
-  batch: Record<string, unknown>[],
+  batch: ImageRow[],
   newProjectId: string,
   userId: string,
   options: DuplicationWorkerData['options'],
@@ -235,7 +259,7 @@ async function processBatch(
       // Generate new file paths
       const { newStoragePath, newThumbnailPath } = generateNewFilePaths(
         image.storage_path,
-        image.thumbnail_path,
+        image.thumbnail_path || undefined,
         newProjectId,
       );
 
@@ -385,7 +409,7 @@ async function processProjectDuplication(): Promise<void> {
     }
 
     // Fetch images from the original project
-    const imagesResult = await pool.query('SELECT * FROM images WHERE project_id = $1', [originalProjectId]);
+    const imagesResult = await pool.query<ImageRow>('SELECT * FROM images WHERE project_id = $1', [originalProjectId]);
 
     const originalImages = imagesResult.rows;
     const totalItems = initialTotalItems || originalImages.length + 1; // +1 for project creation

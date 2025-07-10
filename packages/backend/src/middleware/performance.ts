@@ -276,17 +276,17 @@ export const createPerformanceMiddleware = (options: PerformanceOptions = {}) =>
           };
 
           // Check memory thresholds
-          if (memoryEnd.heapUsed > mergedThresholds.memory.error) {
+          if (mergedThresholds.memory?.error && memoryEnd.heapUsed > mergedThresholds.memory.error) {
             logger.error('High memory usage detected', logData);
-          } else if (memoryEnd.heapUsed > mergedThresholds.memory.warn) {
+          } else if (mergedThresholds.memory?.warn && memoryEnd.heapUsed > mergedThresholds.memory.warn) {
             logger.warn('Elevated memory usage detected', logData);
           }
         }
 
         // Check duration thresholds
-        if (duration > mergedThresholds.duration.error) {
+        if (mergedThresholds.duration?.error && duration > mergedThresholds.duration.error) {
           logger.error('Slow request detected', logData);
-        } else if (duration > mergedThresholds.duration.warn) {
+        } else if (mergedThresholds.duration?.warn && duration > mergedThresholds.duration.warn) {
           logger.warn('Slow request detected', logData);
         } else {
           logger.debug('Request completed', logData);

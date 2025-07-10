@@ -11,11 +11,12 @@ import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import tokenService, { TokenType } from '../services/tokenService';
+import { cacheControl, combineCacheStrategies } from '../middleware/cache';
 
 const router: Router = express.Router();
 
 // GET /api/users/me - Get current user's profile
-router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me', authMiddleware, combineCacheStrategies(cacheControl.conditional, cacheControl.etag), async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
@@ -266,7 +267,7 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 // GET /api/users/me/statistics - Get current user's statistics
-router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me/statistics', authMiddleware, combineCacheStrategies(cacheControl.short, cacheControl.etag), async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
@@ -445,7 +446,7 @@ router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, r
 });
 
 // GET /api/users/me/stats - Alternative endpoint for statistics (simplified)
-router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me/stats', authMiddleware, combineCacheStrategies(cacheControl.short, cacheControl.etag), async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
@@ -492,6 +493,203 @@ router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: R
   } catch (error) {
     logger.error('Error fetching user stats:', { error });
     return res.status(500).json({ message: 'Failed to fetch user stats' });
+  }
+});
+
+// PUT /api/users/me - Update current user's profile
+router.put('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
+  const { name, username, full_name, title, organization, bio, location } = req.body;
+
+  try {
+    // Start transaction
+    await pool.query('BEGIN');
+
+    // Check if user exists
+    const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update user name if provided
+    if (name) {
+      await pool.query('UPDATE users SET name = $1 WHERE id = $2', [name, userId]);
+    }
+
+    // Check if email is already in use (if email update is requested)
+    if (req.body.email && req.body.email !== userResult.rows[0].email) {
+      const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [
+        req.body.email,
+        userId,
+      ]);
+      if (emailCheck.rows.length > 0) {
+        await pool.query('ROLLBACK');
+        return res.status(409).json({ message: 'Email already in use by another account' });
+      }
+      await pool.query('UPDATE users SET email = $1 WHERE id = $2', [req.body.email, userId]);
+    }
+
+    // Check if user_profiles table exists
+    const profileTableCheck = await pool.query(`
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'user_profiles'
+      )
+    `);
+
+    if (profileTableCheck.rows[0].exists) {
+      // Check if profile exists
+      const profileCheck = await pool.query('SELECT * FROM user_profiles WHERE user_id = $1', [
+        userId,
+      ]);
+
+      if (profileCheck.rows.length > 0) {
+        // Update existing profile
+        await pool.query(
+          `UPDATE user_profiles 
+           SET username = COALESCE($1, username),
+               full_name = COALESCE($2, full_name),
+               title = $3,
+               organization = $4,
+               bio = $5,
+               location = $6,
+               updated_at = NOW()
+           WHERE user_id = $7`,
+          [username, full_name, title, organization, bio, location, userId]
+        );
+      } else {
+        // Create new profile
+        await pool.query(
+          `INSERT INTO user_profiles (user_id, username, full_name, title, organization, bio, location)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            userId,
+            username || userResult.rows[0].email.split('@')[0],
+            full_name || name || 'User',
+            title,
+            organization,
+            bio,
+            location,
+          ]
+        );
+      }
+    }
+
+    await pool.query('COMMIT');
+
+    // Get updated user data
+    const updatedUserResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+    const updatedUser = updatedUserResult.rows[0];
+
+    let profile = null;
+    if (profileTableCheck.rows[0].exists) {
+      const profileResult = await pool.query('SELECT * FROM user_profiles WHERE user_id = $1', [
+        userId,
+      ]);
+      if (profileResult.rows.length > 0) {
+        profile = profileResult.rows[0];
+      }
+    }
+
+    // Return updated user data
+    const userData = {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+      created_at: updatedUser.created_at,
+      username: profile?.username || updatedUser.email.split('@')[0],
+      full_name: profile?.full_name || updatedUser.name || 'User',
+      title: profile?.title,
+      organization: profile?.organization,
+      bio: profile?.bio,
+      location: profile?.location,
+      avatar_url: profile?.avatar_url,
+    };
+
+    logger.info('User profile updated', { userId });
+    return res.json(userData);
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    logger.error('Error updating user profile:', { error });
+    return res.status(500).json({ message: 'Failed to update user profile' });
+  }
+});
+
+// POST /api/users/me/avatar - Upload user avatar
+router.post('/me/avatar', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
+  try {
+    // For now, we'll implement a simple avatar URL update
+    // In production, this would handle file upload with multer
+    const { avatar_url } = req.body;
+
+    if (!avatar_url) {
+      return res.status(400).json({ message: 'No avatar URL provided' });
+    }
+
+    // Check if user_profiles table exists
+    const profileTableCheck = await pool.query(`
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'user_profiles'
+      )
+    `);
+
+    if (!profileTableCheck.rows[0].exists) {
+      return res.status(500).json({ message: 'User profiles not supported' });
+    }
+
+    // Check if profile exists
+    const profileCheck = await pool.query('SELECT * FROM user_profiles WHERE user_id = $1', [
+      userId,
+    ]);
+
+    if (profileCheck.rows.length > 0) {
+      // Update existing profile
+      await pool.query(
+        'UPDATE user_profiles SET avatar_url = $1, updated_at = NOW() WHERE user_id = $2',
+        [avatar_url, userId]
+      );
+    } else {
+      // Create new profile with avatar
+      const userResult = await pool.query('SELECT email, name FROM users WHERE id = $1', [userId]);
+      const user = userResult.rows[0];
+      
+      await pool.query(
+        `INSERT INTO user_profiles (user_id, username, full_name, avatar_url)
+         VALUES ($1, $2, $3, $4)`,
+        [
+          userId,
+          user.email.split('@')[0],
+          user.name || 'User',
+          avatar_url,
+        ]
+      );
+    }
+
+    logger.info('User avatar updated', { userId });
+    return res.json({ 
+      message: 'Avatar uploaded successfully',
+      avatar_url: avatar_url 
+    });
+  } catch (error) {
+    logger.error('Error updating user avatar:', { error });
+    return res.status(500).json({ message: 'Failed to update avatar' });
   }
 });
 

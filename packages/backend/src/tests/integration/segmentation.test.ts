@@ -32,13 +32,17 @@ beforeAll(async () => {
   authToken = userData.token;
 
   // Vytvoření testovacího projektu
-  testProjectId = await createTestProject(testUserId, authToken);
+  testProjectId = await createTestProject(testUserId, {
+    title: 'Test Project',
+    description: 'Test project description',
+    public: false
+  });
 });
 
 // Úklid po testech
 afterAll(async () => {
-  await cleanupTestData(testUserId, testProjectId);
-  await pool.end();
+  await cleanupTestData([testUserId], [testProjectId]);
+  await pool.closePool();
 });
 
 describe('Segmentation Integration Tests', () => {

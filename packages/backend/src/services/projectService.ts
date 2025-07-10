@@ -5,7 +5,8 @@
  * updating, and deletion.
  */
 import { Pool } from 'pg';
-import fs from 'fs';
+import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
 import config from '../config';
 import logger from '../utils/logger';
@@ -48,14 +49,14 @@ export async function createProject(
 
   // Ensure title is not empty or undefined and properly trimmed
   if (!rawTitle) {
-    throw new ApiError(400, 'Project title cannot be empty');
+    throw new ApiError('Project title cannot be empty', 400);
   }
 
   // Trim the title to ensure no leading/trailing whitespace
   const title = rawTitle.trim();
 
   if (title === '') {
-    throw new ApiError(400, 'Project title cannot be empty after trimming');
+    throw new ApiError('Project title cannot be empty after trimming', 400);
   }
 
   // Log the project creation attempt with the title
@@ -73,7 +74,7 @@ export async function createProject(
     );
 
     if (existingProject.rows.length > 0) {
-      throw new ApiError(409, `A project with the title "${title}" already exists`);
+      throw new ApiError(`A project with the title "${title}" already exists`, 409);
     }
 
     // Check if the projects table has the needed columns
@@ -141,12 +142,14 @@ export async function createProject(
       const thumbnailsDir = path.join(projectDir, 'thumbnails');
       const exportsDir = path.join(projectDir, 'exports');
 
-      // Create directories
-      fs.mkdirSync(projectDir, { recursive: true });
-      fs.mkdirSync(imagesDir, { recursive: true });
-      fs.mkdirSync(segmentationsDir, { recursive: true });
-      fs.mkdirSync(thumbnailsDir, { recursive: true });
-      fs.mkdirSync(exportsDir, { recursive: true });
+      // Create directories in parallel
+      await Promise.all([
+        fs.mkdir(projectDir, { recursive: true }),
+        fs.mkdir(imagesDir, { recursive: true }),
+        fs.mkdir(segmentationsDir, { recursive: true }),
+        fs.mkdir(thumbnailsDir, { recursive: true }),
+        fs.mkdir(exportsDir, { recursive: true })
+      ]);
 
       logger.info('Project directories created', {
         projectId: newProject.id,
@@ -159,7 +162,7 @@ export async function createProject(
         error,
         projectId: newProject.id,
       });
-      throw new ApiError(500, 'Failed to create project directories');
+      throw new ApiError('Failed to create project directories', 500);
     }
 
     await client.query('COMMIT');
@@ -188,7 +191,7 @@ export async function createProject(
       title,
       userId,
     });
-    throw new ApiError(500, 'Failed to create project');
+    throw new ApiError('Failed to create project', 500);
   } finally {
     client.release();
   }
@@ -266,130 +269,141 @@ export async function getUserProjects(
   offset: number = 0,
   includeShared: boolean = true
 ): Promise<{ projects: ProjectResponse[]; total: number }> {
-  // Build the query based on available tables and columns
-  let baseSelect = `
-    SELECT p.id, p.title, p.description, p.user_id, p.created_at, p.updated_at
-  `;
+  // Check if tables exist
+  let imagesTableExists = false;
+  let sharesTableExists = false;
 
-  // Check if images table exists for image_count and thumbnail_url
   try {
-    const imagesResult = await pool.query(`
-      SELECT EXISTS (
-        SELECT 1
-        FROM information_schema.tables
-        WHERE table_schema = 'public'
-        AND table_name = 'images'
-      )
+    const tableCheckResult = await pool.query(`
+      SELECT 
+        EXISTS (
+          SELECT 1 FROM information_schema.tables 
+          WHERE table_schema = 'public' AND table_name = 'images'
+        ) as images_exists,
+        EXISTS (
+          SELECT 1 FROM information_schema.tables 
+          WHERE table_schema = 'public' AND table_name = 'project_shares'
+        ) as shares_exists
     `);
-
-    const imagesTableExists = imagesResult.rows[0].exists;
-
-    if (imagesTableExists) {
-      // Add image count and thumbnail if columns exist
-      baseSelect += `,
-        (SELECT COUNT(*) FROM images i WHERE i.project_id = p.id) as image_count,
-        (SELECT thumbnail_path FROM images i WHERE i.project_id = p.id ORDER BY i.created_at DESC LIMIT 1) as thumbnail_url
-      `;
-    }
+    
+    imagesTableExists = tableCheckResult.rows[0].images_exists;
+    sharesTableExists = tableCheckResult.rows[0].shares_exists;
   } catch (error) {
-    logger.debug('Error checking for images table', { error });
+    logger.debug('Error checking for tables', { error });
   }
 
-  // Query to fetch owned projects
-  const ownedProjectsQuery = `
-    ${baseSelect},
-    true as is_owner,
-    null as permission
-    FROM projects p
-    WHERE p.user_id = $1
+  // Build optimized query using CTEs to eliminate N+1 pattern
+  let finalQuery = `
+    WITH user_projects AS (
+      -- Get all user's projects (owned and shared)
+      SELECT 
+        p.id,
+        p.title,
+        p.description,
+        p.user_id,
+        p.created_at,
+        p.updated_at,
+        true as is_owner,
+        null::text as permission
+      FROM projects p
+      WHERE p.user_id = $1
   `;
 
-  // Query to fetch shared projects if applicable
-  let sharedProjectsQuery = '';
-  let finalQuery;
-
-  if (includeShared) {
-    try {
-      const sharesResult = await pool.query(`
-        SELECT EXISTS (
-          SELECT 1
-          FROM information_schema.tables
-          WHERE table_schema = 'public'
-          AND table_name = 'project_shares'
-        )
-      `);
-
-      const sharesTableExists = sharesResult.rows[0].exists;
-
-      if (sharesTableExists) {
-        sharedProjectsQuery = `
-          ${baseSelect},
-          false as is_owner,
-          ps.permission
-          FROM projects p
-          JOIN project_shares ps ON p.id = ps.project_id
-          WHERE ps.user_id = $1
-            AND ps.invitation_token IS NULL
-        `;
-
-        finalQuery = `
-          (${ownedProjectsQuery})
-          UNION ALL
-          (${sharedProjectsQuery})
-          ORDER BY updated_at DESC
-          LIMIT $2 OFFSET $3;
-        `;
-      }
-    } catch (error) {
-      logger.debug('Error checking for project_shares table', { error });
-    }
-  }
-
-  if (!finalQuery) {
-    finalQuery = `
-      ${ownedProjectsQuery}
-      ORDER BY updated_at DESC
-      LIMIT $2 OFFSET $3;
+  if (includeShared && sharesTableExists) {
+    finalQuery += `
+      UNION ALL
+      SELECT 
+        p.id,
+        p.title,
+        p.description,
+        p.user_id,
+        p.created_at,
+        p.updated_at,
+        false as is_owner,
+        ps.permission
+      FROM projects p
+      JOIN project_shares ps ON p.id = ps.project_id
+      WHERE ps.user_id = $1 AND ps.invitation_token IS NULL
     `;
   }
 
-  // Execute the query
+  finalQuery += `
+    )`;
+
+  if (imagesTableExists) {
+    // Add image statistics CTE for efficient aggregation
+    finalQuery += `,
+    image_stats AS (
+      -- Aggregate image data per project
+      SELECT 
+        i.project_id,
+        COUNT(*) as image_count,
+        MAX(i.created_at) as latest_image_created_at
+      FROM images i
+      WHERE i.project_id IN (SELECT id FROM user_projects)
+      GROUP BY i.project_id
+    ),
+    latest_thumbnails AS (
+      -- Get latest thumbnail for each project efficiently
+      SELECT DISTINCT ON (i.project_id)
+        i.project_id,
+        i.thumbnail_path
+      FROM images i
+      WHERE i.project_id IN (SELECT id FROM user_projects)
+      ORDER BY i.project_id, i.created_at DESC
+    )`;
+  }
+
+  // Final SELECT with LEFT JOINs
+  finalQuery += `
+    SELECT 
+      up.*`;
+  
+  if (imagesTableExists) {
+    finalQuery += `,
+      COALESCE(img_stats.image_count, 0) as image_count,
+      lt.thumbnail_path as thumbnail_url`;
+  }
+
+  finalQuery += `
+    FROM user_projects up`;
+
+  if (imagesTableExists) {
+    finalQuery += `
+    LEFT JOIN image_stats img_stats ON up.id = img_stats.project_id
+    LEFT JOIN latest_thumbnails lt ON up.id = lt.project_id`;
+  }
+
+  finalQuery += `
+    ORDER BY up.updated_at DESC
+    LIMIT $2 OFFSET $3
+  `;
+
+  // Execute the optimized query - now runs in O(1) instead of O(n)
   const projectsResult = await pool.query(finalQuery, [userId, limit, offset]);
 
-  // Get total count for pagination
-  const ownedCountQuery = 'SELECT COUNT(*) FROM projects WHERE user_id = $1';
-  const ownedCountResult = await pool.query(ownedCountQuery, [userId]);
-  let totalProjects = parseInt(ownedCountResult.rows[0].count, 10);
-
-  // Add shared projects count if applicable
-  if (includeShared) {
-    try {
-      const sharesResult = await pool.query(`
-        SELECT EXISTS (
-          SELECT 1
-          FROM information_schema.tables
-          WHERE table_schema = 'public'
-          AND table_name = 'project_shares'
-        )
-      `);
-
-      const sharesTableExists = sharesResult.rows[0].exists;
-
-      if (sharesTableExists) {
-        const sharedCountQuery = `
-          SELECT COUNT(*)
-          FROM project_shares
-          WHERE user_id = $1 AND invitation_token IS NULL
-        `;
-        const sharedCountResult = await pool.query(sharedCountQuery, [userId]);
-        totalProjects += parseInt(sharedCountResult.rows[0].count, 10);
-      }
-    } catch (error) {
-      logger.debug('Error checking for project_shares table for counting', {
-        error,
-      });
-    }
+  // Get total count for pagination using efficient CTE
+  let countQuery = `
+    WITH project_counts AS (
+      SELECT COUNT(*) as count FROM projects WHERE user_id = $1
+  `;
+  
+  if (includeShared && sharesTableExists) {
+    countQuery += `
+      UNION ALL
+      SELECT COUNT(*) as count 
+      FROM project_shares ps 
+      WHERE ps.user_id = $1 AND ps.invitation_token IS NULL
+    `;
   }
+  
+  countQuery += `
+    )
+    SELECT SUM(count)::int as total FROM project_counts
+  `;
+  
+  const countResult = await pool.query(countQuery, [userId]);
+  const totalProjects = countResult.rows[0].total || 0;
 
   return {
     projects: projectsResult.rows,
@@ -420,7 +434,7 @@ export async function updateProject(
   ]);
 
   if (projectCheck.rows.length === 0) {
-    throw new ApiError(404, 'Project not found or you do not have permission to update it');
+    throw new ApiError('Project not found or you do not have permission to update it', 404);
   }
 
   // Build update query
@@ -449,7 +463,7 @@ export async function updateProject(
   }
 
   if (updateFields.length === 0) {
-    throw new ApiError(400, 'No valid update fields provided');
+    throw new ApiError('No valid update fields provided', 400);
   }
 
   // Add updated_at field
@@ -503,7 +517,7 @@ export async function deleteProject(
           projectId,
           userId,
         });
-        throw new ApiError(404, 'Project not found');
+        throw new ApiError('Project not found', 404);
       }
 
       // Now check if user owns the project
@@ -519,7 +533,7 @@ export async function deleteProject(
           userId,
           actualOwnerId: projectExists.rows[0].user_id,
         });
-        throw new ApiError(403, 'You do not have permission to delete this project');
+        throw new ApiError('You do not have permission to delete this project', 403);
       }
     } catch (err) {
       if (err instanceof ApiError) {
@@ -531,7 +545,7 @@ export async function deleteProject(
         projectId,
         userId,
       });
-      throw new ApiError(500, 'Error verifying project ownership');
+      throw new ApiError('Error verifying project ownership', 500);
     }
 
     // Get all images in the project before deletion for cleanup
@@ -549,7 +563,7 @@ export async function deleteProject(
     );
 
     if (deleteResult.rowCount === 0) {
-      throw new ApiError(404, 'Project not found for deletion');
+      throw new ApiError('Project not found for deletion', 404);
     }
 
     // Only attempt to delete files after database records are successfully deleted
@@ -602,7 +616,7 @@ export async function deleteProject(
       userId,
       message: error instanceof Error ? error.message : 'Unknown error',
     });
-    throw new ApiError(500, 'Failed to delete project');
+    throw new ApiError('Failed to delete project', 500);
   } finally {
     client.release();
   }

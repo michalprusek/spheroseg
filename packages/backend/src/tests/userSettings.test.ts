@@ -5,7 +5,7 @@ import usersRouter from '../routes/users';
 import bcrypt from 'bcryptjs';
 
 // Mock dependencies
-jest.mock('../middleware/authMiddleware', () => {
+jest.mock('../security/middleware/auth', () => {
   return jest.fn((req, res, next) => {
     req.user = { userId: 'test-user-id' };
     next();

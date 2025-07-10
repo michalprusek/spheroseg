@@ -8,7 +8,7 @@
  * @deprecated Import from @shared/utils/pathUtils directly for new code
  */
 
-import pathUtils from '../../../shared/utils/pathUtils';
+import pathUtils from '@spheroseg/shared/utils/pathUtils';
 import config from '../config';
 
 // Re-export most of the functions from shared pathUtils

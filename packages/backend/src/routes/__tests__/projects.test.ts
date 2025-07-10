@@ -1,30 +1,29 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response } from 'express';
 import * as projectController from '../projects';
 import * as projectService from '../../services/projectService';
 import { ApiError } from '../../utils/errors';
 
 // Mock services
-vi.mock('../../services/projectService');
+jest.mock('../../services/projectService');
 
 describe('Projects API Controller', () => {
   // Common mocks
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockNext: vi.Mock;
+  let mockNext: jest.Mock;
 
   beforeEach(() => {
     // Reset mocks before each test
-    vi.resetAllMocks();
+    jest.resetAllMocks();
 
     // Common mock response with jest-like spies for methods
     mockResponse = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+      send: jest.fn().mockReturnThis(),
     };
 
-    mockNext = vi.fn();
+    mockNext = jest.fn();
   });
 
   describe('getAllProjects', () => {
@@ -52,7 +51,7 @@ describe('Projects API Controller', () => {
       ];
 
       // Set up mock to return the data
-      vi.mocked(projectService.getAllProjects).mockResolvedValue(mockProjects);
+      jest.mocked(projectService.getAllProjects).mockResolvedValue(mockProjects);
 
       // Mock request with user
       mockRequest = {
@@ -92,7 +91,7 @@ describe('Projects API Controller', () => {
 
     it('handles server errors when fetching projects', async () => {
       // Set up mock to throw server error
-      vi.mocked(projectService.getAllProjects).mockRejectedValue(
+      jest.mocked(projectService.getAllProjects).mockRejectedValue(
         new Error('Database connection error')
       );
 
@@ -127,7 +126,7 @@ describe('Projects API Controller', () => {
       };
 
       // Set up mock to return the data
-      vi.mocked(projectService.getProjectById).mockResolvedValue(mockProject);
+      jest.mocked(projectService.getProjectById).mockResolvedValue(mockProject);
 
       // Mock request
       mockRequest = {
@@ -152,7 +151,7 @@ describe('Projects API Controller', () => {
 
     it('handles project not found errors', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.getProjectById).mockRejectedValue(
+      jest.mocked(projectService.getProjectById).mockRejectedValue(
         new ApiError(404, 'Project not found')
       );
 
@@ -176,7 +175,7 @@ describe('Projects API Controller', () => {
 
     it('handles unauthorized access errors', async () => {
       // Set up mock to throw unauthorized error
-      vi.mocked(projectService.getProjectById).mockRejectedValue(
+      jest.mocked(projectService.getProjectById).mockRejectedValue(
         new ApiError(403, 'Unauthorized access to project')
       );
 
@@ -218,7 +217,7 @@ describe('Projects API Controller', () => {
       };
 
       // Set up mock to return the created project
-      vi.mocked(projectService.createProject).mockResolvedValue(mockCreatedProject);
+      jest.mocked(projectService.createProject).mockResolvedValue(mockCreatedProject);
 
       // Mock request
       mockRequest = {
@@ -251,7 +250,7 @@ describe('Projects API Controller', () => {
       };
 
       // Set up mock to throw validation error
-      vi.mocked(projectService.createProject).mockRejectedValue(
+      jest.mocked(projectService.createProject).mockRejectedValue(
         new ApiError(400, 'Project name is required')
       );
 
@@ -311,7 +310,7 @@ describe('Projects API Controller', () => {
       };
 
       // Set up mock to return the updated project
-      vi.mocked(projectService.updateProject).mockResolvedValue(mockUpdatedProject);
+      jest.mocked(projectService.updateProject).mockResolvedValue(mockUpdatedProject);
 
       // Mock request
       mockRequest = {
@@ -341,7 +340,7 @@ describe('Projects API Controller', () => {
 
     it('handles project not found errors when updating', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.updateProject).mockRejectedValue(
+      jest.mocked(projectService.updateProject).mockRejectedValue(
         new ApiError(404, 'Project not found')
       );
 
@@ -366,7 +365,7 @@ describe('Projects API Controller', () => {
 
     it('handles unauthorized update attempts', async () => {
       // Set up mock to throw unauthorized error
-      vi.mocked(projectService.updateProject).mockRejectedValue(
+      jest.mocked(projectService.updateProject).mockRejectedValue(
         new ApiError(403, 'Unauthorized to update this project')
       );
 
@@ -393,7 +392,7 @@ describe('Projects API Controller', () => {
   describe('deleteProject', () => {
     it('successfully deletes a project', async () => {
       // Set up mock for successful deletion
-      vi.mocked(projectService.deleteProject).mockResolvedValue({
+      jest.mocked(projectService.deleteProject).mockResolvedValue({
         success: true,
       });
 
@@ -420,7 +419,7 @@ describe('Projects API Controller', () => {
 
     it('handles project not found errors when deleting', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.deleteProject).mockRejectedValue(
+      jest.mocked(projectService.deleteProject).mockRejectedValue(
         new ApiError(404, 'Project not found')
       );
 
@@ -444,7 +443,7 @@ describe('Projects API Controller', () => {
 
     it('handles unauthorized delete attempts', async () => {
       // Set up mock to throw unauthorized error
-      vi.mocked(projectService.deleteProject).mockRejectedValue(
+      jest.mocked(projectService.deleteProject).mockRejectedValue(
         new ApiError(403, 'Unauthorized to delete this project')
       );
 
@@ -481,7 +480,7 @@ describe('Projects API Controller', () => {
       };
 
       // Set up mock to return the stats
-      vi.mocked(projectService.getProjectStats).mockResolvedValue(mockStats);
+      jest.mocked(projectService.getProjectStats).mockResolvedValue(mockStats);
 
       // Mock request
       mockRequest = {
@@ -506,7 +505,7 @@ describe('Projects API Controller', () => {
 
     it('handles project not found errors when getting stats', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.getProjectStats).mockRejectedValue(
+      jest.mocked(projectService.getProjectStats).mockRejectedValue(
         new ApiError(404, 'Project not found')
       );
 
@@ -554,7 +553,7 @@ describe('Projects API Controller', () => {
       ];
 
       // Set up mock to return the activity
-      vi.mocked(projectService.getProjectActivity).mockResolvedValue(mockActivity);
+      jest.mocked(projectService.getProjectActivity).mockResolvedValue(mockActivity);
 
       // Mock request
       mockRequest = {
@@ -626,7 +625,7 @@ describe('Projects API Controller', () => {
       };
 
       // Set up mock to return the duplicated project
-      vi.mocked(projectService.duplicateProject).mockResolvedValue(mockDuplicatedProject);
+      jest.mocked(projectService.duplicateProject).mockResolvedValue(mockDuplicatedProject);
 
       // Mock request
       mockRequest = {
@@ -656,7 +655,7 @@ describe('Projects API Controller', () => {
 
     it('handles source project not found errors', async () => {
       // Set up mock to throw not found error
-      vi.mocked(projectService.duplicateProject).mockRejectedValue(
+      jest.mocked(projectService.duplicateProject).mockRejectedValue(
         new ApiError(404, 'Source project not found')
       );
 
@@ -681,7 +680,7 @@ describe('Projects API Controller', () => {
 
     it('handles unauthorized duplication attempts', async () => {
       // Set up mock to throw unauthorized error
-      vi.mocked(projectService.duplicateProject).mockRejectedValue(
+      jest.mocked(projectService.duplicateProject).mockRejectedValue(
         new ApiError(403, 'Unauthorized to duplicate this project')
       );
 

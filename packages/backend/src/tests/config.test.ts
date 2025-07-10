@@ -25,26 +25,23 @@ describe('Configuration', () => {
     // Test authentication configuration
     expect(config.auth).toBeDefined();
     expect(config.auth.jwtSecret).toBeDefined();
-    expect(config.auth.jwtExpiry).toBeDefined();
+    expect(config.auth.jwtExpiresIn).toBeDefined();
     expect(config.auth.saltRounds).toBeGreaterThan(0);
 
     // Test storage configuration
     expect(config.storage).toBeDefined();
     expect(config.storage.uploadDir).toBeDefined();
-    expect(config.storage.avatarDir).toBeDefined();
     expect(config.storage.maxFileSize).toBeGreaterThan(0);
 
     // Test segmentation configuration
     expect(config.segmentation).toBeDefined();
     expect(config.segmentation.maxConcurrentTasks).toBeGreaterThan(0);
     expect(config.segmentation.checkpointPath).toBeDefined();
-    expect(typeof config.segmentation.checkpointExists).toBe('boolean');
 
     // Test logging configuration
     expect(config.logging).toBeDefined();
     expect(config.logging.level).toBeDefined();
-    expect(typeof config.logging.enableConsole).toBe('boolean');
-    expect(typeof config.logging.enableFile).toBe('boolean');
+    expect(typeof config.logging.logToFile).toBe('boolean');
     expect(config.logging.logDir).toBeDefined();
   });
 

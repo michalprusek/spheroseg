@@ -5,23 +5,23 @@
  * history, versions, and revisions.
  */
 
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+// Jest test for version management
 import request from 'supertest';
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import segmentationRouter from '../../routes/segmentation';
-import authMiddleware from '../../middleware/authMiddleware';
+import authMiddleware from '../../security/middleware/auth';
 
 // Mock dependencies
-vi.mock('../../middleware/authMiddleware', () => {
-  return vi.fn((req, res, next) => {
+jest.mock('../../security/middleware/auth', () => {
+  return jest.fn((req, res, next) => {
     req.user = { userId: 'test-user-id' };
     next();
   });
 });
 
-vi.mock('../../db', () => ({
-  query: vi.fn().mockImplementation((query, params) => {
+jest.mock('../../db', () => ({
+  query: jest.fn().mockImplementation((query, params) => {
     // Mock segmentation_results table queries
     if (query.includes('SELECT * FROM segmentation_results WHERE image_id')) {
       return {
@@ -295,9 +295,9 @@ describe('Segmentation Version Management', () => {
 
     // Override mock for this specific test to return empty rows
     // Import mock from the module system
-    const db = vi.mocked(await import('../../db')).default;
+    const db = require('../../db').default;
     const originalQuery = db.query;
-    db.query = vi.fn().mockImplementation((query, params) => {
+    db.query = jest.fn().mockImplementation((query, params) => {
       if (
         query.includes('SELECT * FROM segmentation_history WHERE image_id = $1 AND version = $2') &&
         params[1] === nonExistentVersion
@@ -391,7 +391,7 @@ describe('Segmentation Version Management', () => {
   it('should handle access control for version management', async () => {
     // Override the auth middleware mock to simulate unauthorized access
     const originalAuthMiddleware = authMiddleware;
-    vi.mocked(authMiddleware).mockImplementation((req, res) => {
+    (authMiddleware as jest.Mock).mockImplementation((req, res, next) => {
       res.status(401).json({ message: 'Authentication error' });
     });
 
@@ -402,7 +402,7 @@ describe('Segmentation Version Management', () => {
     expect(response.body).toHaveProperty('message', 'Authentication error');
 
     // Restore original auth middleware
-    vi.mocked(authMiddleware).mockImplementation(originalAuthMiddleware);
+    (authMiddleware as jest.Mock).mockImplementation(originalAuthMiddleware);
   });
 
   it('should publish a specific version to make it the current version', async () => {

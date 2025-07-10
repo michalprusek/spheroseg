@@ -1,11 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { performanceMonitoring } from '../lib/monitoring';
 
+interface RequestWithUser extends Request {
+  user?: {
+    id?: string;
+    userId?: string;
+  };
+}
+
 /**
  * Middleware to track API response times
  */
 export function performanceMonitoringMiddleware() {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: RequestWithUser, res: Response, next: NextFunction) => {
     // Skip monitoring for metrics endpoint to avoid circular reporting
     if (req.path === '/api/metrics') {
       return next();
@@ -24,7 +31,7 @@ export function performanceMonitoringMiddleware() {
       const route = req.route?.path || req.path;
 
       // Get user ID if available
-      const userId = (req.user as any)?.id;
+      const userId = req.user?.id || req.user?.userId;
 
       // Record metric
       performanceMonitoring.recordApiResponseTimeMetric(

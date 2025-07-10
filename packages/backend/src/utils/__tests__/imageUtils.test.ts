@@ -3,6 +3,7 @@ import * as path from 'path';
 import sharp from 'sharp';
 import { createThumbnail } from '../imageUtils.unified';
 import logger from '../logger';
+import { createMockSharp } from '../../test-utils/mockFactories';
 
 // Mock dependencies
 jest.mock('fs');
@@ -21,14 +22,26 @@ jest.mock('child_process', () => ({
 describe('imageUtils', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock sharp to return a chainable object
-    const sharpInstance = {
+    // Setup sharp mock manually for better control
+    const mockSharpInstance = {
+      metadata: jest.fn().mockResolvedValue({ width: 100, height: 100, format: 'jpeg' }),
       resize: jest.fn().mockReturnThis(),
+      toFile: jest.fn().mockResolvedValue({}),
+      toBuffer: jest.fn().mockResolvedValue(Buffer.from('mock image data')),
+      jpeg: jest.fn().mockReturnThis(),
       png: jest.fn().mockReturnThis(),
-      toFile: jest.fn().mockResolvedValue(undefined),
-      metadata: jest.fn().mockResolvedValue({ width: 100, height: 100, format: 'png' }),
+      webp: jest.fn().mockReturnThis(),
+      rotate: jest.fn().mockReturnThis(),
+      flip: jest.fn().mockReturnThis(),
+      flop: jest.fn().mockReturnThis(),
+      sharpen: jest.fn().mockReturnThis(),
+      blur: jest.fn().mockReturnThis(),
+      extend: jest.fn().mockReturnThis(),
+      extract: jest.fn().mockReturnThis(),
+      trim: jest.fn().mockReturnThis(),
     };
-    (sharp as jest.Mock).mockReturnValue(sharpInstance);
+    
+    (sharp as unknown as jest.Mock).mockImplementation(() => mockSharpInstance);
   });
 
   describe('createThumbnail', () => {
@@ -49,7 +62,7 @@ describe('imageUtils', () => {
 
       // Verify sharp was called correctly
       expect(sharp).toHaveBeenCalledWith(sourcePath);
-      const sharpInstance = (sharp as jest.Mock).mock.results[0].value;
+      const sharpInstance = (sharp as unknown as jest.Mock).mock.results[0].value;
       expect(sharpInstance.resize).toHaveBeenCalledWith({ width: 300, height: 300, fit: 'inside' });
       expect(sharpInstance.png).toHaveBeenCalled();
       expect(sharpInstance.toFile).toHaveBeenCalledWith(validTargetPath);
@@ -77,8 +90,7 @@ describe('imageUtils', () => {
 
       // Should use Python PIL for BMP files
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Created BMP thumbnail using PIL'),
-        expect.any(Object)
+        'Created BMP thumbnail using PIL: /test/image.bmp -> /test/thumb.png'
       );
     });
 
@@ -90,7 +102,7 @@ describe('imageUtils', () => {
 
       // Verify sharp was used for TIFF
       expect(sharp).toHaveBeenCalledWith(sourcePath);
-      const sharpInstance = (sharp as jest.Mock).mock.results[0].value;
+      const sharpInstance = (sharp as unknown as jest.Mock).mock.results[0].value;
       expect(sharpInstance.png).toHaveBeenCalledWith({
         compressionLevel: 9,
         adaptiveFiltering: true,
@@ -111,7 +123,7 @@ describe('imageUtils', () => {
           .mockResolvedValueOnce(undefined),
       };
 
-      (sharp as jest.Mock)
+      (sharp as unknown as jest.Mock)
         .mockReturnValueOnce(sharpInstance) // First call fails
         .mockReturnValueOnce({
           // Second call for temp conversion
@@ -126,9 +138,7 @@ describe('imageUtils', () => {
         });
 
       // Mock fs.promises.unlink
-      (fs.promises as any) = {
-        unlink: jest.fn().mockResolvedValue(undefined),
-      };
+      jest.spyOn(fs.promises, 'unlink').mockResolvedValue(undefined);
 
       await createThumbnail(sourcePath, targetPath);
 

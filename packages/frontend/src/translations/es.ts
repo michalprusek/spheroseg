@@ -1085,37 +1085,6 @@ export default {
         'Estos términos se regirán e interpretarán de acuerdo con las leyes del país en el que se aloja el servicio, y usted se somete irrevocablemente a la jurisdicción exclusiva de los tribunales en esa ubicación.',
     },
     lastUpdated: 'Última actualización: 7 de enero de 2025',
-    title: 'Términos de Servicio',
-    acceptance: {
-      title: '1. Aceptación de Términos',
-      paragraph1:
-        'Al acceder o usar SpheroSeg, acepta estar sujeto a estos Términos de Servicio y todas las leyes y regulaciones aplicables. Si no está de acuerdo con alguno de estos términos, tiene prohibido usar este servicio.',
-    },
-    useLicense: {
-      title: '2. Licencia de Uso',
-      paragraph1:
-        'Se otorga permiso para usar temporalmente SpheroSeg solo para fines personales, no comerciales o de investigación académica. Esta es la concesión de una licencia, no una transferencia de título.',
-    },
-    dataUsage: {
-      title: '3. Uso de Datos',
-      paragraph1:
-        'Todos los datos cargados en SpheroSeg siguen siendo de su propiedad. No reclamamos la propiedad de su contenido, pero requerimos ciertos permisos para proporcionar el servicio.',
-    },
-    limitations: {
-      title: '4. Limitaciones',
-      paragraph1:
-        'En ningún caso SpheroSeg será responsable por cualquier daño que surja del uso o la incapacidad de usar la plataforma, incluso si se nos ha informado de la posibilidad de dicho daño.',
-    },
-    revisions: {
-      title: '5. Revisiones y Errores',
-      paragraph1:
-        'Los materiales que aparecen en SpheroSeg podrían incluir errores técnicos, tipográficos o fotográficos. No garantizamos que ninguno de los materiales sea preciso, completo o actual.',
-    },
-    governingLaw: {
-      title: '6. Ley Aplicable',
-      paragraph1:
-        'Estos términos se regirán y construirán de acuerdo con las leyes del país en el que se aloja el servicio, y usted se somete irrevocablemente a la jurisdicción exclusiva de los tribunales en esa ubicación.',
-    },
   },
   privacyPage: {
     title: 'Política de Privacidad',

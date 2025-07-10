@@ -112,8 +112,8 @@ beforeAll(async () => {
     transports: ['websocket'],
   });
 
-  await new Promise((resolve) => {
-    socketClient.on('connect', resolve);
+  await new Promise<void>((resolve) => {
+    socketClient.on('connect', () => resolve());
   });
 });
 
@@ -133,7 +133,7 @@ afterAll(async () => {
   await pool.query('DELETE FROM projects WHERE id = $1', [testProjectId]);
   await pool.query('DELETE FROM users WHERE id = $1', [testUserId]);
   
-  await pool.end();
+  await pool.closePool();
 });
 
 // Mock authentication middleware for testing
