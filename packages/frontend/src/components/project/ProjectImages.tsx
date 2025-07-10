@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FixedSizeGrid as Grid, VariableSizeList as List } from 'react-window';
 import { ImageDisplay } from './ImageDisplay';
@@ -145,37 +145,50 @@ const ProjectImages = ({
   // Fixed 4 columns as requested
   const FIXED_COLUMN_COUNT = 4;
   const GRID_GAP = 16; // Gap between cards
-  const CONTAINER_PADDING = 32; // Container horizontal padding
   
-  // Calculate dimensions based on container width
+  // Get container element reference to measure actual width
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Calculate dimensions based on actual container width
   const [dimensions, setDimensions] = useState(() => {
-    const containerWidth = window.innerWidth - CONTAINER_PADDING;
+    // Initial calculation based on viewport (will be updated when container mounts)
+    const viewportWidth = window.innerWidth;
+    const containerPadding = viewportWidth >= 1280 ? 64 : 32; // Estimate based on typical container padding
+    const containerWidth = viewportWidth - containerPadding;
     const columnWidth = Math.floor((containerWidth - (GRID_GAP * (FIXED_COLUMN_COUNT - 1))) / FIXED_COLUMN_COUNT);
     const rowHeight = Math.floor(columnWidth * 1.2); // Aspect ratio 1:1.2 for cards
     return { 
       columnWidth,
       rowHeight,
+      containerWidth,
       windowHeight: window.innerHeight - 200
     };
   });
 
   useEffect(() => {
     const handleResize = () => {
-      const containerWidth = window.innerWidth - CONTAINER_PADDING;
-      const columnWidth = Math.floor((containerWidth - (GRID_GAP * (FIXED_COLUMN_COUNT - 1))) / FIXED_COLUMN_COUNT);
-      const rowHeight = Math.floor(columnWidth * 1.2); // Maintain aspect ratio
-      setDimensions({
-        columnWidth,
-        rowHeight,
-        windowHeight: window.innerHeight - 200
-      });
+      if (containerRef.current) {
+        // Use actual container width from the DOM element
+        const containerWidth = containerRef.current.offsetWidth;
+        const columnWidth = Math.floor((containerWidth - (GRID_GAP * (FIXED_COLUMN_COUNT - 1))) / FIXED_COLUMN_COUNT);
+        const rowHeight = Math.floor(columnWidth * 1.2); // Maintain aspect ratio
+        setDimensions({
+          columnWidth,
+          rowHeight,
+          containerWidth,
+          windowHeight: window.innerHeight - 200
+        });
+      }
     };
     
-    // Initial calculation
-    handleResize();
+    // Initial calculation when container is mounted
+    const timer = setTimeout(handleResize, 0);
     
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Cell renderer for grid view
@@ -236,7 +249,7 @@ const ProjectImages = ({
 
   if (viewMode === 'grid') {
     return (
-      <>
+      <div ref={containerRef} className="w-full">
         {renderBatchActionsPanel()}
         <motion.div
           initial={{ opacity: 0 }}
@@ -251,18 +264,18 @@ const ProjectImages = ({
             height={dimensions.windowHeight}
             rowCount={rowCount}
             rowHeight={dimensions.rowHeight}
-            width={window.innerWidth - CONTAINER_PADDING} // Container width
+            width={dimensions.containerWidth}
             overscanRowCount={2} // Render 2 extra rows for smoother scrolling
           >
             {GridCell}
           </Grid>
         </motion.div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div ref={containerRef} className="w-full">
       {renderBatchActionsPanel()}
       <motion.div
         initial={{ opacity: 0 }}
@@ -281,7 +294,7 @@ const ProjectImages = ({
           {ListRow}
         </List>
       </motion.div>
-    </>
+    </div>
   );
 };
 
