@@ -249,31 +249,18 @@ describe('usePolygonWorker', () => {
     await expect(resultPromise!).rejects.toThrow('Worker terminated');
   });
 
-  it('should return false when worker is not ready', async () => {
-    // Mock Worker to delay initialization
-    let onMessageHandler: any;
-    global.Worker = vi.fn().mockImplementation(() => ({
-      postMessage: vi.fn(),
-      terminate: vi.fn(),
-      set onmessage(handler) {
-        // Delay setting the handler
-        setTimeout(() => {
-          onMessageHandler = handler;
-        }, 100);
-      },
-      get onmessage() {
-        return onMessageHandler;
-      },
-      onerror: null,
-    }));
+  it('should throw error when worker is not ready', async () => {
+    // Mock Worker to fail initialization
+    global.Worker = vi.fn().mockImplementation(() => {
+      throw new Error('Worker initialization failed');
+    });
 
     const { result } = renderHook(() => usePolygonWorker());
 
-    // Check immediately before worker is ready
+    // Check that isReady is false
     expect(result.current.isReady).toBe(false);
 
-    // Operations should return default values when not ready
-    const isInside = await result.current.isPointInPolygon({ x: 0, y: 0 }, [{ x: 0, y: 0 }]);
-    expect(isInside).toBe(false);
+    // Operations should throw error when worker not initialized
+    await expect(result.current.isPointInPolygon({ x: 0, y: 0 }, [{ x: 0, y: 0 }])).rejects.toThrow('Worker not initialized');
   });
 });

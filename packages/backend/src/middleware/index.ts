@@ -18,6 +18,7 @@ import { errorHandler } from './errorHandler';
 import { configureSecurity } from '../security';
 import { requestLoggerMiddleware } from '../monitoring/unified';
 import { trackAPIPerformance, addResponseTimeHeader } from './performanceTracking';
+import { i18nMiddleware, setUserLanguage } from './i18n';
 
 /**
  * Security middleware configuration
@@ -97,6 +98,21 @@ export const configureBodyParsingMiddleware = (app: Application): void => {
 };
 
 /**
+ * i18n middleware configuration
+ */
+export const configureI18nMiddleware = (app: Application): void => {
+  // Add i18n middleware
+  app.use(i18nMiddleware);
+  
+  // Add user language detection middleware (must be after auth)
+  app.use(setUserLanguage);
+  
+  logger.info('i18n middleware configured', {
+    languages: ['en', 'cs', 'de', 'es', 'fr', 'zh']
+  });
+};
+
+/**
  * Static files middleware configuration
  */
 export const configureStaticFilesMiddleware = (app: Application): void => {
@@ -168,14 +184,17 @@ export const configureMiddleware = (app: Application): void => {
   // 4. Security middleware (needs parsed body for suspicious pattern detection)
   configureSecurityMiddleware(app);
 
-  // 5. Request monitoring middleware (unified monitoring system)
+  // 5. i18n middleware (needs to be early in the chain)
+  configureI18nMiddleware(app);
+
+  // 6. Request monitoring middleware (unified monitoring system)
   app.use(requestLoggerMiddleware);
 
-  // 6. Performance tracking middleware
+  // 7. Performance tracking middleware
   app.use(addResponseTimeHeader());
   app.use(trackAPIPerformance());
 
-  // 7. Static files middleware
+  // 8. Static files middleware
   configureStaticFilesMiddleware(app);
 
   logger.info('All middleware configured successfully');

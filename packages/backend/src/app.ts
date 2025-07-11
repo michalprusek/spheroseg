@@ -11,6 +11,7 @@ import apiRouter from './routes';
 import config from './config';
 import logger from './utils/logger';
 import { performHealthCheck } from './utils/healthCheck';
+import i18next from './config/i18n';
 
 /**
  * Create and configure Express application

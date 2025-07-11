@@ -2,7 +2,7 @@
  * Authentication Routes
  * Handles user registration, login, token refresh, and related functionality
  */
-import express, { Response, Router } from 'express';
+import express, { Request, Response, Router } from 'express';
 import { validate } from '../middleware/validationMiddleware';
 import {
   registerSchema,
@@ -30,45 +30,57 @@ import {
 import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
 import authService from '../services/authService'; // Import the new auth service
+import { 
+  sendSuccess, 
+  sendCreated, 
+  sendError, 
+  sendServerError 
+} from '../utils/apiResponsei18n';
 
 const router: Router = express.Router();
 
 // GET /api/auth/test - Test route
-router.get('/test', (req: express.Request, res: Response) => {
+router.get('/test', (req: Request, res: Response) => {
   logger.info('Test route hit');
-  res.json({ message: 'Auth routes are working' });
+  sendSuccess(req, res, { status: 'ok' }, 'common.welcome');
 });
 
 // POST /api/auth/register - Register a new user
-router.post('/register', validate(registerSchema), async (req: express.Request, res: Response) => {
+router.post('/register', validate(registerSchema), async (req: Request, res: Response) => {
   logger.info('Register endpoint hit', { body: req.body });
   const { email, password, name, preferred_language } = req.body as RegisterRequest;
 
   try {
     const result = await authService.registerUser(email, password, name, preferred_language);
-    res.status(201).json(result);
+    sendCreated(req, res, result, req.t('common.user'));
   } catch (error) {
     logger.error('Registration error', { error, email });
     if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({ message: error.message, code: error.code });
+      if (error.message.includes('already exists')) {
+        return sendError(req, res, 'auth.emailAlreadyExists', undefined, 409);
+      }
+      return sendError(req, res, 'auth.registrationFailed', undefined, error.statusCode);
     }
-    res.status(500).json({ message: 'Failed to register user' });
+    return sendServerError(req, res, error);
   }
 });
 
 // POST /api/auth/login - Login with email/password
-router.post('/login', validate(loginSchema), async (req: express.Request, res: Response) => {
+router.post('/login', validate(loginSchema), async (req: Request, res: Response) => {
   const { email, password, remember_me } = req.body as LoginRequest;
 
   try {
     const result = await authService.loginUser(email, password, remember_me);
-    res.json(result);
+    sendSuccess(req, res, result, 'auth.loginSuccess');
   } catch (error) {
     logger.error('Login error', { error, email });
     if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({ message: error.message, code: error.code });
+      if (error.statusCode === 401) {
+        return sendError(req, res, 'auth.invalidCredentials', undefined, 401);
+      }
+      return sendError(req, res, 'auth.loginFailed', undefined, error.statusCode);
     }
-    res.status(500).json({ message: 'Failed to login' });
+    return sendServerError(req, res, error);
   }
 });
 

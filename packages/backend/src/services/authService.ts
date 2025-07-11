@@ -829,6 +829,32 @@ class AuthService {
       client.release();
     }
   }
+
+  /**
+   * Get user's preferred language
+   * @param userId User ID
+   * @returns Preferred language code or null
+   */
+  async getUserLanguage(userId: string): Promise<string | null> {
+    const client = await pool.getClient();
+    try {
+      const result = await client.query(
+        'SELECT preferred_language FROM users WHERE id = $1',
+        [userId]
+      );
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return result.rows[0].preferred_language || 'en';
+    } catch (error) {
+      logger.error('Error fetching user language', { error, userId });
+      return 'en'; // Default to English on error
+    } finally {
+      client.release();
+    }
+  }
 }
 
 export default new AuthService();
