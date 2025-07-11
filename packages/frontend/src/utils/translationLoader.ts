@@ -8,21 +8,17 @@ async function loadSingleTranslation(importFunc: () => Promise<any>, fallback = 
     if (mod && typeof mod === 'object') {
       // Check if it's the actual translations (has expected keys)
       if (mod.common || mod.projects || mod.auth) {
-        console.log('[translationLoader] Direct translation object found');
         return mod;
       }
-      // Check for default export
+      // Check for default export (most common case)
       if (mod.default) {
-        console.log('[translationLoader] Using default export');
         return mod.default;
       }
       // Check for __esModule flag
       if (mod.__esModule && mod.default) {
-        console.log('[translationLoader] Using __esModule default export');
         return mod.default;
       }
     }
-    console.log('[translationLoader] Returning module as-is');
     return mod || fallback;
   } catch (error) {
     console.warn('Failed to load a translation module:', error);
@@ -94,15 +90,16 @@ export async function initializeTranslations() {
   if (process.env.NODE_ENV === 'development') {
     console.log('[translationLoader] Translations loaded:', Object.keys(resources));
     
-    // Debug specific translation structure
-    if (en) {
-      console.log('[translationLoader] EN translation structure:', {
-        hasCommon: !!en.common,
-        hasProjects: !!en.projects,
-        hasStatsOverview: !!en.statsOverview,
-        commonKeys: en.common ? Object.keys(en.common).slice(0, 5) : [],
-        projectKeys: en.projects ? Object.keys(en.projects).slice(0, 5) : [],
-      });
+    // Verify translations are loaded correctly
+    if (process.env.NODE_ENV === 'development' && en) {
+      console.log('[translationLoader] EN translation loaded successfully');
+      
+      // Quick validation
+      const requiredKeys = ['common', 'projects', 'statsOverview'];
+      const missingKeys = requiredKeys.filter(key => !en[key]);
+      if (missingKeys.length > 0) {
+        console.error('[translationLoader] Missing required translation sections:', missingKeys);
+      }
     }
   }
   return resources;

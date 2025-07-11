@@ -10,14 +10,9 @@ export const i18nInitializedPromise = (async () => {
     const baseResources = await initializeTranslations();
     logger.info('[i18n] Base translations loaded:', Object.keys(baseResources || {}));
     
-    // Debug: Log a sample of the loaded translations
-    if (baseResources?.en?.translation) {
-      logger.info('[i18n] Sample EN translations:', {
-        hasCommon: !!baseResources.en.translation.common,
-        hasProjects: !!baseResources.en.translation.projects,
-        hasStatsOverview: !!baseResources.en.translation.statsOverview,
-        commonKeys: Object.keys(baseResources.en.translation.common || {}).slice(0, 5),
-      });
+    // Verify translations structure
+    if (!baseResources?.en?.translation) {
+      logger.error('[i18n] Critical: No English translations found in resources!');
     }
 
     await i18nInstance.use(initReactI18next).init({

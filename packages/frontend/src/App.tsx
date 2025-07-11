@@ -16,14 +16,7 @@ import {
 // i18n
 import './i18n';
 
-// Debug translations
-import { debugTranslationImports } from '@/utils/debugTranslations';
-if (process.env.NODE_ENV === 'development') {
-  // Run debug after a short delay to ensure i18next is initialized
-  setTimeout(() => {
-    debugTranslationImports();
-  }, 1000);
-}
+// i18n initialization is handled by the import above
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
