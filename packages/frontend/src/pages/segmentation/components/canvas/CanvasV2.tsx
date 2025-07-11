@@ -167,8 +167,12 @@ const CanvasV2: React.FC<CanvasV2Props> = ({
           debouncedSetCursorPosition(newPosition);
 
           // For immediate feedback on drawing operations, also set directly
-          // when in CreatePolygon or Slice mode
-          if (editMode === EditMode.CreatePolygon || editMode === EditMode.Slice) {
+          // when in CreatePolygon, Slice, or AddPoints mode (when actively adding points)
+          if (
+            editMode === EditMode.CreatePolygon || 
+            editMode === EditMode.Slice ||
+            (editMode === EditMode.AddPoints && interactionState?.isAddingPoints)
+          ) {
             setCursorPosition(newPosition);
           }
         }
