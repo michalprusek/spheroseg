@@ -588,6 +588,17 @@ vi.mock('@/contexts/ThemeContext', () => {
   };
 });
 
+// Ensure global timer functions are available
+if (typeof global !== 'undefined') {
+  global.setTimeout = global.setTimeout || vi.fn((fn, delay) => {
+    fn();
+    return 1;
+  });
+  global.clearTimeout = global.clearTimeout || vi.fn();
+  global.setInterval = global.setInterval || vi.fn(() => 1);
+  global.clearInterval = global.clearInterval || vi.fn();
+}
+
 // Mock window.indexedDB
 if (typeof window !== 'undefined' && !window.indexedDB) {
   (window as any).indexedDB = {
