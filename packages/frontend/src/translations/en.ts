@@ -413,6 +413,12 @@ export default {
     uploadComplete: 'Upload completed',
     uploadFailed: 'Upload failed',
     deletePolygon: 'Delete polygon',
+    pleaseLogin: 'Please log in to continue',
+    retry: 'Retry',
+    segmentation: 'Segmentation',
+    copiedToClipboard: 'Copied to clipboard!',
+    failedToCopy: 'Failed to copy to clipboard',
+    confirm: 'Confirm',
     editor: {
       error: 'Error',
       success: 'Success',
