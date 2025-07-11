@@ -1,212 +1,1502 @@
 // Chinese translations
 export default {
-  'segmentation': {
-    'contextMenu': {
-      'editPolygon': '编辑多边形', 'splitPolygon': '分割多边形', 'deletePolygon': '删除多边形', 'confirmDeleteTitle': '您确定要删除多边形吗？', 'confirmDeleteMessage': '此操作不可逆。多边形将从分割中永久删除。', 'duplicateVertex': '复制顶点', 'deleteVertex': '删除顶点'
-    }, 'title': '分割编辑器', 'resolution': '{width}x{height}', 'batch': {
-      'mixed': '分割：{{successCount}} 张图片成功排队，{{failCount}} 张失败', 'allSuccess': '分割：所有 {{count}} 张图片成功排队', 'allFailed': '分割：所有 {{count}} 张图片失败'
-    }, 'queue': {
-      'title': '分割队列', 'summary': '总共 {{total}} 个任务（{{running}} 个处理中，{{queued}} 个排队中）', 'noRunningTasks': '没有运行中的任务', 'noQueuedTasks': '没有排队的任务', 'task': '任务', 'statusRunning': '分割：{{count}} 个运行中{{queued}}', 'statusQueued': '，{{count}} 个排队中', 'statusOnlyQueued': '分割：{{count}} 个排队中', 'statusOnlyQueued_one': '分割：1 个排队中', 'statusOnlyQueued_other': '分割：{{count}} 个排队中', 'processing': '处理中', 'queued': '排队中', 'statusProcessing': '分割：{{count}} 个处理中', 'statusReady': '就绪', 'tasksTotal': '总共 {{total}} 个任务（{{running}} 个处理中，{{queued}} 个排队中）'
-    }, 'selectPolygonForEdit': '选择要编辑的多边形', 'selectPolygonForSlice': '选择要切片的多边形', 'selectPolygonForAddPoints': '选择要添加点的多边形', 'clickToAddPoint': '点击添加点', 'clickToCompletePolygon': '点击第一个点以完成多边形', 'clickToAddFirstSlicePoint': '点击添加第一个切片点', 'clickToAddSecondSlicePoint': '点击添加第二个切片点', 'polygonCreationMode': '多边形创建模式', 'polygonEditMode': '多边形编辑模式', 'polygonSliceMode': '多边形切片模式', 'polygonAddPointsMode': '添加点模式', 'viewMode': '查看模式', 'totalPolygons': '总多边形数', 'totalVertices': '总顶点数', 'vertices': '顶点', 'zoom': '缩放', 'mode': '模式', 'selected': '已选择', 'none': '无', 'polygons': '多边形', 'imageNotFound': '未找到图片', 'returnToProject': '返回项目', 'backToProject': '返回项目', 'previousImage': '上一张图片', 'nextImage': '下一张图片', 'toggleShortcuts': '切换快捷键'
-  }, 'common': {
-    'appName': 'Spheroid Segmentation', 'appNameShort': 'SpheroSeg', 'loading': '正在加载...', 'loadingAccount': '正在加载您的账户...', 'loadingApplication': '正在加载应用程序...', 'selectAll': '全选', 'deselectAll': '取消全选', 'save': '保存', 'cancel': '取消', 'delete': '删除', 'edit': '编辑', 'create': '创建', 'search': '搜索', 'error': '错误', 'success': '成功', 'reset': '重置', 'clear': '清除', 'close': '关闭', 'back': '返回', 'signIn': '登录', 'signUp': '注册', 'signOut': '登出', 'signingIn': '正在登录...', 'settings': '设置', 'profile': '个人资料', 'dashboard': '仪表板', 'project': '项目', 'projects': '项目', 'newProject': '新项目', 'upload': '上传', 'download': '下载', 'removeAll': '全部删除', 'uploadImages': '上传图片', 'recentAnalyses': '最近的分析', 'noProjects': '未找到项目', 'noImages': '未找到图片', 'createYourFirst': '创建您的第一个项目以开始使用', 'tryAgain': '重试', 'email': '电子邮件', 'password': '密码', 'confirmPassword': '确认密码', 'firstName': '名字', 'lastName': '姓氏', 'username': '用户名', 'name': '名称', 'description': '描述', 'date': '日期', 'status': '状态', 'image': '图片', 'projectName': '项目名称', 'projectDescription': '项目描述', 'language': '语言', 'theme': '主题', 'light': '浅色', 'dark': '深色', 'system': '系统', 'welcome': '欢迎使用球体分割平台', 'account': '账户', 'passwordConfirm': '确认密码', 'manageAccount': '管理账户', 'changePassword': '更改密码', 'deleteAccount': '删除账户', 'requestAccess': '请求访问', 'accessRequest': '访问请求', 'createAccount': '创建账户', 'signInToAccount': '登录账户', 'termsOfService': '服务条款', 'privacyPolicy': '隐私政策', 'termsOfServiceLink': '服务条款', 'privacyPolicyLink': '隐私政策', 'optional': '可选', 'saveChanges': '保存更改', 'saving': '正在保存', 'notSpecified': '未指定', 'enable': '启用', 'disable': '禁用', 'backToHome': '返回主页', 'and': '和', 'lastChange': '最后更改', 'sort': '排序', 'emailPlaceholder': '输入您的电子邮件', 'passwordPlaceholder': '输入您的密码', 'export': '导出', 'selectImages': '选择图片', 'noImagesDescription': '上传图片以开始您的项目', 'yes': '是', 'no': '否', 'images': '图片', 'files': '文件', 'validationFailed': '验证失败', 'cropAvatar': '裁剪头像', 'profileTitle': '个人资料', 'profileDescription': '更新其他用户可见的个人资料信息', 'profileUsername': '用户名', 'profileUsernamePlaceholder': '输入您的用户名', 'profileFullName': '全名', 'profileFullNamePlaceholder': '输入您的全名', 'profileTitlePlaceholder': '例如：研究员、教授', 'profileOrganization': '组织', 'profileOrganizationPlaceholder': '输入您的组织或机构', 'profileBio': '简介', 'profileBioPlaceholder': '写一份关于您自己的简短介绍', 'profileBioDescription': '简要描述您的研究兴趣和专业知识', 'profileLocation': '位置', 'profileLocationPlaceholder': '例如：中国北京', 'profileSaveButton': '保存个人资料', 'actions': '操作', 'view': '查看', 'share': '分享', 'projectNamePlaceholder': '输入项目名称', 'projectDescPlaceholder': '输入项目描述', 'creatingProject': '正在创建项目...', 'createSuccess': '项目创建成功', 'unauthorized': '您无权执行此操作', 'forbidden': '访问被禁止', 'maxFileSize': '最大文件大小：{{size}}MB', 'accepted': '已接受', 'processing': '处理中...', 'uploading': '正在上传...', 'uploadComplete': '上传完成', 'uploadFailed': '上传失败', 'deletePolygon': '删除多边形', 'pleaseLogin': '请登录以继续', 'retry': '重试', 'segmentation': '分割', 'copiedToClipboard': '已复制到剪贴板！', 'failedToCopy': '复制到剪贴板失败', 'confirm': '确认'
-  }, 'auth': {
-    'signIn': '登录', 'signUp': '注册', 'signOut': '登出', 'email': '电子邮件', 'password': '密码', 'forgotPassword': '忘记密码？', 'rememberMe': '记住我', 'noAccount': '没有账户？', 'alreadyHaveAccount': '已有账户？', 'createAccount': '创建账户', 'or': '或', 'signingIn': '正在登录...', 'signingUp': '正在注册...', 'signInError': '登录错误', 'signUpError': '注册错误', 'accountLocked': '您的账户已被锁定。请联系支持。', 'fillAllFields': '请填写所有必填字段', 'serverError': '服务器错误。请稍后再试。', 'signInFailed': '登录失败。请检查您的凭据。', 'alreadyHaveAccess': '已有访问权限？', 'alreadyLoggedInMessage': '您已登录', 'alreadyLoggedInTitle': '已登录', 'backToSignIn': '返回登录', 'creatingAccount': '正在创建账户...', 'dontHaveAccount': '没有账户？', 'emailAddressLabel': '电子邮件地址', 'emailAlreadyExists': '电子邮件已存在', 'emailHasPendingRequest': '此电子邮件有待处理的请求', 'emailPlaceholder': '输入您的电子邮件', 'enterEmail': '输入您的电子邮件地址', 'enterEmailForReset': '输入您的电子邮件以重置密码', 'enterInfoCreateAccount': '输入您的信息以创建账户', 'firstNamePlaceholder': '名字', 'forgotPasswordLink': '忘记密码？', 'forgotPasswordTitle': '重置您的密码', 'invalidCredentials': '无效的凭据', 'invalidTokenAction': '无效的令牌或操作', 'lastNamePlaceholder': '姓氏', 'needAnAccount': '需要一个账户？', 'newPasswordLabel': '新密码', 'confirmPasswordLabel': '确认密码', 'requestAccessTitle': '申请访问权限', 'requestSent': '请求已发送', 'requestSentMessage': '您的访问请求已提交。我们会尽快与您联系。', 'resendEmail': '重新发送电子邮件', 'resetPasswordEmailSent': '重置密码电子邮件已发送', 'resetPasswordInstructions': '请检查您的电子邮件以获取重置密码的说明。', 'signUpFailed': '注册失败。请稍后再试。', 'signUpSuccess': '注册成功！', 'signUpSuccessMessage': '您的账户已创建。请检查您的电子邮件以验证您的账户。', 'submitRequest': '提交请求', 'welcomeBack': '欢迎回来', 'signInToYourAccount': '登录您的账户', 'emailVerificationRequired': '需要电子邮件验证', 'emailVerificationSent': '验证电子邮件已发送到您的电子邮件地址。', 'resendVerificationEmail': '重新发送验证电子邮件', 'checkYourEmail': '检查您的电子邮件'
-  }, 'projects': {
-    'title': '项目', 'createProject': '创建项目', 'noProjects': '未找到项目', 'loading': '正在加载项目...', 'error': '加载项目时出错', 'deleteSuccess': '项目删除成功', 'deleteError': '删除项目时出错', 'createProjectDialog': {
-      'duplicateNameError': '具有此名称的项目已存在'
-    }
-  }, 'settings': {
-    'title': '设置', 'pageTitle': '设置', 'profile': '个人资料', 'account': '账户', 'appearance': '外观', 'changingPassword': '正在更改密码...', 'generalTitle': '常规设置', 'generalDescription': '管理您的基本账户设置', 'securityTitle': '安全', 'securityDescription': '管理您的密码和安全设置', 'notificationsTitle': '通知', 'notificationsDescription': '配置您希望如何接收通知', 'privacyTitle': '隐私', 'privacyDescription': '控制您的数据和隐私设置'
-  }, 'profile': {
-    'title': '个人资料', 'editProfile': '编辑个人资料', 'joined': '加入时间', 'statistics': '统计', 'recentActivity': '最近活动', 'totalProjects': '项目总数', 'totalImages': '图片总数', 'storageUsed': '已用存储', 'projects': '项目', 'images': '图片', 'analyses': '分析', 'noRecentActivity': '没有最近的活动', 'aboutMe': '关于我', 'noBio': '没有可用的简介', 'fetchError': '加载个人资料时出错', 'updateError': '更新个人资料时出错', 'updateSuccess': '个人资料更新成功', 'avatarHelp': '上传个人头像', 'avatarImageOnly': '仅限图片文件', 'avatarTooLarge': '图片太大。最大大小为 5MB', 'avatarUpdated': '头像更新成功', 'avatarUploadError': '上传头像时出错', 'avatarRemoved': '头像删除成功', 'avatarRemoveError': '删除头像时出错', 'cropAvatarDescription': '调整您的个人头像', 'saveButton': '保存更改', 'username': '用户名', 'usernamePlaceholder': '输入您的用户名', 'fullName': '全名', 'fullNamePlaceholder': '输入您的全名', 'organization': '组织', 'organizationPlaceholder': '输入您的组织', 'bio': '简介', 'bioPlaceholder': '输入您的简介', 'bioDescription': '简要描述您的研究兴趣和专业知识', 'location': '位置', 'locationPlaceholder': '输入您的位置', 'activityDescription': '您的最近活动', 'imagesUploaded': '上传的图片', 'segmentationsCompleted': '完成的分割', 'pageTitle': '用户个人资料'
-  }, 'errors': {
-    'somethingWentWrong': '[ZH] Something went wrong', 'componentError': '[ZH] An error occurred in this component', 'errorDetails': '[ZH] Error Details', 'tryAgain': '[ZH] Try again', 'reloadPage': '[ZH] Reload Page', 'goBack': '[ZH] Go back', 'notFound': '[ZH] Page not found', 'pageNotFoundMessage': '[ZH] The page you requested could not be found', 'returnToHome': '[ZH] Return to Home', 'unauthorized': '[ZH] Unauthorized access', 'forbidden': '[ZH] Access forbidden', 'serverError': '[ZH] Server error', 'networkError': '[ZH] Network error', 'timeoutError': '[ZH] Request timed out', 'validationError': '[ZH] Validation error', 'unknownError': '[ZH] Unknown error', 'goHome': '[ZH] Go to home page', 'fetchSegmentationFailed': '[ZH] Failed to fetch segmentation', 'fetchImageFailed': '[ZH] Failed to fetch image', 'saveSegmentationFailed': '[ZH] Failed to save segmentation', 'missingPermissions': '[ZH] Insufficient permissions', 'invalidInput': '[ZH] Invalid input', 'resourceNotFound': '[ZH] Resource not found'
-  }, 'project': {
-    'detail': {
-      'noImagesSelected': '[ZH] No images selected', 'triggeringResegmentation': '[ZH] Triggering re-segmentation for {{count}} images...', 'deleteConfirmation': '[ZH] Are you sure you want to delete {{count}} images? This action cannot be undone.', 'deletingImages': '[ZH] Deleting {{count}} images...', 'deleteSuccess': '[ZH] Successfully deleted {{count}} images', 'deleteFailed': '[ZH] Failed to delete {{count}} images', 'preparingExport': '[ZH] Preparing export of {{count}} images...'
-    }, 'segmentation': {
-      'processingInBatches': '[ZH] Starting segmentation for {{count}} images in {{batches}} batches...', 'batchQueued': '[ZH] Batch {{current}}/{{total}} successfully queued', 'batchQueuedFallback': '[ZH] Batch {{current}}/{{total}} successfully queued (fallback endpoint)', 'batchError': '[ZH] Error processing batch {{current}}/{{total}}', 'partialSuccess': '[ZH] Segmentation: {{success}} images successfully queued, {{failed}} failed', 'allSuccess': '[ZH] Segmentation: All {{count}} images successfully queued', 'allFailed': '[ZH] Segmentation: All {{count}} images failed', 'startedImages': '[ZH] Segmentation started for {{count}} images', 'queuedLocallyWarning': '[ZH] Segmentation queued locally for {{count}} images. Server connection failed.'
-    }, 'loading': '[ZH] Loading project...', 'notFound': '[ZH] Project not found', 'error': '[ZH] Error loading project', 'empty': '[ZH] This project is empty', 'noImagesText': '[ZH] No images found in this project', 'addImages': '[ZH] Add images to get started', 'noImages': {
-      'title': '[ZH] No Images Yet', 'description': '[ZH] This project doesn't have any images yet. Upload images to get started.', 'uploadButton': '[ZH] Upload Images'
-    }, 'deleteProject': '[ZH] Delete Project', 'deleteConfirmation': '[ZH] Are you sure you want to delete the project \'{{projectName}}\'? This action cannot be undone.', 'resegmentImage': '[ZH] Re-segment image', 'deleteImage': '[ZH] Delete image'
-  }, 'projectsPage': {
-    'title': '[ZH] Projects', 'description': '[ZH] Manage research projects', 'createNew': '[ZH] Create new project', 'createProject': '[ZH] Create project', 'createProjectDesc': '[ZH] Start a new research project', 'projectName': '[ZH] Project name', 'projectDescription': '[ZH] Project description', 'projectNamePlaceholder': '[ZH] Enter project name', 'projectDescriptionPlaceholder': '[ZH] Enter project description', 'projectCreated': '[ZH] Project successfully created', 'projectCreationFailed': '[ZH] Project creation failed', 'projectDeleted': '[ZH] Project successfully deleted', 'projectDeletionFailed': '[ZH] Project deletion failed', 'confirmDelete': '[ZH] Are you sure you want to delete this project?', 'confirmDeleteDescription': '[ZH] This action cannot be undone. All data associated with this project will be permanently deleted.', 'deleteProject': '[ZH] Delete project', 'editProject': '[ZH] Edit project', 'viewProject': '[ZH] View project', 'projectUpdated': '[ZH] Project successfully updated', 'projectUpdateFailed': '[ZH] Project update failed', 'noProjects': '[ZH] No projects found', 'createFirstProject': '[ZH] Create your first project to get started', 'searchProjects': '[ZH] Search projects...', 'filterProjects': '[ZH] Filter projects', 'sortProjects': '[ZH] Sort projects', 'projectNameRequired': '[ZH] Project name is required', 'loginRequired': '[ZH] You must be logged in to create a project', 'createdAt': '[ZH] Created', 'updatedAt': '[ZH] Last updated', 'imageCount': '[ZH] Images', 'status': '[ZH] Status', 'actions': '[ZH] Actions', 'loading': '[ZH] Loading projects...', 'error': '[ZH] Error loading projects', 'retry': '[ZH] Try again', 'copySegmentations': '[ZH] Copy segmentation results', 'resetImageStatus': '[ZH] Reset image processing status', 'newProjectTitle': '[ZH] New project title', 'itemsProcessed': '[ZH] items processed', 'items': '[ZH] items', 'unknownProject': '[ZH] Unknown project', 'activeTasks': '[ZH] Active', 'allTasks': '[ZH] All', 'deleteProjectDescription': '[ZH] This action will permanently delete the project and all associated data.', 'deleteWarning': '[ZH] This action cannot be undone. All data associated with this project will be permanently deleted.', 'untitledProject': '[ZH] Untitled project', 'typeToConfirm': '[ZH] Type \'delete\' to confirm', 'deleteConfirm': '[ZH] Are you sure you want to delete this project?', 'exportProject': '[ZH] Export project', 'archived': '[ZH] Archived', 'completed': '[ZH] Completed', 'draft': '[ZH] Draft', 'active': '[ZH] Active', 'createDate': '[ZH] Created', 'lastModified': '[ZH] Last modified', 'projectDescPlaceholder': '[ZH] Enter project description', 'creatingProject': '[ZH] Creating project...', 'noImages': {
-      'title': '[ZH] No images yet', 'description': '[ZH] This project doesn't have any images yet. Upload images to start segmentation.', 'uploadButton': '[ZH] Upload Images'
-    }
-  }, 'requestAccess': {
-    'and': '[ZH] and', 'title': '[ZH] Request Access to Spheroid Segmentation Platform', 'description': '[ZH] Fill out the following form to request access to our platform. We will review your request and contact you soon.', 'emailLabel': '[ZH] Your Email Address', 'nameLabel': '[ZH] Your Name', 'institutionLabel': '[ZH] Institution/Company', 'reasonLabel': '[ZH] Reason for Access', 'submitRequest': '[ZH] Submit Request', 'requestReceived': '[ZH] Request Received', 'thankYou': '[ZH] Thank you for your interest', 'weWillContact': '[ZH] We will review your request and contact you soon', 'submitSuccess': '[ZH] Request submitted successfully!', 'emailPlaceholder': '[ZH] Enter your email address', 'namePlaceholder': '[ZH] Enter your full name', 'institutionPlaceholder': '[ZH] Enter your institution or company name', 'reasonPlaceholder': '[ZH] Please describe how you plan to use the platform', 'fillRequired': '[ZH] Please fill in all required fields', 'submittingRequest': '[ZH] Submitting Request...', 'submitError': '[ZH] Failed to submit request', 'alreadyPending': '[ZH] An access request for this email is already pending', 'agreeToTerms': '[ZH] By submitting this request, you agree to our'
-  }, 'requestAccessForm': {
-    'title': '[ZH] Request Access to Spheroid Segmentation Platform', 'description': '[ZH] Fill out the following form to request access to our platform. We will review your request and contact you soon.', 'emailLabel': '[ZH] Your Email Address', 'nameLabel': '[ZH] Your Name', 'institutionLabel': '[ZH] Institution/Company', 'reasonLabel': '[ZH] Reason for Access', 'submitButton': '[ZH] Submit Request', 'signInPrompt': '[ZH] Already have an account?', 'signInLink': '[ZH] Sign In', 'thankYouTitle': '[ZH] Thank you for your interest', 'weWillContact': '[ZH] We will review your request and contact you soon', 'agreeToTerms': '[ZH] By submitting this request, you agree to our', 'and': '[ZH] and'
-  }, 'documentation': {
-    'tag': '[ZH] User Guide', 'title': '[ZH] SpheroSeg Documentation', 'subtitle': '[ZH] Learn how to use the Spheroid Segmentation Platform effectively.', 'sidebar': {
-      'title': '[ZH] Sections', 'introduction': '[ZH] Introduction', 'gettingStarted': '[ZH] Getting Started', 'uploadingImages': '[ZH] Uploading Images', 'segmentationProcess': '[ZH] Segmentation Process', 'apiReference': '[ZH] API Reference'
-    }, 'introduction': {
-      'title': '[ZH] Introduction', 'imageAlt': '[ZH] Illustration of spheroid analysis workflow', 'whatIs': {
-        'title': '[ZH] What is SpheroSeg?', 'paragraph1': '[ZH] SpheroSeg is a cutting-edge platform designed for the segmentation and analysis of cell spheroids in microscopic images. Our tool provides researchers with precise detection and analytical capabilities.', 'paragraph2': '[ZH] It utilizes advanced AI algorithms based on deep learning to automatically identify and segment spheroids in your images with high accuracy and consistency.', 'paragraph3': '[ZH] This documentation will guide you through all aspects of using the platform, from getting started to advanced features and API integration.'
-      }
-    }, 'gettingStarted': {
-      'title': '[ZH] Getting Started', 'accountCreation': {
-        'title': '[ZH] Account Creation', 'paragraph1': '[ZH] To use SpheroSeg, you need to create an account. This allows us to securely store your projects and images.', 'step1Prefix': '[ZH] Visit the', 'step1Link': '[ZH] sign-up page', 'step2': '[ZH] Enter your institutional email address and create a password', 'step3': '[ZH] Complete your profile with your name and institution', 'step4': '[ZH] Verify your email address via the link sent to your inbox'
-      }, 'creatingProject': {
-        'title': '[ZH] Creating Your First Project', 'paragraph1': '[ZH] Projects help you organize your work. Each project can contain multiple images and their corresponding segmentation results.', 'step1': '[ZH] On your dashboard, click on \'New Project\'', 'step2': '[ZH] Enter a project name and description', 'step3': '[ZH] Select project type (default: Spheroid Analysis)', 'step4': '[ZH] Click \'Create Project\' to continue'
-      }
-    }, 'uploadingImages': {
-      'title': '[ZH] Uploading Images', 'paragraph1': '[ZH] SpheroSeg supports various image formats commonly used in microscopy, including TIFF, PNG, and JPEG.', 'methods': {
-        'title': '[ZH] Upload Methods', 'paragraph1': '[ZH] There are several ways to upload images:', 'step1': '[ZH] Drag and drop files directly into the upload area', 'step2': '[ZH] Click on the upload area to browse and select files from your computer', 'step3': '[ZH] Batch upload multiple images at once'
-      }, 'note': {
-        'prefix': '[ZH] Note:', 'text': '[ZH] For optimal results, ensure your microscopy images have good contrast between the spheroid and background.'
-      }
-    }, 'segmentationProcess': {
-      'title': '[ZH] Segmentation Process', 'paragraph1': '[ZH] The segmentation process identifies the boundaries of spheroids in your images, allowing for precise analysis of their morphology.', 'automatic': {
-        'title': '[ZH] Automatic Segmentation', 'paragraph1': '[ZH] Our AI-powered automatic segmentation can detect spheroid boundaries with high accuracy:', 'step1': '[ZH] Select an image from your project', 'step2': '[ZH] Click on \'Auto-Segment\' to initiate the process', 'step3': '[ZH] The system will process the image and display the detected boundaries', 'step4': '[ZH] Review the results in the segmentation editor'
-      }, 'manual': {
-        'title': '[ZH] Manual Adjustments', 'paragraph1': '[ZH] Sometimes automatic segmentation may require refinement. Our editor provides tools for:', 'step1': '[ZH] Adding or removing vertices along the boundary', 'step2': '[ZH] Adjusting vertex positions for more accurate boundaries', 'step3': '[ZH] Splitting or merging regions', 'step4': '[ZH] Adding or removing holes within spheroids'
-      }
-    }, 'apiReference': {
-      'title': '[ZH] API Reference', 'paragraph1': '[ZH] SpheroSeg offers a RESTful API for programmatic access to the platform's features. This is ideal for integration with your existing workflows or batch processing.', 'endpoint1Desc': '[ZH] Retrieves a list of all your projects', 'endpoint2Desc': '[ZH] Retrieves all images within a specific project', 'endpoint3Desc': '[ZH] Initiates segmentation for a specific image', 'contactPrefix': '[ZH] For full API documentation and authentication details, please contact us at'
-    }, 'backToHome': '[ZH] Back to Home', 'backToTop': '[ZH] Back to Top'
-  }, 'hero': {
-    'platformTag': '[ZH] Advanced Spheroid Segmentation Platform', 'title': '[ZH] AI-powered Cell Analysis for Biomedical Research', 'subtitle': '[ZH] Elevate your microscopic cell image analysis with our cutting-edge spheroid segmentation platform. Designed for researchers seeking precision and efficiency.', 'getStartedButton': '[ZH] Get Started', 'learnMoreButton': '[ZH] Learn More', 'imageAlt1': '[ZH] Spheroid microscopy image', 'imageAlt2': '[ZH] Spheroid microscopy image with analysis', 'welcomeTitle': '[ZH] Welcome to SpheroSeg', 'welcomeSubtitle': '[ZH] Advanced platform for cell spheroid segmentation and analysis', 'welcomeDescription': '[ZH] Our platform combines cutting-edge artificial intelligence algorithms with an intuitive interface for precise detection and analysis of cell spheroids in microscopic images.', 'featuresTitle': '[ZH] Powerful Features', 'featuresSubtitle': '[ZH] Advanced tools for biomedical research', 'featureAiSegmentation': '[ZH] Advanced Segmentation', 'featureAiSegmentationDesc': '[ZH] Precise spheroid detection with boundary analysis for accurate cell measurements.', 'featureEditing': '[ZH] AI-powered Analysis', 'featureEditingDesc': '[ZH] Leverage deep learning algorithms for automated detection and cell classification.', 'featureAnalytics': '[ZH] Easy Uploading', 'featureAnalyticsDesc': '[ZH] Drag and drop your microscopy images for immediate processing and analysis.', 'featureExport': '[ZH] Statistical Insights', 'featureExportDesc': '[ZH] Comprehensive metrics and visualizations for extracting meaningful data patterns.', 'ctaTitle': '[ZH] Ready to transform your cell analysis workflow?', 'ctaSubtitle': '[ZH] Join leading researchers already using our platform to accelerate their discoveries.', 'ctaButton': '[ZH] Create Account'
-  }, 'navbar': {
-    'home': '[ZH] Home', 'features': '[ZH] Features', 'documentation': '[ZH] Documentation', 'terms': '[ZH] Terms', 'privacy': '[ZH] Privacy', 'login': '[ZH] Sign In', 'requestAccess': '[ZH] Request Access'
-  }, 'navigation': {
-    'home': '[ZH] Home', 'projects': '[ZH] Projects', 'settings': '[ZH] Settings', 'profile': '[ZH] Profile', 'dashboard': '[ZH] Dashboard', 'back': '[ZH] Back'
-  }, 'dashboard': {
-    'manageProjects': '[ZH] Manage and organize your research projects', 'viewMode': {
-      'grid': '[ZH] Grid View', 'list': '[ZH] List View'
-    }, 'sort': {
-      'name': '[ZH] Name', 'updatedAt': '[ZH] Last Updated', 'segmentationStatus': '[ZH] Status'
-    }, 'search': '[ZH] Search projects...', 'searchImagesPlaceholder': '[ZH] Search images...', 'noProjects': '[ZH] No projects found', 'noImagesDescription': '[ZH] No images match your search criteria', 'createFirst': '[ZH] Create your first project to get started', 'createNew': '[ZH] Create New Project', 'lastChange': '[ZH] Last Change', 'statsOverview': '[ZH] Stats Overview', 'totalProjects': '[ZH] Total Projects', 'activeProjects': '[ZH] Active Projects', 'totalImages': '[ZH] Total Images', 'totalAnalyses': '[ZH] Total Analyses', 'lastUpdated': '[ZH] Last Updated', 'noProjectsDescription': '[ZH] You haven't created any projects yet. Create your first project to get started.', 'searchProjectsPlaceholder': '[ZH] Search projects by name...', 'sortBy': '[ZH] Sort by', 'name': '[ZH] Name', 'completed': '[ZH] Completed', 'processing': '[ZH] Processing', 'pending': '[ZH] Pending', 'failed': '[ZH] Failed', 'selectImagesButton': '[ZH] Select Images'
-  }, 'projectToolbar': {
-    'selectImages': '[ZH] Select Images', 'cancelSelection': '[ZH] Cancel Selection', 'export': '[ZH] Export', 'uploadImages': '[ZH] Upload Images'
-  }, 'statsOverview': {
-    'title': '[ZH] Dashboard Overview', 'totalProjects': '[ZH] Total Projects', 'totalImages': '[ZH] Total Images', 'completedSegmentations': '[ZH] Completed Segmentations', 'storageUsed': '[ZH] Storage Used', 'recentActivity': '[ZH] Recent Activity', 'moreStats': '[ZH] View Detailed Statistics', 'completion': '[ZH] completion rate', 'vsLastMonth': '[ZH] vs. last month', 'thisMonth': '[ZH] This Month', 'lastMonth': '[ZH] Last Month', 'projectsCreated': '[ZH] Projects Created', 'imagesUploaded': '[ZH] Images Uploaded', 'fetchError': '[ZH] Failed to load statistics', 'storageLimit': '[ZH] Storage Limit', 'activityTitle': '[ZH] Recent Activity', 'noActivity': '[ZH] No recent activity', 'hide': '[ZH] Hide', 'activityTypes': {
-      'project_created': '[ZH] Created project', 'image_uploaded': '[ZH] Uploaded image', 'segmentation_completed': '[ZH] Completed segmentation'
-    }
-  }, 'footer': {
-    'developerName': '[ZH] Bc. Michal Průšek', 'facultyName': '[ZH] FNSPE CTU in Prague', 'description': '[ZH] Advanced platform for spheroid segmentation and analysis', 'contactLabel': '[ZH] spheroseg@utia.cas.cz', 'developerLabel': '[ZH] Bc. Michal Průšek', 'facultyLabel': '[ZH] FNSPE CTU in Prague', 'resourcesTitle': '[ZH] Resources', 'documentationLink': '[ZH] Documentation', 'featuresLink': '[ZH] Features', 'tutorialsLink': '[ZH] Tutorials', 'researchLink': '[ZH] Research', 'legalTitle': '[ZH] Legal Information', 'termsLink': '[ZH] Terms of Service', 'privacyLink': '[ZH] Privacy Policy', 'contactUsLink': '[ZH] Contact Us', 'informationTitle': '[ZH] Information', 'contactTitle': '[ZH] Contact', 'copyrightNotice': '[ZH] SpheroSeg. All rights reserved.', 'madeWith': '[ZH] Made with', 'by': '[ZH] by', 'requestAccessLink': '[ZH] Request Access', 'githubRepository': '[ZH] GitHub Repository', 'contactEmail': '[ZH] Contact Email'
-  }, 'features': {
-    'tag': '[ZH] Features', 'title': '[ZH] Discover Our Platform Capabilities', 'subtitle': '[ZH] Advanced tools for biomedical research', 'cards': {
-      'segmentation': {
-        'title': '[ZH] Advanced Segmentation', 'description': '[ZH] Precise spheroid detection with boundary analysis for accurate cell measurements'
-      }, 'aiAnalysis': {
-        'title': '[ZH] AI-powered Analysis', 'description': '[ZH] Leverage deep learning algorithms for automated cell detection and classification'
-      }, 'uploads': {
-        'title': '[ZH] Easy Uploading', 'description': '[ZH] Drag and drop your microscopy images for immediate processing and analysis'
-      }, 'insights': {
-        'title': '[ZH] Statistical Insights', 'description': '[ZH] Comprehensive metrics and visualizations to extract meaningful data patterns'
-      }, 'collaboration': {
-        'title': '[ZH] Team Collaboration', 'description': '[ZH] Share projects and results with colleagues for more efficient research'
-      }, 'pipeline': {
-        'title': '[ZH] Automated Pipeline', 'description': '[ZH] Streamline your workflow with our batch processing tools'
-      }
-    }
-  }, 'index': {
-    'about': {
-      'tag': '[ZH] About the Platform', 'title': '[ZH] What is SpheroSeg?', 'imageAlt': '[ZH] Spheroid segmentation example', 'paragraph1': '[ZH] SpheroSeg is an advanced platform specifically designed for the segmentation and analysis of cell spheroids in microscopic images.', 'paragraph2': '[ZH] Our tool combines cutting-edge artificial intelligence algorithms with an intuitive interface to provide researchers with precise spheroid boundary detection and analytical capabilities.', 'paragraph3': '[ZH] The platform was developed by Michal Průšek from FNSPE CTU in Prague under the supervision of Adam Novozámský from UTIA CAS, in collaboration with researchers from the Department of Biochemistry and Microbiology at UCT Prague.', 'contactPrefix': '[ZH] spheroseg@utia.cas.cz'
-    }, 'cta': {
-      'title': '[ZH] Ready to transform your research?', 'subtitle': '[ZH] Start using SpheroSeg today and discover new possibilities in cell spheroid analysis', 'boxTitle': '[ZH] Create a free account', 'boxText': '[ZH] Get access to all platform features and start analyzing your microscopy images', 'button': '[ZH] Create Account'
-    }
-  }, 'tools': {
-    'zoomIn': '[ZH] Zoom In', 'zoomOut': '[ZH] Zoom Out', 'resetView': '[ZH] Reset View', 'createPolygon': '[ZH] Create New Polygon', 'exitPolygonCreation': '[ZH] Exit Polygon Creation Mode', 'splitPolygon': '[ZH] Split Polygon in Two', 'exitSlicingMode': '[ZH] Exit Slicing Mode', 'addPoints': '[ZH] Add Points to Polygon', 'exitPointAddingMode': '[ZH] Exit Point Adding Mode', 'undo': '[ZH] Undo', 'redo': '[ZH] Redo', 'save': '[ZH] Save', 'resegment': '[ZH] Resegment', 'title': '[ZH] Tools'
-  }, 'accessibility': {
-    'skipToContent': '[ZH] Skip to main content'
-  }, 'shortcuts': {
-    'button': '[ZH] Shortcuts', 'editMode': '[ZH] Switch to Edit Mode', 'sliceMode': '[ZH] Switch to Slice Mode', 'addPointMode': '[ZH] Switch to Add Point Mode', 'holdShift': '[ZH] Hold Shift to auto-add points (in Edit Mode)', 'undo': '[ZH] Undo', 'redo': '[ZH] Redo', 'deletePolygon': '[ZH] Delete selected polygon', 'cancel': '[ZH] Cancel current operation', 'zoomIn': '[ZH] Zoom in', 'zoomOut': '[ZH] Zoom out', 'resetView': '[ZH] Reset view', 'title': '[ZH] Keyboard Shortcuts', 'viewMode': '[ZH] View Mode', 'editVerticesMode': '[ZH] Edit Vertices Mode', 'addPointsMode': '[ZH] Add Points Mode', 'createPolygonMode': '[ZH] Create Polygon Mode', 'save': '[ZH] Save', 'description': '[ZH] These shortcuts work within the segmentation editor for faster and more comfortable work.'
-  }, 'imageProcessor': {
-    'segmentationStarted': '[ZH] Segmentation process has started...', 'startSegmentationTooltip': '[ZH] Start Segmentation', 'processingTooltip': '[ZH] Processing...', 'savingTooltip': '[ZH] Saving...', 'completedTooltip': '[ZH] Segmentation completed', 'retryTooltip': '[ZH] Retry segmentation'
-  }, 'uploader': {
-    'dragDrop': '[ZH] Drag and drop images here or click to select files', 'dropFiles': '[ZH] Drop files here...', 'segmentAfterUploadLabel': '[ZH] Segment images immediately after upload', 'filesToUpload': '[ZH] Files to upload', 'uploadBtn': '[ZH] Upload', 'uploadError': '[ZH] An error occurred during upload. Please try again.', 'clickToUpload': '[ZH] Click to browse files', 'selectProjectLabel': '[ZH] Select project', 'selectProjectPlaceholder': '[ZH] Select project...', 'noProjectsFound': '[ZH] No projects found. Create a new one first.', 'imageOnly': '[ZH] (Image files only)', 'uploadingImages': '[ZH] Uploading images...', 'uploadComplete': '[ZH] Upload complete', 'uploadFailed': '[ZH] Upload failed', 'processingImages': '[ZH] Processing images...', 'dragAndDropFiles': '[ZH] Drag and drop files here', 'or': '[ZH] or', 'clickToSelect': '[ZH] Click to select files'
-  }, 'images': {
-    'uploadImages': '[ZH] Upload Images', 'dragDrop': '[ZH] Drag and drop images here', 'clickToSelect': '[ZH] or click to select files', 'acceptedFormats': '[ZH] Supported formats: JPEG, PNG, TIFF, BMP (max 10MB)', 'uploadProgress': '[ZH] Upload Progress', 'uploadingTo': '[ZH] Uploading to', 'currentProject': '[ZH] Current Project', 'autoSegment': '[ZH] Automatically segment images after upload', 'uploadCompleted': '[ZH] Upload Completed', 'uploadFailed': '[ZH] Upload Failed', 'imagesUploaded': '[ZH] Images uploaded successfully', 'imagesFailed': '[ZH] Image upload failed', 'viewAnalyses': '[ZH] View Analyses', 'noAnalysesYet': '[ZH] No analyses yet', 'runAnalysis': '[ZH] Run Analysis', 'viewResults': '[ZH] View Results', 'dropImagesHere': '[ZH] Drop images here...', 'selectProjectFirst': '[ZH] Please select a project first', 'projectRequired': '[ZH] You must select a project before uploading images', 'imageOnly': '[ZH] (Image files only)', 'dropFiles': '[ZH] Drop files here...', 'filesToUpload': '[ZH] Files to upload ({{count}})', 'uploadBtn': '[ZH] Upload {{count}} images', 'uploadError': '[ZH] An error occurred during upload. Please try again.', 'noProjectsToUpload': '[ZH] No projects available. Create a project first.', 'notFound': '[ZH] Project \'{{projectName}}\' not found. It may have been deleted.', 'errors': {
-      'imageOrProjectNotFound': '[ZH] Image or project not found.', 'failedToDeleteImage': '[ZH] Failed to delete image', 'imageOrProjectNotFoundForNavigation': '[ZH] Image or project not found for navigation, or UUID is missing.', 'imageNotFoundForClearingSegmentation': '[ZH] Image not found for clearing segmentation or UUID is missing.', 'failedToClearSegmentation': '[ZH] Failed to clear segmentation'
-    }, 'success': {
-      'localImageDeleted': '[ZH] Local image successfully deleted', 'imageDeleted': '[ZH] Image successfully deleted', 'segmentationCleared': '[ZH] Segmentation successfully cleared.'
-    }, 'info': {
-      'clearingSegmentation': '[ZH] Clearing segmentation for image {{imageName}}...', 'selectAtLeastOneImage': '[ZH] Please select at least one image.'
-    }
-  }, 'export': {
-    'formatDescriptions': {
-      'COCO': '[ZH] Common Objects in Context (COCO) JSON format for object detection', 'YOLO': '[ZH] You Only Look Once (YOLO) text format for object detection', 'MASK': '[ZH] Binary mask images for each segmented object', 'POLYGONS': '[ZH] Polygon coordinates in JSON format'
-    }, 'exportCompleted': '[ZH] Export completed', 'exportFailed': '[ZH] Export failed', 'title': '[ZH] Export Segmentation Data', 'spheroidMetrics': '[ZH] Spheroid Metrics', 'visualization': '[ZH] Visualization', 'cocoFormat': '[ZH] COCO Format', 'close': '[ZH] Close', 'metricsExported': '[ZH] Metrics exported successfully', 'options': {
-      'includeMetadata': '[ZH] Include metadata', 'includeSegmentation': '[ZH] Include segmentation', 'selectExportFormat': '[ZH] Select export format', 'includeObjectMetrics': '[ZH] Include object metrics', 'selectMetricsFormat': '[ZH] Select metrics format', 'metricsFormatDescription': {
-        'EXCEL': '[ZH] Excel file (.xlsx)', 'CSV': '[ZH] CSV file (.csv)'
-      }, 'includeImages': '[ZH] Include original images', 'exportMetricsOnly': '[ZH] Export metrics only', 'metricsRequireSegmentation': '[ZH] Exporting metrics requires completed segmentation'
-    }, 'formats': {
-      'COCO': '[ZH] COCO JSON', 'YOLO': '[ZH] YOLO TXT', 'MASK': '[ZH] Mask (TIFF)', 'POLYGONS': '[ZH] Polygons (JSON)'
-    }, 'metricsFormats': {
-      'EXCEL': '[ZH] Excel (.xlsx)', 'CSV': '[ZH] CSV (.csv)'
-    }, 'selectImagesForExport': '[ZH] Select images for export', 'selectImagesToExport': '[ZH] Select images to export', 'noImagesAvailable': '[ZH] No images available', 'backToProject': '[ZH] Back to Project', 'exportImages': '[ZH] Export Images', 'maskExportError': '[ZH] Error exporting mask', 'maskExportStarted': '[ZH] Mask export started', 'metricsRequireSegmentation': '[ZH] Metrics require segmentation to be completed', 'noImageSelectedError': '[ZH] No image selected for export'
-  }, 'metrics': {
-    'area': '[ZH] Area', 'perimeter': '[ZH] Perimeter', 'circularity': '[ZH] Circularity', 'sphericity': '[ZH] Sphericity', 'solidity': '[ZH] Solidity', 'compactness': '[ZH] Compactness', 'convexity': '[ZH] Convexity', 'visualization': '[ZH] Metrics Visualization', 'visualizationHelp': '[ZH] Visual representation of metrics for all spheroids in this image', 'barChart': '[ZH] Bar Chart', 'pieChart': '[ZH] Pie Chart', 'comparisonChart': '[ZH] Comparison Chart', 'keyMetricsComparison': '[ZH] Key Metrics Comparison', 'areaDistribution': '[ZH] Area Distribution', 'shapeMetricsComparison': '[ZH] Shape Metrics Comparison', 'noPolygonsFound': '[ZH] No polygons found for analysis'
-  }, 'imageStatus': {
-    'completed': '[ZH] Processed', 'processing': '[ZH] Processing', 'pending': '[ZH] Pending', 'failed': '[ZH] Failed', 'noImage': '[ZH] No image', 'untitledImage': '[ZH] Untitled image'
-  }, 'projectActions': {
-    'deleteTooltip': '[ZH] Delete project', 'deleteConfirmTitle': '[ZH] Are you sure?', 'deleteConfirmDesc': '[ZH] Are you sure you want to delete the project \'{{projectName}}\'? This action cannot be undone.', 'deleteSuccess': '[ZH] Project \'{{projectName}}\' has been successfully deleted.', 'deleteError': '[ZH] Project deletion failed.', 'makePrivateTooltip': '[ZH] Mark as private', 'makePublicTooltip': '[ZH] Mark as public', 'shareTooltip': '[ZH] Share project', 'downloadTooltip': '[ZH] Download project', 'notFound': '[ZH] Project \'{{projectName}}\' not found. It may have already been deleted.'
-  }, 'editor': {
-    'backButtonTooltip': '[ZH] Back to project overview', 'exportButtonTooltip': '[ZH] Export current segmentation data', 'saveTooltip': '[ZH] Save changes', 'image': '[ZH] Image', 'previousImage': '[ZH] Previous image', 'nextImage': '[ZH] Next image', 'resegmentButton': '[ZH] Resegment', 'resegmentButtonTooltip': '[ZH] Run segmentation again on this image', 'exportMaskButton': '[ZH] Export mask', 'exportMaskButtonTooltip': '[ZH] Export segmentation mask for this image', 'backButton': '[ZH] Back', 'exportButton': '[ZH] Export', 'saveButton': '[ZH] Save', 'loadingProject': '[ZH] Loading project...', 'loadingImage': '[ZH] Loading image...', 'sliceErrorInvalidPolygon': '[ZH] Cannot slice: Invalid polygon selected.', 'sliceWarningInvalidResult': '[ZH] Slicing created polygons that are too small and invalid.', 'sliceWarningInvalidIntersections': '[ZH] Invalid slice: Slice line must intersect the polygon at exactly two points.', 'sliceSuccess': '[ZH] Polygon successfully sliced.', 'noPolygonToSlice': '[ZH] No polygons available to slice.', 'savingTooltip': '[ZH] Saving...'
-  }, 'segmentationPage': {
-    'noImageSelected': '[ZH] No image selected for resegmentation.', 'resegmentationStarted': '[ZH] Starting resegmentation using ResUNet neural network...', 'resegmentationQueued': '[ZH] Resegmentation has been queued.', 'resegmentationCompleted': '[ZH] Resegmentation completed successfully.', 'resegmentationFailed': '[ZH] Resegmentation failed.', 'resegmentationTimeout': '[ZH] Resegmentation timed out. Check queue status.', 'resegmentationError': '[ZH] Failed to start resegmentation.', 'resegmentTooltip': '[ZH] Resegment'
-  }, 'share': {
-    'accepted': '[ZH] Accepted', 'alreadyShared': '[ZH] Already shared with this user', 'canEdit': '[ZH] Can edit', 'copyToClipboard': '[ZH] Copy to clipboard', 'edit': '[ZH] Edit', 'email': '[ZH] Email', 'failedToCopy': '[ZH] Failed to copy link', 'failedToGenerateLink': '[ZH] Failed to generate share link', 'failedToLoadShares': '[ZH] Failed to load shared users', 'failedToRemove': '[ZH] Failed to remove share', 'failedToShare': '[ZH] Failed to share project', 'generateLink': '[ZH] Generate link', 'generateNewLink': '[ZH] Generate new link', 'generating': '[ZH] Generating...', 'invalidEmail': '[ZH] Invalid email address', 'invalidEmailOrPermission': '[ZH] Invalid email or permission', 'invite': '[ZH] Invite', 'inviteByEmail': '[ZH] Invite by email', 'inviteByLink': '[ZH] Invite by link', 'linkCopied': '[ZH] Link copied to clipboard', 'linkGenerated': '[ZH] Share link generated', 'linkPermissions': '[ZH] Link permissions', 'noPermission': '[ZH] No permission', 'noShares': '[ZH] No shared users', 'pendingAcceptance': '[ZH] Pending acceptance', 'permissions': '[ZH] Permissions', 'projectNotFound': '[ZH] Project not found', 'removeShare': '[ZH] Remove share', 'selectAccessLevel': '[ZH] Select access level', 'selectPermission': '[ZH] Please select a permission type', 'shareDescription': '[ZH] Share this project with other users', 'sharedWith': '[ZH] Shared with', 'shareLinkDescription': '[ZH] Anyone with this link can access the project', 'shareProject': '[ZH] Share Project', 'shareProjectTitle': '[ZH] Share project \'{{projectName}}\'', 'sharing': '[ZH] Sharing...', 'sharedSuccess': '[ZH] Project \'{{projectName}}\' has been shared with {{email}}', 'removedSuccess': '[ZH] Share with {{email}} has been removed', 'status': '[ZH] Status', 'userEmail': '[ZH] User email', 'view': '[ZH] View', 'viewOnly': '[ZH] View only'
-  }, 'invitation': {
-    'title': '[ZH] Project Invitation', 'processing': '[ZH] Processing invitation...', 'successTitle': '[ZH] Invitation Accepted!', 'successMessage': '[ZH] You now have access to \'{{projectName}}\' shared by {{ownerName}}.', 'redirecting': '[ZH] Redirecting to project...', 'errorTitle': '[ZH] Unable to Accept Invitation', 'loginRequired': '[ZH] Sign In Required', 'loginMessage': '[ZH] Please sign in to accept this project invitation.', 'signIn': '[ZH] Sign In', 'createAccount': '[ZH] Create Account', 'goToDashboard': '[ZH] Go to Dashboard', 'invalidLink': '[ZH] Invalid invitation link', 'expired': '[ZH] This invitation link has expired or is invalid', 'notForYou': '[ZH] This invitation is not intended for your account', 'genericError': '[ZH] Failed to accept invitation. Please try again.', 'acceptedSuccess': '[ZH] Invitation accepted successfully'
-  }, 'termsPage': {
-    'title': '[ZH] Terms of Service', 'acceptance': {
-      'title': '[ZH] 1. Acceptance of Terms', 'paragraph1': '[ZH] By accessing or using SpheroSeg, you agree to be bound by these Terms of Service. If you do not agree with these terms, please do not use our service.'
-    }, 'useLicense': {
-      'title': '[ZH] 2. Use License', 'paragraph1': '[ZH] SpheroSeg grants you a limited, non-exclusive, non-transferable license to use the service for research and educational purposes. Commercial use requires a separate license agreement.'
-    }, 'dataUsage': {
-      'title': '[ZH] 3. Data Usage', 'paragraph1': '[ZH] You retain all rights to your uploaded images and data. We do not share your data with third parties without your explicit consent. Your data is used solely to provide and improve our segmentation services.'
-    }, 'limitations': {
-      'title': '[ZH] 4. Service Limitations', 'paragraph1': '[ZH] SpheroSeg is provided \'as is\' without any warranties, express or implied. We do not guarantee 100% availability, accuracy, or reliability. Users are responsible for validating results for their specific applications.'
-    }, 'revisions': {
-      'title': '[ZH] 5. Revisions', 'paragraph1': '[ZH] We reserve the right to modify these terms at any time. Changes will take effect immediately upon posting. Your continued use of the service constitutes acceptance of the revised terms.'
-    }, 'governingLaw': {
-      'title': '[ZH] 6. Governing Law', 'paragraph1': '[ZH] These terms are governed by the laws of the Czech Republic. Any disputes will be resolved by the competent courts in Prague.'
-    }, 'lastUpdated': '[ZH] Last Updated: January 7, 2025'
-  }, 'privacyPage': {
-    'title': '[ZH] Privacy Policy', 'introduction': {
-      'title': '[ZH] 1. Introduction', 'paragraph1': '[ZH] At SpheroSeg, we are committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and what rights you have regarding your information.'
-    }, 'dataCollection': {
-      'title': '[ZH] 2. Information We Collect', 'paragraph1': '[ZH] We collect information you provide directly to us, including:', 'list': ['[ZH] Account information (email, name, institution)', '[ZH] Uploaded images and data for segmentation', '[ZH] Project metadata and analysis results', '[ZH] Usage data and activity logs']
-    }, 'dataUsage': {
-      'title': '[ZH] 3. How We Use Your Information', 'paragraph1': '[ZH] We use the collected information to:', 'list': ['[ZH] Provide and maintain our services', '[ZH] Process your image segmentation requests', '[ZH] Improve our algorithms and services', '[ZH] Communicate with you about your account', '[ZH] Ensure security and prevent abuse']
-    }, 'dataStorage': {
-      'title': '[ZH] 4. Data Storage and Security', 'paragraph1': '[ZH] We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.', 'paragraph2': '[ZH] Your data is stored on secure servers and is deleted according to our data retention policy.'
-    }, 'dataSharing': {
-      'title': '[ZH] 5. Data Sharing', 'paragraph1': '[ZH] We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy or as required by law.'
-    }, 'userRights': {
-      'title': '[ZH] 6. Your Rights', 'paragraph1': '[ZH] You have the right to:', 'list': ['[ZH] Access your personal information', '[ZH] Correct inaccurate information', '[ZH] Request deletion of your data', '[ZH] Export your data', '[ZH] Object to processing of your data']
-    }, 'cookies': {
-      'title': '[ZH] 7. Cookies and Tracking Technologies', 'paragraph1': '[ZH] We use cookies and similar technologies to enhance your experience, analyze site usage, and personalize content.'
-    }, 'changes': {
-      'title': '[ZH] 8. Changes to This Policy', 'paragraph1': '[ZH] We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.'
-    }, 'contact': {
-      'title': '[ZH] 9. Contact Us', 'paragraph1': '[ZH] If you have any questions about this Privacy Policy, please contact us at:', 'email': '[ZH] privacy@spheroseg.com'
-    }, 'lastUpdated': '[ZH] Last Updated: January 7, 2025'
-  }, 'about': {
-    'title': '[ZH] About SpheroSeg', 'mission': {
-      'title': '[ZH] Our Mission', 'description': '[ZH] SpheroSeg is an advanced platform specifically designed for the segmentation and analysis of cell spheroids in microscopic images. We combine cutting-edge artificial intelligence algorithms with an intuitive interface to provide researchers with precise spheroid boundary detection and analytical capabilities.', 'vision': '[ZH] Our vision is to accelerate scientific discovery by making advanced image analysis accessible to researchers worldwide, enabling them to focus on their research rather than technical challenges.'
-    }, 'technology': {
-      'title': '[ZH] Our Technology', 'description': '[ZH] Built on state-of-the-art deep learning models and computer vision techniques, SpheroSeg offers unparalleled accuracy in spheroid segmentation.', 'feature1': {
-        'title': '[ZH] AI-Powered Segmentation', 'description': '[ZH] Advanced deep learning models trained on diverse spheroid images ensure accurate and reliable segmentation results.'
-      }, 'feature2': {
-        'title': '[ZH] Real-Time Processing', 'description': '[ZH] Optimized algorithms provide fast processing times, allowing you to analyze large datasets efficiently.'
-      }, 'feature3': {
-        'title': '[ZH] Comprehensive Analysis', 'description': '[ZH] Extract detailed metrics including area, perimeter, circularity, and more for each segmented spheroid.'
-      }
-    }, 'team': {
-      'title': '[ZH] Our Team', 'description': '[ZH] SpheroSeg was developed by a dedicated team of researchers and engineers passionate about advancing biomedical research', 'member1': {
-        'name': '[ZH] Michal Průšek', 'role': '[ZH] Lead Developer, FNSPE CTU Prague'
-      }, 'member2': {
-        'name': '[ZH] Adam Novozámský', 'role': '[ZH] Supervisor, UTIA CAS'
-      }, 'member3': {
-        'name': '[ZH] Research Team', 'role': '[ZH] Department of Biochemistry and Microbiology, UCT Prague'
-      }
-    }, 'contact': {
-      'title': '[ZH] Contact Us', 'description': '[ZH] Have questions or need support? We're here to help!', 'email': '[ZH] Contact via Email', 'github': '[ZH] View on GitHub', 'twitter': '[ZH] Follow on Twitter'
-    }
-  }
+  // Segmentation context menu
+  segmentation: {
+    contextMenu: {
+      editPolygon: '编辑多边形',
+      splitPolygon: '分割多边形',
+      deletePolygon: '删除多边形',
+      confirmDeleteTitle: '您确定要删除多边形吗？',
+      confirmDeleteMessage: '此操作不可逆。多边形将从分割中永久删除。',
+      duplicateVertex: '复制顶点',
+      deleteVertex: '删除顶点',
+    },
+    title: '分割编辑器',
+    resolution: '{width}x{height}',
+    batch: {
+      mixed: '分割：{{successCount}} 张图片成功排队，{{failCount}} 张失败',
+      allSuccess: '分割：所有 {{count}} 张图片成功排队',
+      allFailed: '分割：所有 {{count}} 张图片失败',
+    },
+    queue: {
+      title: '分割队列',
+      summary: '总共 {{total}} 个任务（{{running}} 个处理中，{{queued}} 个排队中）',
+      noRunningTasks: '没有运行中的任务',
+      noQueuedTasks: '没有排队的任务',
+      task: '任务',
+      statusRunning: '分割：{{count}} 个运行中{{queued}}',
+      statusQueued: '，{{count}} 个排队中',
+      statusOnlyQueued: '分割：{{count}} 个排队中',
+      statusOnlyQueued_one: '分割：1 个排队中',
+      statusOnlyQueued_other: '分割：{{count}} 个排队中',
+      processing: '处理中',
+      queued: '排队中',
+      statusProcessing: '分割：{{count}} 个处理中',
+      statusReady: '就绪',
+      tasksTotal: '总共 {{total}} 个任务（{{running}} 个处理中，{{queued}} 个排队中）',
+    },
+    selectPolygonForEdit: '选择要编辑的多边形',
+    selectPolygonForSlice: '选择要切片的多边形',
+    selectPolygonForAddPoints: '选择要添加点的多边形',
+    clickToAddPoint: '点击添加点',
+    clickToCompletePolygon: '点击第一个点以完成多边形',
+    clickToAddFirstSlicePoint: '点击添加第一个切片点',
+    clickToAddSecondSlicePoint: '点击添加第二个切片点',
+    polygonCreationMode: '多边形创建模式',
+    polygonEditMode: '多边形编辑模式',
+    polygonSliceMode: '多边形切片模式',
+    polygonAddPointsMode: '添加点模式',
+    viewMode: '查看模式',
+    totalPolygons: '总多边形数',
+    totalVertices: '总顶点数',
+    vertices: '顶点',
+    zoom: '缩放',
+    mode: '模式',
+    selected: '已选择',
+    none: '无',
+    polygons: '多边形',
+    imageNotFound: '未找到图片',
+    returnToProject: '返回项目',
+    backToProject: '返回项目',
+    previousImage: '上一张图片',
+    nextImage: '下一张图片',
+    toggleShortcuts: '切换快捷键',
+    modes: {
+      view: '查看模式',
+      edit: '编辑模式',
+      create: '创建模式',
+      slice: '切片模式',
+      addPoints: '添加点模式',
+      deletePolygon: '删除多边形模式',
+      createPolygon: '创建多边形模式',
+      editVertices: '编辑顶点模式',
+      editMode: '编辑模式',
+      slicingMode: '切片模式',
+      pointAddingMode: '点添加模式',
+    },
+    status: {
+      processing: '处理中',
+      queued: '排队中',
+      completed: '已完成',
+      failed: '失败',
+      pending: '待处理',
+      withoutSegmentation: '无分割',
+    },
+    autoSave: {
+      enabled: '自动保存：已启用',
+      disabled: '自动保存：已禁用',
+      idle: '自动保存：空闲',
+      pending: '待处理...',
+      saving: '正在保存...',
+      success: '已保存',
+      error: '错误',
+    },
+    loading: '正在加载分割...',
+    polygon: '多边形',
+    unsavedChanges: '未保存的更改',
+    noData: '没有可用的分割数据',
+    noPolygons: '未找到多边形',
+    regions: '分割',
+    position: '位置',
+    polygonDeleted: '多边形删除成功',
+    saveSuccess: '分割保存成功',
+    resegmentSuccess: '重新分割启动成功',
+    resegmentComplete: '重新分割完成成功',
+    resegmentError: '重新分割图片失败',
+    resegmentButton: '重新分割',
+    completedSegmentation: '已完成',
+    resegmentButtonTooltip: '使用神经网络重新分割',
+    processingImage: '正在处理图片...',
+    helpTips: {
+      title: '提示：',
+      edit: {
+        createPoint: '点击创建新点',
+        shiftPoints: '按住 Shift 键自动创建一系列点',
+        closePolygon: '点击第一个点关闭多边形',
+      },
+      slice: {
+        start: '点击开始切片',
+        finish: '再次点击完成切片',
+        cancel: '按 Esc 取消切片',
+      },
+      addPoint: {
+        hover: '悬停在多边形线上',
+        click: '点击将点添加到选定的多边形',
+        exit: '按 Esc 退出添加模式',
+      },
+      view: {
+        pan: '平移：点击并拖动',
+        selectPolygon: '选择：点击多边形',
+        zoom: '缩放：鼠标滚轮',
+      },
+    },
+    imageNotFoundDescription: '无法找到请求的图片',
+    invalidImageDimensions: '无效的图片尺寸',
+    noDataToSave: '没有要保存的更改',
+    polygonDuplicated: '多边形已复制',
+    polygonNotFound: '未找到多边形',
+    polygonSimplified: '多边形已简化',
+    polygonSimplifyFailed: '简化多边形失败',
+    polygonSliced: '多边形切片成功',
+    resegment: {
+      error: {
+        exception: '重新分割错误：{{error}}',
+        failed: '重新分割失败',
+        missingData: '重新分割缺少必需数据',
+      },
+      success: '重新分割完成成功',
+    },
+    resegmentMultipleError: '重新分割多张图片时出错',
+    resegmentMultipleSuccess: '多张图片重新分割成功',
+    resegmenting: '正在重新分割...',
+    resegmentingMultiple: '正在重新分割多张图片...',
+    saveError: '保存分割时出错',
+    segmentationLoading: '正在加载分割...',
+    segmentationPolygon: '分割多边形',
+    selectPolygonFirst: '请先选择一个多边形',
+    sliceFailed: '切片多边形失败',
+    undoRestored: '操作已撤销',
+    undoWhileDraggingError: '拖动时无法撤销',
+    vertexDeleteFailed: '删除顶点失败',
+    vertexDeleted: '顶点已删除',
+    vertexDuplicateFailed: '复制顶点失败',
+    vertexDuplicated: '顶点已复制',
+  },
+  // Errors section
+  errors: {
+    somethingWentWrong: '出现了问题',
+    componentError: '此组件发生错误',
+    errorDetails: '错误详情',
+    tryAgain: '重试',
+    reloadPage: '重新加载页面',
+    goBack: '返回',
+    notFound: '页面未找到',
+    pageNotFoundMessage: '您请求的页面无法找到',
+    returnToHome: '返回主页',
+    unauthorized: '未授权访问',
+    forbidden: '访问被禁止',
+    serverError: '服务器错误',
+    networkError: '网络错误',
+    timeoutError: '请求超时',
+    validationError: '验证错误',
+    unknownError: '未知错误',
+    goHome: '前往主页',
+    fetchSegmentationFailed: '获取分割失败',
+    fetchImageFailed: '获取图片失败',
+    saveSegmentationFailed: '保存分割失败',
+    missingPermissions: '权限不足',
+    invalidInput: '无效输入',
+    resourceNotFound: '资源未找到',
+  },
+  // Project section
+  project: {
+    detail: {
+      noImagesSelected: '未选择图片',
+      triggeringResegmentation: '正在触发 {{count}} 张图片的重新分割...',
+      deleteConfirmation: '您确定要删除 {{count}} 张图片吗？此操作无法撤消。',
+      deletingImages: '正在删除 {{count}} 张图片...',
+      deleteSuccess: '成功删除 {{count}} 张图片',
+      deleteFailed: '删除 {{count}} 张图片失败',
+      preparingExport: '正在准备导出 {{count}} 张图片...',
+    },
+    segmentation: {
+      processingInBatches: '正在以 {{batches}} 批次开始 {{count}} 张图片的分割...',
+      batchQueued: '批次 {{current}}/{{total}} 成功排队',
+      batchQueuedFallback: '批次 {{current}}/{{total}} 成功排队（备用端点）',
+      batchError: '处理批次 {{current}}/{{total}} 时出错',
+      partialSuccess: '分割：{{success}} 张图片成功排队，{{failed}} 张失败',
+      allSuccess: '分割：所有 {{count}} 张图片成功排队',
+      allFailed: '分割：所有 {{count}} 张图片失败',
+      startedImages: '已开始 {{count}} 张图片的分割',
+      queuedLocallyWarning: '{{count}} 张图片的分割已本地排队。服务器连接失败。',
+    },
+    loading: '正在加载项目...',
+    notFound: '项目未找到',
+    error: '加载项目时出错',
+    empty: '此项目为空',
+    noImagesText: '在此项目中未找到图片',
+    addImages: '添加图片以开始',
+    noImages: {
+      title: '还没有图片',
+      description: '该项目还没有任何图片。上传图片以开始使用。',
+      uploadButton: '上传图片',
+    },
+    deleteProject: '删除项目',
+    deleteConfirmation: '您确定要删除项目 \'{{projectName}}\' 吗？此操作无法撤消。',
+    resegmentImage: '重新分割图片',
+    deleteImage: '删除图片',
+  },
+  // Projects page section
+  projectsPage: {
+    title: '项目',
+    description: '管理研究项目',
+    createNew: '创建新项目',
+    createProject: '创建项目',
+    createProjectDesc: '开始新的研究项目',
+    projectName: '项目名称',
+    projectDescription: '项目描述',
+    projectNamePlaceholder: '输入项目名称',
+    projectDescriptionPlaceholder: '输入项目描述',
+    projectCreated: '项目创建成功',
+    projectCreationFailed: '项目创建失败',
+    projectDeleted: '项目删除成功',
+    projectDeletionFailed: '项目删除失败',
+    confirmDelete: '您确定要删除这个项目吗？',
+    confirmDeleteDescription: '此操作无法撤消。与此项目相关的所有数据将被永久删除。',
+    deleteProject: '删除项目',
+    editProject: '编辑项目',
+    viewProject: '查看项目',
+    projectUpdated: '项目更新成功',
+    projectUpdateFailed: '项目更新失败',
+    noProjects: '未找到项目',
+    createFirstProject: '创建您的第一个项目以开始',
+    searchProjects: '搜索项目...',
+    filterProjects: '筛选项目',
+    sortProjects: '排序项目',
+    projectNameRequired: '项目名称是必需的',
+    loginRequired: '您必须登录才能创建项目',
+    createdAt: '创建于',
+    updatedAt: '最后更新',
+    imageCount: '图片',
+    status: '状态',
+    actions: '操作',
+    loading: '正在加载项目...',
+    error: '加载项目时出错',
+    retry: '重试',
+    copySegmentations: '复制分割结果',
+    resetImageStatus: '重置图片处理状态',
+    newProjectTitle: '新项目标题',
+    itemsProcessed: '已处理项目',
+    items: '项目',
+    unknownProject: '未知项目',
+    activeTasks: '活跃',
+    allTasks: '全部',
+    deleteProjectDescription: '此操作将永久删除项目和所有相关数据。',
+    deleteWarning: '此操作无法撤消。与此项目相关的所有数据将被永久删除。',
+    untitledProject: '无标题项目',
+    typeToConfirm: '输入 "delete" 以确认',
+    deleteConfirm: '您确定要删除这个项目吗？',
+    confirmDeleteError: '请准确输入项目名称以确认',
+    exportProject: '导出项目',
+    archived: '已归档',
+    completed: '已完成',
+    draft: '草稿',
+    active: '活跃',
+    createDate: '创建日期',
+    lastModified: '最后修改',
+    projectDescPlaceholder: '输入项目描述',
+    creatingProject: '正在创建项目...',
+    noImages: {
+      title: '还没有图片',
+      description: '此项目还没有任何图片。上传图片以开始分割。',
+      uploadButton: '上传图片',
+    },
+    searching: '正在搜索项目...',
+    noResults: '未找到匹配的项目',
+    deleting: '正在删除...',
+  },
+  // Common section
+  common: {
+    appName: 'Spheroid Segmentation',
+    appNameShort: 'SpheroSeg',
+    loading: '正在加载...',
+    loadingAccount: '正在加载您的账户...',
+    loadingApplication: '正在加载应用程序...',
+    selectAll: '全选',
+    deselectAll: '取消全选',
+    save: '保存',
+    cancel: '取消',
+    delete: '删除',
+    edit: '编辑',
+    create: '创建',
+    search: '搜索',
+    error: '错误',
+    success: '成功',
+    reset: '重置',
+    clear: '清除',
+    close: '关闭',
+    back: '返回',
+    signIn: '登录',
+    signUp: '注册',
+    signOut: '登出',
+    signingIn: '正在登录...',
+    settings: '设置',
+    profile: '个人资料',
+    dashboard: '仪表板',
+    project: '项目',
+    projects: '项目',
+    newProject: '新项目',
+    upload: '上传',
+    download: '下载',
+    removeAll: '全部删除',
+    uploadImages: '上传图片',
+    recentAnalyses: '最近的分析',
+    noProjects: '未找到项目',
+    noImages: '未找到图片',
+    createYourFirst: '创建您的第一个项目以开始使用',
+    tryAgain: '重试',
+    email: '电子邮件',
+    password: '密码',
+    confirmPassword: '确认密码',
+    firstName: '名字',
+    lastName: '姓氏',
+    username: '用户名',
+    name: '名称',
+    description: '描述',
+    date: '日期',
+    status: '状态',
+    image: '图片',
+    projectName: '项目名称',
+    projectDescription: '项目描述',
+    language: '语言',
+    theme: '主题',
+    light: '浅色',
+    dark: '深色',
+    system: '系统',
+    welcome: '欢迎使用球体分割平台',
+    account: '账户',
+    passwordConfirm: '确认密码',
+    manageAccount: '管理账户',
+    changePassword: '更改密码',
+    deleteAccount: '删除账户',
+    requestAccess: '请求访问',
+    accessRequest: '访问请求',
+    createAccount: '创建账户',
+    signInToAccount: '登录账户',
+    termsOfService: '服务条款',
+    privacyPolicy: '隐私政策',
+    termsOfServiceLink: '服务条款',
+    privacyPolicyLink: '隐私政策',
+    optional: '可选',
+    saveChanges: '保存更改',
+    saving: '正在保存',
+    notSpecified: '未指定',
+    enable: '启用',
+    disable: '禁用',
+    backToHome: '返回主页',
+    and: '和',
+    lastChange: '最后更改',
+    sort: '排序',
+    emailPlaceholder: '输入您的电子邮件',
+    passwordPlaceholder: '输入您的密码',
+    export: '导出',
+    selectImages: '选择图片',
+    noImagesDescription: '上传图片以开始您的项目',
+    yes: '是',
+    no: '否',
+    images: '图片',
+    files: '文件',
+    validationFailed: '验证失败',
+    cropAvatar: '裁剪头像',
+    profileTitle: '个人资料',
+    profileDescription: '更新其他用户可见的个人资料信息',
+    profileUsername: '用户名',
+    profileUsernamePlaceholder: '输入您的用户名',
+    profileFullName: '全名',
+    profileFullNamePlaceholder: '输入您的全名',
+    profileTitlePlaceholder: '例如：研究员、教授',
+    profileOrganization: '组织',
+    profileOrganizationPlaceholder: '输入您的组织或机构',
+    profileBio: '简介',
+    profileBioPlaceholder: '写一份关于您自己的简短介绍',
+    profileBioDescription: '简要描述您的研究兴趣和专业知识',
+    profileLocation: '位置',
+    profileLocationPlaceholder: '例如：中国北京',
+    profileSaveButton: '保存个人资料',
+    actions: '操作',
+    view: '查看',
+    share: '分享',
+    projectNamePlaceholder: '输入项目名称',
+    projectDescPlaceholder: '输入项目描述',
+    creatingProject: '正在创建项目...',
+    createSuccess: '项目创建成功',
+    unauthorized: '您无权执行此操作',
+    forbidden: '访问被禁止',
+    maxFileSize: '最大文件大小：{{size}}MB',
+    accepted: '已接受',
+    processing: '处理中...',
+    uploading: '正在上传...',
+    uploadComplete: '上传完成',
+    uploadFailed: '上传失败',
+    deletePolygon: '删除多边形',
+    pleaseLogin: '请登录以继续',
+    retry: '重试',
+    segmentation: '分割',
+    copiedToClipboard: '已复制到剪贴板！',
+    failedToCopy: '复制到剪贴板失败',
+    confirm: '确认',
+    editor: {
+      error: '错误',
+      success: '成功',
+      edit: '编辑',
+      create: '创建',
+    },
+  },
+  // Auth section
+  auth: {
+    signIn: '登录',
+    signUp: '注册',
+    signOut: '登出',
+    signingIn: '正在登录...',
+    email: '电子邮件',
+    password: '密码',
+    forgotPassword: '忘记密码？',
+    resetPassword: '重置密码',
+    dontHaveAccount: '没有账户？',
+    alreadyHaveAccount: '已有账户？',
+    createAccount: '创建账户',
+    signInWithGoogle: '使用 Google 登录',
+    signInWithGithub: '使用 GitHub 登录',
+    or: '或',
+    signInTitle: '登录',
+    signInDescription: '登录您的账户',
+    noAccount: '没有账户？',
+    emailAddressLabel: '电子邮件地址',
+    passwordLabel: '密码',
+    currentPasswordLabel: '当前密码',
+    newPasswordLabel: '新密码',
+    confirmPasswordLabel: '确认密码',
+    rememberMe: '记住我',
+    emailRequired: '电子邮件是必需的',
+    passwordRequired: '密码是必需的',
+    alreadyLoggedInTitle: '您已经登录',
+    alreadyLoggedInMessage: '您已经登录到您的账户',
+    goToDashboardLink: '前往仪表板',
+    invalidEmail: '无效的电子邮件地址',
+    passwordTooShort: '密码必须至少 6 个字符',
+    passwordsDontMatch: '密码不匹配',
+    invalidCredentials: '无效的电子邮件或密码',
+    accountCreated: '账户创建成功',
+    resetLinkSent: '密码重置链接已发送到您的电子邮件',
+    resetSuccess: '密码重置成功',
+    signInSuccess: '登录成功',
+    signOutSuccess: '登出成功',
+    sessionExpired: '您的会话已过期。请重新登录。',
+    unauthorized: '您无权访问此资源',
+    verifyEmail: '请验证您的电子邮件地址',
+    verificationLinkSent: '验证链接已发送到您的电子邮件',
+    verificationSuccess: '电子邮件验证成功',
+    resendVerification: '重新发送验证电子邮件',
+    requestAccess: '请求访问',
+    termsAndPrivacy: '注册即表示您同意我们的服务条款和隐私政策。',
+    forgotPasswordLink: '忘记密码？',
+    passwordChanged: '密码更改成功',
+    currentPasswordIncorrect: '当前密码不正确',
+    registerTitle: '创建账户',
+    registerDescription: '注册新账户',
+    registerSuccess: '注册成功！您现在可以登录了。',
+    emailPlaceholder: '输入您的电子邮件',
+    passwordPlaceholder: '输入您的密码',
+    firstNamePlaceholder: '例如：张',
+    lastNamePlaceholder: '例如：三',
+    passwordConfirmPlaceholder: '确认您的密码',
+    signUpTitle: '创建账户',
+    signUpDescription: '注册新账户',
+    enterInfoCreateAccount: '输入您的信息以创建账户',
+    creatingAccount: '正在创建账户...',
+    emailAlreadyExists: '此电子邮件已经注册。请使用其他电子邮件或登录。',
+    emailHasPendingRequest: '此电子邮件已有待处理的访问请求。请等待批准。',
+    signUpSuccess: '注册成功！',
+    signUpSuccessEmail: '注册成功！请检查您的电子邮件或等待管理员批准。',
+    signUpFailed: '注册失败。请稍后再试。',
+    alreadyHaveAccess: '已有访问权限？',
+    forgotPasswordTitle: '重置您的密码',
+    checkYourEmail: '检查您的电子邮件以获取新密码',
+    enterEmailForReset: '输入您的电子邮件地址，我们将向您发送新密码',
+    passwordResetLinkSent: '如果此电子邮件存在账户，新密码已发送',
+    passwordResetFailed: '发送新密码失败。请重试。',
+    enterEmail: '请输入您的电子邮件地址',
+    sendingResetLink: '正在发送新密码...',
+    sendResetLink: '发送新密码',
+    backToSignIn: '返回登录',
+    accountLocked: '您的账户已被锁定。请联系支持。',
+    fillAllFields: '请填写所有必填字段',
+    serverError: '服务器错误。请稍后再试。',
+    signInError: '登录错误',
+    signInFailed: '登录失败。请检查您的凭据。',
+  },
+  // Request access section
+  requestAccess: {
+    and: '和',
+    title: '申请访问球体分割平台',
+    description: '填写以下表格以申请访问我们的平台。我们将审核您的请求并尽快与您联系。',
+    emailLabel: '您的电子邮件地址',
+    nameLabel: '您的姓名',
+    institutionLabel: '机构/公司',
+    reasonLabel: '访问原因',
+    submitRequest: '提交请求',
+    requestReceived: '请求已收到',
+    thankYou: '感谢您的关注',
+    weWillContact: '我们将审核您的请求并尽快与您联系',
+    submitSuccess: '请求提交成功！',
+    emailPlaceholder: '输入您的电子邮件地址',
+    namePlaceholder: '输入您的全名',
+    institutionPlaceholder: '输入您的机构或公司名称',
+    reasonPlaceholder: '请描述您计划如何使用该平台',
+    fillRequired: '请填写所有必填字段',
+    submittingRequest: '正在提交请求...',
+    submitError: '提交请求失败',
+    alreadyPending: '此电子邮件的访问请求已在待处理中',
+    agreeToTerms: '提交此请求即表示您同意我们的',
+  },
+  // Request access form section
+  requestAccessForm: {
+    title: '申请访问球体分割平台',
+    description: '填写以下表格以申请访问我们的平台。我们将审核您的请求并尽快与您联系。',
+    emailLabel: '您的电子邮件地址',
+    nameLabel: '您的姓名',
+    institutionLabel: '机构/公司',
+    reasonLabel: '访问原因',
+    submitButton: '提交请求',
+    signInPrompt: '已有账户？',
+    signInLink: '登录',
+    thankYouTitle: '感谢您的关注',
+    weWillContact: '我们将审核您的请求并尽快与您联系',
+    agreeToTerms: '提交此请求即表示您同意我们的',
+    and: '和',
+  },
+  // Documentation section
+  documentation: {
+    tag: '用户指南',
+    title: 'SpheroSeg 文档',
+    subtitle: '学习如何有效使用球体分割平台。',
+    sidebar: {
+      title: '章节',
+      introduction: '简介',
+      gettingStarted: '入门',
+      uploadingImages: '上传图片',
+      segmentationProcess: '分割过程',
+      apiReference: 'API 参考',
+    },
+    introduction: {
+      title: '简介',
+      imageAlt: '球体分析工作流程示意图',
+      whatIs: {
+        title: '什么是 SpheroSeg？',
+        paragraph1: 'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的尖端平台。我们的工具为研究人员提供精确的检测和分析功能。',
+        paragraph2: '它利用基于深度学习的先进 AI 算法，以高精度和一致性自动识别和分割图像中的球体。',
+        paragraph3: '本文档将指导您了解使用平台的各个方面，从入门到高级功能和 API 集成。',
+      },
+    },
+    gettingStarted: {
+      title: '入门',
+      accountCreation: {
+        title: '账户创建',
+        paragraph1: '要使用 SpheroSeg，您需要创建一个账户。这使我们能够安全地存储您的项目和图片。',
+        step1Prefix: '访问',
+        step1Link: '注册页面',
+        step2: '输入您的机构电子邮件地址并创建密码',
+        step3: '使用您的姓名和机构完成您的个人资料',
+        step4: '通过发送到您收件箱的链接验证您的电子邮件地址',
+      },
+      creatingProject: {
+        title: '创建您的第一个项目',
+        paragraph1: '项目帮助您组织工作。每个项目可以包含多个图片及其相应的分割结果。',
+        step1: '在您的仪表板上，点击\'新项目\'',
+        step2: '输入项目名称和描述',
+        step3: '选择项目类型（默认：球体分析）',
+        step4: '点击\'创建项目\'继续',
+      },
+    },
+    uploadingImages: {
+      title: '上传图片',
+      paragraph1: 'SpheroSeg 支持显微镜中常用的各种图片格式，包括 TIFF、PNG 和 JPEG。',
+      methods: {
+        title: '上传方法',
+        paragraph1: '有几种上传图片的方法：',
+        step1: '将文件直接拖放到上传区域',
+        step2: '点击上传区域从计算机浏览和选择文件',
+        step3: '一次批量上传多个图片',
+      },
+      note: {
+        prefix: '注意：',
+        text: '为获得最佳结果，请确保您的显微镜图片在球体和背景之间具有良好的对比度。',
+      },
+    },
+    segmentationProcess: {
+      title: '分割过程',
+      paragraph1: '分割过程识别图片中球体的边界，允许对其形态进行精确分析。',
+      automatic: {
+        title: '自动分割',
+        paragraph1: '我们的 AI 驱动的自动分割可以高精度地检测球体边界：',
+        step1: '从您的项目中选择一张图片',
+        step2: '点击\'自动分割\'以启动过程',
+        step3: '系统将处理图片并显示检测到的边界',
+        step4: '在分割编辑器中查看结果',
+      },
+      manual: {
+        title: '手动调整',
+        paragraph1: '有时自动分割可能需要优化。我们的编辑器提供以下工具：',
+        step1: '沿边界添加或删除顶点',
+        step2: '调整顶点位置以获得更准确的边界',
+        step3: '分割或合并区域',
+        step4: '在球体内添加或删除孔',
+      },
+    },
+    apiReference: {
+      title: 'API 参考',
+      paragraph1: 'SpheroSeg 提供 RESTful API 以编程方式访问平台功能。这非常适合与您现有的工作流程或批处理集成。',
+      endpoint1Desc: '检索您的所有项目列表',
+      endpoint2Desc: '检索特定项目中的所有图片',
+      endpoint3Desc: '为特定图片启动分割',
+      contactPrefix: '有关完整的 API 文档和身份验证详细信息，请联系我们：',
+    },
+    backToHome: '返回主页',
+    backToTop: '返回顶部',
+  },
+  // Hero section
+  hero: {
+    platformTag: '先进的球体分割平台',
+    title: '用于生物医学研究的 AI 驱动细胞分析',
+    subtitle: '使用我们尖端的球体分割平台提升您的显微细胞图像分析。专为寻求精确和效率的研究人员设计。',
+    getStartedButton: '开始使用',
+    learnMoreButton: '了解更多',
+    imageAlt1: '球体显微镜图像',
+    imageAlt2: '带分析的球体显微镜图像',
+    welcomeTitle: '欢迎来到 SpheroSeg',
+    welcomeSubtitle: '用于细胞球体分割和分析的先进平台',
+    welcomeDescription: '我们的平台将尖端的人工智能算法与直观的界面相结合，用于显微图像中细胞球体的精确检测和分析。',
+    featuresTitle: '强大的功能',
+    featuresSubtitle: '用于生物医学研究的先进工具',
+    featureAiSegmentation: '先进分割',
+    featureAiSegmentationDesc: '精确的球体检测与边界分析，实现准确的细胞测量。',
+    featureEditing: 'AI 驱动分析',
+    featureEditingDesc: '利用深度学习算法进行自动检测和细胞分类。',
+    featureAnalytics: '轻松上传',
+    featureAnalyticsDesc: '拖放您的显微镜图像以立即处理和分析。',
+    featureExport: '统计洞察',
+    featureExportDesc: '全面的指标和可视化以提取有意义的数据模式。',
+    ctaTitle: '准备好改变您的细胞分析工作流程了吗？',
+    ctaSubtitle: '加入已经使用我们平台加速发现的领先研究人员。',
+    ctaButton: '创建账户',
+  },
+  // Navbar section
+  navbar: {
+    home: '主页',
+    features: '功能',
+    documentation: '文档',
+    terms: '条款',
+    privacy: '隐私',
+    login: '登录',
+    requestAccess: '请求访问',
+  },
+  // Navigation section
+  navigation: {
+    home: '主页',
+    projects: '项目',
+    settings: '设置',
+    profile: '个人资料',
+    dashboard: '仪表板',
+    back: '返回',
+  },
+  // Dashboard section
+  dashboard: {
+    title: '仪表板',
+    manageProjects: '管理和组织您的研究项目',
+    viewMode: {
+      grid: '网格视图',
+      list: '列表视图',
+    },
+    sort: {
+      name: '名称',
+      updatedAt: '最后更新',
+      segmentationStatus: '状态',
+    },
+    search: '搜索项目...',
+    searchImagesPlaceholder: '搜索图片...',
+    noProjects: '未找到项目',
+    noImagesDescription: '没有符合您搜索条件的图片',
+    createFirst: '创建您的第一个项目以开始',
+    createNew: '创建新项目',
+    lastChange: '最后更改',
+    statsOverview: '统计概览',
+    totalProjects: '项目总数',
+    activeProjects: '活跃项目',
+    totalImages: '图片总数',
+    totalAnalyses: '分析总数',
+    lastUpdated: '最后更新',
+    noProjectsDescription: '您还没有创建任何项目。创建您的第一个项目以开始。',
+    searchProjectsPlaceholder: '按名称搜索项目...',
+    sortBy: '排序方式',
+    name: '名称',
+    completed: '已完成',
+    processing: '处理中',
+    pending: '待处理',
+    failed: '失败',
+    selectImagesButton: '选择图片',
+  },
+  // Projects section
+  projects: {
+    title: '项目',
+    description: '管理您的研究项目',
+    createNew: '创建新项目',
+    createProject: '创建项目',
+    createProjectDesc: '创建一个新项目以开始处理图片和分割。',
+    projectName: '项目名称',
+    projectDescription: '项目描述',
+    projectNamePlaceholder: '输入项目名称',
+    projectDescriptionPlaceholder: '输入项目描述',
+    projectCreated: '项目创建成功',
+    projectCreationFailed: '创建项目失败',
+    projectDeleted: '项目删除成功',
+    deleteSuccess: '项目删除成功',
+    deleteFailed: '删除项目失败',
+    deleting: '正在删除项目...',
+    notFound: '项目未找到。它可能已被删除。',
+    missingId: '无法删除项目：缺少项目标识符',
+    projectDeletionFailed: '删除项目失败',
+    confirmDelete: '您确定要删除这个项目吗？',
+    confirmDeleteDescription: '此操作无法撤消。与此项目相关的所有数据将被永久删除。',
+    delete: '删除',
+    deleteProject: '删除项目',
+    deleteProjectDescription: '此操作无法撤消。这将永久删除项目和所有相关数据。',
+    deleteWarning: '您即将删除以下项目：',
+    typeToConfirm: '输入项目名称以确认',
+    confirmDeleteError: '请准确输入项目名称以确认',
+    editProject: '编辑项目',
+    viewProject: '查看项目',
+    projectUpdated: '项目更新成功',
+    projectUpdateFailed: '更新项目失败',
+    noProjects: '未找到项目',
+    createFirstProject: '创建您的第一个项目以开始',
+    searchProjects: '搜索项目...',
+    filterProjects: '筛选项目',
+    sortProjects: '排序项目',
+    projectNameRequired: '项目名称是必需的',
+    loginRequired: '您必须登录才能创建项目',
+    createdAt: '创建于',
+    updatedAt: '最后更新',
+    imageCount: '图片',
+    status: '状态',
+    actions: '操作',
+    loading: '正在加载项目...',
+    error: '加载项目时出错',
+    retry: '重试',
+    copySegmentations: '复制分割结果',
+    resetImageStatus: '重置图片处理状态',
+    newProjectTitle: '新项目标题',
+    itemsProcessed: '已处理项目',
+    items: '项目',
+    unknownProject: '未知项目',
+    activeTasks: '活跃',
+    allTasks: '全部',
+    untitledProject: '无标题项目',
+    exportProject: '导出项目',
+    share: '分享',
+    export: '导出',
+    archived: '已归档',
+    completed: '已完成',
+    draft: '草稿',
+    active: '活跃',
+  },
+  // Project toolbar section
+  projectToolbar: {
+    selectImages: '选择图片',
+    cancelSelection: '取消选择',
+    export: '导出',
+    uploadImages: '上传图片',
+  },
+  // Stats overview section
+  statsOverview: {
+    title: '仪表板概览',
+    totalProjects: '项目总数',
+    totalImages: '图片总数',
+    completedSegmentations: '完成的分割',
+    storageUsed: '已用存储',
+    recentActivity: '最近活动',
+    moreStats: '查看详细统计',
+    completion: '完成率',
+    vsLastMonth: '与上月相比',
+    thisMonth: '本月',
+    lastMonth: '上月',
+    projectsCreated: '创建的项目',
+    imagesUploaded: '上传的图片',
+    fetchError: '加载统计信息失败',
+    storageLimit: '存储限制',
+    activityTitle: '最近活动',
+    noActivity: '没有最近的活动',
+    hide: '隐藏',
+    activityTypes: {
+      project_created: '创建项目',
+      image_uploaded: '上传图片',
+      segmentation_completed: '完成分割',
+    },
+  },
+  // Footer section
+  footer: {
+    developerName: 'Bc. Michal Průšek',
+    facultyName: '布拉格捷克理工大学核科学与物理工程学院',
+    description: '先进的球体分割和分析平台',
+    contactLabel: 'spheroseg@utia.cas.cz',
+    developerLabel: 'Bc. Michal Průšek',
+    facultyLabel: '布拉格捷克理工大学核科学与物理工程学院',
+    resourcesTitle: '资源',
+    documentationLink: '文档',
+    featuresLink: '功能',
+    tutorialsLink: '教程',
+    researchLink: '研究',
+    legalTitle: '法律信息',
+    termsLink: '服务条款',
+    privacyLink: '隐私政策',
+    contactUsLink: '联系我们',
+    informationTitle: '信息',
+    contactTitle: '联系',
+    copyrightNotice: 'SpheroSeg. 版权所有。',
+    madeWith: '使用',
+    by: '制作',
+    requestAccessLink: '请求访问',
+    githubRepository: 'GitHub 仓库',
+    contactEmail: '联系邮箱',
+  },
+  // Features section
+  features: {
+    tag: '功能',
+    title: '探索我们的平台功能',
+    subtitle: '用于生物医学研究的先进工具',
+    cards: {
+      segmentation: {
+        title: '先进分割',
+        description: '精确的球体检测与边界分析，实现准确的细胞测量',
+      },
+      aiAnalysis: {
+        title: 'AI 驱动分析',
+        description: '利用深度学习算法进行自动细胞检测和分类',
+      },
+      uploads: {
+        title: '轻松上传',
+        description: '拖放您的显微镜图像以立即处理和分析',
+      },
+      insights: {
+        title: '统计洞察',
+        description: '全面的指标和可视化以提取有意义的数据模式',
+      },
+      collaboration: {
+        title: '团队协作',
+        description: '与同事分享项目和结果，实现更高效的研究',
+      },
+      pipeline: {
+        title: '自动化流程',
+        description: '使用我们的批处理工具简化您的工作流程',
+      },
+    },
+  },
+  // Index section
+  index: {
+    about: {
+      tag: '关于平台',
+      title: '什么是 SpheroSeg？',
+      imageAlt: '球体分割示例',
+      paragraph1: 'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的先进平台。',
+      paragraph2: '我们的工具将尖端的人工智能算法与直观的界面相结合，为研究人员提供精确的球体边界检测和分析功能。',
+      paragraph3: '该平台由布拉格捷克理工大学核科学与物理工程学院的 Michal Průšek 在 UTIA CAS 的 Adam Novozámský 的监督下开发，并与布拉格化工大学生物化学与微生物学系的研究人员合作。',
+      contactPrefix: 'spheroseg@utia.cas.cz',
+    },
+    cta: {
+      title: '准备好改变您的研究了吗？',
+      subtitle: '立即开始使用 SpheroSeg，发现细胞球体分析的新可能性',
+      boxTitle: '创建免费账户',
+      boxText: '获得平台所有功能的访问权限，开始分析您的显微镜图像',
+      button: '创建账户',
+    },
+  },
+  // Tools section
+  tools: {
+    zoomIn: '放大',
+    zoomOut: '缩小',
+    resetView: '重置视图',
+    createPolygon: '创建新多边形',
+    exitPolygonCreation: '退出多边形创建模式',
+    splitPolygon: '将多边形分成两部分',
+    exitSlicingMode: '退出切片模式',
+    addPoints: '向多边形添加点',
+    exitPointAddingMode: '退出添加点模式',
+    undo: '撤销',
+    redo: '重做',
+    save: '保存',
+    resegment: '重新分割',
+    title: '工具',
+  },
+  // Settings section
+  settings: {
+    title: '设置',
+    pageTitle: '设置',
+    profile: '个人资料',
+    account: '账户',
+    appearance: '外观',
+    selectLanguage: '选择语言',
+    profileSettings: '个人资料设置',
+    accountSettings: '账户设置',
+    securitySettings: '安全设置',
+    preferenceSettings: '偏好设置',
+    selectTheme: '选择主题',
+    updateProfile: '更新个人资料',
+    changePassword: '更改密码',
+    deleteAccount: '删除账户',
+    savedChanges: '更改保存成功',
+    saveChanges: '保存更改',
+    profileUpdated: '个人资料更新成功',
+    languageSettings: '语言设置',
+    themeSettings: '主题设置',
+    privacySettings: '隐私设置',
+    exportData: '导出数据',
+    importData: '导入数据',
+    uploadAvatar: '上传头像',
+    removeAvatar: '删除头像',
+    twoFactorAuth: '双因素认证',
+    emailNotifications: '电子邮件通知',
+    pushNotifications: '推送通知',
+    weeklyDigest: '每周摘要',
+    monthlyReport: '每月报告',
+    displaySettings: '显示设置',
+    accessibilitySettings: '辅助功能设置',
+    advancedSettings: '高级设置',
+    useBrowserLanguage: '使用浏览器语言',
+    language: '语言',
+    theme: '主题',
+    light: '浅色',
+    dark: '深色',
+    system: '系统',
+    languageUpdated: '语言更新成功',
+    themeUpdated: '主题更新成功',
+    toggleTheme: '切换主题',
+    languageDescription: '选择您的首选语言',
+    themeDescription: '选择您的首选主题',
+    profileLoadError: '加载个人资料失败',
+    appearanceDescription: '自定义应用程序的外观',
+    personal: '个人信息',
+    fullName: '全名',
+    organization: '组织',
+    department: '部门',
+    publicProfile: '公开个人资料',
+    makeProfileVisible: '使我的个人资料对其他研究人员可见',
+    passwordSettings: '密码设置',
+    currentPassword: '当前密码',
+    newPassword: '新密码',
+    confirmNewPassword: '确认新密码',
+    dangerZone: '危险区域',
+    deleteAccountWarning: '一旦删除您的账户，就无法恢复。您的所有数据将被永久删除。',
+    savingChanges: '正在保存更改...',
+    savePreferences: '保存偏好',
+    usernameTaken: '此用户名已被占用',
+    deleteAccountDescription: '此操作不可逆。您的所有数据将被永久删除。',
+    confirmUsername: '确认您的电子邮件',
+    password: '密码',
+    enterPassword: '输入您的密码',
+    passwordChangeError: '更改密码时出错',
+    passwordChangeSuccess: '密码更改成功',
+    passwordsDoNotMatch: '密码不匹配',
+    accountDeleteSuccess: '账户删除成功',
+    accountDeleteError: '删除账户时出错',
+    passwordChanged: '密码已更改',
+    changingPassword: '正在更改密码...',
+    confirmPasswordLabel: '确认密码',
+    changePasswordDescription: '更改您的密码以保持账户安全',
+    dangerZoneDescription: '这些操作是不可逆的，将永久删除您的数据',
+    deletingAccount: '正在删除账户...',
+    deleteAccountError: '删除账户时出错',
+  },
+  // Accessibility section
+  accessibility: {
+    skipToContent: '跳转到主要内容',
+  },
+  // Profile section
+  profile: {
+    title: '标题',
+    about: '关于',
+    activity: '活动',
+    projects: '项目',
+    recentProjects: '最近的项目',
+    recentAnalyses: '最近的分析',
+    accountDetails: '账户详情',
+    accountType: '账户类型',
+    joinDate: '加入日期',
+    lastActive: '最后活跃',
+    projectsCreated: '创建的项目',
+    imagesUploaded: '上传的图片',
+    segmentationsCompleted: '完成的分割',
+    pageTitle: '用户个人资料',
+    editProfile: '编辑个人资料',
+    joined: '加入时间',
+    statistics: '统计',
+    images: '图片',
+    analyses: '分析',
+    storageUsed: '已用存储',
+    recentActivity: '最近活动',
+    noRecentActivity: '没有最近的活动',
+    fetchError: '加载个人资料数据失败',
+    aboutMe: '关于我',
+    noBio: '未提供简介',
+    avatarHelp: '点击相机图标上传头像',
+    avatarImageOnly: '请选择图片文件',
+    avatarTooLarge: '图片必须小于 5MB',
+    avatarUpdated: '头像已更新',
+    avatarUploadError: '上传头像失败',
+    avatarRemoved: '头像已删除',
+    avatarRemoveError: '删除头像失败',
+    cropAvatarDescription: '调整裁剪区域设置您的头像',
+    description: '更新您的个人信息和头像',
+    saveButton: '保存个人资料',
+    username: '用户名',
+    usernamePlaceholder: '输入您的用户名',
+    fullName: '全名',
+    fullNamePlaceholder: '输入您的全名',
+    titlePlaceholder: '例如：研究员、教授',
+    organization: '组织',
+    organizationPlaceholder: '输入您的组织或机构',
+    bio: '简介',
+    bioPlaceholder: '告诉我们关于您自己',
+    bioDescription: '您的个人资料上可见的简短自我介绍',
+    location: '位置',
+    locationPlaceholder: '例如：中国北京',
+    uploadAvatar: '上传头像',
+    removeAvatar: '删除头像',
+    cropAvatar: '裁剪头像',
+    activityDescription: '系统活动',
+    email: '电子邮件',
+    notProvided: '未提供',
+  },
+  // Shortcuts section
+  shortcuts: {
+    button: '快捷键',
+    editMode: '切换到编辑模式',
+    sliceMode: '切换到切片模式',
+    addPointMode: '切换到添加点模式',
+    holdShift: '按住 Shift 自动添加点（在编辑模式下）',
+    undo: '撤销',
+    redo: '重做',
+    deletePolygon: '删除选中的多边形',
+    cancel: '取消当前操作',
+    zoomIn: '放大',
+    zoomOut: '缩小',
+    resetView: '重置视图',
+    title: '键盘快捷键',
+    viewMode: '查看模式',
+    editVerticesMode: '编辑顶点模式',
+    addPointsMode: '添加点模式',
+    createPolygonMode: '创建多边形模式',
+    save: '保存',
+    description: '这些快捷键在分割编辑器中工作，使工作更快速、更舒适。',
+  },
+  // Image processor section
+  imageProcessor: {
+    segmentationStarted: '分割过程已开始...',
+    startSegmentationTooltip: '开始分割',
+    processingTooltip: '处理中...',
+    savingTooltip: '正在保存...',
+    completedTooltip: '分割已完成',
+    retryTooltip: '重试分割',
+  },
+  // Uploader section
+  uploader: {
+    dragDrop: '将图片拖放到此处或点击选择文件',
+    dropFiles: '将文件放在这里...',
+    segmentAfterUploadLabel: '上传后立即分割图片',
+    filesToUpload: '要上传的文件',
+    uploadBtn: '上传',
+    uploadError: '上传过程中发生错误。请重试。',
+    clickToUpload: '点击浏览文件',
+    selectProjectLabel: '选择项目',
+    selectProjectPlaceholder: '选择项目...',
+    noProjectsFound: '未找到项目。请先创建一个新项目。',
+    imageOnly: '（仅限图片文件）',
+    uploadingImages: '正在上传图片...',
+    uploadComplete: '上传完成',
+    uploadFailed: '上传失败',
+    processingImages: '正在处理图片...',
+    dragAndDropFiles: '将文件拖放到此处',
+    or: '或',
+    clickToSelect: '点击选择文件',
+  },
+  // Images section
+  images: {
+    uploadImages: '上传图片',
+    dragDrop: '将图片拖放到此处',
+    clickToSelect: '或点击选择文件',
+    acceptedFormats: '支持的格式：JPEG、PNG、TIFF、BMP（最大 10MB）',
+    uploadProgress: '上传进度',
+    uploadingTo: '上传到',
+    currentProject: '当前项目',
+    autoSegment: '上传后自动分割图片',
+    uploadCompleted: '上传完成',
+    uploadFailed: '上传失败',
+    imagesUploaded: '图片上传成功',
+    imagesFailed: '图片上传失败',
+    viewAnalyses: '查看分析',
+    noAnalysesYet: '还没有分析',
+    runAnalysis: '运行分析',
+    viewResults: '查看结果',
+    dropImagesHere: '将图片放在这里...',
+    selectProjectFirst: '请先选择一个项目',
+    projectRequired: '上传图片前必须选择一个项目',
+    imageOnly: '（仅限图片文件）',
+    dropFiles: '将文件放在这里...',
+    filesToUpload: '要上传的文件（{{count}}）',
+    uploadBtn: '上传 {{count}} 张图片',
+    uploadError: '上传过程中发生错误。请重试。',
+    noProjectsToUpload: '没有可用的项目。请先创建一个项目。',
+    notFound: '项目 \'{{projectName}}\' 未找到。它可能已被删除。',
+    errors: {
+      imageOrProjectNotFound: '图片或项目未找到。',
+      failedToDeleteImage: '删除图片失败',
+      imageOrProjectNotFoundForNavigation: '导航的图片或项目未找到，或缺少 UUID。',
+      imageNotFoundForClearingSegmentation: '清除分割的图片未找到或缺少 UUID。',
+      failedToClearSegmentation: '清除分割失败',
+    },
+    success: {
+      localImageDeleted: '本地图片成功删除',
+      imageDeleted: '图片成功删除',
+      segmentationCleared: '分割成功清除。',
+    },
+    info: {
+      clearingSegmentation: '正在清除图片 {{imageName}} 的分割...',
+      selectAtLeastOneImage: '请至少选择一张图片。',
+    },
+  },
+  // Export section
+  export: {
+    formatDescriptions: {
+      COCO: '用于对象检测的通用对象上下文（COCO）JSON 格式',
+      YOLO: '用于对象检测的 You Only Look Once（YOLO）文本格式',
+      MASK: '每个分割对象的二进制掩码图像',
+      POLYGONS: 'JSON 格式的多边形坐标',
+    },
+    exportCompleted: '导出完成',
+    exportFailed: '导出失败',
+    title: '导出分割数据',
+    spheroidMetrics: '球体指标',
+    visualization: '可视化',
+    cocoFormat: 'COCO 格式',
+    close: '关闭',
+    metricsExported: '指标导出成功',
+    options: {
+      includeMetadata: '包含元数据',
+      includeSegmentation: '包含分割',
+      selectExportFormat: '选择导出格式',
+      includeObjectMetrics: '包含对象指标',
+      selectMetricsFormat: '选择指标格式',
+      metricsFormatDescription: {
+        EXCEL: 'Excel 文件（.xlsx）',
+        CSV: 'CSV 文件（.csv）',
+      },
+      includeImages: '包含原始图片',
+      exportMetricsOnly: '仅导出指标',
+      metricsRequireSegmentation: '导出指标需要完成分割',
+    },
+    formats: {
+      COCO: 'COCO JSON',
+      YOLO: 'YOLO TXT',
+      MASK: '掩码（TIFF）',
+      POLYGONS: '多边形（JSON）',
+    },
+    metricsFormats: {
+      EXCEL: 'Excel（.xlsx）',
+      CSV: 'CSV（.csv）',
+    },
+    selectImagesForExport: '选择要导出的图片',
+    selectImagesToExport: '选择要导出的图片',
+    noImagesAvailable: '没有可用的图片',
+    backToProject: '返回项目',
+    exportImages: '导出图片',
+    maskExportError: '导出掩码时出错',
+    maskExportStarted: '掩码导出已开始',
+    metricsRequireSegmentation: '指标需要完成分割',
+    noImageSelectedError: '未选择要导出的图片',
+  },
+  // Metrics section
+  metrics: {
+    area: '面积',
+    perimeter: '周长',
+    circularity: '圆度',
+    sphericity: '球度',
+    solidity: '实心度',
+    compactness: '紧凑度',
+    convexity: '凸度',
+    visualization: '指标可视化',
+    visualizationHelp: '此图片中所有球体的指标的可视化表示',
+    barChart: '条形图',
+    pieChart: '饼图',
+    comparisonChart: '比较图',
+    keyMetricsComparison: '关键指标比较',
+    areaDistribution: '面积分布',
+    shapeMetricsComparison: '形状指标比较',
+    noPolygonsFound: '未找到可分析的多边形',
+  },
+  // Image status section
+  imageStatus: {
+    completed: '已处理',
+    processing: '处理中',
+    pending: '待处理',
+    failed: '失败',
+    noImage: '没有图片',
+    untitledImage: '无标题图片',
+  },
+  // Project actions section
+  projectActions: {
+    deleteTooltip: '删除项目',
+    deleteConfirmTitle: '您确定吗？',
+    deleteConfirmDesc: '您确定要删除项目 \'{{projectName}}\' 吗？此操作无法撤消。',
+    deleteSuccess: '项目 \'{{projectName}}\' 已成功删除。',
+    deleteError: '项目删除失败。',
+    makePrivateTooltip: '标记为私有',
+    makePublicTooltip: '标记为公开',
+    shareTooltip: '分享项目',
+    downloadTooltip: '下载项目',
+    notFound: '项目 \'{{projectName}}\' 未找到。它可能已被删除。',
+  },
+  // Editor section
+  editor: {
+    backButtonTooltip: '返回项目概览',
+    exportButtonTooltip: '导出当前分割数据',
+    saveTooltip: '保存更改',
+    image: '图片',
+    previousImage: '上一张图片',
+    nextImage: '下一张图片',
+    resegmentButton: '重新分割',
+    resegmentButtonTooltip: '在此图片上再次运行分割',
+    exportMaskButton: '导出遮罩',
+    exportMaskButtonTooltip: '为此图片导出分割遮罩',
+    backButton: '返回',
+    exportButton: '导出',
+    saveButton: '保存',
+    loadingProject: '正在加载项目...',
+    loadingImage: '正在加载图片...',
+    sliceErrorInvalidPolygon: '无法切片：选择的多边形无效。',
+    sliceWarningInvalidResult: '切片创建的多边形太小且无效。',
+    sliceWarningInvalidIntersections: '无效切片：切片线必须在恰好两个点与多边形相交。',
+    sliceSuccess: '多边形切片成功。',
+    noPolygonToSlice: '没有可切片的多边形。',
+    savingTooltip: '正在保存...',
+    error: '错误',
+    success: '成功',
+    edit: '编辑',
+    create: '创建',
+    delete: '删除',
+    save: '保存',
+    cancel: '取消',
+    close: '关闭',
+    confirm: '确认',
+    undo: '撤销',
+    redo: '重做',
+    tools: {
+      select: '选择',
+      pan: '平移',
+      zoom: '缩放',
+      draw: '绘制',
+      erase: '擦除',
+      measure: '测量',
+    },
+    confirmDelete: '您确定要删除这个吗？',
+    unsavedChanges: '您有未保存的更改。您确定要离开吗？',
+    autoSave: {
+      enabled: '自动保存已启用',
+      disabled: '自动保存已禁用',
+      saving: '正在自动保存...',
+      saved: '自动保存完成',
+      failed: '自动保存失败',
+    },
+  },
+  // Segmentation page section
+  segmentationPage: {
+    noImageSelected: '未选择要重新分割的图片。',
+    resegmentationStarted: '正在使用 ResUNet 神经网络开始重新分割...',
+    resegmentationQueued: '重新分割已排队。',
+    resegmentationCompleted: '重新分割完成成功。',
+    resegmentationFailed: '重新分割失败。',
+    resegmentationTimeout: '重新分割超时。请检查队列状态。',
+    resegmentationError: '启动重新分割失败。',
+    resegmentTooltip: '重新分割',
+  },
+  // Share section
+  share: {
+    accepted: '已接受',
+    alreadyShared: '已与此用户共享',
+    canEdit: '可以编辑',
+    copyToClipboard: '复制到剪贴板',
+    edit: '编辑',
+    email: '电子邮件',
+    failedToCopy: '复制链接失败',
+    failedToGenerateLink: '生成共享链接失败',
+    failedToLoadShares: '加载共享用户失败',
+    failedToRemove: '删除共享失败',
+    failedToShare: '共享项目失败',
+    generateLink: '生成链接',
+    generateNewLink: '生成新链接',
+    generating: '正在生成...',
+    invalidEmail: '无效的电子邮件地址',
+    invalidEmailOrPermission: '无效的电子邮件或权限',
+    invite: '邀请',
+    inviteByEmail: '通过电子邮件邀请',
+    inviteByLink: '通过链接邀请',
+    linkCopied: '链接已复制到剪贴板',
+    linkGenerated: '共享链接已生成',
+    linkPermissions: '链接权限',
+    noPermission: '无权限',
+    noShares: '没有共享用户',
+    pendingAcceptance: '等待接受',
+    permissions: '权限',
+    projectNotFound: '项目未找到',
+    removeShare: '删除共享',
+    selectAccessLevel: '选择访问级别',
+    selectPermission: '请选择权限类型',
+    shareDescription: '与其他用户共享此项目',
+    sharedWith: '共享给',
+    shareLinkDescription: '任何拥有此链接的人都可以访问项目',
+    shareProject: '共享项目',
+    shareProjectTitle: '共享项目 \'{{projectName}}\'',
+    sharing: '正在共享...',
+    sharedSuccess: '项目 \'{{projectName}}\' 已与 {{email}} 共享',
+    removedSuccess: '与 {{email}} 的共享已删除',
+    status: '状态',
+    userEmail: '用户电子邮件',
+    view: '查看',
+    viewOnly: '仅查看',
+  },
+  // Invitation section
+  invitation: {
+    title: '项目邀请',
+    processing: '正在处理邀请...',
+    successTitle: '邀请已接受！',
+    successMessage: '您现在可以访问由 {{ownerName}} 共享的 \'{{projectName}}\'。',
+    redirecting: '正在重定向到项目...',
+    errorTitle: '无法接受邀请',
+    loginRequired: '需要登录',
+    loginMessage: '请登录以接受此项目邀请。',
+    signIn: '登录',
+    createAccount: '创建账户',
+    goToDashboard: '前往仪表板',
+    invalidLink: '无效的邀请链接',
+    expired: '此邀请链接已过期或无效',
+    notForYou: '此邀请不适用于您的账户',
+    genericError: '接受邀请失败。请重试。',
+    acceptedSuccess: '邀请接受成功',
+  },
+  // Terms page section
+  termsPage: {
+    title: '服务条款',
+    acceptance: {
+      title: '1. 接受条款',
+      paragraph1: '通过访问或使用 SpheroSeg，您同意受这些服务条款的约束。如果您不同意这些条款，请不要使用我们的服务。',
+    },
+    useLicense: {
+      title: '2. 使用许可',
+      paragraph1: 'SpheroSeg 授予您有限的、非独占的、不可转让的许可，用于研究和教育目的。商业用途需要单独的许可协议。',
+    },
+    dataUsage: {
+      title: '3. 数据使用',
+      paragraph1: '您保留对上传的图片和数据的所有权利。未经您的明确同意，我们不会与第三方共享您的数据。您的数据仅用于提供和改进我们的分割服务。',
+    },
+    limitations: {
+      title: '4. 服务限制',
+      paragraph1: 'SpheroSeg 按\'原样\'提供，不提供任何明示或暗示的保证。我们不保证 100% 的可用性、准确性或可靠性。用户负责验证其特定应用的结果。',
+    },
+    revisions: {
+      title: '5. 修订',
+      paragraph1: '我们保留随时修改这些条款的权利。更改将在发布后立即生效。您继续使用服务即表示接受修订后的条款。',
+    },
+    governingLaw: {
+      title: '6. 管辖法律',
+      paragraph1: '这些条款受捷克共和国法律管辖。任何争议将由布拉格的主管法院解决。',
+    },
+    lastUpdated: '最后更新：2025年1月7日',
+  },
+  // Privacy page section
+  privacyPage: {
+    title: '隐私政策',
+    introduction: {
+      title: '1. 简介',
+      paragraph1: '在 SpheroSeg，我们致力于保护您的隐私。本隐私政策解释了我们收集哪些信息、如何使用这些信息以及您对您的信息拥有哪些权利。',
+    },
+    dataCollection: {
+      title: '2. 我们收集的信息',
+      paragraph1: '我们收集您直接提供给我们的信息，包括：',
+      list: ['账户信息（电子邮件、姓名、机构）', '用于分割的上传图片和数据', '项目元数据和分析结果', '使用数据和活动日志'],
+    },
+    dataUsage: {
+      title: '3. 我们如何使用您的信息',
+      paragraph1: '我们使用收集的信息来：',
+      list: ['提供和维护我们的服务', '处理您的图片分割请求', '改进我们的算法和服务', '就您的账户与您沟通', '确保安全并防止滥用'],
+    },
+    dataStorage: {
+      title: '4. 数据存储和安全',
+      paragraph1: '我们实施适当的技术和组织措施来保护您的个人信息免受未经授权的访问、更改、披露或破坏。',
+      paragraph2: '您的数据存储在安全的服务器上，并根据我们的数据保留政策进行删除。',
+    },
+    dataSharing: {
+      title: '5. 数据共享',
+      paragraph1: '未经您的同意，我们不会出售、交易或以其他方式将您的个人信息转让给第三方，除非本政策中有所描述或法律要求。',
+    },
+    userRights: {
+      title: '6. 您的权利',
+      paragraph1: '您有权：',
+      list: ['访问您的个人信息', '更正不准确的信息', '请求删除您的数据', '导出您的数据', '反对处理您的数据'],
+    },
+    cookies: {
+      title: '7. Cookie 和跟踪技术',
+      paragraph1: '我们使用 Cookie 和类似技术来增强您的体验、分析网站使用情况并个性化内容。',
+    },
+    changes: {
+      title: '8. 本政策的变更',
+      paragraph1: '我们可能会不时更新我们的隐私政策。我们将通过在此页面上发布新的隐私政策来通知您任何更改。',
+    },
+    contact: {
+      title: '9. 联系我们',
+      paragraph1: '如果您对本隐私政策有任何疑问，请通过以下方式联系我们：',
+      email: 'privacy@spheroseg.com',
+    },
+    lastUpdated: '最后更新：2025年1月7日',
+  },
+  // About section
+  about: {
+    title: '关于 SpheroSeg',
+    mission: {
+      title: '我们的使命',
+      description: 'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的先进平台。我们将尖端的人工智能算法与直观的界面相结合，为研究人员提供精确的球体边界检测和分析功能。',
+      vision: '我们的愿景是通过让全球研究人员能够访问先进的图像分析，加速科学发现，使他们能够专注于研究而不是技术挑战。',
+    },
+    technology: {
+      title: '我们的技术',
+      description: 'SpheroSeg 基于最先进的深度学习模型和计算机视觉技术，提供无与伦比的球体分割准确性。',
+      feature1: {
+        title: 'AI 驱动的分割',
+        description: '在多样化的球体图像上训练的先进深度学习模型确保准确可靠的分割结果。',
+      },
+      feature2: {
+        title: '实时处理',
+        description: '优化的算法提供快速的处理时间，使您能够高效地分析大型数据集。',
+      },
+      feature3: {
+        title: '全面分析',
+        description: '提取每个分割球体的详细指标，包括面积、周长、圆度等。',
+      },
+    },
+    team: {
+      title: '我们的团队',
+      description: 'SpheroSeg 由一支致力于推进生物医学研究的研究人员和工程师团队开发',
+      member1: {
+        name: 'Michal Průšek',
+        role: '首席开发者，布拉格捷克理工大学核科学与物理工程学院',
+      },
+      member2: {
+        name: 'Adam Novozámský',
+        role: '监督员，UTIA CAS',
+      },
+      member3: {
+        name: '研究团队',
+        role: '布拉格化工大学生物化学与微生物学系',
+      },
+    },
+    contact: {
+      title: '联系我们',
+      description: '有问题或需要支持？我们在这里帮助您！',
+      email: '通过电子邮件联系',
+      github: '在 GitHub 上查看',
+      twitter: '在 Twitter 上关注',
+    },
+  },
+  // No images section
+  noImages: {
+    title: '还没有图片',
+    description: '上传图片以开始分析。',
+    uploadButton: '上传图片',
+  },
 };
