@@ -9,7 +9,7 @@ export const i18nInitializedPromise = (async () => {
     logger.info('[i18n] Starting asynchronous initialization...');
     const baseResources = await initializeTranslations();
     logger.info('[i18n] Base translations loaded:', Object.keys(baseResources || {}));
-    
+
     // Verify translations structure
     if (!baseResources?.en?.translation) {
       logger.error('[i18n] Critical: No English translations found in resources!');
@@ -34,11 +34,11 @@ export const i18nInitializedPromise = (async () => {
       '[i18n] i18next initialized successfully. Loaded languages:',
       Object.keys(i18nInstance.services.resourceStore.data),
     );
-    
+
     // Add i18next to window for debugging in development
     if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
       (window as any).i18next = i18nInstance;
-      
+
       // Quick test to ensure translations work
       const testKey = i18nInstance.t('common.loadingApplication');
       if (testKey === 'common.loadingApplication') {

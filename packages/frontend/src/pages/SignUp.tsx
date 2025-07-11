@@ -144,11 +144,11 @@ const SignUp = () => {
 
   if (user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Card className="mx-auto max-w-sm">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 dark:from-gray-800 dark:via-gray-900 dark:to-black">
+        <Card className="mx-auto max-w-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-xl">Already Logged In</CardTitle>
-            <CardDescription>You are already signed in.</CardDescription>
+            <CardTitle className="text-xl text-gray-900 dark:text-gray-100">Already Logged In</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">You are already signed in.</CardDescription>
           </CardHeader>
           <CardContent>
             <Link to="/dashboard">
@@ -156,7 +156,7 @@ const SignUp = () => {
             </Link>
           </CardContent>
         </Card>
-        <div className="absolute top-[-20px] left-0 right-0 flex justify-between items-center mb-4">
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
           <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label={t('common.backToHome')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>

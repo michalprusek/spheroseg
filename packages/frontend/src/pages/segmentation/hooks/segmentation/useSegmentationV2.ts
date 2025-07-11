@@ -586,7 +586,12 @@ export const useSegmentationV2 = (
           break;
         case 'delete':
           if (selectedPolygonId) {
-            handleDeletePolygon(selectedPolygonId, segmentationData, setSelectedPolygonId, setSegmentationDataWithHistory);
+            handleDeletePolygon(
+              selectedPolygonId,
+              segmentationData,
+              setSelectedPolygonId,
+              setSegmentationDataWithHistory,
+            );
           }
           break;
         case 'escape':
@@ -1028,7 +1033,7 @@ export const useSegmentationV2 = (
     };
 
     window.addEventListener('segmentation-save', handleSaveEvent);
-    
+
     return () => {
       window.removeEventListener('segmentation-save', handleSaveEvent);
     };

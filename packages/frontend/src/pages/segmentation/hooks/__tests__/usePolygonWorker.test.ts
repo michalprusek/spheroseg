@@ -20,7 +20,7 @@ vi.mock('../workers/polygonWorker.ts', () => ({
   default: class MockWorker {
     postMessage() {}
     terminate() {}
-  }
+  },
 }));
 
 describe('usePolygonWorker', () => {
@@ -70,13 +70,13 @@ describe('usePolygonWorker', () => {
     act(() => {
       const call = mockPostMessage.mock.calls[0];
       const message = call[0];
-      
+
       if (mockWorkerInstance.onmessage) {
         mockWorkerInstance.onmessage({
           data: {
             id: message.id,
             result: true,
-          }
+          },
         });
       }
     });
@@ -110,7 +110,7 @@ describe('usePolygonWorker', () => {
     act(() => {
       const call = mockPostMessage.mock.calls[0];
       const message = call[0];
-      
+
       if (mockWorkerInstance.onmessage) {
         mockWorkerInstance.onmessage({
           data: {
@@ -129,7 +129,7 @@ describe('usePolygonWorker', () => {
                 { x: 0, y: 100 },
               ],
             },
-          }
+          },
         });
       }
     });
@@ -164,7 +164,7 @@ describe('usePolygonWorker', () => {
     act(() => {
       const call = mockPostMessage.mock.calls[0];
       const message = call[0];
-      
+
       if (mockWorkerInstance.onmessage) {
         mockWorkerInstance.onmessage({
           data: {
@@ -175,7 +175,7 @@ describe('usePolygonWorker', () => {
               { x: 100, y: 100 },
               { x: 0, y: 100 },
             ],
-          }
+          },
         });
       }
     });
@@ -203,13 +203,13 @@ describe('usePolygonWorker', () => {
     act(() => {
       const call = mockPostMessage.mock.calls[0];
       const message = call[0];
-      
+
       if (mockWorkerInstance.onmessage) {
         mockWorkerInstance.onmessage({
           data: {
             id: message.id,
             error: 'Invalid polygon',
-          }
+          },
         });
       }
     });
@@ -261,6 +261,8 @@ describe('usePolygonWorker', () => {
     expect(result.current.isReady).toBe(false);
 
     // Operations should throw error when worker not initialized
-    await expect(result.current.isPointInPolygon({ x: 0, y: 0 }, [{ x: 0, y: 0 }])).rejects.toThrow('Worker not initialized');
+    await expect(result.current.isPointInPolygon({ x: 0, y: 0 }, [{ x: 0, y: 0 }])).rejects.toThrow(
+      'Worker not initialized',
+    );
   });
 });

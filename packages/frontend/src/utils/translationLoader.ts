@@ -89,14 +89,14 @@ export async function initializeTranslations() {
   // Log only in development mode
   if (process.env.NODE_ENV === 'development') {
     console.log('[translationLoader] Translations loaded:', Object.keys(resources));
-    
+
     // Verify translations are loaded correctly
     if (en) {
       console.log('[translationLoader] EN translation loaded successfully');
-      
+
       // Quick validation
       const requiredKeys = ['common', 'projects', 'statsOverview'];
-      const missingKeys = requiredKeys.filter(key => !en[key]);
+      const missingKeys = requiredKeys.filter((key) => !en[key]);
       if (missingKeys.length > 0) {
         console.error('[translationLoader] Missing required translation sections:', missingKeys);
       }

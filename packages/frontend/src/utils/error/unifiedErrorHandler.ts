@@ -137,7 +137,7 @@ export class ServerError extends AppError {
         options.severity || ErrorSeverity.ERROR,
         options.code || 'SERVER_ERROR',
         undefined,
-        500
+        500,
       );
     } else {
       super(
@@ -146,7 +146,7 @@ export class ServerError extends AppError {
         ErrorSeverity.ERROR,
         code || 'SERVER_ERROR',
         details,
-        500
+        500,
       );
     }
   }
@@ -255,7 +255,10 @@ export function getErrorSeverity(error: unknown): ErrorSeverity {
 /**
  * Extract error message from various error types
  */
-export function getErrorMessage(error: unknown, defaultMessage = 'An unknown error occurred. Please try again.'): string {
+export function getErrorMessage(
+  error: unknown,
+  defaultMessage = 'An unknown error occurred. Please try again.',
+): string {
   // AppError instances
   if (error instanceof AppError) {
     return error.message;
@@ -265,7 +268,7 @@ export function getErrorMessage(error: unknown, defaultMessage = 'An unknown err
   if (axios.isAxiosError(error)) {
     const response = error.response?.data as ApiErrorResponse;
     const message = response?.message || response?.error || error.message;
-    
+
     // Provide default messages based on error type
     if (!message || message === 'Network Error') {
       const type = getErrorType(error);
@@ -277,7 +280,7 @@ export function getErrorMessage(error: unknown, defaultMessage = 'An unknown err
         case ErrorType.AUTHENTICATION:
           return 'Authentication failed. Please sign in again.';
         case ErrorType.AUTHORIZATION:
-          return 'You don\'t have permission to perform this action.';
+          return "You don't have permission to perform this action.";
         case ErrorType.NOT_FOUND:
           return 'The requested resource was not found.';
         case ErrorType.SERVER:
@@ -288,7 +291,7 @@ export function getErrorMessage(error: unknown, defaultMessage = 'An unknown err
           return message || defaultMessage;
       }
     }
-    
+
     return message;
   }
 

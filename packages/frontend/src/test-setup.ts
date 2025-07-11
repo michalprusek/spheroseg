@@ -52,8 +52,8 @@ vi.mock('@/i18n', () => ({
 // Mock lucide-react icons
 vi.mock('lucide-react', () => {
   const createIcon = (name: string) => {
-    const Icon = React.forwardRef((props: any, ref: any) => 
-      React.createElement('svg', { ...props, ref, 'data-testid': `${name}-icon` })
+    const Icon = React.forwardRef((props: any, ref: any) =>
+      React.createElement('svg', { ...props, ref, 'data-testid': `${name}-icon` }),
     );
     Icon.displayName = name;
     return Icon;
@@ -344,10 +344,10 @@ vi.mock('i18next', () => {
       lng: 'en',
     },
   };
-  
+
   // Make use() return the instance for chaining
   mockI18next.use.mockReturnValue(mockI18next);
-  
+
   return {
     default: mockI18next,
   };
@@ -379,7 +379,7 @@ class MockAxiosError extends Error {
   config?: any;
   request?: any;
   response?: any;
-  
+
   constructor(message: string, code?: string, config?: any, request?: any, response?: any) {
     super(message);
     this.name = 'AxiosError';
@@ -565,7 +565,7 @@ vi.mock('@/contexts/LanguageContext', () => {
             availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
           },
         },
-        children
+        children,
       );
     },
   };
@@ -602,10 +602,12 @@ vi.mock('@/contexts/ThemeContext', () => {
 
 // Ensure global timer functions are available
 if (typeof global !== 'undefined') {
-  global.setTimeout = global.setTimeout || vi.fn((fn, delay) => {
-    fn();
-    return 1;
-  });
+  global.setTimeout =
+    global.setTimeout ||
+    vi.fn((fn, delay) => {
+      fn();
+      return 1;
+    });
   global.clearTimeout = global.clearTimeout || vi.fn();
   global.setInterval = global.setInterval || vi.fn(() => 1);
   global.clearInterval = global.clearInterval || vi.fn();
@@ -707,11 +709,13 @@ vi.mock('@/config/app.config.validated', () => ({
 // Mock @radix-ui components
 vi.mock('@/lib/radix-optimized', () => ({
   SelectContent: ({ children }: any) => React.createElement('div', { 'data-testid': 'select-content' }, children),
-  SelectItem: ({ children, value }: any) => React.createElement('option', { value, 'data-testid': `select-item-${value}` }, children),
+  SelectItem: ({ children, value }: any) =>
+    React.createElement('option', { value, 'data-testid': `select-item-${value}` }, children),
   SelectTrigger: ({ children }: any) => React.createElement('button', { 'data-testid': 'select-trigger' }, children),
   SelectValue: ({ placeholder }: any) => React.createElement('span', { 'data-testid': 'select-value' }, placeholder),
   SelectRoot: ({ children }: any) => React.createElement('div', { 'data-testid': 'select-root' }, children),
-  DialogRoot: ({ children, open }: any) => open !== false ? React.createElement('div', { 'data-testid': 'dialog-root' }, children) : null,
+  DialogRoot: ({ children, open }: any) =>
+    open !== false ? React.createElement('div', { 'data-testid': 'dialog-root' }, children) : null,
   DialogTrigger: ({ children }: any) => React.createElement('button', { 'data-testid': 'dialog-trigger' }, children),
   DialogPortal: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-portal' }, children),
   DialogOverlay: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-overlay' }, children),

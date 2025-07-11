@@ -149,7 +149,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
             variant="secondary"
             size="icon"
             onClick={handleRotate}
-            className="absolute top-2 right-2 bg-white/80 hover:bg-white/90 backdrop-blur-sm shadow-md"
+            className="absolute top-2 right-2 bg-white/80 dark:bg-gray-800/80 hover:bg-white/90 dark:hover:bg-gray-800/90 backdrop-blur-sm shadow-md"
             title="Rotate image"
           >
             <RotateCw className="h-4 w-4" />

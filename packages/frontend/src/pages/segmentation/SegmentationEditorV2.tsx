@@ -106,7 +106,7 @@ const SegmentationEditorV2Inner: React.FC<SegmentationEditorV2Props> = ({ projec
       hasPolygon: !!selectedPolygonId,
       shouldTrigger: editMode === EditMode.Slice && tempPoints.length === 2 && !!selectedPolygonId,
     });
-    
+
     if (editMode === EditMode.Slice && tempPoints.length === 2 && selectedPolygonId) {
       console.log('[SegmentationEditorV2] Slice points ready, triggering slice action');
       console.log('[SegmentationEditorV2] About to call handleSliceAction after delay:', SLICE_ACTION_DELAY);
@@ -134,7 +134,15 @@ const SegmentationEditorV2Inner: React.FC<SegmentationEditorV2Props> = ({ projec
         clearTimeout(timeoutId);
       };
     }
-  }, [editMode, tempPoints.length, JSON.stringify(tempPoints), selectedPolygonId, handleSliceAction, SLICE_ACTION_DELAY, t]);
+  }, [
+    editMode,
+    tempPoints.length,
+    JSON.stringify(tempPoints),
+    selectedPolygonId,
+    handleSliceAction,
+    SLICE_ACTION_DELAY,
+    t,
+  ]);
 
   // Zoom handlers
   const handleZoomIn = () => {

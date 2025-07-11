@@ -752,7 +752,8 @@ const remainingSections: any = {
       imageAlt: '球体分析工作流程示意图',
       whatIs: {
         title: '什么是 SpheroSeg？',
-        paragraph1: 'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的尖端平台。我们的工具为研究人员提供精确的检测和分析功能。',
+        paragraph1:
+          'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的尖端平台。我们的工具为研究人员提供精确的检测和分析功能。',
         paragraph2: '它利用基于深度学习的先进 AI 算法，以高精度和一致性自动识别和分割图像中的球体。',
         paragraph3: '本文档将指导您了解使用平台的各个方面，从入门到高级功能和 API 集成。',
       },
@@ -919,7 +920,7 @@ function translateSection(section: any): any {
     // Return placeholder translation for now
     return `[需要翻译] ${section}`;
   } else if (Array.isArray(section)) {
-    return section.map(item => translateSection(item));
+    return section.map((item) => translateSection(item));
   } else if (typeof section === 'object' && section !== null) {
     const result: any = {};
     for (const key in section) {

@@ -222,7 +222,7 @@ export default {
       uploadButton: '上传图片',
     },
     deleteProject: '删除项目',
-    deleteConfirmation: '您确定要删除项目 \'{{projectName}}\' 吗？此操作无法撤消。',
+    deleteConfirmation: "您确定要删除项目 '{{projectName}}' 吗？此操作无法撤消。",
     resegmentImage: '重新分割图片',
     deleteImage: '删除图片',
   },
@@ -573,7 +573,8 @@ export default {
       imageAlt: '球体分析工作流程示意图',
       whatIs: {
         title: '什么是 SpheroSeg？',
-        paragraph1: 'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的尖端平台。我们的工具为研究人员提供精确的检测和分析功能。',
+        paragraph1:
+          'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的尖端平台。我们的工具为研究人员提供精确的检测和分析功能。',
         paragraph2: '它利用基于深度学习的先进 AI 算法，以高精度和一致性自动识别和分割图像中的球体。',
         paragraph3: '本文档将指导您了解使用平台的各个方面，从入门到高级功能和 API 集成。',
       },
@@ -592,10 +593,10 @@ export default {
       creatingProject: {
         title: '创建您的第一个项目',
         paragraph1: '项目帮助您组织工作。每个项目可以包含多个图片及其相应的分割结果。',
-        step1: '在您的仪表板上，点击\'新项目\'',
+        step1: "在您的仪表板上，点击'新项目'",
         step2: '输入项目名称和描述',
         step3: '选择项目类型（默认：球体分析）',
-        step4: '点击\'创建项目\'继续',
+        step4: "点击'创建项目'继续",
       },
     },
     uploadingImages: {
@@ -620,7 +621,7 @@ export default {
         title: '自动分割',
         paragraph1: '我们的 AI 驱动的自动分割可以高精度地检测球体边界：',
         step1: '从您的项目中选择一张图片',
-        step2: '点击\'自动分割\'以启动过程',
+        step2: "点击'自动分割'以启动过程",
         step3: '系统将处理图片并显示检测到的边界',
         step4: '在分割编辑器中查看结果',
       },
@@ -888,7 +889,8 @@ export default {
       imageAlt: '球体分割示例',
       paragraph1: 'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的先进平台。',
       paragraph2: '我们的工具将尖端的人工智能算法与直观的界面相结合，为研究人员提供精确的球体边界检测和分析功能。',
-      paragraph3: '该平台由布拉格捷克理工大学核科学与物理工程学院的 Michal Průšek 在 UTIA CAS 的 Adam Novozámský 的监督下开发，并与布拉格化工大学生物化学与微生物学系的研究人员合作。',
+      paragraph3:
+        '该平台由布拉格捷克理工大学核科学与物理工程学院的 Michal Průšek 在 UTIA CAS 的 Adam Novozámský 的监督下开发，并与布拉格化工大学生物化学与微生物学系的研究人员合作。',
       contactPrefix: 'spheroseg@utia.cas.cz',
     },
     cta: {
@@ -1134,7 +1136,7 @@ export default {
     uploadBtn: '上传 {{count}} 张图片',
     uploadError: '上传过程中发生错误。请重试。',
     noProjectsToUpload: '没有可用的项目。请先创建一个项目。',
-    notFound: '项目 \'{{projectName}}\' 未找到。它可能已被删除。',
+    notFound: "项目 '{{projectName}}' 未找到。它可能已被删除。",
     errors: {
       imageOrProjectNotFound: '图片或项目未找到。',
       failedToDeleteImage: '删除图片失败',
@@ -1234,14 +1236,14 @@ export default {
   projectActions: {
     deleteTooltip: '删除项目',
     deleteConfirmTitle: '您确定吗？',
-    deleteConfirmDesc: '您确定要删除项目 \'{{projectName}}\' 吗？此操作无法撤消。',
-    deleteSuccess: '项目 \'{{projectName}}\' 已成功删除。',
+    deleteConfirmDesc: "您确定要删除项目 '{{projectName}}' 吗？此操作无法撤消。",
+    deleteSuccess: "项目 '{{projectName}}' 已成功删除。",
     deleteError: '项目删除失败。',
     makePrivateTooltip: '标记为私有',
     makePublicTooltip: '标记为公开',
     shareTooltip: '分享项目',
     downloadTooltip: '下载项目',
-    notFound: '项目 \'{{projectName}}\' 未找到。它可能已被删除。',
+    notFound: "项目 '{{projectName}}' 未找到。它可能已被删除。",
   },
   // Editor section
   editor: {
@@ -1342,9 +1344,9 @@ export default {
     sharedWith: '共享给',
     shareLinkDescription: '任何拥有此链接的人都可以访问项目',
     shareProject: '共享项目',
-    shareProjectTitle: '共享项目 \'{{projectName}}\'',
+    shareProjectTitle: "共享项目 '{{projectName}}'",
     sharing: '正在共享...',
-    sharedSuccess: '项目 \'{{projectName}}\' 已与 {{email}} 共享',
+    sharedSuccess: "项目 '{{projectName}}' 已与 {{email}} 共享",
     removedSuccess: '与 {{email}} 的共享已删除',
     status: '状态',
     userEmail: '用户电子邮件',
@@ -1356,7 +1358,7 @@ export default {
     title: '项目邀请',
     processing: '正在处理邀请...',
     successTitle: '邀请已接受！',
-    successMessage: '您现在可以访问由 {{ownerName}} 共享的 \'{{projectName}}\'。',
+    successMessage: "您现在可以访问由 {{ownerName}} 共享的 '{{projectName}}'。",
     redirecting: '正在重定向到项目...',
     errorTitle: '无法接受邀请',
     loginRequired: '需要登录',
@@ -1383,11 +1385,13 @@ export default {
     },
     dataUsage: {
       title: '3. 数据使用',
-      paragraph1: '您保留对上传的图片和数据的所有权利。未经您的明确同意，我们不会与第三方共享您的数据。您的数据仅用于提供和改进我们的分割服务。',
+      paragraph1:
+        '您保留对上传的图片和数据的所有权利。未经您的明确同意，我们不会与第三方共享您的数据。您的数据仅用于提供和改进我们的分割服务。',
     },
     limitations: {
       title: '4. 服务限制',
-      paragraph1: 'SpheroSeg 按\'原样\'提供，不提供任何明示或暗示的保证。我们不保证 100% 的可用性、准确性或可靠性。用户负责验证其特定应用的结果。',
+      paragraph1:
+        "SpheroSeg 按'原样'提供，不提供任何明示或暗示的保证。我们不保证 100% 的可用性、准确性或可靠性。用户负责验证其特定应用的结果。",
     },
     revisions: {
       title: '5. 修订',
@@ -1404,17 +1408,29 @@ export default {
     title: '隐私政策',
     introduction: {
       title: '1. 简介',
-      paragraph1: '在 SpheroSeg，我们致力于保护您的隐私。本隐私政策解释了我们收集哪些信息、如何使用这些信息以及您对您的信息拥有哪些权利。',
+      paragraph1:
+        '在 SpheroSeg，我们致力于保护您的隐私。本隐私政策解释了我们收集哪些信息、如何使用这些信息以及您对您的信息拥有哪些权利。',
     },
     dataCollection: {
       title: '2. 我们收集的信息',
       paragraph1: '我们收集您直接提供给我们的信息，包括：',
-      list: ['账户信息（电子邮件、姓名、机构）', '用于分割的上传图片和数据', '项目元数据和分析结果', '使用数据和活动日志'],
+      list: [
+        '账户信息（电子邮件、姓名、机构）',
+        '用于分割的上传图片和数据',
+        '项目元数据和分析结果',
+        '使用数据和活动日志',
+      ],
     },
     dataUsage: {
       title: '3. 我们如何使用您的信息',
       paragraph1: '我们使用收集的信息来：',
-      list: ['提供和维护我们的服务', '处理您的图片分割请求', '改进我们的算法和服务', '就您的账户与您沟通', '确保安全并防止滥用'],
+      list: [
+        '提供和维护我们的服务',
+        '处理您的图片分割请求',
+        '改进我们的算法和服务',
+        '就您的账户与您沟通',
+        '确保安全并防止滥用',
+      ],
     },
     dataStorage: {
       title: '4. 数据存储和安全',
@@ -1423,7 +1439,8 @@ export default {
     },
     dataSharing: {
       title: '5. 数据共享',
-      paragraph1: '未经您的同意，我们不会出售、交易或以其他方式将您的个人信息转让给第三方，除非本政策中有所描述或法律要求。',
+      paragraph1:
+        '未经您的同意，我们不会出售、交易或以其他方式将您的个人信息转让给第三方，除非本政策中有所描述或法律要求。',
     },
     userRights: {
       title: '6. 您的权利',
@@ -1450,8 +1467,10 @@ export default {
     title: '关于 SpheroSeg',
     mission: {
       title: '我们的使命',
-      description: 'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的先进平台。我们将尖端的人工智能算法与直观的界面相结合，为研究人员提供精确的球体边界检测和分析功能。',
-      vision: '我们的愿景是通过让全球研究人员能够访问先进的图像分析，加速科学发现，使他们能够专注于研究而不是技术挑战。',
+      description:
+        'SpheroSeg 是一个专为显微图像中细胞球体的分割和分析而设计的先进平台。我们将尖端的人工智能算法与直观的界面相结合，为研究人员提供精确的球体边界检测和分析功能。',
+      vision:
+        '我们的愿景是通过让全球研究人员能够访问先进的图像分析，加速科学发现，使他们能够专注于研究而不是技术挑战。',
     },
     technology: {
       title: '我们的技术',

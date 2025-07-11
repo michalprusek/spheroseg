@@ -1204,26 +1204,45 @@ export default {
       title: '9. Kontaktujte nás',
     },
     cookies: {
-      paragraph1: 'Používáme cookies a podobné technologie k vylepšení vašeho zážitku, analýze používání webu a personalizaci obsahu.',
+      paragraph1:
+        'Používáme cookies a podobné technologie k vylepšení vašeho zážitku, analýze používání webu a personalizaci obsahu.',
       title: '7. Cookies a sledovací technologie',
     },
     dataCollection: {
-      list: ['Informace o účtu (e-mail, jméno, instituce)', 'Nahrané obrázky a data pro segmentaci', 'Metadata projektů a výsledky analýz', 'Údaje o používání a protokoly aktivit'],
+      list: [
+        'Informace o účtu (e-mail, jméno, instituce)',
+        'Nahrané obrázky a data pro segmentaci',
+        'Metadata projektů a výsledky analýz',
+        'Údaje o používání a protokoly aktivit',
+      ],
       paragraph1: 'Shromažďujeme informace, které nám přímo poskytujete, včetně:',
       title: '2. Informace, které shromažďujeme',
     },
     dataStorage: {
-      paragraph1: 'Implementujeme vhodná technická a organizační opatření k ochraně vašich osobních informací před neoprávněným přístupem, změnou, zveřejněním nebo zničením.',
+      paragraph1:
+        'Implementujeme vhodná technická a organizační opatření k ochraně vašich osobních informací před neoprávněným přístupem, změnou, zveřejněním nebo zničením.',
       paragraph2: 'Vaše data jsou uložena na zabezpečených serverech a jsou mazána podle našich zásad uchovávání dat.',
       title: '4. Ukládání dat a zabezpečení',
     },
     dataUsage: {
-      list: ['Poskytovat a udržovat naše služby', 'Zpracovávat vaše požadavky na segmentaci obrázků', 'Zlepšovat naše algoritmy a služby', 'Komunikovat s vámi o vašem účtu', 'Zajistit bezpečnost a zabránit zneužití'],
+      list: [
+        'Poskytovat a udržovat naše služby',
+        'Zpracovávat vaše požadavky na segmentaci obrázků',
+        'Zlepšovat naše algoritmy a služby',
+        'Komunikovat s vámi o vašem účtu',
+        'Zajistit bezpečnost a zabránit zneužití',
+      ],
       paragraph1: 'Shromážděné informace používáme k:',
       title: '3. Jak používáme vaše informace',
     },
     userRights: {
-      list: ['Přístup k vašim osobním informacím', 'Opravu nepřesných informací', 'Žádost o smazání vašich dat', 'Export vašich dat', 'Námitku proti zpracování vašich dat'],
+      list: [
+        'Přístup k vašim osobním informacím',
+        'Opravu nepřesných informací',
+        'Žádost o smazání vašich dat',
+        'Export vašich dat',
+        'Námitku proti zpracování vašich dat',
+      ],
       paragraph1: 'Máte právo na:',
       title: '6. Vaše práva',
     },
@@ -1516,12 +1535,15 @@ export default {
       twitter: 'Sledovat na Twitteru',
     },
     mission: {
-      description: 'SpheroSeg je pokročilá platforma speciálně navržená pro segmentaci a analýzu buněčných sféroidů v mikroskopických obrázcích. Kombinujeme špičkové algoritmy umělé inteligence s intuitivním rozhraním, abychom výzkumníkům poskytli přesnou detekci hranic sféroidů a analytické schopnosti.',
+      description:
+        'SpheroSeg je pokročilá platforma speciálně navržená pro segmentaci a analýzu buněčných sféroidů v mikroskopických obrázcích. Kombinujeme špičkové algoritmy umělé inteligence s intuitivním rozhraním, abychom výzkumníkům poskytli přesnou detekci hranic sféroidů a analytické schopnosti.',
       title: 'Naše mise',
-      vision: 'Naší vizí je urychlit vědecké objevy tím, že zpřístupníme pokročilou analýzu obrazů výzkumníkům po celém světě a umožníme jim soustředit se na jejich výzkum místo technických výzev.',
+      vision:
+        'Naší vizí je urychlit vědecké objevy tím, že zpřístupníme pokročilou analýzu obrazů výzkumníkům po celém světě a umožníme jim soustředit se na jejich výzkum místo technických výzev.',
     },
     team: {
-      description: 'SpheroSeg byl vyvinut oddaným týmem výzkumníků a inženýrů nadšených pro pokrok v biomedicínském výzkumu',
+      description:
+        'SpheroSeg byl vyvinut oddaným týmem výzkumníků a inženýrů nadšených pro pokrok v biomedicínském výzkumu',
       member1: {
         name: 'Michal Průšek',
         role: 'Hlavní vývojář, FJFI ČVUT v Praze',
@@ -1537,17 +1559,21 @@ export default {
       title: 'Náš tým',
     },
     technology: {
-      description: 'Postaveno na nejmodernějších modelech hlubokého učení a technikách počítačového vidění, SpheroSeg nabízí bezkonkurenční přesnost v segmentaci sféroidů.',
+      description:
+        'Postaveno na nejmodernějších modelech hlubokého učení a technikách počítačového vidění, SpheroSeg nabízí bezkonkurenční přesnost v segmentaci sféroidů.',
       feature1: {
-        description: 'Pokročilé modely hlubokého učení trénované na různorodých obrázcích sféroidů zajišťují přesné a spolehlivé výsledky segmentace.',
+        description:
+          'Pokročilé modely hlubokého učení trénované na různorodých obrázcích sféroidů zajišťují přesné a spolehlivé výsledky segmentace.',
         title: 'Segmentace poháněná AI',
       },
       feature2: {
-        description: 'Optimalizované algoritmy poskytují rychlé časy zpracování, což vám umožňuje efektivně analyzovat velké datové sady.',
+        description:
+          'Optimalizované algoritmy poskytují rychlé časy zpracování, což vám umožňuje efektivně analyzovat velké datové sady.',
         title: 'Zpracování v reálném čase',
       },
       feature3: {
-        description: 'Extrahujte podrobné metriky včetně plochy, obvodu, kruhovosti a dalších pro každý segmentovaný sféroid.',
+        description:
+          'Extrahujte podrobné metriky včetně plochy, obvodu, kruhovosti a dalších pro každý segmentovaný sféroid.',
         title: 'Komplexní analýza',
       },
       title: 'Naše technologie',

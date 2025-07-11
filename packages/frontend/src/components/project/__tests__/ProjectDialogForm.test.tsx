@@ -46,7 +46,7 @@ describe('ProjectDialogForm Component', () => {
     return render(
       <Dialog open={true}>
         <DialogContent>{ui}</DialogContent>
-      </Dialog>
+      </Dialog>,
     );
   };
 

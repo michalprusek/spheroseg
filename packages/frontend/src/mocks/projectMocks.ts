@@ -44,7 +44,7 @@ export function generateMockProject(overrides: Partial<MockProject> = {}): MockP
     updated_at: new Date().toISOString(),
     image_count: 0,
     is_owner: true,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -62,17 +62,22 @@ export function generateMockImages(count: number = 5, projectId?: string): MockI
     createdAt: new Date(),
     updatedAt: new Date(),
     segmentationStatus: index % 2 === 0 ? 'completed' : 'pending',
-    segmentationResult: index % 2 === 0 ? JSON.stringify({
-      polygons: [{
-        id: `polygon-${index + 1}`,
-        type: 'external',
-        points: [
-          { x: 100, y: 100 },
-          { x: 200, y: 100 },
-          { x: 200, y: 200 },
-          { x: 100, y: 200 }
-        ]
-      }]
-    }) : undefined
+    segmentationResult:
+      index % 2 === 0
+        ? JSON.stringify({
+            polygons: [
+              {
+                id: `polygon-${index + 1}`,
+                type: 'external',
+                points: [
+                  { x: 100, y: 100 },
+                  { x: 200, y: 100 },
+                  { x: 200, y: 200 },
+                  { x: 100, y: 200 },
+                ],
+              },
+            ],
+          })
+        : undefined,
   }));
 }

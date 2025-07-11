@@ -13,11 +13,7 @@ interface RenderWithRouterOptions extends Omit<RenderOptions, 'wrapper'> {
 
 export function renderWithRouter(
   ui: React.ReactElement,
-  {
-    route = '/',
-    routerProps = {},
-    ...renderOptions
-  }: RenderWithRouterOptions = {}
+  { route = '/', routerProps = {}, ...renderOptions }: RenderWithRouterOptions = {},
 ) {
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <MemoryRouter initialEntries={[route]} {...routerProps}>

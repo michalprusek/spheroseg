@@ -1187,7 +1187,8 @@ export default {
       title: '4. Datenspeicherung und Sicherheit',
       paragraph1:
         'Wir implementieren angemessene technische und organisatorische Maßnahmen, um Ihre persönlichen Informationen vor unbefugtem Zugriff, Änderung, Offenlegung oder Zerstörung zu schützen.',
-      paragraph2: 'Ihre Daten werden auf sicheren Servern gespeichert und gemäß unserer Datenaufbewahrungsrichtlinie gelöscht.',
+      paragraph2:
+        'Ihre Daten werden auf sicheren Servern gespeichert und gemäß unserer Datenaufbewahrungsrichtlinie gelöscht.',
     },
     dataSharing: {
       title: '5. Datenweitergabe',

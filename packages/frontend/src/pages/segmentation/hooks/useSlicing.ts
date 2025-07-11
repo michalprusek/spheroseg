@@ -42,7 +42,7 @@ export function useSlicing({
       tempPoints,
       hasSegmentationData: !!segmentationData,
     });
-    
+
     if (!selectedPolygonId || tempPoints.length !== 2 || !segmentationData) {
       console.log('[handleSliceAction] Cannot slice: missing data', {
         selectedPolygonId,

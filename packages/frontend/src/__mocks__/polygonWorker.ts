@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 export class MockWorker {
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: ((error: ErrorEvent) => void) | null = null;
-  
+
   private messageQueue: MessageEvent[] = [];
   private terminated = false;
 
@@ -20,13 +20,13 @@ export class MockWorker {
     // Simulate async worker response
     setTimeout(() => {
       if (this.terminated) return;
-      
+
       const { id, operation, params } = message;
-      
+
       // Mock responses for different operations
       let result: any;
       let error: string | undefined;
-      
+
       try {
         switch (operation) {
           case 'isPointInPolygon':
@@ -53,11 +53,13 @@ export class MockWorker {
       } catch (err) {
         error = err instanceof Error ? err.message : 'Unknown error';
       }
-      
+
       if (this.onmessage) {
-        this.onmessage(new MessageEvent('message', {
-          data: { id, result, error }
-        }));
+        this.onmessage(
+          new MessageEvent('message', {
+            data: { id, result, error },
+          }),
+        );
       }
     }, 0);
   }

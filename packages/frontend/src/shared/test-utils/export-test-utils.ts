@@ -1,6 +1,6 @@
 /**
  * Export Test Utilities
- * 
+ *
  * Common utilities for testing export functionality
  */
 
@@ -19,7 +19,7 @@ export function createMockExportOptions() {
     metricsFormat: 'EXCEL' as const,
     selectedImages: {},
     onExport: vi.fn(),
-    onCancel: vi.fn()
+    onCancel: vi.fn(),
   };
 }
 
@@ -37,18 +37,23 @@ export function createMockProjectImages(count: number = 3): ProjectImage[] {
     createdAt: new Date(`2023-01-0${i + 1}`),
     updatedAt: new Date(`2023-01-0${i + 1}`),
     segmentationStatus: i === 0 ? 'completed' : 'pending',
-    segmentationResult: i === 0 ? JSON.stringify({
-      polygons: [{
-        id: 'polygon-1',
-        type: 'external',
-        points: [
-          { x: 100, y: 100 },
-          { x: 200, y: 100 },
-          { x: 200, y: 200 },
-          { x: 100, y: 200 }
-        ]
-      }]
-    }) : null
+    segmentationResult:
+      i === 0
+        ? JSON.stringify({
+            polygons: [
+              {
+                id: 'polygon-1',
+                type: 'external',
+                points: [
+                  { x: 100, y: 100 },
+                  { x: 200, y: 100 },
+                  { x: 200, y: 200 },
+                  { x: 100, y: 200 },
+                ],
+              },
+            ],
+          })
+        : null,
   }));
 }
 
@@ -62,6 +67,6 @@ export function createMockExportMetrics() {
     totalCells: 150,
     averageCellArea: 234.5,
     averageCellPerimeter: 56.7,
-    averageCellCircularity: 0.85
+    averageCellCircularity: 0.85,
   };
 }

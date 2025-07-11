@@ -1315,7 +1315,7 @@ export default {
     expired: 'This invitation link has expired or is invalid',
     notForYou: 'This invitation is not intended for your account',
     genericError: 'Failed to accept invitation. Please try again.',
-    acceptedSuccess: 'Invitation accepted successfully'
+    acceptedSuccess: 'Invitation accepted successfully',
   },
   termsPage: {
     title: 'Terms of Service',

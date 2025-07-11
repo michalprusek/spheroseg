@@ -145,7 +145,7 @@ export const uploadFilesWithFallback = async (
       if (onProgress) {
         // Simulate progressive completion for better UX
         for (let i = 0; i < files.length; i++) {
-          await new Promise(resolve => setTimeout(resolve, 50)); // Small delay for visual effect
+          await new Promise((resolve) => setTimeout(resolve, 50)); // Small delay for visual effect
           onProgress(files[i].name, 100, i, files.length);
         }
       }
@@ -183,7 +183,7 @@ export const uploadFilesWithFallback = async (
         if (onProgress) {
           for (let j = 0; j < batch.length; j++) {
             const globalIndex = i + j;
-            await new Promise(resolve => setTimeout(resolve, 30)); // Small delay for visual effect
+            await new Promise((resolve) => setTimeout(resolve, 30)); // Small delay for visual effect
             onProgress(batch[j].name, 100, globalIndex, files.length);
           }
         }

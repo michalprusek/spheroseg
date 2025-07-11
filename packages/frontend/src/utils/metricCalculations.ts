@@ -1,6 +1,6 @@
 /**
  * Metric Calculations Utility
- * 
+ *
  * Functions for calculating polygon and cell metrics
  */
 
@@ -26,16 +26,16 @@ export interface PolygonMetrics {
  */
 export function calculatePolygonArea(points: Array<{ x: number; y: number }>): number {
   if (!points || points.length < 3) return 0;
-  
+
   let area = 0;
   const n = points.length;
-  
+
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
     area += points[i].x * points[j].y;
     area -= points[j].x * points[i].y;
   }
-  
+
   return Math.abs(area / 2);
 }
 
@@ -44,17 +44,17 @@ export function calculatePolygonArea(points: Array<{ x: number; y: number }>): n
  */
 export function calculatePolygonPerimeter(points: Array<{ x: number; y: number }>): number {
   if (!points || points.length < 2) return 0;
-  
+
   let perimeter = 0;
   const n = points.length;
-  
+
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
     const dx = points[j].x - points[i].x;
     const dy = points[j].y - points[i].y;
     perimeter += Math.sqrt(dx * dx + dy * dy);
   }
-  
+
   return perimeter;
 }
 
@@ -72,12 +72,12 @@ export function calculatePolygonCircularity(area: number, perimeter: number): nu
  */
 export function calculatePolygonCentroid(points: Array<{ x: number; y: number }>): { x: number; y: number } {
   if (!points || points.length === 0) return { x: 0, y: 0 };
-  
+
   let cx = 0;
   let cy = 0;
   let area = 0;
   const n = points.length;
-  
+
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
     const a = points[i].x * points[j].y - points[j].x * points[i].y;
@@ -85,7 +85,7 @@ export function calculatePolygonCentroid(points: Array<{ x: number; y: number }>
     cx += (points[i].x + points[j].x) * a;
     cy += (points[i].y + points[j].y) * a;
   }
-  
+
   area *= 0.5;
   if (area === 0) {
     // Fallback to average of points
@@ -93,7 +93,7 @@ export function calculatePolygonCentroid(points: Array<{ x: number; y: number }>
     const sumY = points.reduce((sum, p) => sum + p.y, 0);
     return { x: sumX / n, y: sumY / n };
   }
-  
+
   const factor = 1 / (6 * area);
   return { x: cx * factor, y: cy * factor };
 }
@@ -106,15 +106,15 @@ export function calculatePolygonMetrics(points: Array<{ x: number; y: number }>)
   const perimeter = calculatePolygonPerimeter(points);
   const circularity = calculatePolygonCircularity(area, perimeter);
   const centroid = calculatePolygonCentroid(points);
-  
+
   // Calculate bounding box
-  const xCoords = points.map(p => p.x);
-  const yCoords = points.map(p => p.y);
+  const xCoords = points.map((p) => p.x);
+  const yCoords = points.map((p) => p.y);
   const minX = Math.min(...xCoords);
   const maxX = Math.max(...xCoords);
   const minY = Math.min(...yCoords);
   const maxY = Math.max(...yCoords);
-  
+
   return {
     area,
     perimeter,
@@ -126,8 +126,8 @@ export function calculatePolygonMetrics(points: Array<{ x: number; y: number }>)
       maxX,
       maxY,
       width: maxX - minX,
-      height: maxY - minY
-    }
+      height: maxY - minY,
+    },
   };
 }
 
@@ -137,15 +137,15 @@ export function calculatePolygonMetrics(points: Array<{ x: number; y: number }>)
 export function convertPixelsToRealUnits(
   pixelValue: number,
   pixelsPerUnit: number,
-  unitName: string = 'μm'
+  unitName: string = 'μm',
 ): { value: number; unit: string } {
   if (!pixelsPerUnit || pixelsPerUnit === 0) {
     return { value: pixelValue, unit: 'px' };
   }
-  
+
   return {
     value: pixelValue / pixelsPerUnit,
-    unit: unitName
+    unit: unitName,
   };
 }
 
@@ -171,15 +171,15 @@ export function generatePolygonStatistics(polygons: Polygon[]): {
       maxArea: 0,
       totalPerimeter: 0,
       averagePerimeter: 0,
-      averageCircularity: 0
+      averageCircularity: 0,
     };
   }
-  
-  const metrics = polygons.map(polygon => calculatePolygonMetrics(polygon.points));
-  const areas = metrics.map(m => m.area);
-  const perimeters = metrics.map(m => m.perimeter);
-  const circularities = metrics.map(m => m.circularity);
-  
+
+  const metrics = polygons.map((polygon) => calculatePolygonMetrics(polygon.points));
+  const areas = metrics.map((m) => m.area);
+  const perimeters = metrics.map((m) => m.perimeter);
+  const circularities = metrics.map((m) => m.circularity);
+
   return {
     count: polygons.length,
     totalArea: areas.reduce((sum, a) => sum + a, 0),
@@ -188,6 +188,6 @@ export function generatePolygonStatistics(polygons: Polygon[]): {
     maxArea: Math.max(...areas),
     totalPerimeter: perimeters.reduce((sum, p) => sum + p, 0),
     averagePerimeter: perimeters.reduce((sum, p) => sum + p, 0) / perimeters.length,
-    averageCircularity: circularities.reduce((sum, c) => sum + c, 0) / circularities.length
+    averageCircularity: circularities.reduce((sum, c) => sum + c, 0) / circularities.length,
   };
 }

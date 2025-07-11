@@ -1,6 +1,6 @@
 /**
  * Request Deduplication Utility
- * 
+ *
  * Prevents duplicate API requests and caches responses
  * to improve performance and reduce server load
  */
@@ -25,13 +25,13 @@ interface CachedResponse {
 class RequestDeduplicator {
   private pendingRequests: Map<string, PendingRequest> = new Map();
   private responseCache: Map<string, CachedResponse> = new Map();
-  
+
   // Constants
   private static readonly DEFAULT_CACHE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
   private static readonly DEFAULT_DEDUP_TIMEOUT_MS = 30 * 1000; // 30 seconds
   private static readonly CLEANUP_PROBABILITY = 0.1; // 10% chance
   private static readonly ONE_HOUR_MS = 60 * 60 * 1000;
-  
+
   private cacheTimeout: number = RequestDeduplicator.DEFAULT_CACHE_TIMEOUT_MS;
   private deduplicationTimeout: number = RequestDeduplicator.DEFAULT_DEDUP_TIMEOUT_MS;
 
@@ -43,10 +43,10 @@ class RequestDeduplicator {
     const url = config.url || '';
     const params = config.params ? JSON.stringify(config.params) : '';
     const data = config.data ? JSON.stringify(config.data) : '';
-    
+
     // Include auth header in key for user-specific requests
     const authHeader = config.headers?.Authorization || '';
-    
+
     return `${method}:${url}:${params}:${data}:${authHeader}`;
   }
 
@@ -57,14 +57,14 @@ class RequestDeduplicator {
     // Only cache successful GET requests
     if (config.method?.toLowerCase() !== 'get') return false;
     if (response.status < 200 || response.status >= 300) return false;
-    
+
     // Don't cache if explicitly disabled
     if (config.headers?.['Cache-Control'] === 'no-cache') return false;
-    
+
     // Check response cache headers
     const cacheControl = response.headers['cache-control'];
     if (cacheControl && cacheControl.includes('no-store')) return false;
-    
+
     return true;
   }
 
@@ -74,12 +74,12 @@ class RequestDeduplicator {
   private getCacheDuration(response: AxiosResponse): number {
     const cacheControl = response.headers['cache-control'];
     if (!cacheControl) return this.cacheTimeout;
-    
+
     const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
     if (maxAgeMatch) {
       return parseInt(maxAgeMatch[1]) * 1000;
     }
-    
+
     return this.cacheTimeout;
   }
 
@@ -88,14 +88,14 @@ class RequestDeduplicator {
    */
   private cleanup(): void {
     const now = Date.now();
-    
+
     // Clean pending requests
     this.pendingRequests.forEach((request, key) => {
       if (now - request.timestamp > this.deduplicationTimeout) {
         this.pendingRequests.delete(key);
       }
     });
-    
+
     // Clean cache
     this.responseCache.forEach((response, key) => {
       if (now - response.timestamp > this.cacheTimeout) {
@@ -109,11 +109,11 @@ class RequestDeduplicator {
    */
   async execute(
     config: AxiosRequestConfig,
-    requestFn: (config: AxiosRequestConfig) => Promise<AxiosResponse>
+    requestFn: (config: AxiosRequestConfig) => Promise<AxiosResponse>,
   ): Promise<AxiosResponse> {
     try {
       const key = this.generateRequestKey(config);
-      
+
       // Check cache first for GET requests
       if (config.method?.toLowerCase() === 'get') {
         const cached = this.responseCache.get(key);
@@ -128,14 +128,14 @@ class RequestDeduplicator {
           } as AxiosResponse;
         }
       }
-      
+
       // Check if request is already pending
       const pending = this.pendingRequests.get(key);
       if (pending && Date.now() - pending.timestamp < this.deduplicationTimeout) {
         logger.debug('Deduplicating request', { url: config.url });
         return pending.promise;
       }
-      
+
       // Create abort controller
       const abortController = new AbortController();
       if (config.signal) {
@@ -147,13 +147,13 @@ class RequestDeduplicator {
         }
       }
       config.signal = abortController.signal;
-      
+
       // Execute new request
       const promise = requestFn(config)
-        .then(response => {
+        .then((response) => {
           // Remove from pending
           this.pendingRequests.delete(key);
-          
+
           // Cache if appropriate
           try {
             if (this.isCacheable(config, response)) {
@@ -165,7 +165,7 @@ class RequestDeduplicator {
                 status: response.status,
                 statusText: response.statusText,
               });
-              
+
               // Schedule cache cleanup
               setTimeout(() => {
                 this.responseCache.delete(key);
@@ -175,13 +175,13 @@ class RequestDeduplicator {
             logger.error('Failed to cache response', cacheError);
             // Continue without caching
           }
-          
+
           return response;
         })
-        .catch(error => {
+        .catch((error) => {
           // Remove from pending on error
           this.pendingRequests.delete(key);
-          
+
           // Clean up abort controller
           if (pending?.abortController) {
             try {
@@ -190,22 +190,22 @@ class RequestDeduplicator {
               logger.warn('Failed to abort pending request', abortError);
             }
           }
-          
+
           throw error;
         });
-      
+
       // Store pending request
       this.pendingRequests.set(key, {
         promise,
         timestamp: Date.now(),
         abortController,
       });
-      
+
       // Periodic cleanup
       if (Math.random() < RequestDeduplicator.CLEANUP_PROBABILITY) {
         this.cleanup();
       }
-      
+
       return promise;
     } catch (error) {
       // If deduplication logic fails, fall back to direct request
@@ -220,7 +220,7 @@ class RequestDeduplicator {
   cancel(config: AxiosRequestConfig): void {
     const key = this.generateRequestKey(config);
     const pending = this.pendingRequests.get(key);
-    
+
     if (pending?.abortController) {
       pending.abortController.abort();
       this.pendingRequests.delete(key);
@@ -266,10 +266,10 @@ export function createDeduplicationInterceptor(axiosInstance: any) {
       config.metadata = { startTime: Date.now() };
       return config;
     },
-    (error: any) => Promise.reject(error)
+    (error: any) => Promise.reject(error),
   );
 
-  // Response interceptor  
+  // Response interceptor
   axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => {
       // Log response time
@@ -291,12 +291,12 @@ export function createDeduplicationInterceptor(axiosInstance: any) {
         message: error.message,
       });
       return Promise.reject(error);
-    }
+    },
   );
 
   // Override request method to use deduplicator
   const originalRequest = axiosInstance.request;
-  axiosInstance.request = function(config: AxiosRequestConfig) {
+  axiosInstance.request = function (config: AxiosRequestConfig) {
     return requestDeduplicator.execute(config, originalRequest.bind(this));
   };
 

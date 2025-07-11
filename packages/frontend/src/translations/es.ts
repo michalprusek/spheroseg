@@ -1105,7 +1105,7 @@ export default {
     expired: 'Este enlace de invitación ha expirado o es inválido',
     notForYou: 'Esta invitación no está destinada para su cuenta',
     genericError: 'Fallo al aceptar la invitación. Por favor intente de nuevo.',
-    acceptedSuccess: 'Invitación aceptada exitosamente'
+    acceptedSuccess: 'Invitación aceptada exitosamente',
   },
   termsPage: {
     title: 'Términos de Servicio',
@@ -1173,7 +1173,8 @@ export default {
       title: '4. Almacenamiento y Seguridad de Datos',
       paragraph1:
         'Implementamos medidas técnicas y organizativas apropiadas para proteger su información personal contra el acceso no autorizado, alteración, divulgación o destrucción.',
-      paragraph2: 'Sus datos se almacenan en servidores seguros y se eliminan según nuestra política de retención de datos.',
+      paragraph2:
+        'Sus datos se almacenan en servidores seguros y se eliminan según nuestra política de retención de datos.',
     },
     dataSharing: {
       title: '5. Compartir Datos',
@@ -1294,7 +1295,8 @@ export default {
       title: '4. Almacenamiento y Seguridad de Datos',
       paragraph1:
         'Implementamos medidas técnicas y organizativas apropiadas para proteger su información personal contra el acceso no autorizado, alteración, divulgación o destrucción.',
-      paragraph2: 'Sus datos se almacenan en servidores seguros y se eliminan según nuestra política de retención de datos.',
+      paragraph2:
+        'Sus datos se almacenan en servidores seguros y se eliminan según nuestra política de retención de datos.',
     },
     dataSharing: {
       title: '5. Compartir Datos',

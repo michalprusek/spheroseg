@@ -154,7 +154,9 @@ vi.mock('i18next', () => {
         return key;
       }),
       language: currentLanguage,
-      get language() { return currentLanguage; },
+      get language() {
+        return currentLanguage;
+      },
       options: {
         resources: {
           en: {},
@@ -168,7 +170,6 @@ vi.mock('i18next', () => {
     },
   };
 });
-
 
 // Setup configurable AuthContext mock
 let mockUser = { id: 'test-user-id' };
@@ -221,11 +222,11 @@ vi.mock('@/lib/apiClient', () => ({
   },
   __clearMocks: () => {
     mockApiClientResponses = {
-      get: { 
+      get: {
         '/users/me': { status: 200, data: { preferred_language: 'en' } },
         '/api/user-profile/settings/language': { status: 200, data: { value: 'en' } },
       },
-      put: { 
+      put: {
         '/users/me': { status: 200, data: { success: true } },
         '/api/user-profile/settings/language': { status: 200, data: { success: true } },
       },
@@ -470,7 +471,7 @@ describe('LanguageContext (Enhanced)', () => {
     // Set API to return French preference
     if (typeof (apiClient as any).__setMockResponse === 'function') {
       (apiClient as any).__setMockResponse('get', '/users/me', {
-      status: 200,
+        status: 200,
         data: { preferred_language: 'fr' },
       });
     }

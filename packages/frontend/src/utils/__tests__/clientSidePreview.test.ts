@@ -105,7 +105,7 @@ describe('clientSidePreview', () => {
 
     it('should attempt BMP preview for BMP files', async () => {
       const bmpFile = new File([''], 'test.bmp', { type: 'image/bmp' });
-      
+
       // Mock FileReader to simulate successful read
       const mockFileReader = {
         readAsDataURL: vi.fn(),
@@ -113,9 +113,9 @@ describe('clientSidePreview', () => {
         onerror: null as any,
         result: 'data:image/bmp;base64,mockdata',
       };
-      
+
       global.FileReader = vi.fn(() => mockFileReader) as any;
-      
+
       // Mock successful image load
       const mockImage = {
         onload: null as any,
@@ -124,25 +124,25 @@ describe('clientSidePreview', () => {
         width: 800,
         height: 600,
       };
-      
+
       global.Image = vi.fn(() => mockImage) as any;
-      
+
       const promise = generateClientSidePreview(bmpFile);
-      
+
       // Simulate FileReader load
       mockFileReader.readAsDataURL(bmpFile);
       if (mockFileReader.onload) {
         mockFileReader.onload({ target: { result: mockFileReader.result } } as any);
       }
-      
+
       // Wait a bit for async operations
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // Simulate Image load
       if (mockImage.onload) {
         mockImage.onload();
       }
-      
+
       const result = await promise;
       expect(result).toBe('data:image/png;base64,mock');
     });

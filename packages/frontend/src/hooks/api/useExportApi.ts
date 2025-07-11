@@ -25,25 +25,21 @@ export const useExportApi = () => {
     setLoading(true);
     setError(null);
     setProgress(0);
-    
+
     try {
-      const response = await apiClient.post(
-        `/projects/${projectId}/export`,
-        options,
-        {
-          responseType: 'blob',
-          onDownloadProgress: (progressEvent) => {
-            const total = progressEvent.total || 1;
-            const current = progressEvent.loaded;
-            setProgress(Math.round((current / total) * 100));
-          },
-        }
-      );
-      
+      const response = await apiClient.post(`/projects/${projectId}/export`, options, {
+        responseType: 'blob',
+        onDownloadProgress: (progressEvent) => {
+          const total = progressEvent.total || 1;
+          const current = progressEvent.loaded;
+          setProgress(Math.round((current / total) * 100));
+        },
+      });
+
       // Save the file
       const filename = `project-${projectId}-export.zip`;
       saveAs(response.data, filename);
-      
+
       return { success: true, filename };
     } catch (err) {
       setError(err as Error);
@@ -57,25 +53,22 @@ export const useExportApi = () => {
   const exportMetrics = useCallback(async (projectId: string, format: 'EXCEL' | 'CSV' | 'JSON' = 'EXCEL') => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const response = await apiClient.get(
-        `/projects/${projectId}/export/metrics`,
-        {
-          params: { format },
-          responseType: format === 'JSON' ? 'json' : 'blob',
-        }
-      );
-      
+      const response = await apiClient.get(`/projects/${projectId}/export/metrics`, {
+        params: { format },
+        responseType: format === 'JSON' ? 'json' : 'blob',
+      });
+
       if (format === 'JSON') {
         return response.data;
       }
-      
+
       // Save the file
       const extension = format.toLowerCase();
       const filename = `project-${projectId}-metrics.${extension}`;
       saveAs(response.data, filename);
-      
+
       return { success: true, filename };
     } catch (err) {
       setError(err as Error);

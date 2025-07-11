@@ -12,12 +12,15 @@ export const createMockFileList = (files: File[]): FileList => {
   const fileList = {
     length: files.length,
     item: (index: number) => files[index] || null,
-    ...files.reduce((acc, file, index) => ({
-      ...acc,
-      [index]: file,
-    }), {}),
+    ...files.reduce(
+      (acc, file, index) => ({
+        ...acc,
+        [index]: file,
+      }),
+      {},
+    ),
   };
-  
+
   return fileList as unknown as FileList;
 };
 
@@ -48,13 +51,13 @@ export const createMockUploadProgress = (loaded: number, total: number) => ({
 export const mockFileReader = () => {
   const mockReadAsDataURL = vi.fn();
   const mockResult = 'data:image/jpeg;base64,test';
-  
+
   global.FileReader = vi.fn(() => ({
     readAsDataURL: mockReadAsDataURL,
     result: mockResult,
     onload: null,
     onerror: null,
   })) as any;
-  
+
   return { mockReadAsDataURL, mockResult };
 };

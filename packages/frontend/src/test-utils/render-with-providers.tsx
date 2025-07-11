@@ -38,19 +38,15 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <MockAuthProvider>
       <MockThemeProvider>
-        <MockLanguageProvider>
-          {children}
-        </MockLanguageProvider>
+        <MockLanguageProvider>{children}</MockLanguageProvider>
       </MockThemeProvider>
     </MockAuthProvider>
   );
 };
 
 // Custom render function
-const customRender = (
-  ui: React.ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => rtlRender(ui, { wrapper: AllTheProviders, ...options });
+const customRender = (ui: React.ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
+  rtlRender(ui, { wrapper: AllTheProviders, ...options });
 
 // Re-export everything
 export * from '@testing-library/react';

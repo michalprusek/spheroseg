@@ -42,7 +42,7 @@ const zhFlat = flattenObject(zhTranslations);
 const enKeys = Object.keys(enFlat);
 const zhKeys = Object.keys(zhFlat);
 
-const missing = enKeys.filter(key => !zhKeys.includes(key));
+const missing = enKeys.filter((key) => !zhKeys.includes(key));
 
 console.log('Missing keys in Chinese translation:');
 console.log('Total missing:', missing.length);
@@ -50,7 +50,7 @@ console.log('\nMissing keys by section:');
 
 // Group by section
 const sections = {};
-missing.forEach(key => {
+missing.forEach((key) => {
   const section = key.split('.')[0];
   if (!sections[section]) sections[section] = [];
   sections[section].push(key);
@@ -58,13 +58,13 @@ missing.forEach(key => {
 
 Object.entries(sections).forEach(([section, keys]) => {
   console.log('\n' + section + ' (' + keys.length + ' keys):');
-  keys.slice(0, 10).forEach(key => console.log('  - ' + key));
+  keys.slice(0, 10).forEach((key) => console.log('  - ' + key));
   if (keys.length > 10) console.log('  ... and ' + (keys.length - 10) + ' more');
 });
 
 // Output all missing keys for reference
 console.log('\n\nAll missing keys:');
-missing.forEach(key => {
+missing.forEach((key) => {
   const enValue = enFlat[key];
   console.log(`${key}: '${enValue}'`);
 });

@@ -42,9 +42,7 @@ vi.mock('../ImageListActions', () => ({
 // Mock SegmentationThumbnail component
 vi.mock('../SegmentationThumbnail', () => ({
   default: ({ imageId, projectId }: { imageId: string; projectId: string }) => (
-    <div data-testid={`segmentation-thumbnail-${imageId}`}>
-      Segmentation Thumbnail
-    </div>
+    <div data-testid={`segmentation-thumbnail-${imageId}`}>Segmentation Thumbnail</div>
   ),
 }));
 

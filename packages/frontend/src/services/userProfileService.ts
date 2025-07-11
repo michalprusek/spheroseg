@@ -49,26 +49,32 @@ class UserProfileService {
         let parsed = value;
         let attempts = 0;
         const maxAttempts = 10;
-        
+
         while (attempts < maxAttempts) {
           try {
             parsed = JSON.parse(parsed);
             attempts++;
             // If we get a valid value, use it
-            if (typeof parsed === 'string' && ['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(parsed)) {
+            if (
+              typeof parsed === 'string' &&
+              ['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(parsed)
+            ) {
               cleanValue = JSON.stringify(parsed);
               break;
             }
           } catch {
             // Not JSON anymore, check if it's a valid value
-            if (typeof parsed === 'string' && ['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(parsed)) {
+            if (
+              typeof parsed === 'string' &&
+              ['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(parsed)
+            ) {
               cleanValue = JSON.stringify(parsed);
             }
             break;
           }
         }
       }
-      
+
       localStorage.setItem(key, cleanValue);
       return true;
     } catch (error) {

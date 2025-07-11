@@ -30,9 +30,7 @@ export const TestProviders: React.FC<TestProvidersProps> = ({ children }) => {
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
-            <LanguageProvider>
-              {children}
-            </LanguageProvider>
+            <LanguageProvider>{children}</LanguageProvider>
           </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>

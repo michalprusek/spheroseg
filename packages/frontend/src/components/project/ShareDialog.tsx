@@ -97,7 +97,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
       const users = response.data.data.map((user: any) => ({
         ...user,
         isPending: user.is_pending,
-        userName: user.user_name || user.userName
+        userName: user.user_name || user.userName,
       }));
       setSharedUsers(users);
     } catch (error) {

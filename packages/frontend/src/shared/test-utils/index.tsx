@@ -1,6 +1,6 @@
 /**
  * Shared Test Utilities
- * 
+ *
  * Common utilities for testing components
  */
 
@@ -23,9 +23,7 @@ export const AllTheProviders: React.FC<AllTheProvidersProps> = ({ children }) =>
     <MemoryRouter>
       <ThemeProvider>
         <LanguageProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
     </MemoryRouter>
@@ -35,10 +33,8 @@ export const AllTheProviders: React.FC<AllTheProvidersProps> = ({ children }) =>
 /**
  * Custom render function that includes all providers
  */
-export const customRender = (
-  ui: React.ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: AllTheProviders, ...options });
+export const customRender = (ui: React.ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
+  render(ui, { wrapper: AllTheProviders, ...options });
 
 // Re-export everything from testing library
 export * from '@testing-library/react';

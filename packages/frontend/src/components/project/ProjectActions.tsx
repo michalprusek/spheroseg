@@ -43,20 +43,12 @@ interface ProjectActionsProps {
    * Handler for export action
    */
   onExport?: () => void;
-
 }
 
 /**
  * Component for project actions (edit, delete, share, export)
  */
-export function ProjectActions({
-  projectId,
-  projectTitle,
-  onEdit,
-  onDelete,
-  onShare,
-  onExport,
-}: ProjectActionsProps) {
+export function ProjectActions({ projectId, projectTitle, onEdit, onDelete, onShare, onExport }: ProjectActionsProps) {
   const { t } = useLanguage();
 
   // Dialog states

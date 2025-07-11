@@ -121,7 +121,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
             // Try client-side preview first for instant display
             const clientPreview = await generateClientSidePreview(file);
-            
+
             if (clientPreview) {
               // Use client-side preview (instant)
               previewUrl = clientPreview;
@@ -129,27 +129,27 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               // For TIFF files, we need server-side conversion
               // Show a temporary fallback preview while server generates the real one
               previewUrl = generateFallbackPreview(file);
-              
+
               // Generate server preview in background
-              generateTiffPreview(file).then((serverPreview) => {
-                if (serverPreview) {
-                  // Update the preview URL once server preview is ready
-                  setUploadedFiles((prevFiles) =>
-                    prevFiles.map((f) =>
-                      f.file === file ? { ...f, previewUrl: serverPreview } : f
-                    )
-                  );
-                  // Clean up the old fallback preview if it was a data URL
-                  if (previewUrl.startsWith('data:')) {
-                    // Data URLs don't need cleanup
-                  } else if (previewUrl.startsWith('blob:')) {
-                    URL.revokeObjectURL(previewUrl);
+              generateTiffPreview(file)
+                .then((serverPreview) => {
+                  if (serverPreview) {
+                    // Update the preview URL once server preview is ready
+                    setUploadedFiles((prevFiles) =>
+                      prevFiles.map((f) => (f.file === file ? { ...f, previewUrl: serverPreview } : f)),
+                    );
+                    // Clean up the old fallback preview if it was a data URL
+                    if (previewUrl.startsWith('data:')) {
+                      // Data URLs don't need cleanup
+                    } else if (previewUrl.startsWith('blob:')) {
+                      URL.revokeObjectURL(previewUrl);
+                    }
                   }
-                }
-              }).catch((error) => {
-                console.warn('Server preview generation failed for TIFF:', error);
-                // Keep using the fallback preview
-              });
+                })
+                .catch((error) => {
+                  console.warn('Server preview generation failed for TIFF:', error);
+                  // Keep using the fallback preview
+                });
             } else {
               // Fallback for other unsupported formats
               previewUrl = generateFallbackPreview(file);

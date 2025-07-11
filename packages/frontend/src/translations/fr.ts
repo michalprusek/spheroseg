@@ -15,8 +15,8 @@ export default {
     title: 'Éditeur de segmentation',
     resolution: '{width}x{height}',
     batch: {
-      mixed: 'Segmentation : {{successCount}} images mises en file d\'attente avec succès, {{failCount}} échouées',
-      allSuccess: 'Segmentation : Toutes les {{count}} images mises en file d\'attente avec succès',
+      mixed: "Segmentation : {{successCount}} images mises en file d'attente avec succès, {{failCount}} échouées",
+      allSuccess: "Segmentation : Toutes les {{count}} images mises en file d'attente avec succès",
       allFailed: 'Segmentation : Toutes les {{count}} images ont échoué',
     },
     queue: {
@@ -107,7 +107,7 @@ export default {
     resegmentButton: 'Resegmenter',
     completedSegmentation: 'Terminé',
     resegmentButtonTooltip: 'Resegmenter avec le réseau de neurones',
-    processingImage: 'Traitement de l\'image...',
+    processingImage: "Traitement de l'image...",
     helpTips: {
       title: 'Conseils :',
       edit: {
@@ -131,8 +131,8 @@ export default {
         zoom: 'Zoom : Molette de la souris',
       },
     },
-    imageNotFoundDescription: 'L\'image demandée est introuvable',
-    invalidImageDimensions: 'Dimensions d\'image invalides',
+    imageNotFoundDescription: "L'image demandée est introuvable",
+    invalidImageDimensions: "Dimensions d'image invalides",
     noDataToSave: 'Aucune modification à enregistrer',
     polygonDuplicated: 'Polygone dupliqué',
     polygonNotFound: 'Polygone introuvable',
@@ -154,10 +154,10 @@ export default {
     saveError: 'Erreur lors de la sauvegarde de la segmentation',
     segmentationLoading: 'Chargement de la segmentation...',
     segmentationPolygon: 'Polygone de segmentation',
-    selectPolygonFirst: 'Veuillez d\'abord sélectionner un polygone',
+    selectPolygonFirst: "Veuillez d'abord sélectionner un polygone",
     sliceFailed: 'Échec de la division du polygone',
     undoRestored: 'Action annulée',
-    undoWhileDraggingError: 'Impossible d\'annuler pendant le glissement',
+    undoWhileDraggingError: "Impossible d'annuler pendant le glissement",
     vertexDeleteFailed: 'Échec de la suppression du sommet',
     vertexDeleted: 'Sommet supprimé',
     vertexDuplicateFailed: 'Échec de la duplication du sommet',
@@ -227,8 +227,8 @@ export default {
     deleteProject: 'Supprimer le projet',
     deleteConfirmation:
       'Êtes-vous sûr de vouloir supprimer le projet "{{projectName}}" ? Cette action ne peut pas être annulée.',
-    resegmentImage: 'Resegmenter l\'image',
-    deleteImage: 'Supprimer l\'image',
+    resegmentImage: "Resegmenter l'image",
+    deleteImage: "Supprimer l'image",
   },
   projectsPage: {
     title: 'Projets',
@@ -1165,8 +1165,8 @@ export default {
       list: [
         'Informations de compte (e-mail, nom, institution)',
         'Images téléchargées et données pour la segmentation',
-        'Métadonnées de projet et résultats d\'analyse',
-        'Données d\'utilisation et journaux d\'activité',
+        "Métadonnées de projet et résultats d'analyse",
+        "Données d'utilisation et journaux d'activité",
       ],
     },
     dataUsage: {
@@ -1174,7 +1174,7 @@ export default {
       paragraph1: 'Nous utilisons les informations collectées pour :',
       list: [
         'Fournir et maintenir nos services',
-        'Traiter vos demandes de segmentation d\'images',
+        "Traiter vos demandes de segmentation d'images",
         'Améliorer nos algorithmes et services',
         'Communiquer avec vous au sujet de votre compte',
         'Assurer la sécurité et prévenir les abus',
@@ -1183,13 +1183,14 @@ export default {
     dataStorage: {
       title: '4. Stockage et sécurité des données',
       paragraph1:
-        'Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos informations personnelles contre l\'accès, la modification, la divulgation ou la destruction non autorisés.',
-      paragraph2: 'Vos données sont stockées sur des serveurs sécurisés et sont supprimées conformément à notre politique de conservation des données.',
+        "Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos informations personnelles contre l'accès, la modification, la divulgation ou la destruction non autorisés.",
+      paragraph2:
+        'Vos données sont stockées sur des serveurs sécurisés et sont supprimées conformément à notre politique de conservation des données.',
     },
     dataSharing: {
       title: '5. Partage de données',
       paragraph1:
-        'Nous ne vendons, n\'échangeons ou ne transférons pas vos informations personnelles à des tiers sans votre consentement, sauf dans les cas décrits dans cette politique ou requis par la loi.',
+        "Nous ne vendons, n'échangeons ou ne transférons pas vos informations personnelles à des tiers sans votre consentement, sauf dans les cas décrits dans cette politique ou requis par la loi.",
     },
     userRights: {
       title: '6. Vos droits',
@@ -1205,7 +1206,7 @@ export default {
     cookies: {
       title: '7. Cookies et technologies de suivi',
       paragraph1:
-        'Nous utilisons des cookies et des technologies similaires pour améliorer votre expérience, analyser l\'utilisation du site et personnaliser le contenu.',
+        "Nous utilisons des cookies et des technologies similaires pour améliorer votre expérience, analyser l'utilisation du site et personnaliser le contenu.",
     },
     changes: {
       title: '8. Modifications de cette politique',
@@ -1298,10 +1299,10 @@ export default {
     notFound: 'Projet "{{projectName}}" introuvable. Il a peut-être été supprimé.',
     errors: {
       imageOrProjectNotFound: 'Image ou projet introuvable.',
-      failedToDeleteImage: 'Échec de la suppression de l\'image',
+      failedToDeleteImage: "Échec de la suppression de l'image",
       imageOrProjectNotFoundForNavigation: 'Image ou projet introuvable pour la navigation, ou UUID manquant.',
       imageNotFoundForClearingSegmentation: 'Image introuvable pour effacer la segmentation ou UUID manquant.',
-      failedToClearSegmentation: 'Échec de l\'effacement de la segmentation',
+      failedToClearSegmentation: "Échec de l'effacement de la segmentation",
     },
     success: {
       localImageDeleted: 'Image locale supprimée avec succès',
@@ -1309,7 +1310,7 @@ export default {
       segmentationCleared: 'Segmentation effacée avec succès.',
     },
     info: {
-      clearingSegmentation: 'Effacement de la segmentation pour l\'image {{imageName}}...',
+      clearingSegmentation: "Effacement de la segmentation pour l'image {{imageName}}...",
       selectAtLeastOneImage: 'Veuillez sélectionner au moins une image.',
     },
   },
@@ -1357,10 +1358,10 @@ export default {
     noImagesAvailable: 'Aucune image disponible',
     backToProject: 'Retour au projet',
     exportImages: 'Exporter les images',
-    maskExportError: 'Erreur lors de l\'export du masque',
+    maskExportError: "Erreur lors de l'export du masque",
     maskExportStarted: 'Export du masque démarré',
     metricsRequireSegmentation: 'Les métriques nécessitent que la segmentation soit terminée',
-    noImageSelectedError: 'Aucune image sélectionnée pour l\'export',
+    noImageSelectedError: "Aucune image sélectionnée pour l'export",
   },
   metrics: {
     area: 'Surface',
@@ -1483,44 +1484,44 @@ export default {
   },
   invitation: {
     title: 'Invitation au projet',
-    processing: 'Traitement de l\'invitation...',
+    processing: "Traitement de l'invitation...",
     successTitle: 'Invitation acceptée !',
     successMessage: 'Vous avez maintenant accès à "{{projectName}}" partagé par {{ownerName}}.',
     redirecting: 'Redirection vers le projet...',
-    errorTitle: 'Impossible d\'accepter l\'invitation',
+    errorTitle: "Impossible d'accepter l'invitation",
     loginRequired: 'Connexion requise',
     loginMessage: 'Veuillez vous connecter pour accepter cette invitation au projet.',
     signIn: 'Se connecter',
     createAccount: 'Créer un compte',
     goToDashboard: 'Aller au tableau de bord',
-    invalidLink: 'Lien d\'invitation invalide',
-    expired: 'Ce lien d\'invitation a expiré ou est invalide',
-    notForYou: 'Cette invitation n\'est pas destinée à votre compte',
-    genericError: 'Échec de l\'acceptation de l\'invitation. Veuillez réessayer.',
-    acceptedSuccess: 'Invitation acceptée avec succès'
+    invalidLink: "Lien d'invitation invalide",
+    expired: "Ce lien d'invitation a expiré ou est invalide",
+    notForYou: "Cette invitation n'est pas destinée à votre compte",
+    genericError: "Échec de l'acceptation de l'invitation. Veuillez réessayer.",
+    acceptedSuccess: 'Invitation acceptée avec succès',
   },
   about: {
     title: 'À propos de SpheroSeg',
     mission: {
       title: 'Notre mission',
       description:
-        'SpheroSeg est une plateforme avancée spécialement conçue pour la segmentation et l\'analyse de sphéroïdes cellulaires dans des images microscopiques. Nous combinons des algorithmes d\'intelligence artificielle de pointe avec une interface intuitive pour fournir aux chercheurs une détection précise des limites des sphéroïdes et des capacités analytiques.',
+        "SpheroSeg est une plateforme avancée spécialement conçue pour la segmentation et l'analyse de sphéroïdes cellulaires dans des images microscopiques. Nous combinons des algorithmes d'intelligence artificielle de pointe avec une interface intuitive pour fournir aux chercheurs une détection précise des limites des sphéroïdes et des capacités analytiques.",
       vision:
-        'Notre vision est d\'accélérer la découverte scientifique en rendant l\'analyse d\'images avancée accessible aux chercheurs du monde entier, leur permettant de se concentrer sur leur recherche plutôt que sur les défis techniques.',
+        "Notre vision est d'accélérer la découverte scientifique en rendant l'analyse d'images avancée accessible aux chercheurs du monde entier, leur permettant de se concentrer sur leur recherche plutôt que sur les défis techniques.",
     },
     technology: {
       title: 'Notre technologie',
       description:
-        'Construit sur des modèles d\'apprentissage profond et des techniques de vision par ordinateur de pointe, SpheroSeg offre une précision inégalée dans la segmentation des sphéroïdes.',
+        "Construit sur des modèles d'apprentissage profond et des techniques de vision par ordinateur de pointe, SpheroSeg offre une précision inégalée dans la segmentation des sphéroïdes.",
       feature1: {
-        title: 'Segmentation alimentée par l\'IA',
+        title: "Segmentation alimentée par l'IA",
         description:
-          'Des modèles d\'apprentissage profond avancés formés sur diverses images de sphéroïdes garantissent des résultats de segmentation précis et fiables.',
+          "Des modèles d'apprentissage profond avancés formés sur diverses images de sphéroïdes garantissent des résultats de segmentation précis et fiables.",
       },
       feature2: {
         title: 'Traitement en temps réel',
         description:
-          'Des algorithmes optimisés fournissent des temps de traitement rapides, vous permettant d\'analyser efficacement de grands ensembles de données.',
+          "Des algorithmes optimisés fournissent des temps de traitement rapides, vous permettant d'analyser efficacement de grands ensembles de données.",
       },
       feature3: {
         title: 'Analyse complète',
@@ -1531,7 +1532,7 @@ export default {
     team: {
       title: 'Notre équipe',
       description:
-        'SpheroSeg a été développé par une équipe dédiée de chercheurs et d\'ingénieurs passionnés par l\'avancement de la recherche biomédicale',
+        "SpheroSeg a été développé par une équipe dédiée de chercheurs et d'ingénieurs passionnés par l'avancement de la recherche biomédicale",
       member1: {
         name: 'Michal Průšek',
         role: 'Développeur principal, FJFI ČVUT Prague',
@@ -1547,7 +1548,7 @@ export default {
     },
     contact: {
       title: 'Nous contacter',
-      description: 'Des questions ou besoin d\'aide ? Nous sommes là pour vous aider !',
+      description: "Des questions ou besoin d'aide ? Nous sommes là pour vous aider !",
       email: 'Contacter par e-mail',
       github: 'Voir sur GitHub',
       twitter: 'Suivre sur Twitter',

@@ -28,9 +28,7 @@ const AllTheProviders: React.FC<AllTheProvidersProps> = ({ children }) => {
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
-            <LanguageProvider>
-              {children}
-            </LanguageProvider>
+            <LanguageProvider>{children}</LanguageProvider>
           </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
@@ -38,10 +36,8 @@ const AllTheProviders: React.FC<AllTheProvidersProps> = ({ children }) => {
   );
 };
 
-const customRender = (
-  ui: React.ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: AllTheProviders, ...options });
+const customRender = (ui: React.ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
+  render(ui, { wrapper: AllTheProviders, ...options });
 
 // Re-export everything
 export * from '@testing-library/react';

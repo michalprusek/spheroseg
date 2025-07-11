@@ -77,9 +77,7 @@ export const AllTheProviders: React.FC<AllTheProvidersProps> = ({ children }) =>
       <BrowserRouter>
         <MockAuthProvider>
           <MockThemeProvider>
-            <MockLanguageProvider>
-              {children}
-            </MockLanguageProvider>
+            <MockLanguageProvider>{children}</MockLanguageProvider>
           </MockThemeProvider>
         </MockAuthProvider>
       </BrowserRouter>
@@ -87,10 +85,8 @@ export const AllTheProviders: React.FC<AllTheProvidersProps> = ({ children }) =>
   );
 };
 
-export const customRender = (
-  ui: React.ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: AllTheProviders, ...options });
+export const customRender = (ui: React.ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
+  render(ui, { wrapper: AllTheProviders, ...options });
 
 // Re-export everything
 export * from '@testing-library/react';

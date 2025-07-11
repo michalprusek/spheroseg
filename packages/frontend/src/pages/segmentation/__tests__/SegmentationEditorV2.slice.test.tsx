@@ -98,7 +98,7 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     // Mock the hook to return 2 temp points
     const mockHook = vi.mocked(useSegmentationV2);
     mockHook.mockReturnValue({
-      ...mockHook.getMockImplementation()?.() || {},
+      ...(mockHook.getMockImplementation()?.() || {}),
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -135,7 +135,7 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     // Mock the hook to return 2 temp points
     const mockHook = vi.mocked(useSegmentationV2);
     mockHook.mockReturnValue({
-      ...mockHook.getMockImplementation()?.() || {},
+      ...(mockHook.getMockImplementation()?.() || {}),
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -166,7 +166,7 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     // Mock the hook to return 2 temp points
     const mockHook = vi.mocked(useSegmentationV2);
     mockHook.mockReturnValue({
-      ...mockHook.getMockImplementation()?.() || {},
+      ...(mockHook.getMockImplementation()?.() || {}),
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -199,7 +199,7 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     // Mock the hook to return 2 temp points
     const mockHook = vi.mocked(useSegmentationV2);
     mockHook.mockReturnValue({
-      ...mockHook.getMockImplementation()?.() || {},
+      ...(mockHook.getMockImplementation()?.() || {}),
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -220,7 +220,7 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     // Mock the hook with no selected polygon
     const mockHook = vi.mocked(useSegmentationV2);
     mockHook.mockReturnValue({
-      ...mockHook.getMockImplementation()?.() || {},
+      ...(mockHook.getMockImplementation()?.() || {}),
       selectedPolygonId: null,
       tempPoints: [
         { x: 100, y: 100 },

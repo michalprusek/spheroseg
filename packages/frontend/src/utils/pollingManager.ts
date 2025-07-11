@@ -30,11 +30,11 @@ class PollingManager {
     endpoint: string,
     callback: (data: any) => void,
     interval: number = 30000,
-    maxRetries: number = 30
+    maxRetries: number = 30,
   ): void {
     // Enforce minimum interval
     const safeInterval = Math.max(interval, this.MIN_INTERVAL);
-    
+
     this.tasks.set(id, {
       id,
       endpoint,
@@ -96,7 +96,7 @@ class PollingManager {
     // Process tasks that are due
     for (const task of this.tasks.values()) {
       const timeSinceLastPoll = now - task.lastPoll;
-      
+
       if (timeSinceLastPoll >= task.interval) {
         // Don't await to allow parallel processing
         this.executePoll(task);
@@ -122,13 +122,13 @@ class PollingManager {
       // Dynamic import to avoid circular dependencies
       const { default: apiClient } = await import('@/lib/apiClient');
       const response = await apiClient.get(task.endpoint);
-      
+
       if (response.data) {
         task.callback(response.data);
-        
+
         // Reset retry count on success
         task.retryCount = 0;
-        
+
         // Increase interval exponentially to reduce load
         task.interval = Math.min(task.interval * 1.2, 60000); // Max 1 minute
       }
@@ -137,7 +137,7 @@ class PollingManager {
         // Rate limited - apply global backoff
         console.warn('Rate limit hit, applying global backoff');
         this.rateLimitBackoff = Date.now() + this.RATE_LIMIT_COOLDOWN;
-        
+
         // Double all task intervals
         for (const t of this.tasks.values()) {
           t.interval = Math.min(t.interval * 2, this.MAX_BACKOFF);

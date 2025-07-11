@@ -25,7 +25,7 @@ export const SegmentationPage: React.FC = () => {
 
   // Create a ref for the canvas
   const canvasRef = useRef<HTMLDivElement>(null);
-  
+
   // Track if we're actively placing slice points
   const isPlacingSlicePoints = useRef(false);
 
@@ -140,15 +140,15 @@ export const SegmentationPage: React.FC = () => {
 
   // Track temp points changes to know when user is actively placing points
   const prevTempPointsLength = useRef(0);
-  
+
   // Trigger slice when we have 2 points in Slice mode
   useEffect(() => {
     // Only trigger if we just went from less than 2 points to exactly 2 points
     const justPlacedSecondPoint = prevTempPointsLength.current < 2 && tempPoints.length === 2;
-    
+
     if (editMode === EditMode.Slice && justPlacedSecondPoint && selectedPolygonId && isPlacingSlicePoints.current) {
       console.log('[SegmentationPage] Second slice point just placed, triggering slice action');
-      
+
       // Add a small delay to ensure state is properly updated
       const timeoutId = setTimeout(() => {
         console.log('[SegmentationPage] Calling handleSliceAction now');
@@ -174,7 +174,7 @@ export const SegmentationPage: React.FC = () => {
         clearTimeout(timeoutId);
       };
     }
-    
+
     // Update the previous length for next render
     prevTempPointsLength.current = tempPoints.length;
   }, [editMode, tempPoints.length, selectedPolygonId, handleSliceAction, t]);

@@ -1,6 +1,6 @@
 /**
  * Socket Client Utilities
- * 
+ *
  * Provides utilities for WebSocket connections
  */
 
@@ -10,7 +10,7 @@
 export function getSocketUrl(): string {
   const protocol = window.location.protocol;
   const host = window.location.host.replace('0.0.0.0', 'localhost');
-  
+
   return `${protocol}//${host}`;
 }
 
@@ -25,6 +25,6 @@ export function getSocketConfig() {
     reconnectionDelay: 1000,
     timeout: 20000,
     autoConnect: true,
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
   };
 }

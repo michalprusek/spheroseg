@@ -56,7 +56,7 @@ describe('errorHandling', () => {
         url: '/test',
       });
       expect(getErrorType(error)).toBe(ErrorType.NETWORK);
-      
+
       // Test timeout error separately
       const timeoutError = new AxiosError('Request Timeout', 'ECONNABORTED', {
         url: '/test',
@@ -132,21 +132,13 @@ describe('errorHandling', () => {
     });
 
     it('should extract message from AxiosError response data object', () => {
-      const error = new AxiosError(
-        'Error',
-        'ERR_BAD_RESPONSE',
-        { url: '/test' }
-      );
+      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' });
       error.response = { data: { message: 'API error message' } };
       expect(getErrorMessage(error)).toBe('API error message');
     });
 
     it('should extract message from AxiosError response data error field', () => {
-      const error = new AxiosError(
-        'Error',
-        'ERR_BAD_RESPONSE',
-        { url: '/test' }
-      );
+      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' });
       error.response = { data: { error: 'Validation failed' } };
       expect(getErrorMessage(error)).toBe('Validation failed');
     });
@@ -196,11 +188,7 @@ describe('errorHandling', () => {
 
   describe('createErrorInfo', () => {
     it('should create error info with complete info from error', () => {
-      const error = new AxiosError(
-        'Error',
-        'ERR_BAD_RESPONSE',
-        { url: '/test' }
-      );
+      const error = new AxiosError('Error', 'ERR_BAD_RESPONSE', { url: '/test' });
       error.response = {
         status: 400,
         data: { message: 'Validation failed', details: { field: 'email' } },

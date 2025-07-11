@@ -247,10 +247,10 @@ export const useLazyLoading = () => {
  */
 export class PerformanceMonitor {
   private metrics: Map<string, number[]> = new Map();
-  
+
   start(label: string): () => void {
     const startTime = performance.now();
-    
+
     return () => {
       const duration = performance.now() - startTime;
       if (!this.metrics.has(label)) {
@@ -259,7 +259,7 @@ export class PerformanceMonitor {
       this.metrics.get(label)!.push(duration);
     };
   }
-  
+
   getMetrics(label: string): {
     count: number;
     total: number;
@@ -271,7 +271,7 @@ export class PerformanceMonitor {
     if (!values || values.length === 0) {
       return null;
     }
-    
+
     return {
       count: values.length,
       total: values.reduce((sum, val) => sum + val, 0),
@@ -280,7 +280,7 @@ export class PerformanceMonitor {
       max: Math.max(...values),
     };
   }
-  
+
   reset(label?: string): void {
     if (label) {
       this.metrics.delete(label);
@@ -288,7 +288,7 @@ export class PerformanceMonitor {
       this.metrics.clear();
     }
   }
-  
+
   getAllMetrics(): Map<string, number[]> {
     return new Map(this.metrics);
   }
@@ -297,12 +297,9 @@ export class PerformanceMonitor {
 /**
  * Simple debounce implementation
  */
-export function debounce<T extends (...args: any[]) => any>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout;
-  
+
   return function (...args: Parameters<T>) {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn(...args), delay);
@@ -312,12 +309,9 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Simple throttle implementation
  */
-export function throttle<T extends (...args: any[]) => any>(
-  fn: T,
-  limit: number
-): (...args: Parameters<T>) => void {
+export function throttle<T extends (...args: any[]) => any>(fn: T, limit: number): (...args: Parameters<T>) => void {
   let inThrottle = false;
-  
+
   return function (...args: Parameters<T>) {
     if (!inThrottle) {
       fn(...args);
@@ -332,17 +326,15 @@ export function throttle<T extends (...args: any[]) => any>(
 /**
  * Simple memoize implementation
  */
-export function memoize<T extends (...args: any[]) => any>(
-  fn: T
-): T {
+export function memoize<T extends (...args: any[]) => any>(fn: T): T {
   const cache = new Map<string, ReturnType<T>>();
-  
+
   return ((...args: Parameters<T>) => {
     const key = JSON.stringify(args);
     if (cache.has(key)) {
       return cache.get(key)!;
     }
-    
+
     const result = fn(...args);
     cache.set(key, result);
     return result;

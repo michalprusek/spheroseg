@@ -534,17 +534,17 @@ const ProjectDetail = () => {
 
         if (successfulDeletions.length > 0) {
           toast.success(t('project.detail.deleteSuccess', { count: successfulDeletions.length }));
-          
+
           // Update UI only for successfully deleted images
           const remainingImages = images.filter((img) => !successfulDeletions.includes(img.id));
           onImagesChange(remainingImages);
-          
+
           // Clean up caches for deleted images
           for (const imageId of successfulDeletions) {
             try {
               const { cleanImageFromAllStorages } = await import('@/api/projectImages');
               await cleanImageFromAllStorages(id!, imageId);
-              
+
               // Dispatch image-deleted event for each successfully deleted image
               const event = new CustomEvent('image-deleted', {
                 detail: {
