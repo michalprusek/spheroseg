@@ -15,9 +15,16 @@ async function loadSingleTranslation(importFunc: () => Promise<any>, fallback = 
 const minimalEnFallback = {
   common: {
     loading: 'Loading...',
+    loadingApplication: 'Loading application...',
     error: 'Error',
     save: 'Save',
     cancel: 'Cancel',
+  },
+  settings: {
+    pageTitle: 'Settings',
+    profile: 'Profile',
+    account: 'Account',
+    appearance: 'Appearance',
   },
   project: {
     noImages: {
@@ -32,18 +39,18 @@ export async function initializeTranslations() {
   let en, cs, de, es, fr, zh;
 
   try {
-    en = await loadSingleTranslation(() => import('../translations/en.ts'), minimalEnFallback);
+    en = await loadSingleTranslation(() => import('../translations/en'), minimalEnFallback);
   } catch (error) {
     console.error('Critical failure loading English translations, using minimal fallback:', error);
     en = minimalEnFallback;
   }
 
   // Load other translations, defaulting to empty objects if they fail (i18next will use fallbackLng)
-  cs = await loadSingleTranslation(() => import('../translations/cs.ts'));
-  de = await loadSingleTranslation(() => import('../translations/de.ts'));
-  es = await loadSingleTranslation(() => import('../translations/es.ts'));
-  fr = await loadSingleTranslation(() => import('../translations/fr.ts'));
-  zh = await loadSingleTranslation(() => import('../translations/zh.ts'));
+  cs = await loadSingleTranslation(() => import('../translations/cs'));
+  de = await loadSingleTranslation(() => import('../translations/de'));
+  es = await loadSingleTranslation(() => import('../translations/es'));
+  fr = await loadSingleTranslation(() => import('../translations/fr'));
+  zh = await loadSingleTranslation(() => import('../translations/zh'));
 
   const resources = {
     en: { translation: en }, // i18next expects resources in { lang: { namespace: { key: value } } }
