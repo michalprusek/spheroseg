@@ -431,8 +431,6 @@ export default {
     signUp: 'Sign Up',
     signOut: 'Sign Out',
     signingIn: 'Signing In...',
-    email: 'Email',
-    password: 'Password',
     forgotPassword: 'Forgot Password?',
     resetPassword: 'Reset Password',
     dontHaveAccount: "Don't have an account?",
@@ -502,11 +500,6 @@ export default {
     sendingResetLink: 'Sending new password...',
     sendResetLink: 'Send New Password',
     backToSignIn: 'Back to Sign In',
-    accountLocked: 'Your account has been locked. Please contact support.',
-    fillAllFields: 'Please fill in all required fields',
-    serverError: 'Server error. Please try again later.',
-    signInError: 'Error signing in',
-    signInFailed: 'Sign in failed. Please check your credentials.',
   },
   requestAccess: {
     and: 'and',
@@ -922,6 +915,7 @@ export default {
     accountSettings: 'Account Settings',
     securitySettings: 'Security Settings',
     preferenceSettings: 'Preference Settings',
+    selectLanguage: 'Select Language',
     selectTheme: 'Select Theme',
     updateProfile: 'Update Profile',
     changePassword: 'Change Password',
@@ -1477,5 +1471,101 @@ export default {
       github: 'View on GitHub',
       twitter: 'Follow on Twitter',
     },
+  },
+  // Missing translations added during audit
+  missing: {
+    key: 'Translation missing',
+  },
+  // DUPLICATE common section removed - keys merged into first common section above
+  newProject: {
+    createError: 'Error creating project',
+    createSuccess: 'Project created successfully',
+  },
+  error: {
+    handler: {
+      defaultMessage: 'An unexpected error occurred',
+      title: 'Error',
+    },
+  },
+  greeting: {
+    evening: 'Good evening',
+    morning: 'Good morning',
+    welcome: 'Welcome',
+  },
+  hello: 'Hello',
+  items: {
+    one: '{{count}} item',
+    other: '{{count}} items',
+    zero: 'No items',
+  },
+  landing: {
+    cta: {
+      button: 'Get Started',
+      description: 'Join our platform to access powerful segmentation tools',
+      title: 'Ready to start?',
+    },
+    features: {
+      feature1: {
+        description: 'Advanced AI-powered cell segmentation',
+        point1: 'Accurate detection',
+        point2: 'Fast processing',
+        title: 'Smart Segmentation',
+      },
+      feature2: {
+        description: 'Comprehensive analysis and metrics',
+        point1: 'Detailed statistics',
+        point2: 'Export capabilities',
+        title: 'Data Analysis',
+      },
+      feature3: {
+        description: 'Work together on projects',
+        point1: 'Share projects',
+        point2: 'Team collaboration',
+        title: 'Collaboration',
+      },
+      subtitle: 'Everything you need for cell analysis',
+      title: 'Features',
+    },
+    hero: {
+      getStarted: 'Get Started',
+      imageAlt: 'Cell segmentation example',
+      requestAccess: 'Request Access',
+      subtitle: 'Advanced AI-powered cell segmentation and analysis platform',
+      title: 'SpherosegV4',
+    },
+  },
+  nav: {
+    about: 'About',
+    home: 'Home',
+  },
+  nested: {
+    deeply: {
+      key: 'Nested key value',
+    },
+  },
+  params: 'Parameters',
+  shared: {
+    sharedBy: 'Shared by {{name}}',
+  },
+  test: {
+    key: 'Test value',
+  },
+  upload: {
+    cancel: 'Cancel',
+    dragDropMultiple: 'Drag & drop files here, or click to select',
+    dragDropSingle: 'Drag & drop a file here, or click to select',
+    dropFiles: 'Drop files here',
+    error: 'Upload error',
+    filesTooLarge: 'Some files are too large',
+    maxFiles: 'Maximum {{count}} files',
+    maxSize: 'Maximum size: {{size}}',
+    removeFile: 'Remove file',
+    retry: 'Retry',
+    singleFileOnly: 'Only one file allowed',
+    success: 'Upload successful',
+    tooManyFiles: 'Too many files. Maximum allowed: {{max}}',
+    unsupportedFileTypes: 'Unsupported file type(s)',
+    uploaderDisabled: 'Uploader is disabled',
+    uploading: 'Uploading...',
   },
 };

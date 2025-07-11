@@ -121,7 +121,7 @@ describe('Translation Coverage Tests', () => {
       'settings.title',
       'settings.profile',
       'profile.title',
-      'dashboard.title',
+      'common.dashboard',
     ];
     
     for (const lang of languages) {
