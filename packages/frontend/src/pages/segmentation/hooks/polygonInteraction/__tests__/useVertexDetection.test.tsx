@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { useVertexDetection } from '../useVertexDetection';
 import { screenToImageCoordinates, imageToScreenCoordinates } from '../coordinateUtils';

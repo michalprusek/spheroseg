@@ -5,6 +5,7 @@ import ProjectDialogForm from '../ProjectDialogForm';
 import '@testing-library/jest-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProjectForm } from '@/hooks/useProjectForm';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 // Mock dependencies
 vi.mock('@/contexts/LanguageContext', () => ({
@@ -40,6 +41,15 @@ describe('ProjectDialogForm Component', () => {
   const mockOnSuccess = vi.fn();
   const mockOnClose = vi.fn();
 
+  // Helper function to render the component with Dialog wrapper
+  const renderWithDialog = (ui: React.ReactElement) => {
+    return render(
+      <Dialog open={true}>
+        <DialogContent>{ui}</DialogContent>
+      </Dialog>
+    );
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -55,10 +65,10 @@ describe('ProjectDialogForm Component', () => {
   });
 
   it('renders the form with correct elements', () => {
-    render(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
+    renderWithDialog(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
 
-    // Check for header elements
-    expect(screen.getByText('Create Project')).toBeInTheDocument();
+    // Check for header elements - use more specific queries
+    expect(screen.getByRole('heading', { name: 'Create Project' })).toBeInTheDocument();
     expect(screen.getByText('Create a new project to upload and segment images')).toBeInTheDocument();
 
     // Check for form inputs
@@ -72,7 +82,7 @@ describe('ProjectDialogForm Component', () => {
   });
 
   it('handles input changes correctly', () => {
-    render(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
+    renderWithDialog(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
 
     // Get inputs
     const nameInput = screen.getByLabelText('Project Name');
@@ -88,14 +98,13 @@ describe('ProjectDialogForm Component', () => {
   });
 
   it('handles form submission correctly', async () => {
-    render(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
+    renderWithDialog(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
 
-    // Get the form and submit button
-    const form = screen.getByRole('form');
+    // Get the submit button
     const submitButton = screen.getByRole('button', { name: 'Create Project' });
 
-    // Submit the form
-    fireEvent.submit(form);
+    // Click the submit button
+    fireEvent.click(submitButton);
 
     // Check if handleCreateProject was called
     expect(mockHandleCreateProject).toHaveBeenCalled();
@@ -112,7 +121,7 @@ describe('ProjectDialogForm Component', () => {
       handleCreateProject: mockHandleCreateProject,
     });
 
-    render(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
+    renderWithDialog(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
 
     // Get submit button
     const submitButton = screen.getByRole('button', {
@@ -124,7 +133,7 @@ describe('ProjectDialogForm Component', () => {
   });
 
   it('passes onSuccess and onClose to useProjectForm', () => {
-    render(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
+    renderWithDialog(<ProjectDialogForm onSuccess={mockOnSuccess} onClose={mockOnClose} />);
 
     // Check if useProjectForm was called with correct props
     expect(useProjectForm).toHaveBeenCalledWith({

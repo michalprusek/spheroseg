@@ -1,389 +1,279 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, waitFor, act, cleanup } from '@testing-library/react';
 import { usePolygonWorker } from '../usePolygonWorker';
-import { Point, Polygon } from '@spheroseg/types';
 
-// Mock the Web Worker
-class MockWorker {
-  constructor(stringUrl) {
-    this.url = stringUrl;
-    this.onmessage = null;
+// Mock Worker globally
+const mockPostMessage = vi.fn();
+const mockTerminate = vi.fn();
+const mockWorkerInstance = {
+  postMessage: mockPostMessage,
+  terminate: mockTerminate,
+  onmessage: null,
+  onerror: null,
+};
+
+// Mock Worker constructor
+global.Worker = vi.fn().mockImplementation(() => mockWorkerInstance);
+
+// Mock the worker URL
+vi.mock('../workers/polygonWorker.ts', () => ({
+  default: class MockWorker {
+    postMessage() {}
+    terminate() {}
   }
-
-  postMessage(msg) {
-    // Simulate asynchronous worker response
-    setTimeout(() => {
-      if (this.onmessage) {
-        let response;
-
-        switch (msg.type) {
-          case 'DETECT_POINT_IN_POLYGON':
-            response = {
-              type: 'POINT_IN_POLYGON_RESULT',
-              payload: {
-                isInside:
-                  msg.payload.point.x >= 100 &&
-                  msg.payload.point.x <= 300 &&
-                  msg.payload.point.y >= 100 &&
-                  msg.payload.point.y <= 300,
-                pointIndex: msg.payload.pointIndex,
-              },
-              requestId: msg.requestId,
-            };
-            break;
-
-          case 'SIMPLIFY_POLYGON':
-            response = {
-              type: 'SIMPLIFY_POLYGON_RESULT',
-              payload: {
-                // Mock simplification - remove every other point if tolerance > 0
-                polygon:
-                  msg.payload.tolerance > 0
-                    ? {
-                        ...msg.payload.polygon,
-                        points: msg.payload.polygon.points.filter((_, i) => i % 2 === 0),
-                      }
-                    : msg.payload.polygon,
-              },
-              requestId: msg.requestId,
-            };
-            break;
-
-          case 'CALCULATE_AREA':
-            response = {
-              type: 'AREA_RESULT',
-              payload: {
-                area: 40000, // Mock area for test
-              },
-              requestId: msg.requestId,
-            };
-            break;
-
-          case 'DETECT_SELF_INTERSECTIONS':
-            response = {
-              type: 'SELF_INTERSECTIONS_RESULT',
-              payload: {
-                intersections:
-                  msg.payload.polygon.points.length > 5
-                    ? [
-                        {
-                          x: msg.payload.polygon.points[0].x,
-                          y: msg.payload.polygon.points[0].y,
-                        },
-                      ]
-                    : [],
-              },
-              requestId: msg.requestId,
-            };
-            break;
-
-          case 'COMBINE_POLYGONS':
-            response = {
-              type: 'COMBINE_POLYGONS_RESULT',
-              payload: {
-                polygon: {
-                  points: [...msg.payload.polygon1.points, ...msg.payload.polygon2.points],
-                  closed: true,
-                  color: msg.payload.polygon1.color,
-                },
-              },
-              requestId: msg.requestId,
-            };
-            break;
-
-          default:
-            response = {
-              type: 'ERROR',
-              payload: { error: 'Unknown operation' },
-              requestId: msg.requestId,
-            };
-        }
-
-        this.onmessage({ data: response });
-      }
-    }, 50);
-  }
-
-  terminate() {
-    // Mock worker termination
-  }
-}
-
-// Replace real Worker with mock
-vi.stubGlobal('Worker', MockWorker);
+}));
 
 describe('usePolygonWorker', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
+    mockPostMessage.mockClear();
+    mockTerminate.mockClear();
+    mockWorkerInstance.onmessage = null;
+    mockWorkerInstance.onerror = null;
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    cleanup();
   });
 
-  it('initializes worker correctly', () => {
+  it('should initialize worker and set isReady to true', async () => {
     const { result } = renderHook(() => usePolygonWorker());
 
-    // Should not be in an error state
-    expect(result.current.error).toBeNull();
-
-    // Worker should be initialized
-    expect(result.current.workerInitialized).toBe(true);
-  });
-
-  it('detects if a point is inside a polygon', async () => {
-    const { result } = renderHook(() => usePolygonWorker());
-
-    const polygon: Polygon = {
-      points: [
-        { x: 100, y: 100 },
-        { x: 300, y: 100 },
-        { x: 300, y: 300 },
-        { x: 100, y: 300 },
-      ],
-      closed: true,
-      color: '#FF0000',
-    };
-
-    // Point inside
-    const insidePoint: Point = { x: 200, y: 200 };
-    // Point outside
-    const outsidePoint: Point = { x: 400, y: 400 };
-
-    // Start async operations
-    const insidePromise = result.current.isPointInPolygon(polygon, insidePoint);
-    const outsidePromise = result.current.isPointInPolygon(polygon, outsidePoint);
-
-    // Fast-forward timers to resolve the promises
-    await act(async () => {
-      vi.runAllTimers();
-    });
-
-    // Check results
     await waitFor(() => {
-      expect(insidePromise).resolves.toBe(true);
-      expect(outsidePromise).resolves.toBe(false);
+      expect(result.current.isReady).toBe(true);
     });
+
+    expect(global.Worker).toHaveBeenCalledTimes(1);
   });
 
-  it('simplifies polygons based on tolerance', async () => {
+  it('should check if point is inside polygon', async () => {
     const { result } = renderHook(() => usePolygonWorker());
 
-    const complexPolygon: Polygon = {
-      points: [
-        { x: 100, y: 100 },
-        { x: 200, y: 100 },
-        { x: 300, y: 100 },
-        { x: 300, y: 200 },
-        { x: 300, y: 300 },
-        { x: 200, y: 300 },
-        { x: 100, y: 300 },
-        { x: 100, y: 200 },
-      ],
-      closed: true,
-      color: '#FF0000',
-    };
-
-    // Simplify with tolerance
-    const simplifyPromise = result.current.simplifyPolygon(complexPolygon, 1.0);
-
-    // Fast-forward timers
-    await act(async () => {
-      vi.runAllTimers();
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
     });
 
-    // Check results
-    const simplifiedPolygon = await simplifyPromise;
-    expect(simplifiedPolygon.points.length).toBeLessThan(complexPolygon.points.length);
+    const point = { x: 150, y: 150 };
+    const polygon = [
+      { x: 100, y: 100 },
+      { x: 200, y: 100 },
+      { x: 200, y: 200 },
+      { x: 100, y: 200 },
+    ];
 
-    // Simplify with zero tolerance (should keep all points)
-    const noSimplifyPromise = result.current.simplifyPolygon(complexPolygon, 0);
-
-    // Fast-forward timers
-    await act(async () => {
-      vi.runAllTimers();
+    let resultPromise: Promise<boolean>;
+    act(() => {
+      resultPromise = result.current.isPointInPolygon(point, polygon);
     });
 
-    // Check results
-    const noSimplifiedPolygon = await noSimplifyPromise;
-    expect(noSimplifiedPolygon.points.length).toBe(complexPolygon.points.length);
+    // Simulate worker response
+    act(() => {
+      const call = mockPostMessage.mock.calls[0];
+      const message = call[0];
+      
+      if (mockWorkerInstance.onmessage) {
+        mockWorkerInstance.onmessage({
+          data: {
+            id: message.id,
+            result: true,
+          }
+        });
+      }
+    });
+
+    const isInside = await resultPromise!;
+    expect(isInside).toBe(true);
   });
 
-  it('calculates polygon area correctly', async () => {
+  it('should slice polygon', async () => {
     const { result } = renderHook(() => usePolygonWorker());
 
-    const rectangle: Polygon = {
-      points: [
-        { x: 100, y: 100 },
-        { x: 300, y: 100 },
-        { x: 300, y: 300 },
-        { x: 100, y: 300 },
-      ],
-      closed: true,
-      color: '#FF0000',
-    };
-
-    // Calculate area
-    const areaPromise = result.current.calculatePolygonArea(rectangle);
-
-    // Fast-forward timers
-    await act(async () => {
-      vi.runAllTimers();
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
     });
 
-    // Check results (mock returns 40000)
-    const area = await areaPromise;
-    expect(area).toBe(40000);
+    const polygon = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 100 },
+      { x: 0, y: 100 },
+    ];
+    const lineStart = { x: -10, y: 50 };
+    const lineEnd = { x: 110, y: 50 };
+
+    let resultPromise: Promise<any>;
+    act(() => {
+      resultPromise = result.current.slicePolygon(polygon, lineStart, lineEnd);
+    });
+
+    // Simulate worker response
+    act(() => {
+      const call = mockPostMessage.mock.calls[0];
+      const message = call[0];
+      
+      if (mockWorkerInstance.onmessage) {
+        mockWorkerInstance.onmessage({
+          data: {
+            id: message.id,
+            result: {
+              polygon1: [
+                { x: 0, y: 0 },
+                { x: 100, y: 0 },
+                { x: 100, y: 50 },
+                { x: 0, y: 50 },
+              ],
+              polygon2: [
+                { x: 0, y: 50 },
+                { x: 100, y: 50 },
+                { x: 100, y: 100 },
+                { x: 0, y: 100 },
+              ],
+            },
+          }
+        });
+      }
+    });
+
+    const sliceResult = await resultPromise!;
+    expect(sliceResult).toHaveProperty('polygon1');
+    expect(sliceResult).toHaveProperty('polygon2');
   });
 
-  it('detects self-intersections in polygons', async () => {
+  it('should simplify polygon', async () => {
     const { result } = renderHook(() => usePolygonWorker());
 
-    // Non-self-intersecting polygon
-    const simplePolygon: Polygon = {
-      points: [
-        { x: 100, y: 100 },
-        { x: 300, y: 100 },
-        { x: 300, y: 300 },
-        { x: 100, y: 300 },
-      ],
-      closed: true,
-      color: '#FF0000',
-    };
-
-    // Self-intersecting polygon (for test purposes, our mock considers any polygon with > 5 points as self-intersecting)
-    const selfIntersectingPolygon: Polygon = {
-      points: [
-        { x: 100, y: 100 },
-        { x: 300, y: 100 },
-        { x: 300, y: 300 },
-        { x: 100, y: 300 },
-        { x: 200, y: 200 },
-        { x: 150, y: 250 },
-      ],
-      closed: true,
-      color: '#FF0000',
-    };
-
-    // Check intersections
-    const simplePromise = result.current.detectSelfIntersections(simplePolygon);
-    const intersectingPromise = result.current.detectSelfIntersections(selfIntersectingPolygon);
-
-    // Fast-forward timers
-    await act(async () => {
-      vi.runAllTimers();
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
     });
 
-    // Check results
-    const simpleIntersections = await simplePromise;
-    const intersectingIntersections = await intersectingPromise;
+    const polygon = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 100 },
+      { x: 0, y: 100 },
+    ];
 
-    expect(simpleIntersections.length).toBe(0);
-    expect(intersectingIntersections.length).toBeGreaterThan(0);
+    let resultPromise: Promise<any>;
+    act(() => {
+      resultPromise = result.current.simplifyPolygon(polygon, 5);
+    });
+
+    // Simulate worker response
+    act(() => {
+      const call = mockPostMessage.mock.calls[0];
+      const message = call[0];
+      
+      if (mockWorkerInstance.onmessage) {
+        mockWorkerInstance.onmessage({
+          data: {
+            id: message.id,
+            result: [
+              { x: 0, y: 0 },
+              { x: 100, y: 0 },
+              { x: 100, y: 100 },
+              { x: 0, y: 100 },
+            ],
+          }
+        });
+      }
+    });
+
+    const simplified = await resultPromise!;
+    expect(simplified).toHaveLength(4);
   });
 
-  it('combines polygons correctly', async () => {
+  it('should handle worker errors', async () => {
     const { result } = renderHook(() => usePolygonWorker());
 
-    const polygon1: Polygon = {
-      points: [
-        { x: 100, y: 100 },
-        { x: 200, y: 100 },
-        { x: 200, y: 200 },
-        { x: 100, y: 200 },
-      ],
-      closed: true,
-      color: '#FF0000',
-    };
-
-    const polygon2: Polygon = {
-      points: [
-        { x: 150, y: 150 },
-        { x: 250, y: 150 },
-        { x: 250, y: 250 },
-        { x: 150, y: 250 },
-      ],
-      closed: true,
-      color: '#00FF00',
-    };
-
-    // Combine polygons
-    const combinePromise = result.current.combinePolygons(polygon1, polygon2);
-
-    // Fast-forward timers
-    await act(async () => {
-      vi.runAllTimers();
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
     });
 
-    // Check results
-    const combinedPolygon = await combinePromise;
+    const point = { x: 150, y: 150 };
+    const polygon = [{ x: 100, y: 100 }];
 
-    expect(combinedPolygon.points.length).toBe(polygon1.points.length + polygon2.points.length);
-    expect(combinedPolygon.color).toBe(polygon1.color);
+    let resultPromise: Promise<boolean>;
+    act(() => {
+      resultPromise = result.current.isPointInPolygon(point, polygon);
+    });
+
+    // Simulate worker error
+    act(() => {
+      const call = mockPostMessage.mock.calls[0];
+      const message = call[0];
+      
+      if (mockWorkerInstance.onmessage) {
+        mockWorkerInstance.onmessage({
+          data: {
+            id: message.id,
+            error: 'Invalid polygon',
+          }
+        });
+      }
+    });
+
+    await expect(resultPromise!).rejects.toThrow('Invalid polygon');
   });
 
-  it('handles worker termination on unmount', () => {
+  it('should terminate worker on unmount', async () => {
     const { result, unmount } = renderHook(() => usePolygonWorker());
 
-    // Spy on worker terminate method
-    const terminateSpy = vi.spyOn(MockWorker.prototype, 'terminate');
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
+    });
 
-    // Unmount component
     unmount();
 
-    // Worker should be terminated
-    expect(terminateSpy).toHaveBeenCalled();
+    expect(mockTerminate).toHaveBeenCalledTimes(1);
   });
 
-  it('handles multiple concurrent operations', async () => {
+  it('should reject pending requests on unmount', async () => {
+    const { result, unmount } = renderHook(() => usePolygonWorker());
+
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
+    });
+
+    // Start a request but don't resolve it
+    let resultPromise: Promise<boolean>;
+    act(() => {
+      resultPromise = result.current.isPointInPolygon({ x: 0, y: 0 }, [{ x: 0, y: 0 }]);
+    });
+
+    // Unmount before the request completes
+    unmount();
+
+    // The promise should be rejected
+    await expect(resultPromise!).rejects.toThrow('Worker terminated');
+  });
+
+  it('should return false when worker is not ready', async () => {
+    // Mock Worker to delay initialization
+    let onMessageHandler: any;
+    global.Worker = vi.fn().mockImplementation(() => ({
+      postMessage: vi.fn(),
+      terminate: vi.fn(),
+      set onmessage(handler) {
+        // Delay setting the handler
+        setTimeout(() => {
+          onMessageHandler = handler;
+        }, 100);
+      },
+      get onmessage() {
+        return onMessageHandler;
+      },
+      onerror: null,
+    }));
+
     const { result } = renderHook(() => usePolygonWorker());
 
-    const polygon: Polygon = {
-      points: [
-        { x: 100, y: 100 },
-        { x: 300, y: 100 },
-        { x: 300, y: 300 },
-        { x: 100, y: 300 },
-      ],
-      closed: true,
-      color: '#FF0000',
-    };
+    // Check immediately before worker is ready
+    expect(result.current.isReady).toBe(false);
 
-    // Start multiple operations concurrently
-    const pointPromise = result.current.isPointInPolygon(polygon, {
-      x: 200,
-      y: 200,
-    });
-    const areaPromise = result.current.calculatePolygonArea(polygon);
-    const intersectionPromise = result.current.detectSelfIntersections(polygon);
-
-    // Fast-forward timers
-    await act(async () => {
-      vi.runAllTimers();
-    });
-
-    // All promises should resolve correctly
-    await waitFor(() => {
-      expect(pointPromise).resolves.toBe(true);
-      expect(areaPromise).resolves.toBe(40000);
-      expect(intersectionPromise).resolves.toEqual([]);
-    });
-  });
-
-  it('throws error if worker fails to initialize', () => {
-    // Mock Worker constructor to throw an error
-    const originalWorker = global.Worker;
-    global.Worker = class FailingWorker {
-      constructor() {
-        throw new Error('Failed to create worker');
-      }
-    } as unknown as typeof Worker;
-
-    // This should throw an error
-    expect(() => renderHook(() => usePolygonWorker())).toThrow();
-
-    // Restore original Worker
-    global.Worker = originalWorker;
+    // Operations should return default values when not ready
+    const isInside = await result.current.isPointInPolygon({ x: 0, y: 0 }, [{ x: 0, y: 0 }]);
+    expect(isInside).toBe(false);
   });
 });

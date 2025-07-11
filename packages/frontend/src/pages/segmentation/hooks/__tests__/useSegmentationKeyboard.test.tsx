@@ -1,5 +1,5 @@
 import React from 'react';
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useSegmentationKeyboard } from '../useSegmentationKeyboard';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';

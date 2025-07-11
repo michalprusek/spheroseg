@@ -87,7 +87,7 @@ export class ProjectShareService {
   async isProjectSharedWithEmail(projectId: string, email: string): Promise<boolean> {
     const query = `
       SELECT id FROM project_shares 
-      WHERE project_id = $1 AND (invitation_email = $2 OR user_id IN (SELECT id FROM users WHERE email = $2))
+      WHERE project_id = $1 AND (email = $2 OR user_id IN (SELECT id FROM users WHERE email = $2))
     `;
 
     const result = await this.query(query, [projectId, email]);
@@ -153,18 +153,20 @@ export class ProjectShareService {
     // Vytvoření záznamu v databázi
     const insertQuery = `
       INSERT INTO project_shares 
-        (project_id, user_id, invitation_email, permission, invitation_token)
+        (project_id, owner_id, user_id, email, permission, invitation_token, invitation_expires_at)
       VALUES 
-        ($1, $2, $3, $4, $5)
+        ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
 
     const result = await this.query(insertQuery, [
       projectId,
+      ownerId,
       userId,
       email,
       permission,
       invitationToken,
+      invitationExpiresAt,
     ]);
 
     const shareDetails = result.rows[0];
@@ -244,19 +246,21 @@ export class ProjectShareService {
 
     const userEmail = userResult.rows[0].email;
 
-    if (invitation.email.toLowerCase() !== userEmail.toLowerCase()) {
+    // For link-based invitations, the email might be a placeholder
+    if (invitation.email !== 'pending@invitation.link' && 
+        invitation.email.toLowerCase() !== userEmail.toLowerCase()) {
       throw new ApiError('This invitation is not intended for this user', 403);
     }
 
-    // Aktualizace záznamu o sdílení - nastavení user_id a zrušení tokenu
+    // Aktualizace záznamu o sdílení - nastavení user_id, email a zrušení tokenu
     const updateQuery = `
       UPDATE project_shares
-      SET user_id = $1, invitation_token = NULL, invitation_expires_at = NULL, updated_at = NOW()
-      WHERE id = $2
+      SET user_id = $1, email = $2, invitation_token = NULL, invitation_expires_at = NULL, updated_at = NOW()
+      WHERE id = $3
       RETURNING *
     `;
 
-    await this.query(updateQuery, [userId, invitation.id]);
+    await this.query(updateQuery, [userId, userEmail, invitation.id]);
 
     // Vrátíme informace o sdíleném projektu
     return {
@@ -313,7 +317,7 @@ export class ProjectShareService {
 
     const query = `
       SELECT ps.id, 
-             COALESCE(u.email, ps.invitation_email) as email, 
+             ps.email, 
              ps.permission, 
              ps.created_at, 
              u.name as user_name, 
@@ -389,13 +393,21 @@ export class ProjectShareService {
     // Vytvoření záznamu v databázi bez emailu
     const insertQuery = `
       INSERT INTO project_shares 
-        (project_id, permission, invitation_token)
+        (project_id, owner_id, email, permission, invitation_token, invitation_expires_at)
       VALUES 
-        ($1, $2, $3)
+        ($1, $2, $3, $4, $5, $6)
       RETURNING id
     `;
 
-    await this.query(insertQuery, [projectId, permission, invitationToken]);
+    // For invitation links, we use a placeholder email that will be updated when accepted
+    await this.query(insertQuery, [
+      projectId, 
+      ownerId,
+      'pending@invitation.link', // Placeholder email
+      permission, 
+      invitationToken,
+      invitationExpiresAt
+    ]);
 
     logger.info(`Invitation link generated for project ${projectId}`);
 

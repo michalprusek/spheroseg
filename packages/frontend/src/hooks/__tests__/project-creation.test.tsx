@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useProjectForm } from '../useProjectForm';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';

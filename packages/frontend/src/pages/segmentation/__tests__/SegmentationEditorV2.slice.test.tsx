@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { SegmentationEditorV2 } from '../SegmentationEditorV2';
-import { EditMode } from '../hooks/segmentation';
+import { EditMode } from '../hooks/segmentation/types';
+import { useSegmentationV2 } from '../hooks/segmentation';
 import { toast } from 'sonner';
 
 // Mock dependencies
@@ -95,8 +96,9 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
-    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    const mockHook = vi.mocked(useSegmentationV2);
+    mockHook.mockReturnValue({
+      ...mockHook.getMockImplementation()?.() || {},
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -131,8 +133,9 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
-    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    const mockHook = vi.mocked(useSegmentationV2);
+    mockHook.mockReturnValue({
+      ...mockHook.getMockImplementation()?.() || {},
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -161,8 +164,9 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
-    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    const mockHook = vi.mocked(useSegmentationV2);
+    mockHook.mockReturnValue({
+      ...mockHook.getMockImplementation()?.() || {},
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -193,8 +197,9 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     const { unmount } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
-    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    const mockHook = vi.mocked(useSegmentationV2);
+    mockHook.mockReturnValue({
+      ...mockHook.getMockImplementation()?.() || {},
       tempPoints: [
         { x: 100, y: 100 },
         { x: 200, y: 200 },
@@ -213,8 +218,9 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
 
   it('should not trigger slice action without selected polygon', async () => {
     // Mock the hook with no selected polygon
-    vi.mocked(require('../hooks/segmentation').useSegmentationV2).mockReturnValue({
-      ...vi.mocked(require('../hooks/segmentation').useSegmentationV2)(),
+    const mockHook = vi.mocked(useSegmentationV2);
+    mockHook.mockReturnValue({
+      ...mockHook.getMockImplementation()?.() || {},
       selectedPolygonId: null,
       tempPoints: [
         { x: 100, y: 100 },

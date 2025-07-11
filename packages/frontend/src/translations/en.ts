@@ -1250,6 +1250,24 @@ export default {
     view: 'View',
     viewOnly: 'View only',
   },
+  invitation: {
+    title: 'Project Invitation',
+    processing: 'Processing invitation...',
+    successTitle: 'Invitation Accepted!',
+    successMessage: 'You now have access to "{{projectName}}" shared by {{ownerName}}.',
+    redirecting: 'Redirecting to project...',
+    errorTitle: 'Unable to Accept Invitation',
+    loginRequired: 'Sign In Required',
+    loginMessage: 'Please sign in to accept this project invitation.',
+    signIn: 'Sign In',
+    createAccount: 'Create Account',
+    goToDashboard: 'Go to Dashboard',
+    invalidLink: 'Invalid invitation link',
+    expired: 'This invitation link has expired or is invalid',
+    notForYou: 'This invitation is not intended for your account',
+    genericError: 'Failed to accept invitation. Please try again.',
+    acceptedSuccess: 'Invitation accepted successfully'
+  },
   termsPage: {
     title: 'Terms of Service',
     acceptance: {

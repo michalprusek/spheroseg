@@ -139,8 +139,8 @@ class PerformanceMonitor extends EventEmitter {
       this.systemMetrics.push(metrics);
       this.cleanupOldMetrics();
 
-      // Emit high usage warnings
-      if (memoryUsage.percentage > 85) {
+      // Emit high usage warnings - raised threshold to reduce noise
+      if (memoryUsage.percentage > 95) {
         this.emit('high-memory-usage', memoryUsage);
         logger.warn('High memory usage detected', memoryUsage);
       }

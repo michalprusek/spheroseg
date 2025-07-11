@@ -278,6 +278,22 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
+// Mock Worker for polygon operations
+vi.mock('../workers/polygonWorker.ts', () => ({
+  default: vi.fn().mockImplementation(() => ({
+    postMessage: vi.fn(),
+    terminate: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    onmessage: null,
+    onerror: null,
+  })),
+}));
+
+// Mock Worker constructor globally
+import { MockWorker } from './__mocks__/polygonWorker';
+global.Worker = MockWorker as any;
+
 // Mock LanguageContext with proper provider
 const mockLanguageContext = React.createContext({
   language: 'en',

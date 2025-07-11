@@ -135,8 +135,8 @@ const initializeServices = async (): Promise<void> => {
     } catch (dbError) {
       logger.error('Database connection test failed', { 
         error: dbError,
-        message: dbError.message,
-        stack: dbError.stack 
+        message: (dbError as Error).message,
+        stack: (dbError as Error).stack 
       });
       throw dbError;
     }

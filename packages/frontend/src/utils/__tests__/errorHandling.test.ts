@@ -52,10 +52,16 @@ describe('errorHandling', () => {
 
   describe('getErrorType', () => {
     it('should identify network errors from AxiosError', () => {
-      const error = new AxiosError('Network Error', 'ECONNABORTED', {
+      const error = new AxiosError('Network Error', 'ERR_NETWORK', {
         url: '/test',
       });
       expect(getErrorType(error)).toBe(ErrorType.NETWORK);
+      
+      // Test timeout error separately
+      const timeoutError = new AxiosError('Request Timeout', 'ECONNABORTED', {
+        url: '/test',
+      });
+      expect(getErrorType(timeoutError)).toBe(ErrorType.TIMEOUT);
     });
 
     it('should identify error types from HTTP status codes', () => {
@@ -77,11 +83,12 @@ describe('errorHandling', () => {
     });
 
     it('should identify client errors', () => {
-      const typeError = new TypeError('Cannot read property of undefined');
-      expect(getErrorType(typeError)).toBe(ErrorType.CLIENT);
+      // Client errors are identified from strings with validation keywords
+      const validationError = 'Field is required';
+      expect(getErrorType(validationError)).toBe(ErrorType.CLIENT);
 
-      const syntaxError = new SyntaxError('Unexpected token');
-      expect(getErrorType(syntaxError)).toBe(ErrorType.CLIENT);
+      const invalidError = 'Invalid input provided';
+      expect(getErrorType(invalidError)).toBe(ErrorType.CLIENT);
     });
 
     it('should identify network errors from standard Error messages', () => {

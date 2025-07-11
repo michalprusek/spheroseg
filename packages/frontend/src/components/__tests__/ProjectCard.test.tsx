@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import ProjectCard from '../ProjectCard';
+import ProjectCard from '../project/ProjectCard';
 import { vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 

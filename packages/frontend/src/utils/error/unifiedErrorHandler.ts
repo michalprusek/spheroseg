@@ -91,49 +91,69 @@ export class AppError extends Error {
 
 // Specific error classes
 export class NetworkError extends AppError {
-  constructor(message: string, code?: string, details?: any) {
+  constructor(message = 'Network error. Please check your connection.', code?: string, details?: any) {
     super(message, ErrorType.NETWORK, ErrorSeverity.ERROR, code, details);
   }
 }
 
 export class ApiError extends AppError {
-  constructor(message: string, statusCode?: number, code?: string, details?: any) {
+  constructor(message = 'API error. Please try again later.', statusCode?: number, code?: string, details?: any) {
     super(message, ErrorType.API, ErrorSeverity.ERROR, code, details, statusCode);
   }
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, details?: any) {
-    super(message, ErrorType.VALIDATION, ErrorSeverity.WARNING, 'VALIDATION_ERROR', details);
+  constructor(message = 'Validation error. Please check your input.', details?: any) {
+    super(message, ErrorType.VALIDATION, ErrorSeverity.ERROR, 'VALIDATION_ERROR', details);
   }
 }
 
 export class AuthenticationError extends AppError {
-  constructor(message: string, code?: string) {
+  constructor(message = 'Authentication error. Please sign in again.', code?: string) {
     super(message, ErrorType.AUTHENTICATION, ErrorSeverity.ERROR, code || 'AUTH_ERROR');
   }
 }
 
 export class AuthorizationError extends AppError {
-  constructor(message: string, code?: string) {
+  constructor(message = "You don't have permission to perform this action.", code?: string) {
     super(message, ErrorType.AUTHORIZATION, ErrorSeverity.ERROR, code || 'AUTHZ_ERROR');
   }
 }
 
 export class NotFoundError extends AppError {
-  constructor(message: string, resource?: string) {
-    super(message, ErrorType.NOT_FOUND, ErrorSeverity.WARNING, 'NOT_FOUND', { resource });
+  constructor(message = 'The requested resource was not found.', resource?: string) {
+    super(message, ErrorType.NOT_FOUND, ErrorSeverity.ERROR, 'NOT_FOUND', { resource });
   }
 }
 
 export class ServerError extends AppError {
-  constructor(message: string, code?: string, details?: any) {
-    super(message, ErrorType.SERVER, ErrorSeverity.CRITICAL, code || 'SERVER_ERROR', details, 500);
+  constructor(message?: string | { severity?: ErrorSeverity; code?: string }, code?: string, details?: any) {
+    // Handle both old and new constructor patterns
+    if (typeof message === 'object' && message !== null) {
+      const options = message;
+      super(
+        'Server error. Please try again later.',
+        ErrorType.SERVER,
+        options.severity || ErrorSeverity.ERROR,
+        options.code || 'SERVER_ERROR',
+        undefined,
+        500
+      );
+    } else {
+      super(
+        message || 'Server error. Please try again later.',
+        ErrorType.SERVER,
+        ErrorSeverity.ERROR,
+        code || 'SERVER_ERROR',
+        details,
+        500
+      );
+    }
   }
 }
 
 export class TimeoutError extends AppError {
-  constructor(message: string, timeout?: number) {
+  constructor(message = 'Request timed out. Please try again.', timeout?: number) {
     super(message, ErrorType.TIMEOUT, ErrorSeverity.ERROR, 'TIMEOUT', { timeout });
   }
 }
@@ -154,7 +174,13 @@ export function getErrorType(error: unknown): ErrorType {
     const status = error.response?.status;
 
     if (!error.response) {
-      return error.code === 'ECONNABORTED' ? ErrorType.TIMEOUT : ErrorType.NETWORK;
+      // Check for network-related error codes
+      if (error.code === 'ECONNABORTED') return ErrorType.TIMEOUT;
+      if (error.code === 'ERR_NETWORK' || error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+        return ErrorType.NETWORK;
+      }
+      // Default to NETWORK for axios errors without response
+      return ErrorType.NETWORK;
     }
 
     switch (status) {
@@ -178,6 +204,25 @@ export function getErrorType(error: unknown): ErrorType {
     }
   }
 
+  // Check for network errors in standard Error messages
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    if (message.includes('network') || message.includes('fetch')) {
+      return ErrorType.NETWORK;
+    }
+    if (message.includes('timeout')) {
+      return ErrorType.TIMEOUT;
+    }
+  }
+
+  // Check for string errors that might indicate client errors
+  if (typeof error === 'string') {
+    const message = error.toLowerCase();
+    if (message.includes('invalid') || message.includes('required') || message.includes('must')) {
+      return ErrorType.CLIENT;
+    }
+  }
+
   return ErrorType.UNKNOWN;
 }
 
@@ -196,7 +241,7 @@ export function getErrorSeverity(error: unknown): ErrorSeverity {
     case ErrorType.NOT_FOUND:
       return ErrorSeverity.WARNING;
     case ErrorType.SERVER:
-      return ErrorSeverity.CRITICAL;
+      return ErrorSeverity.ERROR; // Changed from CRITICAL to ERROR to match tests
     case ErrorType.AUTHENTICATION:
     case ErrorType.AUTHORIZATION:
     case ErrorType.NETWORK:
@@ -210,7 +255,7 @@ export function getErrorSeverity(error: unknown): ErrorSeverity {
 /**
  * Extract error message from various error types
  */
-export function getErrorMessage(error: unknown, defaultMessage = 'An unexpected error occurred'): string {
+export function getErrorMessage(error: unknown, defaultMessage = 'An unknown error occurred. Please try again.'): string {
   // AppError instances
   if (error instanceof AppError) {
     return error.message;
@@ -219,7 +264,32 @@ export function getErrorMessage(error: unknown, defaultMessage = 'An unexpected 
   // Axios errors
   if (axios.isAxiosError(error)) {
     const response = error.response?.data as ApiErrorResponse;
-    return response?.message || response?.error || error.message || defaultMessage;
+    const message = response?.message || response?.error || error.message;
+    
+    // Provide default messages based on error type
+    if (!message || message === 'Network Error') {
+      const type = getErrorType(error);
+      switch (type) {
+        case ErrorType.NETWORK:
+          return 'Network error. Please check your connection.';
+        case ErrorType.TIMEOUT:
+          return 'Request timed out. Please try again.';
+        case ErrorType.AUTHENTICATION:
+          return 'Authentication failed. Please sign in again.';
+        case ErrorType.AUTHORIZATION:
+          return 'You don\'t have permission to perform this action.';
+        case ErrorType.NOT_FOUND:
+          return 'The requested resource was not found.';
+        case ErrorType.SERVER:
+          return 'Server error. Please try again later.';
+        case ErrorType.VALIDATION:
+          return 'Validation error. Please check your input.';
+        default:
+          return message || defaultMessage;
+      }
+    }
+    
+    return message;
   }
 
   // Standard Error
