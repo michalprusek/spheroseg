@@ -23,6 +23,23 @@ const ThemedFooter = () => {
     setForceUpdate((prev) => prev + 1);
   }, [language, theme]);
 
+  // Listen for system theme changes
+  useEffect(() => {
+    if (theme === 'system') {
+      const observer = new MutationObserver(() => {
+        // Force re-render when dark class changes
+        setForceUpdate((prev) => prev + 1);
+      });
+
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+
+      return () => observer.disconnect();
+    }
+  }, [theme]);
+
   // Get translations based on current language
   const getTranslations = useCallback(() => {
     switch (language) {
@@ -75,45 +92,56 @@ const ThemedFooter = () => {
     [language, getTranslations],
   );
 
-  // Determine footer classes based on theme
+  // Get the resolved theme (handles system theme)
+  const getResolvedTheme = () => {
+    if (theme === 'system') {
+      // Check if dark mode is active by looking at the root element
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+    return theme;
+  };
+
+  const resolvedTheme = getResolvedTheme();
+
+  // Determine footer classes based on resolved theme
   const getFooterClasses = () => {
-    if (theme === 'dark') {
+    if (resolvedTheme === 'dark') {
       return 'bg-gray-900 text-white';
     } else {
       return 'bg-gray-100 text-gray-800';
     }
   };
 
-  // Determine link hover classes based on theme
+  // Determine link hover classes based on resolved theme
   const getLinkHoverClasses = () => {
-    if (theme === 'dark') {
+    if (resolvedTheme === 'dark') {
       return 'text-gray-400 hover:text-white transition-colors';
     } else {
       return 'text-gray-600 hover:text-gray-900 transition-colors';
     }
   };
 
-  // Determine border color based on theme
+  // Determine border color based on resolved theme
   const getBorderClasses = () => {
-    if (theme === 'dark') {
+    if (resolvedTheme === 'dark') {
       return 'border-gray-800';
     } else {
       return 'border-gray-200';
     }
   };
 
-  // Determine icon background based on theme
+  // Determine icon background based on resolved theme
   const getIconBgClasses = () => {
-    if (theme === 'dark') {
+    if (resolvedTheme === 'dark') {
       return 'bg-blue-600';
     } else {
       return 'bg-blue-500';
     }
   };
 
-  // Determine text color for muted text based on theme
+  // Determine text color for muted text based on resolved theme
   const getMutedTextClasses = () => {
-    if (theme === 'dark') {
+    if (resolvedTheme === 'dark') {
       return 'text-gray-400';
     } else {
       return 'text-gray-500';
