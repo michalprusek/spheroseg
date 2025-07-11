@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-export type AnnotationFormat = 'COCO' | 'YOLO' | 'MASK' | 'POLYGONS';
+export type AnnotationFormat = 'COCO' | 'YOLO' | 'MASK' | 'POLYGONS' | 'DATUMARO' | 'CVAT_MASKS' | 'CVAT_YAML';
 export type MetricsFormat = 'CSV' | 'EXCEL';
 
 interface ExportOptionsCardProps {
@@ -89,6 +89,9 @@ const ExportOptionsCard: React.FC<ExportOptionsCardProps> = ({
                   <SelectItem value="YOLO">{t('export.formats.YOLO')}</SelectItem>
                   <SelectItem value="MASK">{t('export.formats.MASK')}</SelectItem>
                   <SelectItem value="POLYGONS">{t('export.formats.POLYGONS')}</SelectItem>
+                  <SelectItem value="DATUMARO">{t('export.formats.DATUMARO')}</SelectItem>
+                  <SelectItem value="CVAT_MASKS">{t('export.formats.CVAT_MASKS')}</SelectItem>
+                  <SelectItem value="CVAT_YAML">{t('export.formats.CVAT_YAML')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500 mt-1">
@@ -96,6 +99,9 @@ const ExportOptionsCard: React.FC<ExportOptionsCardProps> = ({
                 {annotationFormat === 'YOLO' && t('export.formatDescriptions.YOLO')}
                 {annotationFormat === 'MASK' && t('export.formatDescriptions.MASK')}
                 {annotationFormat === 'POLYGONS' && t('export.formatDescriptions.POLYGONS')}
+                {annotationFormat === 'DATUMARO' && t('export.formatDescriptions.DATUMARO')}
+                {annotationFormat === 'CVAT_MASKS' && t('export.formatDescriptions.CVAT_MASKS')}
+                {annotationFormat === 'CVAT_YAML' && t('export.formatDescriptions.CVAT_YAML')}
               </p>
             </div>
           )}

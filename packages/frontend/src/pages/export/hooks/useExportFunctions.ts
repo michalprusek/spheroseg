@@ -1229,6 +1229,208 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
     return result;
   };
 
+  // Convert polygons to Datumaro format
+  const convertToDatumaro = (images: ProjectImage[]) => {
+    const items: any[] = [];
+    
+    images.forEach((image, imageIndex) => {
+      const imageItem = {
+        id: image.name,
+        annotations: [] as any[],
+        image: {
+          path: image.name,
+          size: [image.width || 800, image.height || 600]
+        }
+      };
+      
+      if (!image.segmentationResult) {
+        items.push(imageItem);
+        return;
+      }
+      
+      // Extract polygons
+      let polygons: Polygon[] = [];
+      try {
+        const segData = typeof image.segmentationResult === 'string' 
+          ? JSON.parse(image.segmentationResult) 
+          : image.segmentationResult;
+          
+        if (Array.isArray(segData)) {
+          polygons = segData;
+        } else if (segData?.polygons) {
+          polygons = segData.polygons;
+        } else if (segData?.result_data?.polygons) {
+          polygons = segData.result_data.polygons;
+        }
+      } catch (error) {
+        console.error(`Error parsing segmentation data for ${image.name}:`, error);
+      }
+      
+      // Process polygons
+      polygons.forEach((polygon, polygonIndex) => {
+        if (!Array.isArray(polygon.points) || polygon.points.length < 3) return;
+        
+        const isHole = polygon.type === 'internal';
+        const label = isHole ? 1 : 0; // 0 for cell, 1 for hole
+        
+        // Convert points to flat array format [x1, y1, x2, y2, ...]
+        const points = polygon.points.flatMap(p => [p.x, p.y]);
+        
+        imageItem.annotations.push({
+          id: polygonIndex,
+          type: 'polygon',
+          label_id: label,
+          points: points,
+          attributes: {},
+          group_id: 0
+        });
+      });
+      
+      items.push(imageItem);
+    });
+    
+    return { items };
+  };
+
+  // Convert polygons to CVAT masks XML format
+  const convertToCVATMasks = (images: ProjectImage[]) => {
+    let xml = '<?xml version="1.0" encoding="utf-8"?>\n';
+    xml += '<annotations>\n';
+    xml += '  <version>1.1</version>\n';
+    xml += '  <meta>\n';
+    xml += '    <task>\n';
+    xml += '      <name>Spheroid Segmentation</name>\n';
+    xml += '      <size>' + images.reduce((sum, img) => sum + 1, 0) + '</size>\n';
+    xml += '      <mode>annotation</mode>\n';
+    xml += '      <labels>\n';
+    xml += '        <label>\n';
+    xml += '          <name>cell</name>\n';
+    xml += '          <color>#ff0000</color>\n';
+    xml += '          <type>polygon</type>\n';
+    xml += '        </label>\n';
+    xml += '        <label>\n';
+    xml += '          <name>hole</name>\n';
+    xml += '          <color>#0000ff</color>\n';
+    xml += '          <type>polygon</type>\n';
+    xml += '        </label>\n';
+    xml += '      </labels>\n';
+    xml += '    </task>\n';
+    xml += '  </meta>\n';
+    
+    images.forEach((image, imageIndex) => {
+      xml += `  <image id="${imageIndex}" name="${image.name}" width="${image.width || 800}" height="${image.height || 600}">\n`;
+      
+      if (image.segmentationResult) {
+        // Extract polygons
+        let polygons: Polygon[] = [];
+        try {
+          const segData = typeof image.segmentationResult === 'string' 
+            ? JSON.parse(image.segmentationResult) 
+            : image.segmentationResult;
+            
+          if (Array.isArray(segData)) {
+            polygons = segData;
+          } else if (segData?.polygons) {
+            polygons = segData.polygons;
+          } else if (segData?.result_data?.polygons) {
+            polygons = segData.result_data.polygons;
+          }
+        } catch (error) {
+          console.error(`Error parsing segmentation data for ${image.name}:`, error);
+        }
+        
+        // Process polygons
+        polygons.forEach((polygon, polygonIndex) => {
+          if (!Array.isArray(polygon.points) || polygon.points.length < 3) return;
+          
+          const isHole = polygon.type === 'internal';
+          const label = isHole ? 'hole' : 'cell';
+          
+          // Convert points to string format "x1,y1;x2,y2;..."
+          const pointsStr = polygon.points.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(';');
+          
+          xml += `    <polygon label="${label}" source="manual" occluded="0" points="${pointsStr}" z_order="${polygonIndex}">\n`;
+          xml += '    </polygon>\n';
+        });
+      }
+      
+      xml += '  </image>\n';
+    });
+    
+    xml += '</annotations>\n';
+    return xml;
+  };
+
+  // Convert polygons to CVAT YAML format
+  const convertToCVATYAML = (images: ProjectImage[]) => {
+    let yaml = '# CVAT YAML Format 1.1\n';
+    yaml += 'annotations:\n';
+    yaml += '  version: "1.1"\n';
+    yaml += '  meta:\n';
+    yaml += '    task:\n';
+    yaml += '      name: "Spheroid Segmentation"\n';
+    yaml += '      size: ' + images.length + '\n';
+    yaml += '      mode: "annotation"\n';
+    yaml += '      labels:\n';
+    yaml += '        - name: "cell"\n';
+    yaml += '          color: "#ff0000"\n';
+    yaml += '          type: "polygon"\n';
+    yaml += '        - name: "hole"\n';
+    yaml += '          color: "#0000ff"\n';
+    yaml += '          type: "polygon"\n';
+    yaml += '  images:\n';
+    
+    images.forEach((image, imageIndex) => {
+      yaml += `    - id: ${imageIndex}\n`;
+      yaml += `      name: "${image.name}"\n`;
+      yaml += `      width: ${image.width || 800}\n`;
+      yaml += `      height: ${image.height || 600}\n`;
+      
+      if (image.segmentationResult) {
+        yaml += '      annotations:\n';
+        
+        // Extract polygons
+        let polygons: Polygon[] = [];
+        try {
+          const segData = typeof image.segmentationResult === 'string' 
+            ? JSON.parse(image.segmentationResult) 
+            : image.segmentationResult;
+            
+          if (Array.isArray(segData)) {
+            polygons = segData;
+          } else if (segData?.polygons) {
+            polygons = segData.polygons;
+          } else if (segData?.result_data?.polygons) {
+            polygons = segData.result_data.polygons;
+          }
+        } catch (error) {
+          console.error(`Error parsing segmentation data for ${image.name}:`, error);
+        }
+        
+        // Process polygons
+        polygons.forEach((polygon, polygonIndex) => {
+          if (!Array.isArray(polygon.points) || polygon.points.length < 3) return;
+          
+          const isHole = polygon.type === 'internal';
+          const label = isHole ? 'hole' : 'cell';
+          
+          yaml += '        - type: "polygon"\n';
+          yaml += `          label: "${label}"\n`;
+          yaml += '          source: "manual"\n';
+          yaml += '          occluded: false\n';
+          yaml += `          z_order: ${polygonIndex}\n`;
+          yaml += '          points:\n';
+          
+          polygon.points.forEach(p => {
+            yaml += `            - [${p.x.toFixed(2)}, ${p.y.toFixed(2)}]\n`;
+          });
+        });
+      }
+    });
+    
+    return yaml;
+  };
+
   // Helper function to fetch an image as blob
   const fetchImageAsBlob = async (url: string): Promise<Blob | null> => {
     try {
@@ -1728,6 +1930,66 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         } catch (error) {
           console.error(`Error exporting MASK format:`, error);
           toast.error(`Chyba při exportu MASK formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+        }
+      } else if (annotationFormat === 'DATUMARO') {
+        try {
+          console.log(`Converting ${imagesToExport.length} images to Datumaro format`);
+          const datumaroData = convertToDatumaro(imagesToExport);
+          
+          // Create Datumaro structure
+          const datumaroFolder = segmentationFolder.folder('datumaro');
+          
+          // Add annotations.json
+          datumaroFolder.file('annotations.json', JSON.stringify(datumaroData, null, 2));
+          
+          // Add categories.json
+          const categories = {
+            label: {
+              labels: [
+                { name: 'cell', parent: null, attributes: [] },
+                { name: 'hole', parent: null, attributes: [] }
+              ],
+              attributes: []
+            }
+          };
+          datumaroFolder.file('categories.json', JSON.stringify(categories, null, 2));
+          
+          console.log(`Datumaro format exported successfully`);
+        } catch (error) {
+          console.error(`Error exporting Datumaro format:`, error);
+          toast.error(`Chyba při exportu Datumaro formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+        }
+      } else if (annotationFormat === 'CVAT_MASKS') {
+        try {
+          console.log(`Converting ${imagesToExport.length} images to CVAT masks format`);
+          const cvatMasksData = convertToCVATMasks(imagesToExport);
+          
+          // Create CVAT masks structure
+          const cvatMasksFolder = segmentationFolder.folder('cvat_masks');
+          
+          // Add annotations.xml
+          cvatMasksFolder.file('annotations.xml', cvatMasksData);
+          
+          console.log(`CVAT masks format exported successfully`);
+        } catch (error) {
+          console.error(`Error exporting CVAT masks format:`, error);
+          toast.error(`Chyba při exportu CVAT masks formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+        }
+      } else if (annotationFormat === 'CVAT_YAML') {
+        try {
+          console.log(`Converting ${imagesToExport.length} images to CVAT YAML format`);
+          const cvatYamlData = convertToCVATYAML(imagesToExport);
+          
+          // Create CVAT YAML structure
+          const cvatYamlFolder = segmentationFolder.folder('cvat_yaml');
+          
+          // Add annotations.yaml
+          cvatYamlFolder.file('annotations.yaml', cvatYamlData);
+          
+          console.log(`CVAT YAML format exported successfully`);
+        } catch (error) {
+          console.error(`Error exporting CVAT YAML format:`, error);
+          toast.error(`Chyba při exportu CVAT YAML formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
         }
       }
     }
