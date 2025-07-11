@@ -16,11 +16,18 @@ const minimalEnFallback = {
   common: {
     loading: 'Loading...',
     loadingApplication: 'Loading application...',
+    loadingAccount: 'Loading your account...',
     error: 'Error',
     save: 'Save',
     cancel: 'Cancel',
+    settings: 'Settings',
+    profile: 'Profile',
+    dashboard: 'Dashboard',
+    signIn: 'Sign In',
+    signOut: 'Sign Out',
   },
   settings: {
+    title: 'Settings',
     pageTitle: 'Settings',
     profile: 'Profile',
     account: 'Account',
@@ -32,6 +39,10 @@ const minimalEnFallback = {
       description: "This project doesn't have any images yet. Upload images to get started.",
       uploadButton: 'Upload Images',
     },
+  },
+  auth: {
+    signIn: 'Sign In',
+    signOut: 'Sign Out',
   },
 };
 
@@ -60,7 +71,10 @@ export async function initializeTranslations() {
     fr: { translation: fr },
     zh: { translation: zh },
   };
-  console.log('[translationLoader] Translations loaded:', resources);
+  // Log only in development mode
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[translationLoader] Translations loaded:', Object.keys(resources));
+  }
   return resources;
 }
 
