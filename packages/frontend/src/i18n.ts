@@ -26,44 +26,24 @@ export const i18nInitializedPromise = (async () => {
       },
       returnObjects: true, // Allow returning arrays and objects
       debug: process.env.NODE_ENV === 'development',
-      // Add these to help with debugging
-      load: 'languageOnly',
-      keySeparator: '.',
-      nsSeparator: false,
+      react: {
+        useSuspense: false, // Prevent suspense issues during init
+      },
     });
     logger.info(
       '[i18n] i18next initialized successfully. Loaded languages:',
       Object.keys(i18nInstance.services.resourceStore.data),
     );
     
-    // Debug: Check resource store structure
-    const resourceStore = i18nInstance.services.resourceStore;
-    logger.info('[i18n] Resource store structure:', {
-      data: resourceStore.data,
-      enData: resourceStore.data?.en,
-      enTranslation: resourceStore.data?.en?.translation,
-      commonFromStore: resourceStore.data?.en?.translation?.common,
-      sampleKey: resourceStore.data?.en?.translation?.common?.loadingApplication
-    });
-    
-    // Debug: Check if translations are accessible
-    const testKeys = [
-      'common.loadingApplication',
-      'projects.createProject', 
-      'statsOverview.totalProjects',
-      'common.delete'
-    ];
-    
-    logger.info('[i18n] Testing translation keys:');
-    testKeys.forEach(key => {
-      const value = i18nInstance.t(key);
-      const directAccess = i18nInstance.getResource('en', 'translation', key);
-      logger.info(`[i18n] ${key} = "${value}" (missing: ${value === key}, direct: ${directAccess})`);
-    });
-    
-    // Add i18next to window for debugging
-    if (typeof window !== 'undefined') {
+    // Add i18next to window for debugging in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
       (window as any).i18next = i18nInstance;
+      
+      // Quick test to ensure translations work
+      const testKey = i18nInstance.t('common.loadingApplication');
+      if (testKey === 'common.loadingApplication') {
+        logger.error('[i18n] Translation test failed - keys are not being resolved!');
+      }
     }
     return i18nInstance;
   } catch (error) {

@@ -91,7 +91,7 @@ export async function initializeTranslations() {
     console.log('[translationLoader] Translations loaded:', Object.keys(resources));
     
     // Verify translations are loaded correctly
-    if (process.env.NODE_ENV === 'development' && en) {
+    if (en) {
       console.log('[translationLoader] EN translation loaded successfully');
       
       // Quick validation
