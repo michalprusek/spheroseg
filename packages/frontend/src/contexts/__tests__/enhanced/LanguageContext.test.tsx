@@ -8,9 +8,26 @@ import '@testing-library/jest-dom';
 vi.mock('i18next');
 vi.mock('@/lib/apiClient');
 vi.mock('@/services/userProfileService');
+vi.mock('@/i18n');
 
 import i18next from 'i18next';
 import apiClient from '@/lib/apiClient';
+
+// Mock i18n module with initialization promise
+vi.mock('@/i18n', () => ({
+  i18nInitializedPromise: Promise.resolve({
+    language: 'en',
+    changeLanguage: vi.fn().mockResolvedValue(undefined),
+    t: vi.fn((key) => key),
+    isInitialized: true,
+  }),
+  default: {
+    language: 'en',
+    changeLanguage: vi.fn().mockResolvedValue(undefined),
+    t: vi.fn((key) => key),
+    isInitialized: true,
+  },
+}));
 
 // Mock translations with nested structures and plurals
 vi.mock('@/translations/en', () => ({
@@ -136,7 +153,8 @@ vi.mock('i18next', () => {
         if (options?.defaultValue) return options.defaultValue;
         return key;
       }),
-      language: vi.fn().mockImplementation(() => currentLanguage),
+      language: currentLanguage,
+      get language() { return currentLanguage; },
       options: {
         resources: {
           en: {},

@@ -57,14 +57,23 @@ export function calculatePolygonPerimeter(points: Point[]): number {
 
 /**
  * Check if a point is inside a polygon using ray casting
+ * Note: Points exactly on the edge are considered inside
  */
 export function isPointInPolygon(point: Point, polygon: Point[]): boolean {
+  if (!polygon || polygon.length < 3) return false;
+  
   let inside = false;
   const n = polygon.length;
   let p1 = polygon[0];
   
   for (let i = 1; i <= n; i++) {
     const p2 = polygon[i % n];
+    
+    // Check if point is on the edge
+    if (isPointOnLineSegment(point, p1, p2)) {
+      return true;
+    }
+    
     if (point.y > Math.min(p1.y, p2.y)) {
       if (point.y <= Math.max(p1.y, p2.y)) {
         if (point.x <= Math.max(p1.x, p2.x)) {
@@ -79,6 +88,42 @@ export function isPointInPolygon(point: Point, polygon: Point[]): boolean {
   }
   
   return inside;
+}
+
+/**
+ * Check if a point lies on a line segment
+ */
+function isPointOnLineSegment(point: Point, lineStart: Point, lineEnd: Point): boolean {
+  const epsilon = 0.0001;
+  
+  // Calculate vectors
+  const dx = lineEnd.x - lineStart.x;
+  const dy = lineEnd.y - lineStart.y;
+  
+  // Handle the case where lineStart and lineEnd are the same point
+  if (Math.abs(dx) < epsilon && Math.abs(dy) < epsilon) {
+    return Math.abs(point.x - lineStart.x) < epsilon && Math.abs(point.y - lineStart.y) < epsilon;
+  }
+  
+  // Calculate parameter t for the parametric line equation
+  let t: number;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    t = (point.x - lineStart.x) / dx;
+  } else {
+    t = (point.y - lineStart.y) / dy;
+  }
+  
+  // Check if t is within [0, 1] range (point is on the segment)
+  if (t < -epsilon || t > 1 + epsilon) {
+    return false;
+  }
+  
+  // Calculate the expected point on the line
+  const expectedX = lineStart.x + t * dx;
+  const expectedY = lineStart.y + t * dy;
+  
+  // Check if the point is close enough to the line
+  return Math.abs(point.x - expectedX) < epsilon && Math.abs(point.y - expectedY) < epsilon;
 }
 
 /**
@@ -315,4 +360,82 @@ export function calculatePolygonCentroid(points: Point[]): Point {
   
   const factor = 1 / (6 * area);
   return { x: cx * factor, y: cy * factor };
+}
+
+/**
+ * Calculate distance between two points
+ */
+export function distance(p1: Point, p2: Point): number {
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * Create a polygon with default properties
+ */
+export function createPolygon(points: Point[], properties?: Partial<Polygon>): Polygon {
+  return {
+    id: properties?.id || `polygon-${Date.now()}`,
+    points,
+    type: properties?.type || 'external',
+    color: properties?.color || generatePolygonColor(),
+    label: properties?.label,
+    visible: properties?.visible !== false,
+    ...properties
+  };
+}
+
+/**
+ * Calculate the bounding box of a polygon
+ */
+export function calculateBoundingBox(points: Point[]): { minX: number; minY: number; maxX: number; maxY: number } {
+  if (!points || points.length === 0) {
+    return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+  }
+
+  let minX = points[0].x;
+  let minY = points[0].y;
+  let maxX = points[0].x;
+  let maxY = points[0].y;
+
+  for (let i = 1; i < points.length; i++) {
+    minX = Math.min(minX, points[i].x);
+    minY = Math.min(minY, points[i].y);
+    maxX = Math.max(maxX, points[i].x);
+    maxY = Math.max(maxY, points[i].y);
+  }
+
+  return { minX, minY, maxX, maxY };
+}
+
+/**
+ * Check if two polygons intersect
+ */
+export function doPolygonsIntersect(polygon1: Point[], polygon2: Point[]): boolean {
+  // Check if any edge of polygon1 intersects with any edge of polygon2
+  for (let i = 0; i < polygon1.length; i++) {
+    const p1 = polygon1[i];
+    const p2 = polygon1[(i + 1) % polygon1.length];
+    
+    for (let j = 0; j < polygon2.length; j++) {
+      const p3 = polygon2[j];
+      const p4 = polygon2[(j + 1) % polygon2.length];
+      
+      if (findLineIntersection(p1, p2, p3, p4)) {
+        return true;
+      }
+    }
+  }
+  
+  // Check if one polygon is inside the other
+  if (polygon1.length > 0 && isPointInPolygon(polygon1[0], polygon2)) {
+    return true;
+  }
+  
+  if (polygon2.length > 0 && isPointInPolygon(polygon2[0], polygon1)) {
+    return true;
+  }
+  
+  return false;
 }
