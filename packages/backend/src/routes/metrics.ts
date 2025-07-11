@@ -11,6 +11,7 @@ import { getPool } from '../db';
 import logger from '../utils/logger';
 import os from 'os';
 import { getContainerInfo } from '../utils/containerInfo';
+import { authenticate as authMiddleware } from '../security/middleware/auth';
 
 const router: Router = express.Router();
 
@@ -24,7 +25,7 @@ const router: Router = express.Router();
  * - Cache hit/miss rates
  * - Database connection pool stats
  */
-router.get('/performance', async (req: Request, res: Response) => {
+router.get('/performance', authMiddleware, async (req: Request, res: Response) => {
   try {
     const summary = await performanceMonitor.getPerformanceSummary();
 
@@ -123,7 +124,7 @@ router.get('/health', async (req: Request, res: Response) => {
  *
  * Returns a simplified performance summary suitable for dashboards
  */
-router.get('/summary', async (req: Request, res: Response) => {
+router.get('/summary', authMiddleware, async (req: Request, res: Response) => {
   try {
     const summary = await performanceMonitor.getPerformanceSummary();
 
@@ -168,7 +169,7 @@ router.get('/summary', async (req: Request, res: Response) => {
  *
  * Returns list of slow database queries for optimization
  */
-router.get('/slow-queries', async (req: Request, res: Response) => {
+router.get('/slow-queries', authMiddleware, async (req: Request, res: Response) => {
   try {
     const summary = await performanceMonitor.getPerformanceSummary();
     const slowQueries = summary.database?.slowQueries || [];
@@ -197,7 +198,7 @@ router.get('/slow-queries', async (req: Request, res: Response) => {
  *
  * Returns performance statistics for all API endpoints
  */
-router.get('/endpoints', async (req: Request, res: Response) => {
+router.get('/endpoints', authMiddleware, async (req: Request, res: Response) => {
   try {
     const summary = await performanceMonitor.getPerformanceSummary();
     const slowEndpoints = summary.api?.slowEndpoints || [];

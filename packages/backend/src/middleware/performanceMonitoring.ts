@@ -554,6 +554,8 @@ export function createMonitoredPool(pool: Pool): Pool {
 
 /**
  * Performance monitoring endpoint handler
+ * @deprecated Use the authenticated endpoints in routes/metrics.ts instead
+ * Note: This function requires authentication middleware to be applied when used
  */
 export function performanceEndpoint(_req: Request, res: Response) {
   const summary = performanceMonitor.getSummary();
