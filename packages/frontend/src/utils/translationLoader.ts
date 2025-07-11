@@ -4,7 +4,26 @@
 async function loadSingleTranslation(importFunc: () => Promise<any>, fallback = {}) {
   try {
     const mod = await importFunc();
-    return mod.default || fallback; // Assuming .ts files export default
+    // Handle different module formats
+    if (mod && typeof mod === 'object') {
+      // Check if it's the actual translations (has expected keys)
+      if (mod.common || mod.projects || mod.auth) {
+        console.log('[translationLoader] Direct translation object found');
+        return mod;
+      }
+      // Check for default export
+      if (mod.default) {
+        console.log('[translationLoader] Using default export');
+        return mod.default;
+      }
+      // Check for __esModule flag
+      if (mod.__esModule && mod.default) {
+        console.log('[translationLoader] Using __esModule default export');
+        return mod.default;
+      }
+    }
+    console.log('[translationLoader] Returning module as-is');
+    return mod || fallback;
   } catch (error) {
     console.warn('Failed to load a translation module:', error);
     return fallback;

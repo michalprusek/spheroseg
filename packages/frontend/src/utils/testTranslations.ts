@@ -7,18 +7,28 @@ export function testTranslations() {
   // Test if the translations object exists
   console.log('EN translations exists:', !!enTranslations);
   
-  // Test common keys
-  console.log('common.loadingApplication:', enTranslations?.common?.loadingApplication);
-  console.log('common.delete:', enTranslations?.common?.delete);
+  // The issue: these are looking at the default export directly
+  // But i18next wraps them in a 'translation' namespace
   
-  // Test projects keys
-  console.log('projects.createProject:', enTranslations?.projects?.createProject);
-  console.log('projects.share:', enTranslations?.projects?.share);
-  console.log('projects.delete:', enTranslations?.projects?.delete);
+  // Let's check the actual structure
+  console.log('EN translations type:', typeof enTranslations);
+  console.log('EN translations is object:', enTranslations && typeof enTranslations === 'object');
   
-  // Test statsOverview keys
-  console.log('statsOverview.totalProjects:', enTranslations?.statsOverview?.totalProjects);
-  console.log('statsOverview.vsLastMonth:', enTranslations?.statsOverview?.vsLastMonth);
+  // Check if it's a module with default export
+  if (enTranslations && typeof enTranslations === 'object') {
+    // If it has a default property, it might be a module
+    if ('default' in enTranslations) {
+      console.log('Has default export, checking default:', enTranslations.default);
+      const actualTranslations = enTranslations.default;
+      console.log('common.loadingApplication from default:', actualTranslations?.common?.loadingApplication);
+    } else {
+      // Direct access
+      console.log('Direct access - common exists?', !!enTranslations.common);
+      console.log('Direct access - common.loadingApplication:', enTranslations.common?.loadingApplication);
+      console.log('Direct access - common.delete:', enTranslations.common?.delete);
+      console.log('Direct access - projects.createProject:', enTranslations.projects?.createProject);
+    }
+  }
   
   // Log the full structure
   console.log('Top-level keys:', Object.keys(enTranslations || {}));

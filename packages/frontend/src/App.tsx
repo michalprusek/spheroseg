@@ -17,9 +17,12 @@ import {
 import './i18n';
 
 // Debug translations
-import { testTranslations } from '@/utils/testTranslations';
+import { debugTranslationImports } from '@/utils/debugTranslations';
 if (process.env.NODE_ENV === 'development') {
-  testTranslations();
+  // Run debug after a short delay to ensure i18next is initialized
+  setTimeout(() => {
+    debugTranslationImports();
+  }, 1000);
 }
 
 import { AuthProvider } from '@/contexts/AuthContext';

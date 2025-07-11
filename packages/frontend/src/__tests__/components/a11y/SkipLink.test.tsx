@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 import { SkipLink } from '@/components/a11y';
 
 // Mock the useLanguage hook
 vi.mock('@/contexts/LanguageContext', () => ({
-  ...vi.requireActual('@/contexts/LanguageContext'),
   useLanguage: () => ({
     t: (key: string, fallback: string) => fallback,
     language: 'en',
