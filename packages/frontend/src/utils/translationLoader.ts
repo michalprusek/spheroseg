@@ -74,6 +74,17 @@ export async function initializeTranslations() {
   // Log only in development mode
   if (process.env.NODE_ENV === 'development') {
     console.log('[translationLoader] Translations loaded:', Object.keys(resources));
+    
+    // Debug specific translation structure
+    if (en) {
+      console.log('[translationLoader] EN translation structure:', {
+        hasCommon: !!en.common,
+        hasProjects: !!en.projects,
+        hasStatsOverview: !!en.statsOverview,
+        commonKeys: en.common ? Object.keys(en.common).slice(0, 5) : [],
+        projectKeys: en.projects ? Object.keys(en.projects).slice(0, 5) : [],
+      });
+    }
   }
   return resources;
 }

@@ -16,6 +16,12 @@ import {
 // i18n
 import './i18n';
 
+// Debug translations
+import { testTranslations } from '@/utils/testTranslations';
+if (process.env.NODE_ENV === 'development') {
+  testTranslations();
+}
+
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
