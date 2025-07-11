@@ -18,7 +18,9 @@ import { errorHandler } from './errorHandler';
 import { configureSecurity } from '../security';
 import { requestLoggerMiddleware } from '../monitoring/unified';
 import { trackAPIPerformance, addResponseTimeHeader } from './performanceTracking';
-import { i18nMiddleware, setUserLanguage } from './i18n';
+// TODO: Fix i18n imports - temporarily disabled
+// import { createI18nMiddleware } from '../config/i18n';
+// import { setUserLanguage } from './i18n';
 
 /**
  * Security middleware configuration
@@ -102,6 +104,7 @@ export const configureBodyParsingMiddleware = (app: Application): void => {
  */
 export const configureI18nMiddleware = (app: Application): void => {
   // Add i18n middleware
+  const i18nMiddleware = createI18nMiddleware();
   app.use(i18nMiddleware);
   
   // Add user language detection middleware (must be after auth)
@@ -185,7 +188,8 @@ export const configureMiddleware = (app: Application): void => {
   configureSecurityMiddleware(app);
 
   // 5. i18n middleware (needs to be early in the chain)
-  configureI18nMiddleware(app);
+  // TODO: Fix i18n middleware - temporarily disabled due to module resolution issues
+  // configureI18nMiddleware(app);
 
   // 6. Request monitoring middleware (unified monitoring system)
   app.use(requestLoggerMiddleware);

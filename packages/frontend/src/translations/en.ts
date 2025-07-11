@@ -904,6 +904,7 @@ export default {
     profile: 'Profile',
     account: 'Account',
     appearance: 'Appearance',
+    selectLanguage: 'Select Language',
     profileSettings: 'Profile Settings',
     accountSettings: 'Account Settings',
     securitySettings: 'Security Settings',

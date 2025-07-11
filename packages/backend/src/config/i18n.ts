@@ -3,7 +3,7 @@ import Backend from 'i18next-fs-backend';
 import middleware from 'i18next-http-middleware';
 import path from 'path';
 
-// Initialize i18next
+// Initialize i18next synchronously
 i18next
   .use(Backend)
   .use(middleware.LanguageDetector)
@@ -31,10 +31,17 @@ i18next
       escapeValue: false, // Not needed for API responses
     },
     returnObjects: true, // Allow returning objects for complex translations
+  }, (err) => {
+    if (err) {
+      console.error('Failed to initialize i18next:', err);
+    }
   });
 
 export default i18next;
-export const i18nMiddleware = middleware.handle(i18next);
+// Create middleware function that returns the actual middleware
+export function createI18nMiddleware() {
+  return middleware.handle(i18next);
+}
 
 // Helper function to get translation with user's preferred language
 export async function getUserTranslation(
