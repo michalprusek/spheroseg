@@ -286,6 +286,7 @@ export default {
     loadingAccount: 'Cargando su cuenta...',
     loadingApplication: 'Cargando aplicación...',
     selectAll: 'Seleccionar todo',
+    deselectAll: 'Deseleccionar todo',
     save: 'Guardar',
     cancel: 'Cancelar',
     delete: 'Eliminar',
@@ -1262,6 +1263,8 @@ export default {
       CSV: 'CSV (.csv)',
     },
     selectImagesForExport: 'Seleccionar imágenes para exportar',
+    selectImagesToExport: 'Seleccionar imágenes para exportar',
+    noImagesAvailable: 'No hay imágenes disponibles',
   },
   metrics: {
     area: 'Área',

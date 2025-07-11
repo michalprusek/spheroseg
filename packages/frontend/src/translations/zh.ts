@@ -1545,6 +1545,9 @@ export default {
     cloudStorage: '云存储',
     ftpServer: 'FTP服务器',
     apiEndpoint: 'API端点',
+    selectImagesForExport: '选择要导出的图像',
+    selectImagesToExport: '选择要导出的图像',
+    noImagesAvailable: '没有可用的图像',
   },
   metrics: {
     title: '指标',
