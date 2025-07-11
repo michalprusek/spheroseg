@@ -13,6 +13,11 @@ export default {
     },
     title: 'Editor segmentace',
     resolution: '{width}x{height}',
+    batch: {
+      mixed: 'Segmentace: {{successCount}} obrázků úspěšně zařazeno do fronty, {{failCount}} selhalo',
+      allSuccess: 'Segmentace: Všech {{count}} obrázků úspěšně zařazeno do fronty',
+      allFailed: 'Segmentace: Všech {{count}} obrázků selhalo',
+    },
     queue: {
       title: 'Fronta segmentace',
       summary: '{{total}} úkolů celkem ({{running}} zpracovává, {{queued}} ve frontě)',
@@ -281,6 +286,7 @@ export default {
     loadingAccount: 'Načítání vašeho účtu...',
     loadingApplication: 'Načítání aplikace...',
     selectAll: 'Vybrat vše',
+    deselectAll: 'Odznačit vše',
     save: 'Uložit',
     cancel: 'Zrušit',
     delete: 'Smazat',
@@ -1217,6 +1223,22 @@ export default {
     uploadError: 'Při nahrávání došlo k chybě. Zkuste to prosím znovu.',
     noProjectsToUpload: 'Žádné dostupné projekty. Nejprve vytvořte projekt.',
     notFound: 'Projekt "{{projectName}}" nebyl nalezen. Možná byl smazán.',
+    errors: {
+      imageOrProjectNotFound: 'Obrázek nebo projekt nebyl nalezen.',
+      failedToDeleteImage: 'Nepodařilo se smazat obrázek',
+      imageOrProjectNotFoundForNavigation: 'Obrázek nebo projekt nebyl nalezen pro navigaci, nebo chybí UUID.',
+      imageNotFoundForClearingSegmentation: 'Obrázek pro vymazání segmentace nebyl nalezen nebo chybí UUID.',
+      failedToClearSegmentation: 'Nepodařilo se odstranit segmentaci',
+    },
+    success: {
+      localImageDeleted: 'Lokální obrázek byl úspěšně odstraněn',
+      imageDeleted: 'Obrázek byl úspěšně smazán',
+      segmentationCleared: 'Segmentace byla úspěšně odstraněna.',
+    },
+    info: {
+      clearingSegmentation: 'Mažu segmentaci pro obrázek {{imageName}}...',
+      selectAtLeastOneImage: 'Vyberte prosím alespoň jeden obrázek.',
+    },
   },
   export: {
     formatDescriptions: {
@@ -1258,6 +1280,8 @@ export default {
       CSV: 'CSV (.csv)',
     },
     selectImagesForExport: 'Vyberte obrázky pro export',
+    selectImagesToExport: 'Vyberte obrázky k exportu',
+    noImagesAvailable: 'Žádné obrázky nejsou k dispozici',
   },
   metrics: {
     area: 'Plocha',

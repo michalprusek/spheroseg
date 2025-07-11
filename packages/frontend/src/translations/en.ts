@@ -13,6 +13,11 @@ export default {
     },
     title: 'Segmentation Editor',
     resolution: '{width}x{height}',
+    batch: {
+      mixed: 'Segmentation: {{successCount}} images successfully queued, {{failCount}} failed',
+      allSuccess: 'Segmentation: All {{count}} images successfully queued',
+      allFailed: 'Segmentation: All {{count}} images failed',
+    },
     queue: {
       title: 'Segmentation Queue',
       summary: '{{total}} tasks total ({{running}} processing, {{queued}} queued)',
@@ -256,6 +261,7 @@ export default {
     loadingAccount: 'Loading your account...',
     loadingApplication: 'Loading application...',
     selectAll: 'Select all',
+    deselectAll: 'Deselect all',
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',
@@ -1069,6 +1075,22 @@ export default {
     uploadError: 'An error occurred during upload. Please try again.',
     noProjectsToUpload: 'No projects available. Create a project first.',
     notFound: 'Project "{{projectName}}" not found. It may have been deleted.',
+    errors: {
+      imageOrProjectNotFound: 'Image or project not found.',
+      failedToDeleteImage: 'Failed to delete image',
+      imageOrProjectNotFoundForNavigation: 'Image or project not found for navigation, or UUID is missing.',
+      imageNotFoundForClearingSegmentation: 'Image not found for clearing segmentation or UUID is missing.',
+      failedToClearSegmentation: 'Failed to clear segmentation',
+    },
+    success: {
+      localImageDeleted: 'Local image successfully deleted',
+      imageDeleted: 'Image successfully deleted',
+      segmentationCleared: 'Segmentation successfully cleared.',
+    },
+    info: {
+      clearingSegmentation: 'Clearing segmentation for image {{imageName}}...',
+      selectAtLeastOneImage: 'Please select at least one image.',
+    },
   },
   export: {
     formatDescriptions: {
@@ -1110,6 +1132,8 @@ export default {
       CSV: 'CSV (.csv)',
     },
     selectImagesForExport: 'Select images for export',
+    selectImagesToExport: 'Select images to export',
+    noImagesAvailable: 'No images available',
   },
   metrics: {
     area: 'Area',

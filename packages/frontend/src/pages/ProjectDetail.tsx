@@ -474,11 +474,11 @@ const ProjectDetail = () => {
 
       // Zobrazíme celkový výsledek
       if (successCount > 0 && failCount > 0) {
-        toast.info(`Segmentace: ${successCount} obrázků úspěšně zařazeno do fronty, ${failCount} selhalo`);
+        toast.info(t('segmentation.batch.mixed', { successCount, failCount }));
       } else if (successCount > 0) {
-        toast.success(`Segmentace: Všech ${successCount} obrázků úspěšně zařazeno do fronty`);
+        toast.success(t('segmentation.batch.allSuccess', { count: successCount }));
       } else if (failCount > 0) {
-        toast.error(`Segmentace: Všech ${failCount} obrázků selhalo`);
+        toast.error(t('segmentation.batch.allFailed', { count: failCount }));
       }
 
       // Aktualizujeme data projektu
@@ -723,11 +723,11 @@ const ProjectDetail = () => {
 
         // Zobrazíme celkový výsledek
         if (successCount > 0 && failCount > 0) {
-          toast.info(`Segmentace: ${successCount} obrázků úspěšně zařazeno do fronty, ${failCount} selhalo`);
+          toast.info(t('segmentation.batch.mixed', { successCount, failCount }));
         } else if (successCount > 0) {
-          toast.success(`Segmentace: Všech ${successCount} obrázků úspěšně zařazeno do fronty`);
+          toast.success(t('segmentation.batch.allSuccess', { count: successCount }));
         } else if (failCount > 0) {
-          toast.error(`Segmentace: Všech ${failCount} obrázků selhalo`);
+          toast.error(t('segmentation.batch.allFailed', { count: failCount }));
         }
         apiSuccess = successCount > 0;
 
