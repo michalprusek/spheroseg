@@ -291,9 +291,15 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           // Calculate metrics
           const metrics = calculateMetrics(polygon, holes);
 
+          // Ensure area is positive (in case holes are larger than the polygon)
+          const area = Math.abs(metrics.Area);
+          if (metrics.Area < 0) {
+            console.warn(`Negative area detected for polygon ${index}: ${metrics.Area}. Using absolute value: ${area}`);
+          }
+
           return {
             objectId: index + 1,
-            area: metrics.Area,
+            area: area,
             perimeter: metrics.Perimeter,
             circularity: metrics.Circularity,
             equivalentDiameter: metrics.EquivalentDiameter,
@@ -1093,13 +1099,14 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
         // Calculate area with holes subtracted
         const metrics = calculateMetrics(polygon, holes);
+        const area = Math.abs(metrics.Area); // Ensure positive area
 
         annotations.push({
           id: annotationId++,
           image_id: imageIndex + 1,
           category_id: 1,
           segmentation,
-          area: metrics.Area,
+          area: area,
           bbox: [minX, minY, width, height],
           iscrowd: 0,
         });
@@ -1132,13 +1139,14 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
         // Calculate area
         const metrics = calculateMetrics(polygon, []);
+        const area = Math.abs(metrics.Area); // Ensure positive area
 
         annotations.push({
           id: annotationId++,
           image_id: imageIndex + 1,
           category_id: 2, // Use category "hole"
           segmentation,
-          area: metrics.Area,
+          area: area,
           bbox: [minX, minY, width, height],
           iscrowd: 0,
         });
@@ -1525,7 +1533,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       const imagesFolder = zip.folder('images');
 
       // Show progress toast
-      toast.info(`Stahování ${imagesToExport.length} obrázků...`);
+      toast.info(`Downloading ${imagesToExport.length} images...`);
 
       // Track progress
       let completedImages = 0;
@@ -1556,7 +1564,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             // Update progress
             completedImages++;
             if (completedImages % 5 === 0 || completedImages === totalImages) {
-              toast.info(`Stahování obrázků: ${completedImages}/${totalImages}`, {
+              toast.info(`Downloading images: ${completedImages}/${totalImages}`, {
                 id: 'image-download-progress',
               });
             }
@@ -2156,6 +2164,9 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         // Export metrics based on selected format
         console.log(`Generating metrics file in ${metricsFormat} format`);
 
+        // Get column headers (needed for both CSV and HTML)
+        const headers = worksheetRows.length > 0 ? Object.keys(worksheetRows[0]) : [];
+
         if (metricsFormat === 'EXCEL') {
           // Create worksheet
           const worksheet = utils.json_to_sheet(worksheetRows);
@@ -2194,8 +2205,6 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           console.log('Excel file successfully added to ZIP');
         } else {
           // CSV format
-          // First, get all column headers
-          const headers = Object.keys(worksheetRows[0]);
 
           // Create CSV content
           let csvContent = headers.join(',') + '\n';
@@ -2235,7 +2244,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         <body>
           <div class="container">
             <h1>Metrics for ${projectTitle || 'project'}</h1>
-            <p>Generated on ${formatDateTime(new Date())}</p>
+            <p>Generated on ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}</p>
             <table>
               <thead>
                 <tr>
