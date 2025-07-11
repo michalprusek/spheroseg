@@ -15,6 +15,8 @@ import useSocketConnection from '@/hooks/useSocketConnection';
 import apiClient from '@/lib/apiClient';
 import { useTranslations } from '@/hooks/useTranslations';
 import { SEGMENTATION_STATUS, isProcessingStatus } from '@/constants/segmentationStatus';
+import { debouncedCacheUpdate } from '@/utils/debounce';
+import { pollingManager } from '@/utils/pollingManager';
 
 interface ImageDisplayProps {
   image: ProjectImage;
@@ -41,12 +43,52 @@ export const ImageDisplay = ({
 }: ImageDisplayProps) => {
   const { t } = useTranslations();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [currentStatus, setCurrentStatus] = useState<string>(image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION);
+  const [currentStatus, setCurrentStatus] = useState<string>(
+    image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION,
+  );
 
-  // Track segmentation status changes
+  // Track segmentation status changes and force check on mount
   useEffect(() => {
-    setCurrentStatus(image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION);
-  }, [image.segmentationStatus]);
+    // Only update if the status actually changed
+    const newStatus = image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION;
+    if (currentStatus !== newStatus) {
+      setCurrentStatus(newStatus);
+    }
+
+    // Only check API status for images that might be processing
+    if (newStatus === SEGMENTATION_STATUS.PROCESSING || newStatus === SEGMENTATION_STATUS.QUEUED) {
+      // Force check the actual status from API when component mounts or image changes
+      const checkInitialStatus = async () => {
+        try {
+          const response = await apiClient.get(`/api/images/${image.id}/segmentation`);
+          if (response.data && response.data.status) {
+            const apiStatus = response.data.status;
+
+            // Only update if status is different from current
+            if (apiStatus !== currentStatus) {
+              setCurrentStatus(apiStatus);
+
+              // Update the cache with the correct status from API (debounced)
+              if (image.project_id) {
+                debouncedCacheUpdate(image.project_id, image.id, apiStatus, response.data.resultPath);
+              }
+            }
+          }
+        } catch (error: any) {
+          // Silently ignore 404 and 429 errors
+          if (error?.response?.status !== 404 && error?.response?.status !== 429) {
+            console.debug(`ImageDisplay: Error checking initial segmentation status for image ${image.id}`);
+          }
+        }
+      };
+
+      // Check status after a random delay between 2-5 seconds to avoid burst
+      const delay = 2000 + Math.random() * 3000;
+      const timeoutId = setTimeout(checkInitialStatus, delay);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [image.segmentationStatus, image.id, image.project_id]); // currentStatus removed to avoid infinite loop
 
   // Get socket connection
   const { socket, isConnected } = useSocketConnection();
@@ -59,6 +101,11 @@ export const ImageDisplay = ({
 
         // Update image status
         setCurrentStatus(data.status);
+
+        // Update the cache to prevent stale data (debounced)
+        if (image.project_id) {
+          debouncedCacheUpdate(image.project_id, data.imageId, data.status, data.resultPath);
+        }
 
         // Trigger queue status update
         if (
@@ -135,59 +182,57 @@ export const ImageDisplay = ({
     }
   }, [socket, isConnected, handleSegmentationUpdate, image.id, image.project_id]);
 
-  // Periodically check status for processing images to catch missed updates
+  // Use centralized polling manager for status updates
   useEffect(() => {
-    // Only set up polling for processing status and avoid infinite loops
-    if (currentStatus === SEGMENTATION_STATUS.PROCESSING) {
-      console.log(`ImageDisplay: Setting up status polling for processing image ${image.id}`);
+    // Set up polling for processing or queued status
+    if (currentStatus === SEGMENTATION_STATUS.PROCESSING || currentStatus === SEGMENTATION_STATUS.QUEUED) {
+      const pollId = `image-status-${image.id}`;
+      const endpoint = `/api/images/${image.id}/segmentation`;
 
-      // Function to check current image status through API
-      const checkImageStatus = async () => {
-        try {
-          // Try to get segmentation status directly
-          const response = await apiClient.get(`/api/images/${image.id}/segmentation`);
-          if (response.data && response.data.status) {
-            const apiStatus = response.data.status;
-            if (apiStatus !== currentStatus) {
-              console.log(
-                `ImageDisplay: Status polling detected change for image ${image.id}: ${currentStatus} → ${apiStatus}`,
-              );
-              setCurrentStatus(apiStatus);
+      // Callback when poll receives data
+      const handlePollData = (data: any) => {
+        if (data && data.status) {
+          const apiStatus = data.status;
+          if (apiStatus !== currentStatus) {
+            setCurrentStatus(apiStatus);
 
-              // If status changed to completed, trigger update notification
-              if (apiStatus === SEGMENTATION_STATUS.COMPLETED) {
-                const imageUpdateEvent = new CustomEvent('image-status-update', {
-                  detail: {
-                    imageId: image.id,
-                    status: apiStatus,
-                    forceQueueUpdate: true,
-                  },
-                });
-                window.dispatchEvent(imageUpdateEvent);
-              }
+            // Update the cache to prevent stale data (debounced)
+            if (image.project_id) {
+              debouncedCacheUpdate(image.project_id, image.id, apiStatus, data.resultPath);
+            }
+
+            // If status changed to completed or failed, unregister polling
+            if (apiStatus === SEGMENTATION_STATUS.COMPLETED || apiStatus === SEGMENTATION_STATUS.FAILED) {
+              pollingManager.unregister(pollId);
+
+              const imageUpdateEvent = new CustomEvent('image-status-update', {
+                detail: {
+                  imageId: image.id,
+                  status: apiStatus,
+                  forceQueueUpdate: true,
+                  resultPath: data.resultPath,
+                },
+              });
+              window.dispatchEvent(imageUpdateEvent);
             }
           }
-        } catch (error) {
-          // Don't spam the console with 401 errors, just log once
-          if (error?.response?.status === 401) {
-            console.warn(`ImageDisplay: Authentication required for image ${image.id}, stopping polling`);
-            return; // Stop polling on auth errors
-          }
-          console.warn(`ImageDisplay: Error checking segmentation status for image ${image.id}:`, error);
         }
       };
 
-      // Check immediately on mount
-      checkImageStatus();
-
-      // Set up polling interval - check every 15 seconds (increased to reduce spam)
-      const intervalId = setInterval(checkImageStatus, 15000);
+      // Register with polling manager - it will handle rate limiting and backoff
+      pollingManager.register(
+        pollId,
+        endpoint,
+        handlePollData,
+        15000, // Poll every 15 seconds (will be enforced to minimum by manager)
+        30, // Max 30 attempts
+      );
 
       return () => {
-        clearInterval(intervalId);
+        pollingManager.unregister(pollId);
       };
     }
-  }, [image.id]); // Removed currentStatus from dependencies to prevent infinite loops
+  }, [currentStatus, image.id, image.project_id]);
 
   // Listen for custom events (fallback mechanism)
   useEffect(() => {
@@ -204,6 +249,11 @@ export const ImageDisplay = ({
 
         // Update image status
         setCurrentStatus(status);
+
+        // Update the cache to prevent stale data (debounced)
+        if (image.project_id) {
+          debouncedCacheUpdate(image.project_id, imageId, status, customEvent.detail.resultPath);
+        }
 
         // If forceQueueUpdate is true or status is 'processing' or 'queued', update the queue indicator
         if (forceQueueUpdate || status === SEGMENTATION_STATUS.PROCESSING || status === SEGMENTATION_STATUS.QUEUED) {
@@ -399,10 +449,11 @@ export const ImageDisplay = ({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
         layout
+        className="h-full"
       >
         <Card
           className={cn(
-            'overflow-hidden border-gray-200 dark:border-gray-700 transition-all group hover:shadow-md relative',
+            'overflow-hidden border-gray-200 dark:border-gray-700 transition-all group hover:shadow-md relative h-full flex flex-col',
             isSelected ? 'ring-2 ring-blue-500' : '',
             className,
           )}
@@ -436,8 +487,8 @@ export const ImageDisplay = ({
 
           {/* Image preview with segmentation overlay - clickable to open segmentation editor */}
           <div
-            className="bg-gray-100 dark:bg-gray-800 relative overflow-hidden cursor-pointer flex items-center justify-center w-full aspect-square"
-            style={{ width: '100%', height: '100%', margin: '0' }}
+            className="bg-gray-100 dark:bg-gray-800 relative overflow-hidden cursor-pointer flex items-center justify-center w-full flex-1"
+            style={{ margin: '0' }}
           >
             {imageSrc ? (
               <>
@@ -445,16 +496,19 @@ export const ImageDisplay = ({
                   src={imageSrc || (isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg')}
                   alt={image.name || 'Image'}
                   className="w-full h-full object-cover"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onError={handleImageError}
                   loading="lazy"
                 />
-                {/* Debug overlay for segmentation - bright red to make it visible */}
+                {/* Segmentation overlay for completed images */}
                 {currentStatus === SEGMENTATION_STATUS.COMPLETED && (
-                  <div className="absolute inset-0">
-                    <DebugSegmentationThumbnail
+                  <div className="absolute inset-0 pointer-events-none">
+                    <SegmentationThumbnail
                       imageId={image.id}
                       projectId={image.project_id || ''}
+                      thumbnailUrl={imageSrc || undefined}
+                      fallbackSrc="/placeholder.svg"
+                      altText={image.name || 'Image'}
+                      className="w-full h-full"
                       width={300}
                       height={300}
                     />
@@ -515,7 +569,8 @@ export const ImageDisplay = ({
     >
       {/* Thumbnail with segmentation overlay for completed images */}
       <div className="h-10 w-10 rounded overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0 cursor-pointer">
-        {(currentStatus === SEGMENTATION_STATUS.COMPLETED || currentStatus === SEGMENTATION_STATUS.PROCESSING) && image.id ? (
+        {(currentStatus === SEGMENTATION_STATUS.COMPLETED || currentStatus === SEGMENTATION_STATUS.PROCESSING) &&
+        image.id ? (
           <SegmentationThumbnail
             imageId={image.id}
             projectId={image.project_id || ''}

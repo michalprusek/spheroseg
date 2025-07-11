@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Microscope, Github, Mail, Heart } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { appConfig } from '@/config/app.config';
 
 // Import translation files directly
 import enTranslations from '@/translations/en';
@@ -129,12 +130,12 @@ const ThemedFooter = () => {
               <div className={`w-10 h-10 rounded-md ${getIconBgClasses()} flex items-center justify-center`}>
                 <Microscope className="text-white w-6 h-6" />
               </div>
-              <span className="text-xl font-bold">SpheroSeg</span>
+              <span className="text-xl font-bold">{appConfig.app.name}</span>
             </div>
             <p className={`${getMutedTextClasses()} mb-6 max-w-md`}>{getTranslation('footer.description')}</p>
             <div className="flex items-center gap-4">
               <a
-                href="https://github.com/michalprusek/spheroseg"
+                href={appConfig.social.github.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${getLinkHoverClasses()} flex items-center gap-2`}
@@ -144,7 +145,7 @@ const ThemedFooter = () => {
                 <span className="text-sm">{getTranslation('footer.githubRepository') || 'GitHub Repository'}</span>
               </a>
               <a
-                href="mailto:spheroseg@utia.cas.cz"
+                href={`mailto:${appConfig.contact.email}`}
                 className={`${getLinkHoverClasses()} flex items-center gap-2`}
                 aria-label={getTranslation('footer.contactEmail') || 'Contact Email'}
               >
@@ -186,28 +187,28 @@ const ThemedFooter = () => {
             <h3 className="text-lg font-semibold mb-6">{getTranslation('footer.contactTitle')}</h3>
             <ul className="space-y-4">
               <li>
-                <a href="mailto:spheroseg@utia.cas.cz" className={getLinkHoverClasses()}>
-                  spheroseg@utia.cas.cz
+                <a href={`mailto:${appConfig.contact.email}`} className={getLinkHoverClasses()}>
+                  {appConfig.contact.email}
                 </a>
               </li>
               <li>
                 <a
-                  href="https://www.fjfi.cvut.cz/"
+                  href={appConfig.organization.primary.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={getLinkHoverClasses()}
                 >
-                  FNSPE CTU in Prague
+                  {appConfig.organization.primary.name}
                 </a>
               </li>
               <li>
                 <a
-                  href="https://www.utia.cas.cz/"
+                  href={appConfig.organization.supervisor.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={getLinkHoverClasses()}
                 >
-                  UTIA CAS
+                  {appConfig.organization.supervisor.name}
                 </a>
               </li>
             </ul>
@@ -220,7 +221,7 @@ const ThemedFooter = () => {
           </p>
           <p className="mt-2 text-sm flex items-center justify-center">
             {getTranslation('footer.madeWith') || 'Made with'} <Heart className="w-4 h-4 mx-1 text-red-500" />{' '}
-            {getTranslation('footer.by') || 'by'} Michal Průšek
+            {getTranslation('footer.by') || 'by'} {appConfig.contact.developer.name}
           </p>
         </div>
       </div>

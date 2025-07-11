@@ -30,7 +30,7 @@ interface StatCardProps {
   };
 }
 
-const StatCard = ({ titleKey, value, descriptionKey, descriptionOptions, icon, trend }: StatCardProps) => {
+const StatCard = React.memo(({ titleKey, value, descriptionKey, descriptionOptions, icon, trend }: StatCardProps) => {
   const { t } = useLanguage();
   return (
     <Card className="transition-all duration-300 hover:shadow-md dark:bg-gray-800 dark:border-gray-700">
@@ -64,7 +64,7 @@ const StatCard = ({ titleKey, value, descriptionKey, descriptionOptions, icon, t
       </CardContent>
     </Card>
   );
-};
+});
 
 interface StatsData {
   totalProjects: number;
@@ -193,4 +193,4 @@ const StatsOverview = () => {
   );
 };
 
-export default StatsOverview;
+export default React.memo(StatsOverview);

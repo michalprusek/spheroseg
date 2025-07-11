@@ -157,7 +157,7 @@ describe('RequestAccess Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset the mock implementation for apiClient
-    (apiClient.post as jest.Mock).mockResolvedValue({
+    (apiClient.post as vi.Mock).mockResolvedValue({
       data: { message: 'Access request submitted successfully.' },
     });
   });
@@ -230,7 +230,7 @@ describe('RequestAccess Page', () => {
 
   it('submits the form with valid data', async () => {
     // Mock the API call to return success
-    (apiClient.post as jest.Mock).mockImplementation(async (url, data) => {
+    (apiClient.post as vi.Mock).mockImplementation(async (url, data) => {
       return { data: { message: 'Access request submitted successfully.' } };
     });
 
@@ -271,7 +271,7 @@ describe('RequestAccess Page', () => {
 
   it('shows error message when API call fails', async () => {
     // Mock API to return an error
-    (apiClient.post as jest.Mock).mockRejectedValueOnce(new Error('API error'));
+    (apiClient.post as vi.Mock).mockRejectedValueOnce(new Error('API error'));
 
     renderRequestAccess();
 

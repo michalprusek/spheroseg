@@ -78,7 +78,7 @@ describe('Performance Optimizations', () => {
   });
 
   describe('useDebounce', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     it('should debounce value changes', () => {
       const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
@@ -93,7 +93,7 @@ describe('Performance Optimizations', () => {
 
       // Fast forward time
       act(() => {
-        jest.advanceTimersByTime(500);
+        vi.advanceTimersByTime(500);
       });
 
       expect(result.current).toBe('updated');
@@ -107,23 +107,23 @@ describe('Performance Optimizations', () => {
       rerender({ value: 'first', delay: 500 });
 
       act(() => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
       });
 
       rerender({ value: 'second', delay: 500 });
 
       act(() => {
-        jest.advanceTimersByTime(500);
+        vi.advanceTimersByTime(500);
       });
 
       expect(result.current).toBe('second');
     });
 
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('useThrottle', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     it('should throttle value changes', () => {
       const { result, rerender } = renderHook(({ value, interval }) => useThrottle(value, interval), {
@@ -142,13 +142,13 @@ describe('Performance Optimizations', () => {
 
       // Advance time past interval
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       expect(result.current).toBe('second');
     });
 
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('useVirtualList', () => {
@@ -200,11 +200,11 @@ describe('Performance Optimizations', () => {
 
   describe('useIntersectionObserver', () => {
     // Mock IntersectionObserver
-    const mockIntersectionObserver = jest.fn();
+    const mockIntersectionObserver = vi.fn();
     mockIntersectionObserver.mockReturnValue({
-      observe: jest.fn(),
-      unobserve: jest.fn(),
-      disconnect: jest.fn(),
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
     });
     window.IntersectionObserver = mockIntersectionObserver as any;
 

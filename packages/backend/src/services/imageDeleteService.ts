@@ -6,6 +6,7 @@ import logger from '../utils/logger';
 import imageUtils from '../utils/imageUtils.unified';
 import config from '../config';
 import { ApiError } from '../utils/ApiError';
+import cacheService from './cacheService';
 
 // Type for delete image result
 interface DeleteImageResult {
@@ -120,6 +121,9 @@ export async function deleteImage(
     // Step 6: Commit transaction
     await client.query('COMMIT');
     logger.info('Image deletion transaction committed', { imageId });
+
+    // Invalidate image list cache for this project
+    await cacheService.invalidateImageList(projectId);
 
     // Transaction successful, now set success to true
     result.success = true;

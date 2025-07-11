@@ -16,8 +16,14 @@ export const projectIdParams = z.object({
 });
 
 export const paginationQuerySchema = z.object({
-  limit: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined),
-  offset: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : undefined)),
+  offset: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : undefined)),
   sortBy: optionalStringSchema,
   sortDirection: z.enum(['asc', 'desc']).optional(),
 });

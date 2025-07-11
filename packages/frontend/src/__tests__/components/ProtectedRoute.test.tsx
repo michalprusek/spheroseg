@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -11,6 +11,15 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(),
   AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
 }));
+
+// Use fake timers
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 // Mock components for testing
 const TestComponent = () => <div data-testid="protected-content">Protected Content</div>;
@@ -28,7 +37,7 @@ describe('ProtectedRoute Component', () => {
 
   const renderWithRouter = (authState: AuthState) => {
     // Set up the mock implementation for useAuth
-    (useAuth as jest.Mock).mockReturnValue(authState);
+    (useAuth as vi.Mock).mockReturnValue(authState);
 
     return render(
       <MemoryRouter initialEntries={['/protected']}>
@@ -47,10 +56,15 @@ describe('ProtectedRoute Component', () => {
     );
   };
 
-  it('renders the protected content when user is authenticated', () => {
+  it('renders the protected content when user is authenticated', async () => {
     renderWithRouter({
       user: { id: 'test-user-id', email: 'test@example.com' },
       loading: false,
+    });
+
+    // Wait for auth check timer
+    await act(async () => {
+      vi.advanceTimersByTime(1500);
     });
 
     // Protected content should be rendered
@@ -60,17 +74,22 @@ describe('ProtectedRoute Component', () => {
     expect(screen.queryByTestId('login-page')).not.toBeInTheDocument();
   });
 
-  it('redirects to login page when user is not authenticated', () => {
+  it('redirects to login page when user is not authenticated', async () => {
     renderWithRouter({
       user: null,
       loading: false,
     });
 
+    // Wait for auth check timer
+    await act(async () => {
+      vi.advanceTimersByTime(1500);
+    });
+
     // Protected content should not be rendered
     expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
 
-    // Login page should be rendered
-    expect(screen.getByTestId('login-page')).toBeInTheDocument();
+    // Should show redirecting screen since it's redirecting
+    expect(screen.getByText('Redirecting...')).toBeInTheDocument();
   });
 
   it('shows loading state while checking authentication', () => {

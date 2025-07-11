@@ -53,7 +53,7 @@ export async function getSecurityAuditReport() {
  */
 export async function getSecurityIssueById(id: string) {
   if (id === 'non-existent') {
-    throw new ApiError(404, 'Security issue not found');
+    throw new ApiError('Security issue not found', 404);
   }
 
   return {
@@ -95,11 +95,11 @@ export async function getSecurityIssueById(id: string) {
  */
 export async function updateSecurityIssue(id: string, updateData: any, userId: string) {
   if (id === 'non-existent') {
-    throw new ApiError(404, 'Security issue not found');
+    throw new ApiError('Security issue not found', 404);
   }
 
   if (updateData.status === 'invalid-status') {
-    throw new ApiError(400, 'Invalid status value');
+    throw new ApiError('Invalid status value', 400);
   }
 
   return {
@@ -168,7 +168,7 @@ export async function getVulnerabilityScans(options: {
  */
 export async function getScanById(id: string) {
   if (id === 'non-existent') {
-    throw new ApiError(404, 'Scan not found');
+    throw new ApiError('Scan not found', 404);
   }
 
   return {

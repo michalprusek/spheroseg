@@ -751,7 +751,7 @@ class AuthService {
       );
 
       // Send email with verification link
-      const verificationUrl = `${config.server.frontendUrl}/verify-email?token=${token}`;
+      const verificationUrl = `${config.appUrl || 'https://spherosegapp.utia.cas.cz'}/verify-email?token=${token}`;
 
       // Import email service
       const { sendVerificationEmail } = await import('./emailService');
@@ -825,6 +825,32 @@ class AuthService {
         500,
         error instanceof Error ? error.message : String(error)
       );
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Get user's preferred language
+   * @param userId User ID
+   * @returns Preferred language code or null
+   */
+  async getUserLanguage(userId: string): Promise<string | null> {
+    const client = await pool.getClient();
+    try {
+      const result = await client.query(
+        'SELECT preferred_language FROM users WHERE id = $1',
+        [userId]
+      );
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return result.rows[0].preferred_language || 'en';
+    } catch (error) {
+      logger.error('Error fetching user language', { error, userId });
+      return 'en'; // Default to English on error
     } finally {
       client.release();
     }

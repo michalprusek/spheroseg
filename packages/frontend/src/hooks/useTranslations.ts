@@ -35,7 +35,10 @@ export const useTranslations = () => {
             return translated;
           }
         } catch (error) {
-          console.warn(`i18next translation error for key "${key}":`, error);
+          // Only log in development mode
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`i18next translation error for key "${key}":`, error);
+          }
         }
       }
 
@@ -47,7 +50,10 @@ export const useTranslations = () => {
             return contextTranslation;
           }
         } catch (error) {
-          console.warn(`Context translation error for key "${key}":`, error);
+          // Only log in development mode
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`Context translation error for key "${key}":`, error);
+          }
         }
       }
 

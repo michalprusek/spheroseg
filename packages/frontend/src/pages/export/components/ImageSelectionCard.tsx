@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProjectImage } from '@/types';
 import { safeFormatDate } from '@/utils/dateUtils';
+import { useTranslation } from 'react-i18next';
 
 interface ImageSelectionCardProps {
   images: ProjectImage[];
@@ -21,12 +22,13 @@ const ImageSelectionCard: React.FC<ImageSelectionCardProps> = ({
   handleSelectAll,
   handleSelectImage,
 }) => {
+  const { t } = useTranslation();
   return (
     <Card className="md:col-span-2">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Vyberte obrázky k exportu</CardTitle>
+        <CardTitle>{t('export.selectImagesToExport')}</CardTitle>
         <Button variant="outline" size="sm" onClick={handleSelectAll}>
-          {images.every((img) => selectedImages[img.id]) ? 'Odznačit vše' : 'Vybrat vše'}
+          {images.every((img) => selectedImages[img.id]) ? t('common.deselectAll') : t('common.selectAll')}
         </Button>
       </CardHeader>
       <CardContent>
@@ -35,7 +37,7 @@ const ImageSelectionCard: React.FC<ImageSelectionCardProps> = ({
             <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
           </div>
         ) : images.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">Žádné obrázky nejsou k dispozici</div>
+          <div className="text-center text-gray-500 py-8">{t('export.noImagesAvailable')}</div>
         ) : (
           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
             {images.map((image) => (

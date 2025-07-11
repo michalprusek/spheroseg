@@ -27,10 +27,23 @@ export const updateSegmentationSchema = z.object({
       result_data: z.record(z.any()).optional(), // Allow any JSON object, optional
       parameters: z.record(z.any()).optional(), // Optional parameters update
     })
-    .refine((data) => data.status === 'failed' || (data.status === 'completed' && data.result_data !== undefined), {
-      message: 'Result data is required when status is completed',
-      path: ['result_data'], // Specify the path for the error message
-    }),
+    .refine(
+      (data) =>
+        data.status === 'failed' || (data.status === 'completed' && data.result_data !== undefined),
+      {
+        message: 'Result data is required when status is completed',
+        path: ['result_data'], // Specify the path for the error message
+      }
+    ),
+});
+
+// Schema for POST /api/segmentation/job
+export const createSegmentationJobSchema = z.object({
+  body: z.object({
+    imageIds: z.array(z.string().uuid()),
+    priority: z.number().int().min(0).max(10).optional().default(1),
+    parameters: z.record(z.any()).optional(),
+  }),
 });
 
 // Schema for POST /api/projects/:projectId/segmentation/batch-trigger
@@ -60,3 +73,4 @@ export const triggerProjectBatchSegmentationSchema = z.object({
     })
     .passthrough(),
 });
+

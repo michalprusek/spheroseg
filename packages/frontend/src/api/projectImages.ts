@@ -108,6 +108,16 @@ export const mapApiImageToProjectImage = (apiImage: Image): ProjectImage => {
     segmentationResultPathValue = ensuredPath === undefined ? null : ensuredPath;
   }
 
+  // Prioritize segmentation_status field from database
+  let finalStatus = 'without_segmentation';
+  if (apiImage.segmentation_status) {
+    finalStatus = apiImage.segmentation_status;
+  } else if (apiImage.segmentationStatus) {
+    finalStatus = apiImage.segmentationStatus;
+  } else if (apiImage.status) {
+    finalStatus = apiImage.status;
+  }
+
   return {
     id: apiImage.id,
     project_id: apiImage.project_id,
@@ -119,8 +129,9 @@ export const mapApiImageToProjectImage = (apiImage: Image): ProjectImage => {
     updatedAt: new Date(apiImage.updated_at),
     width: apiImage.width || null,
     height: apiImage.height || null,
-    segmentationStatus: apiImage.segmentationStatus || apiImage.status || 'pending',
+    segmentationStatus: finalStatus,
     segmentationResultPath: segmentationResultPathValue,
+    segmentation_status: apiImage.segmentation_status, // Keep original field for reference
   };
 };
 
@@ -159,7 +170,7 @@ export const loadImagesFromStorage = (projectId: string): ProjectImage[] => {
             imageUuid: img.imageUuid || img.id,
             createdAt: img.createdAt ? new Date(img.createdAt) : new Date(),
             updatedAt: img.updatedAt ? new Date(img.updatedAt) : new Date(),
-            segmentationStatus: img.segmentationStatus || 'pending',
+            segmentationStatus: img.segmentationStatus || 'without_segmentation',
             project_id: img.project_id || projectId,
             name: img.name || 'Unnamed Image',
             url: img.url || '',
@@ -343,6 +354,83 @@ export const cleanLocalStorageFromBlobUrls = (projectId: string): void => {
 };
 
 /**
+ * Update image status in all caches
+ * This ensures the image status is updated in all storage layers
+ * @param projectId The ID of the project
+ * @param imageId The ID of the image to update
+ * @param status The new segmentation status
+ * @param resultPath Optional segmentation result path
+ */
+export const updateImageStatusInCache = async (
+  projectId: string,
+  imageId: string,
+  status: string,
+  resultPath?: string | null,
+): Promise<void> => {
+  // Clean projectId to ensure consistent format
+  const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
+
+  try {
+    // 1. Update unified cache
+    const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
+    const cachedImages = await cacheService.get<ProjectImage[]>(cacheKey);
+    if (cachedImages) {
+      const updatedImages = cachedImages.map((img) => {
+        if (img.id === imageId) {
+          return {
+            ...img,
+            segmentationStatus: status,
+            segmentationResultPath: resultPath !== undefined ? resultPath : img.segmentationResultPath,
+          };
+        }
+        return img;
+      });
+      await cacheService.set(cacheKey, updatedImages, {
+        ttl: CACHE_EXPIRATION,
+        layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
+        tags: ['project-data', `project-${cleanProjectId}`, 'images'],
+      });
+    }
+
+    // 2. Update legacy project images cache
+    if (projectImagesCache && projectImagesCache[cleanProjectId]) {
+      projectImagesCache[cleanProjectId].data = projectImagesCache[cleanProjectId].data.map((img) => {
+        if (img.id === imageId) {
+          return {
+            ...img,
+            segmentationStatus: status,
+            segmentationResultPath: resultPath !== undefined ? resultPath : img.segmentationResultPath,
+          };
+        }
+        return img;
+      });
+    }
+
+    // 3. Update localStorage
+    const storageKey = getLocalStorageKey(cleanProjectId);
+    const storedImages = localStorage.getItem(storageKey);
+    if (storedImages) {
+      const images = JSON.parse(storedImages) as ProjectImage[];
+      const updatedImages = images.map((img) => {
+        if (img.id === imageId) {
+          return {
+            ...img,
+            segmentationStatus: status,
+            segmentationResultPath: resultPath !== undefined ? resultPath : img.segmentationResultPath,
+          };
+        }
+        return img;
+      });
+      localStorage.setItem(storageKey, JSON.stringify(updatedImages));
+    }
+
+    console.log(`Updated image ${imageId} status to ${status} in all caches`);
+  } catch (error) {
+    console.error(`Failed to update image ${imageId} status in caches:`, error);
+  }
+};
+
+/**
  * Clean all storages for a specific image
  * This ensures an image is completely removed from all caches and storage
  * @param projectId The ID of the project
@@ -482,21 +570,23 @@ export const storeUploadedImages = async (projectId: string, imagesToStore: Proj
   );
 };
 
-export const getProjectImages = async (projectId: string): Promise<ProjectImage[]> => {
+export const getProjectImages = async (projectId: string, skipCache: boolean = false): Promise<ProjectImage[]> => {
   const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
   cleanLocalStorageFromBlobUrls(cleanProjectId);
 
-  // Try unified cache first
-  const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
-  const cachedImages = await cacheService.get<ProjectImage[]>(cacheKey, {
-    layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
-  });
+  // Try unified cache first unless skipCache is true
+  if (!skipCache) {
+    const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
+    const cachedImages = await cacheService.get<ProjectImage[]>(cacheKey, {
+      layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],
+    });
 
-  // Only return cached data if it's not an empty array
-  // This ensures we always try to fetch from API when there are no images in cache
-  if (cachedImages && cachedImages.length > 0) {
-    console.log(`Retrieved ${cachedImages.length} images from unified cache for project ${cleanProjectId}`);
-    return cachedImages;
+    // Only return cached data if it's not an empty array
+    // This ensures we always try to fetch from API when there are no images in cache
+    if (cachedImages && cachedImages.length > 0) {
+      console.log(`Retrieved ${cachedImages.length} images from unified cache for project ${cleanProjectId}`);
+      return cachedImages;
+    }
   }
 
   try {
@@ -524,6 +614,7 @@ export const getProjectImages = async (projectId: string): Promise<ProjectImage[
     });
 
     // Store in unified cache
+    const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
     await cacheService.set(cacheKey, mappedImages, {
       ttl: CACHE_EXPIRATION,
       layer: [CacheLayer.MEMORY, CacheLayer.LOCAL_STORAGE],

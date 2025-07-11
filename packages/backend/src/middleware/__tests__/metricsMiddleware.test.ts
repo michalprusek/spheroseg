@@ -55,22 +55,22 @@ describe('Metrics Middleware', () => {
     next = jest.fn();
   });
 
-  it('should call next and register a finish listener', () => {
+  it('should call next', () => {
     // Act
     metricsMiddleware(req as Request, res as Response, next);
 
     // Assert
     expect(next).toHaveBeenCalled();
-    expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));
+    // Note: Current implementation just passes through to next()
   });
 
-  it('should register finish listener', () => {
+  it('should not register finish listener (delegated to unified monitoring)', () => {
     // Act
     metricsMiddleware(req as Request, res as Response, next);
 
     // Assert
-    expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));
-    // Note: The current implementation doesn't call removeListener, so we don't test for it
+    expect(res.on).not.toHaveBeenCalled();
+    // HTTP metrics are now handled by unified monitoring
   });
 
   it('should handle different response status codes', () => {
@@ -82,7 +82,7 @@ describe('Metrics Middleware', () => {
 
     // Assert
     expect(next).toHaveBeenCalled();
-    expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));
+    // Metrics collection is handled by unified monitoring
   });
 
   it('should handle different request methods', () => {
@@ -94,7 +94,7 @@ describe('Metrics Middleware', () => {
 
     // Assert
     expect(next).toHaveBeenCalled();
-    expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));
+    // Metrics collection is handled by unified monitoring
   });
 
   it('should handle different request paths', () => {
@@ -109,6 +109,6 @@ describe('Metrics Middleware', () => {
 
     // Assert
     expect(next).toHaveBeenCalled();
-    expect(res.on).toHaveBeenCalledWith('finish', expect.any(Function));
+    // Metrics collection is handled by unified monitoring
   });
 });

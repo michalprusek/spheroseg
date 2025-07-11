@@ -42,9 +42,9 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
       setError(null);
 
       try {
-        console.log(
-          `Fetching projects for user ${user.id}, limit: ${limit}, offset: ${offset}, sortField: ${sortField}, sortDirection: ${sortDirection}`,
-        );
+        // console.log(
+        //   `Fetching projects for user ${user.id}, limit: ${limit}, offset: ${offset}, sortField: ${sortField}, sortDirection: ${sortDirection}`,
+        // );
 
         // Create the API request with a timeout
         const controller = new AbortController();
@@ -80,7 +80,7 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
           clearTimeout(timeoutId);
 
           // Log the full response for debugging
-          console.log('Projects API response:', response.data);
+          // console.log('Projects API response:', response.data);
 
           // Handle different response formats flexibly
           let fetchedProjects: Project[] = [];
@@ -141,7 +141,7 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
               return project;
             });
 
-            console.log('Processed projects before sorting:', processedProjects);
+            // console.log('Processed projects before sorting:', processedProjects);
 
             // Apply client-side sorting if sort parameters are provided
             if (sortField && sortDirection) {
@@ -163,11 +163,11 @@ export const useDashboardProjects = (): UseDashboardProjectsReturn => {
                 }
               });
 
-              console.log('Projects after client-side sorting:', {
-                sortField,
-                sortDirection,
-                projects: processedProjects,
-              });
+              // console.log('Projects after client-side sorting:', {
+              //   sortField,
+              //   sortDirection,
+              //   projects: processedProjects,
+              // });
             }
 
             setProjects(processedProjects);

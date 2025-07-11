@@ -7,12 +7,12 @@ const originalLocation = window.location;
 describe('WebSocket Connection', () => {
   beforeEach(() => {
     // Mock localStorage
-    Storage.prototype.getItem = jest.fn();
-    Storage.prototype.setItem = jest.fn();
-    Storage.prototype.removeItem = jest.fn();
+    Storage.prototype.getItem = vi.fn();
+    Storage.prototype.setItem = vi.fn();
+    Storage.prototype.removeItem = vi.fn();
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock window.location
     delete window.location;
@@ -76,7 +76,7 @@ describe('WebSocket Connection', () => {
 
     it('should get a valid token from localStorage', () => {
       // Mock localStorage.getItem to return a valid token
-      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(validToken);
+      vi.spyOn(Storage.prototype, 'getItem').mockReturnValue(validToken);
 
       const token = getAccessToken();
       expect(token).toBe(validToken);
@@ -84,7 +84,7 @@ describe('WebSocket Connection', () => {
 
     it('should return null for an invalid token when validation is enabled', () => {
       // Mock localStorage.getItem to return an invalid token
-      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(invalidToken);
+      vi.spyOn(Storage.prototype, 'getItem').mockReturnValue(invalidToken);
 
       const token = getAccessToken(true);
       expect(token).toBeNull();
@@ -92,7 +92,7 @@ describe('WebSocket Connection', () => {
 
     it('should remove an invalid token when removeIfInvalid is true', () => {
       // Mock localStorage.getItem to return an invalid token
-      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(invalidToken);
+      vi.spyOn(Storage.prototype, 'getItem').mockReturnValue(invalidToken);
 
       const token = getAccessToken(true, true);
       expect(token).toBeNull();

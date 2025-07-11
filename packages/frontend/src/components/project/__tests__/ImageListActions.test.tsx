@@ -12,12 +12,7 @@ describe('ImageListActions', () => {
   });
 
   it('renders both action buttons', () => {
-    render(
-      <ImageListActions 
-        onDelete={mockOnDelete}
-        onResegment={mockOnResegment}
-      />
-    );
+    render(<ImageListActions onDelete={mockOnDelete} onResegment={mockOnResegment} />);
 
     expect(screen.getByLabelText('Delete image')).toBeInTheDocument();
     expect(screen.getByLabelText('Resegment image')).toBeInTheDocument();
@@ -25,52 +20,28 @@ describe('ImageListActions', () => {
 
   describe('isProcessing prop', () => {
     it('shows spinner animation when isProcessing is true', () => {
-      render(
-        <ImageListActions 
-          onDelete={mockOnDelete}
-          onResegment={mockOnResegment}
-          isProcessing={true}
-        />
-      );
+      render(<ImageListActions onDelete={mockOnDelete} onResegment={mockOnResegment} isProcessing={true} />);
 
       const resegmentIcon = screen.getByLabelText('Resegment image').querySelector('svg');
       expect(resegmentIcon).toHaveClass('animate-spin');
     });
 
     it('does not show spinner animation when isProcessing is false', () => {
-      render(
-        <ImageListActions 
-          onDelete={mockOnDelete}
-          onResegment={mockOnResegment}
-          isProcessing={false}
-        />
-      );
+      render(<ImageListActions onDelete={mockOnDelete} onResegment={mockOnResegment} isProcessing={false} />);
 
       const resegmentIcon = screen.getByLabelText('Resegment image').querySelector('svg');
       expect(resegmentIcon).not.toHaveClass('animate-spin');
     });
 
     it('disables resegment button during processing', () => {
-      render(
-        <ImageListActions 
-          onDelete={mockOnDelete}
-          onResegment={mockOnResegment}
-          isProcessing={true}
-        />
-      );
+      render(<ImageListActions onDelete={mockOnDelete} onResegment={mockOnResegment} isProcessing={true} />);
 
       const resegmentButton = screen.getByLabelText('Resegment image');
       expect(resegmentButton).toBeDisabled();
     });
 
     it('prevents click events when processing', () => {
-      render(
-        <ImageListActions 
-          onDelete={mockOnDelete}
-          onResegment={mockOnResegment}
-          isProcessing={true}
-        />
-      );
+      render(<ImageListActions onDelete={mockOnDelete} onResegment={mockOnResegment} isProcessing={true} />);
 
       const resegmentButton = screen.getByLabelText('Resegment image');
       fireEvent.click(resegmentButton);
@@ -81,11 +52,7 @@ describe('ImageListActions', () => {
 
   it('maintains visual consistency with ImageActions component', () => {
     const { container } = render(
-      <ImageListActions 
-        onDelete={mockOnDelete}
-        onResegment={mockOnResegment}
-        isProcessing={true}
-      />
+      <ImageListActions onDelete={mockOnDelete} onResegment={mockOnResegment} isProcessing={true} />,
     );
 
     // Check that the same classes are applied for spinner animation

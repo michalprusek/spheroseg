@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CanvasV2 } from '../../../canvas/CanvasV2';
 import { testRenderPerformance } from '../../../../../../__tests__/performance/performanceTest';
-import { EditMode } from '@spheroseg/types';
+import { EditMode } from '../../hooks/segmentation/types';
 import { createRandomPolygons, createMockImageData } from '../../../../../../__tests__/fixtures/polygonFixtures';
 
 describe('CanvasV2 Performance Tests', () => {

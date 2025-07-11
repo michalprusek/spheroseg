@@ -31,15 +31,11 @@ export function initializeSocket(): Socket {
   const hasAuthToken = !!authToken;
   logger.info(`Socket auth token available: ${hasAuthToken}`);
 
-  // Determine the Socket.IO server URL
-  // In development, use relative path to leverage proxy
-  // In production, use the backend URL from environment
-  const useRelativePath = true; // Always use relative path with proxy
-  const socketUrl = useRelativePath
-    ? '' // Empty string means relative to current origin
-    : process.env.REACT_APP_API_URL || 'http://localhost:5001';
+  // Always use relative path to ensure connection to the correct backend
+  // This works in both development (with proxy) and production
+  const socketUrl = ''; // Empty string means relative to current origin
 
-  logger.info(`Using relative path for Socket.IO to leverage proxy`);
+  logger.info(`Using relative path for Socket.IO connection`);
 
   // Socket.IO connection options
   const socketOptions = {

@@ -11,9 +11,11 @@ import argparse
 import numpy as np
 import cv2
 import torch
+import torch.nn.functional as F
 from collections import OrderedDict
+from datetime import datetime
 try:
-    from extract_polygons import extract_polygons_from_mask
+    from extract_polygons import extract_polygons_from_mask, polygon_to_points_list, calculate_polygon_features
 except ImportError:
     # If extract_polygons.py is not available, use built-in function
     print("Warning: extract_polygons module not found, using built-in function")
@@ -129,6 +131,187 @@ def parse_args():
     parser.add_argument('--model_type', type=str, default='resunet',
                         help='Model type (resunet)')
     return parser.parse_args()
+
+
+def load_model(model_path, device='cpu'):
+    """
+    Load ResUNet model from checkpoint.
+    
+    Args:
+        model_path: Path to model checkpoint
+        device: Device to load model on ('cpu' or 'cuda')
+        
+    Returns:
+        Loaded model
+    """
+    device_obj = torch.device(device)
+    model = ResUNet(in_channels=3, out_channels=1).to(device_obj)
+    
+    try:
+        load_checkpoint(model_path, model, device_obj)
+        model.eval()
+        return model
+    except Exception as e:
+        raise ValueError(f"Failed to load model from {model_path}: {e}")
+
+
+def preprocess_image(image, target_size=(256, 256)):
+    """
+    Preprocess image for model input.
+    
+    Args:
+        image: Input image (numpy array)
+        target_size: Target size for resizing
+        
+    Returns:
+        Preprocessed tensor
+    """
+    if image is None:
+        raise ValueError("Image is None")
+    
+    # Convert to RGB if needed
+    if len(image.shape) == 2:
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    elif image.shape[2] == 4:
+        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+    elif image.shape[2] == 3 and image.dtype == np.uint8:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    # Resize
+    image_resized = cv2.resize(image, target_size)
+    
+    # Normalize and convert to tensor
+    image_tensor = torch.from_numpy(image_resized.transpose(2, 0, 1)).float() / 255.0
+    image_tensor = image_tensor.unsqueeze(0)  # Add batch dimension
+    
+    return image_tensor
+
+
+def segment_image(image_path, model_path, output_dir=None, return_polygons=False):
+    """
+    Segment a single image using ResUNet model.
+    
+    Args:
+        image_path: Path to input image
+        model_path: Path to model checkpoint
+        output_dir: Directory to save outputs
+        return_polygons: Whether to extract and return polygons
+        
+    Returns:
+        Dictionary with segmentation results
+    """
+    # Check if image exists
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(f"Image not found: {image_path}")
+    
+    # Load image
+    image = cv2.imread(image_path)
+    if image is None:
+        raise ValueError(f"Failed to load image: {image_path}")
+    
+    # Setup output directory
+    if output_dir is None:
+        output_dir = os.path.dirname(image_path)
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Device selection
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+    # Load model
+    model = load_model(model_path, device)
+    
+    # Preprocess image
+    original_shape = image.shape[:2]
+    image_tensor = preprocess_image(image, target_size=(1024, 1024)).to(device)
+    
+    # Perform segmentation
+    with torch.no_grad():
+        output = model(image_tensor)
+        output = torch.sigmoid(output)
+        mask = (output > 0.5).float()
+    
+    # Convert to numpy and resize
+    mask_np = mask.squeeze().cpu().numpy()
+    mask_resized = cv2.resize(mask_np, (original_shape[1], original_shape[0]), 
+                              interpolation=cv2.INTER_NEAREST)
+    mask_uint8 = (mask_resized * 255).astype(np.uint8)
+    
+    # Save mask
+    mask_path = os.path.join(output_dir, 'mask.png')
+    cv2.imwrite(mask_path, mask_uint8)
+    
+    result = {
+        'mask_path': mask_path,
+        'metadata': {
+            'original_shape': original_shape,
+            'timestamp': datetime.now().isoformat()
+        }
+    }
+    
+    # Extract polygons if requested
+    if return_polygons:
+        polygons = extract_polygons_from_mask(mask_uint8)
+        formatted_polygons = []
+        
+        for i, poly_data in enumerate(polygons):
+            # Handle both formats
+            if isinstance(poly_data, dict) and 'contour' in poly_data:
+                # Test format
+                points = polygon_to_points_list(poly_data['contour'])
+                formatted_polygons.append({
+                    'id': i + 1,
+                    'points': points,
+                    'area': poly_data['area']
+                })
+            else:
+                # Production format
+                formatted_polygons.append(poly_data)
+        
+        result['polygons'] = formatted_polygons
+    
+    return result
+
+
+def segment_batch(image_paths, model_path, output_dir, batch_size=4):
+    """
+    Segment multiple images in batches.
+    
+    Args:
+        image_paths: List of image paths
+        model_path: Path to model checkpoint
+        output_dir: Directory to save outputs
+        batch_size: Batch size for processing
+        
+    Returns:
+        List of results for each image
+    """
+    results = []
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+    # Load model once
+    model = load_model(model_path, device)
+    
+    # Process in batches
+    for i in range(0, len(image_paths), batch_size):
+        batch_paths = image_paths[i:i + batch_size]
+        batch_results = []
+        
+        for image_path in batch_paths:
+            try:
+                result = segment_image(image_path, model_path, output_dir, return_polygons=True)
+                result['image_path'] = image_path
+                result['status'] = 'success'
+                batch_results.append(result)
+            except Exception as e:
+                batch_results.append({
+                    'image_path': image_path,
+                    'status': 'error',
+                    'error': str(e)
+                })
+        
+        results.extend(batch_results)
+    
+    return results
 
 
 def main():

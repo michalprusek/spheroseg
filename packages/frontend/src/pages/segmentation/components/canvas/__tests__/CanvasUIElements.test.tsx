@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CanvasUIElements } from '../CanvasUIElements';
-import { EditMode, Point } from '@spheroseg/types';
+import { EditMode } from '../hooks/segmentation/types';
 
 // Mock custom hooks
 vi.mock('../../../hooks/useCanvasContext', () => ({

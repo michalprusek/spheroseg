@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 
 // Mock dependencies
-jest.mock('../middleware/authMiddleware', () => {
+jest.mock('../security/middleware/auth', () => {
   return jest.fn((req: Express.Request, res: Express.Response, next: () => void) => {
     req.user = { userId: 'test-user-id' } as Express.User;
     next();

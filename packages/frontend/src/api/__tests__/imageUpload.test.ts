@@ -4,9 +4,9 @@ import apiClient from '../apiClient';
 import { toast } from 'sonner';
 
 // Mock dependencies
-jest.mock('../apiClient');
-jest.mock('../projectImages');
-jest.mock('sonner');
+vi.mock('../apiClient');
+vi.mock('../projectImages');
+vi.mock('sonner');
 
 // Mock File and FormData
 global.File = class MockFile {
@@ -42,7 +42,7 @@ global.FormData = class MockFormData {
 
 describe('imageUpload', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('uploadFilesWithFallback', () => {
@@ -51,7 +51,7 @@ describe('imageUpload', () => {
       const mockResponse = {
         data: [{ id: 'test-id', name: 'test.jpg' }],
       };
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as vi.Mock).mockResolvedValue(mockResponse);
 
       // Create 41 mock files (stejný počet jako v chybovém hlášení)
       const files = Array(41)
@@ -108,7 +108,7 @@ describe('imageUpload', () => {
       };
 
       // Mock failure for second batch
-      (apiClient.post as jest.Mock)
+      (apiClient.post as vi.Mock)
         .mockResolvedValueOnce(mockSuccessResponse) // První dávka úspěšná
         .mockRejectedValueOnce(new Error('Server error')) // Druhá dávka selže
         .mockResolvedValueOnce(mockSuccessResponse); // Třetí dávka úspěšná
@@ -120,8 +120,8 @@ describe('imageUpload', () => {
 
       // Mock the createLocalImages functionality
       const mockLocalImage = { id: 'local-id', name: 'local.jpg' };
-      jest.spyOn(global, 'FileReader').mockImplementation(function () {
-        this.readAsDataURL = jest.fn(() => {
+      vi.spyOn(global, 'FileReader').mockImplementation(function () {
+        this.readAsDataURL = vi.fn(() => {
           setTimeout(() => {
             this.onload && this.onload({ target: { result: 'data:image/jpeg;base64,test' } });
           }, 0);
@@ -141,7 +141,7 @@ describe('imageUpload', () => {
 
     it('should handle API errors and fall back to local storage', async () => {
       // Mock API error
-      (apiClient.post as jest.Mock).mockRejectedValue(new Error('API error'));
+      (apiClient.post as vi.Mock).mockRejectedValue(new Error('API error'));
 
       // Create mock files
       const files = [new File(['test content'], 'test.jpg', { type: 'image/jpeg' })];

@@ -40,7 +40,7 @@ const Dashboard = () => {
       queryClient.invalidateQueries(['projects']);
 
       // Log that we're refreshing data
-      console.log('Dashboard loaded - refreshing statistics and projects data');
+      // console.log('Dashboard loaded - refreshing statistics and projects data');
 
       // Fetch projects directly with current sort parameters
       fetchProjects(10, 0, sortField, sortDirection);
@@ -169,12 +169,12 @@ const Dashboard = () => {
   });
 
   // Log the sorted projects for debugging
-  console.log('Dashboard rendering sorted projects:', {
-    originalProjects: projects,
-    sortedProjects,
-    sortField,
-    sortDirection,
-  });
+  // console.log('Dashboard rendering sorted projects:', {
+  //   originalProjects: projects,
+  //   sortedProjects,
+  //   sortField,
+  //   sortDirection,
+  // });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">

@@ -54,11 +54,11 @@ describe('Logger', () => {
   });
 
   it('should have the correct log levels', () => {
-    expect(logger.levels).toHaveProperty('error');
-    expect(logger.levels).toHaveProperty('warn');
-    expect(logger.levels).toHaveProperty('info');
-    expect(logger.levels).toHaveProperty('http');
-    expect(logger.levels).toHaveProperty('debug');
+    expect(logger).toHaveProperty('error');
+    expect(logger).toHaveProperty('warn');
+    expect(logger).toHaveProperty('info');
+    expect(logger).toHaveProperty('http');
+    expect(logger).toHaveProperty('debug');
   });
 
   it('should log messages with the correct level', () => {

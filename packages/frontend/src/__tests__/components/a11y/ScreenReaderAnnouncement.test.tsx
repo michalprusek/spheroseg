@@ -3,7 +3,7 @@ import { render, screen, act } from '@testing-library/react';
 import { ScreenReaderAnnouncement } from '@/components/a11y';
 
 // Mock timers for testing clearAfter functionality
-jest.useFakeTimers();
+vi.useFakeTimers();
 
 describe('ScreenReaderAnnouncement', () => {
   it('renders with the provided message', () => {
@@ -32,7 +32,7 @@ describe('ScreenReaderAnnouncement', () => {
 
     // Fast-forward time
     act(() => {
-      jest.advanceTimersByTime(1500);
+      vi.advanceTimersByTime(1500);
     });
 
     // Message should be cleared
@@ -57,7 +57,7 @@ describe('ScreenReaderAnnouncement', () => {
 
     // Fast-forward time
     act(() => {
-      jest.advanceTimersByTime(10000);
+      vi.advanceTimersByTime(10000);
     });
 
     // Message should still be there

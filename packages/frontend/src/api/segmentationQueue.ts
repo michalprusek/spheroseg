@@ -33,19 +33,11 @@ export const fetchQueueStatus = async (projectId: string): Promise<QueueStatusUp
     const endpoints = [
       {
         name: 'Primary endpoint',
-        url: `/api/segmentations/queue/status/${projectId}`,
+        url: `/api/segmentation/queue-status/${projectId}`,
       },
       {
-        name: 'Alternative endpoint',
-        url: `/api/projects/${projectId}/segmentations/queue`,
-      },
-      {
-        name: 'Legacy endpoint',
-        url: `/api/segmentations/queue/status?projectId=${projectId}`,
-      },
-      {
-        name: 'Direct queue endpoint',
-        url: `/api/queue/status`,
+        name: 'Alternative endpoint (global queue)',
+        url: `/api/segmentation/queue-status`,
       },
     ];
 

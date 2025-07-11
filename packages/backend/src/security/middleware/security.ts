@@ -9,7 +9,7 @@
  * - General security hardening
  */
 
-import { Express, NextFunction, Request, Response } from 'express';
+import { Application, NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -17,6 +17,14 @@ import crypto from 'crypto';
 import config from '../../config';
 import logger from '../../utils/logger';
 import { standardLimiter } from './rateLimitMiddleware';
+
+// Extend Request type to include session
+interface RequestWithSession extends Request {
+  session?: {
+    csrfToken?: string;
+    [key: string]: any;
+  };
+}
 
 // =============================================================================
 // INTERFACES AND TYPES
@@ -201,7 +209,7 @@ export const createCSRFMiddleware = (options: SecurityOptions = {}) => {
     return (req: Request, res: Response, next: NextFunction) => next();
   }
 
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: RequestWithSession, res: Response, next: NextFunction) => {
     const ignoreMethods = ['GET', 'HEAD', 'OPTIONS'];
 
     // Skip CSRF for safe methods
@@ -272,7 +280,7 @@ export const createCORSMiddleware = (options: SecurityOptions = {}) => {
     'https://spherosegapp.utia.cas.cz',
   ];
 
-  const allowedOrigins = options.corsOrigins || config.cors?.allowedOrigins || defaultOrigins;
+  const allowedOrigins = options.corsOrigins || config.server.corsOrigins || defaultOrigins;
 
   const corsOptions = {
     origin: (
@@ -316,7 +324,7 @@ export const createCORSMiddleware = (options: SecurityOptions = {}) => {
 /**
  * Apply all security middleware to Express application
  */
-export const applySecurityMiddleware = (app: Express, options: SecurityOptions = {}): void => {
+export const applySecurityMiddleware = (app: Application, options: SecurityOptions = {}): void => {
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   logger.info('Applying security middleware', {

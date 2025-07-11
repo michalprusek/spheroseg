@@ -125,7 +125,7 @@ jest.mock('../utils/logger', () => ({
 }));
 
 // Mock authentication middleware
-jest.mock('../middleware/authMiddleware', () => {
+jest.mock('../security/middleware/auth', () => {
   return jest.fn((req, res, next) => {
     req.user = { userId: 'test-user-id' };
     next();
@@ -162,7 +162,7 @@ jest.mock('../utils/imageUtils.unified', () => ({
 
 // Import after all mocks have been defined
 import imagesRouter from '../routes/images';
-import authMiddleware from '../security/middleware/authMiddleware';
+import authMiddleware from '../security/middleware/auth';
 
 describe('Image Upload API', () => {
   let app: express.Application;

@@ -32,4 +32,4 @@ const DashboardHeader = () => {
   );
 };
 
-export default DashboardHeader;
+export default React.memo(DashboardHeader);

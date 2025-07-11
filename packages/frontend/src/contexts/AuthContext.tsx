@@ -287,7 +287,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Try to get tokens (will check both localStorage and cookies)
       const currentToken = getAccessToken();
       const currentRefreshToken = getRefreshToken();
-      
+
       logger.info('[AuthContext] Auth initialization check:', {
         hasToken: !!currentToken,
         hasRefreshToken: !!currentRefreshToken,

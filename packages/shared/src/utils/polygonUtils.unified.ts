@@ -397,32 +397,38 @@ export const calculateLineSegmentIntersection = (
   const ub = (((x2 - x1) * (y1 - y3)) - ((y2 - y1) * (x1 - x3))) / denominator;
 
   // Only check if intersection is within the polygon edge segment (ub)
-  // We treat the slice line as infinite, so we don't check ua
+  // We treat the slice line as infinite, so we don't check ua bounds
+  // The slice line extends infinitely in both directions
   if (ub >= 0 && ub <= 1) {
     const intersection = {
       x: x1 + ua * (x2 - x1),
       y: y1 + ua * (y2 - y1)
     };
-    console.log('[calculateLineSegmentIntersection] Intersection found:', {
+    // Only log detailed info if explicitly enabled
+    if (false) { // Set to true for debugging
+      console.log('[calculateLineSegmentIntersection] Intersection found:', {
+        ua,
+        ub,
+        intersection,
+        lineStart,
+        lineEnd,
+        segStart,
+        segEnd
+      });
+    }
+    return intersection;
+  }
+  
+  if (false) { // Set to true for debugging
+    console.log('[calculateLineSegmentIntersection] No intersection:', {
       ua,
       ub,
-      intersection,
       lineStart,
       lineEnd,
       segStart,
       segEnd
     });
-    return intersection;
   }
-  
-  console.log('[calculateLineSegmentIntersection] No intersection:', {
-    ua,
-    ub,
-    lineStart,
-    lineEnd,
-    segStart,
-    segEnd
-  });
 
   return null;
 };
@@ -451,17 +457,50 @@ export const calculateLinePolygonIntersections = (
     } : null
   });
   
+  // Extend the line far beyond the polygon bounds to ensure intersections
+  const dx = lineEnd.x - lineStart.x;
+  const dy = lineEnd.y - lineStart.y;
+  const lineLength = Math.sqrt(dx * dx + dy * dy);
+  
+  if (lineLength === 0) {
+    console.log('[calculateLinePolygonIntersections] Line has zero length, returning empty');
+    return [];
+  }
+  
+  // Normalize direction
+  const dirX = dx / lineLength;
+  const dirY = dy / lineLength;
+  
+  // Extend the line by a large factor (10000 units in each direction)
+  const extendFactor = 10000;
+  const extendedStart = {
+    x: lineStart.x - dirX * extendFactor,
+    y: lineStart.y - dirY * extendFactor
+  };
+  const extendedEnd = {
+    x: lineEnd.x + dirX * extendFactor,
+    y: lineEnd.y + dirY * extendFactor
+  };
+  
+  console.log('[calculateLinePolygonIntersections] Extended line:', {
+    original: { lineStart, lineEnd },
+    extended: { extendedStart, extendedEnd }
+  });
+  
   const intersections: Intersection[] = [];
 
   for (let i = 0; i < polygon.length; i++) {
     const j = (i + 1) % polygon.length;
-    // Use the new function that treats the slice line as infinite
+    // Use the extended line for intersection calculation
     const intersection = calculateLineSegmentIntersection(
-      lineStart, lineEnd, polygon[i], polygon[j]
+      extendedStart, extendedEnd, polygon[i], polygon[j]
     );
 
     if (intersection) {
-      console.log(`[calculateLinePolygonIntersections] Found intersection at edge ${i}:`, intersection);
+      console.log(`[calculateLinePolygonIntersections] Found intersection at edge ${i}->>${j}:`, {
+        intersection,
+        edge: `(${polygon[i].x}, ${polygon[i].y}) -> (${polygon[j].x}, ${polygon[j].y})`
+      });
       // Calculate distance from line start for sorting
       const dist = distance(lineStart, intersection);
 
@@ -628,7 +667,14 @@ export const slicePolygon = (
   console.log('[slicePolygon unified] Called with:', {
     polygonPoints: polygon.length,
     sliceStart,
-    sliceEnd
+    sliceEnd,
+    polygonBounds: polygon.length > 0 ? {
+      minX: Math.min(...polygon.map(p => p.x)),
+      maxX: Math.max(...polygon.map(p => p.x)),
+      minY: Math.min(...polygon.map(p => p.y)),
+      maxY: Math.max(...polygon.map(p => p.y))
+    } : null,
+    firstFewPoints: polygon.slice(0, 5).map((p, i) => `[${i}]: (${p.x}, ${p.y})`)
   });
   
   const intersections = calculateLinePolygonIntersections(

@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { ProjectImage } from '@/pages/segmentation/types';
 import { saveAs } from 'file-saver';

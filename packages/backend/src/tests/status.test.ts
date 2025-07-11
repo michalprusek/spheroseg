@@ -18,7 +18,7 @@ jest.mock('../db', () => ({
 }));
 
 // Create mock middleware for authentication
-const authMiddleware = (req, res, next) => {
+const authMiddleware = (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -27,7 +27,7 @@ const authMiddleware = (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'test-secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'test-secret') as any;
     req.user = { userId: decoded.userId };
     next();
   } catch (error) {
@@ -37,9 +37,9 @@ const authMiddleware = (req, res, next) => {
 
 // Create mock routes for testing
 app.get('/api/queue-status', authMiddleware, async (req, res) => {
-  const status = getSegmentationQueueStatus();
+  const status = await (getSegmentationQueueStatus as any)();
 
-  if (status.runningTasks && status.runningTasks.length > 0) {
+  if (status && status.runningTasks && status.runningTasks.length > 0) {
     const result = await pool.query(
       `SELECT i.id, i.name, i.project_id FROM images i 
        WHERE i.id = ANY($1::uuid[]) AND i.user_id = $2`,
@@ -71,10 +71,10 @@ app.get('/api/queue-status/:projectId', authMiddleware, async (req, res) => {
     return res.status(404).json({ message: 'Project not found or access denied' });
   }
 
-  const status = getSegmentationQueueStatus();
+  const status = await (getSegmentationQueueStatus as any)();
   const filteredStatus = { ...status, processingImages: [] };
 
-  if (status.runningTasks && status.runningTasks.length > 0) {
+  if (status && status.runningTasks && status.runningTasks.length > 0) {
     const result = await pool.query(
       `SELECT i.id, i.name FROM images i 
        WHERE i.id = ANY($1::uuid[]) AND i.project_id = $2`,

@@ -17,7 +17,7 @@ interface FeatureCardProps {
   delay: number;
 }
 
-const FeatureCard = ({ icon, title, description, delay }: FeatureCardProps) => (
+const FeatureCard = React.memo(({ icon, title, description, delay }: FeatureCardProps) => (
   <div
     className="glass-morphism p-6 rounded-xl transition-all duration-300 hover:shadow-glass-lg"
     style={{ transitionDelay: `${delay}ms` }}
@@ -26,7 +26,7 @@ const FeatureCard = ({ icon, title, description, delay }: FeatureCardProps) => (
     <h3 className="text-xl font-semibold mb-2">{title}</h3>
     <p className="text-gray-600">{description}</p>
   </div>
-);
+));
 
 const Features = () => {
   const { language } = useLanguage();
@@ -190,4 +190,4 @@ const Features = () => {
   );
 };
 
-export default Features;
+export default React.memo(Features);

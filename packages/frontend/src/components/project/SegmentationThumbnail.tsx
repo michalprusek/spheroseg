@@ -382,8 +382,8 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
         // Map scaled ApiPolygons to DisplayPolygons, adding color
         const displayPolygons: DisplayPolygon[] = scaled.map((poly) => ({
           ...poly,
-          // Example color logic, can be refined based on poly.class or other props
-          color: poly.type === 'internal' ? '#0000ff' : '#ff0000', // Blue for internal, red for external
+          // Use transparent colors like in the segmentation editor
+          color: poly.type === 'internal' ? '#3B82F6' : '#EF4444', // Blue for internal, red for external
         }));
 
         setScaledPolygons(displayPolygons);
@@ -488,9 +488,9 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
             <path
               key={polygon.id}
               d={createSvgPath(polygon.points, polygon.holes)}
-              fill={polygon.color || 'rgba(255, 0, 0, 0.3)'} // Fallback color if somehow not set
-              stroke={polygon.color ? darkenColor(polygon.color, 30) : 'rgba(200,0,0,0.7)'}
-              strokeWidth="1"
+              fill="transparent" // Transparent fill
+              stroke={polygon.color || '#EF4444'} // Full color stroke
+              strokeWidth="2"
               vectorEffect="non-scaling-stroke" // Ensures consistent stroke width regardless of scaling
             />
           ))}

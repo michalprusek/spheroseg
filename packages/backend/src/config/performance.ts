@@ -7,9 +7,9 @@ export const performanceConfig = {
   // Memory settings
   memory: {
     // Container memory limit in MB (should match docker-compose.yml)
-    containerLimitMB: parseInt(process.env.CONTAINER_MEMORY_LIMIT_MB || '512', 10),
+    containerLimitMB: parseInt(process.env.CONTAINER_MEMORY_LIMIT_MB || '1024', 10),
     // V8 max old space size in MB
-    v8MaxOldSpaceMB: parseInt(process.env.V8_MAX_OLD_SPACE_MB || '384', 10),
+    v8MaxOldSpaceMB: parseInt(process.env.V8_MAX_OLD_SPACE_MB || '768', 10),
     // Garbage collection interval in milliseconds
     gcIntervalMs: parseInt(process.env.GC_INTERVAL_MS || '30000', 10),
     // Memory usage thresholds
@@ -46,7 +46,7 @@ export const performanceConfig = {
   // Response compression settings
   compression: {
     level: parseInt(process.env.COMPRESSION_LEVEL || '6', 10), // 0-9
-    threshold: parseInt(process.env.COMPRESSION_THRESHOLD || '1024', 10), // bytes
+    threshold: parseInt(process.env.COMPRESSION_THRESHOLD || '512', 10), // bytes
     memLevel: parseInt(process.env.COMPRESSION_MEM_LEVEL || '8', 10), // 1-9
   },
 

@@ -11,6 +11,7 @@ interface ErrorBoundaryProps {
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   resetOnPropsChange?: boolean;
   componentName?: string;
+  t?: (key: string) => string;
 }
 
 interface ErrorBoundaryState {
@@ -119,15 +120,15 @@ class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryStat
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-2 dark:text-white">Something went wrong</h2>
+          <h2 className="text-2xl font-bold mb-2 dark:text-white">{this.props.t ? this.props.t('errors.somethingWentWrong') : 'Something went wrong'}</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6 text-center max-w-md">
-            An error occurred in this component. We've been notified and will fix the issue as soon as possible.
+            {this.props.t ? this.props.t('errors.componentError') : "An error occurred in this component. We've been notified and will fix the issue as soon as possible."}
           </p>
 
           {process.env.NODE_ENV !== 'production' && (
             <div className="mb-6 w-full max-w-md">
               <details className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-sm">
-                <summary className="font-medium cursor-pointer">Error Details</summary>
+                <summary className="font-medium cursor-pointer">{this.props.t ? this.props.t('errors.errorDetails') : 'Error Details'}</summary>
                 <pre className="mt-2 text-red-600 dark:text-red-400 overflow-auto max-h-[200px]">
                   {this.state.error?.toString()}
                 </pre>
@@ -142,10 +143,10 @@ class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="default" onClick={this.handleReset}>
-              Try Again
+              {this.props.t ? this.props.t('errors.tryAgain') : 'Try Again'}
             </Button>
             <Button variant="outline" onClick={() => window.location.reload()}>
-              Reload Page
+              {this.props.t ? this.props.t('errors.reloadPage') : 'Reload Page'}
             </Button>
           </div>
         </div>
@@ -220,7 +221,7 @@ const ErrorBoundary: React.FC<ErrorBoundaryProps> = (props) => {
     </div>
   );
 
-  return <ErrorBoundaryClass {...props} fallback={translatedFallback} />;
+  return <ErrorBoundaryClass {...props} fallback={translatedFallback} t={t} />;
 };
 
 export default ErrorBoundary;

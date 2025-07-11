@@ -29,6 +29,7 @@ export interface Image {
   metadata: Record<string, unknown> | null;
   status: ImageStatus; // Use the unified status type
   segmentationStatus?: string; // Segmentation status from backend (pending, processing, completed, failed)
+  segmentation_status?: string; // Database column name for segmentation status
   created_at: string; // ISO date string (timestamptz)
   updated_at: string; // ISO date string (timestamptz)
   segmentation_result?: {

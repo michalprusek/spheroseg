@@ -1,0 +1,89 @@
+{
+  "auth": {
+    "loginFailed": "Failed to login",
+    "invalidCredentials": "Invalid email or password",
+    "userNotFound": "User not found",
+    "emailAlreadyExists": "Email already exists",
+    "registrationFailed": "Failed to register user",
+    "invalidToken": "Invalid token",
+    "tokenExpired": "Token expired",
+    "refreshTokenInvalid": "Invalid refresh token",
+    "authRequired": "Authentication required",
+    "insufficientPermissions": "Insufficient permissions",
+    "accountLocked": "Your account has been locked. Please contact support.",
+    "loginSuccess": "Login successful"
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "invalidEmail": "Invalid email format",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "invalidFormat": "Invalid {{field}} format",
+    "alreadyExists": "{{field}} already exists",
+    "notFound": "{{field}} not found",
+    "invalidImageId": "Invalid image ID format",
+    "atLeastOneRequired": "At least one {{field}} is required"
+  },
+  "project": {
+    "notFound": "Project not found",
+    "notAuthorized": "Not authorized to {{action}} this project",
+    "createdSuccess": "Project created successfully",
+    "updatedSuccess": "Project updated successfully",
+    "deletedSuccess": "Project deleted successfully",
+    "duplicateSuccess": "Project duplicated successfully",
+    "shareSuccess": "Project shared successfully",
+    "shareRemoved": "Share removed successfully",
+    "invitationSent": "Invitation sent successfully",
+    "invitationAccepted": "Invitation accepted successfully",
+    "invitationInvalid": "Invalid or expired invitation",
+    "permissions": {
+      "view": "view",
+      "edit": "edit"
+    }
+  },
+  "image": {
+    "uploadSuccess": "Image uploaded successfully",
+    "uploadFailed": "Failed to upload image",
+    "notFound": "Image not found",
+    "deletedSuccess": "Image deleted successfully",
+    "segmentationQueued": "Segmentation queued successfully",
+    "segmentationFailed": "Segmentation failed",
+    "resegmentationQueued": "Resegmentation queued successfully"
+  },
+  "email": {
+    "invitationSubject": "You've been invited to collaborate on \"{{projectName}}\"",
+    "invitationAcceptedSubject": "{{userName}} accepted your project invitation",
+    "invitationBody": "{{ownerName}} has invited you to collaborate on their project \"{{projectName}}\" on SpheroSeg.",
+    "invitationAcceptedBody": "{{userName}} ({{userEmail}}) has accepted your invitation to collaborate on \"{{projectName}}\".",
+    "invitationAction": "Accept Invitation",
+    "invitationExpires": "This invitation link will expire in 7 days.",
+    "footer": "Best regards,\nThe SpheroSeg Team",
+    "passwordResetSubject": "Reset Your Password",
+    "passwordResetBody": "You requested to reset your password. Click the button below to create a new password.",
+    "passwordResetAction": "Reset Password",
+    "passwordResetExpires": "This link will expire in 24 hours. If you didn't request this, please ignore this email."
+  },
+  "error": {
+    "internalServer": "Internal server error",
+    "somethingWentWrong": "Something went wrong",
+    "resourceNotFound": "Resource not found",
+    "resourceConflict": "Resource conflict",
+    "fileTooLarge": "File too large",
+    "unexpectedField": "Unexpected file field",
+    "validationFailed": "Validation failed"
+  },
+  "success": {
+    "created": "{{resource}} created successfully",
+    "updated": "{{resource}} updated successfully",
+    "deleted": "{{resource}} deleted successfully",
+    "fetched": "{{resource}} fetched successfully"
+  },
+  "common": {
+    "welcome": "Welcome to SpheroSeg API",
+    "healthCheck": "API is healthy",
+    "hello": "Hello{{#name}}, {{name}}{{/name}}{{^name}}{{/name}}",
+    "user": "User",
+    "project": "Project",
+    "image": "Image",
+    "segmentation": "Segmentation"
+  }
+}

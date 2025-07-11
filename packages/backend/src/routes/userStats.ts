@@ -1,6 +1,7 @@
 import express, { Response, Router } from 'express';
 import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import userStatsService from '../services/userStatsService';
+import { userStatsServiceOptimized } from '../services/userStatsServiceOptimized';
 import pool from '../db';
 import logger from '../utils/logger';
 
@@ -17,8 +18,8 @@ router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: R
   try {
     logger.info('Fetching stats for user', { userId });
 
-    // Get stats from service
-    const stats = await userStatsService.getUserStats(pool, userId);
+    // Get stats from optimized service
+    const stats = await userStatsServiceOptimized.getUserStats(pool, userId);
 
     // Return stats with both new format and old format keys for compatibility
     res.status(200).json({
@@ -82,8 +83,8 @@ router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, r
   try {
     logger.info('Fetching statistics for user', { userId });
 
-    // Get stats from service
-    const stats = await userStatsService.getUserStats(pool, userId);
+    // Get stats from optimized service
+    const stats = await userStatsServiceOptimized.getUserStats(pool, userId);
 
     // Return stats with both new format and old format keys for compatibility
     res.status(200).json({

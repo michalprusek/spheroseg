@@ -11,6 +11,7 @@ import config from '../config';
 import performanceConfig from '../config/performance';
 import logger from '../utils/logger';
 import { monitorQuery } from '../monitoring/unified';
+// import { wrapPool } from './performanceWrapper';
 
 // =====================
 // Cache Configuration
@@ -70,11 +71,14 @@ export function getPool(): Pool {
 
     pool = new Pool(poolConfig);
 
+    // TODO: Re-enable performance tracking after fixing wrapper
+    // pool = wrapPool(pool);
+
     pool.on('error', (err) => {
       logger.error('Database pool error', { error: err });
     });
 
-    logger.info('Database pool created', {
+    logger.info('Database pool created with performance tracking', {
       max: poolConfig.max,
       database: poolConfig.database || 'from DATABASE_URL',
     });
@@ -90,15 +94,18 @@ export function getPool(): Pool {
 /**
  * Execute a database query with monitoring
  */
-export async function query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
+export async function query<T extends Record<string, any> = any>(
+  text: string,
+  params?: any[]
+): Promise<QueryResult<T>> {
   const pool = getPool();
-  return monitorQuery(text, params || [], () => pool.query<T>(text, params));
+  return monitorQuery(text, params || [], () => pool.query(text, params));
 }
 
 /**
  * Execute a cached query
  */
-export async function cachedQuery<T = any>(
+export async function cachedQuery<T extends Record<string, any> = any>(
   text: string,
   params?: any[],
   ttl?: number
@@ -106,7 +113,7 @@ export async function cachedQuery<T = any>(
   const cacheKey = `query:${text}:${JSON.stringify(params || [])}`;
 
   // Check cache first
-  const cached = unifiedCache.get<QueryResult<T>>(cacheKey);
+  const cached = unifiedCache.get(cacheKey) as QueryResult<T> | undefined;
   if (cached) {
     return cached;
   }

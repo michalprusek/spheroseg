@@ -28,7 +28,7 @@ describe('SegmentationThumbnail Component', () => {
 
   it('renders the image without segmentation when no data is available', async () => {
     // Mock API response with no polygons
-    (apiClient.get as jest.Mock).mockResolvedValue({
+    (apiClient.get as vi.Mock).mockResolvedValue({
       data: {
         polygons: [],
       },
@@ -58,7 +58,7 @@ describe('SegmentationThumbnail Component', () => {
 
   it('renders the image with segmentation overlay when data is available', async () => {
     // Mock API response with polygons
-    (apiClient.get as jest.Mock).mockResolvedValue({
+    (apiClient.get as vi.Mock).mockResolvedValue({
       data: {
         polygons: [
           {
@@ -79,7 +79,7 @@ describe('SegmentationThumbnail Component', () => {
     });
 
     // Mock the scalePolygons function
-    (svgUtils.scalePolygons as jest.Mock).mockImplementation((polygons) => {
+    (svgUtils.scalePolygons as vi.Mock).mockImplementation((polygons) => {
       return polygons.map((polygon) => ({
         ...polygon,
         points: polygon.points.map((point) => ({
@@ -120,7 +120,7 @@ describe('SegmentationThumbnail Component', () => {
 
   it('handles image loading errors gracefully', async () => {
     // Mock API response
-    (apiClient.get as jest.Mock).mockResolvedValue({
+    (apiClient.get as vi.Mock).mockResolvedValue({
       data: {
         polygons: [],
       },
@@ -149,7 +149,7 @@ describe('SegmentationThumbnail Component', () => {
 
   it('handles API errors gracefully', async () => {
     // Mock API error
-    (apiClient.get as jest.Mock).mockRejectedValue(new Error('API error'));
+    (apiClient.get as vi.Mock).mockRejectedValue(new Error('API error'));
 
     render(
       <SegmentationThumbnail

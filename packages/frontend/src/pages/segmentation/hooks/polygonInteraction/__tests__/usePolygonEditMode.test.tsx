@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { SegmentationResult, Point } from '@/lib/segmentation';
 import { usePolygonEditMode } from '../usePolygonEditMode';

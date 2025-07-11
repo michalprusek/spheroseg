@@ -95,7 +95,7 @@ async function duplicateProjectMock() {
 const mockDuplicateProject = jest.fn(duplicateProjectMock);
 
 // Mock all required dependencies
-jest.mock('../middleware/authMiddleware', () => ({
+jest.mock('../security/middleware/auth', () => ({
   __esModule: true,
   default: mockAuthMiddleware,
 }));

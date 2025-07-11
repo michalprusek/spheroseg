@@ -2,13 +2,13 @@ import request from 'supertest';
 import express from 'express';
 import { jest } from '@jest/globals';
 import imagesRouter from '../routes/images';
-import authMiddleware from '../security/middleware/authMiddleware';
+import authMiddleware from '../security/middleware/auth';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 
 // Mock dependencies
-jest.mock('../middleware/authMiddleware', () => {
+jest.mock('../security/middleware/auth', () => {
   return jest.fn((req, res, next) => {
     req.user = { userId: 'test-user-id' };
     next();

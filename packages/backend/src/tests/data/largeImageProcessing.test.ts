@@ -4,7 +4,8 @@ import { execSync } from 'child_process';
 import sharp from 'sharp';
 import pool from '../../db';
 import config from '../../config';
-import { segmentImage } from '../../services/segmentationService';
+// Remove unused import - segmentImage is not exported from segmentationService
+import { createMockSharp } from '../../test-utils/mockFactories';
 
 // Mock database connection
 jest.mock('../../db');
@@ -47,23 +48,9 @@ describe('Large Image Processing Tests', () => {
 
   // Setup test environment
   beforeAll(() => {
-    // Mock sharp functionality
-    (sharp as jest.Mock).mockImplementation(() => {
-      return {
-        metadata: jest.fn().mockResolvedValue({
-          width: 8000,
-          height: 6000,
-          format: 'jpeg',
-        }),
-        resize: jest.fn().mockReturnThis(),
-        toFile: jest.fn().mockResolvedValue({ width: 2000, height: 1500 }),
-        toBuffer: jest.fn().mockResolvedValue(Buffer.from('mockImageData')),
-        clone: jest.fn().mockReturnThis(),
-        png: jest.fn().mockReturnThis(),
-        jpeg: jest.fn().mockReturnThis(),
-        webp: jest.fn().mockReturnThis(),
-      };
-    });
+    // Setup sharp mock using factory
+    const mockSharp = createMockSharp();
+    (sharp as unknown as jest.Mock) = mockSharp;
 
     // Mock database responses
     (pool.query as jest.Mock).mockImplementation((query, params) => {
@@ -118,8 +105,8 @@ describe('Large Image Processing Tests', () => {
     // Test should complete within reasonable time (adjust timeout as needed)
     expect(result).toBeDefined();
     expect(result.success).toBe(true);
-    expect(result.width).toBeLessThanOrEqual(config.processing.maxWidth || 4000);
-    expect(result.height).toBeLessThanOrEqual(config.processing.maxHeight || 4000);
+    expect(result.width).toBeLessThanOrEqual(4000);
+    expect(result.height).toBeLessThanOrEqual(4000);
 
     // Verify sharp was called with correct resizing parameters
     expect(sharp).toHaveBeenCalledWith(largeImagePath);
@@ -197,8 +184,8 @@ describe('Large Image Processing Tests', () => {
       // Check if image needs resizing
       let width = metadata.width;
       let height = metadata.height;
-      const maxWidth = config.processing?.maxWidth || 4000;
-      const maxHeight = config.processing?.maxHeight || 4000;
+      const maxWidth = 4000;
+      const maxHeight = 4000;
 
       if (width > maxWidth || height > maxHeight) {
         // Calculate aspect ratio

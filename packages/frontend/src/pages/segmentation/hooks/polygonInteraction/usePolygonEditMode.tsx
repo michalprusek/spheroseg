@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { SegmentationResult } from '@/lib/segmentation';
 import { useSlicingMode } from './editMode/useSlicingMode';
 import { usePointAddingMode } from './editMode/usePointAddingMode';
@@ -5,6 +6,7 @@ import { useEditModeSwitcher } from './editMode/useEditModeSwitcher';
 import { useAutoPointAdding } from './editMode/useAutoPointAdding';
 import { useEditModeClickHandlers } from './editMode/useEditModeClickHandlers';
 import { useEditModeManager, createEditModeParams } from '../../../../../shared/utils/editModeManager';
+import { EditMode } from '../../segmentation/types';
 
 /**
  * Hook for managing polygon edit modes (adding/modifying vertices, slicing)
@@ -15,6 +17,7 @@ export const usePolygonEditMode = (
   selectedPolygonId: string | null,
   zoom: number = 1,
   offset: { x: number; y: number } = { x: 0, y: 0 },
+  editMode?: number, // Pass in the global EditMode from toolbar
 ) => {
   // Use the shared edit mode manager
   const params = createEditModeParams({
@@ -44,6 +47,19 @@ export const usePolygonEditMode = (
 
   // Adding points to existing polygon mode
   const pointAddingMode = usePointAddingMode(segmentation, setSegmentation, selectedPolygonId);
+
+  // Sync the EditMode.Slice from toolbar with the slicingMode boolean
+  useEffect(() => {
+    if (editMode !== undefined) {
+      if (editMode === EditMode.Slice && !slicingMode.slicingMode) {
+        // When EditMode.Slice is activated from toolbar, activate slicing mode
+        slicingMode.setSlicingMode(true);
+      } else if (editMode !== EditMode.Slice && slicingMode.slicingMode) {
+        // When switching away from EditMode.Slice, deactivate slicing mode
+        slicingMode.setSlicingMode(false);
+      }
+    }
+  }, [editMode, slicingMode]);
 
   // Use the edit mode switcher to handle mode toggling
   const { toggleEditMode, toggleSlicingMode, togglePointAddingMode, exitAllEditModes } = useEditModeSwitcher({

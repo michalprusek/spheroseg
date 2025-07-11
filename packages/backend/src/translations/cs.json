@@ -1,0 +1,78 @@
+{
+  "auth": {
+    "loginFailed": "Přihlášení selhalo",
+    "invalidCredentials": "Neplatný e-mail nebo heslo",
+    "userNotFound": "Uživatel nenalezen",
+    "emailAlreadyExists": "E-mail již existuje",
+    "registrationFailed": "Registrace uživatele selhala",
+    "invalidToken": "Neplatný token",
+    "tokenExpired": "Token vypršel",
+    "refreshTokenInvalid": "Neplatný obnovovací token",
+    "authRequired": "Vyžaduje se ověření",
+    "insufficientPermissions": "Nedostatečná oprávnění",
+    "accountLocked": "Váš účet byl uzamčen. Prosím kontaktujte podporu.",
+    "loginSuccess": "Přihlášení úspěšné"
+  },
+  "validation": {
+    "required": "{{field}} je povinné",
+    "invalidEmail": "Neplatný formát e-mailu",
+    "passwordTooShort": "Heslo musí mít alespoň 8 znaků",
+    "invalidFormat": "Neplatný formát {{field}}",
+    "alreadyExists": "{{field}} již existuje",
+    "notFound": "{{field}} nenalezen",
+    "invalidImageId": "Neplatný formát ID obrázku",
+    "atLeastOneRequired": "Alespoň jeden {{field}} je vyžadován"
+  },
+  "project": {
+    "notFound": "Projekt nenalezen",
+    "notAuthorized": "Nemáte oprávnění {{action}} tento projekt",
+    "createdSuccess": "Projekt byl úspěšně vytvořen",
+    "updatedSuccess": "Projekt byl úspěšně aktualizován",
+    "deletedSuccess": "Projekt byl úspěšně smazán",
+    "duplicateSuccess": "Projekt byl úspěšně zduplikován",
+    "shareSuccess": "Projekt byl úspěšně sdílen",
+    "shareRemoved": "Sdílení bylo úspěšně odebráno",
+    "invitationSent": "Pozvánka byla úspěšně odeslána",
+    "invitationAccepted": "Pozvánka byla úspěšně přijata",
+    "invitationInvalid": "Neplatná nebo vypršelá pozvánka"
+  },
+  "image": {
+    "uploadSuccess": "Obrázek byl úspěšně nahrán",
+    "uploadFailed": "Nahrání obrázku selhalo",
+    "notFound": "Obrázek nenalezen",
+    "deletedSuccess": "Obrázek byl úspěšně smazán",
+    "segmentationQueued": "Segmentace byla úspěšně zařazena do fronty",
+    "segmentationFailed": "Segmentace selhala",
+    "resegmentationQueued": "Resegmentace byla úspěšně zařazena do fronty"
+  },
+  "email": {
+    "invitationSubject": "Byli jste pozváni ke spolupráci na \"{{projectName}}\"",
+    "invitationAcceptedSubject": "{{userName}} přijal vaši pozvánku k projektu",
+    "invitationBody": "{{ownerName}} vás pozval ke spolupráci na projektu \"{{projectName}}\" na SpheroSeg.",
+    "invitationAction": "Přijmout pozvánku",
+    "invitationExpires": "Tento odkaz pozvánky vyprší za 7 dní."
+  },
+  "error": {
+    "internalServer": "Interní chyba serveru",
+    "somethingWentWrong": "Něco se pokazilo",
+    "resourceNotFound": "Zdroj nenalezen",
+    "resourceConflict": "Konflikt zdrojů",
+    "fileTooLarge": "Soubor je příliš velký",
+    "unexpectedField": "Neočekávané pole souboru",
+    "validationFailed": "Validace selhala"
+  },
+  "success": {
+    "created": "{{resource}} byl úspěšně vytvořen",
+    "updated": "{{resource}} byl úspěšně aktualizován",
+    "deleted": "{{resource}} byl úspěšně smazán",
+    "fetched": "{{resource}} byl úspěšně načten"
+  },
+  "common": {
+    "welcome": "Vítejte v SpheroSeg API",
+    "healthCheck": "API je v pořádku",
+    "user": "Uživatel",
+    "project": "Projekt",
+    "image": "Obrázek",
+    "segmentation": "Segmentace"
+  }
+}

@@ -24,6 +24,10 @@ import previewRoutes from './preview';
 import logsRoutes from './logs';
 import performanceRoutes from './performance';
 import accessRequestsRoutes from './accessRequests';
+import debugRoutes from './debug';
+import adminRoutes from './admin';
+import downloadRoutes from './download';
+import metricsApiRoutes from './metrics';
 
 // Create main router
 const router: Router = express.Router();
@@ -51,7 +55,8 @@ router.use('/segmentations', segmentationRoutes); // Alias for compatibility
 router.use('/', segmentationRoutes); // Mount at root for /images/:id/segmentation compatibility
 
 // Monitoring routes
-router.use('/metrics', metricsRoutes);
+router.use('/metrics', metricsRoutes); // Prometheus metrics
+router.use('/metrics', metricsApiRoutes); // Our performance metrics API
 router.use('/metrics/performance', performanceRoutes);
 
 // Logs routes
@@ -63,8 +68,19 @@ router.use('/', statusRoutes);
 // Preview routes (for TIFF/BMP preview generation)
 router.use('/preview', previewRoutes);
 
+// Download routes (for streaming downloads)
+router.use('/download', downloadRoutes);
+
 // Access requests routes
 router.use('/access-requests', accessRequestsRoutes);
+
+// Admin routes
+router.use('/admin', adminRoutes);
+
+// Debug routes (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  router.use('/debug', debugRoutes);
+}
 
 // Add a default route for root
 router.get('/', (req, res) => {

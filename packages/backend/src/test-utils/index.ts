@@ -49,7 +49,7 @@ export const createTestRequest = (app: Express) => {
  */
 export const mockAuthenticatedUser = (user = createUserFixture()) => {
   // Mock the auth middleware
-  jest.mock('../middleware/authMiddleware', () =>
+  jest.mock('../security/middleware/auth', () =>
     jest.fn((req, res, next) => {
       req.user = { userId: user.id, email: user.email };
       next();

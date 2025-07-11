@@ -9,6 +9,8 @@ import logging
 import math
 from datetime import datetime
 import threading
+import subprocess
+from concurrent.futures import ThreadPoolExecutor
 
 # Configure logging
 logging.basicConfig(
@@ -26,10 +28,14 @@ RABBITMQ_PORT = int(os.environ.get('RABBITMQ_PORT', 5672))
 RABBITMQ_USER = os.environ.get('RABBITMQ_USER', 'guest')
 RABBITMQ_PASS = os.environ.get('RABBITMQ_PASS', 'guest')
 RABBITMQ_QUEUE = os.environ.get('RABBITMQ_QUEUE', 'segmentation_tasks')
+RABBITMQ_PREFETCH_COUNT = int(os.environ.get('RABBITMQ_PREFETCH_COUNT', 4))
 
 # Check if model exists
 MODEL_PATH = os.environ.get('MODEL_PATH', '/ML/checkpoint_epoch_9.pth.tar')
 DEBUG = os.environ.get('DEBUG', 'false').lower() == 'true'
+
+# Create thread pool for concurrent segmentation processing
+executor = ThreadPoolExecutor(max_workers=RABBITMQ_PREFETCH_COUNT)
 
 # Create uploads directory if it doesn't exist
 UPLOADS_DIR = '/ML/uploads'
@@ -184,10 +190,12 @@ def start_rabbitmq_consumer():
             ))
             channel = connection.channel()
             channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
-            channel.basic_qos(prefetch_count=1)
+            # Increase prefetch count to allow concurrent processing
+            # This allows multiple images to be processed simultaneously
+            channel.basic_qos(prefetch_count=RABBITMQ_PREFETCH_COUNT)
             channel.basic_consume(queue=RABBITMQ_QUEUE, on_message_callback=process_message)
 
-            logger.info(f"Started RabbitMQ consumer for queue: {RABBITMQ_QUEUE}")
+            logger.info(f"Started RabbitMQ consumer for queue: {RABBITMQ_QUEUE} with prefetch_count: {RABBITMQ_PREFETCH_COUNT}")
             channel.start_consuming()
         except pika.exceptions.AMQPConnectionError as e:
             logger.error(f"RabbitMQ connection error: {e}. Retrying in 5 seconds...")

@@ -70,12 +70,28 @@ class ToastService {
     position: 'bottom-right',
     dismissible: true,
   };
+  private translations: Record<string, string> = {
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    copiedToClipboard: 'Copied to clipboard!',
+    failedToCopy: 'Failed to copy to clipboard',
+    networkError: 'Network error. Please check your connection.',
+    retry: 'Retry',
+    validationErrors: 'Validation errors:',
+  };
 
   /**
    * Configure default toast options
    */
   configure(options: Partial<ToastOptions>) {
     this.defaultOptions = { ...this.defaultOptions, ...options };
+  }
+
+  /**
+   * Update translations
+   */
+  setTranslations(translations: Record<string, string>) {
+    this.translations = { ...this.translations, ...translations };
   }
 
   /**
@@ -189,7 +205,7 @@ class ToastService {
             }}
             className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
-            Confirm
+            {this.translations.confirm}
           </button>
           <button
             onClick={() => {
@@ -198,7 +214,7 @@ class ToastService {
             }}
             className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/90"
           >
-            Cancel
+            {this.translations.cancel}
           </button>
         </div>
       </div>,
@@ -249,21 +265,21 @@ class ToastService {
   /**
    * Show a toast for copy to clipboard
    */
-  copyToClipboard(text: string, successMessage = 'Copied to clipboard!') {
+  copyToClipboard(text: string, successMessage?: string) {
     navigator.clipboard
       .writeText(text)
-      .then(() => this.success(successMessage))
-      .catch(() => this.error('Failed to copy to clipboard'));
+      .then(() => this.success(successMessage || this.translations.copiedToClipboard))
+      .catch(() => this.error(this.translations.failedToCopy));
   }
 
   /**
    * Show a toast for network errors
    */
-  networkError(message = 'Network error. Please check your connection.') {
-    return this.error(message, {
+  networkError(message?: string) {
+    return this.error(message || this.translations.networkError, {
       duration: 6000,
       action: {
-        label: 'Retry',
+        label: this.translations.retry,
         onClick: () => window.location.reload(),
       },
     });
@@ -281,7 +297,7 @@ class ToastService {
 
     return this.custom(
       <div className="flex flex-col gap-2">
-        <p className="font-semibold">Validation errors:</p>
+        <p className="font-semibold">{this.translations.validationErrors}</p>
         <ul className="list-disc list-inside text-sm">
           {errorList.map((error, index) => (
             <li key={index}>{error}</li>

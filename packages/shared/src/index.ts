@@ -49,3 +49,11 @@ export * from './monitoring';
 
 // Export segmentation status constants
 export * from './constants/segmentationStatus';
+
+// Export image utilities
+export * from './utils/imageUtils';
+export { default as imageUtils } from './utils/imageUtils';
+
+// Export path utilities
+export * from './utils/pathUtils';
+export { default as pathUtils } from './utils/pathUtils';

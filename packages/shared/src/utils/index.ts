@@ -8,3 +8,6 @@ export * from './polygonUtils';
 
 // Default export for convenience
 export { default as polygonUtils } from './polygonUtils';
+
+// Export path utilities
+export * from './pathUtils';

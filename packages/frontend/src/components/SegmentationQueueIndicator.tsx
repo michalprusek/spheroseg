@@ -2,6 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { fetchQueueStatus, clearQueueStatusCache } from '@/api/segmentationQueue';
 import { useSocket } from '@/hooks/useSocketConnection';
 import { formatTime } from '@/utils/dateUtils';
+import { X } from 'lucide-react';
+import apiClient from '@/lib/apiClient';
+import { toast } from '@/hooks/useToast';
+import { FixedSizeList as List } from 'react-window';
 
 interface QueueStatusData {
   pendingTasks: string[];
@@ -24,6 +28,147 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
   const [hasActiveJobs, setHasActiveJobs] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
+  const [isCancelling, setIsCancelling] = useState<Record<string, boolean>>({});
+
+  // Function to cancel a segmentation task
+  const cancelTask = useCallback(async (imageId: string) => {
+    setIsCancelling((prev) => ({ ...prev, [imageId]: true }));
+
+    try {
+      // Call backend to cancel the task
+      await apiClient.delete(`/api/segmentation/task/${imageId}`);
+
+      // Update local state immediately
+      setQueueData((prevData) => {
+        if (!prevData) return prevData;
+
+        return {
+          ...prevData,
+          pendingTasks: prevData.pendingTasks.filter((id) => id !== imageId),
+          runningTasks: prevData.runningTasks.filter((id) => id !== imageId),
+          queueLength: Math.max(0, prevData.queueLength - 1),
+          activeTasksCount: Math.max(0, prevData.activeTasksCount - 1),
+        };
+      });
+
+      toast.success('Segmentation task cancelled');
+
+      // Refresh queue data
+      // Will be refreshed by the interval
+    } catch (error) {
+      console.error('Error cancelling task:', error);
+      toast.error('Failed to cancel segmentation task');
+    } finally {
+      setIsCancelling((prev) => {
+        const newState = { ...prev };
+        delete newState[imageId];
+        return newState;
+      });
+    }
+  }, []);
+
+  // Render task list with virtual scrolling for performance
+  const renderTaskList = () => {
+    if (!queueData) return null;
+
+    // Combine running and pending tasks with their type
+    const allTasks = [
+      ...queueData.runningTasks.map((id) => ({ id, type: 'running' as const })),
+      ...queueData.pendingTasks.map((id) => ({ id, type: 'pending' as const })),
+    ];
+
+    if (allTasks.length === 0) return null;
+
+    // For small lists (< 10 items), render normally
+    if (allTasks.length < 10) {
+      return (
+        <div className="space-y-2 max-h-40 overflow-y-auto">
+          {allTasks.map(({ id, type }) => (
+            <div
+              key={id}
+              className={`flex items-center justify-between text-sm px-2 py-1 rounded ${
+                type === 'running' ? 'bg-blue-100 dark:bg-blue-800/30' : 'bg-gray-100 dark:bg-gray-800/30'
+              }`}
+            >
+              <span className="truncate flex-1">
+                {type === 'running' ? 'Processing' : 'Queued'}: {id.substring(0, 8)}...
+              </span>
+              <button
+                onClick={() => cancelTask(id)}
+                disabled={isCancelling[id]}
+                className={`ml-2 p-1 rounded transition-colors disabled:opacity-50 ${
+                  type === 'running'
+                    ? 'hover:bg-blue-200 dark:hover:bg-blue-700'
+                    : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+                title="Cancel segmentation"
+              >
+                {isCancelling[id] ? (
+                  <div
+                    className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${
+                      type === 'running' ? 'border-blue-500' : 'border-gray-500'
+                    }`}
+                  />
+                ) : (
+                  <X className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // For larger lists, use virtual scrolling
+    const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+      const { id, type } = allTasks[index];
+      return (
+        <div style={style}>
+          <div
+            className={`flex items-center justify-between text-sm px-2 py-1 rounded mx-1 ${
+              type === 'running' ? 'bg-blue-100 dark:bg-blue-800/30' : 'bg-gray-100 dark:bg-gray-800/30'
+            }`}
+          >
+            <span className="truncate flex-1">
+              {type === 'running' ? 'Processing' : 'Queued'}: {id.substring(0, 8)}...
+            </span>
+            <button
+              onClick={() => cancelTask(id)}
+              disabled={isCancelling[id]}
+              className={`ml-2 p-1 rounded transition-colors disabled:opacity-50 ${
+                type === 'running'
+                  ? 'hover:bg-blue-200 dark:hover:bg-blue-700'
+                  : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+              title="Cancel segmentation"
+            >
+              {isCancelling[id] ? (
+                <div
+                  className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${
+                    type === 'running' ? 'border-blue-500' : 'border-gray-500'
+                  }`}
+                />
+              ) : (
+                <X className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <List
+        height={160} // Max height of 40 * 4 (tailwind max-h-40)
+        itemCount={allTasks.length}
+        itemSize={36} // Height of each item including padding
+        width="100%"
+        className="scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
+      >
+        {Row}
+      </List>
+    );
+  };
 
   // Funkce pro aktualizaci dat fronty
   const fetchData = useCallback(async () => {
@@ -220,8 +365,33 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
           };
         });
       } else if (data && (data.status === 'completed' || data.status === 'failed')) {
-        // Refresh queue data immediately when an image is completed or failed
-        fetchData();
+        // Update queue data to remove the completed/failed image
+        setQueueData((prevData) => {
+          if (!prevData) return prevData;
+
+          // Remove from running tasks
+          const runningTasks = (prevData.runningTasks || []).filter((id) => id !== data.imageId);
+          // Remove from pending tasks
+          const pendingTasks = (prevData.pendingTasks || []).filter((id) => id !== data.imageId);
+
+          const newData = {
+            ...prevData,
+            runningTasks,
+            pendingTasks,
+            queueLength: pendingTasks.length,
+            activeTasksCount: runningTasks.length,
+            timestamp: new Date().toISOString(),
+          };
+
+          // Update hasActiveJobs based on new data
+          const activeJobCount = runningTasks.length + pendingTasks.length;
+          setHasActiveJobs(activeJobCount > 0);
+
+          return newData;
+        });
+
+        // Also refresh queue data from server to ensure consistency
+        setTimeout(() => fetchData(), 1000);
       }
 
       setLastUpdateTime(Date.now());
@@ -349,25 +519,31 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
   // Regular version with more details
   if (hasActiveJobs) {
     return (
-      <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-800">
-        <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
-        <div className="flex-1">
-          <div className="font-medium">Image Segmentation Status</div>
-          <div className="text-sm flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <span className="font-semibold">{queueData?.runningTasks?.length || 0}</span>
-              <span>processing</span>
-            </span>
-            <span className="text-gray-400">•</span>
-            <span className="flex items-center gap-1">
-              <span className="font-semibold">{queueData?.pendingTasks?.length || 0}</span>
-              <span>queued</span>
-            </span>
+      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
+          <div className="flex-1">
+            <div className="font-medium">Image Segmentation Status</div>
+            <div className="text-sm flex items-center gap-4">
+              <span className="flex items-center gap-1">
+                <span className="font-semibold">{queueData?.runningTasks?.length || 0}</span>
+                <span>processing</span>
+              </span>
+              <span className="text-gray-400">•</span>
+              <span className="flex items-center gap-1">
+                <span className="font-semibold">{queueData?.pendingTasks?.length || 0}</span>
+                <span>queued</span>
+              </span>
+            </div>
           </div>
-          {queueData?.timestamp && (
-            <div className="text-xs text-blue-400 mt-1">Last updated: {formatTime(queueData.timestamp)}</div>
-          )}
         </div>
+
+        {/* Show list of tasks with cancel buttons - using virtual scrolling for performance */}
+        {renderTaskList()}
+
+        {queueData?.timestamp && (
+          <div className="text-xs text-blue-400 mt-2">Last updated: {formatTime(queueData.timestamp)}</div>
+        )}
       </div>
     );
   } else {

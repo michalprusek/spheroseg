@@ -29,7 +29,11 @@
     "retry": "Retry",
     "imageNotFound": "Image not found",
     "returnToProject": "Return to project",
-    "uploadImages": "Upload Images"
+    "uploadImages": "Upload Images",
+    "maxFileSize": "Max file size: {{size}}MB",
+    "accepted": "Accepted",
+    "files": "Files",
+    "removeAll": "Remove All"
   },
   "auth": {
     "signIn": "Sign In",
@@ -161,7 +165,24 @@
       "description": "This project doesn't have any images yet. Upload images to get started with segmentation.",
       "uploadButton": "Upload Images"
     },
-    "errorLoading": "Error loading project"
+    "errorLoading": "Error loading project",
+    "resegmentImage": "Resegment Image"
+  },
+  "uploader": {
+    "generatingPreviews": "Generating previews...",
+    "previewsGenerated": "Previews generated",
+    "processing": "Processing...",
+    "uploadSuccess": "Upload successful",
+    "dragDrop": "Drag & drop images here",
+    "uploadError": "Please select some files to upload.",
+    "uploadingImages": "Uploading images...",
+    "uploadErrorGeneral": "Error uploading images. Please try again.",
+    "clickToSelect": "Click to select files",
+    "or": "Or",
+    "dragAndDropFiles": "drag and drop files here",
+    "segmentAfterUploadLabel": "Segment images immediately after upload",
+    "uploadBtn": "Upload",
+    "imageOnly": "Images only"
   },
   "segmentation": {
     "imageNotFound": "Image not found",
@@ -186,12 +207,58 @@
     "loadError": "Failed to load segmentation",
     "resegmentSuccess": "Re-segmentation triggered successfully",
     "resegmentError": "Failed to trigger re-segmentation",
+    "processingImage": "Processing image...",
     "queue": {
       "statusReady": "Ready",
       "statusProcessing": "Processing",
       "statusCompleted": "Completed",
       "statusFailed": "Failed",
       "statusPending": "Pending"
+    }
+  },
+  "about": {
+    "title": "About",
+    "mission": {
+      "title": "Our Mission",
+      "description": "We are dedicated to advancing cell biology research through cutting-edge AI technology.",
+      "vision": "Our vision is to make cell analysis more accessible and accurate for researchers worldwide."
+    },
+    "technology": {
+      "title": "Our Technology",
+      "description": "We leverage state-of-the-art deep learning models for precise cell segmentation.",
+      "feature1": {
+        "title": "AI-Powered",
+        "description": "Advanced neural networks for accurate cell detection"
+      },
+      "feature2": {
+        "title": "User-Friendly",
+        "description": "Intuitive interface designed for researchers"
+      },
+      "feature3": {
+        "title": "Scalable",
+        "description": "Process thousands of images efficiently"
+      }
+    },
+    "team": {
+      "title": "Our Team",
+      "description": "We are a diverse team of scientists and engineers passionate about advancing research.",
+      "member1": {
+        "name": "Team Member 1",
+        "role": "Lead Developer"
+      },
+      "member2": {
+        "name": "Team Member 2",
+        "role": "Research Scientist"
+      },
+      "member3": {
+        "name": "Team Member 3",
+        "role": "Machine Learning Engineer"
+      }
+    },
+    "contact": {
+      "title": "Get in Touch",
+      "description": "We'd love to hear from you. Reach out with questions or feedback.",
+      "email": "contact@spheroseg.com"
     }
   }
 }

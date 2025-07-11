@@ -5,14 +5,14 @@ import DebugSegmentationThumbnail from '../DebugSegmentationThumbnail';
 import * as svgUtils from '@/lib/svgUtils';
 
 // Mock axios
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+vi.mock('axios');
+const mockedAxios = axios as vi.Mocked<typeof axios>;
 
 // Mock svgUtils
-jest.mock('@/lib/svgUtils', () => ({
-  scalePolygons: jest.fn((polygons) => polygons.map((p) => ({ ...p }))), // Simple mock that returns the same polygons
-  createSvgPath: jest.fn(),
-  darkenColor: jest.fn(),
+vi.mock('@/lib/svgUtils', () => ({
+  scalePolygons: vi.fn((polygons) => polygons.map((p) => ({ ...p }))), // Simple mock that returns the same polygons
+  createSvgPath: vi.fn(),
+  darkenColor: vi.fn(),
 }));
 
 describe('DebugSegmentationThumbnail', () => {
@@ -65,11 +65,11 @@ describe('DebugSegmentationThumbnail', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console methods to reduce noise in tests
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   it('renders loading state initially', () => {
@@ -156,7 +156,7 @@ describe('DebugSegmentationThumbnail', () => {
     const originalHeight = 1080;
 
     // Spy on console.log to check the logged dimensions
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy = vi.spyOn(console, 'log');
 
     mockedAxios.get.mockImplementation((url) => {
       if (url.includes('/projects/')) {

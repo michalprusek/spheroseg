@@ -17,10 +17,12 @@ import logger from './utils/logger';
 import socketService from './services/socketService';
 import scheduledTaskService from './services/scheduledTaskService';
 import segmentationQueueService from './services/segmentationQueueService';
-import dbPool from './db';
+import stuckImageCleanupService from './services/stuckImageCleanup';
+import db, { getPool } from './db';
 import { startPerformanceMonitoring, stopPerformanceMonitoring } from './utils/performance';
 import { monitorQuery } from './monitoring/unified';
 import performanceConfig from './config/performance';
+import performanceMonitor from './services/performanceMonitor';
 
 // Memory optimization settings
 // Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized
@@ -106,12 +108,38 @@ const initializeServices = async (): Promise<void> => {
     logger.info('Segmentation queue service initialized');
 
     // Initialize scheduled tasks
-    scheduledTaskService.initialize(dbPool);
+    scheduledTaskService.initialize(getPool());
     logger.info('Scheduled task service initialized');
 
+    // Start stuck image cleanup service
+    stuckImageCleanupService.start();
+    logger.info('Stuck image cleanup service started');
+
     // Test database connection
-    await monitorQuery('SELECT NOW()', [], () => dbPool.query('SELECT NOW()'));
-    logger.info('Database connection verified');
+    logger.info('Testing database connection...');
+    try {
+      // Create a simple pool without wrapper for testing
+      const { Pool } = require('pg');
+      const testPool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        max: 1
+      });
+      
+      logger.info('Created test pool');
+      
+      const result = await testPool.query('SELECT NOW()');
+      logger.info('Database connection verified', { time: result.rows[0].now });
+      
+      await testPool.end();
+      logger.info('Test pool closed');
+    } catch (dbError) {
+      logger.error('Database connection test failed', { 
+        error: dbError,
+        message: (dbError as Error).message,
+        stack: (dbError as Error).stack 
+      });
+      throw dbError;
+    }
 
     // Start performance monitoring
     if (config.monitoring?.metricsEnabled) {
@@ -179,6 +207,12 @@ const shutdown = async (signal: string): Promise<void> => {
 
       try {
         // Shutdown services in reverse order
+        performanceMonitor.stop();
+        logger.info('Performance monitoring stopped');
+
+        stuckImageCleanupService.stop();
+        logger.info('Stuck image cleanup service stopped');
+
         if (scheduledTaskService && typeof scheduledTaskService.shutdown === 'function') {
           await scheduledTaskService.shutdown();
           logger.info('Scheduled tasks stopped');
@@ -187,10 +221,8 @@ const shutdown = async (signal: string): Promise<void> => {
         // Socket.IO will be closed when HTTP server closes
         logger.info('Socket.IO server will close with HTTP server');
 
-        if (dbPool && typeof dbPool.end === 'function') {
-          await dbPool.end();
-          logger.info('Database connections closed');
-        }
+        await db.closePool();
+        logger.info('Database connections closed');
 
         clearTimeout(shutdownTimeout);
         logger.info('Graceful shutdown completed');

@@ -75,9 +75,9 @@ export function createRateLimiter(
 ): RateLimitRequestHandler {
   // Skip rate limiting if explicitly disabled
   if (config.security?.enableRateLimit === false) {
-    return (_req: Request, _res: Response, next: NextFunction) => {
+    return ((_req: Request, _res: Response, next: NextFunction) => {
       next();
-    };
+    }) as RateLimitRequestHandler;
   }
 
   const typeConfig = rateLimitConfigs[type];

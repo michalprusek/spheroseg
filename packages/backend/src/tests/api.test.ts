@@ -228,8 +228,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Close database connection
-  await db.end();
+  // Close database connection properly
+  if (db && typeof db.closePool === 'function') {
+    await db.closePool();
+  }
   console.log('API tests completed');
 });
 

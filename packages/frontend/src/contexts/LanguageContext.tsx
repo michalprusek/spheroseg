@@ -321,12 +321,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     [isI18nReady, isContextInitialized],
   );
 
-  if (!isI18nReady || !isContextInitialized) {
-    logger.debug(
-      '[LanguageContext] LanguageProvider: i18next not ready or context language not set, rendering null/loader.',
-    ); // Changed to debug
-    return null;
-  }
+  // Always render children to avoid breaking the app while translations load
+  // The t function already has proper fallbacks
 
   logger.debug('[LanguageContext] LanguageProvider fully initialized, rendering children.');
   return (

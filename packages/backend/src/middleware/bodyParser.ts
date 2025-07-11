@@ -9,7 +9,7 @@ export function setupBodyParser(app: Express): void {
   // Parse JSON bodies with size limit from config
   app.use(
     express.json({
-      limit: config.server.maxRequestSize || '100mb',
+      limit: '100mb',
     })
   );
 
@@ -17,7 +17,7 @@ export function setupBodyParser(app: Express): void {
   app.use(
     express.urlencoded({
       extended: true,
-      limit: config.server.maxRequestSize || '100mb',
+      limit: '100mb',
     })
   );
 }

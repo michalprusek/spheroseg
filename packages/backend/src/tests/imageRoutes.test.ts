@@ -9,7 +9,7 @@ import path from 'path';
 import fs from 'fs';
 
 // Import the AuthenticatedRequest interface
-import { AuthenticatedRequest } from '../security/middleware/authMiddleware';
+import { AuthenticatedRequest } from '../security/middleware/auth';
 
 // Mock dependencies
 jest.mock('../db', () => ({

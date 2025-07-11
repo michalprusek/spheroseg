@@ -72,7 +72,7 @@ async function queryMock(query: string, params: any[] = []): Promise<QueryResult
 const mockDbQuery = jest.fn(queryMock);
 
 // Mock all required dependencies
-jest.mock('../middleware/authMiddleware', () => ({
+jest.mock('../security/middleware/auth', () => ({
   __esModule: true,
   default: mockAuthMiddleware,
 }));

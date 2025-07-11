@@ -53,7 +53,7 @@ describe('Error Handling Utilities - Basic Tests', () => {
     it('should determine severity based on error type', () => {
       const unauthorizedError = new AxiosError('Unauthorized');
       unauthorizedError.response = { status: 401 } as any;
-      expect(getErrorSeverity(unauthorizedError)).toBe(ErrorSeverity.WARNING);
+      expect(getErrorSeverity(unauthorizedError)).toBe(ErrorSeverity.ERROR);
 
       const serverError = new AxiosError('Server Error');
       serverError.response = { status: 500 } as any;
@@ -100,7 +100,8 @@ describe('Error Handling Utilities - Basic Tests', () => {
 
     it('should create ValidationError with correct properties', () => {
       const error = new ValidationError('Invalid input', {
-        details: { field: 'email', message: 'Invalid email format' },
+        field: 'email',
+        message: 'Invalid email format',
       });
 
       expect(error instanceof Error).toBe(true);

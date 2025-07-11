@@ -1,0 +1,34 @@
+import express from 'express';
+import { authenticate as authMiddleware } from '../security/middleware/auth';
+import stuckImageCleanupService from '../services/stuckImageCleanup';
+import logger from '../utils/logger';
+
+const router = express.Router();
+
+/**
+ * POST /api/admin/cleanup-stuck-images
+ * Manually trigger cleanup of stuck images
+ *
+ * Requires authentication
+ */
+router.post('/cleanup-stuck-images', authMiddleware, async (req, res, next) => {
+  try {
+    // TODO: Add admin role check here
+    // For now, any authenticated user can trigger cleanup
+
+    logger.info('Manual stuck image cleanup triggered', { userId: req.user?.userId });
+
+    const count = await stuckImageCleanupService.forceCleanup();
+
+    res.json({
+      success: true,
+      message: `Cleanup completed. Found and fixed ${count} stuck images.`,
+      fixedCount: count,
+    });
+  } catch (error) {
+    logger.error('Error during manual stuck image cleanup:', error);
+    next(error);
+  }
+});
+
+export default router;
