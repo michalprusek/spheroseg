@@ -236,7 +236,7 @@ describe('ToolbarV2 Component', () => {
 
     // The refresh icon should have the animate-spin class
     const refreshIcon = screen.getByTestId('icon-refresh-cw');
-    expect(refreshIcon.parentElement).toHaveClass('animate-spin');
+    expect(refreshIcon).toHaveClass('animate-spin');
   });
 
   it('does not show spinning animation for resegment button when isResegmenting is false', () => {

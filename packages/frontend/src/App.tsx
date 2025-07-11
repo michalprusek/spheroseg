@@ -16,7 +16,8 @@ import {
 // i18n
 import './i18n';
 
-// i18n initialization is handled by the import above
+// Debug i18next issue
+import '@/utils/debugI18next';
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
