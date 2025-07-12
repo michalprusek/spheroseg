@@ -28,6 +28,7 @@ import debugRoutes from './debug';
 import adminRoutes from './admin';
 import downloadRoutes from './download';
 import metricsApiRoutes from './metrics';
+import diagnosticsRoutes from './diagnostics';
 
 // Create main router
 const router: Router = express.Router();
@@ -76,6 +77,9 @@ router.use('/access-requests', accessRequestsRoutes);
 
 // Admin routes
 router.use('/admin', adminRoutes);
+
+// Diagnostics routes
+router.use('/diagnostics', diagnosticsRoutes);
 
 // Debug routes (only in development)
 if (process.env.NODE_ENV !== 'production') {

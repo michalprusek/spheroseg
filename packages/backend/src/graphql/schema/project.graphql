@@ -1,0 +1,126 @@
+# Project-related types and operations
+
+type Project implements Node {
+  id: ID!
+  title: String!
+  description: String
+  tags: [String!]!
+  public: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  
+  # Relationships
+  owner: User!
+  images(pagination: PaginationInput, filter: ImageFilterInput): ImageConnection!
+  shares: [ProjectShare!]!
+  
+  # Computed fields
+  imageCount: Int!
+  segmentationCount: Int!
+  totalSize: Int!
+  stats: ProjectStats!
+  
+  # Permissions
+  userPermission: ProjectPermission
+}
+
+type ProjectStats {
+  totalImages: Int!
+  segmentedImages: Int!
+  pendingSegmentations: Int!
+  failedSegmentations: Int!
+  totalStorageBytes: Int!
+  averageSegmentationTime: Float
+  lastActivityAt: DateTime
+}
+
+type ProjectShare {
+  id: ID!
+  project: Project!
+  user: User!
+  permission: ProjectPermission!
+  createdAt: DateTime!
+  acceptedAt: DateTime
+}
+
+enum ProjectPermission {
+  VIEWER
+  EDITOR
+  ADMIN
+}
+
+type ProjectConnection implements PaginatedResponse {
+  items: [Project!]!
+  total: Int!
+  offset: Int!
+  limit: Int!
+  hasMore: Boolean!
+}
+
+# Input types
+input CreateProjectInput {
+  title: String!
+  description: String
+  tags: [String!]
+  public: Boolean = false
+}
+
+input UpdateProjectInput {
+  title: String
+  description: String
+  tags: [String!]
+  public: Boolean
+}
+
+input ProjectFilterInput {
+  search: String
+  tags: [String!]
+  public: Boolean
+  owned: Boolean
+  shared: Boolean
+  hasImages: Boolean
+  createdAfter: DateTime
+  createdBefore: DateTime
+}
+
+input ShareProjectInput {
+  projectId: ID!
+  userEmail: String!
+  permission: ProjectPermission!
+}
+
+# Extend root types
+extend type Query {
+  # Project queries
+  projects(pagination: PaginationInput, filter: ProjectFilterInput): ProjectConnection! @auth
+  project(id: ID!): Project @auth
+  publicProjects(pagination: PaginationInput, filter: ProjectFilterInput): ProjectConnection!
+  
+  # Project sharing
+  projectShares(projectId: ID!): [ProjectShare!]! @auth
+  sharedWithMe(pagination: PaginationInput): ProjectConnection! @auth
+}
+
+extend type Mutation {
+  # Project CRUD
+  createProject(input: CreateProjectInput!): Project! @auth @requiresApproval
+  updateProject(id: ID!, input: UpdateProjectInput!): Project! @auth
+  deleteProject(id: ID!): MutationResponse! @auth
+  duplicateProject(id: ID!, title: String!): Project! @auth
+  
+  # Project sharing
+  shareProject(input: ShareProjectInput!): ProjectShare! @auth
+  updateProjectShare(shareId: ID!, permission: ProjectPermission!): ProjectShare! @auth
+  removeProjectShare(shareId: ID!): MutationResponse! @auth
+  acceptProjectShare(shareId: ID!): ProjectShare! @auth
+  
+  # Batch operations
+  deleteProjects(ids: [ID!]!): MutationResponse! @auth
+  updateProjectTags(projectId: ID!, tags: [String!]!): Project! @auth
+}
+
+extend type Subscription {
+  # Real-time project updates
+  projectUpdated(projectId: ID!): Project! @auth
+  projectDeleted(projectId: ID!): ID! @auth
+}

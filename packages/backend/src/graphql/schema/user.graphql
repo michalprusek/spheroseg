@@ -1,0 +1,149 @@
+# User-related types and operations
+
+type User implements Node {
+  id: ID!
+  email: String!
+  name: String!
+  isApproved: Boolean!
+  isAdmin: Boolean!
+  storageUsedBytes: Int!
+  storageLimitBytes: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastLogin: DateTime
+  emailVerified: Boolean!
+  
+  # Computed fields
+  storageUsedMB: Float!
+  storageLimitMB: Float!
+  storageUsagePercent: Float!
+  
+  # Related data (requires auth)
+  projects(pagination: PaginationInput, filter: ProjectFilterInput): ProjectConnection! @auth
+  stats: UserStats! @auth
+}
+
+type UserStats {
+  totalProjects: Int!
+  totalImages: Int!
+  totalSegmentations: Int!
+  storageUsed: StorageInfo!
+  recentActivity: [Activity!]!
+}
+
+type StorageInfo {
+  bytes: Int!
+  megabytes: Float!
+  gigabytes: Float!
+  percentage: Float!
+}
+
+type Activity {
+  id: ID!
+  type: ActivityType!
+  description: String!
+  timestamp: DateTime!
+  metadata: JSON
+}
+
+enum ActivityType {
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  PROJECT_DELETED
+  IMAGE_UPLOADED
+  SEGMENTATION_COMPLETED
+  USER_LOGIN
+}
+
+type AuthPayload {
+  success: Boolean!
+  message: String
+  user: User
+  accessToken: String
+  refreshToken: String
+}
+
+type UserConnection implements PaginatedResponse {
+  items: [User!]!
+  total: Int!
+  offset: Int!
+  limit: Int!
+  hasMore: Boolean!
+}
+
+# Input types
+input RegisterInput {
+  email: String!
+  password: String!
+  name: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+  rememberMe: Boolean = false
+}
+
+input UpdateProfileInput {
+  name: String
+  email: String
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
+input ResetPasswordInput {
+  token: String!
+  newPassword: String!
+}
+
+# Extend root types
+extend type Query {
+  # Current user
+  me: User @auth
+  
+  # User management (admin only)
+  users(pagination: PaginationInput, filter: UserFilterInput): UserConnection! @requiresAdmin
+  user(id: ID!): User @requiresAdmin
+  
+  # Check if email exists
+  checkEmail(email: String!): Boolean!
+}
+
+extend type Mutation {
+  # Authentication
+  register(input: RegisterInput!): AuthPayload! @rateLimit(max: 5, window: "15m")
+  login(input: LoginInput!): AuthPayload! @rateLimit(max: 10, window: "15m")
+  logout: MutationResponse! @auth
+  refreshToken(refreshToken: String!): AuthPayload!
+  
+  # Profile management
+  updateProfile(input: UpdateProfileInput!): User! @auth
+  changePassword(input: ChangePasswordInput!): MutationResponse! @auth
+  deleteAccount(password: String!): MutationResponse! @auth
+  
+  # Email verification
+  sendVerificationEmail: MutationResponse! @auth @rateLimit(max: 3, window: "1h")
+  verifyEmail(token: String!): MutationResponse!
+  
+  # Password reset
+  forgotPassword(email: String!): MutationResponse! @rateLimit(max: 3, window: "1h")
+  resetPassword(input: ResetPasswordInput!): MutationResponse!
+  
+  # Session management
+  revokeAllSessions: MutationResponse! @auth
+  
+  # Admin operations
+  approveUser(userId: ID!): User! @requiresAdmin
+  updateUserStorageLimit(userId: ID!, limitMB: Int!): User! @requiresAdmin
+}
+
+input UserFilterInput {
+  search: String
+  isApproved: Boolean
+  isAdmin: Boolean
+  createdAfter: DateTime
+  createdBefore: DateTime
+}

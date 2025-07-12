@@ -21,6 +21,12 @@ import * as socketClient from '@/services/socketClient';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { useTranslation } from 'react-i18next';
 import logger from '@/utils/logger'; // Import logger
+import { lazy, Suspense as ReactSuspense } from 'react';
+
+// Lazy load diagnostics component (only in dev mode)
+const DatabaseConsistencyCheck = lazy(() => 
+  import('@/components/diagnostics/DatabaseConsistencyCheck')
+);
 
 interface UseProjectDataReturn {
   project: Project | null;
@@ -371,6 +377,34 @@ const ProjectDetail = () => {
       setSelectAll(false);
     }
     setSelectionMode(!selectionMode);
+  };
+
+  // Handle cache clearing
+  const handleClearCache = async () => {
+    try {
+      const { clearProjectImageCache } = await import('@/utils/cacheManager');
+      
+      // Show confirmation dialog
+      const confirmed = window.confirm(
+        'Clear image cache? This will remove all cached image data for this project and refresh the page.'
+      );
+      
+      if (!confirmed) return;
+      
+      const cleanedId = projectId?.includes('-') ? projectId.split('-').pop() || projectId : projectId;
+      if (cleanedId) {
+        await clearProjectImageCache(cleanedId);
+        toast.success('Cache cleared successfully. Refreshing...');
+        
+        // Wait a bit then refresh the data
+        setTimeout(() => {
+          refreshData();
+        }, 500);
+      }
+    } catch (error) {
+      logger.error('Failed to clear cache:', error);
+      toast.error('Failed to clear cache');
+    }
   };
 
   const toggleImageSelection = (imageId: string, event?: React.MouseEvent) => {
@@ -882,6 +916,7 @@ const ProjectDetail = () => {
               selectionMode={selectionMode}
               onToggleSelectionMode={toggleSelectionMode}
               showStatusSort={true}
+              onClearCache={handleClearCache}
             />
 
             {loading ? (
@@ -934,6 +969,16 @@ const ProjectDetail = () => {
                 onBatchDelete={handleBatchDelete}
                 onBatchExport={handleBatchExport}
               />
+            )}
+            
+            {/* Database diagnostics (dev mode only) */}
+            {import.meta.env.DEV && (
+              <ReactSuspense fallback={<div className="mt-4">Loading diagnostics...</div>}>
+                <DatabaseConsistencyCheck 
+                  projectId={id || ''} 
+                  onRefreshNeeded={refreshData}
+                />
+              </ReactSuspense>
             )}
           </motion.div>
         )}
