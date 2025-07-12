@@ -252,9 +252,24 @@ async function processAndStoreImage(
       }
     }
 
+    // Provide more specific error messages for common issues
+    let errorMessage = processError.message || 'Unknown error';
+    let statusCode = 500;
+    
+    if (errorMessage.includes('file too large')) {
+      errorMessage = `Image file is too large. TIFF/BMP files must be under 100MB`;
+      statusCode = 413; // Payload Too Large
+    } else if (errorMessage.includes('unsupported') || errorMessage.includes('corrupted')) {
+      errorMessage = `Invalid or corrupted image file format`;
+      statusCode = 415; // Unsupported Media Type
+    } else if (errorMessage.includes('out of memory')) {
+      errorMessage = `Image too complex to process. Please try a smaller or simpler image`;
+      statusCode = 413;
+    }
+    
     throw new ApiError(
-      `Failed to process image: ${file.originalname} - ${processError.message || 'Unknown error'}`,
-      500
+      `Failed to process ${file.originalname}: ${errorMessage}`,
+      statusCode
     );
   }
 
@@ -497,6 +512,25 @@ router.post(
           imagesCount: insertedImages.length,
         });
 
+        // Verify that images are actually in the database before proceeding
+        const verifyQuery = await getPool().query(
+          'SELECT COUNT(*) FROM images WHERE project_id = $1 AND id = ANY($2::uuid[])',
+          [projectId, insertedImages.map(img => img.id)]
+        );
+        const verifiedCount = parseInt(verifyQuery.rows[0].count, 10);
+        if (verifiedCount !== insertedImages.length) {
+          logger.error('Image count mismatch after commit', {
+            expected: insertedImages.length,
+            actual: verifiedCount,
+            projectId
+          });
+        } else {
+          logger.debug('Images verified in database after commit', {
+            count: verifiedCount,
+            projectId
+          });
+        }
+
         // --- Update User Storage Usage (Outside Transaction) --- START
         // It's generally safer to update the aggregate count *after* the main transaction succeeds.
         // Calculate the total size of *successfully* processed and inserted images.
@@ -550,29 +584,32 @@ router.post(
           imageUtils.formatImageForApi(img, origin)
         );
 
-        // Emit WebSocket events for real-time updates
+        // Emit WebSocket events for real-time updates with a small delay
         const io = req.app.get('io');
         if (io) {
-          // Emit to project room for each uploaded image
-          formattedImages.forEach((image) => {
-            io.to(`project-${projectId}`).emit('image:created', {
-              projectId,
-              image,
-              timestamp: new Date().toISOString(),
+          // Add a small delay to ensure database changes are fully propagated
+          setTimeout(() => {
+            // Emit to project room for each uploaded image
+            formattedImages.forEach((image) => {
+              io.to(`project-${projectId}`).emit('image:created', {
+                projectId,
+                image,
+                timestamp: new Date().toISOString(),
+              });
+              
+              // Also emit to alternative room formats for compatibility
+              io.to(`project_${projectId}`).emit('image:created', {
+                projectId,
+                image,
+                timestamp: new Date().toISOString(),
+              });
             });
             
-            // Also emit to alternative room formats for compatibility
-            io.to(`project_${projectId}`).emit('image:created', {
+            logger.debug('Emitted image:created events via WebSocket', {
               projectId,
-              image,
-              timestamp: new Date().toISOString(),
+              imageCount: formattedImages.length,
             });
-          });
-          
-          logger.debug('Emitted image:created events via WebSocket', {
-            projectId,
-            imageCount: formattedImages.length,
-          });
+          }, 100); // 100ms delay for database propagation
         }
 
         res.status(201).json(formattedImages);
@@ -1171,7 +1208,8 @@ router.get(
       }
 
       const response = {
-        data: processedImages,
+        images: processedImages,
+        data: processedImages, // Keep for backward compatibility
         total: totalCount,
         pagination: {
           limit: Number(limit),

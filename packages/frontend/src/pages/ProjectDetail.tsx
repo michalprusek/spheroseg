@@ -186,7 +186,7 @@ const ProjectDetail = () => {
         if (data && data.projectId === cleanedId) {
           setTimeout(() => {
             refreshData();
-          }, 500); // Small delay to ensure backend is ready
+          }, 1500); // Increased delay to ensure database transaction is complete
         }
       };
 
