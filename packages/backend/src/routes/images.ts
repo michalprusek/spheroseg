@@ -550,6 +550,31 @@ router.post(
           imageUtils.formatImageForApi(img, origin)
         );
 
+        // Emit WebSocket events for real-time updates
+        const io = req.app.get('io');
+        if (io) {
+          // Emit to project room for each uploaded image
+          formattedImages.forEach((image) => {
+            io.to(`project-${projectId}`).emit('image:created', {
+              projectId,
+              image,
+              timestamp: new Date().toISOString(),
+            });
+            
+            // Also emit to alternative room formats for compatibility
+            io.to(`project_${projectId}`).emit('image:created', {
+              projectId,
+              image,
+              timestamp: new Date().toISOString(),
+            });
+          });
+          
+          logger.debug('Emitted image:created events via WebSocket', {
+            projectId,
+            imageCount: formattedImages.length,
+          });
+        }
+
         res.status(201).json(formattedImages);
       } catch (transactionError) {
         await client.query('ROLLBACK');
@@ -677,6 +702,28 @@ router.delete(
             return res.status(500).json({ message: result.error || 'Failed to delete image' });
           }
 
+          // Emit WebSocket event for real-time updates
+          const io = req.app.get('io');
+          if (io) {
+            io.to(`project-${projectId}`).emit('image:deleted', {
+              projectId,
+              imageId: actualImageId,
+              timestamp: new Date().toISOString(),
+            });
+            
+            // Also emit to alternative room formats
+            io.to(`project_${projectId}`).emit('image:deleted', {
+              projectId,
+              imageId: actualImageId,
+              timestamp: new Date().toISOString(),
+            });
+            
+            logger.debug('Emitted image:deleted event via WebSocket', {
+              projectId,
+              imageId: actualImageId,
+            });
+          }
+
           // Return success with no content
           return res.status(204).send();
         }
@@ -718,6 +765,28 @@ router.delete(
           error: result.error,
         });
         return res.status(500).json({ message: result.error || 'Failed to delete image' });
+      }
+
+      // Emit WebSocket event for real-time updates
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`project-${projectId}`).emit('image:deleted', {
+          projectId,
+          imageId,
+          timestamp: new Date().toISOString(),
+        });
+        
+        // Also emit to alternative room formats
+        io.to(`project_${projectId}`).emit('image:deleted', {
+          projectId,
+          imageId,
+          timestamp: new Date().toISOString(),
+        });
+        
+        logger.debug('Emitted image:deleted event via WebSocket', {
+          projectId,
+          imageId,
+        });
       }
 
       // Return success with no content

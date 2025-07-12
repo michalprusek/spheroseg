@@ -176,8 +176,37 @@ const ProjectDetail = () => {
         }
       };
 
+      // Handle image created event - for real-time gallery updates
+      const handleImageCreated = (data: any) => {
+        if (!isComponentMounted) return;
+        
+        logger.info('Received image:created event:', data);
+        
+        // Refresh the project data to include the new image
+        if (data && data.projectId === cleanedId) {
+          setTimeout(() => {
+            refreshData();
+          }, 500); // Small delay to ensure backend is ready
+        }
+      };
+
+      // Handle image deleted event - for real-time gallery updates
+      const handleImageDeleted = (data: any) => {
+        if (!isComponentMounted) return;
+        
+        logger.info('Received image:deleted event:', data);
+        
+        // If the image belongs to this project, update the UI
+        if (data && data.projectId === cleanedId && data.imageId) {
+          setImages(prevImages => prevImages.filter(img => img.id !== data.imageId));
+          toast.success('Image deleted successfully');
+        }
+      };
+
       socket.on('connect', handleConnect);
       socket.on('segmentation_update', handleSegmentationUpdate);
+      socket.on('image:created', handleImageCreated);
+      socket.on('image:deleted', handleImageDeleted);
 
       if (socket.connected) {
         logger.debug('WebSocket already connected:', socket.id);
@@ -206,6 +235,8 @@ const ProjectDetail = () => {
 
         socket.off('connect', handleConnect);
         socket.off('segmentation_update', handleSegmentationUpdate);
+        socket.off('image:created', handleImageCreated);
+        socket.off('image:deleted', handleImageDeleted);
 
         logger.info('Cleaned up WebSocket event listeners');
       };
