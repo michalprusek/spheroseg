@@ -105,3 +105,29 @@ export function getEffectiveMemoryLimit(defaultLimitMB: number): number {
   logger.info(`Using default memory limit: ${defaultLimitMB}MB`);
   return defaultLimitMB;
 }
+
+/**
+ * Get container information including memory usage
+ */
+export async function getContainerInfo(): Promise<{
+  isContainer: boolean;
+  memoryLimit: number;
+  memoryUsage: number;
+  memoryUsagePercentage: number;
+}> {
+  const containerLimits = getContainerLimits();
+  
+  // Get current memory usage
+  const memUsage = process.memoryUsage();
+  const currentUsage = memUsage.rss; // Resident Set Size
+  
+  // Default to OS total memory if not in container
+  const memoryLimit = containerLimits.memoryLimitBytes || require('os').totalmem();
+  
+  return {
+    isContainer: containerLimits.isContainerized,
+    memoryLimit,
+    memoryUsage: currentUsage,
+    memoryUsagePercentage: (currentUsage / memoryLimit) * 100
+  };
+}

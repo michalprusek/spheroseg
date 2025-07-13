@@ -1,11 +1,11 @@
-import { test as base } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 
 // Extend basic test fixture
 export const test = base.extend({
   // Add custom fixtures here if needed
 });
 
-export { expect } from '@playwright/test';
+export { expect };
 
 // Common selectors
 export const selectors = {

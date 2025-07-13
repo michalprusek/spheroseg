@@ -140,9 +140,13 @@ class PerformanceMonitor extends EventEmitter {
       this.cleanupOldMetrics();
 
       // Emit high usage warnings - raised threshold to reduce noise
-      if (memoryUsage.percentage > 95) {
+      if (memoryUsage.percentage > 85) {
         this.emit('high-memory-usage', memoryUsage);
-        logger.warn('High memory usage detected', memoryUsage);
+        logger.warn('High memory usage detected', {
+          usage: `${memoryUsage.percentage.toFixed(1)}%`,
+          used: `${Math.round(memoryUsage.used / 1024 / 1024)}MB`,
+          total: `${Math.round(memoryUsage.total / 1024 / 1024)}MB`
+        });
       }
 
       if (cpuUsage > 90) {
@@ -155,7 +159,13 @@ class PerformanceMonitor extends EventEmitter {
         logger.warn('High event loop lag detected', { lag: this.eventLoopLag });
       }
     } catch (error) {
-      logger.error('Error collecting system metrics', { error });
+      // Only log actual errors, not expected issues
+      if (error instanceof Error && error.message) {
+        logger.error('Error collecting system metrics', { 
+          error: error.message,
+          stack: error.stack 
+        });
+      }
     }
   }
 
