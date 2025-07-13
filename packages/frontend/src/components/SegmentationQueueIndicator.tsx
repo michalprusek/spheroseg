@@ -397,6 +397,9 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
       setLastUpdateTime(Date.now());
 
       // Broadcast the segmentation update to other components
+      // DISABLED: Event dispatching moved to centralized location to prevent duplicates
+      // The ProjectDetail component already handles WebSocket events and dispatches updates
+      /*
       try {
         const imageUpdateEvent = new CustomEvent('image-status-update', {
           detail: {
@@ -411,6 +414,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
       } catch (error) {
         console.error('Error broadcasting image status update:', error);
       }
+      */
     },
     [fetchData, propProjectId],
   );

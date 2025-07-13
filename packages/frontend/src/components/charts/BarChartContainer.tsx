@@ -6,7 +6,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from '@/utils/optimizedRecharts';
 
 interface ChartConfig {
   [key: string]: {

@@ -127,7 +127,9 @@ export const ImageDisplay = ({
             });
             window.dispatchEvent(queueUpdateEvent);
 
-            // Also dispatch an image-status-update event to ensure all components are updated
+            // DISABLED: Event dispatching moved to centralized location to prevent duplicates
+            // The ProjectDetail component already handles WebSocket events and dispatches updates
+            /*
             const imageUpdateEvent = new CustomEvent('image-status-update', {
               detail: {
                 imageId: data.imageId,
@@ -138,6 +140,7 @@ export const ImageDisplay = ({
               },
             });
             window.dispatchEvent(imageUpdateEvent);
+            */
           }, 50); // Reduced timeout for faster updates
         }
       }
@@ -205,6 +208,8 @@ export const ImageDisplay = ({
             if (apiStatus === SEGMENTATION_STATUS.COMPLETED || apiStatus === SEGMENTATION_STATUS.FAILED) {
               pollingManager.unregister(pollId);
 
+              // DISABLED: Event dispatching moved to centralized location to prevent duplicates
+              /*
               const imageUpdateEvent = new CustomEvent('image-status-update', {
                 detail: {
                   imageId: image.id,
@@ -214,6 +219,7 @@ export const ImageDisplay = ({
                 },
               });
               window.dispatchEvent(imageUpdateEvent);
+              */
             }
           }
         }

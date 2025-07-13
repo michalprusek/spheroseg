@@ -1,0 +1,264 @@
+# Optimized Docker Compose Configuration
+# 
+# Performance improvements:
+# 1. Multi-stage builds for smaller images
+# 2. Build caching optimization
+# 3. Resource limits and reservations
+# 4. Health checks for all services
+# 5. Optimized networking
+
+version: '3.8'
+
+services:
+  # Optimized Database with performance tuning
+  db:
+    profiles: ["dev", "prod"]
+    image: postgres:14-alpine
+    container_name: spheroseg-db
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+        reservations:
+          memory: 512M
+          cpus: '1'
+    environment:
+      POSTGRES_DB: spheroseg
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # Performance tuning
+      POSTGRES_INITDB_ARGS: "-c shared_buffers=256MB -c effective_cache_size=1GB -c maintenance_work_mem=64MB"
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./packages/backend/src/db/migrations:/docker-entrypoint-initdb.d/migrations:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spheroseg-network
+
+  # Optimized Redis with persistence
+  redis:
+    profiles: ["dev", "prod"]
+    image: redis:7-alpine
+    container_name: spheroseg-redis
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --appendonly yes
+      --appendfsync everysec
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spheroseg-network
+
+  # Optimized Backend with multi-stage build
+  backend:
+    profiles: ["dev", "prod"]
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile.optimized
+      cache_from:
+        - spheroseg-backend:cache
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: spheroseg-backend:latest
+    container_name: spheroseg-backend
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+        reservations:
+          memory: 512M
+          cpus: '1'
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - NODE_OPTIONS=--max-old-space-size=768
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/spheroseg
+      - REDIS_URL=redis://redis:6379
+      - ENABLE_REDIS_CACHE=true
+      - REDIS_CACHE_TTL=300
+      - CONTAINER_MEMORY_LIMIT_MB=1024
+      - ENABLE_PERFORMANCE_MONITORING=true
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./public/uploads:/app/public/uploads
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - spheroseg-network
+
+  # Optimized ML Service
+  ml:
+    profiles: ["dev", "prod"]
+    build:
+      context: .
+      dockerfile: packages/ml/Dockerfile.optimized
+      cache_from:
+        - spheroseg-ml:cache
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: spheroseg-ml:latest
+    container_name: spheroseg-ml
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '4'
+        reservations:
+          memory: 2G
+          cpus: '2'
+          devices:
+            - capabilities: [gpu]
+              count: 1
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEVICE_PREFERENCE=cuda
+      - RABBITMQ_PREFETCH_COUNT=8
+      - MODEL_CACHE_SIZE=5
+      - BATCH_SIZE=4
+    volumes:
+      - ./public/uploads:/app/uploads
+      - ./packages/ml/checkpoint_epoch_9.pth.tar:/app/checkpoint_epoch_9.pth.tar:ro
+      - ml_cache:/app/cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - spheroseg-network
+
+  # Optimized Frontend (Production)
+  frontend-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile.optimized
+      cache_from:
+        - spheroseg-frontend:cache
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+        - NODE_ENV=production
+    image: spheroseg-frontend:latest
+    container_name: spheroseg-frontend-prod
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '1'
+        reservations:
+          memory: 128M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - spheroseg-network
+
+  # Optimized Nginx with caching
+  nginx:
+    profiles: ["dev", "prod"]
+    image: nginx:alpine
+    container_name: spheroseg-nginx
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '1'
+        reservations:
+          memory: 128M
+          cpus: '0.5'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.optimized.conf:/etc/nginx/conf.d/default.conf:ro
+      - nginx_cache:/var/cache/nginx
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - frontend-prod
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - spheroseg-network
+
+volumes:
+  db_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/postgres
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/redis
+  ml_cache:
+    driver: local
+  nginx_cache:
+    driver: local
+
+networks:
+  spheroseg-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-spheroseg

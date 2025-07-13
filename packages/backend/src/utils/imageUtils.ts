@@ -10,6 +10,7 @@
 import { imageUtils as sharedImageUtils } from '@spheroseg/shared';
 import imageUtils from './imageUtils.unified';
 import * as fs from 'fs';
+import { fsExists } from './asyncFileOperations';
 
 // Export all from the unified implementation
 export * from './imageUtils.unified';
@@ -54,7 +55,33 @@ export const formatImagePaths = (image: ImageData, origin: string): ImageData =>
  * Verify if image files exist on the filesystem
  * @deprecated Use the fileExists function from imageUtils.unified.ts instead
  */
-export const verifyImageFiles = (image: ImageData, uploadDir: string): ImageData => {
+export const verifyImageFiles = async (image: ImageData, uploadDir: string): Promise<ImageData> => {
+  const result = { ...image };
+
+  // Check if the main image file exists
+  if (result.storage_path) {
+    const imagePath = imageUtils.dbPathToFilesystemPath(result.storage_path, uploadDir);
+    result.file_exists = await fsExists(imagePath);
+  } else {
+    result.file_exists = false;
+  }
+
+  // Check if the thumbnail file exists
+  if (result.thumbnail_path) {
+    const thumbnailPath = imageUtils.dbPathToFilesystemPath(result.thumbnail_path, uploadDir);
+    result.thumbnail_exists = await fsExists(thumbnailPath);
+  } else {
+    result.thumbnail_exists = false;
+  }
+
+  return result;
+};
+
+/**
+ * Synchronous version for backward compatibility
+ * @deprecated Use async verifyImageFiles instead
+ */
+export const verifyImageFilesSync = (image: ImageData, uploadDir: string): ImageData => {
   const result = { ...image };
 
   // Check if the main image file exists

@@ -21,6 +21,7 @@ import * as socketClient from '@/services/socketClient';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { useTranslation } from 'react-i18next';
 import logger from '@/utils/logger'; // Import logger
+import { segmentationEventManager } from '@/utils/segmentationEventManager';
 
 interface UseProjectDataReturn {
   project: Project | null;
@@ -50,6 +51,10 @@ const ProjectDetail = () => {
   const [selectedImages, setSelectedImages] = useState<Record<string, boolean>>({});
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const lastSelectedImageRef = useRef<string | null>(null);
+  
+  // Add refs for notification deduplication
+  const notificationDedupeRef = useRef<Map<string, number>>(new Map());
+  const NOTIFICATION_DEDUPE_WINDOW = 2000; // 2 seconds
 
   // Funkce pro aktualizaci pouze statistik projektu bez načítání všech obrázků
   const updateProjectStatistics = useCallback(async () => {
@@ -137,13 +142,19 @@ const ProjectDetail = () => {
           // Aktualizujeme stav obrázku včetně chybové zprávy, pokud existuje
           updateImageStatus(data.imageId, data.status, data.resultPath, data.error);
 
+          // Dispatch event through centralized manager to prevent duplicates
+          segmentationEventManager.dispatchStatusUpdate(
+            data.imageId,
+            data.status,
+            data.resultPath,
+            data.error,
+            true // forceQueueUpdate
+          );
+
           if (data.status === 'completed') {
-            // Odstraníme toast odsud, protože se zobrazí v handleImageStatusUpdate
             // Namísto refreshData použijeme cílenější aktualizaci
             updateProjectStatistics();
           } else if (data.status === 'failed') {
-            // Odstraníme toast odsud, protože se zobrazí v handleImageStatusUpdate
-
             // Aktualizujeme také stav fronty
             const queueUpdateEvent = new CustomEvent('queue-status-update', {
               detail: {
@@ -337,7 +348,26 @@ const ProjectDetail = () => {
 
       // Pokud je status "completed", zobrazíme úspěšnou zprávu
       if (status === 'completed') {
-        toast.success(`Image segmentation completed for ${imageId.substring(0, 8)}...`);
+        // Check for duplicate notifications
+        const notificationKey = `${imageId}-${status}`;
+        const lastNotificationTime = notificationDedupeRef.current.get(notificationKey);
+        const currentTime = Date.now();
+        
+        // Only show notification if it hasn't been shown recently
+        if (!lastNotificationTime || currentTime - lastNotificationTime > NOTIFICATION_DEDUPE_WINDOW) {
+          toast.success(`Image segmentation completed for ${imageId.substring(0, 8)}...`);
+          notificationDedupeRef.current.set(notificationKey, currentTime);
+          
+          // Clean up old entries periodically
+          if (notificationDedupeRef.current.size > 100) {
+            const cutoffTime = currentTime - NOTIFICATION_DEDUPE_WINDOW;
+            for (const [key, time] of notificationDedupeRef.current) {
+              if (time < cutoffTime) {
+                notificationDedupeRef.current.delete(key);
+              }
+            }
+          }
+        }
 
         // For completed status, ensure cache is updated before refreshing
         import('@/api/projectImages').then(({ updateImageStatusInCache }) => {

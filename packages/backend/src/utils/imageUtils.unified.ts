@@ -336,12 +336,39 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
 };
 
 /**
+ * Check if a file exists (synchronous)
+ */
+export const fileExistsSync = (filePath: string): boolean => {
+  try {
+    fs.accessSync(filePath, fs.constants.F_OK);
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+/**
  * Create a directory if it doesn't exist
  */
 export const ensureDirectoryExists = async (dirPath: string): Promise<void> => {
   try {
     if (!(await fsExists(dirPath))) {
       await fsMkdir(dirPath, { recursive: true });
+      logger.debug(`Created directory: ${dirPath}`);
+    }
+  } catch (error) {
+    logger.error(`Error creating directory: ${dirPath}`, error);
+    throw error;
+  }
+};
+
+/**
+ * Create a directory if it doesn't exist (synchronous)
+ */
+export const ensureDirectoryExistsSync = (dirPath: string): void => {
+  try {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
       logger.debug(`Created directory: ${dirPath}`);
     }
   } catch (error) {
@@ -652,12 +679,45 @@ export const copyFile = async (sourcePath: string, targetPath: string): Promise<
 };
 
 /**
+ * Copy a file from one location to another (synchronous)
+ */
+export const copyFileSync = (sourcePath: string, targetPath: string): void => {
+  try {
+    // Ensure the target directory exists
+    const targetDir = path.dirname(targetPath);
+    ensureDirectoryExistsSync(targetDir);
+
+    // Copy the file
+    fs.copyFileSync(sourcePath, targetPath);
+    logger.debug(`Copied file: ${sourcePath} -> ${targetPath}`);
+  } catch (error) {
+    logger.error(`Error copying file: ${sourcePath} -> ${targetPath}`, error);
+    throw error;
+  }
+};
+
+/**
  * Delete a file
  */
 export const deleteFile = async (filePath: string): Promise<void> => {
   try {
     if (await fileExists(filePath)) {
       await fsUnlink(filePath);
+      logger.debug(`Deleted file: ${filePath}`);
+    }
+  } catch (error) {
+    logger.error(`Error deleting file: ${filePath}`, error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a file (synchronous)
+ */
+export const deleteFileSync = (filePath: string): void => {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
       logger.debug(`Deleted file: ${filePath}`);
     }
   } catch (error) {
@@ -690,6 +750,45 @@ export const getFilesInDirectory = async (
 
       if (entry.isDirectory() && recursive) {
         const subDirFiles = await getFilesInDirectory(fullPath, options);
+        files = [...files, ...subDirFiles];
+      } else if (entry.isFile()) {
+        if (!filter || filter(entry.name)) {
+          files.push(fullPath);
+        }
+      }
+    }
+
+    return files;
+  } catch (error) {
+    logger.error(`Error getting files in directory: ${dirPath}`, error);
+    throw error;
+  }
+};
+
+/**
+ * Get all files in a directory (synchronous)
+ */
+export const getFilesInDirectorySync = (
+  dirPath: string,
+  options: { recursive?: boolean; filter?: (filename: string) => boolean } = {}
+): string[] => {
+  try {
+    const { recursive = false, filter } = options;
+
+    if (!fs.existsSync(dirPath)) {
+      return [];
+    }
+
+    const entries = fs.readdirSync(dirPath, {
+      withFileTypes: true,
+    });
+    let files: string[] = [];
+
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory() && recursive) {
+        const subDirFiles = getFilesInDirectorySync(fullPath, options);
         files = [...files, ...subDirFiles];
       } else if (entry.isFile()) {
         if (!filter || filter(entry.name)) {
@@ -745,7 +844,37 @@ export const generateImagePaths = (
 /**
  * Verify that image files exist on the filesystem
  */
-export const verifyImageFilesForApi = (
+export const verifyImageFilesForApi = async (
+  image: Record<string, unknown>,
+  uploadDir: string
+): Promise<Record<string, unknown>> => {
+  if (!image) return {} as Record<string, unknown>;
+
+  const result = { ...image, file_exists: true };
+
+  // Check if the main image file exists
+  if (image.storage_path && typeof image.storage_path === 'string') {
+    const storagePath = image.storage_path.startsWith('http')
+      ? pathUtils.extractPathFromUrl(image.storage_path)
+      : image.storage_path;
+
+    const fullStoragePath = dbPathToFilesystemPath(storagePath, uploadDir);
+    const storageExists = await fsExists(fullStoragePath);
+
+    if (!storageExists) {
+      result.file_exists = false;
+      logger.warn(`Image file not found: ${fullStoragePath}`);
+    }
+  }
+
+  return result;
+};
+
+/**
+ * Synchronous version for backward compatibility
+ * @deprecated Use async verifyImageFilesForApi instead
+ */
+export const verifyImageFilesForApiSync = (
   image: Record<string, unknown>,
   uploadDir: string
 ): Record<string, unknown> => {
@@ -867,16 +996,22 @@ img.save(sys.argv[2], 'PNG', optimize=True)
 
 export default {
   fileExists,
+  fileExistsSync,
   ensureDirectoryExists,
+  ensureDirectoryExistsSync,
   getImageMetadata,
   createThumbnail,
   dbPathToFilesystemPath,
   normalizePathForDb,
   formatImageForApi,
   verifyImageFilesForApi,
+  verifyImageFilesForApiSync,
   copyFile,
+  copyFileSync,
   deleteFile,
+  deleteFileSync,
   getFilesInDirectory,
+  getFilesInDirectorySync,
   processBatch,
   generateUniqueImageFilename,
   generateImagePaths,

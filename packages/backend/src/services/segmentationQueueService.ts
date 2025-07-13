@@ -592,16 +592,8 @@ class SegmentationQueueService extends EventEmitter {
           const projectId = projectQuery.rows[0].project_id;
 
           const io = getIO();
-          // Emit to project room instead of user room
+          // Emit to project room only - removed duplicate emission to prevent multiple notifications
           io.to(`project-${projectId}`).emit('segmentation_update', {
-            imageId,
-            status,
-            error: errorMessage,
-            timestamp: new Date().toISOString(),
-          });
-
-          // Also emit to the specific image room
-          io.to(`image-${imageId}`).emit('segmentation_update', {
             imageId,
             status,
             error: errorMessage,

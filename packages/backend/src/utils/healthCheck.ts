@@ -10,6 +10,7 @@ import config from '../config';
 import performanceConfig from '../config/performance';
 import { getEffectiveMemoryLimit } from './containerInfo';
 import fs from 'fs';
+import { fsExists, fsWriteFile, fsUnlink, fsStat } from './asyncFileOperations';
 
 export interface HealthStatus {
   status: 'healthy' | 'unhealthy' | 'degraded';
@@ -75,7 +76,7 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
     const uploadDir = config.storage.uploadDir;
 
     // Check if upload directory exists and is writable
-    if (!fs.existsSync(uploadDir)) {
+    if (!(await fsExists(uploadDir))) {
       return {
         status: 'unhealthy',
         message: 'Upload directory does not exist',
@@ -86,8 +87,8 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
     // Test write access
     const testFile = `${uploadDir}/.health-check-${Date.now()}.tmp`;
     try {
-      fs.writeFileSync(testFile, 'health-check');
-      fs.unlinkSync(testFile);
+      await fsWriteFile(testFile, 'health-check');
+      await fsUnlink(testFile);
     } catch (writeError) {
       return {
         status: 'unhealthy',
@@ -98,7 +99,7 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
 
     // Check disk space (if available)
     try {
-      const stats = fs.statSync(uploadDir);
+      const stats = await fsStat(uploadDir);
       return {
         status: 'healthy',
         message: 'Storage accessible and writable',

@@ -4,6 +4,7 @@ import { authenticate as authMiddleware, AuthenticatedRequest } from '../securit
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fsExists, fsMkdir, fsUnlink } from '../utils/asyncFileOperations';
 import { PoolClient } from 'pg';
 import { validate } from '../middleware/validationMiddleware';
 import {
@@ -72,16 +73,19 @@ async function formatAndSendImage(image: ImageData, req: Request, res: Response)
  */
 const UPLOAD_DIR = config.storage.uploadDir;
 
-try {
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    logger.info('Created upload directory', { path: UPLOAD_DIR });
-  } else {
-    logger.debug('Upload directory already exists', { path: UPLOAD_DIR });
+// Initialize upload directory asynchronously
+(async () => {
+  try {
+    if (!(await fsExists(UPLOAD_DIR))) {
+      await fsMkdir(UPLOAD_DIR, { recursive: true });
+      logger.info('Created upload directory', { path: UPLOAD_DIR });
+    } else {
+      logger.debug('Upload directory already exists', { path: UPLOAD_DIR });
+    }
+  } catch (error) {
+    logger.error('Error creating upload directory', { path: UPLOAD_DIR, error });
   }
-} catch (error) {
-  logger.error('Error creating upload directory', { path: UPLOAD_DIR, error });
-}
+})();
 
 /**
  * Multer disk storage configuration
@@ -111,13 +115,20 @@ const storage = multer.diskStorage({
     // No need to handle project- prefix anymore as it's been removed from the frontend
 
     const projectUploadDir = path.join(UPLOAD_DIR, projectId);
-    if (!fs.existsSync(projectUploadDir)) {
-      fs.mkdirSync(projectUploadDir, { recursive: true });
-      logger.debug('Created project upload directory', {
-        path: projectUploadDir,
-      });
-    }
-    cb(null, projectUploadDir);
+    // Use async operation but handle synchronously for multer callback
+    fsExists(projectUploadDir).then(exists => {
+      if (!exists) {
+        return fsMkdir(projectUploadDir, { recursive: true }).then(() => {
+          logger.debug('Created project upload directory', {
+            path: projectUploadDir,
+          });
+        });
+      }
+    }).then(() => {
+      cb(null, projectUploadDir);
+    }).catch(err => {
+      cb(err, '');
+    });
   },
   filename: function (
     _req: MulterRequest,
@@ -640,10 +651,11 @@ router.post(
         filesCount: files?.length || 0,
         userId: requestingUserId,
       });
-      allUploadedFilePaths.forEach((filePath) => {
-        if (fs.existsSync(filePath)) {
+      // Clean up files asynchronously
+      allUploadedFilePaths.forEach(async (filePath) => {
+        if (await fsExists(filePath)) {
           try {
-            fs.unlinkSync(filePath);
+            await fsUnlink(filePath);
             logger.debug('Cleaned up file after global error', {
               path: filePath,
             });
@@ -1303,7 +1315,7 @@ router.get(
 
       const storagePath = imageResult.rows[0].storage_path;
       const fullPath = imageUtils.dbPathToFilesystemPath(storagePath, UPLOAD_DIR);
-      const exists = fs.existsSync(fullPath);
+      const exists = await fsExists(fullPath);
 
       logger.debug('Image verification result', {
         imageId,

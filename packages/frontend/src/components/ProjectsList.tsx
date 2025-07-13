@@ -9,7 +9,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ProjectDialogForm from '@/components/project/ProjectDialogForm';
 import NewProjectCardUI from '@/components/project/NewProjectCardUI';
 import { formatDistanceToNow } from 'date-fns';
-import { cs, enUS } from 'date-fns/locale';
+import { getDateLocale } from '@/utils/optimizedDateLocales';
 import { Badge } from '@/components/ui/badge';
 
 export interface ProjectsListProps {
@@ -40,7 +40,7 @@ const ProjectsList = ({
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
   const navigate = useNavigate();
 
-  const dateLocale = language === 'cs' ? cs : enUS;
+  const dateLocale = getDateLocale(language);
 
   if (loading) {
     return (

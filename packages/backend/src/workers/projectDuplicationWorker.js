@@ -8,6 +8,7 @@
 const { workerData, parentPort } = require('worker_threads');
 const path = require('path');
 const fs = require('fs');
+const { promises: fsPromises } = fs;
 const pg = require('pg');
 
 let pool;
@@ -82,18 +83,24 @@ async function copyFile(sourcePath, targetPath, baseDir) {
     
     // Create target directory if it doesn't exist
     const targetDir = path.dirname(fullTargetPath);
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
+    try {
+      await fsPromises.access(targetDir);
+    } catch {
+      await fsPromises.mkdir(targetDir, { recursive: true });
     }
     
     // Check if source file exists
-    if (fs.existsSync(fullSourcePath)) {
+    try {
+      await fsPromises.access(fullSourcePath);
       // Copy file
-      fs.copyFileSync(fullSourcePath, fullTargetPath);
+      await fsPromises.copyFile(fullSourcePath, fullTargetPath);
       return true;
-    } else {
-      console.warn(`Source file not found: ${fullSourcePath}`);
-      return false;
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        console.warn(`Source file not found: ${fullSourcePath}`);
+        return false;
+      }
+      throw error;
     }
   } catch (error) {
     console.error('Error copying file:', error);
@@ -170,8 +177,10 @@ async function processProjectDuplication() {
       const baseDir = options.baseDir || process.cwd();
       const projectDir = path.join(baseDir, 'public', 'uploads', newProjectId);
       
-      if (!fs.existsSync(projectDir)) {
-        fs.mkdirSync(projectDir, { recursive: true });
+      try {
+        await fsPromises.access(projectDir);
+      } catch {
+        await fsPromises.mkdir(projectDir, { recursive: true });
         console.log(`Created directory for new project: ${projectDir}`);
       }
     }
