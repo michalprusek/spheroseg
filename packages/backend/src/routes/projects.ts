@@ -7,11 +7,12 @@ import {
   createProjectSchema,
   projectIdSchema,
   deleteProjectSchema,
-  duplicateProjectSchema,
+  updateProjectSchema,
 } from '../validators/projectValidators';
 import logger from '../utils/logger';
 import * as projectService from '../services/projectService';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
+import cacheService from '../services/cacheService';
 
 const router: Router = express.Router();
 
@@ -63,6 +64,15 @@ router.get(
         });
       }
 
+      // Try to get from cache first
+      const cacheKey = `project_list:${userId}:${limit}:${offset}:${includeShared}`;
+      const cached = await cacheService.get<{ projects: any[]; total: number }>(cacheKey);
+
+      if (cached) {
+        logger.debug('Returning cached project list', { userId, limit, offset });
+        return res.status(200).json(cached);
+      }
+
       // Get projects using the service
       const result = await projectService.getUserProjects(
         getPool(),
@@ -76,6 +86,9 @@ router.get(
         count: result.projects.length,
         total: result.total,
       });
+
+      // Cache the result
+      await cacheService.set(cacheKey, result, 60); // 1 minute TTL
 
       res.status(200).json({
         projects: result.projects,
@@ -259,6 +272,18 @@ router.get(
         });
       }
 
+      // Try to get from cache first
+      const cachedProject = await cacheService.getCachedProject(projectId);
+
+      if (cachedProject) {
+        // Verify user has access even for cached project
+        if (cachedProject.user_id !== userId && !cachedProject.is_shared) {
+          return res.status(404).json({ message: 'Project not found or access denied' });
+        }
+        logger.debug('Returning cached project', { projectId });
+        return res.status(200).json(cachedProject);
+      }
+
       // Get project using the service
       const project = await projectService.getProjectById(getPool(), projectId, userId);
 
@@ -276,9 +301,99 @@ router.get(
         isOwner: project.is_owner,
       });
 
+      // Cache the project
+      await cacheService.cacheProject(projectId, project);
+
       return res.status(200).json(project);
     } catch (error) {
       logger.error('Error fetching project', { error, projectId, userId });
+      next(error);
+    }
+  }
+);
+
+// PUT /api/projects/:id - Update a project by ID
+// @ts-ignore
+router.put(
+  '/:id',
+  authMiddleware,
+  validate(updateProjectSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    const { id: projectId } = req.params;
+    const updates = req.body;
+
+    if (!userId) return res.status(401).json({ message: 'Authentication error' });
+
+    try {
+      logger.info('Processing update project request', { userId, projectId, updates });
+
+      // Check project ownership
+      const ownershipCheck = await getPool().query(
+        'SELECT user_id FROM projects WHERE id = $1',
+        [projectId]
+      );
+
+      if (ownershipCheck.rows.length === 0) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+
+      if (ownershipCheck.rows[0].user_id !== userId) {
+        return res.status(403).json({ message: 'Not authorized to update this project' });
+      }
+
+      // Update the project
+      const updateFields = [];
+      const values = [];
+      let paramCount = 1;
+
+      if (updates.title !== undefined) {
+        updateFields.push(`title = $${paramCount++}`);
+        values.push(updates.title);
+      }
+
+      if (updates.description !== undefined) {
+        updateFields.push(`description = $${paramCount++}`);
+        values.push(updates.description);
+      }
+
+      if (updates.tags !== undefined) {
+        updateFields.push(`tags = $${paramCount++}`);
+        values.push(updates.tags);
+      }
+
+      if (updates.public !== undefined) {
+        updateFields.push(`public = $${paramCount++}`);
+        values.push(updates.public);
+      }
+
+      if (updateFields.length === 0) {
+        return res.status(400).json({ message: 'No valid fields to update' });
+      }
+
+      updateFields.push(`updated_at = NOW()`);
+      values.push(projectId);
+
+      const updateQuery = `
+        UPDATE projects 
+        SET ${updateFields.join(', ')}
+        WHERE id = $${values.length}
+        RETURNING *
+      `;
+
+      const result = await getPool().query(updateQuery, values);
+
+      // Clear cache for the project
+      await cacheService.invalidateProject(projectId);
+
+      logger.info('Project updated successfully', { projectId });
+      res.json(result.rows[0]);
+    } catch (error: any) {
+      logger.error('Error updating project', { 
+        error: error?.message || error, 
+        stack: error?.stack,
+        projectId 
+      });
       next(error);
     }
   }
@@ -323,6 +438,9 @@ router.delete(
 
       logger.info('Project deleted successfully', { projectId });
 
+      // Invalidate cache for this project
+      await cacheService.invalidateProject(projectId);
+
       // Return 204 No Content on successful deletion
       res.status(204).send();
     } catch (error) {
@@ -340,202 +458,6 @@ router.delete(
   }
 );
 
-// POST /api/projects/:id/duplicate - Duplicate a project
-// @ts-ignore
-router.post(
-  '/:id/duplicate',
-  authMiddleware,
-  validate(duplicateProjectSchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-    const { id: originalProjectId } = req.params;
-    const {
-      newTitle,
-      copyFiles = true,
-      copySegmentations = false,
-      resetStatus = true,
-      async = false,
-    } = req.body;
-
-    if (!userId) return res.status(401).json({ message: 'Authentication error' });
-
-    try {
-      logger.info('Processing duplicate project request', {
-        userId,
-        originalProjectId,
-        newTitle,
-        async,
-      });
-
-      // First check if the projects table exists
-      const projectsTableCheck = await getPool().query(`
-            SELECT EXISTS (
-                SELECT 1
-                FROM information_schema.tables
-                WHERE table_schema = 'public'
-                AND table_name = 'projects'
-            )
-        `);
-
-      const projectsTableExists = projectsTableCheck.rows[0].exists;
-      if (!projectsTableExists) {
-        logger.warn('Projects table does not exist in database');
-        return res.status(404).json({
-          message: 'Project not found - projects table missing',
-          error: 'NOT_FOUND',
-        });
-      }
-
-      // Verify the source project exists and belongs to the user
-      const projectCheck = await getPool().query(
-        'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
-        [originalProjectId, userId]
-      );
-
-      if (projectCheck.rows.length === 0) {
-        logger.info('Source project not found or access denied', {
-          originalProjectId,
-          userId,
-        });
-        return res.status(404).json({ message: 'Source project not found or access denied' });
-      }
-
-      // If async is true and duplication tasks table exists, process asynchronously
-      if (async) {
-        // Check if the duplication tasks table exists
-        const tasksTableCheck = await getPool().query(`
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM information_schema.tables
-                    WHERE table_schema = 'public'
-                    AND table_name = 'project_duplication_tasks'
-                )
-            `);
-
-        const tasksTableExists = tasksTableCheck.rows[0].exists;
-        if (tasksTableExists) {
-          try {
-            // Import the duplication queue service
-            const projectDuplicationQueueService = await import(
-              '../services/projectDuplicationQueueService'
-            );
-
-            // Trigger an asynchronous duplication
-            const taskId = await projectDuplicationQueueService.default.triggerProjectDuplication(
-              getPool(),
-              originalProjectId,
-              userId,
-              {
-                newTitle,
-                copyFiles,
-                copySegmentations,
-                resetStatus,
-                baseDir: process.cwd(),
-              }
-            );
-
-            logger.info('Project duplication task created successfully', {
-              originalProjectId,
-              taskId,
-              userId,
-              options: { newTitle, copyFiles, copySegmentations, resetStatus },
-            });
-
-            // Return the task ID and status
-            return res.status(202).json({
-              taskId,
-              status: 'pending',
-              originalProjectId,
-              message:
-                'Project duplication started. Monitor progress using the duplication task API.',
-            });
-          } catch (queueError) {
-            logger.error('Error using duplication queue service', {
-              queueError,
-              originalProjectId,
-            });
-            // Fall through to synchronous duplication if queue service fails
-          }
-        }
-      }
-
-      // Synchronous duplication (fallback or intentional)
-      try {
-        logger.debug('Loading project duplication service for synchronous duplication', {
-          originalProjectId,
-          newTitle,
-        });
-
-        // Import the project duplication service
-        const projectDuplicationService = await import('../services/projectDuplicationService');
-
-        // Duplicate the project using the centralized service
-        const newProject = await projectDuplicationService.duplicateProject(
-          getPool(),
-          originalProjectId,
-          userId,
-          {
-            newTitle,
-            copyFiles,
-            copySegmentations,
-            resetStatus,
-            baseDir: process.cwd(), // Use current working directory as base
-          }
-        );
-
-        logger.info('Project duplicated successfully (synchronous)', {
-          originalProjectId,
-          newProjectId: newProject.id,
-          newTitle,
-        });
-
-        return res.status(201).json(newProject); // Return the newly created project info
-      } catch (serviceError) {
-        logger.error('Project duplication service error', {
-          error: serviceError,
-          originalProjectId,
-          newTitle,
-        });
-
-        // If service module doesn't exist, fallback to a basic project duplication
-        if (
-          serviceError &&
-          typeof serviceError === 'object' &&
-          'code' in serviceError &&
-          serviceError.code === 'MODULE_NOT_FOUND'
-        ) {
-          logger.warn('Duplication service not found, using fallback method');
-
-          // Basic duplicate without files - just create new project with same title
-          const newProjectResult = await getPool().query(
-            'INSERT INTO projects (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
-            [
-              userId,
-              newTitle || `Copy of ${projectCheck.rows[0].title}`,
-              projectCheck.rows[0].description,
-            ]
-          );
-
-          logger.info('Project duplicated using fallback method', {
-            newProjectId: newProjectResult.rows[0].id,
-          });
-
-          return res.status(201).json(newProjectResult.rows[0]);
-        }
-
-        throw serviceError; // Re-throw if it's not a module-not-found error
-      }
-    } catch (error) {
-      logger.error('Error duplicating project', {
-        error,
-        originalProjectId,
-        userId,
-        newTitle,
-      });
-      next(error);
-    }
-  }
-);
 
 // GET /api/projects/:id/images - Get images for a specific project
 // @ts-ignore

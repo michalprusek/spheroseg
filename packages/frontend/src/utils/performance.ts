@@ -242,6 +242,116 @@ export const useLazyLoading = () => {
   }, []);
 };
 
+/**
+ * Performance monitoring class for tracking multiple metrics
+ */
+export class PerformanceMonitor {
+  private metrics: Map<string, number[]> = new Map();
+
+  start(label: string): () => void {
+    const startTime = performance.now();
+
+    return () => {
+      const duration = performance.now() - startTime;
+      if (!this.metrics.has(label)) {
+        this.metrics.set(label, []);
+      }
+      this.metrics.get(label)!.push(duration);
+    };
+  }
+
+  getMetrics(label: string): {
+    count: number;
+    total: number;
+    average: number;
+    min: number;
+    max: number;
+  } | null {
+    const values = this.metrics.get(label);
+    if (!values || values.length === 0) {
+      return null;
+    }
+
+    return {
+      count: values.length,
+      total: values.reduce((sum, val) => sum + val, 0),
+      average: values.reduce((sum, val) => sum + val, 0) / values.length,
+      min: Math.min(...values),
+      max: Math.max(...values),
+    };
+  }
+
+  reset(label?: string): void {
+    if (label) {
+      this.metrics.delete(label);
+    } else {
+      this.metrics.clear();
+    }
+  }
+
+  getAllMetrics(): Map<string, number[]> {
+    return new Map(this.metrics);
+  }
+}
+
+/**
+ * Simple debounce implementation
+ */
+export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout;
+
+  return function (...args: Parameters<T>) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+}
+
+/**
+ * Simple throttle implementation
+ */
+export function throttle<T extends (...args: any[]) => any>(fn: T, limit: number): (...args: Parameters<T>) => void {
+  let inThrottle = false;
+
+  return function (...args: Parameters<T>) {
+    if (!inThrottle) {
+      fn(...args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    }
+  };
+}
+
+/**
+ * Simple memoize implementation
+ */
+export function memoize<T extends (...args: any[]) => any>(fn: T): T {
+  const cache = new Map<string, ReturnType<T>>();
+
+  return ((...args: Parameters<T>) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key)!;
+    }
+
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  }) as T;
+}
+
+/**
+ * Track operation time
+ */
+export function trackOperationTime(operationName: string, operation: () => void): number {
+  const start = performance.now();
+  operation();
+  const duration = performance.now() - start;
+  console.debug(`[Performance] ${operationName} took ${duration.toFixed(2)}ms`);
+  return duration;
+}
+
 export default {
   usePerformance,
   useImageLoadPerformance,
@@ -249,4 +359,9 @@ export default {
   initPerformanceMonitoring,
   markPerformance,
   measurePerformance,
+  PerformanceMonitor,
+  debounce,
+  throttle,
+  memoize,
+  trackOperationTime,
 };

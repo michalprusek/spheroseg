@@ -345,15 +345,15 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     }, 5000); // 5 second timeout
 
     try {
-      // Use window.location to determine the current origin
-      const origin = window.location.origin;
-      console.log(`WebSocket: Using origin ${origin} for socket.io connection`);
+      // Use relative path for Socket.IO to work with any domain
+      // This will connect to the same origin as the page
+      console.log(`WebSocket: Using relative path for socket.io connection`);
 
       // Only include token in auth if it exists to avoid authentication errors
       const authOptions = token ? { auth: { token } } : {};
 
-      // Initialize socket with explicit URL to ensure proper connection
-      newSocket = io(origin, {
+      // Initialize socket with relative path
+      newSocket = io('', {
         ...authOptions,
         reconnectionAttempts: 1, // Only try once to prevent excessive reconnection attempts
         reconnectionDelay: 1000,

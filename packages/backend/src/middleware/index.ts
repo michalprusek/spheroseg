@@ -12,10 +12,15 @@ import path from 'path';
 import fs from 'fs';
 
 import config from '../config';
+import performanceConfig from '../config/performance';
 import logger from '../utils/logger';
 import { errorHandler } from './errorHandler';
 import { configureSecurity } from '../security';
 import { requestLoggerMiddleware } from '../monitoring/unified';
+import { trackAPIPerformance, addResponseTimeHeader } from './performanceTracking';
+// TODO: Fix i18n imports - temporarily disabled
+// import { createI18nMiddleware } from '../config/i18n';
+// import { setUserLanguage } from './i18n';
 
 /**
  * Security middleware configuration
@@ -31,18 +36,32 @@ export const configurePerformanceMiddleware = (app: Application): void => {
   // Compression for response payloads
   app.use(
     compression({
-      level: 6, // Balance between compression ratio and CPU usage
-      threshold: 1024, // Only compress responses larger than 1KB
+      level: performanceConfig.compression.level,
+      threshold: performanceConfig.compression.threshold,
+      memLevel: performanceConfig.compression.memLevel,
       filter: (req: express.Request, res: express.Response) => {
         // Don't compress if the request includes a Cache-Control no-transform directive
         if (req.headers['cache-control'] && req.headers['cache-control'].includes('no-transform')) {
           return false;
         }
-        // Use compression filter function
+
+        // Always compress JSON responses
+        const contentType = res.getHeader('Content-Type')?.toString() || '';
+        if (contentType.includes('application/json')) {
+          return true;
+        }
+
+        // Use default compression filter for other content types
         return compression.filter(req, res);
       },
     })
   );
+
+  logger.info('Compression middleware configured', {
+    level: performanceConfig.compression.level,
+    threshold: performanceConfig.compression.threshold,
+    memLevel: performanceConfig.compression.memLevel,
+  });
 };
 
 /**
@@ -78,6 +97,22 @@ export const configureBodyParsingMiddleware = (app: Application): void => {
   // Body parsing is now handled in app.ts BEFORE any other middleware
   // This ensures security checks have access to parsed body
   logger.info('Body parsing configured in app.ts');
+};
+
+/**
+ * i18n middleware configuration
+ */
+export const configureI18nMiddleware = (app: Application): void => {
+  // Add i18n middleware
+  const i18nMiddleware = createI18nMiddleware();
+  app.use(i18nMiddleware);
+  
+  // Add user language detection middleware (must be after auth)
+  app.use(setUserLanguage);
+  
+  logger.info('i18n middleware configured', {
+    languages: ['en', 'cs', 'de', 'es', 'fr', 'zh']
+  });
 };
 
 /**
@@ -152,10 +187,18 @@ export const configureMiddleware = (app: Application): void => {
   // 4. Security middleware (needs parsed body for suspicious pattern detection)
   configureSecurityMiddleware(app);
 
-  // 5. Request monitoring middleware (unified monitoring system)
+  // 5. i18n middleware (needs to be early in the chain)
+  // TODO: Fix i18n middleware - temporarily disabled due to module resolution issues
+  // configureI18nMiddleware(app);
+
+  // 6. Request monitoring middleware (unified monitoring system)
   app.use(requestLoggerMiddleware);
 
-  // 6. Static files middleware
+  // 7. Performance tracking middleware
+  app.use(addResponseTimeHeader());
+  app.use(trackAPIPerformance());
+
+  // 8. Static files middleware
   configureStaticFilesMiddleware(app);
 
   logger.info('All middleware configured successfully');

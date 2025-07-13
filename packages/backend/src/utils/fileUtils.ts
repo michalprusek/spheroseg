@@ -26,7 +26,7 @@ export async function setupUploadDirectories(): Promise<void> {
     path.join(uploadDir, 'images'),
     path.join(uploadDir, 'segmentation'),
     path.join(uploadDir, 'exports'),
-    path.join(uploadDir, 'temp')
+    path.join(uploadDir, 'temp'),
   ];
 
   // Create all directories in parallel
@@ -45,7 +45,7 @@ export async function setupUploadDirectories(): Promise<void> {
   try {
     await Promise.all([
       fs.chmod(uploadDir, 0o777),
-      ...directories.map(dir => fs.chmod(dir, 0o777))
+      ...directories.map((dir) => fs.chmod(dir, 0o777)),
     ]);
   } catch (error) {
     logger.warn('Failed to set permissions on upload directories', { error });
@@ -69,10 +69,10 @@ export function setupUploadDirectoriesSync(): void {
     path.join(uploadDir, 'images'),
     path.join(uploadDir, 'segmentation'),
     path.join(uploadDir, 'exports'),
-    path.join(uploadDir, 'temp')
+    path.join(uploadDir, 'temp'),
   ];
 
-  directories.forEach(dir => {
+  directories.forEach((dir) => {
     if (!fsSync.existsSync(dir)) {
       fsSync.mkdirSync(dir, { recursive: true });
     }

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 // Use the refactored version of useSegmentationV2
-import { useSegmentationV2, EditMode } from './hooks/segmentation';
+import { useSegmentationV2 } from './hooks/segmentation';
+import { EditMode } from './hooks/segmentation/types';
 import { useSlicing } from './hooks/useSlicing';
 import CanvasV2 from './components/canvas/CanvasV2';
 import { ToolbarV2 } from './components/toolbar/ToolbarV2';
@@ -97,16 +98,22 @@ const SegmentationEditorV2Inner: React.FC<SegmentationEditorV2Props> = ({ projec
   useEffect(() => {
     console.log('[SegmentationEditorV2] Slice mode check:', {
       editMode,
+      editModeSliceValue: EditMode.Slice,
+      isSliceMode: editMode === EditMode.Slice,
       tempPointsLength: tempPoints.length,
+      hasTwoPoints: tempPoints.length === 2,
       selectedPolygonId,
-      tempPoints,
+      hasPolygon: !!selectedPolygonId,
+      shouldTrigger: editMode === EditMode.Slice && tempPoints.length === 2 && !!selectedPolygonId,
     });
 
     if (editMode === EditMode.Slice && tempPoints.length === 2 && selectedPolygonId) {
       console.log('[SegmentationEditorV2] Slice points ready, triggering slice action');
+      console.log('[SegmentationEditorV2] About to call handleSliceAction after delay:', SLICE_ACTION_DELAY);
 
       // Add a configurable delay to ensure state is properly updated
       const timeoutId = setTimeout(() => {
+        console.log('[SegmentationEditorV2] Timeout fired, calling handleSliceAction now');
         try {
           // Trigger the slice action with error handling
           const success = handleSliceAction();
@@ -122,9 +129,20 @@ const SegmentationEditorV2Inner: React.FC<SegmentationEditorV2Props> = ({ projec
         }
       }, SLICE_ACTION_DELAY);
 
-      return () => clearTimeout(timeoutId);
+      return () => {
+        console.log('[SegmentationEditorV2] Cleanup: clearing timeout');
+        clearTimeout(timeoutId);
+      };
     }
-  }, [editMode, tempPoints, selectedPolygonId, handleSliceAction, SLICE_ACTION_DELAY]);
+  }, [
+    editMode,
+    tempPoints.length,
+    JSON.stringify(tempPoints),
+    selectedPolygonId,
+    handleSliceAction,
+    SLICE_ACTION_DELAY,
+    t,
+  ]);
 
   // Zoom handlers
   const handleZoomIn = () => {

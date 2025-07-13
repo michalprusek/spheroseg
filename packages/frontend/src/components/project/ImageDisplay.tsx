@@ -16,6 +16,7 @@ import apiClient from '@/lib/apiClient';
 import { useTranslations } from '@/hooks/useTranslations';
 import { SEGMENTATION_STATUS, isProcessingStatus } from '@/constants/segmentationStatus';
 import { debouncedCacheUpdate } from '@/utils/debounce';
+import { pollingManager } from '@/utils/pollingManager';
 
 interface ImageDisplayProps {
   image: ProjectImage;
@@ -54,35 +55,39 @@ export const ImageDisplay = ({
       setCurrentStatus(newStatus);
     }
 
-    // Force check the actual status from API when component mounts or image changes
-    const checkInitialStatus = async () => {
-      try {
-        const response = await apiClient.get(`/api/images/${image.id}/segmentation`);
-        if (response.data && response.data.status) {
-          const apiStatus = response.data.status;
+    // Only check API status for images that might be processing
+    if (newStatus === SEGMENTATION_STATUS.PROCESSING || newStatus === SEGMENTATION_STATUS.QUEUED) {
+      // Force check the actual status from API when component mounts or image changes
+      const checkInitialStatus = async () => {
+        try {
+          const response = await apiClient.get(`/api/images/${image.id}/segmentation`);
+          if (response.data && response.data.status) {
+            const apiStatus = response.data.status;
 
-          // Only update if status is different from current
-          if (apiStatus !== currentStatus) {
-            setCurrentStatus(apiStatus);
+            // Only update if status is different from current
+            if (apiStatus !== currentStatus) {
+              setCurrentStatus(apiStatus);
 
-            // Update the cache with the correct status from API (debounced)
-            if (image.project_id) {
-              debouncedCacheUpdate(image.project_id, image.id, apiStatus, response.data.resultPath);
+              // Update the cache with the correct status from API (debounced)
+              if (image.project_id) {
+                debouncedCacheUpdate(image.project_id, image.id, apiStatus, response.data.resultPath);
+              }
             }
           }
+        } catch (error: any) {
+          // Silently ignore 404 and 429 errors
+          if (error?.response?.status !== 404 && error?.response?.status !== 429) {
+            console.debug(`ImageDisplay: Error checking initial segmentation status for image ${image.id}`);
+          }
         }
-      } catch (error: any) {
-        // Silently ignore 404 errors (no segmentation yet)
-        if (error?.response?.status !== 404) {
-          console.debug(`ImageDisplay: Error checking initial segmentation status for image ${image.id}`);
-        }
-      }
-    };
+      };
 
-    // Check status after a short delay to avoid race conditions
-    const timeoutId = setTimeout(checkInitialStatus, 500);
+      // Check status after a random delay between 2-5 seconds to avoid burst
+      const delay = 2000 + Math.random() * 3000;
+      const timeoutId = setTimeout(checkInitialStatus, delay);
 
-    return () => clearTimeout(timeoutId);
+      return () => clearTimeout(timeoutId);
+    }
   }, [image.segmentationStatus, image.id, image.project_id]); // currentStatus removed to avoid infinite loop
 
   // Get socket connection
@@ -177,63 +182,57 @@ export const ImageDisplay = ({
     }
   }, [socket, isConnected, handleSegmentationUpdate, image.id, image.project_id]);
 
-  // Periodically check status for processing/queued images to catch missed updates
+  // Use centralized polling manager for status updates
   useEffect(() => {
     // Set up polling for processing or queued status
     if (currentStatus === SEGMENTATION_STATUS.PROCESSING || currentStatus === SEGMENTATION_STATUS.QUEUED) {
-      // Function to check current image status through API
-      const checkImageStatus = async () => {
-        try {
-          // Try to get segmentation status directly
-          const response = await apiClient.get(`/api/images/${image.id}/segmentation`);
-          if (response.data && response.data.status) {
-            const apiStatus = response.data.status;
-            if (apiStatus !== currentStatus) {
-              setCurrentStatus(apiStatus);
+      const pollId = `image-status-${image.id}`;
+      const endpoint = `/api/images/${image.id}/segmentation`;
 
-              // Update the cache to prevent stale data (debounced)
-              if (image.project_id) {
-                debouncedCacheUpdate(image.project_id, image.id, apiStatus, response.data.resultPath);
-              }
+      // Callback when poll receives data
+      const handlePollData = (data: any) => {
+        if (data && data.status) {
+          const apiStatus = data.status;
+          if (apiStatus !== currentStatus) {
+            setCurrentStatus(apiStatus);
 
-              // If status changed to completed, trigger update notification
-              if (apiStatus === SEGMENTATION_STATUS.COMPLETED) {
-                const imageUpdateEvent = new CustomEvent('image-status-update', {
-                  detail: {
-                    imageId: image.id,
-                    status: apiStatus,
-                    forceQueueUpdate: true,
-                    resultPath: response.data.resultPath,
-                  },
-                });
-                window.dispatchEvent(imageUpdateEvent);
-              }
+            // Update the cache to prevent stale data (debounced)
+            if (image.project_id) {
+              debouncedCacheUpdate(image.project_id, image.id, apiStatus, data.resultPath);
             }
-          }
-        } catch (error: any) {
-          // Silently ignore 401 and 429 errors
-          if (error?.response?.status === 401 || error?.response?.status === 429) {
-            return; // Stop polling on auth or rate limit errors
-          }
-          // Only log other errors once
-          if (error?.response?.status !== 404) {
-            console.debug(`ImageDisplay: Error checking segmentation status for image ${image.id}`);
+
+            // If status changed to completed or failed, unregister polling
+            if (apiStatus === SEGMENTATION_STATUS.COMPLETED || apiStatus === SEGMENTATION_STATUS.FAILED) {
+              pollingManager.unregister(pollId);
+
+              const imageUpdateEvent = new CustomEvent('image-status-update', {
+                detail: {
+                  imageId: image.id,
+                  status: apiStatus,
+                  forceQueueUpdate: true,
+                  resultPath: data.resultPath,
+                },
+              });
+              window.dispatchEvent(imageUpdateEvent);
+            }
           }
         }
       };
 
-      // Check after a delay to avoid initial burst of requests
-      const timeoutId = setTimeout(checkImageStatus, 2000);
-
-      // Set up polling interval - check every 5 seconds for processing images
-      const intervalId = setInterval(checkImageStatus, 5000);
+      // Register with polling manager - it will handle rate limiting and backoff
+      pollingManager.register(
+        pollId,
+        endpoint,
+        handlePollData,
+        15000, // Poll every 15 seconds (will be enforced to minimum by manager)
+        30, // Max 30 attempts
+      );
 
       return () => {
-        clearTimeout(timeoutId);
-        clearInterval(intervalId);
+        pollingManager.unregister(pollId);
       };
     }
-  }, [currentStatus, image.id, image.project_id]); // Added currentStatus back with proper checks
+  }, [currentStatus, image.id, image.project_id]);
 
   // Listen for custom events (fallback mechanism)
   useEffect(() => {

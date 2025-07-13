@@ -3,9 +3,10 @@ import { devices } from '@playwright/test';
 
 test.describe('Responsive Navigation', () => {
   test.describe('Mobile Navigation', () => {
-    test.use({ ...devices['iPhone 12'] });
-
-    test('should display mobile menu on small screens', async ({ page }) => {
+    test('should display mobile menu on small screens', async ({ page, context }) => {
+      // Set mobile viewport size
+      await page.setViewportSize({ width: 390, height: 844 });
+      
       await navigateAndWaitForLoad(page, urls.home);
       
       // Mobile menu button should be visible
@@ -27,6 +28,9 @@ test.describe('Responsive Navigation', () => {
     });
 
     test('should navigate using mobile menu', async ({ page }) => {
+      // Set mobile viewport size
+      await page.setViewportSize({ width: 390, height: 844 });
+      
       await navigateAndWaitForLoad(page, urls.home);
       
       // Open mobile menu
@@ -42,6 +46,9 @@ test.describe('Responsive Navigation', () => {
     });
 
     test('should handle mobile viewport for all pages', async ({ page }) => {
+      // Set mobile viewport size
+      await page.setViewportSize({ width: 390, height: 844 });
+      
       const pagesToTest = [
         { url: urls.home, title: 'AI-powered Cell Analysis' },
         { url: urls.documentation, title: 'SpheroSeg Documentation' },
@@ -66,9 +73,9 @@ test.describe('Responsive Navigation', () => {
   });
 
   test.describe('Tablet Navigation', () => {
-    test.use({ ...devices['iPad'] });
-
     test('should display appropriate navigation on tablet', async ({ page }) => {
+      // Set tablet viewport size
+      await page.setViewportSize({ width: 768, height: 1024 });
       await navigateAndWaitForLoad(page, urls.home);
       
       // Check if navigation is properly displayed

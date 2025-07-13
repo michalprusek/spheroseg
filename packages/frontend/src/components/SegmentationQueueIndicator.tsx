@@ -5,6 +5,7 @@ import { formatTime } from '@/utils/dateUtils';
 import { X } from 'lucide-react';
 import apiClient from '@/lib/apiClient';
 import { toast } from '@/hooks/useToast';
+import { FixedSizeList as List } from 'react-window';
 
 interface QueueStatusData {
   pendingTasks: string[];
@@ -65,6 +66,109 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
       });
     }
   }, []);
+
+  // Render task list with virtual scrolling for performance
+  const renderTaskList = () => {
+    if (!queueData) return null;
+
+    // Combine running and pending tasks with their type
+    const allTasks = [
+      ...queueData.runningTasks.map((id) => ({ id, type: 'running' as const })),
+      ...queueData.pendingTasks.map((id) => ({ id, type: 'pending' as const })),
+    ];
+
+    if (allTasks.length === 0) return null;
+
+    // For small lists (< 10 items), render normally
+    if (allTasks.length < 10) {
+      return (
+        <div className="space-y-2 max-h-40 overflow-y-auto">
+          {allTasks.map(({ id, type }) => (
+            <div
+              key={id}
+              className={`flex items-center justify-between text-sm px-2 py-1 rounded ${
+                type === 'running' ? 'bg-blue-100 dark:bg-blue-800/30' : 'bg-gray-100 dark:bg-gray-800/30'
+              }`}
+            >
+              <span className="truncate flex-1">
+                {type === 'running' ? 'Processing' : 'Queued'}: {id.substring(0, 8)}...
+              </span>
+              <button
+                onClick={() => cancelTask(id)}
+                disabled={isCancelling[id]}
+                className={`ml-2 p-1 rounded transition-colors disabled:opacity-50 ${
+                  type === 'running'
+                    ? 'hover:bg-blue-200 dark:hover:bg-blue-700'
+                    : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+                title="Cancel segmentation"
+              >
+                {isCancelling[id] ? (
+                  <div
+                    className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${
+                      type === 'running' ? 'border-blue-500' : 'border-gray-500'
+                    }`}
+                  />
+                ) : (
+                  <X className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // For larger lists, use virtual scrolling
+    const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+      const { id, type } = allTasks[index];
+      return (
+        <div style={style}>
+          <div
+            className={`flex items-center justify-between text-sm px-2 py-1 rounded mx-1 ${
+              type === 'running' ? 'bg-blue-100 dark:bg-blue-800/30' : 'bg-gray-100 dark:bg-gray-800/30'
+            }`}
+          >
+            <span className="truncate flex-1">
+              {type === 'running' ? 'Processing' : 'Queued'}: {id.substring(0, 8)}...
+            </span>
+            <button
+              onClick={() => cancelTask(id)}
+              disabled={isCancelling[id]}
+              className={`ml-2 p-1 rounded transition-colors disabled:opacity-50 ${
+                type === 'running'
+                  ? 'hover:bg-blue-200 dark:hover:bg-blue-700'
+                  : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+              title="Cancel segmentation"
+            >
+              {isCancelling[id] ? (
+                <div
+                  className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${
+                    type === 'running' ? 'border-blue-500' : 'border-gray-500'
+                  }`}
+                />
+              ) : (
+                <X className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <List
+        height={160} // Max height of 40 * 4 (tailwind max-h-40)
+        itemCount={allTasks.length}
+        itemSize={36} // Height of each item including padding
+        width="100%"
+        className="scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
+      >
+        {Row}
+      </List>
+    );
+  };
 
   // Funkce pro aktualizaci dat fronty
   const fetchData = useCallback(async () => {
@@ -434,49 +538,8 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
           </div>
         </div>
 
-        {/* Show list of tasks with cancel buttons */}
-        <div className="space-y-2 max-h-40 overflow-y-auto">
-          {queueData?.runningTasks?.map((taskId) => (
-            <div
-              key={taskId}
-              className="flex items-center justify-between text-sm bg-blue-100 dark:bg-blue-800/30 px-2 py-1 rounded"
-            >
-              <span className="truncate flex-1">Processing: {taskId.substring(0, 8)}...</span>
-              <button
-                onClick={() => cancelTask(taskId)}
-                disabled={isCancelling[taskId]}
-                className="ml-2 p-1 hover:bg-blue-200 dark:hover:bg-blue-700 rounded transition-colors disabled:opacity-50"
-                title="Cancel segmentation"
-              >
-                {isCancelling[taskId] ? (
-                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <X className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-          ))}
-          {queueData?.pendingTasks?.map((taskId) => (
-            <div
-              key={taskId}
-              className="flex items-center justify-between text-sm bg-gray-100 dark:bg-gray-800/30 px-2 py-1 rounded"
-            >
-              <span className="truncate flex-1">Queued: {taskId.substring(0, 8)}...</span>
-              <button
-                onClick={() => cancelTask(taskId)}
-                disabled={isCancelling[taskId]}
-                className="ml-2 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
-                title="Cancel segmentation"
-              >
-                {isCancelling[taskId] ? (
-                  <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <X className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-          ))}
-        </div>
+        {/* Show list of tasks with cancel buttons - using virtual scrolling for performance */}
+        {renderTaskList()}
 
         {queueData?.timestamp && (
           <div className="text-xs text-blue-400 mt-2">Last updated: {formatTime(queueData.timestamp)}</div>

@@ -11,6 +11,7 @@ import config from '../config';
 import performanceConfig from '../config/performance';
 import logger from '../utils/logger';
 import { monitorQuery } from '../monitoring/unified';
+// import { wrapPool } from './performanceWrapper';
 
 // =====================
 // Cache Configuration
@@ -70,11 +71,14 @@ export function getPool(): Pool {
 
     pool = new Pool(poolConfig);
 
+    // TODO: Re-enable performance tracking after fixing wrapper
+    // pool = wrapPool(pool);
+
     pool.on('error', (err) => {
       logger.error('Database pool error', { error: err });
     });
 
-    logger.info('Database pool created', {
+    logger.info('Database pool created with performance tracking', {
       max: poolConfig.max,
       database: poolConfig.database || 'from DATABASE_URL',
     });

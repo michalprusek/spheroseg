@@ -2,6 +2,11 @@ import { PlaywrightTestConfig } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Test caching configuration for Playwright
@@ -214,38 +219,14 @@ export const testCache = {
 
 // Export modified Playwright config with caching
 export function createCachedConfig(baseConfig: PlaywrightTestConfig): PlaywrightTestConfig {
+  // Initialize cache stats on load
+  console.log('Initializing test cache...');
+  const stats = testCache.getStats();
+  console.log(`Cache stats: ${stats.total} tests cached (${stats.passed} passed, ${stats.failed} failed)`);
+  
   return {
     ...baseConfig,
     
-    // Add global setup to initialize cache
-    globalSetup: async (config) => {
-      console.log('Initializing test cache...');
-      const stats = testCache.getStats();
-      console.log(`Cache stats: ${stats.total} tests cached (${stats.passed} passed, ${stats.failed} failed)`);
-      
-      if (baseConfig.globalSetup) {
-        await baseConfig.globalSetup(config);
-      }
-    },
-    
-    // Add global teardown to report cache usage
-    globalTeardown: async (config) => {
-      const stats = testCache.getStats();
-      console.log('\nTest cache summary:');
-      console.log(`- Total cached: ${stats.total}`);
-      console.log(`- Passed: ${stats.passed}`);
-      console.log(`- Failed: ${stats.failed}`);
-      console.log(`- Time saved: ${(stats.totalDuration / 1000).toFixed(2)}s`);
-      
-      if (baseConfig.globalTeardown) {
-        await baseConfig.globalTeardown(config);
-      }
-    },
-    
-    // Add reporter to update cache
-    reporter: [
-      ...(Array.isArray(baseConfig.reporter) ? baseConfig.reporter : [[baseConfig.reporter]]),
-      ['./test-cache-reporter.ts'],
-    ],
+    // Keep existing reporters from base config (already includes test-cache-reporter)
   };
 }

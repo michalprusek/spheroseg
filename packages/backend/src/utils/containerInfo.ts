@@ -48,7 +48,7 @@ export function getContainerLimits(): ContainerLimits {
       const limitBytes = parseInt(limitStr, 10);
 
       // Check if limit is not the default "unlimited" value
-      if (limitBytes < 9223372036854775807) {
+      if (limitBytes < Number.MAX_SAFE_INTEGER) {
         result.memoryLimitBytes = limitBytes;
         result.memoryLimitMB = Math.floor(limitBytes / (1024 * 1024));
         logger.debug(`Detected cgroup v1 memory limit: ${result.memoryLimitMB}MB`);
@@ -104,4 +104,30 @@ export function getEffectiveMemoryLimit(defaultLimitMB: number): number {
 
   logger.info(`Using default memory limit: ${defaultLimitMB}MB`);
   return defaultLimitMB;
+}
+
+/**
+ * Get container information including memory usage
+ */
+export async function getContainerInfo(): Promise<{
+  isContainer: boolean;
+  memoryLimit: number;
+  memoryUsage: number;
+  memoryUsagePercentage: number;
+}> {
+  const containerLimits = getContainerLimits();
+  
+  // Get current memory usage
+  const memUsage = process.memoryUsage();
+  const currentUsage = memUsage.rss; // Resident Set Size
+  
+  // Default to OS total memory if not in container
+  const memoryLimit = containerLimits.memoryLimitBytes || require('os').totalmem();
+  
+  return {
+    isContainer: containerLimits.isContainerized,
+    memoryLimit,
+    memoryUsage: currentUsage,
+    memoryUsagePercentage: (currentUsage / memoryLimit) * 100
+  };
 }

@@ -123,84 +123,44 @@ const CanvasTemporaryGeometryLayer: React.FC<CanvasTemporaryGeometryLayerProps> 
         </>
       )}
 
-      {editMode === EditMode.AddPoints && selectedPolygonId && (
+      {editMode === EditMode.AddPoints && selectedPolygonId && interactionState?.isAddingPoints && (
         <>
-          {interactionState?.isAddingPoints && tempPoints.length > 0 && (
+          {/* Render the temporary polyline if we have points */}
+          {tempPoints.length > 0 && (
             <polyline
               points={formatPoints(tempPoints)}
               fill="none"
               stroke="cyan"
-              strokeWidth={3 / transform.zoom}
+              strokeWidth={2 / transform.zoom}
               vectorEffect="non-scaling-stroke"
               style={{ pointerEvents: 'none' }}
             />
           )}
 
-          {interactionState?.isAddingPoints &&
-            tempPoints.map((point, index) => (
-              <circle
-                key={`add-point-temp-${index}`}
-                cx={point.x}
-                cy={point.y}
-                r={index === 0 ? vertexRadius * 1.5 : vertexRadius}
-                fill={index === 0 ? 'yellow' : 'cyan'}
-                stroke="black"
-                strokeWidth={1 / transform.zoom}
-                vectorEffect="non-scaling-stroke"
-                style={{ pointerEvents: 'none' }}
-              />
-            ))}
+          {/* Render temporary point markers */}
+          {tempPoints.map((point, index) => (
+            <circle
+              key={`add-point-temp-${index}`}
+              cx={point.x}
+              cy={point.y}
+              r={vertexRadius}
+              fill="cyan"
+              stroke="black"
+              strokeWidth={1 / transform.zoom}
+              vectorEffect="non-scaling-stroke"
+              style={{ pointerEvents: 'none' }}
+            />
+          ))}
 
-          {interactionState?.isAddingPoints &&
-            interactionState?.addPointStartVertex &&
-            segmentationData?.polygons &&
-            cursorPosition &&
-            (() => {
-              const selectedPolygon = segmentationData.polygons.find((p) => p.id === selectedPolygonId);
-              if (selectedPolygon && interactionState.addPointStartVertex.vertexIndex < selectedPolygon.points.length) {
-                const startPoint = selectedPolygon.points[interactionState.addPointStartVertex.vertexIndex];
-
-                if (tempPoints.length > 0) {
-                  return (
-                    <line
-                      x1={startPoint.x}
-                      y1={startPoint.y}
-                      x2={tempPoints[0].x}
-                      y2={tempPoints[0].y}
-                      stroke="cyan"
-                      strokeWidth={2.5 / transform.zoom}
-                      strokeDasharray={`${4 / transform.zoom},${4 / transform.zoom}`}
-                      vectorEffect="non-scaling-stroke"
-                      style={{ pointerEvents: 'none' }}
-                    />
-                  );
-                } else {
-                  return (
-                    <line
-                      x1={startPoint.x}
-                      y1={startPoint.y}
-                      x2={cursorPosition.x}
-                      y2={cursorPosition.y}
-                      stroke="cyan"
-                      strokeWidth={2.5 / transform.zoom}
-                      strokeDasharray={`${4 / transform.zoom},${4 / transform.zoom}`}
-                      vectorEffect="non-scaling-stroke"
-                      style={{ pointerEvents: 'none' }}
-                    />
-                  );
-                }
-              }
-              return null;
-            })()}
-
-          {interactionState?.isAddingPoints && tempPoints.length > 0 && cursorPosition && (
+          {/* Only render line from last point to cursor - same as CreatePolygon mode */}
+          {tempPoints.length > 0 && cursorPosition && (
             <line
               x1={tempPoints[tempPoints.length - 1].x}
               y1={tempPoints[tempPoints.length - 1].y}
               x2={cursorPosition.x}
               y2={cursorPosition.y}
               stroke="cyan"
-              strokeWidth={2.5 / transform.zoom}
+              strokeWidth={1.5 / transform.zoom}
               vectorEffect="non-scaling-stroke"
               style={{ pointerEvents: 'none' }}
             />

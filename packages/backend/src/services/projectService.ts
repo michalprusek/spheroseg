@@ -12,6 +12,7 @@ import config from '../config';
 import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
 import fileCleanupService from './fileCleanupService';
+import cacheService from './cacheService';
 
 interface CreateProjectParams {
   title: string;
@@ -167,6 +168,9 @@ export async function createProject(
 
     await client.query('COMMIT');
 
+    // Invalidate user's project list cache
+    await cacheService.delPattern(`project_list:${userId}:*`);
+
     // Return the project with is_owner flag
     return {
       ...newProject,
@@ -210,6 +214,14 @@ export async function getProjectById(
   projectId: string,
   userId: string
 ): Promise<ProjectResponse | null> {
+  // Try to get from cache first
+  const cacheKey = `project:${projectId}:${userId}`;
+  const cached = await cacheService.getCachedProject(cacheKey);
+
+  if (cached) {
+    logger.debug('Returning cached project', { projectId, userId });
+    return cached;
+  }
   // First try to fetch the project owned by the user
   const ownedProject = await pool.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
     projectId,
@@ -217,10 +229,15 @@ export async function getProjectById(
   ]);
 
   if (ownedProject.rows.length > 0) {
-    return {
+    const project = {
       ...ownedProject.rows[0],
       is_owner: true,
     };
+
+    // Cache the project
+    await cacheService.cacheProject(cacheKey, project);
+
+    return project;
   }
 
   // Check if project is shared with the user
@@ -238,7 +255,12 @@ export async function getProjectById(
     );
 
     if (sharedProject.rows.length > 0) {
-      return sharedProject.rows[0];
+      const project = sharedProject.rows[0];
+
+      // Cache the project
+      await cacheService.cacheProject(cacheKey, project);
+
+      return project;
     }
   } catch (error) {
     // Project shares table might not exist, just return null
@@ -269,6 +291,14 @@ export async function getUserProjects(
   offset: number = 0,
   includeShared: boolean = true
 ): Promise<{ projects: ProjectResponse[]; total: number }> {
+  // Try to get from cache first
+  const cacheKey = `project_list:${userId}:${limit}:${offset}:${includeShared}`;
+  const cached = await cacheService.get<{ projects: ProjectResponse[]; total: number }>(cacheKey);
+
+  if (cached) {
+    logger.debug('Returning cached project list', { userId, limit, offset });
+    return cached;
+  }
   // Check if tables exist
   let imagesTableExists = false;
   let sharesTableExists = false;
@@ -405,10 +435,15 @@ export async function getUserProjects(
   const countResult = await pool.query(countQuery, [userId]);
   const totalProjects = countResult.rows[0].total || 0;
 
-  return {
+  const result = {
     projects: projectsResult.rows,
     total: totalProjects,
   };
+
+  // Cache the result
+  await cacheService.set(cacheKey, result, 60); // Cache for 1 minute
+
+  return result;
 }
 
 /**
@@ -569,6 +604,10 @@ export async function deleteProject(
     // Only attempt to delete files after database records are successfully deleted
     // and transaction is committed
     await client.query('COMMIT');
+
+    // Invalidate all caches related to this project and user
+    await cacheService.invalidateProject(projectId);
+    await cacheService.delPattern(`project_list:${userId}:*`);
 
     // Step 2: Properly clean up all project files using fileCleanupService
     try {

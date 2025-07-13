@@ -363,4 +363,62 @@ const apiClient = {
 // Initialize with standard mocks
 setupStandardMocks();
 
+// React component for providing mock API client in tests
+import React from 'react';
+
+export const MockApiClientProvider: React.FC<{
+  children: React.ReactNode;
+  mockResponses?: Record<string, any>;
+}> = ({ children, mockResponses = {} }) => {
+  // Configure mock responses if provided
+  React.useEffect(() => {
+    if (mockResponses) {
+      const endpoints: Array<{
+        url: string | RegExp;
+        method: 'get' | 'post' | 'put' | 'patch' | 'delete';
+        response: any;
+        status?: number;
+      }> = [];
+      
+      // Convert mockResponses to endpoints
+      Object.entries(mockResponses).forEach(([key, response]) => {
+        if (key === 'login') {
+          endpoints.push({
+            url: '/auth/login',
+            method: 'post',
+            response: response.data,
+            status: response.status || 200,
+          });
+        } else if (key === 'register') {
+          endpoints.push({
+            url: '/auth/register',
+            method: 'post',
+            response: response.data,
+            status: response.status || 200,
+          });
+        } else if (key === 'logout') {
+          endpoints.push({
+            url: '/auth/logout',
+            method: 'post',
+            response: response.data || {},
+            status: response.status || 200,
+          });
+        }
+        // Add more endpoint mappings as needed
+      });
+      
+      if (endpoints.length > 0) {
+        addMockEndpoints(endpoints);
+      }
+    }
+    
+    return () => {
+      resetMocks();
+      setupStandardMocks();
+    };
+  }, [mockResponses]);
+  
+  return <>{children}</>;
+};
+
 export default apiClient;

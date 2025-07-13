@@ -7,6 +7,7 @@ import axios from 'axios';
 import { deleteImageFromDB } from '@/utils/indexedDBService';
 import cacheService from '@/services/unifiedCacheService';
 import { SEGMENTATION_STATUS } from '@/constants/segmentationStatus';
+import { useTranslation } from 'react-i18next';
 
 interface UseProjectImageActionsProps {
   projectId?: string;
@@ -16,6 +17,7 @@ interface UseProjectImageActionsProps {
 
 export const useProjectImageActions = ({ projectId, onImagesChange, images }: UseProjectImageActionsProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isDeleting, setIsDeleting] = useState<Record<string, boolean>>({});
   const [isResegmenting, setIsResegmenting] = useState<Record<string, boolean>>({});
 
@@ -26,7 +28,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         // Find the project ID for this image
         const image = images.find((img) => img.id === imageId);
         if (!image || !projectId) {
-          toast.error('Obrázek nebo projekt nebyl nalezen.');
+          toast.error(t('images.errors.imageOrProjectNotFound'));
           setIsDeleting((prev) => ({ ...prev, [imageId]: false }));
           return;
         }
@@ -323,12 +325,12 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           window.dispatchEvent(queueUpdateEvent);
 
           if (isLocalImage) {
-            toast.success('Lokální obrázek byl úspěšně odstraněn');
+            toast.success(t('images.success.localImageDeleted'));
           } else {
-            toast.success('Obrázek byl úspěšně smazán');
+            toast.success(t('images.success.imageDeleted'));
           }
         } else {
-          throw new Error('Nepodařilo se smazat obrázek');
+          throw new Error(t('images.errors.failedToDeleteImage'));
         }
       } catch (err: unknown) {
         let message = 'Failed to delete image';
@@ -591,7 +593,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
     (imageId: string) => {
       const image = images.find((img) => img.id === imageId);
       if (!image || !image.imageUuid || !projectId) {
-        toast.error('Obrázek nebo projekt nebyl nalezen pro navigaci, nebo chybí UUID.');
+        toast.error(t('images.errors.imageOrProjectNotFoundForNavigation'));
         return;
       }
 
@@ -606,15 +608,15 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
     async (imageId: string) => {
       const imageToClear = images.find((img) => img.id === imageId);
       if (!imageToClear || !imageToClear.imageUuid) {
-        toast.error('Obrázek pro vymazání segmentace nebyl nalezen nebo chybí UUID.');
+        toast.error(t('images.errors.imageNotFoundForClearingSegmentation'));
         return;
       }
       const imageUuidToClear = imageToClear.imageUuid;
 
-      toast.info(`Mažu segmentaci pro obrázek ${imageToClear.name}...`);
+      toast.info(t('images.info.clearingSegmentation', { imageName: imageToClear.name }));
       try {
         await apiClient.delete(`/api/images/${imageUuidToClear}/segmentation`);
-        toast.success('Segmentace byla úspěšně odstraněna.');
+        toast.success(t('images.success.segmentationCleared'));
 
         const updatedImages = images.map((img: ProjectImage) =>
           img.id === imageId
@@ -632,7 +634,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         }
       } catch (error) {
         console.error('Error clearing segmentation:', error);
-        toast.error('Nepodařilo se odstranit segmentaci');
+        toast.error(t('images.errors.failedToClearSegmentation'));
       }
     },
     [images, onImagesChange],
@@ -655,7 +657,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
   const handleBatchAction = useCallback(
     (action: 'delete' | 'resegment' | 'clear', selectedImageIds: Set<string>) => {
       if (selectedImageIds.size === 0) {
-        toast.info('Vyberte prosím alespoň jeden obrázek.');
+        toast.info(t('images.info.selectAtLeastOneImage'));
         return;
       }
 

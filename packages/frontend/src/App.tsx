@@ -16,6 +16,9 @@ import {
 // i18n
 import './i18n';
 
+// Debug i18next issue
+import '@/utils/debugI18next';
+
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -230,7 +233,7 @@ const AppLayout = () => {
         const freedSpace = statsBefore.totalSize - statsAfter.totalSize;
         if (freedSpace > 10 * 1024 * 1024) {
           // Více než 10 MB
-          toast.info(`Vyčištěno ${(freedSpace / (1024 * 1024)).toFixed(1)} MB starých dat z mezipaměti.`);
+          toast.info(`Cleared ${(freedSpace / (1024 * 1024)).toFixed(1)} MB of old data from cache.`);
         }
       } catch (error) {
         console.error('Error during storage cleanup:', error);
@@ -484,6 +487,17 @@ const routes = createRoutesFromElements(
     />
     <Route
       path="/accept-invitation/:token"
+      element={
+        <ErrorBoundary componentName="AcceptInvitationPage">
+          <Suspense fallback={<LoadingFallback />}>
+            <AcceptInvitation />
+          </Suspense>
+        </ErrorBoundary>
+      }
+    />
+    {/* Add alias route for shorter invitation URL */}
+    <Route
+      path="/invitation/:token"
       element={
         <ErrorBoundary componentName="AcceptInvitationPage">
           <Suspense fallback={<LoadingFallback />}>

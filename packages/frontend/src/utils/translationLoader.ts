@@ -4,7 +4,22 @@
 async function loadSingleTranslation(importFunc: () => Promise<any>, fallback = {}) {
   try {
     const mod = await importFunc();
-    return mod.default || fallback; // Assuming .ts files export default
+    // Handle different module formats
+    if (mod && typeof mod === 'object') {
+      // Check if it's the actual translations (has expected keys)
+      if (mod.common || mod.projects || mod.auth) {
+        return mod;
+      }
+      // Check for default export (most common case)
+      if (mod.default) {
+        return mod.default;
+      }
+      // Check for __esModule flag
+      if (mod.__esModule && mod.default) {
+        return mod.default;
+      }
+    }
+    return mod || fallback;
   } catch (error) {
     console.warn('Failed to load a translation module:', error);
     return fallback;
@@ -15,9 +30,23 @@ async function loadSingleTranslation(importFunc: () => Promise<any>, fallback = 
 const minimalEnFallback = {
   common: {
     loading: 'Loading...',
+    loadingApplication: 'Loading application...',
+    loadingAccount: 'Loading your account...',
     error: 'Error',
     save: 'Save',
     cancel: 'Cancel',
+    settings: 'Settings',
+    profile: 'Profile',
+    dashboard: 'Dashboard',
+    signIn: 'Sign In',
+    signOut: 'Sign Out',
+  },
+  settings: {
+    title: 'Settings',
+    pageTitle: 'Settings',
+    profile: 'Profile',
+    account: 'Account',
+    appearance: 'Appearance',
   },
   project: {
     noImages: {
@@ -26,24 +55,28 @@ const minimalEnFallback = {
       uploadButton: 'Upload Images',
     },
   },
+  auth: {
+    signIn: 'Sign In',
+    signOut: 'Sign Out',
+  },
 };
 
 export async function initializeTranslations() {
   let en, cs, de, es, fr, zh;
 
   try {
-    en = await loadSingleTranslation(() => import('../translations/en.ts'), minimalEnFallback);
+    en = await loadSingleTranslation(() => import('../translations/en'), minimalEnFallback);
   } catch (error) {
     console.error('Critical failure loading English translations, using minimal fallback:', error);
     en = minimalEnFallback;
   }
 
   // Load other translations, defaulting to empty objects if they fail (i18next will use fallbackLng)
-  cs = await loadSingleTranslation(() => import('../translations/cs.ts'));
-  de = await loadSingleTranslation(() => import('../translations/de.ts'));
-  es = await loadSingleTranslation(() => import('../translations/es.ts'));
-  fr = await loadSingleTranslation(() => import('../translations/fr.ts'));
-  zh = await loadSingleTranslation(() => import('../translations/zh.ts'));
+  cs = await loadSingleTranslation(() => import('../translations/cs'));
+  de = await loadSingleTranslation(() => import('../translations/de'));
+  es = await loadSingleTranslation(() => import('../translations/es'));
+  fr = await loadSingleTranslation(() => import('../translations/fr'));
+  zh = await loadSingleTranslation(() => import('../translations/zh'));
 
   const resources = {
     en: { translation: en }, // i18next expects resources in { lang: { namespace: { key: value } } }
@@ -53,7 +86,22 @@ export async function initializeTranslations() {
     fr: { translation: fr },
     zh: { translation: zh },
   };
-  console.log('[translationLoader] Translations loaded:', resources);
+  // Log only in development mode
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[translationLoader] Translations loaded:', Object.keys(resources));
+
+    // Verify translations are loaded correctly
+    if (en) {
+      console.log('[translationLoader] EN translation loaded successfully');
+
+      // Quick validation
+      const requiredKeys = ['common', 'projects', 'statsOverview'];
+      const missingKeys = requiredKeys.filter((key) => !en[key]);
+      if (missingKeys.length > 0) {
+        console.error('[translationLoader] Missing required translation sections:', missingKeys);
+      }
+    }
+  }
   return resources;
 }
 

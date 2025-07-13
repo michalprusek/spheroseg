@@ -41,11 +41,11 @@ const config = {
     corsOrigins: validatedEnv.ALLOWED_ORIGINS
       ? validatedEnv.ALLOWED_ORIGINS.split(',')
       : ['http://localhost:3000', 'http://frontend:3000'],
-    publicUrl: validatedEnv.APP_URL || 'http://localhost:5001',
+    publicUrl: validatedEnv.APP_URL || 'https://spherosegapp.utia.cas.cz',
   },
 
-  baseUrl: validatedEnv.APP_URL || 'http://localhost:5001',
-  appUrl: validatedEnv.APP_URL || 'http://localhost:5001',
+  baseUrl: validatedEnv.APP_URL || 'https://spherosegapp.utia.cas.cz',
+  appUrl: validatedEnv.APP_URL || 'https://spherosegapp.utia.cas.cz',
 
   db: {
     host: validatedEnv.DB_HOST || 'localhost',

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { utils, writeFile } from 'xlsx';
+import { utils, writeFile, write } from 'xlsx';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { ProjectImage, Polygon } from '@/pages/segmentation/types';
@@ -291,9 +291,15 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           // Calculate metrics
           const metrics = calculateMetrics(polygon, holes);
 
+          // Ensure area is positive (in case holes are larger than the polygon)
+          const area = Math.abs(metrics.Area);
+          if (metrics.Area < 0) {
+            console.warn(`Negative area detected for polygon ${index}: ${metrics.Area}. Using absolute value: ${area}`);
+          }
+
           return {
             objectId: index + 1,
-            area: metrics.Area,
+            area: area,
             perimeter: metrics.Perimeter,
             circularity: metrics.Circularity,
             equivalentDiameter: metrics.EquivalentDiameter,
@@ -649,7 +655,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       toast.success(t('export.metricsExported'));
     } catch (error) {
       console.error('Export failed:', error);
-      toast.error(`Export selhal: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+      toast.error(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
 
       // Log detailed error information for debugging
       if (error instanceof Error) {
@@ -1093,13 +1099,14 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
         // Calculate area with holes subtracted
         const metrics = calculateMetrics(polygon, holes);
+        const area = Math.abs(metrics.Area); // Ensure positive area
 
         annotations.push({
           id: annotationId++,
           image_id: imageIndex + 1,
           category_id: 1,
           segmentation,
-          area: metrics.Area,
+          area: area,
           bbox: [minX, minY, width, height],
           iscrowd: 0,
         });
@@ -1132,13 +1139,14 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
         // Calculate area
         const metrics = calculateMetrics(polygon, []);
+        const area = Math.abs(metrics.Area); // Ensure positive area
 
         annotations.push({
           id: annotationId++,
           image_id: imageIndex + 1,
           category_id: 2, // Use category "hole"
           segmentation,
-          area: metrics.Area,
+          area: area,
           bbox: [minX, minY, width, height],
           iscrowd: 0,
         });
@@ -1227,6 +1235,211 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
     });
 
     return result;
+  };
+
+  // Convert polygons to Datumaro format
+  const convertToDatumaro = (images: ProjectImage[]) => {
+    const items: any[] = [];
+
+    images.forEach((image, imageIndex) => {
+      const imageItem = {
+        id: image.name,
+        annotations: [] as any[],
+        image: {
+          path: image.name,
+          size: [image.width || 800, image.height || 600],
+        },
+      };
+
+      if (!image.segmentationResult) {
+        items.push(imageItem);
+        return;
+      }
+
+      // Extract polygons
+      let polygons: Polygon[] = [];
+      try {
+        const segData =
+          typeof image.segmentationResult === 'string'
+            ? JSON.parse(image.segmentationResult)
+            : image.segmentationResult;
+
+        if (Array.isArray(segData)) {
+          polygons = segData;
+        } else if (segData?.polygons) {
+          polygons = segData.polygons;
+        } else if (segData?.result_data?.polygons) {
+          polygons = segData.result_data.polygons;
+        }
+      } catch (error) {
+        console.error(`Error parsing segmentation data for ${image.name}:`, error);
+      }
+
+      // Process polygons
+      polygons.forEach((polygon, polygonIndex) => {
+        if (!Array.isArray(polygon.points) || polygon.points.length < 3) return;
+
+        const isHole = polygon.type === 'internal';
+        const label = isHole ? 1 : 0; // 0 for cell, 1 for hole
+
+        // Convert points to flat array format [x1, y1, x2, y2, ...]
+        const points = polygon.points.flatMap((p) => [p.x, p.y]);
+
+        imageItem.annotations.push({
+          id: polygonIndex,
+          type: 'polygon',
+          label_id: label,
+          points: points,
+          attributes: {},
+          group_id: 0,
+        });
+      });
+
+      items.push(imageItem);
+    });
+
+    return { items };
+  };
+
+  // Convert polygons to CVAT masks XML format
+  const convertToCVATMasks = (images: ProjectImage[]) => {
+    let xml = '<?xml version="1.0" encoding="utf-8"?>\n';
+    xml += '<annotations>\n';
+    xml += '  <version>1.1</version>\n';
+    xml += '  <meta>\n';
+    xml += '    <task>\n';
+    xml += '      <name>Spheroid Segmentation</name>\n';
+    xml += '      <size>' + images.reduce((sum, img) => sum + 1, 0) + '</size>\n';
+    xml += '      <mode>annotation</mode>\n';
+    xml += '      <labels>\n';
+    xml += '        <label>\n';
+    xml += '          <name>cell</name>\n';
+    xml += '          <color>#ff0000</color>\n';
+    xml += '          <type>polygon</type>\n';
+    xml += '        </label>\n';
+    xml += '        <label>\n';
+    xml += '          <name>hole</name>\n';
+    xml += '          <color>#0000ff</color>\n';
+    xml += '          <type>polygon</type>\n';
+    xml += '        </label>\n';
+    xml += '      </labels>\n';
+    xml += '    </task>\n';
+    xml += '  </meta>\n';
+
+    images.forEach((image, imageIndex) => {
+      xml += `  <image id="${imageIndex}" name="${image.name}" width="${image.width || 800}" height="${image.height || 600}">\n`;
+
+      if (image.segmentationResult) {
+        // Extract polygons
+        let polygons: Polygon[] = [];
+        try {
+          const segData =
+            typeof image.segmentationResult === 'string'
+              ? JSON.parse(image.segmentationResult)
+              : image.segmentationResult;
+
+          if (Array.isArray(segData)) {
+            polygons = segData;
+          } else if (segData?.polygons) {
+            polygons = segData.polygons;
+          } else if (segData?.result_data?.polygons) {
+            polygons = segData.result_data.polygons;
+          }
+        } catch (error) {
+          console.error(`Error parsing segmentation data for ${image.name}:`, error);
+        }
+
+        // Process polygons
+        polygons.forEach((polygon, polygonIndex) => {
+          if (!Array.isArray(polygon.points) || polygon.points.length < 3) return;
+
+          const isHole = polygon.type === 'internal';
+          const label = isHole ? 'hole' : 'cell';
+
+          // Convert points to string format "x1,y1;x2,y2;..."
+          const pointsStr = polygon.points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(';');
+
+          xml += `    <polygon label="${label}" source="manual" occluded="0" points="${pointsStr}" z_order="${polygonIndex}">\n`;
+          xml += '    </polygon>\n';
+        });
+      }
+
+      xml += '  </image>\n';
+    });
+
+    xml += '</annotations>\n';
+    return xml;
+  };
+
+  // Convert polygons to CVAT YAML format
+  const convertToCVATYAML = (images: ProjectImage[]) => {
+    let yaml = '# CVAT YAML Format 1.1\n';
+    yaml += 'annotations:\n';
+    yaml += '  version: "1.1"\n';
+    yaml += '  meta:\n';
+    yaml += '    task:\n';
+    yaml += '      name: "Spheroid Segmentation"\n';
+    yaml += '      size: ' + images.length + '\n';
+    yaml += '      mode: "annotation"\n';
+    yaml += '      labels:\n';
+    yaml += '        - name: "cell"\n';
+    yaml += '          color: "#ff0000"\n';
+    yaml += '          type: "polygon"\n';
+    yaml += '        - name: "hole"\n';
+    yaml += '          color: "#0000ff"\n';
+    yaml += '          type: "polygon"\n';
+    yaml += '  images:\n';
+
+    images.forEach((image, imageIndex) => {
+      yaml += `    - id: ${imageIndex}\n`;
+      yaml += `      name: "${image.name}"\n`;
+      yaml += `      width: ${image.width || 800}\n`;
+      yaml += `      height: ${image.height || 600}\n`;
+
+      if (image.segmentationResult) {
+        yaml += '      annotations:\n';
+
+        // Extract polygons
+        let polygons: Polygon[] = [];
+        try {
+          const segData =
+            typeof image.segmentationResult === 'string'
+              ? JSON.parse(image.segmentationResult)
+              : image.segmentationResult;
+
+          if (Array.isArray(segData)) {
+            polygons = segData;
+          } else if (segData?.polygons) {
+            polygons = segData.polygons;
+          } else if (segData?.result_data?.polygons) {
+            polygons = segData.result_data.polygons;
+          }
+        } catch (error) {
+          console.error(`Error parsing segmentation data for ${image.name}:`, error);
+        }
+
+        // Process polygons
+        polygons.forEach((polygon, polygonIndex) => {
+          if (!Array.isArray(polygon.points) || polygon.points.length < 3) return;
+
+          const isHole = polygon.type === 'internal';
+          const label = isHole ? 'hole' : 'cell';
+
+          yaml += '        - type: "polygon"\n';
+          yaml += `          label: "${label}"\n`;
+          yaml += '          source: "manual"\n';
+          yaml += '          occluded: false\n';
+          yaml += `          z_order: ${polygonIndex}\n`;
+          yaml += '          points:\n';
+
+          polygon.points.forEach((p) => {
+            yaml += `            - [${p.x.toFixed(2)}, ${p.y.toFixed(2)}]\n`;
+          });
+        });
+      }
+    });
+
+    return yaml;
   };
 
   // Helper function to fetch an image as blob
@@ -1323,7 +1536,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
       const imagesFolder = zip.folder('images');
 
       // Show progress toast
-      toast.info(`Stahování ${imagesToExport.length} obrázků...`);
+      toast.info(`Downloading ${imagesToExport.length} images...`);
 
       // Track progress
       let completedImages = 0;
@@ -1354,7 +1567,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
             // Update progress
             completedImages++;
             if (completedImages % 5 === 0 || completedImages === totalImages) {
-              toast.info(`Stahování obrázků: ${completedImages}/${totalImages}`, {
+              toast.info(`Downloading images: ${completedImages}/${totalImages}`, {
                 id: 'image-download-progress',
               });
             }
@@ -1459,7 +1672,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           console.log(`COCO annotations.json added to ZIP with ${cocoData.annotations.length} annotations`);
         } catch (error) {
           console.error(`Error exporting COCO format:`, error);
-          toast.error(`Chyba při exportu COCO formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+          toast.error(`Error exporting COCO format: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       } else if (annotationFormat === 'YOLO') {
         try {
@@ -1482,7 +1695,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           console.log(`${fileCount} YOLO label files added to ZIP`);
         } catch (error) {
           console.error(`Error exporting YOLO format:`, error);
-          toast.error(`Chyba při exportu YOLO formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+          toast.error(`Error exporting YOLO format: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       } else if (annotationFormat === 'POLYGONS') {
         try {
@@ -1534,9 +1747,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           console.log(`Exported ${successCount} polygon files with ${errorCount} errors`);
         } catch (error) {
           console.error(`Error exporting POLYGONS format:`, error);
-          toast.error(
-            `Chyba při exportu POLYGONS formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`,
-          );
+          toast.error(`Error exporting POLYGONS format: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       } else if (annotationFormat === 'MASK') {
         try {
@@ -1727,7 +1938,67 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
           console.log(`Created ${successCount} mask files with ${errorCount} errors`);
         } catch (error) {
           console.error(`Error exporting MASK format:`, error);
-          toast.error(`Chyba při exportu MASK formátu: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+          toast.error(`Error exporting MASK format: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      } else if (annotationFormat === 'DATUMARO') {
+        try {
+          console.log(`Converting ${imagesToExport.length} images to Datumaro format`);
+          const datumaroData = convertToDatumaro(imagesToExport);
+
+          // Create Datumaro structure
+          const datumaroFolder = segmentationFolder.folder('datumaro');
+
+          // Add annotations.json
+          datumaroFolder.file('annotations.json', JSON.stringify(datumaroData, null, 2));
+
+          // Add categories.json
+          const categories = {
+            label: {
+              labels: [
+                { name: 'cell', parent: null, attributes: [] },
+                { name: 'hole', parent: null, attributes: [] },
+              ],
+              attributes: [],
+            },
+          };
+          datumaroFolder.file('categories.json', JSON.stringify(categories, null, 2));
+
+          console.log(`Datumaro format exported successfully`);
+        } catch (error) {
+          console.error(`Error exporting Datumaro format:`, error);
+          toast.error(`Error exporting Datumaro format: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      } else if (annotationFormat === 'CVAT_MASKS') {
+        try {
+          console.log(`Converting ${imagesToExport.length} images to CVAT masks format`);
+          const cvatMasksData = convertToCVATMasks(imagesToExport);
+
+          // Create CVAT masks structure
+          const cvatMasksFolder = segmentationFolder.folder('cvat_masks');
+
+          // Add annotations.xml
+          cvatMasksFolder.file('annotations.xml', cvatMasksData);
+
+          console.log(`CVAT masks format exported successfully`);
+        } catch (error) {
+          console.error(`Error exporting CVAT masks format:`, error);
+          toast.error(`Error exporting CVAT masks format: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      } else if (annotationFormat === 'CVAT_YAML') {
+        try {
+          console.log(`Converting ${imagesToExport.length} images to CVAT YAML format`);
+          const cvatYamlData = convertToCVATYAML(imagesToExport);
+
+          // Create CVAT YAML structure
+          const cvatYamlFolder = segmentationFolder.folder('cvat_yaml');
+
+          // Add annotations.yaml
+          cvatYamlFolder.file('annotations.yaml', cvatYamlData);
+
+          console.log(`CVAT YAML format exported successfully`);
+        } catch (error) {
+          console.error(`Error exporting CVAT YAML format:`, error);
+          toast.error(`Error exporting CVAT YAML format: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
     }
@@ -1890,55 +2161,69 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         });
       }
 
-      // Vždy použijeme EXCEL formát pro export do ZIP, bez ohledu na nastavení metricsFormat
-      // Create worksheet
-      const worksheet = utils.json_to_sheet(worksheetRows);
-
-      // Set column widths
-      const colWidths = [
-        { wch: 20 }, // Image Name
-        { wch: 36 }, // Image ID
-        { wch: 16 }, // Image Resolution
-        { wch: 10 }, // Object ID
-        { wch: 12 }, // Area
-        { wch: 15 }, // Perimeter
-        { wch: 12 }, // Circularity
-        { wch: 22 }, // Equivalent Diameter
-        { wch: 12 }, // Aspect Ratio
-        { wch: 12 }, // Compactness
-        { wch: 12 }, // Convexity
-        { wch: 12 }, // Solidity
-        { wch: 12 }, // Sphericity
-        { wch: 20 }, // Feret Diameter Max
-        { wch: 20 }, // Feret Diameter Min
-        { wch: 20 }, // Created At
-      ];
-
-      worksheet['!cols'] = colWidths;
-
       try {
-        // Vždy použijeme CSV formát, který je spolehlivější
-        console.log('Generating CSV file for metrics');
+        // Export metrics based on selected format
+        console.log(`Generating metrics file in ${metricsFormat} format`);
 
-        // First, get all column headers
-        const headers = Object.keys(worksheetRows[0]);
+        // Get column headers (needed for both CSV and HTML)
+        const headers = worksheetRows.length > 0 ? Object.keys(worksheetRows[0]) : [];
 
-        // Create CSV content
-        let csvContent = headers.join(',') + '\n';
+        if (metricsFormat === 'EXCEL') {
+          // Create worksheet
+          const worksheet = utils.json_to_sheet(worksheetRows);
 
-        // Add each row
-        worksheetRows.forEach((row) => {
-          const rowValues = headers.map((header) => {
-            // Escape commas and quotes in values
-            const value = String(row[header]).replace(/"/g, '""');
-            return `"${value}"`;
+          // Set column widths
+          const colWidths = [
+            { wch: 20 }, // Image Name
+            { wch: 36 }, // Image ID
+            { wch: 16 }, // Image Resolution
+            { wch: 10 }, // Object ID
+            { wch: 12 }, // Area
+            { wch: 15 }, // Perimeter
+            { wch: 12 }, // Circularity
+            { wch: 22 }, // Equivalent Diameter
+            { wch: 12 }, // Aspect Ratio
+            { wch: 12 }, // Compactness
+            { wch: 12 }, // Convexity
+            { wch: 12 }, // Solidity
+            { wch: 12 }, // Sphericity
+            { wch: 20 }, // Feret Diameter Max
+            { wch: 20 }, // Feret Diameter Min
+            { wch: 20 }, // Created At
+          ];
+
+          worksheet['!cols'] = colWidths;
+
+          // Create workbook
+          const workbook = utils.book_new();
+          utils.book_append_sheet(workbook, worksheet, 'Object Metrics');
+
+          // Generate binary Excel data
+          const excelBuffer = write(workbook, { bookType: 'xlsx', type: 'array' });
+
+          // Add Excel file to ZIP
+          metricsFolder.file(`${projectTitle || 'project'}_metrics.xlsx`, excelBuffer);
+          console.log('Excel file successfully added to ZIP');
+        } else {
+          // CSV format
+
+          // Create CSV content
+          let csvContent = headers.join(',') + '\n';
+
+          // Add each row
+          worksheetRows.forEach((row) => {
+            const rowValues = headers.map((header) => {
+              // Escape commas and quotes in values
+              const value = String(row[header]).replace(/"/g, '""');
+              return `"${value}"`;
+            });
+            csvContent += rowValues.join(',') + '\n';
           });
-          csvContent += rowValues.join(',') + '\n';
-        });
 
-        // Přidáme CSV soubor
-        metricsFolder.file(`${projectTitle || 'project'}_metrics.csv`, csvContent);
-        console.log('CSV soubor úspěšně přidán do ZIP');
+          // Add CSV file to ZIP
+          metricsFolder.file(`${projectTitle || 'project'}_metrics.csv`, csvContent);
+          console.log('CSV file successfully added to ZIP');
+        }
 
         // Přidáme také HTML verzi pro lepší zobrazení
         const htmlContent = `
@@ -1960,7 +2245,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         <body>
           <div class="container">
             <h1>Metrics for ${projectTitle || 'project'}</h1>
-            <p>Generated on ${formatDateTime(new Date())}</p>
+            <p>Generated on ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}</p>
             <table>
               <thead>
                 <tr>
@@ -1984,28 +2269,28 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         </html>
         `;
 
-        // Přidáme HTML soubor
+        // Add HTML file
         metricsFolder.file(`${projectTitle || 'project'}_metrics.html`, htmlContent);
-        console.log('HTML soubor také přidán do ZIP pro lepší zobrazení');
+        console.log('HTML file also added to ZIP for better visualization');
 
-        // Vytvoříme složku pro vizualizace
+        // Create visualizations folder
         const visualizationsFolder = metricsFolder.folder('visualizations');
-        console.log('Vytváření složky pro vizualizace segmentací');
+        console.log('Creating visualizations folder for segmentations');
 
-        // Vytvoříme vizualizace pro každý obrázek
-        console.log(`Generování vizualizací pro ${imagesToExport.length} obrázků`);
+        // Create visualizations for each image
+        console.log(`Generating visualizations for ${imagesToExport.length} images`);
 
-        // Zpracujeme každý obrázek a vytvoříme vizualizaci
+        // Process each image and create visualization
         for (const image of imagesToExport) {
           try {
             if (!image.segmentationResult) {
-              console.log(`Přeskakuji vizualizaci pro obrázek ${image.name} - chybí segmentační data`);
+              console.log(`Skipping visualization for image ${image.name} - no segmentation data`);
               continue;
             }
 
-            console.log(`Vytváření vizualizace pro obrázek ${image.name}`);
+            console.log(`Creating visualization for image ${image.name}`);
 
-            // Získáme polygony
+            // Get polygons
             let polygons: Polygon[] = [];
             try {
               let segData = image.segmentationResult;
@@ -2015,7 +2300,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                 try {
                   segData = JSON.parse(segData);
                 } catch (e) {
-                  console.error(`Chyba při parsování segmentačních dat pro ${image.name}:`, e);
+                  console.error(`Error parsing segmentation data for ${image.name}:`, e);
                 }
               }
 
@@ -2058,11 +2343,11 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                 return polygon;
               });
             } catch (e) {
-              console.error(`Chyba při zpracování polygonů pro ${image.name}:`, e);
+              console.error(`Error processing polygons for ${image.name}:`, e);
               continue;
             }
 
-            // Vytvoříme canvas pro vykreslení vizualizace
+            // Create canvas for visualization
             const canvas = document.createElement('canvas');
             const width = image.width || 800;
             const height = image.height || 600;
@@ -2071,56 +2356,56 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
             const ctx = canvas.getContext('2d');
             if (!ctx) {
-              console.error(`Nepodařilo se získat kontext canvasu pro ${image.name}`);
+              console.error(`Failed to get canvas context for ${image.name}`);
               continue;
             }
 
-            // Vykreslíme obrázek na pozadí, pokud je k dispozici
+            // Draw background image if available
             if (image.url) {
               try {
-                // Vytvoříme nový Image objekt
+                // Create new Image object
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
 
-                // Počkáme na načtení obrázku
+                // Wait for image to load
                 await new Promise((resolve, reject) => {
                   img.onload = resolve;
                   img.onerror = reject;
                   img.src = image.url;
                 });
 
-                // Vykreslíme obrázek na canvas
+                // Draw image on canvas
                 ctx.drawImage(img, 0, 0, width, height);
               } catch (e) {
-                console.error(`Chyba při vykreslování obrázku ${image.name}:`, e);
-                // Pokud se nepodaří načíst obrázek, vykreslíme šedé pozadí
+                console.error(`Error drawing image ${image.name}:`, e);
+                // If image fails to load, draw gray background
                 ctx.fillStyle = '#f0f0f0';
                 ctx.fillRect(0, 0, width, height);
               }
             } else {
-              // Pokud nemáme URL, vykreslíme šedé pozadí
+              // If no URL, draw gray background
               ctx.fillStyle = '#f0f0f0';
               ctx.fillRect(0, 0, width, height);
             }
 
-            // Najdeme externí a interní polygony
+            // Find external and internal polygons
             const externalPolygons = polygons.filter(
               (p) => p.type === 'external' || p.type === undefined || p.type === null,
             );
             const internalPolygons = polygons.filter((p) => p.type === 'internal');
 
             console.log(
-              `Nalezeno ${externalPolygons.length} externích a ${internalPolygons.length} interních polygonů pro ${image.name}`,
+              `Found ${externalPolygons.length} external and ${internalPolygons.length} internal polygons for ${image.name}`,
             );
 
-            // Vykreslíme externí polygony červeně
+            // Draw external polygons in red
             ctx.strokeStyle = 'red';
             ctx.lineWidth = 2;
 
             externalPolygons.forEach((polygon, index) => {
               if (!polygon.points || polygon.points.length < 3) return;
 
-              // Nastavíme červenou barvu pro každý polygon (aby se zajistilo, že všechny budou červené)
+              // Set red color for each polygon (to ensure all are red)
               ctx.strokeStyle = 'red';
 
               ctx.beginPath();
@@ -2133,20 +2418,20 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
               ctx.closePath();
               ctx.stroke();
 
-              // Vypočítáme střed polygonu pro vykreslení ID
+              // Calculate polygon center for ID placement
               const centerX = polygon.points.reduce((sum, p) => sum + p.x, 0) / polygon.points.length;
               const centerY = polygon.points.reduce((sum, p) => sum + p.y, 0) / polygon.points.length;
 
-              // Vykreslíme ID objektu (index + 1) - červené, s výrazným rámečkem
+              // Draw object ID (index + 1) - red with prominent border
               const objectId = index + 1;
-              const fontSize = Math.max(18, Math.min(width, height) / 30); // Menší dynamická velikost fontu
+              const fontSize = Math.max(18, Math.min(width, height) / 30); // Dynamic font size
 
-              // Nastavíme font a zarovnání
+              // Set font and alignment
               ctx.font = `bold ${fontSize}px Arial`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
 
-              // Vykreslíme bílý obdélník pod textem pro lepší čitelnost
+              // Draw white rectangle under text for better readability
               const textWidth = ctx.measureText(`${objectId}`).width;
               const padding = fontSize * 0.4;
               ctx.fillStyle = 'white';
@@ -2157,7 +2442,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                 fontSize + padding,
               );
 
-              // Vykreslíme černý rámeček kolem obdélníku
+              // Draw black border around rectangle
               ctx.strokeStyle = 'black';
               ctx.lineWidth = 3;
               ctx.strokeRect(
@@ -2167,32 +2452,32 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
                 fontSize + padding,
               );
 
-              // Vykreslíme červený text
+              // Draw red text
               ctx.fillStyle = 'red';
               ctx.fillText(`${objectId}`, centerX, centerY);
             });
 
-            // Odstraněno vykreslování modrých vnitřních kontur (děr) podle požadavku
+            // Internal polygons (holes) are not drawn as per requirement
 
-            // Převedeme canvas na blob
+            // Convert canvas to blob
             const blob = await new Promise<Blob | null>((resolve) => {
               canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
             });
 
             if (blob) {
-              // Přidáme vizualizaci do ZIP
+              // Add visualization to ZIP
               const filename = `${image.name.split('.')[0]}_visualization.jpg`;
               visualizationsFolder.file(filename, blob);
-              console.log(`Vizualizace ${filename} přidána do ZIP`);
+              console.log(`Visualization ${filename} added to ZIP`);
             } else {
-              console.error(`Nepodařilo se vytvořit blob pro ${image.name}`);
+              console.error(`Failed to create blob for ${image.name}`);
             }
           } catch (e) {
-            console.error(`Chyba při vytváření vizualizace pro ${image.name}:`, e);
+            console.error(`Error creating visualization for ${image.name}:`, e);
           }
         }
 
-        // Přidáme README soubor s instrukcemi
+        // Add README file with instructions
         const readmeContent = `
 # Metrics Export
 
@@ -2226,13 +2511,14 @@ This helps you identify which metrics belong to which object in the image.
         `;
 
         metricsFolder.file('README.md', readmeContent);
-        console.log('README soubor přidán do ZIP s instrukcemi');
+        console.log('README file added to ZIP with instructions');
       } catch (error) {
-        console.error('Chyba při vytváření CSV souboru pro ZIP:', error);
+        console.error('Error creating metrics file for ZIP:', error);
 
-        // Jednoduchý fallback - vytvoříme alespoň prázdný CSV soubor
-        metricsFolder.file(`${projectTitle || 'project'}_metrics.csv`, 'Error generating metrics');
-        console.error('Fallback na prázdný CSV soubor kvůli chybě');
+        // Simple fallback - create at least an error message file
+        const errorMessage = `Error generating metrics: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        metricsFolder.file(`${projectTitle || 'project'}_metrics_error.txt`, errorMessage);
+        console.error('Fallback to error file due to exception');
       }
     }
 
@@ -2247,11 +2533,11 @@ This helps you identify which metrics belong to which object in the image.
     setIsExporting(true);
 
     try {
-      // Pokud nejsou zadány obrázky k exportu, použijeme vybrané obrázky
+      // If no images provided for export, use selected images
       const imagesToProcess =
         imagesToExport.length > 0 ? imagesToExport : images.filter((img) => selectedImages[img.id]);
 
-      // Podrobné logování pro diagnostiku
+      // Detailed logging for diagnostics
       console.log(`Starting export of ${imagesToProcess.length} images`);
       imagesToProcess.forEach((img, index) => {
         console.log(`Image ${index + 1}/${imagesToProcess.length}:`, {
@@ -2263,7 +2549,7 @@ This helps you identify which metrics belong to which object in the image.
           segmentationResultPath: img.segmentationResultPath,
         });
 
-        // Pokud existuje segmentationResult, vypíšeme jeho strukturu
+        // If segmentationResult exists, log its structure
         if (img.segmentationResult) {
           try {
             const segData =
@@ -2289,7 +2575,7 @@ This helps you identify which metrics belong to which object in the image.
       toast.success(t('export.exportCompleted'));
     } catch (error) {
       console.error('Export failed:', error);
-      toast.error(`${t('export.exportFailed')}: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+      toast.error(`${t('export.exportFailed')}: ${error instanceof Error ? error.message : 'Unknown error'}`);
 
       // Log detailed error information for debugging
       if (error instanceof Error) {

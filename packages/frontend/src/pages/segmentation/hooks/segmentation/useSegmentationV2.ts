@@ -498,31 +498,109 @@ export const useSegmentationV2 = (
   // Set up keyboard event listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle shortcuts if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
       // Shift key for equidistant point placement
       if (e.key === 'Shift') {
         setIsShiftPressed(true);
       }
 
-      // Escape key to cancel current operation
-      if (e.key === 'Escape') {
-        if (editMode !== EditMode.View) {
+      // Command/Control + key shortcuts
+      if (e.metaKey || e.ctrlKey) {
+        switch (e.key.toLowerCase()) {
+          case 'z':
+            e.preventDefault();
+            if (e.shiftKey) {
+              redo();
+            } else {
+              undo();
+            }
+            break;
+          case 's':
+            e.preventDefault();
+            // Trigger save via custom event to avoid dependency issues
+            window.dispatchEvent(new Event('segmentation-save'));
+            break;
+          case '+':
+          case '=':
+            e.preventDefault();
+            setTransform((prev) => ({
+              ...prev,
+              zoom: Math.min(prev.zoom * 1.2, 10), // Max zoom 10x
+            }));
+            break;
+          case '-':
+            e.preventDefault();
+            setTransform((prev) => ({
+              ...prev,
+              zoom: Math.max(prev.zoom / 1.2, 0.1), // Min zoom 0.1x
+            }));
+            break;
+          case '0':
+            e.preventDefault();
+            // Reset view - need image data for this
+            if (imageData && canvasRef.current) {
+              const canvasRect = canvasRef.current.getBoundingClientRect();
+              const initialZoom = Math.min(canvasRect.width / imageData.width, canvasRect.height / imageData.height);
+              const tx = canvasRect.width / 2 - (imageData.width / 2) * initialZoom;
+              const ty = canvasRect.height / 2 - (imageData.height / 2) * initialZoom;
+              setTransform({
+                zoom: initialZoom,
+                translateX: tx,
+                translateY: ty,
+              });
+            }
+            break;
+        }
+        return;
+      }
+
+      // Single key shortcuts with toggle behavior
+      switch (e.key.toLowerCase()) {
+        case 'v':
           setEditMode(EditMode.View);
           setTempPoints([]);
-        }
-      }
-
-      // Delete key to delete selected polygon
-      if (e.key === 'Delete' && selectedPolygonId) {
-        handleDeletePolygon(selectedPolygonId, segmentationData, setSelectedPolygonId, setSegmentationDataWithHistory);
-      }
-
-      // Undo/Redo
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        if (e.shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
+          break;
+        case 'e':
+          setEditMode(editMode === EditMode.EditVertices ? EditMode.View : EditMode.EditVertices);
+          if (editMode === EditMode.EditVertices) setTempPoints([]);
+          break;
+        case 'a':
+          setEditMode(editMode === EditMode.AddPoints ? EditMode.View : EditMode.AddPoints);
+          if (editMode === EditMode.AddPoints) setTempPoints([]);
+          break;
+        case 'n':
+          setEditMode(editMode === EditMode.CreatePolygon ? EditMode.View : EditMode.CreatePolygon);
+          if (editMode === EditMode.CreatePolygon) setTempPoints([]);
+          break;
+        case 's':
+          setEditMode(editMode === EditMode.Slice ? EditMode.View : EditMode.Slice);
+          if (editMode === EditMode.Slice) setTempPoints([]);
+          break;
+        case 'd':
+          setEditMode(editMode === EditMode.DeletePolygon ? EditMode.View : EditMode.DeletePolygon);
+          if (editMode === EditMode.DeletePolygon) setTempPoints([]);
+          break;
+        case 'delete':
+          if (selectedPolygonId) {
+            handleDeletePolygon(
+              selectedPolygonId,
+              segmentationData,
+              setSelectedPolygonId,
+              setSegmentationDataWithHistory,
+            );
+          }
+          break;
+        case 'escape':
+          // Reset to view mode
+          if (editMode !== EditMode.View) {
+            setEditMode(EditMode.View);
+            setTempPoints([]);
+          }
+          break;
       }
     };
 
@@ -552,6 +630,9 @@ export const useSegmentationV2 = (
     undo,
     setIsShiftPressed,
     setLastAutoAddedPoint,
+    setTransform,
+    imageData,
+    canvasRef,
   ]);
 
   // Listen for real-time segmentation status updates
@@ -944,6 +1025,19 @@ export const useSegmentationV2 = (
       isSavingRef.current = false;
     }
   }, [segmentationData, imageData, projectId, t, setSegmentationDataWithHistory]);
+
+  // Listen for save events triggered by keyboard shortcuts
+  useEffect(() => {
+    const handleSaveEvent = () => {
+      handleSave();
+    };
+
+    window.addEventListener('segmentation-save', handleSaveEvent);
+
+    return () => {
+      window.removeEventListener('segmentation-save', handleSaveEvent);
+    };
+  }, [handleSave]);
 
   // Return all the necessary state and functions
   return {

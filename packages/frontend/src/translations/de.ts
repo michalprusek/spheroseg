@@ -14,6 +14,11 @@ export default {
     },
     title: 'Segmentierungs-Editor',
     resolution: '{width}x{height}',
+    batch: {
+      mixed: 'Segmentierung: {{successCount}} Bilder erfolgreich in Warteschlange, {{failCount}} fehlgeschlagen',
+      allSuccess: 'Segmentierung: Alle {{count}} Bilder erfolgreich in Warteschlange',
+      allFailed: 'Segmentierung: Alle {{count}} Bilder fehlgeschlagen',
+    },
     queue: {
       title: 'Segmentierungs-Warteschlange',
       summary: '{{total}} Aufgaben insgesamt ({{running}} in Bearbeitung, {{queued}} in Warteschlange)',
@@ -76,6 +81,7 @@ export default {
       completed: 'Abgeschlossen',
       failed: 'Fehlgeschlagen',
       pending: 'Ausstehend',
+      withoutSegmentation: 'Keine Segmentierung',
     },
     autoSave: {
       enabled: 'Auto-Speichern: Aktiviert',
@@ -101,6 +107,7 @@ export default {
     resegmentButton: 'Neu segmentieren',
     completedSegmentation: 'Abgeschlossen',
     resegmentButtonTooltip: 'Mit neuronalem Netzwerk neu segmentieren',
+    processingImage: 'Bild wird verarbeitet...',
     helpTips: {
       title: 'Tipps:',
       edit: {
@@ -118,7 +125,43 @@ export default {
         click: 'Klicken, um Punkt zum ausgewählten Polygon hinzuzufügen',
         exit: 'Esc zum Verlassen des Hinzufügen-Modus',
       },
+      view: {
+        pan: 'Verschieben: Klicken und ziehen',
+        selectPolygon: 'Auswählen: Auf Polygon klicken',
+        zoom: 'Zoom: Mausrad',
+      },
     },
+    imageNotFoundDescription: 'Das angeforderte Bild konnte nicht gefunden werden',
+    invalidImageDimensions: 'Ungültige Bildabmessungen',
+    noDataToSave: 'Keine Änderungen zum Speichern',
+    polygonDuplicated: 'Polygon dupliziert',
+    polygonNotFound: 'Polygon nicht gefunden',
+    polygonSimplified: 'Polygon vereinfacht',
+    polygonSimplifyFailed: 'Vereinfachung des Polygons fehlgeschlagen',
+    polygonSliced: 'Polygon erfolgreich geteilt',
+    resegment: {
+      error: {
+        exception: 'Neusegmentierungsfehler: {{error}}',
+        failed: 'Neusegmentierung fehlgeschlagen',
+        missingData: 'Fehlende erforderliche Daten für die Neusegmentierung',
+      },
+      success: 'Neusegmentierung erfolgreich abgeschlossen',
+    },
+    resegmentMultipleError: 'Fehler bei der Neusegmentierung mehrerer Bilder',
+    resegmentMultipleSuccess: 'Mehrere Bilder erfolgreich neu segmentiert',
+    resegmenting: 'Neusegmentierung läuft...',
+    resegmentingMultiple: 'Mehrere Bilder werden neu segmentiert...',
+    saveError: 'Fehler beim Speichern der Segmentierung',
+    segmentationLoading: 'Segmentierung wird geladen...',
+    segmentationPolygon: 'Segmentierungspolygon',
+    selectPolygonFirst: 'Bitte wählen Sie zuerst ein Polygon aus',
+    sliceFailed: 'Teilen des Polygons fehlgeschlagen',
+    undoRestored: 'Aktion rückgängig gemacht',
+    undoWhileDraggingError: 'Rückgängig während des Ziehens nicht möglich',
+    vertexDeleteFailed: 'Löschen des Eckpunkts fehlgeschlagen',
+    vertexDeleted: 'Eckpunkt gelöscht',
+    vertexDuplicateFailed: 'Duplizieren des Eckpunkts fehlgeschlagen',
+    vertexDuplicated: 'Eckpunkt dupliziert',
   },
   // Error messages
   errors: {
@@ -183,6 +226,8 @@ export default {
     deleteProject: 'Projekt löschen',
     deleteConfirmation:
       'Sind Sie sicher, dass Sie das Projekt "{{projectName}}" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
+    resegmentImage: 'Bild neu segmentieren',
+    deleteImage: 'Bild löschen',
     duplicateProject: 'Projekt duplizieren',
     duplicateDescription:
       'Erstellen Sie eine Kopie dieses Projekts. Das neue Projekt wird mit dem von Ihnen angegebenen Namen erstellt.',
@@ -290,6 +335,7 @@ export default {
     loadingAccount: 'Ihr Konto wird geladen...',
     loadingApplication: 'Anwendung wird geladen...',
     selectAll: 'Alle auswählen',
+    deselectAll: 'Alle abwählen',
     save: 'Speichern',
     cancel: 'Abbrechen',
     delete: 'Löschen',
@@ -405,6 +451,12 @@ export default {
     uploadComplete: 'Upload abgeschlossen',
     uploadFailed: 'Upload fehlgeschlagen',
     deletePolygon: 'Polygon löschen',
+    pleaseLogin: 'Bitte melden Sie sich an, um fortzufahren',
+    retry: 'Erneut versuchen',
+    segmentation: 'Segmentierung',
+    copiedToClipboard: 'In die Zwischenablage kopiert!',
+    failedToCopy: 'Kopieren in die Zwischenablage fehlgeschlagen',
+    confirm: 'Bestätigen',
     editor: {
       error: 'Fehler',
       success: 'Erfolg',
@@ -417,6 +469,8 @@ export default {
     signUp: 'Registrieren',
     signOut: 'Abmelden',
     signingIn: 'Anmeldung läuft...',
+    email: 'E-Mail',
+    password: 'Passwort',
     forgotPassword: 'Passwort vergessen?',
     resetPassword: 'Passwort zurücksetzen',
     dontHaveAccount: 'Noch kein Konto?',
@@ -489,6 +543,11 @@ export default {
     sendingResetLink: 'Neues Passwort wird gesendet...',
     sendResetLink: 'Neues Passwort senden',
     backToSignIn: 'Zurück zur Anmeldung',
+    accountLocked: 'Ihr Konto wurde gesperrt. Bitte kontaktieren Sie den Support.',
+    fillAllFields: 'Bitte füllen Sie alle erforderlichen Felder aus',
+    serverError: 'Serverfehler. Bitte versuchen Sie es später erneut.',
+    signInError: 'Fehler bei der Anmeldung',
+    signInFailed: 'Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.',
   },
   requestAccess: {
     and: 'und',
@@ -997,6 +1056,7 @@ export default {
     accountDeleteSuccess: 'Konto erfolgreich gelöscht',
     accountDeleteError: 'Fehler beim Löschen des Kontos',
     passwordChanged: 'Passwort geändert',
+    changingPassword: 'Passwort wird geändert...',
     confirmPasswordLabel: 'Passwort bestätigen',
     changePasswordDescription: 'Ändern Sie Ihr Passwort, um Ihr Konto sicher zu halten',
     dangerZoneDescription: 'Diese Aktionen sind unwiderruflich und werden Ihre Daten dauerhaft entfernen',
@@ -1102,55 +1162,64 @@ export default {
       paragraph1:
         'Diese Datenschutzrichtlinie erklärt, wie SpheroSeg ("wir", "uns", "unser") Ihre Informationen sammelt, verwendet und teilt, wenn Sie unsere Plattform für Sphäroid-Segmentierung und -Analyse nutzen.',
     },
-    informationWeCollect: {
+    dataCollection: {
       title: '2. Informationen, die wir sammeln',
-      paragraph1:
-        'Wir sammeln Informationen, die Sie uns direkt zur Verfügung stellen, wenn Sie ein Konto erstellen, Bilder hochladen, Projekte erstellen und anderweitig mit unseren Diensten interagieren.',
+      paragraph1: 'Wir sammeln Informationen, die Sie uns direkt zur Verfügung stellen, einschließlich:',
+      list: [
+        'Kontoinformationen (E-Mail, Name, Institution)',
+        'Hochgeladene Bilder und Daten zur Segmentierung',
+        'Projektmetadaten und Analyseergebnisse',
+        'Nutzungsdaten und Aktivitätsprotokolle',
+      ],
     },
-    personalInformation: {
-      title: '2.1 Persönliche Informationen',
-      paragraph1:
-        'Dazu gehören Ihr Name, Ihre E-Mail-Adresse, Ihre Institution/Organisation und andere Informationen, die Sie bei der Erstellung eines Kontos oder der Anforderung des Zugriffs auf unsere Dienste angeben.',
-    },
-    researchData: {
-      title: '2.2 Forschungsdaten',
-      paragraph1:
-        'Dazu gehören Bilder, die Sie hochladen, Projektdetails, Analyseergebnisse und andere forschungsbezogene Daten, die Sie auf unserer Plattform erstellen oder hochladen.',
-    },
-    usageInformation: {
-      title: '2.3 Nutzungsinformationen',
-      paragraph1:
-        'Wir sammeln Informationen darüber, wie Sie unsere Plattform nutzen, einschließlich Protokolldaten, Geräteinformationen und Nutzungsmustern.',
-    },
-    howWeUse: {
+    dataUsage: {
       title: '3. Wie wir Ihre Informationen verwenden',
-      paragraph1:
-        'Wir verwenden die gesammelten Informationen, um unsere Dienste bereitzustellen, zu warten und zu verbessern, mit Ihnen zu kommunizieren und unsere rechtlichen Verpflichtungen zu erfüllen.',
+      paragraph1: 'Wir verwenden die gesammelten Informationen, um:',
+      list: [
+        'Unsere Dienste bereitzustellen und zu warten',
+        'Ihre Bildsegmentierungsanfragen zu verarbeiten',
+        'Unsere Algorithmen und Dienste zu verbessern',
+        'Mit Ihnen über Ihr Konto zu kommunizieren',
+        'Sicherheit zu gewährleisten und Missbrauch zu verhindern',
+      ],
     },
-    dataSecurity: {
-      title: '4. Datensicherheit',
+    dataStorage: {
+      title: '4. Datenspeicherung und Sicherheit',
       paragraph1:
-        'Wir implementieren angemessene Sicherheitsmaßnahmen, um Ihre persönlichen Informationen und Forschungsdaten vor unbefugtem Zugriff, Änderung, Offenlegung oder Zerstörung zu schützen.',
+        'Wir implementieren angemessene technische und organisatorische Maßnahmen, um Ihre persönlichen Informationen vor unbefugtem Zugriff, Änderung, Offenlegung oder Zerstörung zu schützen.',
+      paragraph2:
+        'Ihre Daten werden auf sicheren Servern gespeichert und gemäß unserer Datenaufbewahrungsrichtlinie gelöscht.',
     },
     dataSharing: {
       title: '5. Datenweitergabe',
       paragraph1:
-        'Wir verkaufen Ihre persönlichen Informationen oder Forschungsdaten nicht. Wir können Ihre Informationen unter begrenzten Umständen teilen, z.B. mit Ihrer Zustimmung, zur Erfüllung rechtlicher Verpflichtungen oder mit Dienstleistern, die uns beim Betrieb unserer Plattform helfen.',
+        'Wir verkaufen, handeln oder übertragen Ihre persönlichen Informationen nicht an Dritte ohne Ihre Zustimmung, außer wie in dieser Richtlinie beschrieben oder gesetzlich vorgeschrieben.',
     },
-    yourChoices: {
-      title: '6. Ihre Wahlmöglichkeiten',
+    userRights: {
+      title: '6. Ihre Rechte',
+      paragraph1: 'Sie haben das Recht:',
+      list: [
+        'Auf Ihre persönlichen Informationen zuzugreifen',
+        'Ungenaue Informationen zu korrigieren',
+        'Die Löschung Ihrer Daten zu verlangen',
+        'Ihre Daten zu exportieren',
+        'Der Verarbeitung Ihrer Daten zu widersprechen',
+      ],
+    },
+    cookies: {
+      title: '7. Cookies und Tracking-Technologien',
       paragraph1:
-        'Sie können über Ihre Kontoeinstellungen auf Ihre Kontoinformationen und Forschungsdaten zugreifen, diese aktualisieren oder löschen. Sie können uns auch kontaktieren, um Zugang, Korrektur oder Löschung persönlicher Informationen zu beantragen, die wir über Sie haben.',
+        'Wir verwenden Cookies und ähnliche Technologien, um Ihre Erfahrung zu verbessern, die Nutzung der Website zu analysieren und Inhalte zu personalisieren.',
     },
     changes: {
-      title: '7. Änderungen dieser Richtlinie',
+      title: '8. Änderungen dieser Richtlinie',
       paragraph1:
-        'Wir können diese Datenschutzrichtlinie von Zeit zu Zeit aktualisieren. Wir werden Sie über Änderungen informieren, indem wir die neue Datenschutzrichtlinie auf dieser Seite veröffentlichen und das Datum "Zuletzt aktualisiert" aktualisieren.',
+        'Wir können unsere Datenschutzrichtlinie von Zeit zu Zeit aktualisieren. Wir werden Sie über Änderungen informieren, indem wir die neue Datenschutzrichtlinie auf dieser Seite veröffentlichen.',
     },
-    contactUs: {
-      title: '8. Kontaktieren Sie uns',
-      paragraph1:
-        'Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns bitte unter privacy@spheroseg.com.',
+    contact: {
+      title: '9. Kontaktieren Sie uns',
+      paragraph1: 'Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns bitte unter:',
+      email: 'privacy@spheroseg.com',
     },
     lastUpdated: 'Zuletzt aktualisiert: 7. Januar 2025',
   },
@@ -1231,6 +1300,22 @@ export default {
     uploadError: 'Beim Upload ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
     noProjectsToUpload: 'Keine Projekte verfügbar. Erstellen Sie zuerst ein Projekt.',
     notFound: 'Projekt "{{projectName}}" nicht gefunden. Es wurde möglicherweise gelöscht.',
+    errors: {
+      imageOrProjectNotFound: 'Bild oder Projekt nicht gefunden.',
+      failedToDeleteImage: 'Löschen des Bildes fehlgeschlagen',
+      imageOrProjectNotFoundForNavigation: 'Bild oder Projekt für Navigation nicht gefunden, oder UUID fehlt.',
+      imageNotFoundForClearingSegmentation: 'Bild zum Löschen der Segmentierung nicht gefunden oder UUID fehlt.',
+      failedToClearSegmentation: 'Löschen der Segmentierung fehlgeschlagen',
+    },
+    success: {
+      localImageDeleted: 'Lokales Bild erfolgreich gelöscht',
+      imageDeleted: 'Bild erfolgreich gelöscht',
+      segmentationCleared: 'Segmentierung erfolgreich gelöscht.',
+    },
+    info: {
+      clearingSegmentation: 'Lösche Segmentierung für Bild {{imageName}}...',
+      selectAtLeastOneImage: 'Bitte wählen Sie mindestens ein Bild aus.',
+    },
   },
   export: {
     formatDescriptions: {
@@ -1272,6 +1357,14 @@ export default {
       CSV: 'CSV (.csv)',
     },
     selectImagesForExport: 'Bilder für Export auswählen',
+    selectImagesToExport: 'Bilder zum Exportieren auswählen',
+    noImagesAvailable: 'Keine Bilder verfügbar',
+    backToProject: 'Zurück zum Projekt',
+    exportImages: 'Bilder exportieren',
+    maskExportError: 'Fehler beim Exportieren der Maske',
+    maskExportStarted: 'Maskenexport gestartet',
+    metricsRequireSegmentation: 'Metriken erfordern eine abgeschlossene Segmentierung',
+    noImageSelectedError: 'Kein Bild für den Export ausgewählt',
   },
   metrics: {
     area: 'Fläche',
@@ -1392,5 +1485,77 @@ export default {
     userEmail: 'Benutzer-E-Mail',
     view: 'Anzeigen',
     viewOnly: 'Nur anzeigen',
+  },
+  invitation: {
+    title: 'Projekteinladung',
+    processing: 'Einladung wird verarbeitet...',
+    successTitle: 'Einladung angenommen!',
+    successMessage: 'Sie haben jetzt Zugriff auf "{{projectName}}", geteilt von {{ownerName}}.',
+    redirecting: 'Weiterleitung zum Projekt...',
+    errorTitle: 'Einladung kann nicht angenommen werden',
+    loginRequired: 'Anmeldung erforderlich',
+    loginMessage: 'Bitte melden Sie sich an, um diese Projekteinladung anzunehmen.',
+    signIn: 'Anmelden',
+    createAccount: 'Konto erstellen',
+    goToDashboard: 'Zum Dashboard',
+    invalidLink: 'Ungültiger Einladungslink',
+    expired: 'Dieser Einladungslink ist abgelaufen oder ungültig',
+    notForYou: 'Diese Einladung ist nicht für Ihr Konto bestimmt',
+    genericError: 'Einladung konnte nicht angenommen werden. Bitte versuchen Sie es erneut.',
+    acceptedSuccess: 'Einladung erfolgreich angenommen',
+  },
+  about: {
+    title: 'Über SpheroSeg',
+    mission: {
+      title: 'Unsere Mission',
+      description:
+        'SpheroSeg ist eine fortschrittliche Plattform, die speziell für die Segmentierung und Analyse von Zellsphäroiden in mikroskopischen Bildern entwickelt wurde. Wir kombinieren modernste Algorithmen künstlicher Intelligenz mit einer intuitiven Benutzeroberfläche, um Forschern präzise Sphäroidgrenzenerkennung und Analysefähigkeiten zu bieten.',
+      vision:
+        'Unsere Vision ist es, wissenschaftliche Entdeckungen zu beschleunigen, indem wir fortschrittliche Bildanalyse für Forscher weltweit zugänglich machen und es ihnen ermöglichen, sich auf ihre Forschung statt auf technische Herausforderungen zu konzentrieren.',
+    },
+    technology: {
+      title: 'Unsere Technologie',
+      description:
+        'Basierend auf modernsten Deep-Learning-Modellen und Computer-Vision-Techniken bietet SpheroSeg beispiellose Genauigkeit bei der Sphäroidsegmentierung.',
+      feature1: {
+        title: 'KI-gestützte Segmentierung',
+        description:
+          'Fortschrittliche Deep-Learning-Modelle, die auf vielfältigen Sphäroidbildern trainiert wurden, gewährleisten genaue und zuverlässige Segmentierungsergebnisse.',
+      },
+      feature2: {
+        title: 'Echtzeitverarbeitung',
+        description:
+          'Optimierte Algorithmen bieten schnelle Verarbeitungszeiten und ermöglichen es Ihnen, große Datensätze effizient zu analysieren.',
+      },
+      feature3: {
+        title: 'Umfassende Analyse',
+        description:
+          'Extrahieren Sie detaillierte Metriken wie Fläche, Umfang, Kreisförmigkeit und mehr für jedes segmentierte Sphäroid.',
+      },
+    },
+    team: {
+      title: 'Unser Team',
+      description:
+        'SpheroSeg wurde von einem engagierten Team von Forschern und Ingenieuren entwickelt, die sich leidenschaftlich für die Förderung der biomedizinischen Forschung einsetzen',
+      member1: {
+        name: 'Michal Průšek',
+        role: 'Leitender Entwickler, FJFI ČVUT Prag',
+      },
+      member2: {
+        name: 'Adam Novozámský',
+        role: 'Betreuer, UTIA CAS',
+      },
+      member3: {
+        name: 'Forschungsteam',
+        role: 'Institut für Biochemie und Mikrobiologie, VŠCHT Prag',
+      },
+    },
+    contact: {
+      title: 'Kontaktieren Sie uns',
+      description: 'Haben Sie Fragen oder benötigen Unterstützung? Wir sind hier, um zu helfen!',
+      email: 'Kontakt per E-Mail',
+      github: 'Auf GitHub ansehen',
+      twitter: 'Auf Twitter folgen',
+    },
   },
 };

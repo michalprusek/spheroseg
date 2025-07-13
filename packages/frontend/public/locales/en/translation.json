@@ -29,7 +29,11 @@
     "retry": "Retry",
     "imageNotFound": "Image not found",
     "returnToProject": "Return to project",
-    "uploadImages": "Upload Images"
+    "uploadImages": "Upload Images",
+    "maxFileSize": "Max file size: {{size}}MB",
+    "accepted": "Accepted",
+    "files": "Files",
+    "removeAll": "Remove All"
   },
   "auth": {
     "signIn": "Sign In",
@@ -163,6 +167,22 @@
     },
     "errorLoading": "Error loading project",
     "resegmentImage": "Resegment Image"
+  },
+  "uploader": {
+    "generatingPreviews": "Generating previews...",
+    "previewsGenerated": "Previews generated",
+    "processing": "Processing...",
+    "uploadSuccess": "Upload successful",
+    "dragDrop": "Drag & drop images here",
+    "uploadError": "Please select some files to upload.",
+    "uploadingImages": "Uploading images...",
+    "uploadErrorGeneral": "Error uploading images. Please try again.",
+    "clickToSelect": "Click to select files",
+    "or": "Or",
+    "dragAndDropFiles": "drag and drop files here",
+    "segmentAfterUploadLabel": "Segment images immediately after upload",
+    "uploadBtn": "Upload",
+    "imageOnly": "Images only"
   },
   "segmentation": {
     "imageNotFound": "Image not found",

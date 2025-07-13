@@ -498,7 +498,9 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
       ) : (
         showNoSegmentationMessage && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-xs text-gray-500 p-1 bg-white bg-opacity-75 rounded">No seg</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 p-1 bg-white dark:bg-gray-800 bg-opacity-75 dark:bg-opacity-75 rounded">
+              No seg
+            </p>
           </div>
         )
       )}

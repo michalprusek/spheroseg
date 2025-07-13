@@ -1,7 +1,7 @@
 /**
  * Express-validator middleware
  *
- * Poskytuje validaci a sanitizaci vstupů pro API endpointy
+ * Provides validation and sanitization of inputs for API endpoints
  */
 
 import { body, param, query, validationResult, ValidationChain } from 'express-validator';
@@ -9,7 +9,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../utils/ApiError';
 
 /**
- * Middleware pro zpracování výsledků validace
+ * Middleware for processing validation results
  */
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction): void => {
   const errors = validationResult(req);
@@ -28,75 +28,75 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
 };
 
 /**
- * Společné validátory
+ * Common validators
  */
 export const validators = {
-  // Email validace
+  // Email validation
   email: () =>
-    body('email').isEmail().withMessage('Neplatný formát emailu').normalizeEmail().toLowerCase(),
+    body('email').isEmail().withMessage('Invalid email format').normalizeEmail().toLowerCase(),
 
-  // Heslo validace
+  // Password validation
   password: () =>
     body('password')
       .isLength({ min: 8 })
-      .withMessage('Heslo musí mít alespoň 8 znaků')
+      .withMessage('Password must be at least 8 characters long')
       .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-      .withMessage('Heslo musí obsahovat malé písmeno, velké písmeno a číslo'),
+      .withMessage('Password must contain a lowercase letter, uppercase letter, and number'),
 
-  // ID validace (UUID)
-  uuid: (field: string = 'id') => param(field).isUUID().withMessage('Neplatné ID'),
+  // ID validation (UUID)
+  uuid: (field: string = 'id') => param(field).isUUID().withMessage('Invalid ID'),
 
-  // Stránkování
+  // Pagination
   pagination: () => [
-    query('page').optional().isInt({ min: 1 }).withMessage('Stránka musí být kladné číslo').toInt(),
+    query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive number').toInt(),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
-      .withMessage('Limit musí být mezi 1 a 100')
+      .withMessage('Limit must be between 1 and 100')
       .toInt(),
   ],
 
-  // Obecný text
+  // General text
   text: (field: string, options: { min?: number; max?: number } = {}) =>
     body(field)
       .trim()
       .notEmpty()
-      .withMessage(`${field} je povinné pole`)
+      .withMessage(`${field} is required`)
       .isLength({ min: options.min || 1, max: options.max || 1000 })
-      .withMessage(`${field} musí mít ${options.min || 1}-${options.max || 1000} znaků`)
+      .withMessage(`${field} must be ${options.min || 1}-${options.max || 1000} characters`)
       .escape(),
 
-  // Telefonní číslo
+  // Phone number
   phone: () =>
-    body('phone').optional().isMobilePhone('any').withMessage('Neplatné telefonní číslo'),
+    body('phone').optional().isMobilePhone('any').withMessage('Invalid phone number'),
 
   // URL
   url: (field: string = 'url') =>
     body(field)
       .optional()
       .isURL({ protocols: ['http', 'https'], require_protocol: true })
-      .withMessage('Neplatná URL adresa'),
+      .withMessage('Invalid URL'),
 
-  // Datum
+  // Date
   date: (field: string) =>
-    body(field).optional().isISO8601().withMessage('Neplatný formát data').toDate(),
+    body(field).optional().isISO8601().withMessage('Invalid date format').toDate(),
 
   // Boolean
   boolean: (field: string) =>
-    body(field).optional().isBoolean().withMessage(`${field} musí být true nebo false`).toBoolean(),
+    body(field).optional().isBoolean().withMessage(`${field} must be true or false`).toBoolean(),
 
-  // Číslo
+  // Number
   number: (field: string, options: { min?: number; max?: number } = {}) =>
     body(field)
       .isNumeric()
-      .withMessage(`${field} musí být číslo`)
+      .withMessage(`${field} must be a number`)
       .toFloat()
       .custom((value) => {
         if (options.min !== undefined && value < options.min) {
-          throw new Error(`${field} musí být alespoň ${options.min}`);
+          throw new Error(`${field} must be at least ${options.min}`);
         }
         if (options.max !== undefined && value > options.max) {
-          throw new Error(`${field} musí být maximálně ${options.max}`);
+          throw new Error(`${field} must be at most ${options.max}`);
         }
         return true;
       }),
@@ -105,10 +105,10 @@ export const validators = {
   array: (field: string, itemValidator?: ValidationChain) =>
     body(field)
       .isArray()
-      .withMessage(`${field} musí být pole`)
+      .withMessage(`${field} must be an array`)
       .custom((items, { req }) => {
         if (itemValidator) {
-          // Validace každé položky v poli
+          // Validate each item in the array
           items.forEach((item: any, index: number) => {
             req.body[`${field}[${index}]`] = item;
           });
@@ -118,23 +118,23 @@ export const validators = {
 
   // JSON
   json: (field: string) =>
-    body(field).optional().isJSON().withMessage(`${field} musí být platný JSON`),
+    body(field).optional().isJSON().withMessage(`${field} must be valid JSON`),
 
   // File upload
   file: (field: string, options: { mimeTypes?: string[]; maxSize?: number } = {}) =>
     body(field).custom((value, { req }) => {
       if (!req.file && !req.files) {
-        throw new Error('Soubor je povinný');
+        throw new Error('File is required');
       }
 
       const file = req.file || (req.files as any)[field];
 
       if (options.mimeTypes && !options.mimeTypes.includes(file.mimetype)) {
-        throw new Error(`Nepovolený typ souboru. Povolené: ${options.mimeTypes.join(', ')}`);
+        throw new Error(`Invalid file type. Allowed: ${options.mimeTypes.join(', ')}`);
       }
 
       if (options.maxSize && file.size > options.maxSize) {
-        throw new Error(`Soubor je příliš velký. Maximum: ${options.maxSize / 1024 / 1024}MB`);
+        throw new Error(`File is too large. Maximum: ${options.maxSize / 1024 / 1024}MB`);
       }
 
       return true;
@@ -142,7 +142,7 @@ export const validators = {
 };
 
 /**
- * Validační pravidla pro specifické endpointy
+ * Validation rules for specific endpoints
  */
 export const validationRules = {
   // User registration
@@ -157,7 +157,7 @@ export const validationRules = {
   // User login
   userLogin: [
     validators.email(),
-    body('password').notEmpty().withMessage('Heslo je povinné'),
+    body('password').notEmpty().withMessage('Password is required'),
     handleValidationErrors,
   ],
 
@@ -202,43 +202,43 @@ export const validationRules = {
  * Custom validators
  */
 export const customValidators = {
-  // Kontrola unikátnosti emailu
+  // Check email uniqueness
   uniqueEmail: () =>
     body('email').custom(async (email) => {
-      // TODO: Implementovat kontrolu v databázi
+      // TODO: Implement database check
       // const exists = await userService.emailExists(email);
       // if (exists) {
-      //   throw new Error('Email už je registrovaný');
+      //   throw new Error('Email is already registered');
       // }
       return true;
     }),
 
-  // Kontrola síly hesla
+  // Check password strength
   strongPassword: () =>
     body('password').custom((password) => {
       const strength = calculatePasswordStrength(password);
       if (strength < 3) {
-        throw new Error('Heslo je příliš slabé');
+        throw new Error('Password is too weak');
       }
       return true;
     }),
 
-  // Kontrola CSRF tokenu
+  // Check CSRF token
   csrfToken: () =>
     body('_csrf')
       .notEmpty()
-      .withMessage('CSRF token je povinný')
+      .withMessage('CSRF token is required')
       .custom((token, { req }) => {
-        // TODO: Implementovat CSRF validaci
+        // TODO: Implement CSRF validation
         // if (!validateCsrfToken(req, token)) {
-        //   throw new Error('Neplatný CSRF token');
+        //   throw new Error('Invalid CSRF token');
         // }
         return true;
       }),
 };
 
 /**
- * Helper funkce pro výpočet síly hesla
+ * Helper function for calculating password strength
  */
 function calculatePasswordStrength(password: string): number {
   let strength = 0;
@@ -254,13 +254,13 @@ function calculatePasswordStrength(password: string): number {
 }
 
 /**
- * Sanitizace funkcí
+ * Sanitization functions
  */
 export const sanitizers = {
-  // HTML sanitizace
+  // HTML sanitization
   html: (field: string) =>
     body(field).customSanitizer((value) => {
-      // Odstranění nebezpečných HTML tagů
+      // Remove dangerous HTML tags
       return value
         .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
         .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
@@ -268,17 +268,17 @@ export const sanitizers = {
         .replace(/on\w+\s*=\s*'[^']*'/gi, '');
     }),
 
-  // SQL sanitizace
+  // SQL sanitization
   sql: (field: string) =>
     body(field).customSanitizer((value) => {
-      // Základní ochrana proti SQL injection
+      // Basic protection against SQL injection
       return value.replace(/'/g, "''").replace(/;/g, '').replace(/--/g, '');
     }),
 
-  // Filename sanitizace
+  // Filename sanitization
   filename: (field: string) =>
     body(field).customSanitizer((value) => {
-      // Odstranění nebezpečných znaků z názvů souborů
+      // Remove dangerous characters from filenames
       return value
         .replace(/[^a-zA-Z0-9._-]/g, '_')
         .replace(/\.{2,}/g, '.')

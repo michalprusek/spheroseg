@@ -11,19 +11,40 @@ vi.mock('../AuthContext', () => ({
 }));
 
 vi.mock('i18next', () => ({
-  init: vi.fn(),
-  changeLanguage: vi.fn().mockResolvedValue(undefined),
-  t: vi.fn((key) => `translated:${key}`),
-  language: 'en',
-  options: {
-    resources: {
-      en: {},
-      cs: {},
-      de: {},
-      es: {},
-      fr: {},
-      zh: {},
+  default: {
+    init: vi.fn().mockResolvedValue(undefined),
+    changeLanguage: vi.fn().mockResolvedValue(undefined),
+    t: vi.fn((key) => `translated:${key}`),
+    language: 'en',
+    use: vi.fn().mockReturnThis(),
+    on: vi.fn(),
+    off: vi.fn(),
+    emit: vi.fn(),
+    exists: vi.fn().mockReturnValue(true),
+    getResource: vi.fn(),
+    addResourceBundle: vi.fn(),
+    hasResourceBundle: vi.fn().mockReturnValue(true),
+    getResourceBundle: vi.fn().mockReturnValue({}),
+    loadNamespaces: vi.fn().mockResolvedValue(undefined),
+    loadLanguages: vi.fn().mockResolvedValue(undefined),
+    reloadResources: vi.fn().mockResolvedValue(undefined),
+    options: {
+      resources: {
+        en: {},
+        cs: {},
+        de: {},
+        es: {},
+        fr: {},
+        zh: {},
+      },
     },
+  },
+}));
+
+vi.mock('react-i18next', () => ({
+  initReactI18next: {
+    type: '3rdParty',
+    init: vi.fn(),
   },
 }));
 
@@ -230,4 +251,3 @@ describe('LanguageContext', () => {
     });
   });
 });
-EOF < /dev/llnu;

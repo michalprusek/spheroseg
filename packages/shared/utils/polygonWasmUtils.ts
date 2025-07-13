@@ -1,0 +1,168 @@
+/**
+ * Polygon WASM Utilities
+ * 
+ * Utilities for working with WebAssembly-based polygon operations
+ */
+
+export interface WasmPolygonModule {
+  _malloc: (size: number) => number;
+  _free: (ptr: number) => void;
+  HEAP8: Int8Array;
+  HEAP16: Int16Array;
+  HEAP32: Int32Array;
+  HEAPU8: Uint8Array;
+  HEAPU16: Uint16Array;
+  HEAPU32: Uint32Array;
+  HEAPF32: Float32Array;
+  HEAPF64: Float64Array;
+  
+  // Polygon operations
+  _simplifyPolygon: (pointsPtr: number, numPoints: number, tolerance: number, resultPtr: number) => number;
+  _splitPolygon: (pointsPtr: number, numPoints: number, lineStartX: number, lineStartY: number, lineEndX: number, lineEndY: number, result1Ptr: number, result2Ptr: number) => number;
+  _calculatePolygonArea: (pointsPtr: number, numPoints: number) => number;
+  _calculatePolygonPerimeter: (pointsPtr: number, numPoints: number) => number;
+  _pointInPolygon: (pointX: number, pointY: number, polygonPtr: number, numPoints: number) => number;
+}
+
+export class PolygonWasmProcessor {
+  private module: WasmPolygonModule | null = null;
+  
+  async initialize(wasmUrl: string): Promise<void> {
+    // In a real implementation, this would load the WASM module
+    // For testing, we'll create a mock
+    this.module = {
+      _malloc: (size: number) => 0,
+      _free: (ptr: number) => {},
+      HEAP8: new Int8Array(1024),
+      HEAP16: new Int16Array(512),
+      HEAP32: new Int32Array(256),
+      HEAPU8: new Uint8Array(1024),
+      HEAPU16: new Uint16Array(512),
+      HEAPU32: new Uint32Array(256),
+      HEAPF32: new Float32Array(256),
+      HEAPF64: new Float64Array(128),
+      _simplifyPolygon: () => 0,
+      _splitPolygon: () => 0,
+      _calculatePolygonArea: () => 0,
+      _calculatePolygonPerimeter: () => 0,
+      _pointInPolygon: () => 0,
+    };
+  }
+  
+  isInitialized(): boolean {
+    return this.module !== null;
+  }
+  
+  simplifyPolygon(points: Array<{x: number; y: number}>, tolerance: number): Array<{x: number; y: number}> {
+    if (!this.module) {
+      throw new Error('WASM module not initialized');
+    }
+    
+    // Simplified implementation for testing
+    if (points.length <= 3) {
+      return points;
+    }
+    
+    // Simple Douglas-Peucker algorithm mock
+    return points.filter((_, index) => index % 2 === 0 || index === points.length - 1);
+  }
+  
+  splitPolygon(
+    points: Array<{x: number; y: number}>,
+    lineStart: {x: number; y: number},
+    lineEnd: {x: number; y: number}
+  ): [Array<{x: number; y: number}>, Array<{x: number; y: number}>] | null {
+    if (!this.module) {
+      throw new Error('WASM module not initialized');
+    }
+    
+    // Simple mock implementation
+    if (points.length < 3) {
+      return null;
+    }
+    
+    const midIndex = Math.floor(points.length / 2);
+    return [
+      points.slice(0, midIndex + 1),
+      points.slice(midIndex)
+    ];
+  }
+  
+  calculateArea(points: Array<{x: number; y: number}>): number {
+    if (!this.module) {
+      throw new Error('WASM module not initialized');
+    }
+    
+    // Shoelace formula
+    let area = 0;
+    const n = points.length;
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      area += points[i].x * points[j].y;
+      area -= points[j].x * points[i].y;
+    }
+    return Math.abs(area / 2);
+  }
+  
+  calculatePerimeter(points: Array<{x: number; y: number}>): number {
+    if (!this.module) {
+      throw new Error('WASM module not initialized');
+    }
+    
+    let perimeter = 0;
+    const n = points.length;
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      const dx = points[j].x - points[i].x;
+      const dy = points[j].y - points[i].y;
+      perimeter += Math.sqrt(dx * dx + dy * dy);
+    }
+    return perimeter;
+  }
+  
+  pointInPolygon(point: {x: number; y: number}, polygon: Array<{x: number; y: number}>): boolean {
+    if (!this.module) {
+      throw new Error('WASM module not initialized');
+    }
+    
+    // Ray casting algorithm
+    let inside = false;
+    const n = polygon.length;
+    let p1 = polygon[0];
+    
+    for (let i = 1; i <= n; i++) {
+      const p2 = polygon[i % n];
+      if (point.y > Math.min(p1.y, p2.y)) {
+        if (point.y <= Math.max(p1.y, p2.y)) {
+          if (point.x <= Math.max(p1.x, p2.x)) {
+            const xinters = (point.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x;
+            if (p1.x === p2.x || point.x <= xinters) {
+              inside = !inside;
+            }
+          }
+        }
+      }
+      p1 = p2;
+    }
+    
+    return inside;
+  }
+  
+  dispose(): void {
+    this.module = null;
+  }
+}
+
+// Singleton instance
+export const polygonWasmProcessor = new PolygonWasmProcessor();
+
+// Helper functions
+export async function initializeWasm(wasmUrl: string = '/polygon-ops.wasm'): Promise<void> {
+  await polygonWasmProcessor.initialize(wasmUrl);
+}
+
+export function isWasmInitialized(): boolean {
+  return polygonWasmProcessor.isInitialized();
+}
+
+export default polygonWasmProcessor;

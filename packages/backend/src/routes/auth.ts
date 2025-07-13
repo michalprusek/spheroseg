@@ -2,7 +2,7 @@
  * Authentication Routes
  * Handles user registration, login, token refresh, and related functionality
  */
-import express, { Response, Router } from 'express';
+import express, { Request, Response, Router } from 'express';
 import { validate } from '../middleware/validationMiddleware';
 import {
   registerSchema,
@@ -30,6 +30,13 @@ import {
 import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
 import authService from '../services/authService'; // Import the new auth service
+// TODO: Re-enable i18n when fixed
+// import { 
+//   sendSuccess, 
+//   sendCreated, 
+//   sendError, 
+//   sendServerError 
+// } from '../utils/apiResponsei18n';
 
 const router: Router = express.Router();
 

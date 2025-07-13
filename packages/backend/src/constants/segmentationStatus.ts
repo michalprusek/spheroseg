@@ -26,11 +26,11 @@ export const FINAL_STATUSES = [
 
 // Type guards
 export function isProcessingStatus(status: string): status is (typeof PROCESSING_STATUSES)[number] {
-  return PROCESSING_STATUSES.includes(status as SegmentationStatus);
+  return (PROCESSING_STATUSES as readonly string[]).includes(status);
 }
 
 export function isFinalStatus(status: string): status is (typeof FINAL_STATUSES)[number] {
-  return FINAL_STATUSES.includes(status as SegmentationStatus);
+  return (FINAL_STATUSES as readonly string[]).includes(status);
 }
 
 export function isValidSegmentationStatus(status: string): status is SegmentationStatus {

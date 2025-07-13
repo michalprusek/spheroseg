@@ -6,19 +6,19 @@ import bcrypt from 'bcryptjs';
 
 // Mock dependencies
 jest.mock('../security/middleware/auth', () => {
-  return jest.fn((req, res, next) => {
+  return jest.fn((req: any, res: any, next: any) => {
     req.user = { userId: 'test-user-id' };
     next();
   });
 });
 
 jest.mock('bcryptjs', () => ({
-  hash: jest.fn().mockResolvedValue('hashed-password'),
-  compare: jest.fn().mockResolvedValue(true),
+  hash: jest.fn(() => Promise.resolve('hashed-password')),
+  compare: jest.fn(() => Promise.resolve(true)),
 }));
 
 jest.mock('../db', () => ({
-  query: jest.fn().mockImplementation((query) => {
+  query: jest.fn().mockImplementation((query: string) => {
     if (query.includes('SELECT * FROM users WHERE id')) {
       return {
         rows: [
@@ -121,7 +121,7 @@ describe('User Settings API', () => {
 
     it('should return 400 if current password is incorrect', async () => {
       // Mock bcrypt.compare to return false
-      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
+      (bcrypt.compare as any).mockResolvedValueOnce(false);
 
       const response = await request(app).patch('/api/users/me').send({
         currentPassword: 'wrong-password',

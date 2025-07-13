@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CanvasContainer } from '../CanvasContainer';
-import { EditMode } from '@spheroseg/types';
+import { EditMode } from '../hooks/segmentation/types';
 
 // Mock context provider
 vi.mock('../../../contexts/CanvasContext', () => ({

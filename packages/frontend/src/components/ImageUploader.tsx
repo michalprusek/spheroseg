@@ -9,7 +9,8 @@ import { Trash2, Upload, ImagePlus } from 'lucide-react';
 import { uploadFilesWithFallback } from '@/api/imageUpload';
 import { storeUploadedImages } from '@/api/projectImages';
 import { toast } from 'sonner';
-import { generateTiffPreview, generateCanvasPreview } from '@/utils/tiffPreview';
+import { generateTiffPreview } from '@/utils/tiffPreview';
+import { generateClientSidePreview, generateFallbackPreview } from '@/utils/clientSidePreview';
 
 interface UploadedFile {
   id: string;
@@ -111,41 +112,47 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
 
       if (acceptedFiles.length > 0) {
-        // Show loading toast for TIFF/BMP preview generation
-        const hasTiffOrBmp = acceptedFiles.some((file) => {
-          const ext = file.name.toLowerCase();
-          return ext.endsWith('.tiff') || ext.endsWith('.tif') || ext.endsWith('.bmp');
-        });
-
-        if (hasTiffOrBmp) {
-          toast.info(t('uploader.generatingPreviews', {}, 'Generating previews for TIFF/BMP files...'));
-        }
-
         const newFiles: UploadedFile[] = await Promise.all(
           acceptedFiles.map(async (file) => {
             const ext = file.name.toLowerCase();
-            const isTiffOrBmp =
-              file.type === 'image/tiff' ||
-              file.type === 'image/bmp' ||
-              ext.endsWith('.tiff') ||
-              ext.endsWith('.tif') ||
-              ext.endsWith('.bmp');
+            const isTiff = ext.endsWith('.tiff') || ext.endsWith('.tif');
 
             let previewUrl: string;
 
-            if (isTiffOrBmp) {
-              // Try to generate server-side preview first
-              const serverPreview = await generateTiffPreview(file);
+            // Try client-side preview first for instant display
+            const clientPreview = await generateClientSidePreview(file);
 
-              if (serverPreview) {
-                previewUrl = serverPreview;
-              } else {
-                // Fallback to canvas preview
-                previewUrl = generateCanvasPreview(file);
-              }
+            if (clientPreview) {
+              // Use client-side preview (instant)
+              previewUrl = clientPreview;
+            } else if (isTiff) {
+              // For TIFF files, we need server-side conversion
+              // Show a temporary fallback preview while server generates the real one
+              previewUrl = generateFallbackPreview(file);
+
+              // Generate server preview in background
+              generateTiffPreview(file)
+                .then((serverPreview) => {
+                  if (serverPreview) {
+                    // Update the preview URL once server preview is ready
+                    setUploadedFiles((prevFiles) =>
+                      prevFiles.map((f) => (f.file === file ? { ...f, previewUrl: serverPreview } : f)),
+                    );
+                    // Clean up the old fallback preview if it was a data URL
+                    if (previewUrl.startsWith('data:')) {
+                      // Data URLs don't need cleanup
+                    } else if (previewUrl.startsWith('blob:')) {
+                      URL.revokeObjectURL(previewUrl);
+                    }
+                  }
+                })
+                .catch((error) => {
+                  console.warn('Server preview generation failed for TIFF:', error);
+                  // Keep using the fallback preview
+                });
             } else {
-              // For other formats, use regular blob URL
-              previewUrl = URL.createObjectURL(file);
+              // Fallback for other unsupported formats
+              previewUrl = generateFallbackPreview(file);
             }
 
             return {
@@ -157,10 +164,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         );
 
         setUploadedFiles((prevFiles) => [...prevFiles, ...newFiles]);
-
-        if (hasTiffOrBmp) {
-          toast.success(t('uploader.previewsGenerated', {}, 'Previews generated'));
-        }
       }
     },
     [maxSize, accept],
@@ -215,12 +218,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       // Create a progress callback function
       const onProgress = (fileName: string, progress: number, fileIndex: number, totalFiles: number) => {
         setCurrentFileName(fileName);
-        // Calculate overall progress: each file contributes equally to total progress
-        // When a file is completed (progress = 100), we count it as fully completed
-        const completedFiles = progress === 100 ? fileIndex + 1 : fileIndex;
-        const currentFileProgress = progress === 100 ? 0 : progress;
-        const overallProgress = (completedFiles / totalFiles) * 100 + currentFileProgress / totalFiles;
-        setUploadProgress(Math.min(overallProgress, 100));
+        // Calculate overall progress based on completed files and current file progress
+        // Each file contributes equally to the total progress
+        const completedFilesProgress = (fileIndex / totalFiles) * 100;
+        const currentFileContribution = (progress / 100) * (100 / totalFiles);
+        const overallProgress = completedFilesProgress + currentFileContribution;
+        setUploadProgress(Math.min(Math.round(overallProgress), 100));
       };
 
       // Použijeme uploadFilesWithFallback s progress callback

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSegmentationV2, EditMode } from './hooks/segmentation';
 import { useSegmentationKeyboard } from './hooks/useSegmentationKeyboard';
+import { useSlicing } from './hooks/useSlicing';
 import CanvasV2 from './components/canvas/CanvasV2';
 import { ToolbarV2 } from './components/toolbar/ToolbarV2';
 import { StatusBarV2 } from './components/statusbar/StatusBarV2';
@@ -24,6 +25,9 @@ export const SegmentationPage: React.FC = () => {
 
   // Create a ref for the canvas
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Track if we're actively placing slice points
+  const isPlacingSlicePoints = useRef(false);
 
   const { images: projectImages, loading: projectLoading } = useProjectData(projectId);
 
@@ -57,7 +61,20 @@ export const SegmentationPage: React.FC = () => {
     undo,
     redo,
     handleDeletePolygon,
+    setSegmentationDataWithHistory,
   } = useSegmentationV2(projectId, imageId, canvasRef, t);
+
+  // Use the slicing hook
+  const { handleSliceAction } = useSlicing({
+    segmentationData,
+    setSegmentationData: setSegmentationDataWithHistory,
+    selectedPolygonId,
+    setSelectedPolygonId,
+    tempPoints,
+    setTempPoints,
+    setInteractionState,
+    setEditMode,
+  });
 
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -108,16 +125,71 @@ export const SegmentationPage: React.FC = () => {
     }
   }, [selectedPolygonId, handleDeletePolygon]);
 
-  // Setup keyboard shortcuts
+  // Clear temp points when entering slice mode
+  useEffect(() => {
+    if (editMode === EditMode.Slice) {
+      // Clear any existing temp points when entering slice mode
+      setTempPoints([]);
+      // Reset the flag
+      isPlacingSlicePoints.current = true;
+    } else {
+      // Reset flag when leaving slice mode
+      isPlacingSlicePoints.current = false;
+    }
+  }, [editMode, setTempPoints]);
+
+  // Track temp points changes to know when user is actively placing points
+  const prevTempPointsLength = useRef(0);
+
+  // Trigger slice when we have 2 points in Slice mode
+  useEffect(() => {
+    // Only trigger if we just went from less than 2 points to exactly 2 points
+    const justPlacedSecondPoint = prevTempPointsLength.current < 2 && tempPoints.length === 2;
+
+    if (editMode === EditMode.Slice && justPlacedSecondPoint && selectedPolygonId && isPlacingSlicePoints.current) {
+      console.log('[SegmentationPage] Second slice point just placed, triggering slice action');
+
+      // Add a small delay to ensure state is properly updated
+      const timeoutId = setTimeout(() => {
+        console.log('[SegmentationPage] Calling handleSliceAction now');
+        try {
+          // Trigger the slice action with error handling
+          const success = handleSliceAction();
+
+          if (success) {
+            console.log('[SegmentationPage] Slice action completed successfully');
+            // Reset the flag after successful slice
+            isPlacingSlicePoints.current = false;
+          } else {
+            console.log('[SegmentationPage] Slice action failed');
+          }
+        } catch (error) {
+          console.error('[SegmentationPage] Error during slice action:', error);
+          toast.error(t('segmentation.sliceError') || 'An error occurred while slicing the polygon');
+        }
+      }, 100); // 100ms delay
+
+      return () => {
+        console.log('[SegmentationPage] Cleanup: clearing timeout');
+        clearTimeout(timeoutId);
+      };
+    }
+
+    // Update the previous length for next render
+    prevTempPointsLength.current = tempPoints.length;
+  }, [editMode, tempPoints.length, selectedPolygonId, handleSliceAction, t]);
+
+  // Setup keyboard shortcuts - disabled as V2 system now handles its own keyboard shortcuts
+  // Keeping only for zoom handlers which aren't in V2 yet
   const { isShiftPressed } = useSegmentationKeyboard({
     editMode,
-    setEditMode,
+    setEditMode: () => {}, // Disabled - V2 handles this
     canUndo,
     canRedo,
-    onUndo: undo,
-    onRedo: redo,
-    onSave: handleSave,
-    onDelete: handleDelete,
+    onUndo: () => {}, // Disabled - V2 handles this
+    onRedo: () => {}, // Disabled - V2 handles this
+    onSave: () => {}, // Disabled - V2 handles this
+    onDelete: () => {}, // Disabled - V2 handles this
     onZoomIn: handleZoomIn,
     onZoomOut: handleZoomOut,
     onResetView: handleResetView,

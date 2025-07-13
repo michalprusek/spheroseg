@@ -14,6 +14,11 @@ export default {
     },
     title: 'Éditeur de segmentation',
     resolution: '{width}x{height}',
+    batch: {
+      mixed: "Segmentation : {{successCount}} images mises en file d'attente avec succès, {{failCount}} échouées",
+      allSuccess: "Segmentation : Toutes les {{count}} images mises en file d'attente avec succès",
+      allFailed: 'Segmentation : Toutes les {{count}} images ont échoué',
+    },
     queue: {
       title: "File d'attente de segmentation",
       summary: '{{total}} tâches au total ({{running}} en traitement, {{queued}} en attente)',
@@ -76,6 +81,7 @@ export default {
       completed: 'Terminé',
       failed: 'Échoué',
       pending: 'En attente',
+      withoutSegmentation: 'Sans segmentation',
     },
     autoSave: {
       enabled: 'Sauvegarde auto : Activée',
@@ -101,6 +107,7 @@ export default {
     resegmentButton: 'Resegmenter',
     completedSegmentation: 'Terminé',
     resegmentButtonTooltip: 'Resegmenter avec le réseau de neurones',
+    processingImage: "Traitement de l'image...",
     helpTips: {
       title: 'Conseils :',
       edit: {
@@ -118,7 +125,43 @@ export default {
         click: 'Cliquez pour ajouter un point au polygone sélectionné',
         exit: 'Échap pour quitter le mode ajout',
       },
+      view: {
+        pan: 'Panoramique : Cliquez et faites glisser',
+        selectPolygon: 'Sélectionner : Cliquez sur le polygone',
+        zoom: 'Zoom : Molette de la souris',
+      },
     },
+    imageNotFoundDescription: "L'image demandée est introuvable",
+    invalidImageDimensions: "Dimensions d'image invalides",
+    noDataToSave: 'Aucune modification à enregistrer',
+    polygonDuplicated: 'Polygone dupliqué',
+    polygonNotFound: 'Polygone introuvable',
+    polygonSimplified: 'Polygone simplifié',
+    polygonSimplifyFailed: 'Échec de la simplification du polygone',
+    polygonSliced: 'Polygone divisé avec succès',
+    resegment: {
+      error: {
+        exception: 'Erreur de resegmentation : {{error}}',
+        failed: 'La resegmentation a échoué',
+        missingData: 'Données requises manquantes pour la resegmentation',
+      },
+      success: 'Resegmentation terminée avec succès',
+    },
+    resegmentMultipleError: 'Erreur lors de la resegmentation de plusieurs images',
+    resegmentMultipleSuccess: 'Plusieurs images resegmentées avec succès',
+    resegmenting: 'Resegmentation...',
+    resegmentingMultiple: 'Resegmentation de plusieurs images...',
+    saveError: 'Erreur lors de la sauvegarde de la segmentation',
+    segmentationLoading: 'Chargement de la segmentation...',
+    segmentationPolygon: 'Polygone de segmentation',
+    selectPolygonFirst: "Veuillez d'abord sélectionner un polygone",
+    sliceFailed: 'Échec de la division du polygone',
+    undoRestored: 'Action annulée',
+    undoWhileDraggingError: "Impossible d'annuler pendant le glissement",
+    vertexDeleteFailed: 'Échec de la suppression du sommet',
+    vertexDeleted: 'Sommet supprimé',
+    vertexDuplicateFailed: 'Échec de la duplication du sommet',
+    vertexDuplicated: 'Sommet dupliqué',
   },
   // Error messages
   errors: {
@@ -184,12 +227,8 @@ export default {
     deleteProject: 'Supprimer le projet',
     deleteConfirmation:
       'Êtes-vous sûr de vouloir supprimer le projet "{{projectName}}" ? Cette action ne peut pas être annulée.',
-    duplicateProject: 'Dupliquer le projet',
-    duplicateDescription:
-      'Créez une copie de ce projet. Le nouveau projet sera créé avec le nom que vous fournissez ci-dessous.',
-    newProjectName: 'Nouveau nom du projet',
-    enterProjectName: 'Entrez le nouveau nom du projet',
-    duplicate: 'Dupliquer',
+    resegmentImage: "Resegmenter l'image",
+    deleteImage: "Supprimer l'image",
   },
   projectsPage: {
     title: 'Projets',
@@ -290,6 +329,7 @@ export default {
     loadingAccount: 'Chargement de votre compte...',
     loadingApplication: "Chargement de l'application...",
     selectAll: 'Tout sélectionner',
+    deselectAll: 'Tout désélectionner',
     save: 'Enregistrer',
     cancel: 'Annuler',
     delete: 'Supprimer',
@@ -405,6 +445,12 @@ export default {
     uploadComplete: 'Téléchargement terminé',
     uploadFailed: 'Échec du téléchargement',
     deletePolygon: 'Supprimer le polygone',
+    pleaseLogin: 'Veuillez vous connecter pour continuer',
+    retry: 'Réessayer',
+    segmentation: 'Segmentation',
+    copiedToClipboard: 'Copié dans le presse-papiers !',
+    failedToCopy: 'Échec de la copie dans le presse-papiers',
+    confirm: 'Confirmer',
     editor: {
       error: 'Erreur',
       success: 'Succès',
@@ -417,6 +463,8 @@ export default {
     signUp: "S'inscrire",
     signOut: 'Se déconnecter',
     signingIn: 'Connexion...',
+    email: 'E-mail',
+    password: 'Mot de passe',
     forgotPassword: 'Mot de passe oublié ?',
     resetPassword: 'Réinitialiser le mot de passe',
     dontHaveAccount: "Vous n'avez pas de compte ?",
@@ -488,6 +536,11 @@ export default {
     sendingResetLink: 'Envoi du nouveau mot de passe...',
     sendResetLink: 'Envoyer un nouveau mot de passe',
     backToSignIn: 'Retour à la connexion',
+    accountLocked: 'Votre compte a été verrouillé. Veuillez contacter le support.',
+    fillAllFields: 'Veuillez remplir tous les champs obligatoires',
+    serverError: 'Erreur serveur. Veuillez réessayer plus tard.',
+    signInError: 'Erreur de connexion',
+    signInFailed: 'Échec de la connexion. Veuillez vérifier vos identifiants.',
   },
   requestAccess: {
     and: 'et',
@@ -1000,6 +1053,7 @@ export default {
     accountDeleteSuccess: 'Compte supprimé avec succès',
     accountDeleteError: 'Erreur lors de la suppression du compte',
     passwordChanged: 'Mot de passe modifié',
+    changingPassword: 'Changement du mot de passe...',
     confirmPasswordLabel: 'Confirmer le mot de passe',
     changePasswordDescription: 'Changez votre mot de passe pour sécuriser votre compte',
     dangerZoneDescription: 'Ces actions sont irréversibles et supprimeront définitivement vos données',
@@ -1096,6 +1150,7 @@ export default {
       paragraph1:
         'Ces conditions seront régies et interprétées conformément aux lois du pays dans lequel le service est hébergé, et vous vous soumettez irrévocablement à la juridiction exclusive des tribunaux de ce lieu.',
     },
+    lastUpdated: 'Dernière mise à jour : 7 janvier 2025',
   },
   privacyPage: {
     title: 'Politique de confidentialité',
@@ -1104,57 +1159,66 @@ export default {
       paragraph1:
         'Cette politique de confidentialité explique comment SpheroSeg ("nous", "notre") collecte, utilise et partage vos informations lorsque vous utilisez notre plateforme de segmentation et d\'analyse de sphéroïdes.',
     },
-    informationWeCollect: {
+    dataCollection: {
       title: '2. Informations que nous collectons',
-      paragraph1:
-        'Nous collectons des informations que vous nous fournissez directement lorsque vous créez un compte, téléchargez des images, créez des projets et interagissez autrement avec nos services.',
+      paragraph1: 'Nous collectons des informations que vous nous fournissez directement, notamment :',
+      list: [
+        'Informations de compte (e-mail, nom, institution)',
+        'Images téléchargées et données pour la segmentation',
+        "Métadonnées de projet et résultats d'analyse",
+        "Données d'utilisation et journaux d'activité",
+      ],
     },
-    personalInformation: {
-      title: '2.1 Informations personnelles',
-      paragraph1:
-        "Cela inclut votre nom, adresse e-mail, institution/organisation et d'autres informations que vous fournissez lors de la création d'un compte ou de la demande d'accès à nos services.",
-    },
-    researchData: {
-      title: '2.2 Données de recherche',
-      paragraph1:
-        "Cela inclut les images que vous téléchargez, les détails du projet, les résultats d'analyse et d'autres données liées à la recherche que vous créez ou téléchargez sur notre plateforme.",
-    },
-    usageInformation: {
-      title: "2.3 Informations d'utilisation",
-      paragraph1:
-        "Nous collectons des informations sur la façon dont vous utilisez notre plateforme, y compris les données de journal, les informations sur l'appareil et les modèles d'utilisation.",
-    },
-    howWeUse: {
+    dataUsage: {
       title: '3. Comment nous utilisons vos informations',
-      paragraph1:
-        'Nous utilisons les informations que nous collectons pour fournir, maintenir et améliorer nos services, pour communiquer avec vous et pour remplir nos obligations légales.',
+      paragraph1: 'Nous utilisons les informations collectées pour :',
+      list: [
+        'Fournir et maintenir nos services',
+        "Traiter vos demandes de segmentation d'images",
+        'Améliorer nos algorithmes et services',
+        'Communiquer avec vous au sujet de votre compte',
+        'Assurer la sécurité et prévenir les abus',
+      ],
     },
-    dataSecurity: {
-      title: '4. Sécurité des données',
+    dataStorage: {
+      title: '4. Stockage et sécurité des données',
       paragraph1:
-        "Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos informations personnelles et données de recherche contre l'accès, la modification, la divulgation ou la destruction non autorisés.",
+        "Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos informations personnelles contre l'accès, la modification, la divulgation ou la destruction non autorisés.",
+      paragraph2:
+        'Vos données sont stockées sur des serveurs sécurisés et sont supprimées conformément à notre politique de conservation des données.',
     },
     dataSharing: {
       title: '5. Partage de données',
       paragraph1:
-        'Nous ne vendons pas vos informations personnelles ou données de recherche. Nous pouvons partager vos informations dans des circonstances limitées, par exemple avec votre consentement, pour remplir des obligations légales ou avec des prestataires de services qui nous aident à exploiter notre plateforme.',
+        "Nous ne vendons, n'échangeons ou ne transférons pas vos informations personnelles à des tiers sans votre consentement, sauf dans les cas décrits dans cette politique ou requis par la loi.",
     },
-    yourChoices: {
-      title: '6. Vos choix',
+    userRights: {
+      title: '6. Vos droits',
+      paragraph1: 'Vous avez le droit de :',
+      list: [
+        'Accéder à vos informations personnelles',
+        'Corriger les informations inexactes',
+        'Demander la suppression de vos données',
+        'Exporter vos données',
+        'Vous opposer au traitement de vos données',
+      ],
+    },
+    cookies: {
+      title: '7. Cookies et technologies de suivi',
       paragraph1:
-        "Vous pouvez accéder, mettre à jour ou supprimer vos informations de compte et données de recherche via les paramètres de votre compte. Vous pouvez également nous contacter pour demander l'accès, la correction ou la suppression de toute information personnelle que nous avons sur vous.",
+        "Nous utilisons des cookies et des technologies similaires pour améliorer votre expérience, analyser l'utilisation du site et personnaliser le contenu.",
     },
     changes: {
-      title: '7. Modifications de cette politique',
+      title: '8. Modifications de cette politique',
       paragraph1:
-        'Nous pouvons mettre à jour cette politique de confidentialité de temps en temps. Nous vous informerons de tout changement en publiant la nouvelle politique de confidentialité sur cette page et en mettant à jour la date de "Dernière mise à jour".',
+        'Nous pouvons mettre à jour notre politique de confidentialité de temps en temps. Nous vous informerons de tout changement en publiant la nouvelle politique de confidentialité sur cette page.',
     },
-    contactUs: {
-      title: '8. Nous contacter',
-      paragraph1:
-        'Si vous avez des questions sur cette politique de confidentialité, veuillez nous contacter à privacy@spheroseg.com.',
+    contact: {
+      title: '9. Nous contacter',
+      paragraph1: 'Si vous avez des questions sur cette politique de confidentialité, veuillez nous contacter à :',
+      email: 'privacy@spheroseg.com',
     },
-    lastUpdated: 'Dernière mise à jour : 1er juillet 2023',
+    lastUpdated: 'Dernière mise à jour : 7 janvier 2025',
   },
   shortcuts: {
     button: 'Raccourcis',
@@ -1233,6 +1297,22 @@ export default {
     uploadError: "Une erreur s'est produite lors du téléchargement. Veuillez réessayer.",
     noProjectsToUpload: "Aucun projet disponible. Créez d'abord un projet.",
     notFound: 'Projet "{{projectName}}" introuvable. Il a peut-être été supprimé.',
+    errors: {
+      imageOrProjectNotFound: 'Image ou projet introuvable.',
+      failedToDeleteImage: "Échec de la suppression de l'image",
+      imageOrProjectNotFoundForNavigation: 'Image ou projet introuvable pour la navigation, ou UUID manquant.',
+      imageNotFoundForClearingSegmentation: 'Image introuvable pour effacer la segmentation ou UUID manquant.',
+      failedToClearSegmentation: "Échec de l'effacement de la segmentation",
+    },
+    success: {
+      localImageDeleted: 'Image locale supprimée avec succès',
+      imageDeleted: 'Image supprimée avec succès',
+      segmentationCleared: 'Segmentation effacée avec succès.',
+    },
+    info: {
+      clearingSegmentation: "Effacement de la segmentation pour l'image {{imageName}}...",
+      selectAtLeastOneImage: 'Veuillez sélectionner au moins une image.',
+    },
   },
   export: {
     formatDescriptions: {
@@ -1274,6 +1354,14 @@ export default {
       CSV: 'CSV (.csv)',
     },
     selectImagesForExport: "Sélectionner des images pour l'export",
+    selectImagesToExport: 'Sélectionner des images à exporter',
+    noImagesAvailable: 'Aucune image disponible',
+    backToProject: 'Retour au projet',
+    exportImages: 'Exporter les images',
+    maskExportError: "Erreur lors de l'export du masque",
+    maskExportStarted: 'Export du masque démarré',
+    metricsRequireSegmentation: 'Les métriques nécessitent que la segmentation soit terminée',
+    noImageSelectedError: "Aucune image sélectionnée pour l'export",
   },
   metrics: {
     area: 'Surface',
@@ -1302,7 +1390,6 @@ export default {
     untitledImage: 'Image sans titre',
   },
   projectActions: {
-    duplicateTooltip: 'Dupliquer le projet',
     deleteTooltip: 'Supprimer le projet',
     deleteConfirmTitle: 'Êtes-vous sûr ?',
     deleteConfirmDesc:
@@ -1394,5 +1481,77 @@ export default {
     userEmail: "E-mail de l'utilisateur",
     view: 'Voir',
     viewOnly: 'Lecture seule',
+  },
+  invitation: {
+    title: 'Invitation au projet',
+    processing: "Traitement de l'invitation...",
+    successTitle: 'Invitation acceptée !',
+    successMessage: 'Vous avez maintenant accès à "{{projectName}}" partagé par {{ownerName}}.',
+    redirecting: 'Redirection vers le projet...',
+    errorTitle: "Impossible d'accepter l'invitation",
+    loginRequired: 'Connexion requise',
+    loginMessage: 'Veuillez vous connecter pour accepter cette invitation au projet.',
+    signIn: 'Se connecter',
+    createAccount: 'Créer un compte',
+    goToDashboard: 'Aller au tableau de bord',
+    invalidLink: "Lien d'invitation invalide",
+    expired: "Ce lien d'invitation a expiré ou est invalide",
+    notForYou: "Cette invitation n'est pas destinée à votre compte",
+    genericError: "Échec de l'acceptation de l'invitation. Veuillez réessayer.",
+    acceptedSuccess: 'Invitation acceptée avec succès',
+  },
+  about: {
+    title: 'À propos de SpheroSeg',
+    mission: {
+      title: 'Notre mission',
+      description:
+        "SpheroSeg est une plateforme avancée spécialement conçue pour la segmentation et l'analyse de sphéroïdes cellulaires dans des images microscopiques. Nous combinons des algorithmes d'intelligence artificielle de pointe avec une interface intuitive pour fournir aux chercheurs une détection précise des limites des sphéroïdes et des capacités analytiques.",
+      vision:
+        "Notre vision est d'accélérer la découverte scientifique en rendant l'analyse d'images avancée accessible aux chercheurs du monde entier, leur permettant de se concentrer sur leur recherche plutôt que sur les défis techniques.",
+    },
+    technology: {
+      title: 'Notre technologie',
+      description:
+        "Construit sur des modèles d'apprentissage profond et des techniques de vision par ordinateur de pointe, SpheroSeg offre une précision inégalée dans la segmentation des sphéroïdes.",
+      feature1: {
+        title: "Segmentation alimentée par l'IA",
+        description:
+          "Des modèles d'apprentissage profond avancés formés sur diverses images de sphéroïdes garantissent des résultats de segmentation précis et fiables.",
+      },
+      feature2: {
+        title: 'Traitement en temps réel',
+        description:
+          "Des algorithmes optimisés fournissent des temps de traitement rapides, vous permettant d'analyser efficacement de grands ensembles de données.",
+      },
+      feature3: {
+        title: 'Analyse complète',
+        description:
+          'Extrayez des métriques détaillées incluant la surface, le périmètre, la circularité, et plus pour chaque sphéroïde segmenté.',
+      },
+    },
+    team: {
+      title: 'Notre équipe',
+      description:
+        "SpheroSeg a été développé par une équipe dédiée de chercheurs et d'ingénieurs passionnés par l'avancement de la recherche biomédicale",
+      member1: {
+        name: 'Michal Průšek',
+        role: 'Développeur principal, FJFI ČVUT Prague',
+      },
+      member2: {
+        name: 'Adam Novozámský',
+        role: 'Superviseur, UTIA CAS',
+      },
+      member3: {
+        name: 'Équipe de recherche',
+        role: 'Département de biochimie et microbiologie, UCT Prague',
+      },
+    },
+    contact: {
+      title: 'Nous contacter',
+      description: "Des questions ou besoin d'aide ? Nous sommes là pour vous aider !",
+      email: 'Contacter par e-mail',
+      github: 'Voir sur GitHub',
+      twitter: 'Suivre sur Twitter',
+    },
   },
 };

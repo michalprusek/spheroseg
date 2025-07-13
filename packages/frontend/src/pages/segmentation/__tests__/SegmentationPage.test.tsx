@@ -254,8 +254,8 @@ describe('SegmentationPage Component', () => {
     expect(screen.getByTestId('mock-canvas')).toBeInTheDocument();
     expect(screen.getByTestId('mock-statusbar')).toBeInTheDocument();
 
-    // Check project navigation controls
-    expect(screen.getByText(/Back to Project/i)).toBeInTheDocument();
+    // Check project navigation controls - the translation key is returned
+    expect(screen.getByText('segmentation.backToProject')).toBeInTheDocument();
   });
 
   it('shows loading state when data is loading', () => {

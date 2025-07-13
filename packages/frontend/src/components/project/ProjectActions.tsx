@@ -2,7 +2,7 @@
  * Project action buttons component
  */
 import React, { useState } from 'react';
-import { MoreVertical, Edit, Trash2, Copy, Share2, Download } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Share2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ProjectDuplicationDialog } from './ProjectDuplicationDialog';
 import { DeleteProjectDialog } from './DeleteProjectDialog';
 
 interface ProjectActionsProps {
@@ -44,29 +43,15 @@ interface ProjectActionsProps {
    * Handler for export action
    */
   onExport?: () => void;
-
-  /**
-   * Handler for successful duplication
-   */
-  onDuplicate?: (newProject: any) => void;
 }
 
 /**
- * Component for project actions (edit, delete, duplicate, share, export)
+ * Component for project actions (edit, delete, share, export)
  */
-export function ProjectActions({
-  projectId,
-  projectTitle,
-  onEdit,
-  onDelete,
-  onShare,
-  onExport,
-  onDuplicate,
-}: ProjectActionsProps) {
+export function ProjectActions({ projectId, projectTitle, onEdit, onDelete, onShare, onExport }: ProjectActionsProps) {
   const { t } = useLanguage();
 
   // Dialog states
-  const [duplicationDialogOpen, setDuplicationDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Handle edit action
@@ -98,11 +83,6 @@ export function ProjectActions({
     }
   };
 
-  // Handle duplicate action
-  const handleDuplicate = () => {
-    setDuplicationDialogOpen(true);
-  };
-
   // Handle share action
   const handleShare = () => {
     if (onShare) {
@@ -114,13 +94,6 @@ export function ProjectActions({
   const handleExport = () => {
     if (onExport) {
       onExport();
-    }
-  };
-
-  // Handle duplication success
-  const handleDuplicationSuccess = (newProject: any) => {
-    if (onDuplicate) {
-      onDuplicate(newProject);
     }
   };
 
@@ -145,11 +118,6 @@ export function ProjectActions({
             </DropdownMenuItem>
           )}
 
-          <DropdownMenuItem onClick={handleDuplicate}>
-            <Copy className="h-4 w-4 mr-2" />
-            {t('projects.duplicate') || 'Duplicate'}
-          </DropdownMenuItem>
-
           {onShare && (
             <DropdownMenuItem onClick={handleShare}>
               <Share2 className="h-4 w-4 mr-2" />
@@ -172,14 +140,6 @@ export function ProjectActions({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* Duplication Dialog */}
-      <ProjectDuplicationDialog
-        projectId={projectId}
-        projectName={projectTitle}
-        isOpen={duplicationDialogOpen}
-        onClose={() => setDuplicationDialogOpen(false)}
-      />
 
       {/* Delete Dialog */}
       <DeleteProjectDialog

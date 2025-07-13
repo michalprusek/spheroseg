@@ -51,7 +51,9 @@ interface SharedUser {
   email: string;
   permission: 'view' | 'edit';
   userName?: string;
-  isPending: boolean;
+  user_name?: string; // Backend returns snake_case
+  is_pending: boolean; // Backend returns snake_case
+  isPending?: boolean; // For frontend compatibility
 }
 
 const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwner, open, onOpenChange }) => {
@@ -91,7 +93,13 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
     setIsLoadingShares(true);
     try {
       const response = await apiClient.get(`/api/project-shares/${projectId}`);
-      setSharedUsers(response.data.data);
+      // Convert snake_case to camelCase for frontend compatibility
+      const users = response.data.data.map((user: any) => ({
+        ...user,
+        isPending: user.is_pending,
+        userName: user.user_name || user.userName,
+      }));
+      setSharedUsers(users);
     } catch (error) {
       console.error('Error fetching shared users:', error);
       // Silently fail - don't show error toast, just set empty array

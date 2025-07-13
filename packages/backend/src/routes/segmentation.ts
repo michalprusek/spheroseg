@@ -14,8 +14,8 @@ import {
   getSegmentationSchema,
   triggerSegmentationSchema,
   updateSegmentationSchema,
-  triggerProjectBatchSegmentationSchema, // Added import
-  // createSegmentationJobSchema // Commented out as it seems missing from validator file
+  triggerProjectBatchSegmentationSchema,
+  createSegmentationJobSchema
 } from '../validators/segmentationValidators';
 import { SEGMENTATION_STATUS } from '../constants/segmentationStatus';
 import { broadcastSegmentationUpdate } from '../services/socketService';
@@ -407,9 +407,12 @@ const authOrInternalMiddleware = async (
     req.headers['user-agent']?.includes('python-requests') ||
     req.ip?.includes('172.') || // Docker network
     req.hostname === 'ml' ||
-    req.ip === '172.22.0.5' || // ML service IP
+    req.ip === '172.22.0.5' || // ML service IP (old)
+    req.ip === '172.22.0.6' || // ML service IP (current)
     req.ip === '::ffff:172.22.0.5' ||
-    req.headers['x-forwarded-for']?.includes('172.22.0.5');
+    req.ip === '::ffff:172.22.0.6' ||
+    req.headers['x-forwarded-for']?.includes('172.22.0.5') ||
+    req.headers['x-forwarded-for']?.includes('172.22.0.6');
 
   if (isInternalRequest) {
     logger.info('Internal request detected, skipping auth');
@@ -521,6 +524,71 @@ router.put(
         'UPDATE images SET segmentation_status = $1, updated_at = NOW() WHERE id = $2',
         [status, imageId]
       );
+
+      // Update the segmentation task status if it exists
+      if (status === SEGMENTATION_STATUS.COMPLETED || status === SEGMENTATION_STATUS.FAILED) {
+        const taskUpdateResult = await pool.query(
+          `UPDATE segmentation_tasks 
+           SET status = $1::task_status, 
+               completed_at = NOW(), 
+               updated_at = NOW(),
+               result = CASE WHEN $1 = 'completed' THEN $2::jsonb ELSE NULL END,
+               error = CASE WHEN $1 = 'failed' THEN $3 ELSE NULL END
+           WHERE image_id = $4 AND status IN ('queued', 'processing')
+           RETURNING id`,
+          [
+            status,
+            result_data || null,
+            status === SEGMENTATION_STATUS.FAILED ? 'Segmentation failed' : null,
+            imageId,
+          ]
+        );
+
+        if (taskUpdateResult.rows.length === 0) {
+          logger.warn('No segmentation task found to update', {
+            imageId,
+            status,
+            lookingForStatuses: ['queued', 'processing'],
+          });
+
+          // Check if task exists in a different status
+          const existingTask = await pool.query(
+            'SELECT id, status FROM segmentation_tasks WHERE image_id = $1 ORDER BY created_at DESC LIMIT 1',
+            [imageId]
+          );
+
+          if (existingTask.rows.length > 0) {
+            logger.warn('Found task in different status', {
+              imageId,
+              taskId: existingTask.rows[0].id,
+              currentStatus: existingTask.rows[0].status,
+              attemptedStatus: status,
+            });
+          }
+        } else {
+          logger.info('Successfully updated segmentation task', {
+            imageId,
+            taskId: taskUpdateResult.rows[0].id,
+            newStatus: status,
+          });
+        }
+
+        logger.info('Updated segmentation task status', {
+          imageId,
+          status,
+          taskUpdateResult: 'completed',
+        });
+
+        // Trigger immediate queue status update
+        try {
+          const segmentationQueueService = (await import('../services/segmentationQueueService'))
+            .default;
+          // Force an immediate queue status update
+          await segmentationQueueService.forceQueueUpdate();
+        } catch (queueError) {
+          logger.error('Failed to trigger queue status update:', queueError);
+        }
+      }
 
       if (updateResult.rows.length === 0) {
         // This might happen if the segmentation_results record didn't exist yet for some reason
@@ -813,14 +881,63 @@ router.get(
   }
 );
 
-/* // Commented out route due to missing schema import
 // POST /api/segmentation/job - Create a new segmentation job
 // @ts-ignore // TS2769: No overload matches this call.
-router.post('/job', authMiddleware, validate(createSegmentationJobSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    console.log('POST /api/segmentation/job called');
-    res.status(501).json({ message: 'Not Implemented' });
-});
-*/
+router.post(
+  '/job',
+  authMiddleware,
+  validate(createSegmentationJobSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { imageIds, priority = 1, parameters = {} } = req.body;
+      const userId = req.user?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      logger.info('Creating segmentation job', { imageIds, priority, userId });
+      
+      // Import the segmentation queue service
+      const segmentationQueueService = (await import('../services/segmentationQueueService')).default;
+      
+      // Create tasks for each image
+      const taskIds = [];
+      for (const imageId of imageIds) {
+        // Get image details
+        const imageQuery = await pool.getPool().query(
+          'SELECT id, storage_path FROM images WHERE id = $1',
+          [imageId]
+        );
+        
+        if (imageQuery.rows.length === 0) {
+          logger.warn('Image not found for segmentation job', { imageId });
+          continue;
+        }
+        
+        const image = imageQuery.rows[0];
+        const taskId = await segmentationQueueService.addTask(
+          image.id,
+          image.storage_path,
+          parameters,
+          priority
+        );
+        taskIds.push(taskId);
+      }
+      
+      logger.info('Segmentation job created', { taskIds });
+      
+      res.status(201).json({
+        success: true,
+        taskIds,
+        message: `Created ${taskIds.length} segmentation tasks`
+      });
+    } catch (error) {
+      logger.error('Error creating segmentation job', { error });
+      next(error);
+    }
+  }
+);
 
 // DELETE /api/segmentation/job/:jobId - Delete a segmentation job
 // @ts-ignore // Keep ignore for now

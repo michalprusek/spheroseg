@@ -5,18 +5,18 @@ import Documentation from '../pages/Documentation';
 import { LanguageProvider } from '../contexts/LanguageContext';
 
 // Mock the constructUrl function
-jest.mock('../lib/urlUtils', () => ({
+vi.mock('../lib/urlUtils', () => ({
   constructUrl: (url: string) => url,
 }));
 
 // Mock the components that are not relevant for this test
-jest.mock('../components/Navbar', () => {
+vi.mock('../components/Navbar', () => {
   const NavbarMock = () => <div data-testid="navbar-mock" />;
   NavbarMock.displayName = 'NavbarMock';
   return NavbarMock;
 });
 
-jest.mock('../components/ThemedFooter', () => {
+vi.mock('../components/ThemedFooter', () => {
   const ThemedFooterMock = () => <div data-testid="footer-mock" />;
   ThemedFooterMock.displayName = 'ThemedFooterMock';
   return ThemedFooterMock;
@@ -25,7 +25,7 @@ jest.mock('../components/ThemedFooter', () => {
 describe('Documentation Page', () => {
   beforeEach(() => {
     // Reset all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders documentation page with hero image', () => {

@@ -21,6 +21,12 @@ import * as socketClient from '@/services/socketClient';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { useTranslation } from 'react-i18next';
 import logger from '@/utils/logger'; // Import logger
+import { lazy, Suspense as ReactSuspense } from 'react';
+
+// Lazy load diagnostics component (only in dev mode)
+const DatabaseConsistencyCheck = lazy(() => 
+  import('@/components/diagnostics/DatabaseConsistencyCheck')
+);
 
 interface UseProjectDataReturn {
   project: Project | null;
@@ -176,8 +182,37 @@ const ProjectDetail = () => {
         }
       };
 
+      // Handle image created event - for real-time gallery updates
+      const handleImageCreated = (data: any) => {
+        if (!isComponentMounted) return;
+        
+        logger.info('Received image:created event:', data);
+        
+        // Refresh the project data to include the new image
+        if (data && data.projectId === cleanedId) {
+          setTimeout(() => {
+            refreshData();
+          }, 1500); // Increased delay to ensure database transaction is complete
+        }
+      };
+
+      // Handle image deleted event - for real-time gallery updates
+      const handleImageDeleted = (data: any) => {
+        if (!isComponentMounted) return;
+        
+        logger.info('Received image:deleted event:', data);
+        
+        // If the image belongs to this project, update the UI
+        if (data && data.projectId === cleanedId && data.imageId) {
+          setImages(prevImages => prevImages.filter(img => img.id !== data.imageId));
+          toast.success('Image deleted successfully');
+        }
+      };
+
       socket.on('connect', handleConnect);
       socket.on('segmentation_update', handleSegmentationUpdate);
+      socket.on('image:created', handleImageCreated);
+      socket.on('image:deleted', handleImageDeleted);
 
       if (socket.connected) {
         logger.debug('WebSocket already connected:', socket.id);
@@ -206,6 +241,8 @@ const ProjectDetail = () => {
 
         socket.off('connect', handleConnect);
         socket.off('segmentation_update', handleSegmentationUpdate);
+        socket.off('image:created', handleImageCreated);
+        socket.off('image:deleted', handleImageDeleted);
 
         logger.info('Cleaned up WebSocket event listeners');
       };
@@ -342,6 +379,34 @@ const ProjectDetail = () => {
     setSelectionMode(!selectionMode);
   };
 
+  // Handle cache clearing
+  const handleClearCache = async () => {
+    try {
+      const { clearProjectImageCache } = await import('@/utils/cacheManager');
+      
+      // Show confirmation dialog
+      const confirmed = window.confirm(
+        'Clear image cache? This will remove all cached image data for this project and refresh the page.'
+      );
+      
+      if (!confirmed) return;
+      
+      const cleanedId = projectId?.includes('-') ? projectId.split('-').pop() || projectId : projectId;
+      if (cleanedId) {
+        await clearProjectImageCache(cleanedId);
+        toast.success('Cache cleared successfully. Refreshing...');
+        
+        // Wait a bit then refresh the data
+        setTimeout(() => {
+          refreshData();
+        }, 500);
+      }
+    } catch (error) {
+      logger.error('Failed to clear cache:', error);
+      toast.error('Failed to clear cache');
+    }
+  };
+
   const toggleImageSelection = (imageId: string, event?: React.MouseEvent) => {
     if (event?.shiftKey && lastSelectedImageRef.current) {
       const lastSelectedId = lastSelectedImageRef.current;
@@ -470,15 +535,15 @@ const ProjectDetail = () => {
         }
       }
 
-      logger.info(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
+      logger.info(`Total result: ${successCount} successful, ${failCount} failed`);
 
       // Zobrazíme celkový výsledek
       if (successCount > 0 && failCount > 0) {
-        toast.info(`Segmentace: ${successCount} obrázků úspěšně zařazeno do fronty, ${failCount} selhalo`);
+        toast.info(t('segmentation.batch.mixed', { successCount, failCount }));
       } else if (successCount > 0) {
-        toast.success(`Segmentace: Všech ${successCount} obrázků úspěšně zařazeno do fronty`);
+        toast.success(t('segmentation.batch.allSuccess', { count: successCount }));
       } else if (failCount > 0) {
-        toast.error(`Segmentace: Všech ${failCount} obrázků selhalo`);
+        toast.error(t('segmentation.batch.allFailed', { count: failCount }));
       }
 
       // Aktualizujeme data projektu
@@ -501,8 +566,9 @@ const ProjectDetail = () => {
     if (window.confirm(t('project.detail.deleteConfirmation', { count: selectedImageIds.length }))) {
       toast.info(t('project.detail.deletingImages', { count: selectedImageIds.length }));
 
-      const remainingImages = images.filter((img) => !selectedImageIds.includes(img.id));
-      onImagesChange(remainingImages);
+      // Don't update UI immediately - wait for API success
+      // const remainingImages = images.filter((img) => !selectedImageIds.includes(img.id));
+      // onImagesChange(remainingImages);
 
       (async () => {
         const results = await Promise.allSettled(
@@ -526,11 +592,37 @@ const ProjectDetail = () => {
           }),
         );
 
-        const successCount = results.filter((r) => r.status === 'fulfilled' && (r.value as any).success).length;
-        const failCount = results.length - successCount;
+        const successfulDeletions = results
+          .filter((r) => r.status === 'fulfilled' && (r.value as any).success)
+          .map((r) => (r.value as any).imageId);
+        const failCount = results.length - successfulDeletions.length;
 
-        if (successCount > 0) {
-          toast.success(t('project.detail.deleteSuccess', { count: successCount }));
+        if (successfulDeletions.length > 0) {
+          toast.success(t('project.detail.deleteSuccess', { count: successfulDeletions.length }));
+
+          // Update UI only for successfully deleted images
+          const remainingImages = images.filter((img) => !successfulDeletions.includes(img.id));
+          onImagesChange(remainingImages);
+
+          // Clean up caches for deleted images
+          for (const imageId of successfulDeletions) {
+            try {
+              const { cleanImageFromAllStorages } = await import('@/api/projectImages');
+              await cleanImageFromAllStorages(id!, imageId);
+
+              // Dispatch image-deleted event for each successfully deleted image
+              const event = new CustomEvent('image-deleted', {
+                detail: {
+                  imageId: imageId,
+                  projectId: id,
+                  forceRefresh: false,
+                },
+              });
+              window.dispatchEvent(event);
+            } catch (cleanupError) {
+              logger.error(`Failed to clean up storage for image ${imageId}:`, cleanupError);
+            }
+          }
         }
 
         if (failCount > 0) {
@@ -541,7 +633,7 @@ const ProjectDetail = () => {
           );
         }
 
-        refreshData();
+        // Don't refresh entire gallery - images are already removed from UI
         setSelectedImages({});
         setSelectAll(false);
       })();
@@ -692,15 +784,15 @@ const ProjectDetail = () => {
           }
         }
 
-        logger.info(`Celkový výsledek: ${successCount} úspěšně, ${failCount} selhalo`);
+        logger.info(`Total result: ${successCount} successful, ${failCount} failed`);
 
         // Zobrazíme celkový výsledek
         if (successCount > 0 && failCount > 0) {
-          toast.info(`Segmentace: ${successCount} obrázků úspěšně zařazeno do fronty, ${failCount} selhalo`);
+          toast.info(t('segmentation.batch.mixed', { successCount, failCount }));
         } else if (successCount > 0) {
-          toast.success(`Segmentace: Všech ${successCount} obrázků úspěšně zařazeno do fronty`);
+          toast.success(t('segmentation.batch.allSuccess', { count: successCount }));
         } else if (failCount > 0) {
-          toast.error(`Segmentace: Všech ${failCount} obrázků selhalo`);
+          toast.error(t('segmentation.batch.allFailed', { count: failCount }));
         }
         apiSuccess = successCount > 0;
 
@@ -824,6 +916,7 @@ const ProjectDetail = () => {
               selectionMode={selectionMode}
               onToggleSelectionMode={toggleSelectionMode}
               showStatusSort={true}
+              onClearCache={handleClearCache}
             />
 
             {loading ? (
@@ -876,6 +969,16 @@ const ProjectDetail = () => {
                 onBatchDelete={handleBatchDelete}
                 onBatchExport={handleBatchExport}
               />
+            )}
+            
+            {/* Database diagnostics (dev mode only) */}
+            {import.meta.env.DEV && (
+              <ReactSuspense fallback={<div className="mt-4">Loading diagnostics...</div>}>
+                <DatabaseConsistencyCheck 
+                  projectId={id || ''} 
+                  onRefreshNeeded={refreshData}
+                />
+              </ReactSuspense>
             )}
           </motion.div>
         )}

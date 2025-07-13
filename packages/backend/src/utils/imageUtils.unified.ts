@@ -16,6 +16,9 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import * as util from 'util';
 // Import the local logger instead of shared library for tests
 import logger from './logger';
 
@@ -416,9 +419,7 @@ export const createThumbnail = async (
 
     // Special handling for BMP files using Python PIL
     if (ext === '.bmp') {
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execAsync = util.promisify(exec);
+      const execAsync = promisify(exec);
 
       const pythonScript = `
 import sys
@@ -530,7 +531,7 @@ export const normalizePathForDb = (absolutePath: string, uploadDir: string): str
  */
 export const formatImageForApi = (
   image: Record<string, unknown>,
-  baseUrl: string
+  _baseUrl: string
 ): Record<string, unknown> => {
   if (!image) return {} as Record<string, unknown>;
 
@@ -783,10 +784,25 @@ export const convertTiffToWebFriendly = async (
   const formatName = ext === '.bmp' ? 'BMP' : 'TIFF';
 
   try {
+    // Check file size first to prevent memory issues
+    const stats = await fs.promises.stat(sourcePath);
+    const maxSizeMB = 100; // 100MB limit for TIFF/BMP files
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    
+    if (stats.size > maxSizeBytes) {
+      const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
+      const error = new Error(`${formatName} file too large: ${sizeMB}MB (max: ${maxSizeMB}MB)`);
+      logger.error(`File size exceeded for ${formatName} conversion`, {
+        sourcePath,
+        fileSize: stats.size,
+        maxSize: maxSizeBytes,
+        sizeMB
+      });
+      throw error;
+    }
+
     // For BMP files, use Python PIL since Sharp doesn't support BMP natively
     if (ext === '.bmp') {
-      const { exec } = require('child_process');
-      const util = require('util');
       const execAsync = util.promisify(exec);
 
       const pythonScript = `
@@ -822,11 +838,30 @@ img.save(sys.argv[2], 'PNG', optimize=True)
       logger.debug(`Converted ${formatName} to web-friendly PNG: ${sourcePath} -> ${targetPath}`);
     }
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const detailedError = new Error(`Failed to convert ${formatName} file: ${errorMessage}`);
+    
     logger.error(
       `Error converting ${formatName} to web-friendly format: ${sourcePath} -> ${targetPath}`,
-      error
+      {
+        error: errorMessage,
+        sourcePath,
+        targetPath,
+        formatName,
+        stack: error instanceof Error ? error.stack : undefined
+      }
     );
-    throw error;
+    
+    // Add more context to the error
+    if (errorMessage.includes('Input file is missing')) {
+      throw new Error(`${formatName} file not found at: ${sourcePath}`);
+    } else if (errorMessage.includes('memory') || errorMessage.includes('heap')) {
+      throw new Error(`${formatName} file too large to process (out of memory)`);
+    } else if (errorMessage.includes('unsupported image format')) {
+      throw new Error(`Unsupported ${formatName} format or corrupted file`);
+    }
+    
+    throw detailedError;
   }
 };
 

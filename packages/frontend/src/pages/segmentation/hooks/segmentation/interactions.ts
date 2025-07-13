@@ -5,6 +5,7 @@ import { isPointInPolygonSync } from './geometry.worker';
 import { getCanvasCoordinates } from './coordinates';
 import { CLOSE_POLYGON_DISTANCE, VERTEX_HIT_RADIUS } from './constants';
 import { createLogger } from '@/lib/logger';
+import { calculatePolygonPerimeter } from '@spheroseg/shared/utils/polygonUtils.unified';
 
 const logger = createLogger('segmentation:interactions');
 
@@ -282,126 +283,180 @@ export const handleMouseDown = (
                 const startIdx = interactionState.addPointStartVertex.vertexIndex;
                 const endIdx = closestVertexIndex;
 
-                // Create a new array of points for the polygon
-                let newPoints: Point[] = [];
+                logger.info(
+                  `Adding ${tempPoints.length} points between vertices ${startIdx} and ${endIdx}`,
+                );
+                logger.info(
+                  `Original polygon has ${selectedPolygon.points.length} vertices`,
+                );
 
-                // Determine which path to replace (the one with smaller perimeter)
-                // Path 1: startIdx to endIdx
-                // Path 2: endIdx to startIdx
-
-                // Calculate the length of the new path
-                let newPathLength = 0;
-                for (let i = 0; i < tempPoints.length - 1; i++) {
-                  const p1 = tempPoints[i];
-                  const p2 = tempPoints[i + 1];
-                  const dx = p2.x - p1.x;
-                  const dy = p2.y - p1.y;
-                  newPathLength += Math.sqrt(dx * dx + dy * dy);
-                }
-
-                // Add the distance from start vertex to first temp point
-                const startPoint = selectedPolygon.points[startIdx];
-                const firstTempPoint = tempPoints[0];
-                const dxStart = firstTempPoint.x - startPoint.x;
-                const dyStart = firstTempPoint.y - startPoint.y;
-                newPathLength += Math.sqrt(dxStart * dxStart + dyStart * dyStart);
-
-                // Add the distance from last temp point to end vertex
-                const endPoint = selectedPolygon.points[endIdx];
-                const lastTempPoint = tempPoints[tempPoints.length - 1];
-                const dxEnd = endPoint.x - lastTempPoint.x;
-                const dyEnd = endPoint.y - lastTempPoint.y;
-                newPathLength += Math.sqrt(dxEnd * dxEnd + dyEnd * dyEnd);
-
-                // Calculate the perimeter of the two possible resulting polygons
-                // Option 1: Keep path1 (startIdx to endIdx) and replace path2 with new path
-                const option1Points = [...selectedPolygon.points];
-
-                // Option 2: Keep path2 (endIdx to startIdx) and replace path1 with new path
-                const option2Points = [...selectedPolygon.points];
-
-                // Determine the orientation of the polygon (clockwise or counter-clockwise)
-                const isClockwise = isPolygonClockwise(selectedPolygon.points);
-                logger.info(`Polygon orientation: ${isClockwise ? 'clockwise' : 'counter-clockwise'}`);
-
-                // Determine if we need to go forward or backward in the array based on indices and orientation
-                // We want to follow the natural direction of the polygon
-
-                // Calculate the distance between indices in both directions
+                // CVAT-like algorithm: Replace one of two possible paths between vertices
                 const numPoints = selectedPolygon.points.length;
-                const forwardDistance = endIdx >= startIdx ? endIdx - startIdx : numPoints - startIdx + endIdx;
-                const backwardDistance = startIdx >= endIdx ? startIdx - endIdx : numPoints - endIdx + startIdx;
-
-                // Determine if we should go forward or backward based on the shortest path
-                // and the orientation of the polygon
-                const goForward = forwardDistance <= backwardDistance === isClockwise;
-
-                logger.info(
-                  `Replacing segment between vertices ${startIdx} and ${endIdx} with ${tempPoints.length} new points`,
-                );
-                logger.info(
-                  `Forward distance: ${forwardDistance}, Backward distance: ${backwardDistance}, Going: ${goForward ? 'forward' : 'backward'}`,
-                );
-
-                // Create a new array for the updated points
-                if (goForward) {
-                  if (startIdx <= endIdx) {
-                    // Simple case: no wrapping around the array
-                    // Keep points before startIdx (inclusive) and after endIdx (inclusive)
-                    const pointsBefore = selectedPolygon.points.slice(0, startIdx + 1);
-                    const pointsAfter = selectedPolygon.points.slice(endIdx);
-
-                    // Combine: points before startIdx + new points + points after endIdx
-                    newPoints = [...pointsBefore, ...tempPoints, ...pointsAfter];
-
-                    logger.info(
-                      `Forward, no wrap: ${pointsBefore.length} points before, ${tempPoints.length} new points, ${pointsAfter.length} points after`,
-                    );
-                  } else {
-                    // Complex case: wrapping around the array
-                    // We need to keep points from startIdx to end and from 0 to endIdx
-                    const pointsStart = selectedPolygon.points.slice(startIdx);
-                    const pointsEnd = selectedPolygon.points.slice(0, endIdx + 1);
-
-                    newPoints = [...pointsStart, ...tempPoints, ...pointsEnd];
-
-                    logger.info(
-                      `Forward, wrap: ${pointsStart.length} points before, ${tempPoints.length} new points, ${pointsEnd.length} points after`,
-                    );
+                
+                // Debug: Log original polygon for verification
+                const prevStartIdx = (startIdx - 1 + numPoints) % numPoints;
+                const nextStartIdx = (startIdx + 1) % numPoints;
+                const prevEndIdx = (endIdx - 1 + numPoints) % numPoints;
+                const nextEndIdx = (endIdx + 1) % numPoints;
+                
+                logger.info('Original polygon vertices around start/end:', {
+                  beforeStart: `[${prevStartIdx}]: (${selectedPolygon.points[prevStartIdx].x.toFixed(1)}, ${selectedPolygon.points[prevStartIdx].y.toFixed(1)})`,
+                  startVertex: `[${startIdx}]: (${selectedPolygon.points[startIdx].x.toFixed(1)}, ${selectedPolygon.points[startIdx].y.toFixed(1)})`,
+                  afterStart: `[${nextStartIdx}]: (${selectedPolygon.points[nextStartIdx].x.toFixed(1)}, ${selectedPolygon.points[nextStartIdx].y.toFixed(1)})`,
+                  beforeEnd: `[${prevEndIdx}]: (${selectedPolygon.points[prevEndIdx].x.toFixed(1)}, ${selectedPolygon.points[prevEndIdx].y.toFixed(1)})`,
+                  endVertex: `[${endIdx}]: (${selectedPolygon.points[endIdx].x.toFixed(1)}, ${selectedPolygon.points[endIdx].y.toFixed(1)})`,
+                  afterEnd: `[${nextEndIdx}]: (${selectedPolygon.points[nextEndIdx].x.toFixed(1)}, ${selectedPolygon.points[nextEndIdx].y.toFixed(1)})`
+                });
+                
+                // Create two candidate polygons by replacing different paths
+                const candidate1Points: Point[] = [];
+                const candidate2Points: Point[] = [];
+                
+                // Candidate 1: Replace the direct path from start to end
+                // Build: vertices before start + start + new points + end + vertices after end
+                
+                let idx: number;
+                
+                // For candidate 1: Replace forward path (start → end going forward in array)
+                if (startIdx < endIdx) {
+                  // No wrapping case
+                  // Add points from 0 to start (inclusive)
+                  for (let i = 0; i <= startIdx; i++) {
+                    candidate1Points.push(selectedPolygon.points[i]);
+                  }
+                  // Add new points
+                  candidate1Points.push(...tempPoints);
+                  // Add points from end to the last
+                  for (let i = endIdx; i < numPoints; i++) {
+                    candidate1Points.push(selectedPolygon.points[i]);
                   }
                 } else {
-                  // Going backward - we need to reverse the temp points
-                  const reversedTempPoints = [...tempPoints].reverse();
-
-                  if (endIdx <= startIdx) {
-                    // Simple case: no wrapping around the array
-                    // Keep points before endIdx (inclusive) and after startIdx (inclusive)
-                    const pointsBefore = selectedPolygon.points.slice(0, endIdx + 1);
-                    const pointsAfter = selectedPolygon.points.slice(startIdx);
-
-                    // Combine: points before endIdx + reversed new points + points after startIdx
-                    newPoints = [...pointsBefore, ...reversedTempPoints, ...pointsAfter];
-
-                    logger.info(
-                      `Backward, no wrap: ${pointsBefore.length} points before, ${reversedTempPoints.length} new points, ${pointsAfter.length} points after`,
-                    );
-                  } else {
-                    // Complex case: wrapping around the array
-                    // We need to keep points from endIdx to end and from 0 to startIdx
-                    const pointsEnd = selectedPolygon.points.slice(endIdx);
-                    const pointsStart = selectedPolygon.points.slice(0, startIdx + 1);
-
-                    newPoints = [...pointsEnd, ...reversedTempPoints, ...pointsStart];
-
-                    logger.info(
-                      `Backward, wrap: ${pointsEnd.length} points before, ${reversedTempPoints.length} new points, ${pointsStart.length} points after`,
-                    );
+                  // Wrapping case (start > end)
+                  // Add points from 0 to end (inclusive)  
+                  for (let i = 0; i <= endIdx; i++) {
+                    candidate1Points.push(selectedPolygon.points[i]);
+                  }
+                  // Add new points in reverse (because we're going from end to start)
+                  candidate1Points.push(...[...tempPoints].reverse());
+                  // Add points from start to the last
+                  for (let i = startIdx; i < numPoints; i++) {
+                    candidate1Points.push(selectedPolygon.points[i]);
                   }
                 }
+                
+                // For candidate 2: Replace backward path (the "other" way around)
+                if (startIdx < endIdx) {
+                  // No wrapping case
+                  // Go from start around the back to end
+                  // Add start
+                  candidate2Points.push(selectedPolygon.points[startIdx]);
+                  // Add new points
+                  candidate2Points.push(...tempPoints);
+                  // Add end
+                  candidate2Points.push(selectedPolygon.points[endIdx]);
+                  // Add vertices after end, wrapping to beginning, up to start (exclusive)
+                  idx = (endIdx + 1) % numPoints;
+                  while (idx !== startIdx) {
+                    candidate2Points.push(selectedPolygon.points[idx]);
+                    idx = (idx + 1) % numPoints;
+                  }
+                } else {
+                  // Wrapping case (start > end)
+                  // Add vertices from start to end going forward
+                  candidate2Points.push(selectedPolygon.points[startIdx]);
+                  // Add new points  
+                  candidate2Points.push(...tempPoints);
+                  // Add end vertex
+                  candidate2Points.push(selectedPolygon.points[endIdx]);
+                  // Add remaining vertices from after end to before start
+                  for (let i = endIdx + 1; i < startIdx; i++) {
+                    candidate2Points.push(selectedPolygon.points[i]);
+                  }
+                }
+                
+                // Calculate perimeters of both candidates
+                const perimeter1 = calculatePolygonPerimeter(candidate1Points);
+                const perimeter2 = calculatePolygonPerimeter(candidate2Points);
+                
+                // Calculate areas as a secondary metric for tie-breaking
+                const area1 = calculatePolygonArea(candidate1Points);
+                const area2 = calculatePolygonArea(candidate2Points);
 
+                // Find where the new points are inserted in each candidate
+                const findNewPointsPosition = (points: Point[], newPoints: Point[]): { startPos: number, endPos: number } => {
+                  if (newPoints.length === 0) return { startPos: -1, endPos: -1 };
+                  
+                  // Find first new point
+                  let startPos = -1;
+                  for (let i = 0; i < points.length; i++) {
+                    if (Math.abs(points[i].x - newPoints[0].x) < 0.001 && Math.abs(points[i].y - newPoints[0].y) < 0.001) {
+                      startPos = i;
+                      break;
+                    }
+                  }
+                  
+                  // Find last new point
+                  let endPos = -1;
+                  for (let i = 0; i < points.length; i++) {
+                    if (Math.abs(points[i].x - newPoints[newPoints.length - 1].x) < 0.001 && Math.abs(points[i].y - newPoints[newPoints.length - 1].y) < 0.001) {
+                      endPos = i;
+                    }
+                  }
+                  
+                  return { startPos, endPos };
+                };
+                
+                const newPosInCandidate1 = findNewPointsPosition(candidate1Points, tempPoints);
+                const newPosInCandidate2 = findNewPointsPosition(candidate2Points, tempPoints);
+                
+                // Log detailed information about candidate construction
+                logger.info('Candidate 1 construction:', {
+                  totalPoints: candidate1Points.length,
+                  perimeter: perimeter1.toFixed(2),
+                  area: area1.toFixed(2),
+                  newPointsPosition: `${newPosInCandidate1.startPos} to ${newPosInCandidate1.endPos}`,
+                  beforeNewPoints: newPosInCandidate1.startPos > 0 ? `[${newPosInCandidate1.startPos - 1}]: (${candidate1Points[newPosInCandidate1.startPos - 1].x.toFixed(1)}, ${candidate1Points[newPosInCandidate1.startPos - 1].y.toFixed(1)})` : 'N/A',
+                  afterNewPoints: newPosInCandidate1.endPos >= 0 && newPosInCandidate1.endPos < candidate1Points.length - 1 ? `[${newPosInCandidate1.endPos + 1}]: (${candidate1Points[newPosInCandidate1.endPos + 1].x.toFixed(1)}, ${candidate1Points[newPosInCandidate1.endPos + 1].y.toFixed(1)})` : 'N/A'
+                });
+                
+                logger.info('Candidate 2 construction:', {
+                  totalPoints: candidate2Points.length,
+                  perimeter: perimeter2.toFixed(2),
+                  area: area2.toFixed(2),
+                  newPointsPosition: `${newPosInCandidate2.startPos} to ${newPosInCandidate2.endPos}`,
+                  beforeNewPoints: newPosInCandidate2.startPos > 0 ? `[${newPosInCandidate2.startPos - 1}]: (${candidate2Points[newPosInCandidate2.startPos - 1].x.toFixed(1)}, ${candidate2Points[newPosInCandidate2.startPos - 1].y.toFixed(1)})` : 'N/A',
+                  afterNewPoints: newPosInCandidate2.endPos >= 0 && newPosInCandidate2.endPos < candidate2Points.length - 1 ? `[${newPosInCandidate2.endPos + 1}]: (${candidate2Points[newPosInCandidate2.endPos + 1].x.toFixed(1)}, ${candidate2Points[newPosInCandidate2.endPos + 1].y.toFixed(1)})` : 'N/A'
+                });
+
+                // Choose the candidate with larger perimeter (CVAT-like behavior)
+                // If perimeters are very close (within 0.1%), use area as tie-breaker
+                let newPoints: Point[];
+                const perimeterDiff = Math.abs(perimeter1 - perimeter2) / Math.max(perimeter1, perimeter2);
+                
+                if (perimeterDiff < 0.001) {
+                  // Perimeters are very close, use area as tie-breaker
+                  newPoints = area1 >= area2 ? candidate1Points : candidate2Points;
+                  logger.info(
+                    `Perimeters are very close (diff: ${(perimeterDiff * 100).toFixed(3)}%), using area as tie-breaker`,
+                  );
+                } else {
+                  // Use perimeter as primary metric
+                  newPoints = perimeter1 >= perimeter2 ? candidate1Points : candidate2Points;
+                }
+                
+                const chosenCandidate = newPoints === candidate1Points ? 1 : 2;
+                logger.info(
+                  `Choosing candidate ${chosenCandidate} with perimeter ${(chosenCandidate === 1 ? perimeter1 : perimeter2).toFixed(2)}`,
+                );
                 logger.info(
                   `Original polygon had ${selectedPolygon.points.length} points, new polygon has ${newPoints.length} points`,
                 );
+
+                // Validate the result
+                if (newPoints.length < 3) {
+                  logger.error('Result polygon has less than 3 points, aborting operation');
+                  return;
+                }
 
                 // Update the polygon
                 if (segmentationData) {

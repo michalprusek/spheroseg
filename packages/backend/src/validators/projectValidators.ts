@@ -59,17 +59,21 @@ export const updateProjectSchema = z.object({
   body: z.object({
     title: z
       .string()
-      .min(3, 'Title must be at least 3 characters long')
+      .min(1, 'Title must not be empty')
       .max(100, 'Title must be at most 100 characters long')
+      .trim()
       .optional(),
     description: z
       .string()
       .max(1000, 'Description must be at most 1000 characters long')
+      .optional()
+      .nullable()
+      .transform((val) => (val && val.trim() ? val.trim() : null)),
+    tags: z
+      .array(z.string().max(50, 'Each tag must be at most 50 characters'))
+      .max(10, 'Maximum 10 tags allowed')
       .optional(),
-    thumbnail_url: z
-      .string()
-      .max(2048, 'Thumbnail URL must be at most 2048 characters long')
-      .optional(),
+    public: z.boolean().optional(),
   }),
 });
 
@@ -82,25 +86,6 @@ export const deleteProjectSchema = z.object({
   }),
 });
 
-/**
- * Schema for project duplication
- */
-export const duplicateProjectSchema = z.object({
-  params: z.object({
-    id: uuidSchema,
-  }),
-  body: z.object({
-    newTitle: z
-      .string()
-      .min(3, 'Title must be at least 3 characters long')
-      .max(100, 'Title must be at most 100 characters long')
-      .optional(),
-    copyFiles: z.boolean().optional().default(true),
-    copySegmentations: z.boolean().optional().default(false),
-    resetStatus: z.boolean().optional().default(true),
-    async: z.boolean().optional().default(false),
-  }),
-});
 
 /**
  * Schema for getting project images

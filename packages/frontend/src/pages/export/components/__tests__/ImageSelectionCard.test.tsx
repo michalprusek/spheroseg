@@ -53,8 +53,8 @@ describe('ImageSelectionCard Component', () => {
     render(<ImageSelectionCard {...defaultProps} />);
 
     // Check title and button
-    expect(screen.getByText('Vyberte obrázky k exportu')).toBeInTheDocument();
-    expect(screen.getByText('Odznačit vše')).toBeInTheDocument();
+    expect(screen.getByText('export.selectImagesToExport')).toBeInTheDocument();
+    expect(screen.getByText('common.deselectAll')).toBeInTheDocument();
 
     // Check if all images are rendered
     expect(screen.getByText('Test Image 1.jpg')).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe('ImageSelectionCard Component', () => {
     render(<ImageSelectionCard {...defaultProps} images={[]} />);
 
     // Check empty message
-    expect(screen.getByText('Žádné obrázky nejsou k dispozici')).toBeInTheDocument();
+    expect(screen.getByText('export.noImagesAvailable')).toBeInTheDocument();
   });
 
   it('calls handleSelectAll when select all button is clicked', () => {
@@ -96,7 +96,7 @@ describe('ImageSelectionCard Component', () => {
     expect(defaultProps.handleSelectAll).toHaveBeenCalledTimes(1);
   });
 
-  it('shows "Vybrat vše" button text when no images are selected', () => {
+  it('shows "Select all" button text when no images are selected', () => {
     render(
       <ImageSelectionCard
         {...defaultProps}
@@ -108,7 +108,7 @@ describe('ImageSelectionCard Component', () => {
       />,
     );
 
-    expect(screen.getByText('Vybrat vše')).toBeInTheDocument();
+    expect(screen.getByText('common.selectAll')).toBeInTheDocument();
   });
 
   it('calls handleSelectImage when an image item is clicked', () => {

@@ -5,7 +5,7 @@
  * to give accurate real-time status information.
  */
 
-import dbPool from '../db';
+import db from '../db';
 import config from '../config';
 import performanceConfig from '../config/performance';
 import { getEffectiveMemoryLimit } from './containerInfo';
@@ -39,7 +39,7 @@ export const checkDatabaseHealth = async (): Promise<HealthStatus> => {
 
   try {
     // Simple query to test connectivity
-    const result = await dbPool.query('SELECT NOW() as current_time, version() as version');
+    const result = await db.query('SELECT NOW() as current_time, version() as version');
     const responseTime = Date.now() - startTime;
 
     if (responseTime > performanceConfig.healthCheck.slowResponseMs) {

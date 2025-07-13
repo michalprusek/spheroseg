@@ -9,6 +9,9 @@ export const listImagesSchema = z.object({
       name: optionalStringSchema,
       verifyFiles: z.enum(['true', 'false']).optional(),
       filterMissing: z.enum(['true', 'false']).optional(),
+      limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(1).max(100)).optional(),
+      offset: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(0)).optional(),
+      page: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(1)).optional(),
     })
     .optional(),
 });

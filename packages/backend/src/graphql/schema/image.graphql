@@ -1,0 +1,156 @@
+# Image-related types and operations
+
+type Image implements Node {
+  id: ID!
+  name: String!
+  originalFilename: String!
+  format: String!
+  width: Int!
+  height: Int!
+  fileSize: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  
+  # URLs
+  url: String!
+  thumbnailUrl: String!
+  downloadUrl: String!
+  
+  # Relationships
+  project: Project!
+  owner: User!
+  segmentation: SegmentationResult
+  
+  # Status
+  status: ImageStatus!
+  segmentationStatus: SegmentationStatus!
+  
+  # Metadata
+  metadata: JSONObject
+  tags: [String!]!
+  
+  # Computed fields
+  fileSizeMB: Float!
+  aspectRatio: Float!
+  hasSegmentation: Boolean!
+}
+
+enum ImageStatus {
+  UPLOADED
+  PROCESSING
+  READY
+  ERROR
+}
+
+enum SegmentationStatus {
+  WITHOUT_SEGMENTATION
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+type ImageConnection implements PaginatedResponse {
+  items: [Image!]!
+  total: Int!
+  offset: Int!
+  limit: Int!
+  hasMore: Boolean!
+}
+
+type ImageUploadResult {
+  success: Boolean!
+  image: Image
+  error: String
+}
+
+type BatchUploadResult {
+  successCount: Int!
+  failureCount: Int!
+  totalSize: Int!
+  images: [ImageUploadResult!]!
+}
+
+# Input types
+input ImageFilterInput {
+  search: String
+  format: [String!]
+  segmentationStatus: [SegmentationStatus!]
+  hasSegmentation: Boolean
+  minWidth: Int
+  minHeight: Int
+  maxWidth: Int
+  maxHeight: Int
+  uploadedAfter: DateTime
+  uploadedBefore: DateTime
+  tags: [String!]
+}
+
+input ImageUploadInput {
+  projectId: ID!
+  files: [Upload!]!
+  metadata: JSONObject
+  tags: [String!]
+}
+
+input UpdateImageInput {
+  name: String
+  tags: [String!]
+  metadata: JSONObject
+}
+
+# Extend root types
+extend type Query {
+  # Image queries
+  image(id: ID!): Image @auth
+  images(projectId: ID!, pagination: PaginationInput, filter: ImageFilterInput): ImageConnection! @auth
+  
+  # Image search across projects
+  searchImages(query: String!, pagination: PaginationInput): ImageConnection! @auth
+}
+
+extend type Mutation {
+  # Image upload
+  uploadImages(input: ImageUploadInput!): BatchUploadResult! @auth @requiresApproval
+  
+  # Image management
+  updateImage(id: ID!, input: UpdateImageInput!): Image! @auth
+  deleteImage(id: ID!): MutationResponse! @auth
+  deleteImages(ids: [ID!]!): MutationResponse! @auth
+  
+  # Image operations
+  duplicateImage(id: ID!, targetProjectId: ID!): Image! @auth
+  moveImage(id: ID!, targetProjectId: ID!): Image! @auth
+  
+  # Batch operations
+  tagImages(ids: [ID!]!, tags: [String!]!): [Image!]! @auth
+  untagImages(ids: [ID!]!, tags: [String!]!): [Image!]! @auth
+}
+
+extend type Subscription {
+  # Image upload progress
+  imageUploadProgress(uploadId: String!): UploadProgress! @auth
+  
+  # Image updates
+  imageUpdated(projectId: ID!): Image! @auth
+  imageDeleted(projectId: ID!): ID! @auth
+}
+
+type UploadProgress {
+  uploadId: String!
+  fileName: String!
+  bytesUploaded: Int!
+  totalBytes: Int!
+  percentage: Float!
+  status: UploadStatus!
+  error: String
+}
+
+enum UploadStatus {
+  PENDING
+  UPLOADING
+  PROCESSING
+  COMPLETED
+  FAILED
+}

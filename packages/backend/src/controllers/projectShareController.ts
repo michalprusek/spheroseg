@@ -243,7 +243,7 @@ export async function generateInvitationLink(
 
     // Vytvoření plné URL pro frontend
     const frontendUrl = process.env.FRONTEND_URL || 'https://spherosegapp.utia.cas.cz';
-    const invitationUrl = `${frontendUrl}/accept-invitation/${result.token}`;
+    const invitationUrl = `${frontendUrl}/invitation/${result.token}`;
 
     res.status(201).json({
       message: 'Invitation link generated successfully',

@@ -19,14 +19,14 @@ vi.mock('react-i18next', () => ({
 
 // Mock the ProjectActions component
 vi.mock('@/components/project/ProjectActions', () => ({
-  default: ({ projectId, onDelete, onDuplicateSuccess }: any) => (
+  default: ({ projectId, onDelete, onDuplicate }: any) => (
     <div data-testid="project-actions">
-      <button data-testid="delete-button" onClick={() => onDelete(projectId)}>
+      <button data-testid="delete-button" onClick={() => onDelete?.()}>
         Delete
       </button>
       <button
         data-testid="duplicate-button"
-        onClick={() => onDuplicateSuccess({ id: 'new-id', title: 'Duplicated Project' })}
+        onClick={() => onDuplicate?.({ id: 'new-id', title: 'Duplicated Project' })}
       >
         Duplicate
       </button>

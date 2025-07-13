@@ -1,13 +1,13 @@
 /**
- * Vylepšená služba pro frontu segmentace
+ * Enhanced segmentation queue service
  *
- * Tato služba poskytuje robustní implementaci fronty pro segmentační úlohy:
- * - Perzistentní ukládání úloh do databáze
- * - Prioritní zpracování úloh
- * - Automatické opakování neúspěšných úloh
- * - Monitorování stavu ML služby
- * - Škálovatelné zpracování úloh
- * - Detailní logování a metriky
+ * This service provides a robust queue implementation for segmentation tasks:
+ * - Persistent task storage in database
+ * - Priority task processing
+ * - Automatic retry for failed tasks
+ * - ML service status monitoring
+ * - Scalable task processing
+ * - Detailed logging and metrics
  */
 
 import amqp from 'amqplib';
@@ -102,17 +102,17 @@ class SegmentationQueueService extends EventEmitter {
       // Ověření existence tabulky
       await this.ensureTaskTableExists();
 
-      // Připojení k RabbitMQ
+      // Connect to RabbitMQ
       await this.connectRabbitMQ();
 
-      // Spuštění pravidelných kontrol
+      // Start periodic checks
       this.startHealthCheck();
       this.startQueueProcessor();
       this.startQueueStatusUpdater();
 
-      logger.info('Služba fronty segmentace byla inicializována');
+      logger.info('Segmentation queue service initialized');
     } catch (error) {
-      logger.error('Chyba při inicializaci služby fronty segmentace:', {
+      logger.error('Error initializing segmentation queue service:', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -121,7 +121,7 @@ class SegmentationQueueService extends EventEmitter {
   }
 
   /**
-   * Zajistí existenci tabulky pro úlohy
+   * Ensure task table exists
    */
   private async ensureTaskTableExists(): Promise<void> {
     const dbPool = pool.getPool();
@@ -188,7 +188,7 @@ class SegmentationQueueService extends EventEmitter {
         durable: true,
       });
 
-      logger.info('Připojeno k RabbitMQ');
+      logger.info('Connected to RabbitMQ');
 
       // Nastavení handlerů pro události
       this.connection.on('error', (err: any) => {
@@ -284,45 +284,53 @@ class SegmentationQueueService extends EventEmitter {
       const dbPool = pool.getPool();
       const client = await dbPool.connect();
       try {
-        // Získání počtu úloh podle stavu
-        const pendingResult = await client.query(`
-          SELECT st.id, st.image_id, i.project_id 
+        // Get all active tasks in a single query
+        const tasksResult = await client.query(`
+          SELECT 
+            st.id, 
+            st.image_id, 
+            st.status,
+            i.project_id,
+            st.priority,
+            st.created_at
           FROM segmentation_tasks st
           JOIN images i ON st.image_id = i.id
-          WHERE st.status = 'queued'
-          ORDER BY st.priority DESC, st.created_at ASC
+          WHERE st.status IN ('queued', 'processing')
+          ORDER BY 
+            st.status DESC, -- processing tasks first
+            st.priority DESC, 
+            st.created_at ASC
         `);
 
-        const runningResult = await client.query(`
-          SELECT st.id, st.image_id, i.project_id 
-          FROM segmentation_tasks st
-          JOIN images i ON st.image_id = i.id
-          WHERE st.status = 'processing'
-        `);
-
-        // Seskupení úloh podle projektu
+        // Group tasks by project and status
         const tasksByProject = new Map<string, { pending: string[]; running: string[] }>();
+        const pendingTasks: string[] = [];
+        const runningTasks: string[] = [];
 
-        pendingResult.rows.forEach((row) => {
+        // Process all tasks in a single pass
+        tasksResult.rows.forEach((row) => {
+          // Initialize project entry if needed
           if (!tasksByProject.has(row.project_id)) {
             tasksByProject.set(row.project_id, { pending: [], running: [] });
           }
-          tasksByProject.get(row.project_id)!.pending.push(row.id);
-        });
 
-        runningResult.rows.forEach((row) => {
-          if (!tasksByProject.has(row.project_id)) {
-            tasksByProject.set(row.project_id, { pending: [], running: [] });
+          // Add task to appropriate list
+          const projectTasks = tasksByProject.get(row.project_id)!;
+          if (row.status === 'queued') {
+            projectTasks.pending.push(row.id);
+            pendingTasks.push(row.id);
+          } else if (row.status === 'processing') {
+            projectTasks.running.push(row.id);
+            runningTasks.push(row.id);
           }
-          tasksByProject.get(row.project_id)!.running.push(row.id);
         });
 
         // Aktualizace globálního stavu fronty
         this.queueStatus = {
-          pendingTasks: pendingResult.rows.map((row) => row.id),
-          runningTasks: runningResult.rows.map((row) => row.id),
-          queueLength: pendingResult.rows.length,
-          activeTasksCount: runningResult.rows.length,
+          pendingTasks: pendingTasks,
+          runningTasks: runningTasks,
+          queueLength: pendingTasks.length,
+          activeTasksCount: runningTasks.length,
           mlServiceStatus: this.mlServiceAvailable ? 'online' : 'offline',
           lastUpdated: new Date(),
         };
@@ -390,7 +398,7 @@ class SegmentationQueueService extends EventEmitter {
           return;
         }
 
-        // Zpracování úloh paralelně
+        // Process tasks in parallel
         const processingPromises = result.rows.map((task) =>
           this.processTask(task.id, task.image_id, task.image_path, task.parameters, task.retries)
         );
@@ -478,13 +486,17 @@ class SegmentationQueueService extends EventEmitter {
       throw new Error('RabbitMQ channel is not available.');
     }
 
+    // Use internal Docker service name for ML service callback
+    const internalBackendUrl =
+      process.env.NODE_ENV === 'production' ? 'http://backend:5001' : config.appUrl;
+
     const taskPayload = {
       taskId,
       imageId,
       imagePath,
       parameters,
       retries,
-      callbackUrl: `${config.appUrl}/api/images/${imageId}/segmentation`, // Callback URL for ML service
+      callbackUrl: `${internalBackendUrl}/api/images/${imageId}/segmentation`, // Callback URL for ML service
     };
 
     try {
@@ -541,7 +553,7 @@ class SegmentationQueueService extends EventEmitter {
       await client.query(
         `
         UPDATE images
-        SET status = $1, updated_at = NOW()
+        SET segmentation_status = $1, updated_at = NOW()
         WHERE id = $2
       `,
         [status, imageId]
@@ -585,7 +597,7 @@ class SegmentationQueueService extends EventEmitter {
           });
         }
       } catch (socketError) {
-        logger.error('Chyba při odesílání notifikace o stavu segmentace:', {
+        logger.error('Error sending segmentation status notification:', {
           error: socketError,
           imageId,
         });
@@ -765,6 +777,13 @@ class SegmentationQueueService extends EventEmitter {
   }
 
   /**
+   * Manually trigger a queue status update
+   */
+  public async forceQueueUpdate(): Promise<void> {
+    await this.updateQueueStatus();
+  }
+
+  /**
    * Získá stav úlohy
    */
   public async getTaskStatus(taskId: string): Promise<SegmentationTask | null> {
@@ -773,7 +792,18 @@ class SegmentationQueueService extends EventEmitter {
     try {
       const result = await client.query(
         `
-        SELECT * FROM segmentation_tasks WHERE id = $1
+        SELECT 
+          id, 
+          image_id, 
+          status, 
+          priority, 
+          created_at, 
+          updated_at,
+          error_message,
+          parameters,
+          result_data
+        FROM segmentation_tasks 
+        WHERE id = $1
       `,
         [taskId]
       );

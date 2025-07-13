@@ -7,8 +7,8 @@ import { SegmentationResult } from '@/lib/segmentation';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock uuid
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'mock-uuid'),
+vi.mock('uuid', () => ({
+  v4: vi.fn(() => 'mock-uuid'),
 }));
 
 describe('Polygon Operations', () => {
@@ -41,7 +41,7 @@ describe('Polygon Operations', () => {
     });
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should split a square polygon with horizontal line', () => {

@@ -23,6 +23,6 @@ export class BackendPerformanceMonitoring {
   recordMLInferenceMetric = performanceMonitoring.recordMLInference.bind(performanceMonitoring);
 }
 
-export function createPerformanceMonitoring(options?: any) {
+export function createPerformanceMonitoring(options?: any): typeof performanceMonitoring {
   return performanceMonitoring;
 }

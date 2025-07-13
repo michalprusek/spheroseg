@@ -13,6 +13,11 @@ export default {
     },
     title: 'Editor segmentace',
     resolution: '{width}x{height}',
+    batch: {
+      mixed: 'Segmentace: {{successCount}} obrázků úspěšně zařazeno do fronty, {{failCount}} selhalo',
+      allSuccess: 'Segmentace: Všech {{count}} obrázků úspěšně zařazeno do fronty',
+      allFailed: 'Segmentace: Všech {{count}} obrázků selhalo',
+    },
     queue: {
       title: 'Fronta segmentace',
       summary: '{{total}} úkolů celkem ({{running}} zpracovává, {{queued}} ve frontě)',
@@ -75,6 +80,7 @@ export default {
       completed: 'Dokončeno',
       failed: 'Selhalo',
       pending: 'Čeká',
+      withoutSegmentation: 'Bez segmentace',
     },
     autoSave: {
       enabled: 'Automatické ukládání: Zapnuto',
@@ -117,7 +123,44 @@ export default {
         click: 'Klikněte pro přidání bodu do vybraného polygonu',
         exit: 'Esc pro ukončení režimu přidávání',
       },
+      view: {
+        pan: 'Posun: Klikněte a táhněte',
+        selectPolygon: 'Výběr: Klikněte na polygon',
+        zoom: 'Přiblížení: Kolečko myši',
+      },
     },
+    processingImage: 'Zpracování obrázku...',
+    imageNotFoundDescription: 'Požadovaný obrázek nebyl nalezen',
+    invalidImageDimensions: 'Neplatné rozměry obrázku',
+    noDataToSave: 'Žádné změny k uložení',
+    polygonDuplicated: 'Polygon zduplikován',
+    polygonNotFound: 'Polygon nenalezen',
+    polygonSimplified: 'Polygon zjednodušen',
+    polygonSimplifyFailed: 'Zjednodušení polygonu selhalo',
+    polygonSliced: 'Polygon úspěšně rozdělen',
+    resegment: {
+      error: {
+        exception: 'Chyba resegmentace: {{error}}',
+        failed: 'Resegmentace selhala',
+        missingData: 'Chybějící požadovaná data pro resegmentaci',
+      },
+      success: 'Resegmentace byla úspěšně dokončena',
+    },
+    resegmentMultipleError: 'Chyba při resegmentaci více obrázků',
+    resegmentMultipleSuccess: 'Více obrázků bylo úspěšně resegmentováno',
+    resegmenting: 'Resegmentace...',
+    resegmentingMultiple: 'Resegmentace více obrázků...',
+    saveError: 'Chyba při ukládání segmentace',
+    segmentationLoading: 'Načítání segmentace...',
+    segmentationPolygon: 'Polygon segmentace',
+    selectPolygonFirst: 'Nejprve prosím vyberte polygon',
+    sliceFailed: 'Rozdělení polygonu selhalo',
+    undoRestored: 'Akce vrácena zpět',
+    undoWhileDraggingError: 'Nelze vrátit zpět během přetahování',
+    vertexDeleteFailed: 'Smazání vrcholu selhalo',
+    vertexDeleted: 'Vrchol smazán',
+    vertexDuplicateFailed: 'Duplikace vrcholu selhala',
+    vertexDuplicated: 'Vrchol zduplikován',
   },
   // Error messages
   errors: {
@@ -184,6 +227,8 @@ export default {
     newProjectName: 'Název nového projektu',
     enterProjectName: 'Zadejte název nového projektu',
     duplicate: 'Duplikovat',
+    deleteImage: 'Smazat obrázek',
+    resegmentImage: 'Znovu segmentovat obrázek',
   },
   projectsPage: {
     title: 'Projekty',
@@ -281,6 +326,7 @@ export default {
     loadingAccount: 'Načítání vašeho účtu...',
     loadingApplication: 'Načítání aplikace...',
     selectAll: 'Vybrat vše',
+    deselectAll: 'Odznačit vše',
     save: 'Uložit',
     cancel: 'Zrušit',
     delete: 'Smazat',
@@ -396,6 +442,12 @@ export default {
     uploadComplete: 'Nahrávání dokončeno',
     uploadFailed: 'Nahrávání selhalo',
     deletePolygon: 'Smazat polygon',
+    pleaseLogin: 'Pro pokračování se prosím přihlaste',
+    retry: 'Zkusit znovu',
+    segmentation: 'Segmentace',
+    copiedToClipboard: 'Zkopírováno do schránky!',
+    failedToCopy: 'Kopírování do schránky selhalo',
+    confirm: 'Potvrdit',
     editor: {
       error: 'Chyba',
       success: 'Úspěch',
@@ -409,6 +461,8 @@ export default {
     signUp: 'Registrovat se',
     signOut: 'Odhlásit se',
     signingIn: 'Přihlašování...',
+    email: 'E-mail',
+    password: 'Heslo',
     forgotPassword: 'Zapomněli jste heslo?',
     resetPassword: 'Resetovat heslo',
     dontHaveAccount: 'Nemáte účet?',
@@ -487,6 +541,10 @@ export default {
     verifyingEmailDescription: 'Počkejte prosím, zatímco ověřujeme vaši e-mailovou adresu...',
     invalidVerificationLink: 'Neplatný ověřovací odkaz',
     verificationFailed: 'Ověření e-mailu selhalo',
+    accountLocked: 'Váš účet byl uzamčen. Kontaktujte prosím podporu.',
+    serverError: 'Chyba serveru. Zkuste to prosím později.',
+    signInError: 'Chyba při přihlašování',
+    signInFailed: 'Přihlášení selhalo. Zkontrolujte prosím své přihlašovací údaje.',
   },
   requestAccess: {
     and: 'a',
@@ -989,6 +1047,7 @@ export default {
     dangerZoneDescription: 'Tyto akce jsou nevratné a trvale odstraní vaše data',
     deletingAccount: 'Mazání účtu...',
     deleteAccountError: 'Chyba při mazání účtu',
+    changingPassword: 'Změna hesla...',
   },
   accessibility: {
     skipToContent: 'Přeskočit na hlavní obsah',
@@ -1139,6 +1198,54 @@ export default {
       paragraph1:
         'Pokud máte jakékoli dotazy k těmto zásadám ochrany osobních údajů, kontaktujte nás prosím na privacy@spheroseg.com.',
     },
+    contact: {
+      email: 'privacy@spheroseg.com',
+      paragraph1: 'Pokud máte jakékoli dotazy k těmto zásadám ochrany osobních údajů, kontaktujte nás prosím na:',
+      title: '9. Kontaktujte nás',
+    },
+    cookies: {
+      paragraph1:
+        'Používáme cookies a podobné technologie k vylepšení vašeho zážitku, analýze používání webu a personalizaci obsahu.',
+      title: '7. Cookies a sledovací technologie',
+    },
+    dataCollection: {
+      list: [
+        'Informace o účtu (e-mail, jméno, instituce)',
+        'Nahrané obrázky a data pro segmentaci',
+        'Metadata projektů a výsledky analýz',
+        'Údaje o používání a protokoly aktivit',
+      ],
+      paragraph1: 'Shromažďujeme informace, které nám přímo poskytujete, včetně:',
+      title: '2. Informace, které shromažďujeme',
+    },
+    dataStorage: {
+      paragraph1:
+        'Implementujeme vhodná technická a organizační opatření k ochraně vašich osobních informací před neoprávněným přístupem, změnou, zveřejněním nebo zničením.',
+      paragraph2: 'Vaše data jsou uložena na zabezpečených serverech a jsou mazána podle našich zásad uchovávání dat.',
+      title: '4. Ukládání dat a zabezpečení',
+    },
+    dataUsage: {
+      list: [
+        'Poskytovat a udržovat naše služby',
+        'Zpracovávat vaše požadavky na segmentaci obrázků',
+        'Zlepšovat naše algoritmy a služby',
+        'Komunikovat s vámi o vašem účtu',
+        'Zajistit bezpečnost a zabránit zneužití',
+      ],
+      paragraph1: 'Shromážděné informace používáme k:',
+      title: '3. Jak používáme vaše informace',
+    },
+    userRights: {
+      list: [
+        'Přístup k vašim osobním informacím',
+        'Opravu nepřesných informací',
+        'Žádost o smazání vašich dat',
+        'Export vašich dat',
+        'Námitku proti zpracování vašich dat',
+      ],
+      paragraph1: 'Máte právo na:',
+      title: '6. Vaše práva',
+    },
     lastUpdated: 'Naposledy aktualizováno: 7. ledna 2025',
   },
   shortcuts: {
@@ -1217,6 +1324,22 @@ export default {
     uploadError: 'Při nahrávání došlo k chybě. Zkuste to prosím znovu.',
     noProjectsToUpload: 'Žádné dostupné projekty. Nejprve vytvořte projekt.',
     notFound: 'Projekt "{{projectName}}" nebyl nalezen. Možná byl smazán.',
+    errors: {
+      imageOrProjectNotFound: 'Obrázek nebo projekt nebyl nalezen.',
+      failedToDeleteImage: 'Nepodařilo se smazat obrázek',
+      imageOrProjectNotFoundForNavigation: 'Obrázek nebo projekt nebyl nalezen pro navigaci, nebo chybí UUID.',
+      imageNotFoundForClearingSegmentation: 'Obrázek pro vymazání segmentace nebyl nalezen nebo chybí UUID.',
+      failedToClearSegmentation: 'Nepodařilo se odstranit segmentaci',
+    },
+    success: {
+      localImageDeleted: 'Lokální obrázek byl úspěšně odstraněn',
+      imageDeleted: 'Obrázek byl úspěšně smazán',
+      segmentationCleared: 'Segmentace byla úspěšně odstraněna.',
+    },
+    info: {
+      clearingSegmentation: 'Mažu segmentaci pro obrázek {{imageName}}...',
+      selectAtLeastOneImage: 'Vyberte prosím alespoň jeden obrázek.',
+    },
   },
   export: {
     formatDescriptions: {
@@ -1258,6 +1381,14 @@ export default {
       CSV: 'CSV (.csv)',
     },
     selectImagesForExport: 'Vyberte obrázky pro export',
+    selectImagesToExport: 'Vyberte obrázky k exportu',
+    noImagesAvailable: 'Žádné obrázky nejsou k dispozici',
+    backToProject: 'Zpět na projekt',
+    exportImages: 'Exportovat obrázky',
+    maskExportError: 'Chyba při exportu masky',
+    maskExportStarted: 'Export masky zahájen',
+    metricsRequireSegmentation: 'Metriky vyžadují dokončenou segmentaci',
+    noImageSelectedError: 'Pro export nebyl vybrán žádný obrázek',
   },
   metrics: {
     area: 'Plocha',
@@ -1376,5 +1507,77 @@ export default {
     userEmail: 'E-mail uživatele',
     view: 'Zobrazit',
     viewOnly: 'Pouze zobrazit',
+  },
+  invitation: {
+    acceptedSuccess: 'Pozvánka byla úspěšně přijata',
+    createAccount: 'Vytvořit účet',
+    errorTitle: 'Nelze přijmout pozvánku',
+    expired: 'Tento odkaz pozvánky vypršel nebo je neplatný',
+    genericError: 'Přijetí pozvánky selhalo. Zkuste to prosím znovu.',
+    goToDashboard: 'Přejít na nástěnku',
+    invalidLink: 'Neplatný odkaz pozvánky',
+    loginMessage: 'Pro přijetí této pozvánky k projektu se prosím přihlaste.',
+    loginRequired: 'Vyžadováno přihlášení',
+    notForYou: 'Tato pozvánka není určena pro váš účet',
+    processing: 'Zpracování pozvánky...',
+    redirecting: 'Přesměrování na projekt...',
+    signIn: 'Přihlásit se',
+    successMessage: 'Nyní máte přístup k projektu "{{projectName}}" sdílenému uživatelem {{ownerName}}.',
+    successTitle: 'Pozvánka přijata!',
+    title: 'Pozvánka k projektu',
+  },
+  about: {
+    contact: {
+      description: 'Máte otázky nebo potřebujete podporu? Jsme tu, abychom vám pomohli!',
+      email: 'Kontaktovat e-mailem',
+      github: 'Zobrazit na GitHubu',
+      title: 'Kontaktujte nás',
+      twitter: 'Sledovat na Twitteru',
+    },
+    mission: {
+      description:
+        'SpheroSeg je pokročilá platforma speciálně navržená pro segmentaci a analýzu buněčných sféroidů v mikroskopických obrázcích. Kombinujeme špičkové algoritmy umělé inteligence s intuitivním rozhraním, abychom výzkumníkům poskytli přesnou detekci hranic sféroidů a analytické schopnosti.',
+      title: 'Naše mise',
+      vision:
+        'Naší vizí je urychlit vědecké objevy tím, že zpřístupníme pokročilou analýzu obrazů výzkumníkům po celém světě a umožníme jim soustředit se na jejich výzkum místo technických výzev.',
+    },
+    team: {
+      description:
+        'SpheroSeg byl vyvinut oddaným týmem výzkumníků a inženýrů nadšených pro pokrok v biomedicínském výzkumu',
+      member1: {
+        name: 'Michal Průšek',
+        role: 'Hlavní vývojář, FJFI ČVUT v Praze',
+      },
+      member2: {
+        name: 'Adam Novozámský',
+        role: 'Vedoucí, ÚTIA AV ČR',
+      },
+      member3: {
+        name: 'Výzkumný tým',
+        role: 'Ústav biochemie a mikrobiologie, VŠCHT Praha',
+      },
+      title: 'Náš tým',
+    },
+    technology: {
+      description:
+        'Postaveno na nejmodernějších modelech hlubokého učení a technikách počítačového vidění, SpheroSeg nabízí bezkonkurenční přesnost v segmentaci sféroidů.',
+      feature1: {
+        description:
+          'Pokročilé modely hlubokého učení trénované na různorodých obrázcích sféroidů zajišťují přesné a spolehlivé výsledky segmentace.',
+        title: 'Segmentace poháněná AI',
+      },
+      feature2: {
+        description:
+          'Optimalizované algoritmy poskytují rychlé časy zpracování, což vám umožňuje efektivně analyzovat velké datové sady.',
+        title: 'Zpracování v reálném čase',
+      },
+      feature3: {
+        description:
+          'Extrahujte podrobné metriky včetně plochy, obvodu, kruhovosti a dalších pro každý segmentovaný sféroid.',
+        title: 'Komplexní analýza',
+      },
+      title: 'Naše technologie',
+    },
+    title: 'O SpheroSeg',
   },
 };

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePolygonActions } from '../usePolygonActions';
-import { EditMode, Polygon } from '@spheroseg/types';
+import { EditMode } from '../hooks/segmentation/types';
 
 // Mock hooks used within usePolygonActions
 vi.mock('../../useCanvasContext', () => ({

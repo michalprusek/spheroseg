@@ -131,20 +131,23 @@ export const uploadFilesWithFallback = async (
 
     // Pokud je souborů méně než BATCH_SIZE, použijeme standardní uploadFiles
     if (files.length <= BATCH_SIZE) {
-      // Report progress for single batch
+      // Report initial progress
       if (onProgress) {
         files.forEach((file, index) => {
-          onProgress(file.name, 50, index, files.length);
+          onProgress(file.name, 0, index, files.length);
         });
       }
 
+      // Upload all files at once
       const result = await uploadFiles(projectId, files);
 
-      // Report completion
+      // Report completion for each file progressively
       if (onProgress) {
-        files.forEach((file, index) => {
-          onProgress(file.name, 100, index, files.length);
-        });
+        // Simulate progressive completion for better UX
+        for (let i = 0; i < files.length; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 50)); // Small delay for visual effect
+          onProgress(files[i].name, 100, i, files.length);
+        }
       }
 
       return result;
@@ -167,7 +170,7 @@ export const uploadFilesWithFallback = async (
       if (onProgress) {
         batch.forEach((file, batchIndex) => {
           const globalIndex = i + batchIndex;
-          onProgress(file.name, 25, globalIndex, files.length);
+          onProgress(file.name, 0, globalIndex, files.length);
         });
       }
 
@@ -176,12 +179,13 @@ export const uploadFilesWithFallback = async (
         const batchImages = await uploadFiles(projectId, batch);
         console.log(`Successfully uploaded batch ${batchNumber}/${totalBatches} with ${batchImages.length} images`);
 
-        // Report progress for current batch completion
+        // Report progress for current batch completion progressively
         if (onProgress) {
-          batch.forEach((file, batchIndex) => {
-            const globalIndex = i + batchIndex;
-            onProgress(file.name, 100, globalIndex, files.length);
-          });
+          for (let j = 0; j < batch.length; j++) {
+            const globalIndex = i + j;
+            await new Promise((resolve) => setTimeout(resolve, 30)); // Small delay for visual effect
+            onProgress(batch[j].name, 100, globalIndex, files.length);
+          }
         }
 
         // Přidáme nahraná data do celkového výsledku
