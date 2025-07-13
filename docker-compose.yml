@@ -253,9 +253,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2048M  # ML service needs more memory for model loading
+          memory: 4096M  # ML service needs more memory for model loading on CPU
         reservations:
-          memory: 1024M
+          memory: 2048M
     volumes:
       - ./packages/ml:/ML
       - uploads_data:/ML/uploads

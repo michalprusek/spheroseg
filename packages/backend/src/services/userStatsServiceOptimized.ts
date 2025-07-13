@@ -111,6 +111,9 @@ export class UserStatsServiceOptimized {
         logger.debug('Storage limit columns not available, using default');
       }
 
+      // Generate recent activity from projects and images
+      const recentActivity = await this.generateRecentActivity(userId);
+
       // Prepare the final stats object
       const finalStats = {
         totalProjects: parseInt(stats.total_projects || 0, 10),
@@ -118,7 +121,7 @@ export class UserStatsServiceOptimized {
         completedSegmentations: parseInt(stats.completed_segmentations || 0, 10),
         storageUsedBytes: BigInt(stats.storage_used_bytes || 0),
         storageLimitBytes,
-        recentActivity: [], // Can be populated from activity tracking if needed
+        recentActivity,
         recentProjects: recent_projects || [],
         recentImages: recent_images || [],
         projectsThisMonth: parseInt(stats.projects_this_month || 0, 10),
@@ -181,6 +184,100 @@ export class UserStatsServiceOptimized {
       storageUsedBytes: BigInt(result.rows[0].storage_used_bytes || 0),
     };
   }
+
+  /**
+   * Generate recent activity from projects and images
+   */
+  async generateRecentActivity(userId: string) {
+    try {
+      const activityQuery = `
+        WITH combined_activities AS (
+          -- Project creation activities
+          SELECT 
+            'project_created' as type,
+            p.title as item_name,
+            p.id as item_id,
+            p.created_at as timestamp,
+            p.title as project_name,
+            p.id as project_id,
+            NULL as image_id,
+            NULL as image_name
+          FROM projects p
+          WHERE p.user_id = $1
+          
+          UNION ALL
+          
+          -- Image upload activities
+          SELECT 
+            'image_uploaded' as type,
+            i.name as item_name,
+            i.id as item_id,
+            i.created_at as timestamp,
+            p.title as project_name,
+            p.id as project_id,
+            i.id as image_id,
+            i.name as image_name
+          FROM images i
+          JOIN projects p ON i.project_id = p.id
+          WHERE p.user_id = $1
+          
+          UNION ALL
+          
+          -- Segmentation completed activities
+          SELECT 
+            'segmentation_completed' as type,
+            i.name as item_name,
+            i.id as item_id,
+            i.updated_at as timestamp,
+            p.title as project_name,
+            p.id as project_id,
+            i.id as image_id,
+            i.name as image_name
+          FROM images i
+          JOIN projects p ON i.project_id = p.id
+          WHERE p.user_id = $1
+            AND i.segmentation_status = 'completed'
+            AND i.updated_at > i.created_at
+        )
+        SELECT * FROM combined_activities
+        ORDER BY timestamp DESC
+        LIMIT 20
+      `;
+
+      const result = await this.pool.query(activityQuery, [userId]);
+      
+      return result.rows.map(row => ({
+        type: row.type,
+        description: this.getActivityDescription(row.type, row.item_name),
+        timestamp: row.timestamp.toISOString(),
+        project_id: row.project_id,
+        project_name: row.project_name,
+        image_id: row.image_id,
+        image_name: row.image_name,
+        item_id: row.item_id,
+        item_name: row.item_name
+      }));
+    } catch (error) {
+      logger.error('Error generating recent activity', { userId, error });
+      return [];
+    }
+  }
+
+  /**
+   * Get human-readable description for activity type
+   */
+  private getActivityDescription(type: string, itemName: string): string {
+    switch (type) {
+      case 'project_created':
+        return `Created project "${itemName}"`;
+      case 'image_uploaded':
+        return `Uploaded image "${itemName}"`;
+      case 'segmentation_completed':
+        return `Completed segmentation for "${itemName}"`;
+      default:
+        return `Activity on "${itemName}"`;
+    }
+  }
 }
 
 // Factory function for creating service instances
@@ -206,5 +303,14 @@ export const userStatsServiceOptimized = {
   getBasicStats: async (pool: Pool | IDatabase, userId: string) => {
     const service = createUserStatsService(pool);
     return service.getBasicStats(userId);
+  },
+
+  /**
+   * Generate recent activity with pool injection
+   * @deprecated Use createUserStatsService instead
+   */
+  generateRecentActivity: async (pool: Pool | IDatabase, userId: string) => {
+    const service = createUserStatsService(pool);
+    return service.generateRecentActivity(userId);
   },
 };

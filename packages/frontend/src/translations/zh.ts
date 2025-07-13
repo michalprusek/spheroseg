@@ -1458,7 +1458,7 @@ export default {
     contact: {
       title: '9. 联系我们',
       paragraph1: '如果您对本隐私政策有任何疑问，请通过以下方式联系我们：',
-      email: 'privacy@spheroseg.com',
+      email: 'spheroseg@utia.cas.cz',
     },
     lastUpdated: '最后更新：2025年1月7日',
   },

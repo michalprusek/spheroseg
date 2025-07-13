@@ -27,27 +27,10 @@ const Dashboard = () => {
 
   const { projects, loading, error, fetchProjects } = useDashboardProjects();
 
-  // Force refresh statistics when dashboard is loaded
+  // Fetch projects when dashboard is loaded or sort parameters change
   useEffect(() => {
-    const refreshDashboardData = async () => {
-      // Clear all dashboard-related caches
-      await clearByTag('dashboard-data');
-      await clearByTag('user-statistics');
-      await clearByTag('project-data');
-
-      // Invalidate React Query caches
-      queryClient.invalidateQueries(['userStatistics']);
-      queryClient.invalidateQueries(['projects']);
-
-      // Log that we're refreshing data
-      // console.log('Dashboard loaded - refreshing statistics and projects data');
-
-      // Fetch projects directly with current sort parameters
-      fetchProjects(10, 0, sortField, sortDirection);
-    };
-
-    refreshDashboardData();
-  }, [queryClient, clearByTag, fetchProjects, sortField, sortDirection]);
+    fetchProjects(10, 0, sortField, sortDirection);
+  }, [fetchProjects, sortField, sortDirection]);
 
   useEffect(() => {
     // Poslouchej události pro aktualizaci seznamu projektů

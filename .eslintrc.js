@@ -37,8 +37,12 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off', // Může být užitečné pro postupné typování
     '@typescript-eslint/no-explicit-any': 'warn', // Varovat před explicitním any
     'no-console': 'warn', // Varovat před použitím console.log
-    // Příklad pro vypnutí pravidla, pokud je potřeba:
-    // "@typescript-eslint/no-unused-vars": "off",
+    // Allow unused variables that start with underscore
+    '@typescript-eslint/no-unused-vars': ['error', { 
+      'argsIgnorePattern': '^_',
+      'varsIgnorePattern': '^_',
+      'ignoreRestSiblings': true 
+    }],
   },
   overrides: [
     {

@@ -1239,7 +1239,7 @@ export default {
     },
     contactUs: {
       title: '8. Contact Us',
-      paragraph1: 'If you have any questions about this Privacy Policy, please contact us at privacy@spheroseg.com.',
+      paragraph1: 'If you have any questions about this Privacy Policy, please contact us at spheroseg@utia.cas.cz.',
     },
   },
 

@@ -38,7 +38,7 @@ describe('App Configuration', () => {
     it('should have correct contact information', () => {
       expect(appConfig.contact.email).toBe('spheroseg@utia.cas.cz');
       expect(appConfig.contact.supportEmail).toBe('support@spheroseg.com');
-      expect(appConfig.contact.privacyEmail).toBe('privacy@spheroseg.com');
+      expect(appConfig.contact.privacyEmail).toBe('spheroseg@utia.cas.cz');
       expect(appConfig.contact.developer.name).toBe('Michal Průšek');
       expect(appConfig.contact.developer.email).toBe('prusemic@cvut.cz');
     });

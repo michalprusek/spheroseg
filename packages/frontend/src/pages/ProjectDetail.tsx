@@ -11,7 +11,7 @@ import ProjectUploaderSection from '@/components/project/ProjectUploaderSection'
 import { useProjectData } from '@/hooks/useProjectData';
 import { useImageFilter } from '@/hooks/useImageFilter';
 import { useProjectImageActions } from '@/components/project/ProjectImageActions';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 import { Project, ProjectImage, ImageStatus } from '@/types';
@@ -21,12 +21,6 @@ import * as socketClient from '@/services/socketClient';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { useTranslation } from 'react-i18next';
 import logger from '@/utils/logger'; // Import logger
-import { lazy, Suspense as ReactSuspense } from 'react';
-
-// Lazy load diagnostics component (only in dev mode)
-const DatabaseConsistencyCheck = lazy(() => 
-  import('@/components/diagnostics/DatabaseConsistencyCheck')
-);
 
 interface UseProjectDataReturn {
   project: Project | null;
@@ -367,9 +361,9 @@ const ProjectDetail = () => {
     };
   }, [id, refreshData, selectionMode]);
 
-  const toggleUploader = () => {
-    setShowUploader(!showUploader);
-  };
+  const toggleUploader = useCallback(() => {
+    setShowUploader(prev => !prev);
+  }, []);
 
   const toggleSelectionMode = () => {
     if (selectionMode) {
@@ -680,6 +674,10 @@ const ProjectDetail = () => {
         });
       }
 
+      // Clear the cache before refreshing to ensure we get fresh data from API
+      const { clearProjectImageCache } = await import('@/api/projectImages');
+      await clearProjectImageCache(projectId);
+      
       // Refresh data after a delay to get any server-side updates
       setTimeout(() => {
         refreshData();
@@ -776,7 +774,16 @@ const ProjectDetail = () => {
           } catch (error: any) {
             logger.warn(`Batch ${i + 1}: Failed to trigger segmentation:`, error);
             failCount += batch.length;
-
+            
+            // Revert status back to 'without_segmentation' for failed images
+            batch.forEach((id) => {
+              updateImageStatus(id, 'without_segmentation');
+            });
+            
+            // Show specific error message
+            const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+            toast.error(`Failed to queue segmentation: ${errorMessage}`);
+            
             // Informujeme uživatele o chybě
             if (batches.length > 1) {
               toast.error(t('project.segmentation.batchError', { current: i + 1, total: batches.length }));
@@ -875,13 +882,15 @@ const ProjectDetail = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
-        {showUploader ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
+        <AnimatePresence mode="wait">
+          {showUploader ? (
+            <motion.div
+              key="uploader"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
             {id ? (
               <ProjectUploaderSection
                 projectId={id}
@@ -901,9 +910,14 @@ const ProjectDetail = () => {
             ) : (
               <p>Error: Project ID is missing.</p>
             )}
-          </motion.div>
-        ) : (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="content"
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ duration: 0.3 }}
+            >
             <ProjectToolbar
               searchTerm={searchTerm}
               onSearchChange={handleSearch}
@@ -971,17 +985,9 @@ const ProjectDetail = () => {
               />
             )}
             
-            {/* Database diagnostics (dev mode only) */}
-            {import.meta.env.DEV && (
-              <ReactSuspense fallback={<div className="mt-4">Loading diagnostics...</div>}>
-                <DatabaseConsistencyCheck 
-                  projectId={id || ''} 
-                  onRefreshNeeded={refreshData}
-                />
-              </ReactSuspense>
-            )}
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

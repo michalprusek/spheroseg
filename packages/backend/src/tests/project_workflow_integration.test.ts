@@ -85,7 +85,7 @@ afterAll(async () => {
   }
 
   // Close database connection
-  await pool.end();
+  await pool.closePool();
   // eslint-disable-next-line no-console
   console.log('Integration tests completed');
 });

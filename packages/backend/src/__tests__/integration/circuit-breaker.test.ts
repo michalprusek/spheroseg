@@ -256,7 +256,7 @@ describe('Circuit Breaker Pattern', () => {
       for (let i = 0; i < 7; i++) {
         try {
           const result = await cdnBreaker.fire(`https://cdn.example.com/asset${i}.js`);
-          results.push({ success: true, latency: result.latency });
+          results.push({ success: true, latency: (result as any).latency });
         } catch (error) {
           results.push({ success: false, error });
         }
@@ -294,7 +294,7 @@ describe('Circuit Breaker Pattern', () => {
     it('should track circuit state changes', async () => {
       const stateChanges: any[] = [];
 
-      mlServiceBreaker.on('stateChange', (state) => {
+      mlServiceBreaker.on('stateChange' as any, (state: any) => {
         stateChanges.push({
           timestamp: Date.now(),
           from: state.from,
@@ -345,7 +345,7 @@ describe('Circuit Breaker Pattern', () => {
           circuitBreakerMetrics.timeouts.set(breaker.name, current + 1);
         });
 
-        breaker.on('stateChange', (state) => {
+        breaker.on('stateChange' as any, (state: any) => {
           circuitBreakerMetrics.state.set(breaker.name, state.to);
         });
       });
@@ -440,7 +440,7 @@ describe('Circuit Breaker Pattern', () => {
       
       // Verify queue positions
       queuedResults.forEach((result, index) => {
-        expect(result.queuePosition).toBe(index + 1);
+        expect((result as any).queuePosition).toBe(index + 1);
       });
     });
   });

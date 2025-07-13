@@ -18,7 +18,7 @@ jest.mock('bcryptjs', () => ({
 }));
 
 jest.mock('../db', () => ({
-  query: jest.fn().mockImplementation((query: string) => {
+  query: jest.fn().mockImplementation((query: string, params?: any[]) => {
     if (query.includes('SELECT * FROM users WHERE id')) {
       return {
         rows: [

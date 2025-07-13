@@ -13,8 +13,7 @@ import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb';
 import { showSuccess, showError } from '@/utils/toastUtils';
 import { tryCatch } from '@/utils/errorUtils';
 import apiClient from '@/lib/apiClient';
-import { useUserStatistics } from '@/hooks/useUserStatistics';
-import { useRecentActivity, ActivityItem } from '@/hooks/useRecentActivity';
+import { useExtendedUserStatistics } from '@/hooks/useExtendedUserStatistics';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface UserProfile {
@@ -37,11 +36,6 @@ interface ProfileStats {
   recentActivity?: Activity[];
 }
 
-interface ActivityItem {
-  action: string;
-  date: string;
-  daysAgo: number;
-}
 
 interface MockProject {
   id: string;
@@ -68,45 +62,83 @@ const Profile = () => {
   });
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
   const [recentImages, setRecentImages] = useState<any[]>([]);
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const { profile: contextProfile, loading: contextLoading } = useProfile();
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  // Force refresh statistics when profile page is loaded
-  useEffect(() => {
-    // Invalidate statistics cache to force a refresh
-    queryClient.invalidateQueries(['userStatistics']);
-
-    // Also invalidate activities cache
-    queryClient.invalidateQueries(['userActivities']);
-
-    // Log that we're refreshing data
-    console.log('Profile page loaded - refreshing statistics and activities data');
-  }, [queryClient]);
-
-  // Use the new hooks for statistics and activities
+  // Use the same statistics hook as Dashboard
   const {
-    statistics,
-    loading: statsLoading,
+    data: rawStats,
+    isLoading: statsLoading,
     error: statsError,
-  } = useUserStatistics({
-    showToasts: false,
-    useCache: true,
-    autoFetch: true,
-  });
+    refetch: fetchStatistics,
+    invalidate: clearCache,
+  } = useExtendedUserStatistics();
 
-  const {
-    activities,
-    loading: activitiesLoading,
-    error: activitiesError,
-  } = useRecentActivity({
-    limit: 10,
-    showToasts: false,
-    useCache: true,
-    autoFetch: true,
-  });
+  // Note: Removed aggressive refresh to prevent rate limiting
+  // The hook already handles caching and will fetch if data is stale
+
+  // Listen for statistics update events with debouncing (same as Dashboard)
+  useEffect(() => {
+    let updateTimeout: NodeJS.Timeout;
+
+    const debouncedUpdate = () => {
+      clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(() => {
+        console.log('Profile: Debounced statistics update');
+        fetchStatistics();
+      }, 1000); // 1 second debounce
+    };
+
+    const handleStatisticsUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('Profile: Statistics update needed event received', customEvent.detail);
+      debouncedUpdate();
+    };
+
+    const handleProjectDeleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        projectId: string;
+        projectName?: string;
+        updateStatistics?: boolean;
+      }>;
+
+      if (customEvent.detail.updateStatistics) {
+        console.log('Profile: Project deleted, updating statistics', customEvent.detail);
+        debouncedUpdate();
+      }
+    };
+
+    const handleImageDeleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        imageId: string;
+        projectId: string;
+        forceRefresh?: boolean;
+      }>;
+
+      console.log('Profile: Image deleted, updating statistics', customEvent.detail);
+      debouncedUpdate();
+    };
+
+    // Register event listeners
+    window.addEventListener('statistics-update-needed', handleStatisticsUpdate);
+    window.addEventListener('project-deleted', handleProjectDeleted);
+    window.addEventListener('image-deleted', handleImageDeleted);
+    window.addEventListener('project-created', handleStatisticsUpdate);
+    window.addEventListener('image-uploaded', handleStatisticsUpdate);
+
+    // Clean up event listeners on unmount
+    return () => {
+      clearTimeout(updateTimeout);
+      window.removeEventListener('statistics-update-needed', handleStatisticsUpdate);
+      window.removeEventListener('project-deleted', handleProjectDeleted);
+      window.removeEventListener('image-deleted', handleImageDeleted);
+      window.removeEventListener('project-created', handleStatisticsUpdate);
+      window.removeEventListener('image-uploaded', handleStatisticsUpdate);
+    };
+  }, [fetchStatistics]);
 
   // Load profile data from context
   useEffect(() => {
@@ -332,32 +364,21 @@ const Profile = () => {
 
   // Sync statistics from the hook to local state
   useEffect(() => {
-    if (statistics && !statsLoading) {
-      setProfileStats((prev) => ({
-        ...prev,
-        totalProjects: statistics.totalProjects || 0,
-        totalImages: statistics.totalImages || 0,
-        completedSegmentations: statistics.completedSegmentations || 0,
-        storageUsed: `${statistics.storageUsedMB || 0} MB`,
-      }));
+    if (rawStats && !statsLoading) {
+      setProfileStats({
+        totalProjects: rawStats.totalProjects || 0,
+        totalImages: rawStats.totalImages || 0,
+        completedSegmentations: rawStats.segmentedImages || 0,
+        storageUsed: `${(rawStats.storageUsed || 0).toFixed(1)} MB`,
+        recentActivity: rawStats.recentActivity || [],
+      });
 
-      // Also sync any recent data from the statistics hook
-      if (statistics.recentProjects && Array.isArray(statistics.recentProjects)) {
-        setRecentProjects(statistics.recentProjects);
-      }
-
-      if (statistics.recentImages && Array.isArray(statistics.recentImages)) {
-        setRecentImages(statistics.recentImages);
+      // Sync recent activity
+      if (rawStats.recentActivity && Array.isArray(rawStats.recentActivity)) {
+        setRecentActivity(rawStats.recentActivity);
       }
     }
-  }, [statistics, statsLoading]);
-
-  // Sync activities from the activities hook
-  useEffect(() => {
-    if (activities && !activitiesLoading && Array.isArray(activities)) {
-      setRecentActivity(activities);
-    }
-  }, [activities, activitiesLoading]);
+  }, [rawStats, statsLoading]);
 
   if (loading) {
     return (
@@ -527,13 +548,13 @@ const Profile = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold mb-4">{t('profile.recentActivity')}</h3>
-                {activitiesLoading ? (
+                {statsLoading ? (
                   <div className="flex justify-center items-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
-                ) : activities && activities.length > 0 ? (
+                ) : recentActivity && recentActivity.length > 0 ? (
                   <ul className="space-y-4">
-                    {activities.map((activity, index) => (
+                    {recentActivity.slice(0, 10).map((activity, index) => (
                       <li key={index} className="flex items-start space-x-3">
                         <div className="flex-shrink-0 mt-1">
                           {activity.type === 'project_created' && <FileText className="h-5 w-5 text-blue-500" />}

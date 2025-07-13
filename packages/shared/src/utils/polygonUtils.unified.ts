@@ -405,30 +405,32 @@ export const calculateLineSegmentIntersection = (
       y: y1 + ua * (y2 - y1)
     };
     // Only log detailed info if explicitly enabled
-    if (false) { // Set to true for debugging
-      console.log('[calculateLineSegmentIntersection] Intersection found:', {
-        ua,
-        ub,
-        intersection,
-        lineStart,
-        lineEnd,
-        segStart,
-        segEnd
-      });
-    }
+    // Debug logging (disabled in production)
+    // if (false) { // Set to true for debugging
+    //   console.log('[calculateLineSegmentIntersection] Intersection found:', {
+    //     ua,
+    //     ub,
+    //     intersection,
+    //     lineStart,
+    //     lineEnd,
+    //     segStart,
+    //     segEnd
+    //   });
+    // }
     return intersection;
   }
   
-  if (false) { // Set to true for debugging
-    console.log('[calculateLineSegmentIntersection] No intersection:', {
-      ua,
-      ub,
-      lineStart,
-      lineEnd,
-      segStart,
-      segEnd
-    });
-  }
+  // Debug logging (disabled in production)  
+  // if (false) { // Set to true for debugging
+  //   console.log('[calculateLineSegmentIntersection] No intersection:', {
+  //     ua,
+  //     ub,
+  //     lineStart,
+  //     lineEnd,
+  //     segStart,
+  //     segEnd
+  //   });
+  // }
 
   return null;
 };
@@ -445,17 +447,18 @@ export const calculateLinePolygonIntersections = (
   lineEnd: Point, 
   polygon: Point[]
 ): Intersection[] => {
-  console.log('[calculateLinePolygonIntersections] Called with:', {
-    lineStart,
-    lineEnd,
-    polygonPoints: polygon.length,
-    polygonBounds: polygon.length > 0 ? {
-      minX: Math.min(...polygon.map(p => p.x)),
-      maxX: Math.max(...polygon.map(p => p.x)),
-      minY: Math.min(...polygon.map(p => p.y)),
-      maxY: Math.max(...polygon.map(p => p.y))
-    } : null
-  });
+  // Debug logging (disabled in production)
+  // console.log('[calculateLinePolygonIntersections] Called with:', {
+  //   lineStart,
+  //   lineEnd,
+  //   polygonPoints: polygon.length,
+  //   polygonBounds: polygon.length > 0 ? {
+  //     minX: Math.min(...polygon.map(p => p.x)),
+  //     maxX: Math.max(...polygon.map(p => p.x)),
+  //     minY: Math.min(...polygon.map(p => p.y)),
+  //     maxY: Math.max(...polygon.map(p => p.y))
+  //   } : null
+  // });
   
   // Extend the line far beyond the polygon bounds to ensure intersections
   const dx = lineEnd.x - lineStart.x;
@@ -463,7 +466,8 @@ export const calculateLinePolygonIntersections = (
   const lineLength = Math.sqrt(dx * dx + dy * dy);
   
   if (lineLength === 0) {
-    console.log('[calculateLinePolygonIntersections] Line has zero length, returning empty');
+    // Debug logging (disabled in production)
+    // console.log('[calculateLinePolygonIntersections] Line has zero length, returning empty');
     return [];
   }
   
@@ -482,10 +486,11 @@ export const calculateLinePolygonIntersections = (
     y: lineEnd.y + dirY * extendFactor
   };
   
-  console.log('[calculateLinePolygonIntersections] Extended line:', {
-    original: { lineStart, lineEnd },
-    extended: { extendedStart, extendedEnd }
-  });
+  // Debug logging (disabled in production)
+  // console.log('[calculateLinePolygonIntersections] Extended line:', {
+  //   original: { lineStart, lineEnd },
+  //   extended: { extendedStart, extendedEnd }
+  // });
   
   const intersections: Intersection[] = [];
 
@@ -497,10 +502,11 @@ export const calculateLinePolygonIntersections = (
     );
 
     if (intersection) {
-      console.log(`[calculateLinePolygonIntersections] Found intersection at edge ${i}->>${j}:`, {
-        intersection,
-        edge: `(${polygon[i].x}, ${polygon[i].y}) -> (${polygon[j].x}, ${polygon[j].y})`
-      });
+      // Debug logging (disabled in production)
+      // console.log(`[calculateLinePolygonIntersections] Found intersection at edge ${i}->>${j}:`, {
+      //   intersection,
+      //   edge: `(${polygon[i].x}, ${polygon[i].y}) -> (${polygon[j].x}, ${polygon[j].y})`
+      // });
       // Calculate distance from line start for sorting
       const dist = distance(lineStart, intersection);
 
@@ -664,28 +670,31 @@ export const slicePolygon = (
   sliceStart: Point, 
   sliceEnd: Point
 ): Point[][] => {
-  console.log('[slicePolygon unified] Called with:', {
-    polygonPoints: polygon.length,
-    sliceStart,
-    sliceEnd,
-    polygonBounds: polygon.length > 0 ? {
-      minX: Math.min(...polygon.map(p => p.x)),
-      maxX: Math.max(...polygon.map(p => p.x)),
-      minY: Math.min(...polygon.map(p => p.y)),
-      maxY: Math.max(...polygon.map(p => p.y))
-    } : null,
-    firstFewPoints: polygon.slice(0, 5).map((p, i) => `[${i}]: (${p.x}, ${p.y})`)
-  });
+  // Debug logging (disabled in production)
+  // console.log('[slicePolygon unified] Called with:', {
+  //   polygonPoints: polygon.length,
+  //   sliceStart,
+  //   sliceEnd,
+  //   polygonBounds: polygon.length > 0 ? {
+  //     minX: Math.min(...polygon.map(p => p.x)),
+  //     maxX: Math.max(...polygon.map(p => p.x)),
+  //     minY: Math.min(...polygon.map(p => p.y)),
+  //     maxY: Math.max(...polygon.map(p => p.y))
+  //   } : null,
+  //   firstFewPoints: polygon.slice(0, 5).map((p, i) => `[${i}]: (${p.x}, ${p.y})`)
+  // });
   
   const intersections = calculateLinePolygonIntersections(
     sliceStart, sliceEnd, polygon
   );
 
-  console.log('[slicePolygon unified] Found intersections:', intersections.length, intersections);
+  // Debug logging (disabled in production)
+  // console.log('[slicePolygon unified] Found intersections:', intersections.length, intersections);
 
   // Need exactly 2 intersections to slice properly
   if (intersections.length !== 2) {
-    console.log('[slicePolygon unified] Wrong number of intersections, returning original polygon');
+    // Debug logging (disabled in production)
+    // console.log('[slicePolygon unified] Wrong number of intersections, returning original polygon');
     return [polygon]; // Return original polygon
   }
 
@@ -815,7 +824,7 @@ export const simplifyClosedPolygon = (points: Point[], epsilon: number): Point[]
   // Find the point with the maximum distance from any other point
   let maxDistance = 0;
   let maxI = 0;
-  let maxJ = 0;
+  // let maxJ = 0;
 
   for (let i = 0; i < points.length; i++) {
     for (let j = i + 1; j < points.length; j++) {
@@ -823,7 +832,7 @@ export const simplifyClosedPolygon = (points: Point[], epsilon: number): Point[]
       if (dist > maxDistance) {
         maxDistance = dist;
         maxI = i;
-        maxJ = j;
+        // maxJ = j;
       }
     }
   }
@@ -1033,7 +1042,8 @@ export const calculateMetrics = (
       centroid
     };
   } catch (error) {
-    console.error('Error calculating metrics:', error);
+    // Debug logging (disabled in production)
+    // console.error('Error calculating metrics:', error);
 
     // Return default metrics
     return {
@@ -1108,7 +1118,8 @@ export const executePolygonWorkerOperation = async <T>(
 
     return await operation(points);
   } catch (error) {
-    console.warn(`Polygon worker operation ${operationName} failed:`, error);
+    // Debug logging (disabled in production)
+    // console.warn(`Polygon worker operation ${operationName} failed:`, error);
     return defaultValue;
   }
 };

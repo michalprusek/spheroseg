@@ -314,7 +314,7 @@ async function processAndStoreImage(
   }
 
   const imageResult = await client.query(
-    'INSERT INTO images (project_id, user_id, name, storage_filename, storage_path, thumbnail_path, width, height, metadata, file_size) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+    'INSERT INTO images (project_id, user_id, name, storage_filename, storage_path, thumbnail_path, width, height, metadata, file_size, segmentation_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
     [
       projectIdStr, // Use validated UUID string
       userIdStr, // Use validated UUID string
@@ -327,6 +327,7 @@ async function processAndStoreImage(
       { originalSize: file.size, originalFormat: file.mimetype }, // Store original size and format
       // If TIFF was converted, we store the size of the converted JPEG, not the original TIFF
       (await fs.promises.stat(finalStoragePath)).size,
+      'without_segmentation', // Explicitly set initial segmentation status
     ]
   );
 
@@ -1042,8 +1043,9 @@ router.get(
       const imageResult = await getPool().query(
         `SELECT 
           i.*,
-          COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
-          sr.id as segmentation_id
+          COALESCE(i.segmentation_status, 'without_segmentation') as segmentationStatus,
+          sr.id as segmentation_id,
+          sr.status as result_status
         FROM images i
         LEFT JOIN segmentation_results sr ON i.id = sr.image_id
         WHERE i.id = $1 AND i.project_id = $2`,
@@ -1150,8 +1152,9 @@ router.get(
         name
           ? `SELECT 
               i.*,
-              COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as "segmentationStatus",
-              sr.id as segmentation_id
+              COALESCE(i.segmentation_status, 'without_segmentation') as "segmentationStatus",
+              sr.id as segmentation_id,
+              sr.status as result_status
             FROM images i
             LEFT JOIN segmentation_results sr ON i.id = sr.image_id
             WHERE i.project_id = $1 AND i.name = $2 
@@ -1159,8 +1162,9 @@ router.get(
             LIMIT $3 OFFSET $4`
           : `SELECT 
               i.*,
-              COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as "segmentationStatus",
-              sr.id as segmentation_id
+              COALESCE(i.segmentation_status, 'without_segmentation') as "segmentationStatus",
+              sr.id as segmentation_id,
+              sr.status as result_status
             FROM images i
             LEFT JOIN segmentation_results sr ON i.id = sr.image_id
             WHERE i.project_id = $1 
@@ -1392,8 +1396,9 @@ router.get(
           `SELECT 
             i.*, 
             p.user_id,
-            COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
-            sr.id as segmentation_id
+            COALESCE(i.segmentation_status, 'without_segmentation') as segmentationStatus,
+            sr.id as segmentation_id,
+            sr.status as result_status
           FROM images i 
           JOIN projects p ON i.project_id = p.id 
           LEFT JOIN segmentation_results sr ON i.id = sr.image_id
@@ -1406,8 +1411,9 @@ router.get(
           `SELECT 
             i.*, 
             p.user_id,
-            COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
-            sr.id as segmentation_id
+            COALESCE(i.segmentation_status, 'without_segmentation') as segmentationStatus,
+            sr.id as segmentation_id,
+            sr.status as result_status
           FROM images i 
           JOIN projects p ON i.project_id = p.id 
           LEFT JOIN segmentation_results sr ON i.id = sr.image_id

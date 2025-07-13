@@ -71,7 +71,7 @@ describe('Segmentation Workflow Integration', () => {
     await cleanupTestData(user.id);
 
     // Close the database pool
-    await pool.end();
+    await pool.closePool();
   });
 
   describe('1. Segmentation Basic Operations', () => {

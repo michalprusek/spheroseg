@@ -15,6 +15,7 @@ import { Pool, PoolClient } from 'pg';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { EventEmitter } from 'events';
+import path from 'path';
 import pool from '../db';
 import logger from '../utils/logger';
 import config from '../config';
@@ -490,10 +491,28 @@ class SegmentationQueueService extends EventEmitter {
     const internalBackendUrl =
       process.env.NODE_ENV === 'production' ? 'http://backend:5001' : config.appUrl;
 
+    // Validate and normalize the image path to prevent path traversal
+    const normalizedPath = path.normalize(imagePath);
+    
+    // Ensure the path starts with /uploads/ and doesn't contain any traversal attempts
+    if (!normalizedPath.startsWith('/uploads/') || normalizedPath.includes('..')) {
+      logger.error('Invalid image path detected', { imagePath, normalizedPath });
+      throw new Error('Invalid image path');
+    }
+    
+    // Convert the image path for ML service
+    // Backend uses /uploads/ but ML service has volumes mounted at /ML/uploads/
+    const mlImagePath = normalizedPath.replace(/^\/uploads\//, '/ML/uploads/');
+    logger.debug('Converting image path for ML service', { 
+      originalPath: imagePath, 
+      normalizedPath,
+      mlPath: mlImagePath 
+    });
+
     const taskPayload = {
       taskId,
       imageId,
-      imagePath,
+      imagePath: mlImagePath,
       parameters,
       retries,
       callbackUrl: `${internalBackendUrl}/api/images/${imageId}/segmentation`, // Callback URL for ML service
@@ -799,9 +818,9 @@ class SegmentationQueueService extends EventEmitter {
           priority, 
           created_at, 
           updated_at,
-          error_message,
+          error,
           parameters,
-          result_data
+          result
         FROM segmentation_tasks 
         WHERE id = $1
       `,

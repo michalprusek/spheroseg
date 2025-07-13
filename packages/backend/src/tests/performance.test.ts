@@ -103,7 +103,7 @@ describe('API Performance Tests', () => {
   afterAll(async () => {
     // Clean up
     await deleteTestUser(testUser.id);
-    await pool.end();
+    await pool.closePool();
   });
 
   describe('Concurrent Request Performance', () => {

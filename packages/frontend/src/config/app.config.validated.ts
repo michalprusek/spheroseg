@@ -124,7 +124,7 @@ const rawConfig = {
   contact: {
     email: 'spheroseg@utia.cas.cz',
     supportEmail: 'support@spheroseg.com',
-    privacyEmail: 'privacy@spheroseg.com',
+    privacyEmail: 'spheroseg@utia.cas.cz',
     developer: {
       name: 'Michal Průšek',
       title: 'Bc. Michal Průšek',

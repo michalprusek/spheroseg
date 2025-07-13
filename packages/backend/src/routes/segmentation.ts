@@ -323,15 +323,15 @@ async function handleBatchSegmentation(
         // Update status in DB
         segmentationPromises.push(
           pool.query(
-            `UPDATE images SET status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`,
-            [imageId]
+            `UPDATE images SET segmentation_status = $1, updated_at = NOW() WHERE id = $2`,
+            [SEGMENTATION_STATUS.QUEUED, imageId]
           )
         );
         segmentationPromises.push(
           pool.query(
-            `INSERT INTO segmentation_results (image_id, status, parameters) VALUES ($1, '${SEGMENTATION_STATUS.QUEUED}', $2)
-                          ON CONFLICT (image_id) DO UPDATE SET status = '${SEGMENTATION_STATUS.QUEUED}', parameters = $2, updated_at = NOW()`,
-            [imageId, combinedParameters] // Použijeme kompletní parametry
+            `INSERT INTO segmentation_results (image_id, status, parameters) VALUES ($1, $2, $3)
+                          ON CONFLICT (image_id) DO UPDATE SET status = $2, parameters = $3, updated_at = NOW()`,
+            [imageId, SEGMENTATION_STATUS.QUEUED, combinedParameters] // Použijeme kompletní parametry
           )
         );
         // Trigger task asynchronously with priority and other parameters

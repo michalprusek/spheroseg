@@ -1,7 +1,6 @@
 import React from 'react';
 import { toast as sonnerToast, ExternalToast } from 'sonner';
-import { IconType } from 'react-icons';
-import { FiCheckCircle, FiXCircle, FiInfo, FiAlertTriangle } from 'react-icons/fi';
+import { CheckCircle, XCircle, Info, AlertTriangle, Loader2, LucideIcon } from 'lucide-react';
 
 /**
  * Enhanced Toast Service
@@ -24,7 +23,7 @@ export interface ToastOptions extends ExternalToast {
   };
 
   // Styling options
-  icon?: IconType | React.ReactNode;
+  icon?: LucideIcon | React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
 
@@ -56,11 +55,11 @@ const DEFAULT_DURATIONS: Record<ToastType, number> = {
 
 // Default icons for toast types
 const DEFAULT_ICONS: Record<ToastType, React.ReactNode> = {
-  success: <FiCheckCircle className="w-5 h-5" />,
-  error: <FiXCircle className="w-5 h-5" />,
-  info: <FiInfo className="w-5 h-5" />,
-  warning: <FiAlertTriangle className="w-5 h-5" />,
-  loading: null,
+  success: <CheckCircle className="w-5 h-5" />,
+  error: <XCircle className="w-5 h-5" />,
+  info: <Info className="w-5 h-5" />,
+  warning: <AlertTriangle className="w-5 h-5" />,
+  loading: <Loader2 className="w-5 h-5 animate-spin" />,
   custom: null,
 };
 

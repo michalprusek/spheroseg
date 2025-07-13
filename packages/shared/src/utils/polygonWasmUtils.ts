@@ -27,12 +27,12 @@ export interface WasmPolygonModule {
 export class PolygonWasmProcessor {
   private module: WasmPolygonModule | null = null;
   
-  async initialize(wasmUrl: string): Promise<void> {
+  async initialize(_wasmUrl: string): Promise<void> {
     // In a real implementation, this would load the WASM module
     // For testing, we'll create a mock
     this.module = {
-      _malloc: (size: number) => 0,
-      _free: (ptr: number) => {},
+      _malloc: (_size: number) => 0,
+      _free: (_ptr: number) => {},
       HEAP8: new Int8Array(1024),
       HEAP16: new Int16Array(512),
       HEAP32: new Int32Array(256),
@@ -53,7 +53,7 @@ export class PolygonWasmProcessor {
     return this.module !== null;
   }
   
-  simplifyPolygon(points: Array<{x: number; y: number}>, tolerance: number): Array<{x: number; y: number}> {
+  simplifyPolygon(points: Array<{x: number; y: number}>, _tolerance: number): Array<{x: number; y: number}> {
     if (!this.module) {
       throw new Error('WASM module not initialized');
     }
@@ -69,8 +69,8 @@ export class PolygonWasmProcessor {
   
   splitPolygon(
     points: Array<{x: number; y: number}>,
-    lineStart: {x: number; y: number},
-    lineEnd: {x: number; y: number}
+    _lineStart: {x: number; y: number},
+    _lineEnd: {x: number; y: number}
   ): [Array<{x: number; y: number}>, Array<{x: number; y: number}>] | null {
     if (!this.module) {
       throw new Error('WASM module not initialized');
@@ -156,6 +156,9 @@ export class PolygonWasmProcessor {
 // Singleton instance
 export const polygonWasmProcessor = new PolygonWasmProcessor();
 
+// Export with alias for backward compatibility
+export const polygonWasm = polygonWasmProcessor;
+
 // Helper functions
 export async function initializeWasm(wasmUrl: string = '/polygon-ops.wasm'): Promise<void> {
   await polygonWasmProcessor.initialize(wasmUrl);
@@ -163,6 +166,66 @@ export async function initializeWasm(wasmUrl: string = '/polygon-ops.wasm'): Pro
 
 export function isWasmInitialized(): boolean {
   return polygonWasmProcessor.isInitialized();
+}
+
+// Hook for React usage
+export function usePolygonWasm() {
+  // This is a simplified version - the actual implementation should be in the frontend
+  return {
+    load: async () => initializeWasm(),
+    isPointInPolygon: (point: {x: number; y: number}, polygon: Array<{x: number; y: number}>) => 
+      polygonWasmProcessor.pointInPolygon(point, polygon),
+    distanceToSegment: (point: {x: number; y: number}, segStart: {x: number; y: number}, segEnd: {x: number; y: number}) => {
+      // Simple distance calculation
+      const A = point.x - segStart.x;
+      const B = point.y - segStart.y;
+      const C = segEnd.x - segStart.x;
+      const D = segEnd.y - segStart.y;
+      
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let param = -1;
+      
+      if (lenSq !== 0) param = dot / lenSq;
+      
+      let xx, yy;
+      
+      if (param < 0) {
+        xx = segStart.x;
+        yy = segStart.y;
+      } else if (param > 1) {
+        xx = segEnd.x;
+        yy = segEnd.y;
+      } else {
+        xx = segStart.x + param * C;
+        yy = segStart.y + param * D;
+      }
+      
+      const dx = point.x - xx;
+      const dy = point.y - yy;
+      return Math.sqrt(dx * dx + dy * dy);
+    },
+    calculateIntersection: () => null, // Not implemented in mock
+    calculatePolygonArea: (polygon: Array<{x: number; y: number}>) => 
+      polygonWasmProcessor.calculateArea(polygon),
+    calculatePolygonPerimeter: (polygon: Array<{x: number; y: number}>) => 
+      polygonWasmProcessor.calculatePerimeter(polygon),
+    calculateBoundingBox: (polygon: Array<{x: number; y: number}>) => {
+      if (!polygon.length) return null;
+      let minX = polygon[0].x, maxX = polygon[0].x;
+      let minY = polygon[0].y, maxY = polygon[0].y;
+      
+      for (const p of polygon) {
+        minX = Math.min(minX, p.x);
+        maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y);
+        maxY = Math.max(maxY, p.y);
+      }
+      
+      return { minX, minY, maxX, maxY };
+    },
+    doPolygonsIntersect: () => false, // Not implemented in mock
+  };
 }
 
 export default polygonWasmProcessor;

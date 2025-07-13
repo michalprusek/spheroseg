@@ -16,6 +16,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@shared': path.resolve(__dirname, './src/shared'),
       '@spheroseg/shared': path.resolve(__dirname, '../shared/src'),
+      '@spheroseg/types': path.resolve(__dirname, '../types/src'),
     },
   },
 });

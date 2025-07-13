@@ -1426,7 +1426,7 @@ export default {
     contact: {
       title: '9. Contact Us',
       paragraph1: 'If you have any questions about this Privacy Policy, please contact us at:',
-      email: 'privacy@spheroseg.com',
+      email: 'spheroseg@utia.cas.cz',
     },
     lastUpdated: 'Last Updated: January 7, 2025',
   },

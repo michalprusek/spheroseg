@@ -17,6 +17,14 @@
     "./utils/pathUtils": {
       "types": "./dist/utils/pathUtils.d.ts",
       "default": "./dist/utils/pathUtils.js"
+    },
+    "./utils/polygonWasmUtils": {
+      "types": "./dist/utils/polygonWasmUtils.d.ts",
+      "default": "./dist/utils/polygonWasmUtils.js"
+    },
+    "./utils/polygonUtils": {
+      "types": "./dist/utils/polygonUtils.d.ts",
+      "default": "./dist/utils/polygonUtils.js"
     }
   },
   "scripts": {

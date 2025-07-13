@@ -2,25 +2,36 @@
  * Tests for container information utilities
  */
 
+// Mock logger first
 jest.mock('../logger');
 
-// Manual mocks for fs module
-const mockExistsSync = jest.fn();
-const mockReadFileSync = jest.fn();
-
-jest.mock('fs', () => ({
-  existsSync: mockExistsSync,
-  readFileSync: mockReadFileSync,
-  mkdirSync: jest.fn(),
-}));
-
-import { getContainerLimits, getEffectiveMemoryLimit } from '../containerInfo';
-import logger from '../logger';
-
 describe('Container Info Utilities', () => {
+  let mockExistsSync: jest.Mock;
+  let mockReadFileSync: jest.Mock;
+  let getContainerLimits: any;
+  let getEffectiveMemoryLimit: any;
+
   beforeEach(() => {
     jest.clearAllMocks();
     delete process.env.CONTAINER_MEMORY_LIMIT_MB;
+    
+    // Clear the module cache
+    jest.resetModules();
+    
+    // Create fresh mocks for each test
+    mockExistsSync = jest.fn();
+    mockReadFileSync = jest.fn();
+    
+    // Mock fs module
+    jest.doMock('fs', () => ({
+      existsSync: mockExistsSync,
+      readFileSync: mockReadFileSync,
+    }));
+    
+    // Import functions after mocking
+    const containerInfo = require('../containerInfo');
+    getContainerLimits = containerInfo.getContainerLimits;
+    getEffectiveMemoryLimit = containerInfo.getEffectiveMemoryLimit;
   });
 
   describe('getContainerLimits', () => {
@@ -51,7 +62,12 @@ describe('Container Info Utilities', () => {
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
         return false;
       });
-      mockReadFileSync.mockReturnValue(limitBytes.toString());
+      mockReadFileSync.mockImplementation((path, encoding) => {
+        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
+          return limitBytes.toString();
+        }
+        return '';
+      });
 
       const result = getContainerLimits();
       expect(result.memoryLimitBytes).toBe(limitBytes);
@@ -81,7 +97,12 @@ describe('Container Info Utilities', () => {
         if (path === '/sys/fs/cgroup/memory.max') return true;
         return false;
       });
-      mockReadFileSync.mockReturnValue(limitBytes.toString());
+      mockReadFileSync.mockImplementation((path, encoding) => {
+        if (path === '/sys/fs/cgroup/memory.max') {
+          return limitBytes.toString();
+        }
+        return '';
+      });
 
       const result = getContainerLimits();
       expect(result.memoryLimitBytes).toBe(limitBytes);
@@ -132,13 +153,19 @@ describe('Container Info Utilities', () => {
 
   describe('getEffectiveMemoryLimit', () => {
     it('should use detected container limit', () => {
+      const logger = require('../logger').default;
       mockExistsSync.mockImplementation((path) => {
         if (path === '/.dockerenv') return false;
         if (path === '/proc/self/cgroup') return false;
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
         return false;
       });
-      mockReadFileSync.mockReturnValue('268435456'); // 256MB
+      mockReadFileSync.mockImplementation((path, encoding) => {
+        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
+          return '268435456'; // 256MB
+        }
+        return '';
+      });
 
       const limit = getEffectiveMemoryLimit(512);
       expect(limit).toBe(256);
@@ -146,6 +173,7 @@ describe('Container Info Utilities', () => {
     });
 
     it('should use default limit when no container limit detected', () => {
+      const logger = require('../logger').default;
       mockExistsSync.mockReturnValue(false);
 
       const limit = getEffectiveMemoryLimit(512);
@@ -160,7 +188,12 @@ describe('Container Info Utilities', () => {
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
         return false;
       });
-      mockReadFileSync.mockReturnValue('1073741824'); // 1GB
+      mockReadFileSync.mockImplementation((path, encoding) => {
+        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
+          return '1073741824'; // 1GB
+        }
+        return '';
+      });
 
       const limit = getEffectiveMemoryLimit(512);
       expect(limit).toBe(1024);

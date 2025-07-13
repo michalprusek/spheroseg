@@ -21,7 +21,13 @@ export const useExtendedUserStatistics = () => {
     tags: ['user-data', 'user-statistics', 'dashboard-data'],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    retry: 1,
+    retry: 3, // Retry up to 3 times
+    retryDelay: (attemptIndex) => {
+      // Exponential backoff: 1s, 2s, 4s
+      return Math.min(1000 * Math.pow(2, attemptIndex), 10000);
+    },
+    refetchOnWindowFocus: false, // Prevent refetch on window focus
+    refetchOnMount: false, // Prevent refetch on mount if data exists
     onSuccess: (data) => {
       logger.info('Extended user statistics API response:', data);
     },

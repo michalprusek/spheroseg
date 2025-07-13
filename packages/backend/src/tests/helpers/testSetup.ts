@@ -129,7 +129,7 @@ export async function cleanupTestData(
   projectIds: string[] = [],
   imageIds: string[] = []
 ) {
-  const client = await pool.connect();
+  const client = await pool.getPool().connect();
 
   try {
     await client.query('BEGIN');

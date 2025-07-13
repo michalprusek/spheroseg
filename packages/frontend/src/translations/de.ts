@@ -1219,7 +1219,7 @@ export default {
     contact: {
       title: '9. Kontaktieren Sie uns',
       paragraph1: 'Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns bitte unter:',
-      email: 'privacy@spheroseg.com',
+      email: 'spheroseg@utia.cas.cz',
     },
     lastUpdated: 'Zuletzt aktualisiert: 7. Januar 2025',
   },

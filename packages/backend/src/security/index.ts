@@ -48,6 +48,7 @@ export {
   standardLimiter,
   authLimiter,
   sensitiveOperationsLimiter,
+  userStatsLimiter,
   createRateLimiter,
 } from './middleware/rateLimitMiddleware';
 

@@ -49,7 +49,7 @@ describe('Segmentation Service Tests', () => {
       fs.unlinkSync(testImagePath);
     }
     await deleteTestUser(testUser.id);
-    await pool.end();
+    await pool.closePool();
   });
 
   it('should trigger segmentation for an image', async () => {

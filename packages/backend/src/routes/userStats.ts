@@ -1,5 +1,6 @@
 import express, { Response, Router } from 'express';
 import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
+import { userStatsLimiter } from '../security/middleware/rateLimitMiddleware';
 import userStatsService from '../services/userStatsService';
 import { userStatsServiceOptimized } from '../services/userStatsServiceOptimized';
 import pool from '../db';
@@ -8,7 +9,7 @@ import logger from '../utils/logger';
 const router: Router = express.Router();
 
 // GET /api/users/me/stats - Get basic statistics for the current user
-router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me/stats', authMiddleware, userStatsLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
@@ -73,7 +74,7 @@ router.get('/me/stats', authMiddleware, async (req: AuthenticatedRequest, res: R
 });
 
 // GET /api/users/me/statistics - Alias for /api/users/me/stats
-router.get('/me/statistics', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me/statistics', authMiddleware, userStatsLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
