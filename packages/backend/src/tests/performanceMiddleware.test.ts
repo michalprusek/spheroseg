@@ -8,13 +8,25 @@ jest.mock('../config', () => ({
 }));
 
 // Mock logger
-jest.mock('../utils/logger', () => ({
-  default: {
+jest.mock('../utils/logger', () => {
+  const mockLogger = {
     error: jest.fn(),
     warn: jest.fn(),
     info: jest.fn(),
-  },
-}));
+    debug: jest.fn(),
+    http: jest.fn(),
+    verbose: jest.fn(),
+    silly: jest.fn(),
+  };
+  return {
+    default: mockLogger,
+    logger: mockLogger,
+    createLogger: jest.fn(() => mockLogger),
+    stream: {
+      write: jest.fn(),
+    },
+  };
+});
 
 // Import logger after mocking
 import logger from '../utils/logger';

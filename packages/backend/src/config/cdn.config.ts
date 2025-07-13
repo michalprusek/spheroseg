@@ -1,4 +1,4 @@
-import { config } from './index';
+import config from './index';
 
 export interface CDNConfig {
   enabled: boolean;

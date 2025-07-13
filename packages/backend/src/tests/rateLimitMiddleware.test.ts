@@ -53,6 +53,7 @@ describe('Rate Limiting Middleware', () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
       set: jest.fn(),
+      setHeader: jest.fn(),
     };
 
     // Create next function with jest.fn() to get mock functionality

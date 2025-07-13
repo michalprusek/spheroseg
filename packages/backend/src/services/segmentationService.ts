@@ -2,6 +2,7 @@ import pool from '../db';
 import config from '../config';
 import logger from '../utils/logger';
 import segmentationQueueService from './segmentationQueueService';
+import { ApiError } from '../utils/ApiError';
 
 /**
  * Function to add a segmentation task to the queue

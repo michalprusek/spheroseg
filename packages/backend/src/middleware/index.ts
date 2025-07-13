@@ -103,14 +103,8 @@ export const configureBodyParsingMiddleware = (app: Application): void => {
  * i18n middleware configuration
  */
 export const configureI18nMiddleware = (app: Application): void => {
-  // Add i18n middleware
-  const i18nMiddleware = createI18nMiddleware();
-  app.use(i18nMiddleware);
-  
-  // Add user language detection middleware (must be after auth)
-  app.use(setUserLanguage);
-  
-  logger.info('i18n middleware configured', {
+  // TODO: Implement i18n middleware when i18n module is available
+  logger.info('i18n middleware skipped - not implemented yet', {
     languages: ['en', 'cs', 'de', 'es', 'fr', 'zh']
   });
 };

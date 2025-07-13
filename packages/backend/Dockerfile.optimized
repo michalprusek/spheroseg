@@ -1,0 +1,93 @@
+# Optimized Backend Dockerfile with multi-stage build
+# Reduces image size and improves build caching
+
+# Stage 1: Dependencies
+FROM node:18-alpine AS deps
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
+# Copy package files
+COPY package*.json ./
+COPY packages/backend/package*.json ./packages/backend/
+COPY packages/shared/package*.json ./packages/shared/
+COPY packages/types/package*.json ./packages/types/
+
+# Install dependencies with cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production
+
+# Stage 2: Build
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
+# Copy package files
+COPY package*.json ./
+COPY packages/backend/package*.json ./packages/backend/
+COPY packages/shared/package*.json ./packages/shared/
+COPY packages/types/package*.json ./packages/types/
+
+# Install all dependencies (including dev)
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
+# Copy source code
+COPY packages/backend ./packages/backend
+COPY packages/shared ./packages/shared
+COPY packages/types ./packages/types
+COPY turbo.json ./
+COPY tsconfig.json ./
+
+# Build the application
+RUN npm run build:backend
+
+# Stage 3: Runtime
+FROM node:18-alpine AS runtime
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apk add --no-cache \
+    tini \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs \
+    && adduser -S nodejs -u 1001
+
+# Copy production dependencies from deps stage
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/packages ./packages
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nodejs:nodejs /app/packages/backend/dist ./packages/backend/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/types/dist ./packages/types/dist
+
+# Copy configuration files
+COPY --chown=nodejs:nodejs packages/backend/.env.example ./packages/backend/.env.example
+COPY --chown=nodejs:nodejs packages/backend/src/db/migrations ./packages/backend/src/db/migrations
+
+# Create necessary directories
+RUN mkdir -p /app/public/uploads /app/logs \
+    && chown -R nodejs:nodejs /app/public /app/logs
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 5001
+
+# Use tini for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:5001/api/health || exit 1
+
+# Start the application
+CMD ["node", "--max-old-space-size=768", "packages/backend/dist/index.js"]

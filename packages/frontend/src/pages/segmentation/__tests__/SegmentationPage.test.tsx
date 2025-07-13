@@ -8,7 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 // Mock useSegmentationV2 hook
-vi.mock('../hooks/segmentation', () => {
+vi.mock('../hooks/segmentation/useSegmentationV2', () => {
   const mockSetEditMode = vi.fn();
   const mockSetTransform = vi.fn();
   const mockSetHoveredVertex = vi.fn();

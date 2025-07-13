@@ -723,4 +723,15 @@ vi.mock('@/lib/radix-optimized', () => ({
   DialogTitle: ({ children }: any) => React.createElement('h2', { 'data-testid': 'dialog-title' }, children),
   DialogDescription: ({ children }: any) => React.createElement('p', { 'data-testid': 'dialog-description' }, children),
   DialogClose: ({ children }: any) => React.createElement('button', { 'data-testid': 'dialog-close' }, children),
+  CheckboxRoot: React.forwardRef(({ children, checked, onCheckedChange, ...props }: any, ref: any) =>
+    React.createElement('input', {
+      type: 'checkbox',
+      ref,
+      checked,
+      onChange: (e) => onCheckedChange?.(e.target.checked),
+      'data-testid': 'checkbox-root',
+      ...props,
+    })
+  ),
+  CheckboxIndicator: ({ children }: any) => React.createElement('span', { 'data-testid': 'checkbox-indicator' }, children),
 }));
