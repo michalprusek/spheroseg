@@ -41,6 +41,9 @@ describe('ML Service Scaling', () => {
       }
       return Promise.resolve({ rows: [] });
     });
+
+    // Generate a test auth token
+    authToken = 'test-auth-token';
   });
 
   afterAll(async () => {

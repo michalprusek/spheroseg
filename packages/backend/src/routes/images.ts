@@ -1043,8 +1043,9 @@ router.get(
       const imageResult = await getPool().query(
         `SELECT 
           i.*,
-          COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
-          sr.id as segmentation_id
+          COALESCE(i.segmentation_status, 'without_segmentation') as segmentationStatus,
+          sr.id as segmentation_id,
+          sr.status as result_status
         FROM images i
         LEFT JOIN segmentation_results sr ON i.id = sr.image_id
         WHERE i.id = $1 AND i.project_id = $2`,
@@ -1151,8 +1152,9 @@ router.get(
         name
           ? `SELECT 
               i.*,
-              COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as "segmentationStatus",
-              sr.id as segmentation_id
+              COALESCE(i.segmentation_status, 'without_segmentation') as "segmentationStatus",
+              sr.id as segmentation_id,
+              sr.status as result_status
             FROM images i
             LEFT JOIN segmentation_results sr ON i.id = sr.image_id
             WHERE i.project_id = $1 AND i.name = $2 
@@ -1160,8 +1162,9 @@ router.get(
             LIMIT $3 OFFSET $4`
           : `SELECT 
               i.*,
-              COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as "segmentationStatus",
-              sr.id as segmentation_id
+              COALESCE(i.segmentation_status, 'without_segmentation') as "segmentationStatus",
+              sr.id as segmentation_id,
+              sr.status as result_status
             FROM images i
             LEFT JOIN segmentation_results sr ON i.id = sr.image_id
             WHERE i.project_id = $1 
@@ -1393,8 +1396,9 @@ router.get(
           `SELECT 
             i.*, 
             p.user_id,
-            COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
-            sr.id as segmentation_id
+            COALESCE(i.segmentation_status, 'without_segmentation') as segmentationStatus,
+            sr.id as segmentation_id,
+            sr.status as result_status
           FROM images i 
           JOIN projects p ON i.project_id = p.id 
           LEFT JOIN segmentation_results sr ON i.id = sr.image_id
@@ -1407,8 +1411,9 @@ router.get(
           `SELECT 
             i.*, 
             p.user_id,
-            COALESCE(sr.status, i.segmentation_status, 'without_segmentation') as segmentationStatus,
-            sr.id as segmentation_id
+            COALESCE(i.segmentation_status, 'without_segmentation') as segmentationStatus,
+            sr.id as segmentation_id,
+            sr.status as result_status
           FROM images i 
           JOIN projects p ON i.project_id = p.id 
           LEFT JOIN segmentation_results sr ON i.id = sr.image_id

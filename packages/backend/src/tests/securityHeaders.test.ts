@@ -49,7 +49,7 @@ describe('Security Headers', () => {
 
     // Check for CSRF cookie
     const cookies = response.headers['set-cookie'] || [];
-    const hasCsrfCookie = cookies.some((cookie) => cookie.includes('XSRF-TOKEN'));
+    const hasCsrfCookie = Array.isArray(cookies) && cookies.some((cookie: string) => cookie.includes('XSRF-TOKEN'));
 
     // In development, CSRF might be disabled
     if (process.env.NODE_ENV !== 'development') {
@@ -57,7 +57,7 @@ describe('Security Headers', () => {
 
       // In production, CSRF cookie should have secure and strict SameSite
       if (process.env.NODE_ENV === 'production') {
-        const csrfCookie = cookies.find((cookie) => cookie.includes('XSRF-TOKEN'));
+        const csrfCookie = Array.isArray(cookies) ? cookies.find((cookie: string) => cookie.includes('XSRF-TOKEN')) : undefined;
         expect(csrfCookie).toContain('Secure');
         expect(csrfCookie).toContain('SameSite=Strict');
       }
@@ -77,7 +77,7 @@ describe('Security Headers', () => {
     // Try to make a POST request without CSRF token
     const postResponse = await request(app)
       .post('/api/test-endpoint')
-      .set('Cookie', cookies) // Set the cookies but not the CSRF header
+      .set('Cookie', Array.isArray(cookies) ? cookies : []) // Set the cookies but not the CSRF header
       .send({ test: 'data' });
 
     // Should be rejected with 403 Forbidden
@@ -95,8 +95,8 @@ describe('Security Headers', () => {
     await agent.get('/api/status');
 
     // Extract CSRF token from cookie
-    const cookies = agent.jar.getCookies('http://localhost');
-    const csrfCookie = cookies.find((cookie) => cookie.key === 'XSRF-TOKEN');
+    const cookies = (agent as any).jar.getCookies('http://localhost');
+    const csrfCookie = cookies.find((cookie: any) => cookie.key === 'XSRF-TOKEN');
 
     if (!csrfCookie) {
       throw new Error('CSRF cookie not found');

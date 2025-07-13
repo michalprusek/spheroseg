@@ -109,7 +109,7 @@ describe('Export API Tests', () => {
       fs.unlinkSync(testImagePath);
     }
     await deleteTestUser(testUser.id);
-    await pool.end();
+    await pool.closePool();
   });
 
   it('should export project data in JSON format', async () => {

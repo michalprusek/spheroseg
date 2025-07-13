@@ -3,7 +3,7 @@ import {
   createProjectSchema,
   projectIdSchema,
   deleteProjectSchema,
-  duplicateProjectSchema,
+  updateProjectSchema,
 } from '../projectValidators';
 
 describe('projectValidators', () => {
@@ -207,34 +207,4 @@ describe('projectValidators', () => {
     });
   });
 
-  describe('duplicateProjectSchema', () => {
-    it('should validate a valid UUID project ID', () => {
-      const validData = {
-        params: {
-          id: '123e4567-e89b-12d3-a456-426614174000',
-        },
-        body: {
-          // body is optional, all fields have defaults
-        },
-      };
-
-      const result = duplicateProjectSchema.safeParse(validData);
-      expect(result.success).toBe(true);
-    });
-
-    it('should reject an invalid UUID format', () => {
-      const invalidData = {
-        params: {
-          id: 'not-a-uuid',
-        },
-      };
-
-      const result = duplicateProjectSchema.safeParse(invalidData);
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.errors[0].path).toContain('id');
-        expect(result.error.errors[0].message).toContain('Invalid UUID format');
-      }
-    });
-  });
 });

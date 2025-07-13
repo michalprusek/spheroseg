@@ -254,7 +254,7 @@ describe('CDN Middleware', () => {
   describe('cdnPurgeMiddleware', () => {
     beforeEach(() => {
       req.method = 'POST';
-      req.path = '/api/cdn/purge';
+      (req as any).path = '/api/cdn/purge';
       req.body = {};
     });
 
@@ -301,7 +301,7 @@ describe('CDN Middleware', () => {
     });
 
     it('should pass through non-purge requests', async () => {
-      req.path = '/api/other';
+      (req as any).path = '/api/other';
       
       await cdnMiddleware.purge(req as Request, res as Response, next);
       

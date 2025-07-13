@@ -124,7 +124,7 @@ describe('Performance Monitoring Middleware', () => {
         return [2, 0]; // 2 seconds
       }
       return [0, 0];
-    });
+    }) as any;
 
     // Create performance monitoring middleware
     const middleware = performanceMonitoring();
@@ -150,7 +150,7 @@ describe('Performance Monitoring Middleware', () => {
         return [4, 0]; // 4 seconds
       }
       return [0, 0];
-    });
+    }) as any;
 
     // Create performance monitoring middleware
     const middleware = performanceMonitoring();

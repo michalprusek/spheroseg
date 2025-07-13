@@ -680,6 +680,10 @@ const ProjectDetail = () => {
         });
       }
 
+      // Clear the cache before refreshing to ensure we get fresh data from API
+      const { clearProjectImageCache } = await import('@/api/projectImages');
+      await clearProjectImageCache(projectId);
+      
       // Refresh data after a delay to get any server-side updates
       setTimeout(() => {
         refreshData();

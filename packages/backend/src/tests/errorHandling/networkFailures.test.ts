@@ -53,13 +53,13 @@ describe('Network Failure Tests', () => {
         res.end('{"incomplete": "json",,,,}');
       } else if (endpoint === '/retry-success') {
         // Static counter to track retry attempts
-        if (!global._retryCount) {
-          global._retryCount = 0;
+        if (!(global as any)._retryCount) {
+          (global as any)._retryCount = 0;
         }
 
-        global._retryCount++;
+        (global as any)._retryCount++;
 
-        if (global._retryCount <= 2) {
+        if ((global as any)._retryCount <= 2) {
           // First two attempts fail
           res.writeHead(503, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Service unavailable, try again' }));
@@ -81,7 +81,7 @@ describe('Network Failure Tests', () => {
     mockServerUrl = `http://localhost:${addressInfo.port}`;
 
     // Update config to use our mock server
-    config.segmentation.mlServiceUrl = mockServerUrl;
+    (config.segmentation as any).mlServiceUrl = mockServerUrl;
   });
 
   afterAll(() => {
@@ -91,7 +91,7 @@ describe('Network Failure Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    global._retryCount = 0;
+    (global as any)._retryCount = 0;
   });
 
   // Helper function to test API calls with network failures
@@ -114,7 +114,7 @@ describe('Network Failure Tests', () => {
     const result = await testNetworkFailure('/timeout');
 
     expect(result).toHaveProperty('error');
-    expect(result.error.name).toBe('AbortError');
+    expect((result.error as any).name).toBe('AbortError');
     expect(logger.error).toHaveBeenCalled();
   });
 
@@ -122,7 +122,7 @@ describe('Network Failure Tests', () => {
     const result = await testNetworkFailure('/connection-reset');
 
     expect(result).toHaveProperty('error');
-    expect(result.error.code).toBeDefined();
+    expect((result.error as any).code).toBeDefined();
     expect(logger.error).toHaveBeenCalled();
   });
 
@@ -148,13 +148,13 @@ describe('Network Failure Tests', () => {
 
   it('should implement retry logic for failed requests', async () => {
     // Reset retry counter
-    global._retryCount = 0;
+    (global as any)._retryCount = 0;
 
     // Request that will succeed after retries
     const result = await testNetworkFailure('/retry-success');
 
     // Verify retries occurred and we got successful result
-    expect(global._retryCount).toBe(3);
+    expect((global as any)._retryCount).toBe(3);
     expect(result.status).toBe(200);
     expect(result.body).toHaveProperty('success', true);
     expect(result.body).toHaveProperty('message', 'Success after retry');
@@ -183,13 +183,13 @@ describe('Network Failure Tests', () => {
     const segmentationServicePromise = import('../../services/segmentationService');
 
     // Test retry logic
-    global._retryCount = 0;
+    (global as any)._retryCount = 0;
 
     // Use the segmentation service module after it's loaded
     segmentationServicePromise
       .then((segmentationService) => {
         // Ensure we're using our mock service
-        segmentationService._callMlService = jest.fn().mockImplementation(async (endpoint) => {
+        (segmentationService as any)._callMlService = jest.fn().mockImplementation(async (endpoint: string) => {
           // Call our test endpoint
           const response = await axios.get(`${mockServerUrl}${endpoint}`);
           if (response.status >= 400) {
@@ -199,15 +199,15 @@ describe('Network Failure Tests', () => {
         });
 
         // Call segmentation with retries
-        return segmentationService._callMlService('/retry-success', {});
+        return (segmentationService as any)._callMlService('/retry-success', {});
       })
       .then(() => {
         // If it succeeds, verify retry count
-        expect(global._retryCount).toBe(3);
+        expect((global as any)._retryCount).toBe(3);
       })
       .catch((error) => {
         // If it fails, check error and retry count
-        expect(global._retryCount).toBeGreaterThan(0);
+        expect((global as any)._retryCount).toBeGreaterThan(0);
         throw error;
       });
   });

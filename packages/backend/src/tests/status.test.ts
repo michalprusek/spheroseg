@@ -36,7 +36,7 @@ const authMiddleware = (req: any, res: any, next: any) => {
 };
 
 // Create mock routes for testing
-app.get('/api/queue-status', authMiddleware, async (req, res) => {
+app.get('/api/queue-status', authMiddleware, async (req: any, res) => {
   const status = await (getSegmentationQueueStatus as any)();
 
   if (status && status.runningTasks && status.runningTasks.length > 0) {
@@ -58,7 +58,7 @@ app.get('/api/queue-status', authMiddleware, async (req, res) => {
   res.json(status);
 });
 
-app.get('/api/queue-status/:projectId', authMiddleware, async (req, res) => {
+app.get('/api/queue-status/:projectId', authMiddleware, async (req: any, res) => {
   const { projectId } = req.params;
 
   // Check if project exists and user has access
