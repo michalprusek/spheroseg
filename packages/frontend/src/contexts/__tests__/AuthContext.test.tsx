@@ -1,10 +1,23 @@
+// Mock logger before any imports
+import { vi } from 'vitest';
+vi.mock('@/utils/logger', () => ({
+  default: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { vi } from 'vitest';
-import { AuthProvider, useAuth } from '../AuthContext';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import httpClient from '@/utils/httpClient';
+import apiClient from '@/lib/apiClient';
+
+// Unmock AuthContext to test the real implementation
+vi.unmock('@/contexts/AuthContext');
+import { AuthProvider, useAuth } from '../AuthContext';
 
 // Mock dependencies
 vi.mock('react-router-dom', async () => {
@@ -23,7 +36,36 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/utils/httpClient', () => ({
+// Mock authService
+vi.mock('@/services/authService', () => ({
+  getAccessToken: vi.fn(() => null),
+  getRefreshToken: vi.fn(() => null),
+  setTokens: vi.fn(),
+  removeTokens: vi.fn(),
+  isAccessTokenExpired: vi.fn(() => true),
+  refreshAccessToken: vi.fn(),
+  saveCurrentRoute: vi.fn(),
+  getLastRoute: vi.fn(() => null),
+  clearLastRoute: vi.fn(),
+  shouldPersistSession: vi.fn(() => true),
+}));
+
+// Mock userProfileService
+vi.mock('@/services/userProfileService', () => ({
+  default: {
+    saveUserSetting: vi.fn(),
+  },
+}));
+
+// Mock error handling
+vi.mock('@/utils/enhancedErrorHandling', () => ({
+  safeAsync: vi.fn((fn) => fn),
+  NetworkErrorType: {},
+  getErrorType: vi.fn(),
+  showEnhancedError: vi.fn(),
+}));
+
+vi.mock('@/lib/apiClient', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
@@ -117,14 +159,14 @@ describe('AuthContext', () => {
     vi.clearAllMocks();
     localStorage.clear();
 
-    // Default mocks for httpClient
-    vi.mocked(httpClient.withRetry).mockImplementation(async (fn) => {
+    // Default mocks for apiClient
+    vi.mocked(apiClient.withRetry).mockImplementation(async (fn) => {
       return await fn();
     });
   });
 
   it('starts with loading state and transitions to unauthenticated when no token exists', async () => {
-    vi.mocked(httpClient.get).mockResolvedValue({ data: null });
+    vi.mocked(apiClient.get).mockResolvedValue({ data: null });
 
     renderWithAuthProvider();
 
@@ -147,7 +189,7 @@ describe('AuthContext', () => {
     localStorage.setItem('authToken', 'valid-token');
 
     // Mock the user response
-    vi.mocked(httpClient.get).mockResolvedValueOnce({
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
       data: { id: 'user-123', email: 'user@example.com' },
     });
 
@@ -165,7 +207,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('token')).toHaveTextContent('valid-token');
 
     // Verify the API call to validate the token
-    expect(httpClient.get).toHaveBeenCalledWith('/users/me');
+    expect(apiClient.get).toHaveBeenCalledWith('/users/me');
   });
 
   it('handles sign in in development mode', async () => {
@@ -244,12 +286,12 @@ describe('AuthContext', () => {
     localStorage.setItem('authToken', 'valid-token');
 
     // Mock user response
-    vi.mocked(httpClient.get).mockResolvedValueOnce({
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
       data: { id: 'user-123', email: 'user@example.com' },
     });
 
     // Mock logout response
-    vi.mocked(httpClient.post).mockResolvedValueOnce({
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
       data: { success: true },
     });
 
@@ -274,7 +316,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('token')).toHaveTextContent('no-token');
 
     // Should call logout endpoint
-    expect(httpClient.post).toHaveBeenCalledWith('/auth/logout');
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/logout');
 
     // Should navigate to sign in
     expect(navigateMock).toHaveBeenCalledWith('/sign-in');
@@ -291,7 +333,7 @@ describe('AuthContext', () => {
     localStorage.setItem('authToken', 'invalid-token');
 
     // Mock the API to throw auth error
-    vi.mocked(httpClient.get).mockRejectedValueOnce(new Error('Unauthorized'));
+    vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('Unauthorized'));
 
     renderWithAuthProvider();
 
@@ -320,7 +362,7 @@ describe('AuthContext', () => {
     }));
 
     // Force timeout by not resolving the promise
-    vi.mocked(httpClient.withRetry).mockImplementation(async () => {
+    vi.mocked(apiClient.withRetry).mockImplementation(async () => {
       return new Promise(() => {
         // This promise never resolves - simulating timeout
       });
@@ -350,4 +392,3 @@ describe('AuthContext', () => {
     vi.useRealTimers();
   });
 });
-EOF < /dev/llnu;

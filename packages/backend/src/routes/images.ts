@@ -314,7 +314,7 @@ async function processAndStoreImage(
   }
 
   const imageResult = await client.query(
-    'INSERT INTO images (project_id, user_id, name, storage_filename, storage_path, thumbnail_path, width, height, metadata, file_size) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+    'INSERT INTO images (project_id, user_id, name, storage_filename, storage_path, thumbnail_path, width, height, metadata, file_size, segmentation_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
     [
       projectIdStr, // Use validated UUID string
       userIdStr, // Use validated UUID string
@@ -327,6 +327,7 @@ async function processAndStoreImage(
       { originalSize: file.size, originalFormat: file.mimetype }, // Store original size and format
       // If TIFF was converted, we store the size of the converted JPEG, not the original TIFF
       (await fs.promises.stat(finalStoragePath)).size,
+      'without_segmentation', // Explicitly set initial segmentation status
     ]
   );
 

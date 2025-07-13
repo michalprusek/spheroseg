@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "entries": {
+    "e2e/accessibility/wcag-compliance.spec.ts": {
+      "hash": "ce66f79d7be2c4072441ac9ed93985fc",
+      "timestamp": 1752395387079,
+      "result": "failed",
+      "duration": 963,
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mnull\u001b[39m"
+    },
+    "e2e/auth.spec.ts": {
+      "hash": "d9919548ebf0cc225c636f1a1ee17cb5",
+      "timestamp": 1752395392274,
+      "result": "passed",
+      "duration": 3523
+    },
+    "e2e/functionality/image-gallery-refresh.spec.ts": {
+      "hash": "6c70de27db209a5b99c0800d23d6b8bb",
+      "timestamp": 1752395487199,
+      "result": "failed",
+      "duration": 31321,
+      "error": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\nError: page.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n"
+    }
+  }
+}
