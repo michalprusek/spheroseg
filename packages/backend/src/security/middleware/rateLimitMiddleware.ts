@@ -25,6 +25,12 @@ const rateLimitConfigs = {
     message: 'Too many sensitive operations, please try again later',
     retryAfter: 3600, // 1 hour in seconds
   },
+  userStats: {
+    windowMs: 60 * 1000, // 1 minute
+    max: config.isTest ? 50 : 300, // Allow 300 requests per minute for authenticated user stats
+    message: 'Too many statistics requests, please try again later',
+    retryAfter: 60, // 1 minute in seconds
+  },
 };
 
 /**
@@ -67,11 +73,11 @@ const createErrorHandler = (type: string, retryAfter: number) => {
 /**
  * Create a rate limiter based on the specified type
  *
- * @param type The type of rate limit to apply ('default', 'auth', or 'sensitive')
+ * @param type The type of rate limit to apply ('default', 'auth', 'sensitive', or 'userStats')
  * @returns A middleware function that applies rate limiting
  */
 export function createRateLimiter(
-  type: 'default' | 'auth' | 'sensitive' = 'default'
+  type: 'default' | 'auth' | 'sensitive' | 'userStats' = 'default'
 ): RateLimitRequestHandler {
   // Skip rate limiting if explicitly disabled
   if (config.security?.enableRateLimit === false) {
@@ -97,6 +103,7 @@ export function createRateLimiter(
 export const standardLimiter = createRateLimiter('default');
 export const authLimiter = createRateLimiter('auth');
 export const sensitiveOperationsLimiter = createRateLimiter('sensitive');
+export const userStatsLimiter = createRateLimiter('userStats');
 
 // Backward compatibility export
 export const rateLimit = createRateLimiter;

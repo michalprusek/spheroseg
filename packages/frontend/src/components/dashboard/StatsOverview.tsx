@@ -277,15 +277,24 @@ const StatsOverview: React.FC = () => {
       }
     : undefined;
 
-  // Listen for statistics update events
+  // Listen for statistics update events with debouncing
   useEffect(() => {
+    let updateTimeout: NodeJS.Timeout;
+
+    const debouncedUpdate = () => {
+      clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(() => {
+        console.log('Debounced statistics update');
+        // Use React Query's invalidation instead of manually clearing cache
+        // The hook will handle refetching if needed
+        fetchStatistics();
+      }, 1000); // 1 second debounce
+    };
+
     const handleStatisticsUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
       console.log('Statistics update needed event received', customEvent.detail);
-
-      // Clear cache and fetch fresh statistics
-      clearCache();
-      fetchStatistics();
+      debouncedUpdate();
     };
 
     const handleProjectDeleted = (event: Event) => {
@@ -297,8 +306,7 @@ const StatsOverview: React.FC = () => {
 
       if (customEvent.detail.updateStatistics) {
         console.log('Project deleted, updating statistics', customEvent.detail);
-        clearCache();
-        fetchStatistics();
+        debouncedUpdate();
       }
     };
 
@@ -310,23 +318,26 @@ const StatsOverview: React.FC = () => {
       }>;
 
       console.log('Image deleted, updating statistics', customEvent.detail);
-      // Always refresh statistics when an image is deleted
-      clearCache();
-      fetchStatistics();
+      debouncedUpdate();
     };
 
     // Register event listeners
     window.addEventListener('statistics-update-needed', handleStatisticsUpdate);
     window.addEventListener('project-deleted', handleProjectDeleted);
     window.addEventListener('image-deleted', handleImageDeleted);
+    window.addEventListener('project-created', handleStatisticsUpdate);
+    window.addEventListener('image-uploaded', handleStatisticsUpdate);
 
     // Clean up event listeners on unmount
     return () => {
+      clearTimeout(updateTimeout);
       window.removeEventListener('statistics-update-needed', handleStatisticsUpdate);
       window.removeEventListener('project-deleted', handleProjectDeleted);
       window.removeEventListener('image-deleted', handleImageDeleted);
+      window.removeEventListener('project-created', handleStatisticsUpdate);
+      window.removeEventListener('image-uploaded', handleStatisticsUpdate);
     };
-  }, [fetchStatistics, clearCache]);
+  }, [fetchStatistics]);
 
   const calculatePercentChange = (current: number, previous: number): number => {
     if (previous === 0) return current > 0 ? 100 : 0;

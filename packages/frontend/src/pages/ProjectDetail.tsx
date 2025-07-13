@@ -21,12 +21,6 @@ import * as socketClient from '@/services/socketClient';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { useTranslation } from 'react-i18next';
 import logger from '@/utils/logger'; // Import logger
-import { lazy, Suspense as ReactSuspense } from 'react';
-
-// Lazy load diagnostics component (only in dev mode)
-const DatabaseConsistencyCheck = lazy(() => 
-  import('@/components/diagnostics/DatabaseConsistencyCheck')
-);
 
 interface UseProjectDataReturn {
   project: Project | null;
@@ -991,15 +985,6 @@ const ProjectDetail = () => {
               />
             )}
             
-            {/* Database diagnostics (dev mode only) */}
-            {import.meta.env.DEV && (
-              <ReactSuspense fallback={<div className="mt-4">Loading diagnostics...</div>}>
-                <DatabaseConsistencyCheck 
-                  projectId={id || ''} 
-                  onRefreshNeeded={refreshData}
-                />
-              </ReactSuspense>
-            )}
             </motion.div>
           )}
         </AnimatePresence>
