@@ -1,7 +1,7 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import type { Request as ExpressRequest } from 'express';
 import pool from '../db';
-import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
+import { authenticate as authMiddleware, AuthenticatedRequest, optionalAuthenticate } from '../security/middleware/auth';
 import {
   triggerSegmentationTask,
   getSegmentationQueueStatus,
@@ -19,6 +19,7 @@ import {
 } from '../validators/segmentationValidators';
 import { SEGMENTATION_STATUS } from '../constants/segmentationStatus';
 import { broadcastSegmentationUpdate } from '../services/socketService';
+import cacheService from '../services/cacheService';
 
 const router: Router = express.Router();
 
@@ -190,6 +191,15 @@ router.post(
 
       // Broadcast the status update
       const projectId = imageCheck.rows[0].project_id;
+      
+      // Invalidate image list cache when segmentation is triggered
+      try {
+        await cacheService.invalidateImageList(projectId);
+        logger.info('Invalidated image list cache for project after triggering segmentation', { projectId });
+      } catch (cacheError) {
+        logger.error('Failed to invalidate image list cache', { projectId, error: cacheError });
+      }
+      
       broadcastSegmentationUpdate(projectId, imageId, SEGMENTATION_STATUS.QUEUED);
 
       // Get current queue status
@@ -355,9 +365,18 @@ async function handleBatchSegmentation(
         [successfullyTriggered]
       );
 
-      // Broadcast status updates for each project
+      // Broadcast status updates for each project and invalidate cache
       for (const row of projectQuery.rows) {
         const projectId = row.project_id;
+        
+        // Invalidate image list cache for this project
+        try {
+          await cacheService.invalidateImageList(projectId);
+          logger.info('Invalidated image list cache for project after batch segmentation', { projectId });
+        } catch (cacheError) {
+          logger.error('Failed to invalidate image list cache', { projectId, error: cacheError });
+        }
+        
         for (const imageId of successfullyTriggered) {
           broadcastSegmentationUpdate(projectId, imageId, SEGMENTATION_STATUS.QUEUED);
         }
@@ -605,6 +624,16 @@ router.put(
       if (projectResult.rows.length > 0) {
         const projectId = projectResult.rows[0].project_id;
 
+        // Invalidate image list cache when segmentation completes or fails
+        if (status === SEGMENTATION_STATUS.COMPLETED || status === SEGMENTATION_STATUS.FAILED) {
+          try {
+            await cacheService.invalidateImageList(projectId);
+            logger.info('Invalidated image list cache for project', { projectId });
+          } catch (cacheError) {
+            logger.error('Failed to invalidate image list cache', { projectId, error: cacheError });
+          }
+        }
+
         // Broadcast the segmentation update to all clients in the project room
         broadcastSegmentationUpdate(
           projectId,
@@ -732,7 +761,7 @@ router.post(
 // @ts-ignore // TS2769: No overload matches this call.
 router.get(
   '/queue',
-  authMiddleware,
+  optionalAuthenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const queueStatus = await getSegmentationQueueStatus();
@@ -1193,15 +1222,10 @@ router.post(
 // @ts-ignore
 router.get(
   '/queue-status',
-  authMiddleware,
+  optionalAuthenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     console.log('GET /api/segmentation/queue-status called');
     const userId = req.user?.userId;
-
-    if (!userId) {
-      res.status(401).json({ message: 'Authentication error' });
-      return;
-    }
 
     try {
       // Get basic queue status from segmentation service
@@ -1215,8 +1239,9 @@ router.get(
         projectId: string;
       }[] = [];
 
-      if (runningTasks.length > 0) {
+      if (runningTasks.length > 0 && userId) {
         // Query database to get image names for the running tasks
+        // Only get user's images if authenticated
         const imagesQuery = await pool.query(
           `SELECT i.id, i.name, i.project_id
          FROM images i
@@ -1252,26 +1277,23 @@ router.get(
 // @ts-ignore
 router.get(
   '/queue-status/:projectId',
-  authMiddleware,
+  optionalAuthenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const projectId = req.params.projectId;
 
-    if (!userId) {
-      res.status(401).json({ message: 'Authentication error' });
-      return;
-    }
-
     try {
-      // Verify project access
-      const projectCheck = await pool.query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
+      // Verify project access if user is authenticated
+      if (userId) {
+        const projectCheck = await pool.query(
+          'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+          [projectId, userId]
+        );
 
-      if (projectCheck.rows.length === 0) {
-        res.status(404).json({ message: 'Project not found or access denied' });
-        return;
+        if (projectCheck.rows.length === 0) {
+          res.status(404).json({ message: 'Project not found or access denied' });
+          return;
+        }
       }
 
       // Get basic queue status from segmentation service
@@ -1280,13 +1302,27 @@ router.get(
 
       // Get image details for running tasks, filtered by project
       // Note: runningTasks contains segmentation_task IDs, not image IDs
-      const runningImagesQuery = await pool.query(
-        `SELECT DISTINCT i.id, i.name, st.id as task_id
-         FROM segmentation_tasks st
-         INNER JOIN images i ON st.image_id = i.id
-         WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2`,
-        [runningTasks, projectId]
-      );
+      let runningImagesQuery;
+      if (userId) {
+        // If authenticated, only show user's images
+        runningImagesQuery = await pool.query(
+          `SELECT DISTINCT i.id, i.name, st.id as task_id
+           FROM segmentation_tasks st
+           INNER JOIN images i ON st.image_id = i.id
+           INNER JOIN projects p ON i.project_id = p.id
+           WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2 AND p.user_id = $3`,
+          [runningTasks, projectId, userId]
+        );
+      } else {
+        // If not authenticated, show all images for the project (public access)
+        runningImagesQuery = await pool.query(
+          `SELECT DISTINCT i.id, i.name, st.id as task_id
+           FROM segmentation_tasks st
+           INNER JOIN images i ON st.image_id = i.id
+           WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2`,
+          [runningTasks, projectId]
+        );
+      }
 
       // Map the results to the expected format
       const processingImages = runningImagesQuery.rows.map((row) => ({
@@ -1303,13 +1339,27 @@ router.get(
       let projectQueuedTasks: string[] = [];
       let queuedImageDetails: any[] = [];
       if (pendingTasks && pendingTasks.length > 0) {
-        const queuedQuery = await pool.query(
-          `SELECT DISTINCT i.id, i.name, st.id as task_id
-           FROM segmentation_tasks st
-           INNER JOIN images i ON st.image_id = i.id
-           WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2`,
-          [pendingTasks, projectId]
-        );
+        let queuedQuery;
+        if (userId) {
+          // If authenticated, only show user's images
+          queuedQuery = await pool.query(
+            `SELECT DISTINCT i.id, i.name, st.id as task_id
+             FROM segmentation_tasks st
+             INNER JOIN images i ON st.image_id = i.id
+             INNER JOIN projects p ON i.project_id = p.id
+             WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2 AND p.user_id = $3`,
+            [pendingTasks, projectId, userId]
+          );
+        } else {
+          // If not authenticated, show all images for the project (public access)
+          queuedQuery = await pool.query(
+            `SELECT DISTINCT i.id, i.name, st.id as task_id
+             FROM segmentation_tasks st
+             INNER JOIN images i ON st.image_id = i.id
+             WHERE st.id = ANY($1::uuid[]) AND i.project_id = $2`,
+            [pendingTasks, projectId]
+          );
+        }
 
         projectQueuedTasks = queuedQuery.rows.map((row) => row.task_id);
         queuedImageDetails = queuedQuery.rows.map((row) => ({
@@ -1348,15 +1398,10 @@ router.get(
 // @ts-ignore
 router.get(
   '/queue',
-  authMiddleware,
+  optionalAuthenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     console.log('GET /api/segmentation/queue called');
     const userId = req.user?.userId;
-
-    if (!userId) {
-      res.status(401).json({ message: 'Authentication error' });
-      return;
-    }
 
     try {
       // Get basic queue status from segmentation service
