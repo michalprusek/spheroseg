@@ -9,6 +9,23 @@ import { Pool } from 'pg';
 import { getPool } from '../db';
 import logger from './logger';
 
+// Validation utilities
+export function isValidUUID(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
+export function validateMinutes(minutes: number): boolean {
+  return Number.isInteger(minutes) && minutes > 0 && minutes <= 1440; // Max 24 hours
+}
+
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
 export interface ConsistencyReport {
   totalImages: number;
   imagesWithoutStatus: number;
@@ -25,6 +42,11 @@ const VALID_STATUSES = ['without_segmentation', 'queued', 'processing', 'complet
  * Check database consistency for a specific project
  */
 export async function checkProjectConsistency(projectId: string): Promise<ConsistencyReport> {
+  // Validate input
+  if (!projectId || !isValidUUID(projectId)) {
+    throw new ValidationError('Invalid project ID format');
+  }
+  
   const pool = getPool();
   const report: ConsistencyReport = {
     totalImages: 0,
@@ -87,6 +109,11 @@ export async function checkProjectConsistency(projectId: string): Promise<Consis
  * Fix common database consistency issues
  */
 export async function fixProjectConsistency(projectId: string, dryRun: boolean = true): Promise<ConsistencyReport> {
+  // Validate input
+  if (!projectId || !isValidUUID(projectId)) {
+    throw new ValidationError('Invalid project ID format');
+  }
+  
   const pool = getPool();
   const report = await checkProjectConsistency(projectId);
   
@@ -183,24 +210,34 @@ export async function verifyRecentUploads(projectId: string, minutes: number = 5
   withoutStatus: number;
   imageIds: string[];
 }> {
+  // Validate inputs
+  if (!projectId || !isValidUUID(projectId)) {
+    throw new ValidationError('Invalid project ID format');
+  }
+  
+  if (!validateMinutes(minutes)) {
+    throw new ValidationError('Minutes must be between 1 and 1440');
+  }
+  
   const pool = getPool();
   
   try {
+    // Using parameterized query to prevent SQL injection
     const result = await pool.query(
       `SELECT id, name, segmentation_status, created_at 
        FROM images 
        WHERE project_id = $1 
-       AND created_at > NOW() - INTERVAL '${minutes} minutes'
+       AND created_at > NOW() - INTERVAL $2
        AND (segmentation_status IS NULL OR segmentation_status = '')
        ORDER BY created_at DESC`,
-      [projectId]
+      [projectId, `${minutes} minutes`]
     );
 
     const totalResult = await pool.query(
       `SELECT COUNT(*) FROM images 
        WHERE project_id = $1 
-       AND created_at > NOW() - INTERVAL '${minutes} minutes'`,
-      [projectId]
+       AND created_at > NOW() - INTERVAL $2`,
+      [projectId, `${minutes} minutes`]
     );
 
     return {

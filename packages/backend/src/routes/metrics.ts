@@ -1,7 +1,8 @@
 /**
  * Performance Metrics API
  *
- * Provides endpoints for accessing performance metrics and system health information.
+ * Provides endpoints for accessing performance metrics, system health information,
+ * and Prometheus metrics for monitoring.
  */
 
 import express, { Request, Response, Router } from 'express';
@@ -12,8 +13,38 @@ import logger from '../utils/logger';
 import os from 'os';
 import { getContainerInfo } from '../utils/containerInfo';
 import { authenticate as authMiddleware } from '../security/middleware/auth';
+import { 
+  metricsHandler,
+  wsActiveConnections,
+  wsMessagesTotal,
+  wsBatchesTotal,
+  wsBatchSize,
+  wsCompressionSavings,
+  graphqlRequestDuration,
+  graphqlResolverDuration,
+  graphqlErrorsTotal,
+  dbPoolConnections,
+  dbReplicationLag,
+  mlTasksQueued,
+  mlInstanceUtilization,
+  cdnCacheHits,
+  cdnCacheMisses,
+  activeUsers,
+  imageProcessingQueue,
+  cacheHitRate
+} from '../monitoring/prometheus';
+import { getWebSocketBatcher } from '../services/websocketBatcher';
+import { getReplicationLag, getPoolStats } from '../db/readReplica';
+import { getEnhancedMetrics } from '../services/socketServiceEnhanced';
 
 const router: Router = express.Router();
+
+/**
+ * GET /api/metrics
+ * 
+ * Prometheus metrics endpoint
+ */
+router.get('/', metricsHandler);
 
 /**
  * GET /api/metrics/performance
@@ -165,6 +196,89 @@ router.get('/summary', authMiddleware, async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/metrics/graphql
+ * 
+ * GraphQL specific metrics
+ */
+router.get('/graphql', async (req: Request, res: Response) => {
+  try {
+    const graphqlMetrics = {
+      total_requests: graphqlRequestDuration.hashMap,
+      total_errors: graphqlErrorsTotal.hashMap,
+      resolver_performance: graphqlResolverDuration.hashMap,
+    };
+    
+    res.json(graphqlMetrics);
+  } catch (error) {
+    logger.error('Error fetching GraphQL metrics:', error);
+    res.status(500).json({ error: 'Failed to fetch GraphQL metrics' });
+  }
+});
+
+/**
+ * GET /api/metrics/websocket
+ * 
+ * WebSocket specific metrics including batching performance
+ */
+router.get('/websocket', async (req: Request, res: Response) => {
+  try {
+    const batcher = getWebSocketBatcher();
+    const enhancedMetrics = getEnhancedMetrics();
+    
+    const wsMetrics = {
+      batcher_metrics: batcher?.getMetrics() || null,
+      enhanced_metrics: enhancedMetrics,
+      active_connections: wsActiveConnections.hashMap,
+      messages_total: wsMessagesTotal.hashMap,
+      batches_sent: wsBatchesTotal.hashMap,
+      compression_savings: wsCompressionSavings.hashMap,
+    };
+    
+    res.json(wsMetrics);
+  } catch (error) {
+    logger.error('Error fetching WebSocket metrics:', error);
+    res.status(500).json({ error: 'Failed to fetch WebSocket metrics' });
+  }
+});
+
+/**
+ * GET /api/metrics/database
+ * 
+ * Database metrics including read replica performance
+ */
+router.get('/database', async (req: Request, res: Response) => {
+  try {
+    const poolStats = await getPoolStats();
+    const replicationLag = await getReplicationLag();
+    
+    // Update Prometheus metrics
+    if (poolStats.write_pool) {
+      dbPoolConnections.labels('write', 'active').set(poolStats.write_pool.total);
+      dbPoolConnections.labels('write', 'idle').set(poolStats.write_pool.idle);
+      dbPoolConnections.labels('write', 'waiting').set(poolStats.write_pool.waiting);
+    }
+    
+    if (poolStats.read_pool) {
+      dbPoolConnections.labels('read', 'active').set(poolStats.read_pool.total);
+      dbPoolConnections.labels('read', 'idle').set(poolStats.read_pool.idle);
+      dbPoolConnections.labels('read', 'waiting').set(poolStats.read_pool.waiting);
+    }
+    
+    if (replicationLag !== null) {
+      dbReplicationLag.labels('replica1').set(replicationLag);
+    }
+    
+    res.json({
+      pool_stats: poolStats,
+      replication_lag_seconds: replicationLag,
+    });
+  } catch (error) {
+    logger.error('Error fetching database metrics:', error);
+    res.status(500).json({ error: 'Failed to fetch database metrics' });
+  }
+});
+
+/**
  * GET /api/metrics/slow-queries
  *
  * Returns list of slow database queries for optimization
@@ -221,6 +335,28 @@ router.get('/endpoints', authMiddleware, async (req: Request, res: Response) => 
       status: 'error',
       message: 'Failed to fetch endpoint metrics',
     });
+  }
+});
+
+/**
+ * GET /api/metrics/cdn
+ * 
+ * CDN performance metrics
+ */
+router.get('/cdn', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const cdnMetrics = {
+      cache_hits: cdnCacheHits.hashMap,
+      cache_misses: cdnCacheMisses.hashMap,
+      hit_rate: cdnCacheHits.hashMap.size > 0 
+        ? (cdnCacheHits.hashMap.size / (cdnCacheHits.hashMap.size + cdnCacheMisses.hashMap.size)) * 100
+        : 0,
+    };
+    
+    res.json(cdnMetrics);
+  } catch (error) {
+    logger.error('Error fetching CDN metrics:', error);
+    res.status(500).json({ error: 'Failed to fetch CDN metrics' });
   }
 });
 

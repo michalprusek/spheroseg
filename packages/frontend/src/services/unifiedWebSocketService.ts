@@ -9,6 +9,7 @@ import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/utils/logging/unifiedLogger';
 import { handleError, ErrorType, ErrorSeverity } from '@/utils/error/unifiedErrorHandler';
 import { getAccessToken } from './authService';
+import { websocketBatchHandler } from './websocketBatchHandler';
 
 // Create logger instance
 const logger = createLogger('UnifiedWebSocketService');
@@ -18,6 +19,12 @@ const logger = createLogger('UnifiedWebSocketService');
 // ===========================
 
 export interface WebSocketConfig {
+  enableBatching?: boolean;
+  batchConfig?: {
+    maxBatchSize?: number;
+    maxBatchWaitTime?: number;
+    enableCompression?: boolean;
+  };
   url?: string;
   path?: string;
   reconnectionAttempts?: number;
@@ -90,6 +97,9 @@ class UnifiedWebSocketService {
 
   // Event emitter for connection state changes
   private stateChangeHandlers: Set<(state: ConnectionState) => void> = new Set();
+  
+  // Batching
+  private batchingEnabled = false;
 
   /**
    * Initialize WebSocket connection
@@ -122,6 +132,15 @@ class UnifiedWebSocketService {
 
       // Set up core event handlers
       this.setupCoreHandlers();
+
+      // Initialize batching if enabled
+      if (this.config.enableBatching) {
+        this.batchingEnabled = true;
+        if (this.config.batchConfig) {
+          websocketBatchHandler.updateConfig(this.config.batchConfig);
+        }
+        websocketBatchHandler.initialize(this.socket);
+      }
 
       // Start heartbeat
       this.startHeartbeat();
@@ -162,9 +181,9 @@ class UnifiedWebSocketService {
   /**
    * Connect to WebSocket server
    */
-  public async connect(): Promise<void> {
+  public async connect(config?: Partial<WebSocketConfig>): Promise<void> {
     if (!this.socket) {
-      await this.initialize();
+      await this.initialize(config);
       return;
     }
 
@@ -199,6 +218,12 @@ class UnifiedWebSocketService {
 
     // Remove all event handlers
     this.removeAllHandlers();
+
+    // Clear batch handler if enabled
+    if (this.batchingEnabled) {
+      websocketBatchHandler.clear();
+      this.batchingEnabled = false;
+    }
 
     // Disconnect socket
     this.socket.disconnect();
@@ -601,6 +626,100 @@ class UnifiedWebSocketService {
     // Remove core handlers
     this.socket.removeAllListeners();
   }
+
+  // ===========================
+  // Batching Methods
+  // ===========================
+
+  /**
+   * Send a message using batching
+   */
+  public async sendBatched(event: string, data: any): Promise<any> {
+    if (!this.batchingEnabled) {
+      // Fallback to regular emit
+      return new Promise((resolve) => {
+        if (this.socket?.connected) {
+          this.socket.emit(event, data);
+        }
+        resolve(undefined);
+      });
+    }
+    return websocketBatchHandler.send(event, data);
+  }
+
+  /**
+   * Send a message immediately without batching
+   */
+  public sendImmediate(event: string, data: any): void {
+    if (this.batchingEnabled) {
+      websocketBatchHandler.sendImmediate(event, data);
+    } else if (this.socket?.connected) {
+      this.socket.emit(event, data);
+    }
+  }
+
+  /**
+   * Flush pending batch messages
+   */
+  public flushBatch(): void {
+    if (this.batchingEnabled) {
+      websocketBatchHandler.flush();
+    }
+  }
+
+  /**
+   * Get batch status
+   */
+  public getBatchStatus() {
+    if (!this.batchingEnabled) {
+      return {
+        enabled: false,
+        queueLength: 0,
+        pendingAcks: 0,
+        capabilities: null,
+        isConnected: this.getConnectionState().isConnected,
+      };
+    }
+    return {
+      enabled: true,
+      ...websocketBatchHandler.getStatus(),
+    };
+  }
+
+  /**
+   * Update batch configuration
+   */
+  public updateBatchConfig(config: {
+    maxBatchSize?: number;
+    maxBatchWaitTime?: number;
+    enableCompression?: boolean;
+  }): void {
+    if (this.batchingEnabled) {
+      websocketBatchHandler.updateConfig(config);
+    }
+  }
+
+  /**
+   * Add batch event listener
+   */
+  public onBatchEvent(event: string, handler: Function): void {
+    if (this.batchingEnabled) {
+      websocketBatchHandler.on(event, handler);
+    } else {
+      this.on(event, handler);
+    }
+  }
+
+  /**
+   * Remove batch event listener
+   */
+  public offBatchEvent(event: string, handler?: Function): void {
+    if (this.batchingEnabled) {
+      websocketBatchHandler.off(event, handler);
+    } else {
+      this.off(event, handler);
+    }
+  }
 }
 
 // ===========================
@@ -633,4 +752,11 @@ export const {
   joinProjectRoom,
   leaveProjectRoom,
   joinSegmentationQueueRoom,
+  sendBatched,
+  sendImmediate,
+  flushBatch,
+  getBatchStatus,
+  updateBatchConfig,
+  onBatchEvent,
+  offBatchEvent,
 } = webSocketService;

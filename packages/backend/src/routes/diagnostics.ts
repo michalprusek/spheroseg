@@ -5,11 +5,15 @@
  */
 
 import { Router, Request, Response, NextFunction } from 'express';
-import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
+import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import { checkProjectConsistency, fixProjectConsistency, getProjectStatusBreakdown, verifyRecentUploads } from '../utils/dbConsistencyCheck';
 import logger from '../utils/logger';
+import { diagnosticsLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
+
+// Apply rate limiting to all diagnostic routes
+router.use(diagnosticsLimiter);
 
 /**
  * GET /api/diagnostics/project/:projectId/consistency
