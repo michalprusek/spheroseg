@@ -1196,10 +1196,10 @@ export default {
     contactUs: {
       title: '8. Kontaktujte nás',
       paragraph1:
-        'Pokud máte jakékoli dotazy k těmto zásadám ochrany osobních údajů, kontaktujte nás prosím na privacy@spheroseg.com.',
+        'Pokud máte jakékoli dotazy k těmto zásadám ochrany osobních údajů, kontaktujte nás prosím na spheroseg@utia.cas.cz.',
     },
     contact: {
-      email: 'privacy@spheroseg.com',
+      email: 'spheroseg@utia.cas.cz',
       paragraph1: 'Pokud máte jakékoli dotazy k těmto zásadám ochrany osobních údajů, kontaktujte nás prosím na:',
       title: '9. Kontaktujte nás',
     },

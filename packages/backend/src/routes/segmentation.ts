@@ -323,7 +323,7 @@ async function handleBatchSegmentation(
         // Update status in DB
         segmentationPromises.push(
           pool.query(
-            `UPDATE images SET status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`,
+            `UPDATE images SET segmentation_status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`,
             [imageId]
           )
         );

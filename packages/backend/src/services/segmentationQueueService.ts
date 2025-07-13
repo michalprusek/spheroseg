@@ -490,10 +490,18 @@ class SegmentationQueueService extends EventEmitter {
     const internalBackendUrl =
       process.env.NODE_ENV === 'production' ? 'http://backend:5001' : config.appUrl;
 
+    // Convert the image path for ML service
+    // Backend uses /uploads/ but ML service has volumes mounted at /ML/uploads/
+    const mlImagePath = imagePath.replace(/^\/uploads\//, '/ML/uploads/');
+    logger.debug('Converting image path for ML service', { 
+      originalPath: imagePath, 
+      mlPath: mlImagePath 
+    });
+
     const taskPayload = {
       taskId,
       imageId,
-      imagePath,
+      imagePath: mlImagePath,
       parameters,
       retries,
       callbackUrl: `${internalBackendUrl}/api/images/${imageId}/segmentation`, // Callback URL for ML service
@@ -799,9 +807,9 @@ class SegmentationQueueService extends EventEmitter {
           priority, 
           created_at, 
           updated_at,
-          error_message,
+          error,
           parameters,
-          result_data
+          result
         FROM segmentation_tasks 
         WHERE id = $1
       `,

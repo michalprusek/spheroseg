@@ -8,7 +8,7 @@
  * - Metric tracking
  */
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode, useEffect, ReactElement } from 'react';
 import {
   useFeatureFlag,
   useVariant,
@@ -16,6 +16,7 @@ import {
   useActiveExperiments,
   useABTestingMetrics,
 } from '@/hooks/useABTesting';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Types
 interface FeatureFlagProps {
@@ -61,7 +62,11 @@ interface TrackConversionProps {
 export function FeatureFlag({ flag, children, fallback = null }: FeatureFlagProps) {
   const isEnabled = useFeatureFlag(flag, false);
   
-  return <>{isEnabled ? children : fallback}</>;
+  return (
+    <ErrorBoundary componentName={`FeatureFlag:${flag}`}>
+      {isEnabled ? children : fallback}
+    </ErrorBoundary>
+  );
 }
 
 /**
@@ -75,7 +80,11 @@ export function Experiment({ experimentId, children, fallback = null }: Experime
     return <>{fallback}</>;
   }
   
-  return <>{children(variant, features)}</>;
+  return (
+    <ErrorBoundary componentName={`Experiment:${experimentId}`}>
+      {children(variant, features)}
+    </ErrorBoundary>
+  );
 }
 
 /**
@@ -113,7 +122,11 @@ export function VariantSwitch({ experimentId, children, fallback }: VariantSwitc
     return false;
   });
   
-  return <>{matchingChild || fallback}</>;
+  return (
+    <ErrorBoundary componentName={`VariantSwitch:${experimentId}`}>
+      {matchingChild || fallback}
+    </ErrorBoundary>
+  );
 }
 
 /**
@@ -131,6 +144,7 @@ export function TrackEvent({
     if (trigger === 'mount') {
       trackEvent(event, properties);
     }
+    // No cleanup needed as trackEvent doesn't create subscriptions
   }, [event, properties, trackEvent, trigger]);
   
   const handleInteraction = () => {
@@ -146,7 +160,9 @@ export function TrackEvent({
   };
   
   if (React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<any>, interactionProps);
+    // Properly type the cloneElement call
+    const element = children as ReactElement<Record<string, any>>;
+    return React.cloneElement(element, interactionProps);
   }
   
   return <div {...interactionProps}>{children}</div>;
@@ -167,6 +183,7 @@ export function TrackConversion({
     if (trigger === 'mount') {
       trackConversion(name, value);
     }
+    // No cleanup needed as trackConversion doesn't create subscriptions
   }, [name, value, trackConversion, trigger]);
   
   const handleClick = () => {
@@ -176,7 +193,9 @@ export function TrackConversion({
   };
   
   if (React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<any>, { onClick: handleClick });
+    // Properly type the cloneElement call
+    const element = children as ReactElement<{ onClick?: () => void }>;
+    return React.cloneElement(element, { onClick: handleClick });
   }
   
   return <div onClick={handleClick}>{children}</div>;
@@ -194,25 +213,27 @@ export function ABTestDebugPanel({ show = import.meta.env.DEV }: ABTestDebugPane
   }
   
   return (
-    <div className="fixed bottom-4 right-4 p-4 bg-gray-900 text-white rounded-lg shadow-lg max-w-sm z-50">
-      <h3 className="text-sm font-bold mb-2">A/B Testing Debug</h3>
-      <div className="space-y-2 text-xs">
-        {experiments.map((flag) => (
-          <div key={flag.key} className="border-b border-gray-700 pb-1">
-            <div className="font-medium">{flag.key}</div>
-            <div className="text-gray-400">
-              Experiment: {flag.experiment || 'none'}
+    <ErrorBoundary componentName="ABTestDebugPanel">
+      <div className="fixed bottom-4 right-4 p-4 bg-gray-900 text-white rounded-lg shadow-lg max-w-sm z-50">
+        <h3 className="text-sm font-bold mb-2">A/B Testing Debug</h3>
+        <div className="space-y-2 text-xs">
+          {experiments.map((flag) => (
+            <div key={flag.key} className="border-b border-gray-700 pb-1">
+              <div className="font-medium">{flag.key}</div>
+              <div className="text-gray-400">
+                Experiment: {flag.experiment || 'none'}
+              </div>
+              <div className="text-gray-400">
+                Variant: {flag.variant || 'control'}
+              </div>
+              <div className="text-gray-400">
+                Value: {JSON.stringify(flag.value)}
+              </div>
             </div>
-            <div className="text-gray-400">
-              Variant: {flag.variant || 'control'}
-            </div>
-            <div className="text-gray-400">
-              Value: {JSON.stringify(flag.value)}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 

@@ -8,6 +8,8 @@ import './styles/tailwind.css';
 import './App.css';
 import { initPerformanceMonitoring, markPerformance } from './utils/performance';
 import logger from './utils/logger';
+import * as serviceWorkerRegistration from './utils/serviceWorkerRegistration';
+import { showUpdateNotification } from './utils/notifications';
 
 // Global error handler
 const handleError = (error: ErrorEvent) => {
@@ -53,3 +55,25 @@ ReactDOM.createRoot(document.getElementById('root')!).render(app);
 
 // Mark application rendered
 markPerformance('app-init-end');
+
+// Register service worker in production
+serviceWorkerRegistration.register({
+  onSuccess: () => {
+    logger.info('Service worker registered successfully');
+  },
+  onUpdate: (registration) => {
+    logger.info('New app version available');
+    // Show update notification to user
+    if (showUpdateNotification) {
+      showUpdateNotification(() => {
+        // Skip waiting and reload
+        serviceWorkerRegistration.skipWaiting().then(() => {
+          window.location.reload();
+        });
+      });
+    }
+  },
+  onError: (error) => {
+    logger.error('Service worker registration failed', { error });
+  },
+});
