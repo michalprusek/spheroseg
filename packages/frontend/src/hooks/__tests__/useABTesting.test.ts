@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useExperiment, useFeatureFlag, useABTestingEvents } from '../useABTesting';
 import { ABTestingService } from '@/services/abTesting/abTestingService';
-import { ABTestingContext } from '../../services/abTesting/ABTestingContext';
+import { ABTestingContext } from '../../contexts/ABTestingContext';
 import React from 'react';
 
 // Mock the ABTestingService

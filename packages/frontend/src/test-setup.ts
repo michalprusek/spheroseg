@@ -49,6 +49,22 @@ vi.mock('@/i18n', () => ({
   },
 }));
 
+// Mock unifiedLogger to avoid debug function errors
+vi.mock('@/utils/logging/unifiedLogger', () => ({
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  })),
+  default: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 // Mock lucide-react icons
 vi.mock('lucide-react', () => {
   const createIcon = (name: string) => {
@@ -82,6 +98,8 @@ vi.mock('lucide-react', () => {
     Camera: createIcon('Camera'),
     File: createIcon('File'),
     Folder: createIcon('Folder'),
+    BookOpen: createIcon('BookOpen'),
+    Microscope: createIcon('Microscope'),
     Eye: createIcon('Eye'),
     EyeOff: createIcon('EyeOff'),
     Copy: createIcon('Copy'),
@@ -704,6 +722,38 @@ vi.mock('@/config/app.config.validated', () => ({
   getSupportedLanguages: () => ['en', 'cs', 'de', 'es', 'fr', 'zh'],
   getAllowedImageTypes: () => ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
   getMaxFileSize: () => 50 * 1024 * 1024,
+}));
+
+// Mock app.config
+vi.mock('@/config/app.config', () => ({
+  appConfig: {
+    organization: {
+      name: 'SpherosegV4',
+      tagline: 'Cell Segmentation Made Easy',
+      supportEmail: 'support@spheroseg.com',
+      supportPhone: '+1 (555) 123-4567',
+      githubUrl: 'https://github.com/spheroseg/spheroseg',
+      documentationUrl: 'https://docs.spheroseg.com',
+    },
+    contact: {
+      developer: {
+        email: 'developer@spheroseg.com',
+        name: 'SpherosegV4 Development Team',
+      },
+    },
+    features: {
+      enableDemoMode: false,
+      enableAnalytics: false,
+      enableErrorReporting: false,
+      maintenanceMode: false,
+    },
+    ui: {
+      defaultTheme: 'light' as const,
+      enableThemeToggle: true,
+      defaultLanguage: 'en',
+      supportedLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
+    },
+  },
 }));
 
 // Mock @radix-ui components

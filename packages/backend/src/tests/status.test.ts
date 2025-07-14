@@ -113,7 +113,6 @@ describe('Status API', () => {
       (getSegmentationQueueStatus as jest.Mock).mockReturnValue({
         queueLength: 1,
         runningTasks: ['image-123', 'image-456'],
-        queuedTasks: ['image-789'],
       });
 
       // Mock the database response
@@ -150,7 +149,6 @@ describe('Status API', () => {
       (getSegmentationQueueStatus as jest.Mock).mockReturnValue({
         queueLength: 0,
         runningTasks: [],
-        queuedTasks: [],
       });
 
       const response = await request(app)
@@ -203,7 +201,10 @@ describe('Status API', () => {
       (getSegmentationQueueStatus as jest.Mock).mockReturnValue({
         queueLength: 2,
         runningTasks: ['image-123', 'image-456', 'image-789'],
-        queuedTasks: ['image-abc'],
+        pendingTasks: ['image-abc'],
+        activeTasksCount: 3,
+        mlServiceStatus: 'online',
+        lastUpdated: new Date(),
       });
 
       // Mock the database response for images query
@@ -214,18 +215,28 @@ describe('Status API', () => {
         ],
       });
 
+      // Mock the queued images query
+      (pool.query as jest.Mock).mockResolvedValueOnce({
+        rows: [
+          { id: 'image-abc' },
+        ],
+      });
+
       const response = await request(app)
         .get(`/api/queue-status/${mockProjectId}`)
         .set('Authorization', `Bearer ${mockToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        queueLength: 0, // This is hardcoded in the current implementation
+        queueLength: 2,
         runningTasks: ['image-123', 'image-456'],
+        queuedTasks: ['image-abc'],
+        pendingTasks: ['image-abc'], // Include both for compatibility
         processingImages: [
-          { id: 'image-123', name: 'Project Image 1' },
-          { id: 'image-456', name: 'Project Image 2' },
+          { id: 'image-123', name: 'Project Image 1', projectId: mockProjectId },
+          { id: 'image-456', name: 'Project Image 2', projectId: mockProjectId },
         ],
+        timestamp: expect.any(String),
       });
 
       // Verify the database was queried correctly

@@ -318,7 +318,7 @@ describe('ImageDisplay Component', () => {
 
       // Change the checkbox
       const checkbox = screen.getByRole('checkbox');
-      fireEvent.change(checkbox, { target: { checked: true } });
+      fireEvent.click(checkbox);
 
       // Check if onToggleSelection was called
       expect(onToggleSelection).toHaveBeenCalled();

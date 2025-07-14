@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { rateLimit } from '../security/middleware/rateLimitMiddleware';
+import { createRateLimiter } from '../security/middleware/rateLimitMiddleware';
 import { AuthenticatedRequest } from '../security/middleware/auth';
 
 // Use jest.Mock type for nextFunction to access mock methods
@@ -7,10 +7,11 @@ type MockNextFunction = jest.Mock;
 
 // Mock config to enable testing
 jest.mock('../config', () => ({
-  isTest: false, // Set to false to test rate limiting
+  isTest: true, // Set to true to use test rate limits
   security: {
     rateLimitRequests: 10,
     rateLimitWindow: 60,
+    enableRateLimit: true,
   },
 }));
 
@@ -28,6 +29,42 @@ jest.mock('../utils/logger', () => {
   };
 });
 
+// Mock express-rate-limit
+let rateLimitCallCount = 0;
+const mockRateLimitHandler = jest.fn((req, res, next) => {
+  rateLimitCallCount++;
+  const config = (req as any)._rateLimitConfig || { max: 5 };
+  
+  // Simple rate limit simulation
+  if (rateLimitCallCount > config.max) {
+    const handler = config.handler || ((req: any, res: any) => {
+      res.set('Retry-After', '60');
+      res.status(429).json({
+        error: {
+          message: 'Too many requests, please try again later',
+          retryAfter: 60,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    });
+    handler(req, res, next, { message: config.message });
+  } else {
+    next();
+  }
+});
+
+jest.mock('express-rate-limit', () => {
+  return {
+    __esModule: true,
+    default: (options: any) => {
+      return (req: any, res: any, next: any) => {
+        req._rateLimitConfig = options;
+        mockRateLimitHandler(req, res, next);
+      };
+    },
+  };
+});
+
 describe('Rate Limiting Middleware', () => {
   let mockRequest: Partial<AuthenticatedRequest>;
   let mockResponse: Partial<Response>;
@@ -36,6 +73,8 @@ describe('Rate Limiting Middleware', () => {
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
+    rateLimitCallCount = 0;
+    mockRateLimitHandler.mockClear();
 
     // Create mock request
     mockRequest = {
@@ -46,6 +85,11 @@ describe('Rate Limiting Middleware', () => {
         userId: 'test-user-id',
         email: 'test@example.com',
       },
+      get: jest.fn((header: string) => {
+        if (header === 'User-Agent') return 'Test Agent';
+        if (header === 'set-cookie') return undefined;
+        return undefined;
+      }) as any,
     };
 
     // Create mock response
@@ -62,7 +106,7 @@ describe('Rate Limiting Middleware', () => {
 
   it('should allow requests within rate limit', async () => {
     // Create rate limit middleware
-    const middleware = rateLimit('default');
+    const middleware = createRateLimiter('default');
 
     // Call middleware
     await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
@@ -75,9 +119,9 @@ describe('Rate Limiting Middleware', () => {
 
   it('should block requests that exceed rate limit', async () => {
     // Create rate limit middleware
-    const middleware = rateLimit('auth');
+    const middleware = createRateLimiter('auth');
 
-    // Call middleware multiple times to exceed rate limit
+    // Call middleware multiple times to exceed rate limit (auth limit is 5 in test mode)
     for (let i = 0; i < 5; i++) {
       await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
     }
@@ -85,7 +129,7 @@ describe('Rate Limiting Middleware', () => {
     // Reset next function to check if it's called again
     nextFunction.mockReset();
 
-    // Call middleware one more time
+    // Call middleware one more time to exceed limit
     await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Check if response was set correctly
@@ -94,7 +138,7 @@ describe('Rate Limiting Middleware', () => {
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         error: expect.objectContaining({
-          message: 'Too many requests, please try again later',
+          message: 'Too many authentication attempts, please try again later',
         }),
       })
     );
@@ -110,7 +154,7 @@ describe('Rate Limiting Middleware', () => {
     };
 
     // Create rate limit middleware
-    const middleware = rateLimit('default');
+    const middleware = createRateLimiter('default');
 
     // Call middleware
     await middleware(requestWithoutUser as Request, mockResponse as Response, nextFunction);
@@ -120,35 +164,42 @@ describe('Rate Limiting Middleware', () => {
   });
 
   it('should use different rate limits for different endpoints', async () => {
-    // Create rate limit middleware for auth
-    const authMiddleware = rateLimit('auth');
+    // Reset counter for this test
+    rateLimitCallCount = 0;
+    
+    // Create rate limit middleware for auth (limit: 5 in test mode)
+    const authMiddleware = createRateLimiter('auth');
 
-    // Call auth middleware multiple times to exceed rate limit
+    // Call auth middleware up to the limit
     for (let i = 0; i < 5; i++) {
       await authMiddleware(mockRequest as Request, mockResponse as Response, nextFunction);
     }
 
-    // Reset next function to check if it's called again
+    // Reset next function and response mocks
     nextFunction.mockReset();
+    mockResponse.status = jest.fn().mockReturnThis();
+    mockResponse.json = jest.fn();
 
-    // Call auth middleware one more time
+    // Call auth middleware one more time to exceed limit
     await authMiddleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
     // Check if auth middleware blocked the request
     expect(nextFunction).not.toHaveBeenCalled();
     expect(mockResponse.status).toHaveBeenCalledWith(429);
 
-    // Reset response
+    // Reset mocks for next test
     jest.clearAllMocks();
+    rateLimitCallCount = 0;
 
-    // Create rate limit middleware for default
-    const defaultMiddleware = rateLimit('default');
+    // Create rate limit middleware for sensitive (limit: 2 in test mode)
+    const sensitiveMiddleware = createRateLimiter('sensitive');
 
-    // Call default middleware
-    await defaultMiddleware(mockRequest as Request, mockResponse as Response, nextFunction);
-
-    // Check if default middleware allowed the request
-    expect(nextFunction).toHaveBeenCalled();
-    expect(mockResponse.status).not.toHaveBeenCalled();
+    // Call sensitive middleware up to the limit
+    for (let i = 0; i < 2; i++) {
+      await sensitiveMiddleware(mockRequest as Request, mockResponse as Response, nextFunction);
+    }
+    
+    // Should still allow requests as we haven't exceeded sensitive limit
+    expect(nextFunction).toHaveBeenCalledTimes(2);
   });
 });

@@ -9,18 +9,9 @@ import express, { Router, Request, Response } from 'express';
 import { jest } from '@jest/globals';
 
 // Mock dependencies
-jest.mock('bcryptjs', () => ({
-  compare: jest.fn(),
-  hash: jest.fn(),
-}));
-
-jest.mock('jsonwebtoken', () => ({
-  sign: jest.fn(),
-}));
-
-jest.mock('../db', () => ({
-  query: jest.fn(),
-}));
+jest.mock('bcryptjs');
+jest.mock('jsonwebtoken');
+jest.mock('../db');
 
 // Import mocked modules after they've been mocked
 import bcrypt from 'bcryptjs';
@@ -135,7 +126,7 @@ describe('Authentication API', () => {
   describe('POST /api/auth/register', () => {
     it('should register a new user', async () => {
       // Mock db.query to return a new user
-      (db.query as jest.Mock).mockResolvedValueOnce({ rows: [] }); // No existing user with the same email
+      (db.query as jest.Mock).mockResolvedValueOnce({ rows: [] } as any); // No existing user with the same email
       (db.query as jest.Mock).mockResolvedValueOnce({
         rows: [
           {
@@ -145,7 +136,7 @@ describe('Authentication API', () => {
             username: 'testuser',
           },
         ],
-      });
+      } as any);
 
       const response = await request(app).post('/api/auth/register').send({
         email: 'test@example.com',
@@ -171,7 +162,7 @@ describe('Authentication API', () => {
             email: 'test@example.com',
           },
         ],
-      });
+      } as any);
 
       const response = await request(app).post('/api/auth/register').send({
         email: 'test@example.com',
@@ -198,7 +189,7 @@ describe('Authentication API', () => {
             username: 'testuser',
           },
         ],
-      });
+      } as any);
 
       // Mock bcrypt.compare to return true
       (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
@@ -218,7 +209,7 @@ describe('Authentication API', () => {
 
     it('should return 401 if user does not exist', async () => {
       // Mock db.query to return no user
-      (db.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+      (db.query as jest.Mock).mockResolvedValueOnce({ rows: [] } as any);
 
       const response = await request(app).post('/api/auth/login').send({
         email: 'nonexistent@example.com',
@@ -241,7 +232,7 @@ describe('Authentication API', () => {
             username: 'testuser',
           },
         ],
-      });
+      } as any);
 
       // Mock bcrypt.compare to return false
       (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);

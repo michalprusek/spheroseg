@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import '@testing-library/jest-dom';
 import ProjectExport from '@/pages/export/ProjectExport';
@@ -117,41 +117,40 @@ const mockImages = [
 // Set up MSW server
 const server = setupServer(
   // Get project details
-  rest.get('/api/projects/:projectId', (req, res, ctx) => {
-    return res(ctx.json(mockProject));
+  http.get('/api/projects/:projectId', () => {
+    return HttpResponse.json(mockProject);
   }),
 
   // Get project images
-  rest.get('/api/projects/:projectId/images', (req, res, ctx) => {
-    return res(ctx.json({ images: mockImages, total: mockImages.length }));
+  http.get('/api/projects/:projectId/images', () => {
+    return HttpResponse.json({ images: mockImages, total: mockImages.length });
   }),
 
   // Get segmentation results for each image
-  rest.get('/api/images/:imageId/segmentation', (req, res, ctx) => {
-    const imageId = req.params.imageId;
+  http.get('/api/images/:imageId/segmentation', ({ params }) => {
+    const imageId = params.imageId as string;
     const image = mockImages.find((img) => img.id === imageId);
 
     if (image?.segmentationResult) {
-      return res(
-        ctx.json({
-          id: `segmentation-${imageId}`,
-          image_id: imageId,
-          status: 'completed',
-          result_data: image.segmentationResult,
-        }),
-      );
+      return HttpResponse.json({
+        id: `segmentation-${imageId}`,
+        image_id: imageId,
+        status: 'completed',
+        result_data: image.segmentationResult,
+      });
     }
 
-    return res(ctx.status(404));
+    return new HttpResponse(null, { status: 404 });
   }),
 
   // Export project
-  rest.get('/api/projects/:projectId/export', (req, res, ctx) => {
-    return res(
-      ctx.set('Content-Type', 'application/zip'),
-      ctx.set('Content-Disposition', 'attachment; filename=project-export.zip'),
-      ctx.body('mock-zip-data'),
-    );
+  http.get('/api/projects/:projectId/export', () => {
+    return new HttpResponse('mock-zip-data', {
+      headers: {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': 'attachment; filename=project-export.zip',
+      },
+    });
   }),
 
   // Export metrics only

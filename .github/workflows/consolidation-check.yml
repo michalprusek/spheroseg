@@ -1,0 +1,88 @@
+name: Consolidation Check
+
+on:
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'packages/**/*.ts'
+      - 'packages/**/*.tsx'
+      - 'packages/**/*.js'
+      - 'packages/**/*.jsx'
+  push:
+    branches: [main, dev]
+    paths:
+      - 'packages/**/*.ts'
+      - 'packages/**/*.tsx'
+      - 'packages/**/*.js'
+      - 'packages/**/*.jsx'
+
+jobs:
+  consolidation-check:
+    name: Check Code Consolidation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run consolidation check
+        run: npm run check:consolidation -- --output consolidation-report.json
+
+      - name: Upload consolidation report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: consolidation-report
+          path: consolidation-report.json
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('consolidation-report.json', 'utf8'));
+            
+            let comment = '## 🔍 Consolidation Check Results\n\n';
+            comment += `**Summary:**\n`;
+            comment += `- ❌ Errors: ${report.summary.errors}\n`;
+            comment += `- ⚠️ Warnings: ${report.summary.warnings}\n`;
+            comment += `- ℹ️ Info: ${report.summary.info}\n\n`;
+            
+            if (report.results.length > 0) {
+              comment += '**Top Issues:**\n\n';
+              const topIssues = report.results.slice(0, 10);
+              
+              for (const issue of topIssues) {
+                const emoji = issue.severity === 'error' ? '❌' : issue.severity === 'warning' ? '⚠️' : 'ℹ️';
+                comment += `${emoji} **${issue.file}**${issue.line ? `:${issue.line}` : ''}\n`;
+                comment += `   ${issue.message}\n`;
+                if (issue.suggestion) {
+                  comment += `   💡 ${issue.suggestion}\n`;
+                }
+                comment += '\n';
+              }
+              
+              if (report.results.length > 10) {
+                comment += `\n... and ${report.results.length - 10} more issues.\n`;
+              }
+            }
+            
+            comment += '\n---\n';
+            comment += '*Run `npm run check:consolidation` locally to see all issues.*';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

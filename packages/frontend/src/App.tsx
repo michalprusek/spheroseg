@@ -1,5 +1,7 @@
 import { Suspense, useEffect } from 'react';
-import { createLazyComponent, lazy } from '@/types/lazyComponents';
+import { LazyBoundary, setupChunkMonitoring } from '@/utils/codeSplitting.consolidated';
+import { bundleOptimizer } from '@/utils/bundleOptimization';
+import { rum } from '@/utils/realUserMetrics';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -37,102 +39,33 @@ import { cleanupOldData, getDBStats, clearEntireDatabase } from './utils/indexed
 // Import accessibility CSS
 import './components/a11y/SkipLink.css';
 
-// Lazy load components with improved error handling
-const Index = lazy(() =>
-  import('./pages/Index').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const SignIn = lazy(() => import('./pages/SignIn'));
-const SignUp = lazy(() =>
-  import('./pages/SignUp').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const VerifyEmail = lazy(() =>
-  import('./pages/VerifyEmail').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const Dashboard = lazy(() =>
-  import('./pages/Dashboard').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
-const SegmentationPage = createLazyComponent(
-  () => import('./pages/segmentation/SegmentationPage'),
-  () => import('./pages/NotFound'),
-);
-const NotFound = lazy(() => import('./pages/NotFound'));
-const Settings = lazy(() =>
-  import('./pages/Settings').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const Profile = lazy(() =>
-  import('./pages/Profile').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const TermsOfService = lazy(() =>
-  import('./pages/TermsOfService').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const PrivacyPolicy = lazy(() =>
-  import('./pages/PrivacyPolicy').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const RequestAccess = lazy(() =>
-  import('./pages/RequestAccess').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const Documentation = lazy(() =>
-  import('./pages/Documentation').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const AboutPage = lazy(() =>
-  import('./pages/AboutPage').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const ProjectExport = lazy(() =>
-  import('./pages/export/ProjectExport').catch(() => {
-    // Error handled by returning NotFound page
-    return import('./pages/NotFound');
-  }),
-);
-const ForgotPassword = lazy(() =>
-  import('./pages/ForgotPassword')
-    .then((module) => ({ default: module.default }))
-    .catch(() => {
-      // Error handled by returning NotFound page
-      return import('./pages/NotFound');
-    }),
-);
-const SegmentationEditorRedirect = createLazyComponent(
-  () => import('./pages/segmentation/SegmentationEditorRedirect'),
-  () => import('./pages/NotFound'),
-);
-const AcceptInvitation = createLazyComponent(
-  () => import('./pages/AcceptInvitation'),
-  () => import('./pages/NotFound'),
-);
+// Import all lazy-loaded components from centralized location
+import lazyComponents from '@/utils/lazyComponents.consolidated';
+import BundleOptimizationManager from '@/components/BundleOptimizationManager';
+import PerformanceMonitor from '@/components/PerformanceMonitor';
+
+// Destructure page components for easier access
+const {
+  Index,
+  SignIn,
+  SignUp,
+  VerifyEmail,
+  Dashboard,
+  ProjectDetail,
+  SegmentationPage,
+  NotFound,
+  Settings,
+  Profile,
+  TermsOfService,
+  PrivacyPolicy,
+  RequestAccess,
+  Documentation,
+  AboutPage,
+  ProjectExport,
+  ForgotPassword,
+  SegmentationEditorRedirect,
+  AcceptInvitation,
+} = lazyComponents.pages;
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -242,6 +175,12 @@ const AppLayout = () => {
 
     // Spustíme čištění po načtení aplikace
     cleanupStorage();
+    
+    // Set up chunk loading monitoring
+    setupChunkMonitoring();
+    
+    // Initialize bundle optimizer for dynamic import analysis
+    bundleOptimizer.initialize();
 
     // Add debug function to window for development
     if (import.meta.env.DEV) {
@@ -260,7 +199,10 @@ const AppLayout = () => {
     const cleanupInterval = setInterval(cleanupStorage, 24 * 60 * 60 * 1000);
 
     // Uklidíme interval při unmount
-    return () => clearInterval(cleanupInterval);
+    return () => {
+      clearInterval(cleanupInterval);
+      bundleOptimizer.cleanup();
+    };
   }, []);
 
   return (
@@ -277,6 +219,8 @@ const AppLayout = () => {
                     {/* Frontend hot reload is working! */}
                     <div className="outlet-wrapper" style={{ minHeight: '50vh' }}>
                       <Outlet />
+                      <BundleOptimizationManager />
+                      <PerformanceMonitor />
                     </div>
                   </Suspense>
                 </main>

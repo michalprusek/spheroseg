@@ -406,7 +406,7 @@ const ProjectDetail = () => {
   // Handle cache clearing
   const handleClearCache = async () => {
     try {
-      const { clearProjectImageCache } = await import('@/utils/cacheManager');
+      const { clearProjectImageCache } = await import('@/utils/cache.consolidated');
       
       // Show confirmation dialog
       const confirmed = window.confirm(

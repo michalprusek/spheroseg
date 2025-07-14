@@ -158,7 +158,7 @@ describe('imageUtils', () => {
       fs.existsSync = originalExistsSync;
     });
 
-    it('should add file_exists and thumbnail_exists flags when both files exist', () => {
+    it('should add file_exists and thumbnail_exists flags when both files exist', async () => {
       // Setup
       const image: ImageData = {
         id: 'test-id',
@@ -175,7 +175,7 @@ describe('imageUtils', () => {
       fs.existsSync.mockImplementation(() => true);
 
       // Execute
-      const result = verifyImageFiles(image, uploadDir);
+      const result = await verifyImageFiles(image, uploadDir);
 
       // Verify
       expect(result.file_exists).toBe(true);
@@ -183,7 +183,7 @@ describe('imageUtils', () => {
       expect(fs.existsSync).toHaveBeenCalledTimes(2);
     });
 
-    it('should add file_exists=false when the image file does not exist', () => {
+    it('should add file_exists=false when the image file does not exist', async () => {
       // Setup
       const image: ImageData = {
         id: 'test-id',
@@ -197,12 +197,12 @@ describe('imageUtils', () => {
       };
 
       // Mock fs.existsSync to return false for the image file and true for the thumbnail
-      fs.existsSync.mockImplementation((path) => {
+      fs.existsSync.mockImplementation((path: string) => {
         return !path.includes('test-image.jpg') || path.includes('thumb');
       });
 
       // Execute
-      const result = verifyImageFiles(image, uploadDir);
+      const result = await verifyImageFiles(image, uploadDir);
 
       // Verify
       expect(result.file_exists).toBe(false);
@@ -210,7 +210,7 @@ describe('imageUtils', () => {
       expect(fs.existsSync).toHaveBeenCalledTimes(2);
     });
 
-    it('should add thumbnail_exists=false when the thumbnail file does not exist', () => {
+    it('should add thumbnail_exists=false when the thumbnail file does not exist', async () => {
       // Setup
       const image: ImageData = {
         id: 'test-id',
@@ -224,12 +224,12 @@ describe('imageUtils', () => {
       };
 
       // Mock fs.existsSync to return true for the image file and false for the thumbnail
-      fs.existsSync.mockImplementation((path) => {
+      fs.existsSync.mockImplementation((path: string) => {
         return !path.includes('thumb');
       });
 
       // Execute
-      const result = verifyImageFiles(image, uploadDir);
+      const result = await verifyImageFiles(image, uploadDir);
 
       // Verify
       expect(result.file_exists).toBe(true);
@@ -237,7 +237,7 @@ describe('imageUtils', () => {
       expect(fs.existsSync).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle missing thumbnail_path', () => {
+    it('should handle missing thumbnail_path', async () => {
       // Setup
       const image: ImageData = {
         id: 'test-id',
@@ -253,7 +253,7 @@ describe('imageUtils', () => {
       fs.existsSync.mockReturnValue(true);
 
       // Execute
-      const result = verifyImageFiles(image, uploadDir);
+      const result = await verifyImageFiles(image, uploadDir);
 
       // Verify
       expect(result.file_exists).toBe(true);
@@ -261,7 +261,7 @@ describe('imageUtils', () => {
       expect(fs.existsSync).toHaveBeenCalledTimes(1); // Only called once for the main image
     });
 
-    it('should handle missing storage_path', () => {
+    it('should handle missing storage_path', async () => {
       // Setup
       const image: ImageData = {
         id: 'test-id',
@@ -274,7 +274,7 @@ describe('imageUtils', () => {
       };
 
       // Execute
-      const result = verifyImageFiles(image, uploadDir);
+      const result = await verifyImageFiles(image, uploadDir);
 
       // Verify
       expect(result.file_exists).toBe(false);

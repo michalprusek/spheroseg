@@ -57,3 +57,7 @@ export { default as imageUtils } from './utils/imageUtils';
 // Export path utilities
 export * from './utils/pathUtils';
 export { default as pathUtils } from './utils/pathUtils';
+
+// Export consolidation checker
+export * from './consolidation';
+export { default as ConsolidationChecker } from './consolidation';

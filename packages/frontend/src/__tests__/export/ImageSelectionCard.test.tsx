@@ -84,14 +84,15 @@ describe('ImageSelectionCard', () => {
   it('shows empty state when no images are available', () => {
     render(<ImageSelectionCard {...mockProps} images={[]} />);
 
-    expect(screen.getByText('Žádné obrázky nejsou k dispozici')).toBeInTheDocument();
+    // The mock returns the key as-is, so we look for the i18n key
+    expect(screen.getByText('export.noImagesAvailable')).toBeInTheDocument();
   });
 
   it('calls handleSelectAll when select all button is clicked', () => {
     render(<ImageSelectionCard {...mockProps} />);
 
-    // Find the select all button
-    const selectAllButton = screen.getByText('Vybrat vše');
+    // Find the select all button - it should show "common.selectAll" since not all images are selected
+    const selectAllButton = screen.getByText('common.selectAll');
     fireEvent.click(selectAllButton);
 
     expect(mockProps.handleSelectAll).toHaveBeenCalled();

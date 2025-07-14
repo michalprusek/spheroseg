@@ -25,6 +25,25 @@ vi.mock('@/contexts/AuthContext', () => ({
   },
 }));
 
+// Mock userProfileService
+vi.mock('@/services/userProfileService', () => ({
+  default: {
+    updateUserProfile: vi.fn(() => Promise.resolve({
+      username: 'updated',
+      full_name: 'Updated User',
+      bio: 'Updated bio',
+      location: 'Updated location',
+      title: 'Updated title',
+      organization: 'Updated organization',
+      avatar_url: 'https://example.com/updated-avatar.jpg',
+    })),
+    uploadAvatar: vi.fn(() => Promise.resolve({
+      avatar_url: 'https://example.com/new-avatar.jpg',
+    })),
+    deleteAvatar: vi.fn(() => Promise.resolve()),
+  },
+}));
+
 // Create test component that uses the profile context
 const ProfileDisplay: React.FC = () => {
   const { profile, loading, updateProfile, updateAvatar, removeAvatar } = useProfile();

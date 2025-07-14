@@ -300,4 +300,3 @@ describe('ThemeContext', () => {
     });
   });
 });
-EOF < /dev/llnu;

@@ -4,6 +4,7 @@ import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { compression } from 'vite-plugin-compression2';
 import staticAssetsPlugin from './vite-static-fix';
+import { getOptimizedViteConfig } from './vite.config.shared';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -57,7 +58,8 @@ export default defineConfig(({ mode }) => {
     );
   }
 
-  return {
+  // Get optimized configuration
+  const baseConfig = {
     plugins,
     optimizeDeps: {
       include: [
@@ -236,4 +238,7 @@ export default defineConfig(({ mode }) => {
       },
     },
   };
+  
+  // Return the optimized configuration
+  return getOptimizedViteConfig(baseConfig);
 });

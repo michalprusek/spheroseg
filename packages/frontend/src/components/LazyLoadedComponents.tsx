@@ -5,9 +5,9 @@
  * that should be loaded on-demand to improve initial bundle size.
  */
 
-import { lazy, Suspense, ComponentType } from 'react';
+import { lazy, Suspense, ComponentType, useState, useRef, useEffect } from 'react';
 import LoadingFallback from './LoadingFallback';
-import { createCodeSplitComponent } from '@/utils/codeSplitting';
+import { createCodeSplitComponent } from '@/utils/codeSplitting.consolidated';
 
 // Heavy visualization components
 export const LazySegmentationCanvas = lazy(() => 

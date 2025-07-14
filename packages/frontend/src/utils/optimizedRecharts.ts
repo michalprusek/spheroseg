@@ -84,22 +84,5 @@ export type {
   CartesianGridProps,
 } from 'recharts';
 
-// Re-export commonly used together
-export const ChartComponents = {
-  LineChart,
-  BarChart,
-  AreaChart,
-  PieChart,
-  RadarChart,
-  Line,
-  Bar,
-  Area,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} as const;
+// Note: Components are already exported individually above
+// Use direct imports instead of grouped export to avoid circular dependency issues

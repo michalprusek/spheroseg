@@ -25,6 +25,46 @@
     "./utils/polygonUtils": {
       "types": "./dist/utils/polygonUtils.d.ts",
       "default": "./dist/utils/polygonUtils.js"
+    },
+    "./utils/imageProcessing.unified": {
+      "types": "./dist/utils/imageProcessing.unified.d.ts",
+      "default": "./dist/utils/imageProcessing.unified.js"
+    },
+    "./utils/imageProcessing.frontend": {
+      "types": "./dist/utils/imageProcessing.frontend.d.ts",
+      "default": "./dist/utils/imageProcessing.frontend.js"
+    },
+    "./utils/imageProcessing.backend": {
+      "types": "./dist/utils/imageProcessing.backend.d.ts",
+      "default": "./dist/utils/imageProcessing.backend.js"
+    },
+    "./utils/dateUtils.unified": {
+      "types": "./dist/utils/dateUtils.unified.d.ts",
+      "default": "./dist/utils/dateUtils.unified.js"
+    },
+    "./utils/dateLocales": {
+      "types": "./dist/utils/dateLocales.d.ts",
+      "default": "./dist/utils/dateLocales.js"
+    },
+    "./validation": {
+      "types": "./dist/validation/index.d.ts",
+      "default": "./dist/validation/index.js"
+    },
+    "./validation/schemas": {
+      "types": "./dist/validation/schemas.d.ts",
+      "default": "./dist/validation/schemas.js"
+    },
+    "./validation/forms": {
+      "types": "./dist/validation/forms.d.ts",
+      "default": "./dist/validation/forms.js"
+    },
+    "./validation/middleware": {
+      "types": "./dist/validation/middleware.d.ts",
+      "default": "./dist/validation/middleware.js"
+    },
+    "./validation/commonSchemas": {
+      "types": "./dist/validation/commonSchemas.d.ts",
+      "default": "./dist/validation/commonSchemas.js"
     }
   },
   "scripts": {
@@ -34,11 +74,14 @@
   },
   "dependencies": {
     "@spheroseg/types": "file:../types",
-    "uuid": "^9.0.1"
+    "date-fns": "^3.0.0",
+    "uuid": "^9.0.1",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
     "@types/uuid": "^9.0.8",
     "@types/node": "^18.11.9",
+    "@types/sharp": "^0.32.0",
     "typescript": "^5.0.4"
   }
 }

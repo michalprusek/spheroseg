@@ -1,19 +1,21 @@
 /**
- * Improved Code Splitting Utilities
+ * Consolidated Code Splitting Utilities
  * 
- * Improvements:
+ * This module combines the best features from all code splitting implementations:
  * - LRU cache to prevent memory leaks
  * - Better cache key generation
  * - Error boundaries integration
  * - Type safety improvements
  * - Performance monitoring
+ * - Retry logic with exponential backoff
+ * - Prefetching strategies
  */
 
-import { lazy, ComponentType, LazyExoticComponent, Suspense } from 'react';
+import React, { lazy, ComponentType, LazyExoticComponent, Suspense } from 'react';
 import { matchPath } from 'react-router-dom';
 import { LRUCache, PromiseCache } from './lruCache';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import LoadingFallback from '@/components/LoadingFallback';
 
 // Types
 export interface CodeSplitOptions {
@@ -24,6 +26,7 @@ export interface CodeSplitOptions {
   retryAttempts?: number;
   retryDelay?: number;
   cacheKey?: string;
+  preload?: boolean;
 }
 
 export interface PrefetchConfig {
@@ -39,6 +42,9 @@ export interface ChunkLoadMetrics {
   success: boolean;
   retries: number;
 }
+
+// Type for the import function
+type ImportFunction<T> = () => Promise<{ default: ComponentType<T> }>;
 
 // Logger for production-safe logging
 class ChunkLogger {
@@ -62,8 +68,8 @@ class ChunkLogger {
 
   private sendSlowLoadWarning(metric: ChunkLoadMetrics): void {
     // Send to monitoring service
-    if (window.gtag) {
-      window.gtag('event', 'slow_chunk_load', {
+    if ((window as any).gtag) {
+      (window as any).gtag('event', 'slow_chunk_load', {
         event_category: 'Performance',
         event_label: metric.chunkName,
         value: metric.loadTime,
@@ -119,14 +125,16 @@ function hashCode(str: string): number {
 
 /**
  * Enhanced lazy loading with retry logic, caching, and monitoring
+ * This is the main entry point for lazy loading components
  */
 export function lazyWithRetry<T extends ComponentType<any>>(
-  importFn: () => Promise<{ default: T }>,
+  importFn: ImportFunction<any>,
   options: CodeSplitOptions = {}
-): LazyExoticComponent<T> {
+): LazyExoticComponent<T> & { preload?: () => Promise<void> } {
   const {
     retryAttempts = 3,
     retryDelay = 1000,
+    preload = false,
   } = options;
 
   const cacheKey = generateCacheKey(importFn, options);
@@ -135,10 +143,10 @@ export function lazyWithRetry<T extends ComponentType<any>>(
   const cached = componentCache.get(cacheKey);
   if (cached) {
     logger.log('debug', 'Returning cached component', { cacheKey });
-    return cached as LazyExoticComponent<T>;
+    return cached as LazyExoticComponent<T> & { preload?: () => Promise<void> };
   }
 
-  // Create retry import function with monitoring
+  // Create retry import function with exponential backoff and monitoring
   const retryImport = async (attemptsLeft: number = retryAttempts): Promise<{ default: T }> => {
     const startTime = performance.now();
     const retryCount = retryAttempts - attemptsLeft;
@@ -177,8 +185,9 @@ export function lazyWithRetry<T extends ComponentType<any>>(
         throw error;
       }
 
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      // Exponential backoff
+      const delay = retryDelay * Math.pow(2, retryCount);
+      await new Promise(resolve => setTimeout(resolve, delay));
       
       // Clear module cache in development
       if (import.meta.env.DEV && import.meta.hot) {
@@ -191,7 +200,17 @@ export function lazyWithRetry<T extends ComponentType<any>>(
   };
 
   // Create lazy component with retry logic
-  const LazyComponent = lazy(() => retryImport());
+  const LazyComponent = lazy(() => retryImport()) as LazyExoticComponent<T> & { preload?: () => Promise<void> };
+
+  // Add preload method if requested
+  if (preload) {
+    LazyComponent.preload = async () => {
+      await loadingPromises.get(cacheKey, async () => {
+        logger.log('info', 'Preloading component', { cacheKey });
+        await retryImport();
+      });
+    };
+  }
 
   // Cache the component
   componentCache.set(cacheKey, LazyComponent);
@@ -203,7 +222,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
  * Prefetch a component
  */
 export async function prefetchComponent(
-  importFn: () => Promise<any>,
+  importFn: ImportFunction<any>,
   options: CodeSplitOptions = {}
 ): Promise<void> {
   const cacheKey = generateCacheKey(importFn, options);
@@ -227,98 +246,45 @@ export async function prefetchComponent(
 }
 
 /**
- * Route prefetching configuration with dynamic loading
- */
-export function getRoutePrefetchConfig(): PrefetchConfig[] {
-  return [
-    {
-      routes: ['/dashboard', '/projects/:id'],
-      priority: 'high',
-      strategy: 'idle',
-    },
-    {
-      routes: ['/settings', '/profile'],
-      priority: 'low',
-      strategy: 'hover',
-    },
-    {
-      routes: ['/documentation', '/about'],
-      priority: 'low',
-      strategy: 'visible',
-    },
-  ];
-}
-
-/**
- * Prefetch routes based on current location and strategy
- */
-export function prefetchRoutes(currentPath: string): void {
-  const config = getRoutePrefetchConfig();
-  
-  // Use requestIdleCallback for non-critical prefetching
-  const idleCallback = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
-  
-  idleCallback(() => {
-    config.forEach(({ routes, strategy, priority }) => {
-      if (strategy === 'idle' && priority === 'high') {
-        routes.forEach(route => {
-          if (matchPath(route, currentPath)) {
-            // Prefetch related routes based on current location
-            prefetchRelatedRoutes(route);
-          }
-        });
-      }
-    });
-  });
-}
-
-/**
- * Prefetch related routes based on navigation patterns
- */
-function prefetchRelatedRoutes(route: string): void {
-  const relatedRoutes: Record<string, (() => Promise<any>)[]> = {
-    '/dashboard': [
-      () => import('../pages/projects/ProjectList'),
-      () => import('../pages/settings/Settings'),
-    ],
-    '/projects/:id': [
-      () => import('../pages/segmentation/SegmentationPage'),
-      () => import('../pages/export/ExportPage'),
-    ],
-    '/settings': [
-      () => import('../pages/profile/Profile'),
-    ],
-  };
-
-  const importFns = relatedRoutes[route] || [];
-  importFns.forEach((importFn, index) => {
-    // Stagger prefetching to avoid blocking
-    setTimeout(() => {
-      prefetchComponent(importFn, { 
-        chunkName: `related-${route}-${index}` 
-      });
-    }, index * 100);
-  });
-}
-
-/**
  * Create a code-split component with advanced features
  */
 export function createCodeSplitComponent<T extends ComponentType<any>>(
-  importFn: () => Promise<{ default: T }>,
+  importFn: ImportFunction<any>,
   options: CodeSplitOptions = {}
 ): {
   Component: LazyExoticComponent<T>;
   prefetch: () => Promise<void>;
   preload: () => Promise<{ default: T }>;
 } {
-  const Component = lazyWithRetry(importFn, options);
+  const Component = lazyWithRetry<T>(importFn, { ...options, preload: true });
 
   return {
     Component,
     prefetch: () => prefetchComponent(importFn, options),
     preload: () => importFn(),
   };
+}
+
+/**
+ * Create a lazy component with a loading fallback and error boundary
+ */
+export function createLazyComponent<T extends Record<string, any>>(
+  importFn: ImportFunction<T>,
+  options: CodeSplitOptions & { 
+    fallback?: React.ReactNode;
+    errorFallback?: React.ComponentType<{ error: Error; retry: () => void }>;
+  } = {}
+): React.FC<T> {
+  const { fallback = <LoadingFallback />, errorFallback, ...lazyOptions } = options;
+  const LazyComponent = lazyWithRetry(importFn, lazyOptions);
+  
+  return (props: T) => (
+    <LazyBoundary fallback={errorFallback}>
+      <Suspense fallback={fallback}>
+        <LazyComponent {...props} />
+      </Suspense>
+    </LazyBoundary>
+  );
 }
 
 /**
@@ -341,11 +307,80 @@ export function LazyBoundary({
         onError?.(error, errorInfo);
       }}
     >
-      <Suspense fallback={<LoadingSpinner />}>
-        {children}
-      </Suspense>
+      {children}
     </ErrorBoundary>
   );
+}
+
+/**
+ * Route prefetching configuration
+ */
+export const routePrefetchConfig: PrefetchConfig[] = [
+  {
+    routes: ['/dashboard', '/projects/:id'],
+    priority: 'high',
+    strategy: 'idle',
+  },
+  {
+    routes: ['/settings', '/profile'],
+    priority: 'low',
+    strategy: 'hover',
+  },
+  {
+    routes: ['/documentation', '/about'],
+    priority: 'low',
+    strategy: 'visible',
+  },
+];
+
+/**
+ * Prefetch routes based on current location and strategy
+ */
+export function prefetchRoutes(currentPath: string): void {
+  // Use requestIdleCallback for non-critical prefetching
+  const idleCallback = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
+  
+  idleCallback(() => {
+    routePrefetchConfig.forEach(({ routes, strategy, priority }) => {
+      if (strategy === 'idle' && priority === 'high') {
+        routes.forEach(route => {
+          if (matchPath(route, currentPath)) {
+            // Prefetch related routes based on current location
+            prefetchRelatedRoutes(route);
+          }
+        });
+      }
+    });
+  });
+}
+
+/**
+ * Prefetch related routes based on navigation patterns
+ */
+function prefetchRelatedRoutes(route: string): void {
+  const relatedRoutes: Record<string, (() => Promise<any>)[]> = {
+    '/dashboard': [
+      () => import('../pages/Dashboard'),
+      () => import('../pages/Settings'),
+    ],
+    '/projects/:id': [
+      () => import('../pages/ProjectDetail'),
+      () => import('../pages/export/ProjectExport'),
+    ],
+    '/settings': [
+      () => import('../pages/Profile'),
+    ],
+  };
+
+  const importFns = relatedRoutes[route] || [];
+  importFns.forEach((importFn, index) => {
+    // Stagger prefetching to avoid blocking
+    setTimeout(() => {
+      prefetchComponent(importFn, { 
+        chunkName: `related-${route}-${index}` 
+      });
+    }, index * 100);
+  });
 }
 
 /**
@@ -377,28 +412,23 @@ export const bundleOptimization = {
   },
 
   /**
-   * Get Vite/Webpack optimization config
+   * Get Vite optimization config
    */
-  getOptimizationConfig() {
+  getViteOptimizationConfig() {
     return {
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name(module: any) {
-              const packageName = module.context.match(
-                /[\\/]node_modules[\\/](.*?)([\\/]|$)/
-              )[1];
-              
-              // Find which vendor group this package belongs to
-              for (const [groupName, packages] of Object.entries(this.vendorChunks)) {
-                if (packages.some(pkg => packageName.startsWith(pkg))) {
-                  return `vendor-${groupName}`;
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: (id: string) => {
+              if (id.includes('node_modules')) {
+                // Find which vendor group this package belongs to
+                for (const [groupName, packages] of Object.entries(this.vendorChunks)) {
+                  if (packages.some(pkg => id.includes(pkg))) {
+                    return `vendor-${groupName}`;
+                  }
                 }
+                return 'vendor-misc';
               }
-              
-              return 'vendor-misc';
             },
           },
         },
@@ -408,31 +438,12 @@ export const bundleOptimization = {
 };
 
 /**
- * Component-level code splitting helper with type safety
- */
-export function splitComponent<T extends ComponentType<any>>(
-  componentPath: string,
-  options?: CodeSplitOptions
-): LazyExoticComponent<T> {
-  // Create a proper import function
-  const importFn = () => import(
-    /* @vite-ignore */
-    componentPath
-  );
-
-  return lazyWithRetry(importFn, {
-    ...options,
-    cacheKey: componentPath,
-  });
-}
-
-/**
  * Heavy component splitting configuration
  */
 export const heavyComponents = {
   // Segmentation editor components
   SegmentationCanvas: () => createCodeSplitComponent(
-    () => import('../pages/segmentation/components/canvas/CanvasV2'),
+    () => import('../pages/segmentation/components/canvas/CanvasContainer'),
     { chunkName: 'segmentation-canvas', prefetch: true }
   ),
   
@@ -454,6 +465,40 @@ export const heavyComponents = {
     { chunkName: 'virtual-image-grid', prefetch: true }
   ),
 };
+
+/**
+ * Prefetch component on hover or focus
+ */
+export function usePrefetch<T extends Record<string, any>>(
+  component: LazyExoticComponent<ComponentType<T>> & { preload?: () => Promise<void> }
+) {
+  const prefetchRef = React.useRef(false);
+  
+  const prefetch = React.useCallback(() => {
+    if (!prefetchRef.current && component.preload) {
+      prefetchRef.current = true;
+      component.preload();
+    }
+  }, [component]);
+  
+  return {
+    onMouseEnter: prefetch,
+    onFocus: prefetch,
+  };
+}
+
+/**
+ * Preload multiple components in parallel
+ */
+export async function preloadComponents(
+  components: Array<{ preload?: () => Promise<void> }>
+): Promise<void> {
+  const preloadPromises = components
+    .filter(comp => typeof comp.preload === 'function')
+    .map(comp => comp.preload!());
+  
+  await Promise.all(preloadPromises);
+}
 
 /**
  * Performance monitoring for code splitting
@@ -497,17 +542,22 @@ export function getCacheStats() {
   };
 }
 
-// Export all utilities
+// Convenience re-exports for backward compatibility
+export { lazy } from 'react';
+
+// Export default object with all utilities
 export default {
   lazyWithRetry,
   prefetchComponent,
   prefetchRoutes,
   createCodeSplitComponent,
-  splitComponent,
+  createLazyComponent,
   heavyComponents,
   LazyBoundary,
   setupChunkMonitoring,
   getCacheStats,
   bundleOptimization,
-  getRoutePrefetchConfig,
+  routePrefetchConfig,
+  usePrefetch,
+  preloadComponents,
 };

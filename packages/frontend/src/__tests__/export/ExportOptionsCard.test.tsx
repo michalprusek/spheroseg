@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ExportOptionsCard from '@/pages/export/components/ExportOptionsCard';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
-import { mockLanguageContext, mockExportOptionsProps } from '../../../shared/test-utils/export-test-utils';
+import { mockLanguageContext, mockExportOptionsProps } from '../../shared/test-utils/export-test-utils';
 
 // Mock language context
 mockLanguageContext();

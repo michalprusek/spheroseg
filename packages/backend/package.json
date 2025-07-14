@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only --no-notify --no-deps --ignore-watch node_modules -r tsconfig-paths/register src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only --no-notify --no-deps --ignore-watch node_modules src/server.ts",
     "test": "jest",
     "test:integration": "jest --testPathPattern=integration",
     "test:unit": "jest --testPathIgnorePatterns=integration",
@@ -56,9 +56,11 @@
     "polygon-clipping": "^0.15.7",
     "prom-client": "^15.1.2",
     "rate-limiter-flexible": "^5.0.4",
+    "redis": "^4.6.15",
     "sharp": "^0.34.1",
     "socket.io": "^4.7.5",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
     "zod": "^3.24.3"
@@ -102,7 +104,6 @@
     "ts-jest": "^29.3.2",
     "ts-node-dev": "^2.0.0",
     "tsc-alias": "^1.8.10",
-    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.0.0"
   },
   "keywords": [],

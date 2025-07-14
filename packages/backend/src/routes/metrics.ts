@@ -39,6 +39,59 @@ import { getEnhancedMetrics } from '../services/socketServiceEnhanced';
 
 const router: Router = express.Router();
 
+// In-memory storage for RUM data (use Redis or database in production)
+const rumStore: {
+  reports: any[];
+  aggregates: {
+    webVitals: Record<string, number[]>;
+    customMetrics: Record<string, number[]>;
+    errors: number;
+    totalSessions: number;
+  };
+} = {
+  reports: [],
+  aggregates: {
+    webVitals: {
+      fcp: [],
+      lcp: [],
+      fid: [],
+      cls: [],
+      ttfb: [],
+      inp: [],
+    },
+    customMetrics: {},
+    errors: 0,
+    totalSessions: 0,
+  },
+};
+
+// Helper to calculate percentiles
+function calculatePercentiles(values: number[]): {
+  median: number;
+  p75: number;
+  p95: number;
+  average: number;
+} {
+  if (values.length === 0) {
+    return { median: 0, p75: 0, p95: 0, average: 0 };
+  }
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const average = values.reduce((sum, val) => sum + val, 0) / values.length;
+  
+  const getPercentile = (p: number) => {
+    const index = Math.ceil(sorted.length * p) - 1;
+    return sorted[Math.max(0, Math.min(index, sorted.length - 1))];
+  };
+
+  return {
+    median: getPercentile(0.5),
+    p75: getPercentile(0.75),
+    p95: getPercentile(0.95),
+    average: Math.round(average),
+  };
+}
+
 /**
  * GET /api/metrics
  * 
@@ -358,6 +411,272 @@ router.get('/cdn', authMiddleware, async (req: Request, res: Response) => {
     logger.error('Error fetching CDN metrics:', error);
     res.status(500).json({ error: 'Failed to fetch CDN metrics' });
   }
+});
+
+/**
+ * POST /api/metrics/rum
+ * Receive real user metrics data
+ */
+router.post('/rum', async (req: Request, res: Response) => {
+  try {
+    const report = req.body;
+    
+    // Validate report structure
+    if (!report.sessionId || !report.timestamp || !report.webVitals) {
+      return res.status(400).json({ 
+        error: 'Invalid metrics report format' 
+      });
+    }
+
+    // Store report (limit to last 1000)
+    rumStore.reports.push(report);
+    if (rumStore.reports.length > 1000) {
+      rumStore.reports = rumStore.reports.slice(-1000);
+    }
+
+    // Update aggregates
+    const { webVitals, customMetrics } = report;
+    
+    // Aggregate Web Vitals
+    Object.entries(webVitals).forEach(([metric, value]) => {
+      if (value !== null && value !== undefined) {
+        if (!rumStore.aggregates.webVitals[metric]) {
+          rumStore.aggregates.webVitals[metric] = [];
+        }
+        rumStore.aggregates.webVitals[metric].push(value as number);
+        
+        // Keep only last 1000 values
+        if (rumStore.aggregates.webVitals[metric].length > 1000) {
+          rumStore.aggregates.webVitals[metric] = 
+            rumStore.aggregates.webVitals[metric].slice(-1000);
+        }
+      }
+    });
+
+    // Aggregate custom metrics
+    if (customMetrics) {
+      Object.entries(customMetrics).forEach(([name, value]) => {
+        if (!rumStore.aggregates.customMetrics[name]) {
+          rumStore.aggregates.customMetrics[name] = [];
+        }
+        rumStore.aggregates.customMetrics[name].push(value as number);
+        
+        // Keep only last 1000 values
+        if (rumStore.aggregates.customMetrics[name].length > 1000) {
+          rumStore.aggregates.customMetrics[name] = 
+            rumStore.aggregates.customMetrics[name].slice(-1000);
+        }
+      });
+    }
+
+    // Track errors from user actions
+    if (report.userActions) {
+      const errorActions = report.userActions.filter((action: any) => !action.success);
+      rumStore.aggregates.errors += errorActions.length;
+    }
+
+    // Track unique sessions
+    const sessionIds = new Set(rumStore.reports.map(r => r.sessionId));
+    rumStore.aggregates.totalSessions = sessionIds.size;
+
+    // Log performance issues
+    if (webVitals.lcp && webVitals.lcp > 4000) {
+      logger.warn('Poor LCP detected', {
+        sessionId: report.sessionId,
+        lcp: webVitals.lcp,
+        url: report.url,
+      });
+    }
+
+    res.status(201).json({ success: true });
+  } catch (error) {
+    logger.error('Error processing RUM data:', error);
+    res.status(500).json({ error: 'Failed to process metrics' });
+  }
+});
+
+/**
+ * GET /api/metrics/rum/summary
+ * Get aggregated RUM statistics
+ */
+router.get('/rum/summary', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const webVitalsSummary: Record<string, any> = {};
+    
+    // Calculate percentiles for each Web Vital
+    Object.entries(rumStore.aggregates.webVitals).forEach(([metric, values]) => {
+      if (values.length > 0) {
+        webVitalsSummary[metric] = calculatePercentiles(values);
+      }
+    });
+
+    // Calculate custom metrics summary
+    const customMetricsSummary: Record<string, any> = {};
+    Object.entries(rumStore.aggregates.customMetrics).forEach(([name, values]) => {
+      if (values.length > 0) {
+        customMetricsSummary[name] = calculatePercentiles(values);
+      }
+    });
+
+    // Get recent reports for timeline
+    const recentReports = rumStore.reports.slice(-100);
+    const timeline = recentReports.map(report => ({
+      timestamp: report.timestamp,
+      lcp: report.webVitals.lcp,
+      fcp: report.webVitals.fcp,
+      cls: report.webVitals.cls,
+    }));
+
+    // Top slow resources
+    const allResources = recentReports.flatMap(r => r.resources || []);
+    const slowResources = allResources
+      .sort((a, b) => b.duration - a.duration)
+      .slice(0, 10);
+
+    // User action performance
+    const allActions = recentReports.flatMap(r => r.userActions || []);
+    const actionsByType = allActions.reduce((acc, action) => {
+      if (!acc[action.action]) {
+        acc[action.action] = {
+          count: 0,
+          totalDuration: 0,
+          failures: 0,
+        };
+      }
+      acc[action.action].count++;
+      acc[action.action].totalDuration += action.duration;
+      if (!action.success) {
+        acc[action.action].failures++;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+    const summary = {
+      totalSessions: rumStore.aggregates.totalSessions,
+      totalReports: rumStore.reports.length,
+      totalErrors: rumStore.aggregates.errors,
+      webVitals: webVitalsSummary,
+      customMetrics: customMetricsSummary,
+      timeline,
+      slowResources,
+      userActions: Object.entries(actionsByType).map(([action, stats]) => ({
+        action,
+        count: stats.count,
+        averageDuration: Math.round(stats.totalDuration / stats.count),
+        failureRate: (stats.failures / stats.count) * 100,
+      })),
+    };
+
+    res.json(summary);
+  } catch (error) {
+    logger.error('Error generating RUM summary:', error);
+    res.status(500).json({ error: 'Failed to generate summary' });
+  }
+});
+
+/**
+ * GET /api/metrics/rum/sessions/:sessionId
+ * Get detailed metrics for a specific session
+ */
+router.get('/rum/sessions/:sessionId', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    
+    const sessionReports = rumStore.reports.filter(
+      report => report.sessionId === sessionId
+    );
+
+    if (sessionReports.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Get latest report for session details
+    const latestReport = sessionReports[sessionReports.length - 1];
+    
+    // Build session timeline
+    const timeline = sessionReports.map(report => ({
+      timestamp: report.timestamp,
+      url: report.url,
+      webVitals: report.webVitals,
+      actionCount: report.userActions?.length || 0,
+      resourceCount: report.resources?.length || 0,
+    }));
+
+    // Aggregate all user actions
+    const allActions = sessionReports.flatMap(r => r.userActions || []);
+    
+    // Aggregate all resources
+    const allResources = sessionReports.flatMap(r => r.resources || []);
+    const resourcesByType = allResources.reduce((acc, resource) => {
+      if (!acc[resource.type]) {
+        acc[resource.type] = {
+          count: 0,
+          totalSize: 0,
+          totalDuration: 0,
+          cached: 0,
+        };
+      }
+      acc[resource.type].count++;
+      acc[resource.type].totalSize += resource.size;
+      acc[resource.type].totalDuration += resource.duration;
+      if (resource.cached) {
+        acc[resource.type].cached++;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+    const sessionDetails = {
+      sessionId,
+      startTime: sessionReports[0].timestamp,
+      endTime: latestReport.timestamp,
+      duration: latestReport.timestamp - sessionReports[0].timestamp,
+      reportCount: sessionReports.length,
+      timeline,
+      finalWebVitals: latestReport.webVitals,
+      userActions: allActions,
+      resourceSummary: Object.entries(resourcesByType).map(([type, stats]) => ({
+        type,
+        count: stats.count,
+        totalSize: stats.totalSize,
+        averageDuration: Math.round(stats.totalDuration / stats.count),
+        cacheHitRate: (stats.cached / stats.count) * 100,
+      })),
+      customMetrics: latestReport.customMetrics,
+    };
+
+    res.json(sessionDetails);
+  } catch (error) {
+    logger.error('Error fetching session details:', error);
+    res.status(500).json({ error: 'Failed to fetch session details' });
+  }
+});
+
+/**
+ * DELETE /api/metrics/rum
+ * Clear all RUM data (development only)
+ */
+router.delete('/rum', authMiddleware, async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV !== 'development') {
+    return res.status(403).json({ error: 'Only available in development' });
+  }
+
+  // Clear all data
+  rumStore.reports = [];
+  rumStore.aggregates = {
+    webVitals: {
+      fcp: [],
+      lcp: [],
+      fid: [],
+      cls: [],
+      ttfb: [],
+      inp: [],
+    },
+    customMetrics: {},
+    errors: 0,
+    totalSessions: 0,
+  };
+
+  res.json({ success: true, message: 'RUM data cleared' });
 });
 
 export default router;

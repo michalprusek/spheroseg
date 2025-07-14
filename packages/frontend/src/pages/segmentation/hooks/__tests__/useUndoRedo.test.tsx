@@ -68,15 +68,19 @@ describe('useUndoRedo hook', () => {
     const initialState = { value: 1 };
     const { result } = renderHook(() => useUndoRedo(initialState));
 
-    // Add two new states
+    // Add two new states (separate acts to ensure they're not batched)
     act(() => {
       result.current.setState({ value: 2 });
+    });
+    act(() => {
       result.current.setState({ value: 3 });
     });
 
-    // Undo twice
+    // Undo twice (separate acts)
     act(() => {
       result.current.undo();
+    });
+    act(() => {
       result.current.undo();
     });
 
@@ -95,9 +99,11 @@ describe('useUndoRedo hook', () => {
     const initialState = { value: 1 };
     const { result } = renderHook(() => useUndoRedo(initialState));
 
-    // Add two new states
+    // Add two new states (separate acts to ensure they're not batched)
     act(() => {
       result.current.setState({ value: 2 });
+    });
+    act(() => {
       result.current.setState({ value: 3 });
     });
 

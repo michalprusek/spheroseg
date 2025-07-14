@@ -9,7 +9,7 @@ import path from 'path';
 
 // Mock dependencies
 jest.mock('../security/middleware/auth', () => {
-  return jest.fn((req, res, next) => {
+  return jest.fn((req: any, res: any, next: any) => {
     req.user = { userId: 'test-user-id' };
     next();
   });
@@ -17,7 +17,7 @@ jest.mock('../security/middleware/auth', () => {
 
 jest.mock('multer', () => {
   const multerMock = () => ({
-    array: () => (req, res, next) => {
+    array: () => (req: any, res: any, next: any) => {
       req.files = [
         {
           fieldname: 'images',
@@ -38,7 +38,7 @@ jest.mock('multer', () => {
 });
 
 jest.mock('../db', () => ({
-  query: jest.fn().mockImplementation((query, params) => {
+  query: jest.fn().mockImplementation((query: any, params: any) => {
     if (query.includes('SELECT id FROM projects')) {
       return { rows: [{ id: 'test-project-id' }] };
     }
@@ -68,7 +68,7 @@ jest.mock('fs', () => ({
   existsSync: jest.fn().mockReturnValue(true),
   mkdirSync: jest.fn(),
   promises: {
-    mkdir: jest.fn().mockResolvedValue(undefined),
+    mkdir: jest.fn(() => Promise.resolve()),
   },
 }));
 

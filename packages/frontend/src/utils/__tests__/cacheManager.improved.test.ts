@@ -31,15 +31,22 @@ const mockLogger = {
 
 // Mock dependencies with proper types
 vi.mock('@/services/unifiedCacheService', () => ({
-  default: mockUnifiedCacheService
+  default: {
+    invalidate: vi.fn<[string[]], Promise<void>>()
+  }
 }));
 
 vi.mock('@/utils/indexedDBService', () => ({
-  deleteProjectImages: mockIndexedDBService.deleteProjectImages
+  deleteProjectImages: vi.fn<[string], Promise<void>>()
 }));
 
 vi.mock('@/utils/logging/unifiedLogger', () => ({
-  createLogger: () => mockLogger
+  createLogger: () => ({
+    info: vi.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn()
+  })
 }));
 
 // Test factories

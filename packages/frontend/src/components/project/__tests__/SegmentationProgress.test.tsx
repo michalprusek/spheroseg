@@ -9,7 +9,7 @@ import {
   mockEmptyQueueResponse,
   mockActiveQueueResponse,
   mockApiClientResponse,
-} from '../../../../../shared/test-utils/segmentation-progress-test-utils';
+} from '../../../shared/test-utils/segmentation-progress-test-utils';
 
 // Setup all mocks
 setupSegmentationProgressMocks();

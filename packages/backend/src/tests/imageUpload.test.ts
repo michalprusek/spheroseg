@@ -25,7 +25,7 @@ jest.mock('../config', () => ({
 
 // Mock database
 jest.mock('../db', () => ({
-  query: jest.fn().mockImplementation((query, params) => {
+  query: jest.fn().mockImplementation((query: any, params: any) => {
     if (String(query).includes('SELECT id FROM projects')) {
       return { rows: [{ id: 'test-project-id' }] };
     }
@@ -49,7 +49,7 @@ jest.mock('../db', () => ({
     return { rows: [] };
   }),
   connect: jest.fn().mockReturnValue({
-    query: jest.fn().mockImplementation((query, params) => {
+    query: jest.fn().mockImplementation((query: any, params: any) => {
       if (String(query).includes('INSERT INTO images')) {
         return {
           rows: [
@@ -70,7 +70,6 @@ jest.mock('../db', () => ({
       return { rows: [] };
     }),
     release: jest.fn(),
-    query: jest.fn().mockResolvedValue({ rows: [] }),
   }),
 }));
 
@@ -80,23 +79,23 @@ jest.mock('fs', () => ({
   mkdirSync: jest.fn(),
   unlinkSync: jest.fn(),
   promises: {
-    mkdir: jest.fn().mockResolvedValue(undefined),
+    mkdir: jest.fn(() => Promise.resolve()),
   },
 }));
 
 // Mock sharp module
 jest.mock('sharp', () =>
   jest.fn(() => ({
-    metadata: jest.fn().mockResolvedValue({ width: 800, height: 600, format: 'jpeg' }),
+    metadata: jest.fn(() => Promise.resolve({ width: 800, height: 600, format: 'jpeg' })),
     resize: jest.fn().mockReturnThis(),
-    toFile: jest.fn().mockResolvedValue({}),
+    toFile: jest.fn(() => Promise.resolve()),
   }))
 );
 
 // Mock multer module
 jest.mock('multer', () => {
   const multerMock = jest.fn(() => ({
-    array: jest.fn(() => (req, res, next) => {
+    array: jest.fn(() => (req: any, res: any, next: any) => {
       req.files = [
         {
           fieldname: 'images',
@@ -112,7 +111,7 @@ jest.mock('multer', () => {
       next();
     }),
   }));
-  multerMock.diskStorage = jest.fn();
+  (multerMock as any).diskStorage = jest.fn();
   return multerMock;
 });
 
@@ -126,7 +125,7 @@ jest.mock('../utils/logger', () => ({
 
 // Mock authentication middleware
 jest.mock('../security/middleware/auth', () => {
-  return jest.fn((req, res, next) => {
+  return jest.fn((req: any, res: any, next: any) => {
     req.user = { userId: 'test-user-id' };
     next();
   });
@@ -135,27 +134,27 @@ jest.mock('../security/middleware/auth', () => {
 // Mock imageUtils
 jest.mock('../utils/imageUtils.unified', () => ({
   default: {
-    fileExists: jest.fn().mockResolvedValue(true),
-    ensureDirectoryExists: jest.fn().mockResolvedValue(undefined),
-    getImageMetadata: jest.fn().mockResolvedValue({ width: 800, height: 600, format: 'jpeg' }),
-    createThumbnail: jest.fn().mockResolvedValue(undefined),
+    fileExists: jest.fn(() => Promise.resolve(true)),
+    ensureDirectoryExists: jest.fn(() => Promise.resolve()),
+    getImageMetadata: jest.fn(() => Promise.resolve({ width: 800, height: 600, format: 'jpeg' })),
+    createThumbnail: jest.fn(() => Promise.resolve()),
     dbPathToFilesystemPath: jest
       .fn()
       .mockReturnValue('/tmp/uploads/test-project-id/test-image.jpg'),
     normalizePathForDb: jest.fn().mockReturnValue('/uploads/test-project-id/test-image.jpg'),
-    formatImageForApi: jest.fn().mockImplementation((image) => ({
+    formatImageForApi: jest.fn().mockImplementation((image: any) => ({
       ...image,
       storage_path: `http://localhost:3000/uploads/test-project-id/test-image.jpg`,
       thumbnail_path: `http://localhost:3000/uploads/test-project-id/thumb-test-image.jpg`,
     })),
     verifyImageFilesForApi: jest
       .fn()
-      .mockImplementation((image) => ({ ...image, file_exists: true })),
-    deleteFile: jest.fn().mockResolvedValue(undefined),
+      .mockImplementation((image: any) => ({ ...image, file_exists: true })),
+    deleteFile: jest.fn(() => Promise.resolve()),
   },
-  fileExists: jest.fn().mockResolvedValue(true),
-  getImageMetadata: jest.fn().mockResolvedValue({ width: 800, height: 600, format: 'jpeg' }),
-  createThumbnail: jest.fn().mockResolvedValue(undefined),
+  fileExists: jest.fn(() => Promise.resolve(true)),
+  getImageMetadata: jest.fn(() => Promise.resolve({ width: 800, height: 600, format: 'jpeg' })),
+  createThumbnail: jest.fn(() => Promise.resolve()),
   dbPathToFilesystemPath: jest.fn().mockReturnValue('/tmp/uploads/test-project-id/test-image.jpg'),
   normalizePathForDb: jest.fn().mockReturnValue('/uploads/test-project-id/test-image.jpg'),
 }));
