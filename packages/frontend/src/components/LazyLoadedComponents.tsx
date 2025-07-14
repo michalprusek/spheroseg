@@ -101,42 +101,42 @@ export const ExcelExporter = withLazyLoading(
 
 // Advanced code splitting with prefetch control
 export const advancedComponents = {
-  // Heavy chart library
-  ChartLibrary: createCodeSplitComponent(
-    () => import(
-      /* webpackChunkName: "charts" */
-      /* webpackPrefetch: true */
-      'recharts'
-    ).then(module => ({
-      default: () => {
-        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = module;
-        return { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend };
-      }
-    })),
-    { chunkName: 'charts', prefetch: true }
-  ),
+  // Heavy chart library (commented out - dependency not installed)
+  // ChartLibrary: createCodeSplitComponent(
+  //   () => import(
+  //     /* webpackChunkName: "charts" */
+  //     /* webpackPrefetch: true */
+  //     'recharts'
+  //   ).then(module => ({
+  //     default: () => {
+  //       const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = module;
+  //       return { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend };
+  //     }
+  //   })),
+  //   { chunkName: 'charts', prefetch: true }
+  // ),
 
-  // PDF generation
-  PDFExporter: createCodeSplitComponent(
-    () => import(
-      /* webpackChunkName: "pdf-export" */
-      'jspdf'
-    ).then(module => ({
-      default: module.default || module.jsPDF
-    })),
-    { chunkName: 'pdf-export' }
-  ),
+  // PDF generation (commented out - dependency not installed)
+  // PDFExporter: createCodeSplitComponent(
+  //   () => import(
+  //     /* webpackChunkName: "pdf-export" */
+  //     'jspdf'
+  //   ).then(module => ({
+  //     default: module.default || module.jsPDF
+  //   })),
+  //   { chunkName: 'pdf-export' }
+  // ),
 
-  // Image processing
-  ImageProcessor: createCodeSplitComponent(
-    () => import(
-      /* webpackChunkName: "image-processing" */
-      'jimp'
-    ).then(module => ({
-      default: module.default || module
-    })),
-    { chunkName: 'image-processing' }
-  ),
+  // Image processing (commented out - dependency not installed)
+  // ImageProcessor: createCodeSplitComponent(
+  //   () => import(
+  //     /* webpackChunkName: "image-processing" */
+  //     'jimp'
+  //   ).then(module => ({
+  //     default: module.default || module
+  //   })),
+  //   { chunkName: 'image-processing' }
+  // ),
 };
 
 // Conditional loading based on features

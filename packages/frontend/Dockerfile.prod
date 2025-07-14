@@ -11,7 +11,10 @@ RUN apk add --no-cache python3 make g++ git
 COPY packages/frontend/package*.json ./
 COPY packages/frontend/tsconfig*.json ./
 COPY packages/frontend/vite.config.ts ./
+COPY packages/frontend/vite.config.shared.ts ./
+COPY packages/frontend/vite.config.enhanced.ts ./
 COPY packages/frontend/vite-static-fix.js ./
+COPY packages/frontend/vite-plugin-import-map.ts ./
 COPY packages/frontend/postcss.config.cjs ./
 COPY packages/frontend/tailwind.config.js ./
 COPY packages/frontend/index.html ./
@@ -20,6 +23,7 @@ COPY packages/frontend/.env.production ./
 # Copy source code from frontend directory
 COPY packages/frontend/src ./src
 COPY packages/frontend/public ./public
+COPY packages/frontend/scripts ./scripts
 
 # Copy shared packages
 COPY packages/shared ./shared

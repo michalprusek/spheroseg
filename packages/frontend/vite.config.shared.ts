@@ -43,15 +43,15 @@ export const vendorChunks = {
     'class-variance-authority',
   ],
   
-  // Visualization and charts
-  viz: [
-    'recharts',
-    'd3',
-    'd3-scale',
-    'd3-shape',
-    'konva',
-    'react-konva',
-  ],
+  // Visualization and charts (commented out - dependencies not installed)
+  // viz: [
+  //   'recharts',
+  //   'd3',
+  //   'd3-scale',
+  //   'd3-shape',
+  //   'konva',
+  //   'react-konva',
+  // ],
   
   // Forms and validation
   forms: [
@@ -69,14 +69,14 @@ export const vendorChunks = {
     'i18next-http-backend',
   ],
   
-  // Large libraries that should be separate
-  heavy: [
-    'xlsx',
-    'jspdf',
-    'html2canvas',
-    '@monaco-editor/react',
-    'jimp',
-  ],
+  // Large libraries that should be separate (commented out - dependencies not installed)
+  // heavy: [
+  //   'xlsx',
+  //   'jspdf',
+  //   'html2canvas',
+  //   '@monaco-editor/react',
+  //   'jimp',
+  // ],
 };
 
 /**
@@ -92,15 +92,24 @@ export function manualChunks(id: string): string | undefined {
   // Extract package name
   const packageName = id.split('node_modules/')[1].split('/')[0];
   
+  // IMPORTANT: Keep React in the main bundle to avoid "React is not defined" errors
+  if (packageName === 'react' || packageName === 'react-dom' || packageName === 'react-is') {
+    return undefined; // Include in main bundle
+  }
+  
   // Find which vendor group this package belongs to
   for (const [groupName, packages] of Object.entries(vendorChunks)) {
+    // Skip react group since we're handling it above
+    if (groupName === 'react') continue;
+    
     if (packages.some(pkg => packageName.includes(pkg))) {
       return `vendor-${groupName}`;
     }
   }
   
-  // Default vendor chunk for unmatched packages
-  return 'vendor-misc';
+  // Don't create vendor-misc chunk for unmatched packages
+  // Let them go into the main bundle to avoid initialization issues
+  return undefined;
 }
 
 /**

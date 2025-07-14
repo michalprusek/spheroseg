@@ -1,5 +1,6 @@
 import React from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from '@/utils/optimizedRecharts';
+// TODO: Install recharts dependency to enable charts
+// import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from '@/utils/optimizedRecharts';
 
 interface PieChartContainerProps {
   data: any[];

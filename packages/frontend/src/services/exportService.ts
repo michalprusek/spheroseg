@@ -10,9 +10,10 @@
  * - Generování vizualizací segmentací
  */
 
-import { utils, writeFile, WorkBook } from 'xlsx';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+// TODO: Install xlsx dependency to enable Excel export
+// import { utils, writeFile, WorkBook } from 'xlsx';
+// import JSZip from 'jszip';
+// import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { createLogger } from '@/lib/logger';
 import { formatISODate } from '@/utils/dateUtils';

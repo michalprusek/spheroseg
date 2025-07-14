@@ -7,23 +7,29 @@
 
 // Re-export everything from schemas
 export * from './schemas';
-export { default as schemas } from './schemas';
+import schemas from './schemas';
 
 // Re-export everything from forms
 export * from './forms';
-export { default as forms } from './forms';
+import forms from './forms';
 
 // Re-export everything from middleware
 export * from './middleware';
-export { default as middleware } from './middleware';
+import middleware from './middleware';
 
 // Re-export everything from common schemas
 export * from './commonSchemas';
-export { default as commonSchemas } from './commonSchemas';
+import commonSchemas from './commonSchemas';
 
 // Re-export zod for convenience
 export { z } from 'zod';
 export type { ZodError, ZodIssue, ZodSchema, ZodType } from 'zod';
+
+// Import for internal use
+import { safeParse } from './forms';
+import { validateRequest, validateBody, validateParams, validateQuery } from './middleware';
+import { VALIDATION_CONSTANTS, ERROR_MESSAGES } from './schemas';
+import type { ZodType } from 'zod';
 
 // ===========================
 // Quick Access Exports
@@ -32,7 +38,6 @@ export type { ZodError, ZodIssue, ZodSchema, ZodType } from 'zod';
 // Most commonly used schemas
 export {
   emailSchema,
-  passwordSchema,
   strongPasswordSchema,
   simplePasswordSchema,
   usernameSchema,
@@ -44,6 +49,8 @@ export {
   dateSchema,
   idSchema,
   paginationSchema,
+  VALIDATION_CONSTANTS,
+  ERROR_MESSAGES,
 } from './schemas';
 
 // Most commonly used form schemas
@@ -138,6 +145,9 @@ export type {
 // ===========================
 // Default Export
 // ===========================
+
+// Export the imported modules
+export { schemas, forms, middleware, commonSchemas };
 
 export default {
   // Core modules

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User as UserIcon, Settings as SettingsIcon, LogOut } from 'lucide-react';
+import { User as UserIcon, Settings as SettingsIcon, LogOut, Shield } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,6 +86,13 @@ const UserProfileDropdown = ({ username }: UserProfileDropdownProps) => {
           <SettingsIcon className="mr-2 h-4 w-4" />
           <span>{t('common.settings')}</span>
         </DropdownMenuItem>
+        {/* Show admin link for admin users */}
+        {user?.role === 'admin' && (
+          <DropdownMenuItem onClick={() => navigate('/admin')} className="dark:text-gray-300 dark:hover:bg-gray-700">
+            <Shield className="mr-2 h-4 w-4" />
+            <span>Admin Dashboard</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator className="dark:bg-gray-700" />
         <DropdownMenuItem onClick={handleSignOut} className="dark:text-gray-300 dark:hover:bg-gray-700">
           <LogOut className="mr-2 h-4 w-4" />

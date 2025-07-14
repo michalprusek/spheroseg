@@ -18,16 +18,86 @@ import { EventEmitter } from 'events';
 import { PoolClient, QueryResult } from 'pg';
 import NodeCache from 'node-cache';
 import config from '../../config';
-import {
-  MetricType,
-  PerformanceMonitoringOptions,
-  ApiResponseTimeMetric,
-  DatabaseQueryMetric,
-  FileOperationMetric,
-  MLInferenceMetric,
-  MemoryHeapMetric,
-  CPUUsageMetric,
-} from '@spheroseg/shared';
+// Import types directly to avoid shared module build issues
+export enum MetricType {
+  // Frontend metrics
+  PAGE_LOAD = 'page_load',
+  COMPONENT_RENDER = 'component_render',
+  API_REQUEST = 'api_request',
+  RESOURCE_LOAD = 'resource_load',
+  USER_INTERACTION = 'user_interaction',
+  MEMORY_USAGE = 'memory_usage',
+  
+  // Backend metrics
+  API_RESPONSE_TIME = 'api_response_time',
+  DATABASE_QUERY = 'database_query',
+  FILE_OPERATION = 'file_operation',
+  ML_INFERENCE = 'ml_inference',
+  MEMORY_HEAP = 'memory_heap',
+  CPU_USAGE = 'cpu_usage',
+}
+
+export interface PerformanceMonitoringOptions {
+  enabled?: boolean;
+  interval?: number;
+  memoryThreshold?: number;
+  cpuThreshold?: number;
+}
+
+interface BaseMetric {
+  type: MetricType;
+  timestamp: number;
+  value: number;
+  labels?: Record<string, string>;
+}
+
+export interface ApiResponseTimeMetric extends BaseMetric {
+  type: MetricType.API_RESPONSE_TIME;
+  endpoint: string;
+  method: string;
+  statusCode: number;
+  responseTime: number;
+  userId?: string;
+}
+
+export interface DatabaseQueryMetric extends BaseMetric {
+  type: MetricType.DATABASE_QUERY;
+  operation: string;
+  table: string;
+  duration: number;
+  rowCount?: number;
+}
+
+export interface FileOperationMetric extends BaseMetric {
+  type: MetricType.FILE_OPERATION;
+  operation: string;
+  filePath: string;
+  duration: number;
+  fileSize?: number;
+}
+
+export interface MLInferenceMetric extends BaseMetric {
+  type: MetricType.ML_INFERENCE;
+  model: string;
+  inputSize: number;
+  duration: number;
+  memoryUsage?: number;
+}
+
+export interface MemoryHeapMetric extends BaseMetric {
+  type: MetricType.MEMORY_HEAP;
+  rss: number;
+  heapTotal: number;
+  heapUsed: number;
+  external: number;
+}
+
+export interface CPUUsageMetric extends BaseMetric {
+  type: MetricType.CPU_USAGE;
+  user: number;
+  system: number;
+  percentage: number;
+}
 
 // Extend Express Request type
 declare global {

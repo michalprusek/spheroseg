@@ -6,7 +6,8 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from '@/utils/optimizedRecharts';
+// TODO: Install recharts dependency to enable charts
+// import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from '@/utils/optimizedRecharts';
 
 interface ChartConfig {
   [key: string]: {

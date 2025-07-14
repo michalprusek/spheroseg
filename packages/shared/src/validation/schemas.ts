@@ -195,12 +195,12 @@ export const fileSchema = z.object({
 });
 
 export const imageFileSchema = fileSchema.refine(
-  (file) => VALIDATION_CONSTANTS.ALLOWED_IMAGE_TYPES.includes(file.type),
+  (file) => VALIDATION_CONSTANTS.ALLOWED_IMAGE_TYPES.includes(file.type as any),
   { message: 'Only JPEG, PNG, WebP, TIFF, and BMP files are allowed' }
 );
 
 export const documentFileSchema = fileSchema.refine(
-  (file) => VALIDATION_CONSTANTS.ALLOWED_DOCUMENT_TYPES.includes(file.type),
+  (file) => VALIDATION_CONSTANTS.ALLOWED_DOCUMENT_TYPES.includes(file.type as any),
   { message: 'Only PDF, Word, and text files are allowed' }
 );
 
@@ -313,10 +313,10 @@ export function arraySchema<T extends z.ZodType>(
     schema = schema.refine(
       (items) => new Set(items).size === items.length,
       { message: 'Items must be unique' }
-    );
+    ) as any;
   }
   
-  return schema;
+  return schema as any;
 }
 
 /**

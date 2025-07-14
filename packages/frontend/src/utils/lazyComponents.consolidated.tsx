@@ -135,39 +135,39 @@ export const components = {
 
 // External Libraries (heavy dependencies)
 export const libraries = {
-  // Chart library
-  recharts: createCodeSplitComponent(
-    () => import('recharts'),
-    { chunkName: 'vendor-recharts', prefetch: true }
-  ),
+  // Chart library (commented out - dependency not installed)
+  // recharts: createCodeSplitComponent(
+  //   () => import('recharts'),
+  //   { chunkName: 'vendor-recharts', prefetch: true }
+  // ),
   
-  // PDF generation
-  jsPDF: createCodeSplitComponent(
-    () => import('jspdf').then(module => ({
-      default: module.default || module.jsPDF
-    })),
-    { chunkName: 'vendor-jspdf' }
-  ),
+  // PDF generation (commented out - dependency not installed)
+  // jsPDF: createCodeSplitComponent(
+  //   () => import('jspdf').then(module => ({
+  //     default: module.default || module.jsPDF
+  //   })),
+  //   { chunkName: 'vendor-jspdf' }
+  // ),
+
+  // Excel generation (commented out - dependency not installed)
+  // xlsx: createCodeSplitComponent(
+  //   () => import('xlsx'),
+  //   { chunkName: 'vendor-xlsx' }
+  // ),
+
+  // Image processing (commented out - dependency not installed)
+  // jimp: createCodeSplitComponent(
+  //   () => import('jimp').then(module => ({
+  //     default: module.default || module
+  //   })),
+  //   { chunkName: 'vendor-jimp' }
+  // ),
   
-  // Excel generation
-  xlsx: createCodeSplitComponent(
-    () => import('xlsx'),
-    { chunkName: 'vendor-xlsx' }
-  ),
-  
-  // Image processing
-  jimp: createCodeSplitComponent(
-    () => import('jimp').then(module => ({
-      default: module.default || module
-    })),
-    { chunkName: 'vendor-jimp' }
-  ),
-  
-  // Code editor
-  monaco: createCodeSplitComponent(
-    () => import('@monaco-editor/react'),
-    { chunkName: 'vendor-monaco' }
-  ),
+  // Code editor (commented out - dependency not installed)
+  // monaco: createCodeSplitComponent(
+  //   () => import('@monaco-editor/react'),
+  //   { chunkName: 'vendor-monaco' }
+  // ),
 };
 
 // Feature-based loading

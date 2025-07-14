@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Import Map Test</title>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime"
+      }
+    }
+    </script>
+</head>
+<body>
+    <div id="test"></div>
+    <script type="module">
+        // Test if we can import React using bare specifier
+        import React from 'react';
+        import ReactDOM from 'react-dom/client';
+        
+        console.log('React loaded:', !!React);
+        console.log('ReactDOM loaded:', !!ReactDOM);
+        
+        const root = ReactDOM.createRoot(document.getElementById('test'));
+        root.render(React.createElement('h1', {}, 'Import Map Works!'));
+    </script>
+</body>
+</html>

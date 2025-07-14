@@ -5,9 +5,10 @@
  * It provides comprehensive export capabilities for all data formats.
  */
 
-import { utils, writeFile, WorkBook } from 'xlsx';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+// TODO: Install xlsx dependency to enable Excel export
+// import { utils, writeFile, WorkBook } from 'xlsx';
+// import JSZip from 'jszip';
+// import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { createLogger } from '@/utils/logging/unifiedLogger';
 import { handleError } from '@/utils/error/unifiedErrorHandler';

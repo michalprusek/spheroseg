@@ -5,6 +5,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { compression } from 'vite-plugin-compression2';
 import staticAssetsPlugin from './vite-static-fix';
 import { getOptimizedViteConfig } from './vite.config.shared';
+import { importMapPlugin } from './vite-plugin-import-map';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -25,10 +26,36 @@ export default defineConfig(({ mode }) => {
   console.log(`Auth Prefix: ${apiAuthPrefix}`);
   console.log(`Users Prefix: ${apiUsersPrefix}`);
 
+
+  // Plugin to ensure no bare module imports in production
+  const fixBareImports = (): PluginOption => ({
+    name: 'fix-bare-imports',
+    apply: 'build',
+    renderChunk(code, chunk) {
+      if (isProduction) {
+        // Replace any remaining bare module imports
+        let fixedCode = code;
+        
+        // Fix import statements (both static and dynamic)
+        fixedCode = fixedCode.replace(/from\s*["']react["']/g, 'from "https://esm.sh/react@18"');
+        fixedCode = fixedCode.replace(/from\s*["']react-dom["']/g, 'from "https://esm.sh/react-dom@18"');
+        fixedCode = fixedCode.replace(/import\(["']react["']\)/g, 'import("https://esm.sh/react@18")');
+        fixedCode = fixedCode.replace(/import\(["']react-dom["']\)/g, 'import("https://esm.sh/react-dom@18")');
+        
+        return fixedCode;
+      }
+      return code;
+    },
+  });
+
   const plugins: PluginOption[] = [
-    react(),
+    react({
+      // Use automatic runtime which doesn't require React imports
+      jsxRuntime: 'automatic',
+    }),
+    isProduction && importMapPlugin(),
     staticAssetsPlugin(),
-  ];
+  ].filter(Boolean) as PluginOption[];
 
   // Add compression plugin for production
   if (isProduction) {
@@ -83,6 +110,8 @@ export default defineConfig(({ mode }) => {
       esbuildOptions: {
         target: 'es2020',
       },
+      // Force optimization of React in development too
+      force: true,
     },
     resolve: {
       alias: {
@@ -168,7 +197,10 @@ export default defineConfig(({ mode }) => {
     },
     // Optimize build
     build: {
-      target: 'es2020',
+      target: 'es2015', // Better browser compatibility
+      modulePreload: {
+        polyfill: true, // Ensure module preloading works
+      },
       minify: isProduction ? 'terser' : false,
       terserOptions: {
         compress: {
@@ -179,17 +211,32 @@ export default defineConfig(({ mode }) => {
       },
       sourcemap: isDevelopment,
       rollupOptions: {
+        // Externalize React in production to use import maps
+        external: isProduction ? ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime'] : [],
         output: {
-          // Manual chunking for better caching
-          manualChunks: {
-            // React ecosystem
-            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            // UI libraries
-            'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-alert-dialog', 
-                         '@radix-ui/react-dropdown-menu'],
-            // Utilities
-            'utils-vendor': ['@tanstack/react-query', 'socket.io-client', 'react-hook-form', 
-                           'zod', '@hookform/resolvers', 'lucide-react', 'sonner'],
+          // In production, disable manual chunks to bundle everything
+          manualChunks: isProduction ? undefined : (id) => {
+            // Only use manual chunks in development
+            if (id.includes('node_modules/')) {
+              // UI libraries
+              if (id.includes('@radix-ui') || id.includes('@headlessui')) {
+                return 'ui-vendor';
+              }
+              // Data and utilities
+              if (id.includes('@tanstack/react-query') ||
+                  id.includes('socket.io-client') ||
+                  id.includes('react-hook-form') ||
+                  id.includes('zod') ||
+                  id.includes('@hookform/resolvers') ||
+                  id.includes('lucide-react') ||
+                  id.includes('sonner')) {
+                return 'utils-vendor';
+              }
+              // i18n libraries
+              if (id.includes('i18next') || id.includes('react-i18next')) {
+                return 'i18n-vendor';
+              }
+            }
           },
           // Asset naming for better caching
           assetFileNames: (assetInfo) => {
@@ -239,6 +286,6 @@ export default defineConfig(({ mode }) => {
     },
   };
   
-  // Return the optimized configuration
-  return getOptimizedViteConfig(baseConfig);
+  // Return the configuration without shared optimization to ensure our React handling works
+  return baseConfig;
 });

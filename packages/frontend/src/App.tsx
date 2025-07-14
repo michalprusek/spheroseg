@@ -67,6 +67,9 @@ const {
   AcceptInvitation,
 } = lazyComponents.pages;
 
+// Admin components
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+
 // Create a client for React Query
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -425,6 +428,18 @@ const routes = createRoutesFromElements(
         <ProtectedRoute>
           <ErrorBoundary componentName="ProfilePage">
             <Profile />
+          </ErrorBoundary>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin"
+      element={
+        <ProtectedRoute>
+          <ErrorBoundary componentName="AdminPage">
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminDashboard />
+            </Suspense>
           </ErrorBoundary>
         </ProtectedRoute>
       }

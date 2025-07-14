@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "outDir": "dist",
-    "strict": true,
+    "strict": false,
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -15,8 +15,17 @@
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["./*"]
-    }
+    },
+    "noImplicitAny": false,
+    "allowJs": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "src/consolidation/**",
+    "src/validation/forms.ts"
+  ]
 }

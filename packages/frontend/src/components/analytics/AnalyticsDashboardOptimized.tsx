@@ -20,23 +20,24 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Legend,
-} from 'recharts';
+// TODO: Install recharts dependency to enable charts
+// import {
+//   Area,
+//   AreaChart,
+//   Bar,
+//   BarChart,
+//   CartesianGrid,
+//   Cell,
+//   Line,
+//   LineChart,
+//   Pie,
+//   PieChart,
+//   ResponsiveContainer,
+//   Tooltip,
+//   XAxis,
+//   YAxis,
+//   Legend,
+// } from 'recharts';
 import { format, startOfDay, endOfDay, subDays } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';

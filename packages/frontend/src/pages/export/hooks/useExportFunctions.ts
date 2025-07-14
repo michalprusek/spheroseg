@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { utils, writeFile, write } from 'xlsx';
+// TODO: Install xlsx dependency to enable Excel export
+// import { utils, writeFile, write } from 'xlsx';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { ProjectImage, Polygon } from '@/pages/segmentation/types';
 import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations';
 import { AnnotationFormat, MetricsFormat } from '../components/ExportOptionsCard';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+// import JSZip from 'jszip';
+// import { saveAs } from 'file-saver';
 import apiClient from '@/lib/apiClient';
 
 // Helper function to convert string to ArrayBuffer

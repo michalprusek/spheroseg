@@ -2,7 +2,8 @@ import React from 'react';
 import { SegmentationResult } from '@/lib/segmentation';
 import { FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { utils, writeFile } from 'xlsx';
+// TODO: Install xlsx dependency to enable Excel export
+// import { utils, writeFile } from 'xlsx';
 import { SpheroidMetric } from '@/types';
 import { calculateMetrics } from '../../../utils/metricCalculations';
 

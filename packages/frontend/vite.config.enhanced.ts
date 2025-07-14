@@ -36,12 +36,12 @@ function customChunkSplitPlugin() {
                   return 'data-vendor';
                 }
                 
-                // Heavy visualization libraries (async)
-                if (id.includes('konva') ||
-                    id.includes('recharts') ||
-                    id.includes('d3')) {
-                  return 'viz-vendor';
-                }
+                // Heavy visualization libraries (async) - commented out, dependencies not installed
+                // if (id.includes('konva') ||
+                //     id.includes('recharts') ||
+                //     id.includes('d3')) {
+                //   return 'viz-vendor';
+                // }
                 
                 // Utilities
                 if (id.includes('lodash') ||

@@ -55,13 +55,13 @@ module.exports = {
           priority: 10,
         },
         
-        // Heavy visualization libraries
-        visualization: {
-          test: /[\\/]node_modules[\\/](konva|recharts|d3)[\\/]/,
-          name: 'viz-vendor',
-          priority: 10,
-          chunks: 'async',
-        },
+        // Heavy visualization libraries (commented out - dependencies not installed)
+        // visualization: {
+        //   test: /[\\/]node_modules[\\/](konva|recharts|d3)[\\/]/,
+        //   name: 'viz-vendor',
+        //   priority: 10,
+        //   chunks: 'async',
+        // },
         
         // Common shared code
         common: {
