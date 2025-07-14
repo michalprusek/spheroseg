@@ -6,11 +6,14 @@
 
 export {
   ConsolidationChecker,
+  runConsolidationCheck,
+} from './consolidationChecker';
+
+export type {
   ConsolidationRule,
   CheckContext,
   CheckResult,
   ConsolidationReport,
-  runConsolidationCheck,
 } from './consolidationChecker';
 
 // Re-export as default

@@ -3,14 +3,19 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ExportOptionsCard from '@/pages/export/components/ExportOptionsCard';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
-import { mockLanguageContext, mockExportOptionsProps } from '../../shared/test-utils/export-test-utils';
+import { createMockExportOptions } from '../../shared/test-utils/export-test-utils';
 
 // Mock language context
-mockLanguageContext();
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    t: (key: string) => key,
+    language: 'en',
+  }),
+}));
 
 describe('ExportOptionsCard', () => {
   // Use shared mock props
-  const mockProps = mockExportOptionsProps;
+  const mockProps = createMockExportOptions();
 
   beforeEach(() => {
     vi.clearAllMocks();

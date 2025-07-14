@@ -680,6 +680,8 @@ export default {
     privacy: '隐私',
     login: '登录',
     requestAccess: '请求访问',
+    openMobileMenu: '打开移动菜单',
+    closeMobileMenu: '关闭移动菜单',
   },
   // Navigation section
   navigation: {
@@ -1161,6 +1163,9 @@ export default {
       YOLO: '用于对象检测的 You Only Look Once（YOLO）文本格式',
       MASK: '每个分割对象的二进制掩码图像',
       POLYGONS: 'JSON 格式的多边形坐标',
+      DATUMARO: 'Datumaro 格式 - 统一数据集表示',
+      CVAT_MASKS: '带有多边形注释的 CVAT XML 格式',
+      CVAT_YAML: '用于注释交换的 CVAT YAML 格式',
     },
     exportCompleted: '导出完成',
     exportFailed: '导出失败',
@@ -1189,6 +1194,9 @@ export default {
       YOLO: 'YOLO TXT',
       MASK: '掩码（TIFF）',
       POLYGONS: '多边形（JSON）',
+      DATUMARO: 'Datumaro',
+      CVAT_MASKS: 'CVAT 掩码（XML）',
+      CVAT_YAML: 'CVAT YAML',
     },
     metricsFormats: {
       EXCEL: 'Excel（.xlsx）',

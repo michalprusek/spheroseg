@@ -26,6 +26,25 @@ vi.mock('@/utils/logger', () => ({
 vi.mock('@/lib/urlUtils');
 vi.mock('sonner');
 
+// Mock apiClient to prevent actual API calls
+vi.mock('@/lib/apiClient', () => ({
+  default: {
+    get: vi.fn(() => Promise.resolve({ data: { polygons: [] }, status: 200 })),
+    post: vi.fn(() => Promise.resolve({ data: {}, status: 200 })),
+    put: vi.fn(() => Promise.resolve({ data: {}, status: 200 })),
+    delete: vi.fn(() => Promise.resolve({ data: {}, status: 200 })),
+  },
+}));
+
+// Mock SegmentationThumbnail to prevent async state updates
+vi.mock('../project/SegmentationThumbnail', () => ({
+  default: ({ imageId, altText }: { imageId: string; altText?: string }) => (
+    <div data-testid={`mock-segmentation-thumbnail-${imageId}`}>
+      <img src="mock-thumbnail.jpg" alt={altText || 'Mock thumbnail'} />
+    </div>
+  ),
+}));
+
 // Mock intersection observer
 const mockIntersectionObserver = vi.fn();
 mockIntersectionObserver.mockReturnValue({
@@ -199,7 +218,7 @@ describe('ProjectImages', () => {
     });
   });
 
-  it('renders in different view modes', () => {
+  it('renders in different view modes', async () => {
     const { rerender } = render(
       <ProjectImages
         images={mockImages}
@@ -213,6 +232,11 @@ describe('ProjectImages', () => {
     // Grid view should render images
     expect(screen.getByText('test-image-1.jpg')).toBeInTheDocument();
 
+    // Wait for any async operations to complete
+    await waitFor(() => {
+      expect(screen.getByText('test-image-1.jpg')).toBeInTheDocument();
+    });
+
     // Switch to list view
     rerender(
       <ProjectImages
@@ -224,8 +248,10 @@ describe('ProjectImages', () => {
       />
     );
 
-    // List view should also render images
-    expect(screen.getByText('test-image-1.jpg')).toBeInTheDocument();
+    // Wait for re-render and async operations
+    await waitFor(() => {
+      expect(screen.getByText('test-image-1.jpg')).toBeInTheDocument();
+    });
   });
 
   it('displays filtered images when provided different image sets', () => {

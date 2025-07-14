@@ -95,7 +95,7 @@ const Navbar = () => {
         <button
           className="md:hidden text-gray-700 dark:text-gray-300"
           onClick={toggleMobileMenu}
-          aria-label="Toggle menu"
+          aria-label={isMobileMenuOpen ? t('navbar.closeMobileMenu') : t('navbar.openMobileMenu')}
         >
           {isMobileMenuOpen ? (
             <X size={24} className="animate-fade-in" />

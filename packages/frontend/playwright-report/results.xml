@@ -1,2 +1,404 @@
-<testsuites id="" name="" tests="0" failures="0" skipped="0" errors="0" time="0.09918799999999998">
+<testsuites id="" name="" tests="10" failures="10" skipped="0" errors="0" time="323.02755099999996">
+<testsuite name="functionality/image-upload.spec.ts" timestamp="2025-07-14T09:18:07.108Z" hostname="chromium" tests="10" failures="10" skipped="0" time="635.683" errors="0">
+<testcase name="Image Upload Functionality › should upload a single image successfully" classname="functionality/image-upload.spec.ts" time="65.316">
+<failure message="image-upload.spec.ts:32:3 should upload a single image successfully" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:32:3 › Image Upload Functionality › should upload a single image successfully 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-4000f-a-single-image-successfully-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-4000f-a-single-image-successfully-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-4000f-a-single-image-successfully-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-4000f-a-single-image-successfully-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-4000f-a-single-image-successfully-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-4000f-a-single-image-successfully-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Image Upload Functionality › should upload multiple images successfully" classname="functionality/image-upload.spec.ts" time="65.643">
+<failure message="image-upload.spec.ts:57:3 should upload multiple images successfully" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:57:3 › Image Upload Functionality › should upload multiple images successfully 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-b0aa4-ultiple-images-successfully-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-b0aa4-ultiple-images-successfully-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-b0aa4-ultiple-images-successfully-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-b0aa4-ultiple-images-successfully-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-b0aa4-ultiple-images-successfully-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-b0aa4-ultiple-images-successfully-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Image Upload Functionality › should show upload progress" classname="functionality/image-upload.spec.ts" time="63.412">
+<failure message="image-upload.spec.ts:84:3 should show upload progress" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:84:3 › Image Upload Functionality › should show upload progress 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-b14a7-should-show-upload-progress-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-b14a7-should-show-upload-progress-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-b14a7-should-show-upload-progress-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-b14a7-should-show-upload-progress-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-b14a7-should-show-upload-progress-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-b14a7-should-show-upload-progress-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Image Upload Functionality › should handle upload errors gracefully" classname="functionality/image-upload.spec.ts" time="63.27">
+<failure message="image-upload.spec.ts:107:3 should handle upload errors gracefully" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:107:3 › Image Upload Functionality › should handle upload errors gracefully 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-d032e-le-upload-errors-gracefully-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-d032e-le-upload-errors-gracefully-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-d032e-le-upload-errors-gracefully-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-d032e-le-upload-errors-gracefully-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-d032e-le-upload-errors-gracefully-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-d032e-le-upload-errors-gracefully-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Image Upload Functionality › should update image gallery immediately after upload" classname="functionality/image-upload.spec.ts" time="63.017">
+<failure message="image-upload.spec.ts:123:3 should update image gallery immediately after upload" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:123:3 › Image Upload Functionality › should update image gallery immediately after upload 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-79c75-ry-immediately-after-upload-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-79c75-ry-immediately-after-upload-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-79c75-ry-immediately-after-upload-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-79c75-ry-immediately-after-upload-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-79c75-ry-immediately-after-upload-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-79c75-ry-immediately-after-upload-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Image Upload Functionality › should show thumbnail immediately after upload" classname="functionality/image-upload.spec.ts" time="63.091">
+<failure message="image-upload.spec.ts:157:3 should show thumbnail immediately after upload" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:157:3 › Image Upload Functionality › should show thumbnail immediately after upload 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-4c853-il-immediately-after-upload-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-4c853-il-immediately-after-upload-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-4c853-il-immediately-after-upload-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-4c853-il-immediately-after-upload-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-4c853-il-immediately-after-upload-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-4c853-il-immediately-after-upload-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Image Upload Functionality › should allow drag and drop upload" classname="functionality/image-upload.spec.ts" time="62.963">
+<failure message="image-upload.spec.ts:183:3 should allow drag and drop upload" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:183:3 › Image Upload Functionality › should allow drag and drop upload 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-55359--allow-drag-and-drop-upload-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-55359--allow-drag-and-drop-upload-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-55359--allow-drag-and-drop-upload-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-55359--allow-drag-and-drop-upload-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-55359--allow-drag-and-drop-upload-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-55359--allow-drag-and-drop-upload-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Image Upload Functionality › should cancel upload in progress" classname="functionality/image-upload.spec.ts" time="63.069">
+<failure message="image-upload.spec.ts:209:3 should cancel upload in progress" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:209:3 › Image Upload Functionality › should cancel upload in progress 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-0c5e5-d-cancel-upload-in-progress-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-0c5e5-d-cancel-upload-in-progress-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-0c5e5-d-cancel-upload-in-progress-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-0c5e5-d-cancel-upload-in-progress-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-0c5e5-d-cancel-upload-in-progress-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-0c5e5-d-cancel-upload-in-progress-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Image Upload Functionality › should validate file size limits" classname="functionality/image-upload.spec.ts" time="62.953">
+<failure message="image-upload.spec.ts:230:3 should validate file size limits" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:230:3 › Image Upload Functionality › should validate file size limits 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-248c3-d-validate-file-size-limits-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-248c3-d-validate-file-size-limits-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-248c3-d-validate-file-size-limits-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-248c3-d-validate-file-size-limits-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-248c3-d-validate-file-size-limits-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-248c3-d-validate-file-size-limits-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Image Upload Functionality › should maintain upload queue for multiple files" classname="functionality/image-upload.spec.ts" time="62.949">
+<failure message="image-upload.spec.ts:243:3 should maintain upload queue for multiple files" type="FAILURE">
+<![CDATA[  [chromium] › functionality/image-upload.spec.ts:243:3 › Image Upload Functionality › should maintain upload queue for multiple files 
+
+    TimeoutError: page.fill: Timeout 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="email"]')
+
+
+      11 | async function loginAsTestUser(page: any) {
+      12 |   await page.goto('/signin');
+    > 13 |   await page.fill('input[type="email"]', TEST_USER.email);
+         |              ^
+      14 |   await page.fill('input[type="password"]', TEST_USER.password);
+      15 |   await page.click('button[type="submit"]');
+      16 |   await page.waitForURL('/dashboard');
+        at loginAsTestUser (/home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:13:14)
+        at /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/functionality/image-upload.spec.ts:29:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-9b192-ad-queue-for-multiple-files-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/functionality-image-upload-9b192-ad-queue-for-multiple-files-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/functionality-image-upload-9b192-ad-queue-for-multiple-files-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/functionality-image-upload-9b192-ad-queue-for-multiple-files-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-9b192-ad-queue-for-multiple-files-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/functionality-image-upload-9b192-ad-queue-for-multiple-files-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
 </testsuites>

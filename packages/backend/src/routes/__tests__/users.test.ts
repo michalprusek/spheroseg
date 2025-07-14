@@ -221,7 +221,6 @@ describe('User Routes', () => {
         name: 'Updated Name',
         username: 'updatedUsername',
         full_name: 'Updated Full Name',
-        preferred_language: 'cs',
       };
 
       const res = await request(app).put('/api/users/me').send(updateData);

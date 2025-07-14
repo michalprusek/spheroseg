@@ -720,6 +720,8 @@ export default {
     privacy: 'Confidentialité',
     login: 'Se connecter',
     requestAccess: "Demander l'accès",
+    openMobileMenu: 'Ouvrir le menu mobile',
+    closeMobileMenu: 'Fermer le menu mobile',
   },
   navigation: {
     home: 'Accueil',
@@ -1320,6 +1322,9 @@ export default {
       YOLO: "Format texte You Only Look Once (YOLO) pour la détection d'objets",
       MASK: 'Images de masque binaire pour chaque objet segmenté',
       POLYGONS: 'Coordonnées de polygone au format JSON',
+      DATUMARO: 'Format Datumaro - représentation unifiée de jeu de données',
+      CVAT_MASKS: 'Format XML CVAT avec annotations de polygone',
+      CVAT_YAML: "Format YAML CVAT pour l'échange d'annotations",
     },
     exportCompleted: 'Export terminé',
     exportFailed: "Échec de l'export",
@@ -1348,6 +1353,9 @@ export default {
       YOLO: 'YOLO TXT',
       MASK: 'Masque (TIFF)',
       POLYGONS: 'Polygones (JSON)',
+      DATUMARO: 'Datumaro',
+      CVAT_MASKS: 'CVAT Masques (XML)',
+      CVAT_YAML: 'CVAT YAML',
     },
     metricsFormats: {
       EXCEL: 'Excel (.xlsx)',

@@ -26,7 +26,7 @@ export const useAutoSave = (
   const { t } = useLanguage();
   const [lastSavedIndex, setLastSavedIndex] = useState<number>(historyIndex);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(enabled);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimeoutRef = useRef<number | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'pending' | 'saving' | 'success' | 'error'>('idle');
 
   // Clear the auto-save timeout when the component unmounts

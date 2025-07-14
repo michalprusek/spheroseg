@@ -45,15 +45,24 @@ function findLongestCommonSuffix<T>(arr1: T[], arr2: T[]): T[] {
 // Import local path utilities as the shared module isn't available in tests
 const pathUtils = {
   dbPathToFilesystemPath: (dbPath: string, uploadDir: string): string => {
-    if (!dbPath || !uploadDir) {
+    if (!dbPath) {
+      throw new Error('Invalid database path');
+    }
+    
+    if (!uploadDir) {
       logger.error('Invalid parameters for dbPathToFilesystemPath', {
         dbPath,
         uploadDir,
       });
-      return path.join(uploadDir || '.', dbPath || '');
+      return path.join('.', dbPath);
     }
 
-    // Pokud cesta začíná celou absolutní cestou, vraťme ji přímo
+    // If path is already absolute and not starting with uploadDir or /uploads, return as-is
+    if (path.isAbsolute(dbPath) && !dbPath.startsWith(uploadDir) && !dbPath.startsWith('/uploads')) {
+      return dbPath;
+    }
+
+    // If path starts with the upload directory, return as-is
     if (dbPath.startsWith(uploadDir)) {
       return dbPath;
     }
@@ -74,7 +83,7 @@ const pathUtils = {
     }
 
     // Remove any leading '/uploads' or 'uploads' from the path
-    const cleanPath = dbPath.replace(/^\/?(uploads\/)?/, '');
+    const cleanPath = dbPath.replace(/^\/uploads\//, '');
 
     // Join with the upload directory - ensure uploadDir is absolute
     const absoluteUploadDir = path.isAbsolute(uploadDir)
@@ -95,12 +104,16 @@ const pathUtils = {
     return fullPath;
   },
   normalizePathForDb: (absolutePath: string, uploadDir: string): string => {
-    if (!absolutePath || !uploadDir) {
+    if (!absolutePath) {
+      throw new Error('Invalid path');
+    }
+    
+    if (!uploadDir) {
       logger.error('Invalid parameters for normalizePathForDb', {
         absolutePath,
         uploadDir,
       });
-      return absolutePath || '';
+      return absolutePath;
     }
 
     // Ensure all paths use forward slashes for consistency
@@ -179,18 +192,19 @@ const pathUtils = {
           });
         }
       } else {
-        // If no common segments, just return the basename
-        relativePath = '/' + path.basename(normalizedAbsolutePath);
-        logger.warn('Path is not within upload directory', {
+        // If no common segments, the path is outside the upload directory
+        // Return the original path as-is
+        logger.warn('Path is not within upload directory, returning as-is', {
           absolutePath,
           uploadDir,
           normalizedAbsolutePath,
           normalizedUploadDirTrimmed,
         });
+        return normalizedAbsolutePath;
       }
     }
 
-    // Ensure the path starts with /uploads
+    // Ensure the path starts with /uploads (only for paths that are within upload dir)
     if (!relativePath.startsWith('/uploads')) {
       relativePath =
         '/uploads' + (relativePath.startsWith('/') ? relativePath : `/${relativePath}`);
@@ -558,7 +572,7 @@ export const normalizePathForDb = (absolutePath: string, uploadDir: string): str
  */
 export const formatImageForApi = (
   image: Record<string, unknown>,
-  _baseUrl: string
+  baseUrl: string
 ): Record<string, unknown> => {
   if (!image) return {} as Record<string, unknown>;
 
@@ -619,6 +633,13 @@ export const formatImageForApi = (
         ? image.storage_path
         : `/${image.storage_path}`;
       result.storage_path = cleanPath;
+      
+      // Add full URL if baseUrl is provided
+      if (baseUrl) {
+        const fullUrl = pathUtils.combineUrl(baseUrl, cleanPath);
+        result.storage_path_full = fullUrl;
+        result.src = fullUrl;
+      }
     }
   }
 
@@ -654,6 +675,11 @@ export const formatImageForApi = (
         ? image.thumbnail_path
         : `/${image.thumbnail_path}`;
       result.thumbnail_path = cleanPath;
+      
+      // Add full URL if baseUrl is provided
+      if (baseUrl) {
+        result.thumbnail_path_full = pathUtils.combineUrl(baseUrl, cleanPath);
+      }
     }
   }
 

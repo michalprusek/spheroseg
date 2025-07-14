@@ -65,6 +65,28 @@ vi.mock('@/utils/logging/unifiedLogger', () => ({
   },
 }));
 
+// Mock @/utils/logger which re-exports unifiedLogger
+vi.mock('@/utils/logger', () => ({
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  })),
+  createNamespacedLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  })),
+  default: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 // Mock lucide-react icons
 vi.mock('lucide-react', () => {
   const createIcon = (name: string) => {

@@ -716,6 +716,8 @@ export default {
     privacy: 'Soukromí',
     login: 'Přihlásit se',
     requestAccess: 'Požádat o přístup',
+    openMobileMenu: 'Otevřít mobilní menu',
+    closeMobileMenu: 'Zavřít mobilní menu',
   },
   navigation: {
     home: 'Domů',
@@ -1347,6 +1349,9 @@ export default {
       YOLO: 'Textový formát You Only Look Once (YOLO) pro detekci objektů',
       MASK: 'Binární maskové obrázky pro každý segmentovaný objekt',
       POLYGONS: 'Souřadnice polygonů ve formátu JSON',
+      DATUMARO: 'Formát Datumaro - unifikovaná reprezentace datové sady',
+      CVAT_MASKS: 'CVAT XML formát s polygonálními anotacemi',
+      CVAT_YAML: 'CVAT YAML formát pro výměnu anotací',
     },
     exportCompleted: 'Export dokončen',
     exportFailed: 'Export selhal',
@@ -1375,6 +1380,9 @@ export default {
       YOLO: 'YOLO TXT',
       MASK: 'Maska (TIFF)',
       POLYGONS: 'Polygony (JSON)',
+      DATUMARO: 'Datumaro',
+      CVAT_MASKS: 'CVAT Masky (XML)',
+      CVAT_YAML: 'CVAT YAML',
     },
     metricsFormats: {
       EXCEL: 'Excel (.xlsx)',

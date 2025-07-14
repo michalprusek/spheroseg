@@ -483,7 +483,7 @@ class TestDeviceSelection:
     """Test device selection logic."""
     
     @patch('torch.cuda.is_available')
-    @patch('hasattr')
+    @patch('builtins.hasattr')
     def test_device_preference_best_cuda(self, mock_hasattr, mock_cuda_available):
         """Test 'best' device preference with CUDA available."""
         mock_cuda_available.return_value = True

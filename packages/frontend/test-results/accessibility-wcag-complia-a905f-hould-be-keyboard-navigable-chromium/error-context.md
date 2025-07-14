@@ -27,31 +27,34 @@ AssertionError: 2 accessibility violations were detected
   - button "Language EN":
     - img
     - text: Language EN
-  - heading "Sign In" [level=2]
-  - paragraph: Sign in to your account
-  - text: Email address
-  - textbox "Email address"
-  - text: Password
-  - textbox "Password"
-  - link "Forgot password?":
-    - /url: /forgot-password
-  - checkbox "Remember me"
-  - text: Remember me
-  - button "Sign In"
-  - text: Don't have an account?
-  - link "Sign Up":
-    - /url: /sign-up
-    - button "Sign Up"
-  - link "Request Access":
-    - /url: /request-access
-    - button "Request Access"
-  - paragraph:
-    - text: By signing up, you agree to our Terms of Service and Privacy Policy.
-    - link "Terms of Service":
-      - /url: /terms-of-service
-    - text: and
-    - link "Privacy Policy":
-      - /url: /privacy-policy
+  - main:
+    - heading "Sign In" [level=1]
+    - paragraph: Sign in to your account
+    - text: Email address
+    - textbox "Email address"
+    - text: Password
+    - textbox "Password"
+    - link "Forgot password?":
+      - /url: /forgot-password
+    - checkbox "Remember me"
+    - text: Remember me
+    - button "Sign In"
+    - text: Don't have an account?
+    - link "Sign Up":
+      - /url: /sign-up
+      - button "Sign Up"
+    - link "Request Access":
+      - /url: /request-access
+      - button "Request Access"
+    - paragraph:
+      - text: By signing up, you agree to our Terms of Service and Privacy Policy.
+      - link "Terms of Service":
+        - /url: /terms-of-service
+      - text: and
+      - link "Privacy Policy":
+        - /url: /privacy-policy
+  - button "Show Performance Monitor":
+    - img
 - region "Notifications alt+T"
 ```
 

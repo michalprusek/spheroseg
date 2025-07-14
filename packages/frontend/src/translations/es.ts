@@ -685,6 +685,8 @@ export default {
     privacy: 'Privacidad',
     login: 'Iniciar Sesión',
     requestAccess: 'Solicitar Acceso',
+    openMobileMenu: 'Abrir menú móvil',
+    closeMobileMenu: 'Cerrar menú móvil',
   },
   navigation: {
     home: 'Inicio',
@@ -1107,40 +1109,6 @@ export default {
     genericError: 'Fallo al aceptar la invitación. Por favor intente de nuevo.',
     acceptedSuccess: 'Invitación aceptada exitosamente',
   },
-  termsPage: {
-    title: 'Términos de Servicio',
-    acceptance: {
-      title: '1. Aceptación de Términos',
-      paragraph1:
-        'Al acceder o usar SpheroSeg, usted acepta estar sujeto a estos Términos de Servicio. Si no está de acuerdo con estos términos, por favor no use nuestro servicio.',
-    },
-    useLicense: {
-      title: '2. Licencia de Uso',
-      paragraph1:
-        'SpheroSeg le otorga una licencia limitada, no exclusiva y no transferible para usar el servicio con fines de investigación y educación. El uso comercial requiere un acuerdo de licencia separado.',
-    },
-    dataUsage: {
-      title: '3. Uso de Datos',
-      paragraph1:
-        'Usted conserva todos los derechos sobre sus imágenes y datos cargados. No compartimos sus datos con terceros sin su consentimiento explícito. Sus datos se utilizan únicamente para proporcionar y mejorar nuestros servicios de segmentación.',
-    },
-    limitations: {
-      title: '4. Limitaciones del Servicio',
-      paragraph1:
-        'SpheroSeg se proporciona "tal cual" sin garantías de ningún tipo, expresas o implícitas. No garantizamos el 100% de disponibilidad, precisión o confiabilidad. Los usuarios son responsables de validar los resultados para sus aplicaciones específicas.',
-    },
-    revisions: {
-      title: '5. Revisiones',
-      paragraph1:
-        'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación. Su uso continuado del servicio constituye la aceptación de los términos revisados.',
-    },
-    governingLaw: {
-      title: '6. Ley Aplicable',
-      paragraph1:
-        'Estos términos se rigen por las leyes de la República Checa. Cualquier disputa será resuelta por los tribunales competentes en Praga.',
-    },
-    lastUpdated: 'Última actualización: 7 de enero de 2025',
-  },
   privacyPage: {
     title: 'Política de Privacidad',
     introduction: {
@@ -1263,74 +1231,6 @@ export default {
       twitter: 'Seguir en Twitter',
     },
   },
-  privacyPage: {
-    title: 'Política de Privacidad',
-    introduction: {
-      title: '1. Introducción',
-      paragraph1:
-        'En SpheroSeg, estamos comprometidos a proteger su privacidad. Esta Política de Privacidad explica qué información recopilamos, cómo la usamos y qué derechos tiene con respecto a su información.',
-    },
-    dataCollection: {
-      title: '2. Información que Recopilamos',
-      paragraph1: 'Recopilamos información que usted nos proporciona directamente, incluyendo:',
-      list: [
-        'Información de cuenta (correo, nombre, institución)',
-        'Imágenes y datos cargados para segmentación',
-        'Metadatos del proyecto y resultados de análisis',
-        'Datos de uso y registros de actividad',
-      ],
-    },
-    dataUsage: {
-      title: '3. Cómo Usamos Su Información',
-      paragraph1: 'Usamos la información recopilada para:',
-      list: [
-        'Proporcionar y mantener nuestros servicios',
-        'Procesar sus solicitudes de segmentación de imágenes',
-        'Mejorar nuestros algoritmos y servicios',
-        'Comunicarnos con usted sobre su cuenta',
-        'Garantizar la seguridad y prevenir abusos',
-      ],
-    },
-    dataStorage: {
-      title: '4. Almacenamiento y Seguridad de Datos',
-      paragraph1:
-        'Implementamos medidas técnicas y organizativas apropiadas para proteger su información personal contra el acceso no autorizado, alteración, divulgación o destrucción.',
-      paragraph2:
-        'Sus datos se almacenan en servidores seguros y se eliminan según nuestra política de retención de datos.',
-    },
-    dataSharing: {
-      title: '5. Compartir Datos',
-      paragraph1:
-        'No vendemos, intercambiamos ni transferimos de otra manera su información personal a terceros sin su consentimiento, excepto como se describe en esta política o según lo exija la ley.',
-    },
-    userRights: {
-      title: '6. Sus Derechos',
-      paragraph1: 'Usted tiene derecho a:',
-      list: [
-        'Acceder a su información personal',
-        'Corregir información inexacta',
-        'Solicitar la eliminación de sus datos',
-        'Exportar sus datos',
-        'Oponerse al procesamiento de sus datos',
-      ],
-    },
-    cookies: {
-      title: '7. Cookies y Tecnologías de Seguimiento',
-      paragraph1:
-        'Usamos cookies y tecnologías similares para mejorar su experiencia, analizar el uso del sitio y personalizar el contenido.',
-    },
-    changes: {
-      title: '8. Cambios a Esta Política',
-      paragraph1:
-        'Podemos actualizar nuestra Política de Privacidad de vez en cuando. Le notificaremos cualquier cambio publicando la nueva Política de Privacidad en esta página.',
-    },
-    contact: {
-      title: '9. Contáctenos',
-      paragraph1: 'Si tiene alguna pregunta sobre esta Política de Privacidad, contáctenos en:',
-      email: 'spheroseg@utia.cas.cz',
-    },
-    lastUpdated: 'Última actualización: 7 de enero de 2025',
-  },
   shortcuts: {
     button: 'Atajos',
     editMode: 'Cambiar a Modo Edición',
@@ -1430,6 +1330,9 @@ export default {
       YOLO: 'Formato de texto You Only Look Once (YOLO) para detección de objetos',
       MASK: 'Imágenes de máscara binaria para cada objeto segmentado',
       POLYGONS: 'Coordenadas de polígono en formato JSON',
+      DATUMARO: 'Formato Datumaro - representación unificada de conjunto de datos',
+      CVAT_MASKS: 'Formato XML CVAT con anotaciones de polígono',
+      CVAT_YAML: 'Formato YAML CVAT para intercambio de anotaciones',
     },
     exportCompleted: 'Exportación completada',
     exportFailed: 'Exportación fallida',
@@ -1458,6 +1361,9 @@ export default {
       YOLO: 'YOLO TXT',
       MASK: 'Máscara (TIFF)',
       POLYGONS: 'Polígonos (JSON)',
+      DATUMARO: 'Datumaro',
+      CVAT_MASKS: 'CVAT Máscaras (XML)',
+      CVAT_YAML: 'CVAT YAML',
     },
     metricsFormats: {
       EXCEL: 'Excel (.xlsx)',

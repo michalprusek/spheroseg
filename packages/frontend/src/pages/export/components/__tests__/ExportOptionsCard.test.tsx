@@ -186,4 +186,3 @@ describe('ExportOptionsCard Component', () => {
     expect(screen.getByText('Comma-separated values')).toBeInTheDocument();
   });
 });
-EOF < /dev/llnu;

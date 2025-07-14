@@ -10,35 +10,39 @@ vi.mock('../AuthContext', () => ({
   })),
 }));
 
-vi.mock('i18next', () => ({
-  default: {
-    init: vi.fn().mockResolvedValue(undefined),
-    changeLanguage: vi.fn().mockResolvedValue(undefined),
-    t: vi.fn((key) => `translated:${key}`),
-    language: 'en',
-    use: vi.fn().mockReturnThis(),
-    on: vi.fn(),
-    off: vi.fn(),
-    emit: vi.fn(),
-    exists: vi.fn().mockReturnValue(true),
-    getResource: vi.fn(),
-    addResourceBundle: vi.fn(),
-    hasResourceBundle: vi.fn().mockReturnValue(true),
-    getResourceBundle: vi.fn().mockReturnValue({}),
-    loadNamespaces: vi.fn().mockResolvedValue(undefined),
-    loadLanguages: vi.fn().mockResolvedValue(undefined),
-    reloadResources: vi.fn().mockResolvedValue(undefined),
-    options: {
-      resources: {
-        en: {},
-        cs: {},
-        de: {},
-        es: {},
-        fr: {},
-        zh: {},
-      },
+const mockI18n = {
+  init: vi.fn().mockResolvedValue(undefined),
+  changeLanguage: vi.fn().mockResolvedValue(undefined),
+  t: vi.fn((key) => `translated:${key}`),
+  language: 'en',
+  use: vi.fn().mockReturnThis(),
+  on: vi.fn(),
+  off: vi.fn(),
+  emit: vi.fn(),
+  exists: vi.fn().mockReturnValue(true),
+  getResource: vi.fn(),
+  addResourceBundle: vi.fn(),
+  hasResourceBundle: vi.fn().mockReturnValue(true),
+  getResourceBundle: vi.fn().mockReturnValue({}),
+  loadNamespaces: vi.fn().mockResolvedValue(undefined),
+  loadLanguages: vi.fn().mockResolvedValue(undefined),
+  reloadResources: vi.fn().mockResolvedValue(undefined),
+  isInitialized: true,
+  options: {
+    resources: {
+      en: {},
+      cs: {},
+      de: {},
+      es: {},
+      fr: {},
+      zh: {},
     },
   },
+};
+
+vi.mock('i18next', () => ({
+  default: mockI18n,
+  t: mockI18n.t,
 }));
 
 vi.mock('react-i18next', () => ({
@@ -52,6 +56,33 @@ vi.mock('@/lib/apiClient', () => ({
   default: {
     get: vi.fn().mockResolvedValue({ data: { preferred_language: 'en' } }),
     put: vi.fn().mockResolvedValue({ data: { success: true } }),
+  },
+}));
+
+vi.mock('@/services/userProfileService', () => ({
+  default: {
+    loadSettingFromDatabase: vi.fn().mockResolvedValue('en'),
+    setUserSetting: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
+vi.mock('../i18n', () => ({
+  default: mockI18n,
+  i18nInitializedPromise: Promise.resolve(),
+}));
+
+vi.mock('@/utils/logger', () => ({
+  default: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock('sonner', () => ({
+  toast: {
+    error: vi.fn(),
   },
 }));
 
@@ -132,9 +163,9 @@ describe('LanguageContext', () => {
 
     renderWithLanguageProvider();
 
-    // Wait for initialization
+    // Wait for initialization with multiple async cycles
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
     // Language should be loaded from localStorage
@@ -149,9 +180,9 @@ describe('LanguageContext', () => {
 
     renderWithLanguageProvider();
 
-    // Wait for initialization
+    // Wait for initialization with multiple async cycles
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
     // Since detection uses just the language part, it should detect 'fr'
@@ -162,9 +193,12 @@ describe('LanguageContext', () => {
   });
 
   it('changes language when setLanguage is called', async () => {
-    const i18n = await import('i18next');
-
     renderWithLanguageProvider();
+
+    // Wait for initialization
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
 
     // Initial language should be English
     expect(screen.getByTestId('current-language')).toHaveTextContent('en');
@@ -172,21 +206,21 @@ describe('LanguageContext', () => {
     // Click button to change language to Czech
     await act(async () => {
       screen.getByTestId('change-language-cs').click();
+      await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
     // Language state should be updated
     expect(screen.getByTestId('current-language')).toHaveTextContent('cs');
 
     // i18n.changeLanguage should be called
-    expect(i18n.changeLanguage).toHaveBeenCalledWith('cs');
+    expect(mockI18n.changeLanguage).toHaveBeenCalledWith('cs');
 
     // localStorage should be updated
     expect(localStorage.setItem).toHaveBeenCalledWith('language', 'cs');
   });
 
   it('provides translation function that handles fallbacks', async () => {
-    const i18n = await import('i18next');
-    vi.mocked(i18n.t).mockImplementation((key) => {
+    vi.mocked(mockI18n.t).mockImplementation((key) => {
       // Simulate missing translation
       if (key === 'test.key') {
         return key; // i18next returns the key when translation is missing
@@ -206,8 +240,7 @@ describe('LanguageContext', () => {
   });
 
   it('attempts alternative translation keys for missing translations', async () => {
-    const i18n = await import('i18next');
-    vi.mocked(i18n.t).mockImplementation((key) => {
+    vi.mocked(mockI18n.t).mockImplementation((key) => {
       // Simulate missing translation for original key but success for alternative
       if (key === 'test.key') {
         return key; // Original key fails
@@ -236,18 +269,21 @@ describe('LanguageContext', () => {
       user: { id: 'user-123', email: 'test@example.com' },
     } as any);
 
-    const apiClient = await import('@/lib/apiClient');
+    const userProfileService = await import('@/services/userProfileService');
 
     renderWithLanguageProvider();
+
+    // Wait for initialization
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
 
     // Change language
     await act(async () => {
       screen.getByTestId('change-language-cs').click();
     });
 
-    // Should call API to update preference
-    expect(apiClient.default.put).toHaveBeenCalledWith('/users/me', {
-      preferred_language: 'cs',
-    });
+    // Should call service to update preference
+    expect(userProfileService.default.setUserSetting).toHaveBeenCalledWith('language', 'cs', 'ui');
   });
 });

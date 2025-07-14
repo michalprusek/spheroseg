@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { render, act, renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, afterEach, vi } from 'vitest';
 import {
   arePropsEqual,
   withMemo,
@@ -78,7 +79,13 @@ describe('Performance Optimizations', () => {
   });
 
   describe('useDebounce', () => {
-    vi.useFakeTimers();
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.restoreAllTimers();
+    });
 
     it('should debounce value changes', () => {
       const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
@@ -119,11 +126,16 @@ describe('Performance Optimizations', () => {
       expect(result.current).toBe('second');
     });
 
-    vi.useRealTimers();
   });
 
   describe('useThrottle', () => {
-    vi.useFakeTimers();
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.restoreAllTimers();
+    });
 
     it('should throttle value changes', () => {
       const { result, rerender } = renderHook(({ value, interval }) => useThrottle(value, interval), {

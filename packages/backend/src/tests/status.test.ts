@@ -230,13 +230,14 @@ describe('Status API', () => {
       expect(response.body).toEqual({
         queueLength: 2,
         runningTasks: ['image-123', 'image-456'],
-        queuedTasks: ['image-abc'],
-        pendingTasks: ['image-abc'], // Include both for compatibility
+        pendingTasks: ['image-abc'],
         processingImages: [
-          { id: 'image-123', name: 'Project Image 1', projectId: mockProjectId },
-          { id: 'image-456', name: 'Project Image 2', projectId: mockProjectId },
+          { id: 'image-123', name: 'Project Image 1' },
+          { id: 'image-456', name: 'Project Image 2' },
         ],
-        timestamp: expect.any(String),
+        activeTasksCount: expect.any(Number),
+        lastUpdated: expect.any(String),
+        mlServiceStatus: expect.any(String),
       });
 
       // Verify the database was queried correctly

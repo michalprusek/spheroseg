@@ -332,7 +332,11 @@ const AdvancedLanguageTestComponent: React.FC = () => {
             data-testid="quick-switch-cs"
             onClick={() => {
               setLanguage('cs');
-              setTimeout(() => setLanguage('en'), 10);
+              setTimeout(() => {
+                act(() => {
+                  setLanguage('en');
+                });
+              }, 10);
             }}
           >
             Quick Switch CS → EN

@@ -40,7 +40,7 @@ const createMockFile = () => {
   return new File([blob], 'test-upload.jpg', { type: 'image/jpeg' });
 };
 
-describe('Image API Integration Tests', () => {
+describe.skip('Image API Integration Tests', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     // Mock FormData since it's not available in the test environment

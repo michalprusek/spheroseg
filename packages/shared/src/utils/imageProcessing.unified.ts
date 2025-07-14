@@ -379,8 +379,14 @@ export function mergeProcessingOptions(
 }
 
 // Export utility functions for specific platforms
-export * from './imageProcessing.frontend';
-export * from './imageProcessing.backend';
+export {
+  generateThumbnail as generateThumbnailFrontend,
+  generateMultipleThumbnails as generateMultipleThumbnailsFrontend
+} from './imageProcessing.frontend';
+export {
+  generateThumbnail as generateThumbnailBackend,
+  generateMultipleThumbnails as generateMultipleThumbnailsBackend
+} from './imageProcessing.backend';
 
 // Default export with all utilities
 export default {

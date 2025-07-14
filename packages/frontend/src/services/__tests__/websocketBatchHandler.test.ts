@@ -353,9 +353,15 @@ describe('WebSocketBatchHandler', () => {
     });
 
     it('should handle null socket gracefully', () => {
+      // Don't initialize socket, so it remains null
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       handler.sendImmediate('event', {});
-      // Should not throw
+      
+      // Should not throw and should log warning
+      expect(consoleSpy).toHaveBeenCalledWith('Cannot send immediate message: WebSocket not connected');
       expect(mockSocket.emit).not.toHaveBeenCalled();
+      
+      consoleSpy.mockRestore();
     });
 
     it('should generate unique message IDs', () => {

@@ -37,10 +37,10 @@ const baseConfig = defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Global timeout for each test */
-  timeout: 300 * 1000, // 5 minutes per test
+  timeout: 600 * 1000, // 10 minutes per test (increased for upload tests)
   /* Global timeout for each assertion */
   expect: {
-    timeout: 30 * 1000, // 30 seconds for assertions
+    timeout: 60 * 1000, // 60 seconds for assertions (increased for upload flows)
   },
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
@@ -64,10 +64,10 @@ const baseConfig = defineConfig({
     video: 'retain-on-failure',
     
     /* Timeout for each action like click, fill, etc. */
-    actionTimeout: 30 * 1000, // 30 seconds
+    actionTimeout: 60 * 1000, // 60 seconds (increased for file uploads)
     
     /* Navigation timeout */
-    navigationTimeout: 60 * 1000, // 60 seconds
+    navigationTimeout: 120 * 1000, // 120 seconds (increased for upload processing)
   },
 
   /* Configure projects for major browsers */

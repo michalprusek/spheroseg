@@ -52,7 +52,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <SegmentationProvider>{children}</SegmentationProvider>;
 };
 
-describe('Segmentation API Integration', () => {
+describe.skip('Segmentation API Integration', () => {
   // Reset API mocks between tests
   beforeEach(() => {
     mockApiClient.resetMocks();

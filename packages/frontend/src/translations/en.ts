@@ -679,6 +679,8 @@ export default {
     privacy: 'Privacy',
     login: 'Sign In',
     requestAccess: 'Request Access',
+    openMobileMenu: 'Open mobile menu',
+    closeMobileMenu: 'Close mobile menu',
   },
   navigation: {
     home: 'Home',

@@ -141,16 +141,16 @@ export type {
 
 export default {
   // Core modules
-  schemas,
-  forms,
-  middleware,
-  commonSchemas,
+  schemas: schemas,
+  forms: forms,
+  middleware: middleware,
+  commonSchemas: commonSchemas,
   
   // Configurations
   frontend: frontendValidation,
   backend: backendValidation,
   
   // Constants
-  VALIDATION_CONSTANTS,
-  ERROR_MESSAGES,
+  VALIDATION_CONSTANTS: VALIDATION_CONSTANTS,
+  ERROR_MESSAGES: ERROR_MESSAGES,
 } as const;

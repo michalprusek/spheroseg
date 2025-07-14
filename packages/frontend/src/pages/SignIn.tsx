@@ -42,13 +42,13 @@ const SignIn = () => {
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 dark:from-gray-800 dark:via-gray-900 dark:to-black py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full glass-morphism rounded-2xl overflow-hidden shadow-glass-lg p-10 text-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">{t('auth.alreadyLoggedInTitle')}</h2>
+        <main className="max-w-md w-full glass-morphism rounded-2xl overflow-hidden shadow-glass-lg p-10 text-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">{t('auth.alreadyLoggedInTitle')}</h1>
           <p className="mb-6 text-gray-600 dark:text-gray-400">{t('auth.alreadyLoggedInMessage')}</p>
           <Button asChild className="w-full">
             <Link to="/dashboard">{t('auth.goToDashboardLink')}</Link>
           </Button>
-        </div>
+        </main>
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
           <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label={t('common.backToHome')}>
             <ArrowLeft className="h-5 w-5" />
@@ -70,10 +70,10 @@ const SignIn = () => {
       </div>
 
       {/* Main Content Card - Centered */}
-      <div className="w-full max-w-md shadow-xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700/60 rounded-lg overflow-hidden">
+      <main className="w-full max-w-md shadow-xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700/60 rounded-lg overflow-hidden">
         <div className="p-6 pt-9 mt-3 text-center">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">{t('auth.signInTitle')}</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{t('auth.signInDescription')}</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">{t('auth.signInTitle')}</h1>
+          <p className="text-sm text-gray-700 dark:text-gray-200 mb-2">{t('auth.signInDescription')}</p>
         </div>
         <div className="p-6 space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -182,7 +182,7 @@ const SignIn = () => {
             </p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

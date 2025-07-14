@@ -50,7 +50,7 @@ export function getAssetUrl(path: string): string {
 
   // For all other assets, use the configured assets URL
   // Získání základní URL pro assety z proměnných prostředí
-  const assetsUrl = isDev ? '' : import.meta.env.VITE_ASSETS_URL || '';
+  const assetsUrl = import.meta.env.VITE_ASSETS_URL || '';
 
   // If we have an assets URL, use it, otherwise use a relative path
   const url = assetsUrl ? `${assetsUrl}/${cleanPath}` : `/${cleanPath}`;

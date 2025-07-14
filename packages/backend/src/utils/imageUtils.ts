@@ -61,7 +61,7 @@ export const verifyImageFiles = async (image: ImageData, uploadDir: string): Pro
   // Check if the main image file exists
   if (result.storage_path) {
     const imagePath = imageUtils.dbPathToFilesystemPath(result.storage_path, uploadDir);
-    result.file_exists = await fsExists(imagePath);
+    result.file_exists = fs.existsSync(imagePath);
   } else {
     result.file_exists = false;
   }
@@ -69,7 +69,7 @@ export const verifyImageFiles = async (image: ImageData, uploadDir: string): Pro
   // Check if the thumbnail file exists
   if (result.thumbnail_path) {
     const thumbnailPath = imageUtils.dbPathToFilesystemPath(result.thumbnail_path, uploadDir);
-    result.thumbnail_exists = await fsExists(thumbnailPath);
+    result.thumbnail_exists = fs.existsSync(thumbnailPath);
   } else {
     result.thumbnail_exists = false;
   }

@@ -54,7 +54,7 @@ describe('BackButton Component', () => {
     // Check that the button has the expected class names
     expect(button).toHaveClass('text-gray-600');
     expect(button).toHaveClass('hover:text-gray-900');
-    expect(button).toHaveClass('dark:text-gray-400');
+    expect(button).toHaveClass('dark:text-gray-300');
     expect(button).toHaveClass('dark:hover:text-gray-100');
   });
 });

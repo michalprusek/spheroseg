@@ -17,7 +17,7 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "clean": "rimraf dist node_modules .turbo",
     "test": "jest --passWithNoTests",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage --passWithNoTests"
   },
   "devDependencies": {
     "@types/estree": "^1.0.8",

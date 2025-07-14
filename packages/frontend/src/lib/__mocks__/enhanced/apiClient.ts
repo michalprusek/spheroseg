@@ -1,6 +1,9 @@
 import { vi } from 'vitest';
 import { AxiosResponse, AxiosError } from 'axios';
 
+// Export MockApiClientProvider
+export { MockApiClientProvider } from './MockApiClientProvider';
+
 // Type definitions for better mock typing
 type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 type MockEndpoint = {

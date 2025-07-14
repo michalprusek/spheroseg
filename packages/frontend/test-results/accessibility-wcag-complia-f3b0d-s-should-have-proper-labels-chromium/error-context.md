@@ -61,6 +61,8 @@ AssertionError: 2 accessibility violations were detected
     - text: and
     - link "Privacy Policy":
       - /url: /privacy-policy
+  - button "Show Performance Monitor":
+    - img
 - region "Notifications alt+T"
 ```
 

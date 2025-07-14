@@ -513,7 +513,14 @@ export class RealUserMetrics {
   private getTargetInfo(element: HTMLElement): string {
     const tag = element.tagName.toLowerCase();
     const id = element.id ? `#${element.id}` : '';
-    const className = element.className ? `.${element.className.split(' ').join('.')}` : '';
+    // Handle SVG elements and other elements that might not have string className
+    let className = '';
+    if (element.className && typeof element.className === 'string') {
+      className = `.${element.className.split(' ').join('.')}`;
+    } else if (element.className && element.className.baseVal) {
+      // SVG elements have className as SVGAnimatedString
+      className = `.${element.className.baseVal.split(' ').join('.')}`;
+    }
     const text = element.textContent?.trim().substring(0, 50) || '';
     
     return `${tag}${id}${className}${text ? `: ${text}` : ''}`;

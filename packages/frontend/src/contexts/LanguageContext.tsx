@@ -73,6 +73,13 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       return 'en';
     }
     try {
+      // Check if user has explicitly set a preference to avoid auto-detection
+      const userPreference = localStorage.getItem('language_preference_set');
+      if (userPreference === 'true') {
+        // User has set a preference, don't auto-detect
+        return 'en';
+      }
+      
       const fullBrowserLanguage = navigator.language;
       logger.debug('[LanguageContext] Detected full browser language: ' + fullBrowserLanguage);
 
@@ -287,6 +294,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       logger.debug('[LanguageContext] Setting language to: ' + newLanguage);
       setLanguageState(newLanguage);
       localStorage.setItem('language', newLanguage);
+      localStorage.setItem('language_preference_set', 'true');
 
       if (auth.user && auth.user.id) {
         logger.debug(

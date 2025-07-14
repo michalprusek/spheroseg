@@ -58,6 +58,5 @@ export { default as imageUtils } from './utils/imageUtils';
 export * from './utils/pathUtils';
 export { default as pathUtils } from './utils/pathUtils';
 
-// Export consolidation checker
-export * from './consolidation';
-export { default as ConsolidationChecker } from './consolidation';
+// Note: Consolidation checker is available via direct import from './consolidation'
+// It's not included in the main export to prevent Node.js dependencies in frontend builds

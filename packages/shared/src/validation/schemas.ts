@@ -417,3 +417,16 @@ export default {
   VALIDATION_CONSTANTS,
   ERROR_MESSAGES,
 };
+
+// Missing exports
+export type ValidationSource = 'frontend' | 'backend' | 'api' | 'form';
+export type ValidationOptions = {
+  source?: ValidationSource;
+  skipRequired?: boolean;
+  strict?: boolean;
+};
+export type ValidationError = {
+  field: string;
+  message: string;
+  code: string;
+};

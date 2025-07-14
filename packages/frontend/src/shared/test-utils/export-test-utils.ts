@@ -4,10 +4,11 @@
  * Common utilities for testing export functionality
  */
 
+import { vi } from 'vitest';
 import { ProjectImage } from '@/pages/segmentation/types';
 
 /**
- * Generate mock export options
+ * Generate mock export options for ExportOptionsCard component
  */
 export function createMockExportOptions() {
   return {
@@ -17,9 +18,15 @@ export function createMockExportOptions() {
     includeObjectMetrics: true,
     annotationFormat: 'COCO' as const,
     metricsFormat: 'EXCEL' as const,
-    selectedImages: {},
-    onExport: vi.fn(),
-    onCancel: vi.fn(),
+    setIncludeImages: vi.fn(),
+    setIncludeMetadata: vi.fn(),
+    setIncludeSegmentation: vi.fn(),
+    setIncludeObjectMetrics: vi.fn(),
+    setAnnotationFormat: vi.fn(),
+    setMetricsFormat: vi.fn(),
+    handleExportMetricsAsXlsx: vi.fn(),
+    getSelectedCount: vi.fn(() => 5),
+    isExporting: false,
   };
 }
 

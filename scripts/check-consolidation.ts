@@ -13,7 +13,7 @@
 
 import { program } from 'commander';
 import * as path from 'path';
-import { runConsolidationCheck } from '@spheroseg/shared/consolidation/consolidationChecker';
+import { runConsolidationCheck } from '@spheroseg/shared/consolidation';
 
 // Get the root directory (parent of scripts)
 const rootDir = path.resolve(__dirname, '..');

@@ -724,6 +724,8 @@ export default {
     privacy: 'Datenschutz',
     login: 'Anmelden',
     requestAccess: 'Zugang anfordern',
+    openMobileMenu: 'Mobiles Menü öffnen',
+    closeMobileMenu: 'Mobiles Menü schließen',
   },
   navigation: {
     home: 'Startseite',
@@ -1323,6 +1325,9 @@ export default {
       YOLO: 'You Only Look Once (YOLO) Textformat für Objekterkennung',
       MASK: 'Binäre Maskenbilder für jedes segmentierte Objekt',
       POLYGONS: 'Polygonkoordinaten im JSON-Format',
+      DATUMARO: 'Datumaro-Format - einheitliche Datensatzrepräsentation',
+      CVAT_MASKS: 'CVAT XML-Format mit Polygon-Annotationen',
+      CVAT_YAML: 'CVAT YAML-Format für Annotationsaustausch',
     },
     exportCompleted: 'Export abgeschlossen',
     exportFailed: 'Export fehlgeschlagen',
@@ -1351,6 +1356,9 @@ export default {
       YOLO: 'YOLO TXT',
       MASK: 'Maske (TIFF)',
       POLYGONS: 'Polygone (JSON)',
+      DATUMARO: 'Datumaro',
+      CVAT_MASKS: 'CVAT Masken (XML)',
+      CVAT_YAML: 'CVAT YAML',
     },
     metricsFormats: {
       EXCEL: 'Excel (.xlsx)',

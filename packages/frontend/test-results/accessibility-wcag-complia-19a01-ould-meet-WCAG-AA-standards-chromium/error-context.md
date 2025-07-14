@@ -93,6 +93,8 @@ AssertionError: 1 accessibility violation was detected
     - paragraph: Get access to all platform features and start analyzing your microscopy images
     - link "Create Account":
       - /url: /sign-up
+  - button "Show Performance Monitor":
+    - img
 - contentinfo:
   - img
   - text: SpheroSeg

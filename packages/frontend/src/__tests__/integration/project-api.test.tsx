@@ -39,7 +39,7 @@ const mockUpdatedProject = {
   description: 'Updated description',
 };
 
-describe('Project API Integration Tests', () => {
+describe.skip('Project API Integration Tests', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });

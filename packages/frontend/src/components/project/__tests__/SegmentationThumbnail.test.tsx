@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import SegmentationThumbnail from '../SegmentationThumbnail';
 import apiClient from '@/lib/apiClient';
@@ -47,8 +47,10 @@ describe('SegmentationThumbnail Component', () => {
     expect(image).toBeInTheDocument();
 
     // Wait for API call to complete
-    await waitFor(() => {
-      expect(apiClient.get).toHaveBeenCalledWith('/api/images/test-image-id/segmentation');
+    await act(async () => {
+      await waitFor(() => {
+        expect(apiClient.get).toHaveBeenCalledWith('/api/images/test-image-id/segmentation');
+      });
     });
 
     // No SVG should be rendered since there are no polygons
@@ -164,8 +166,10 @@ describe('SegmentationThumbnail Component', () => {
     expect(image).toBeInTheDocument();
 
     // Wait for API call to complete
-    await waitFor(() => {
-      expect(apiClient.get).toHaveBeenCalledWith('/api/images/test-image-id/segmentation');
+    await act(async () => {
+      await waitFor(() => {
+        expect(apiClient.get).toHaveBeenCalledWith('/api/images/test-image-id/segmentation');
+      });
     });
 
     // No SVG should be rendered since there was an error
