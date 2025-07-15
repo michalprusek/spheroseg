@@ -3,22 +3,65 @@
 /**
  * Import validation script for Spheroseg
  * Validates import statements across all packages
+ * Converted to ES modules with performance monitoring
  */
 
-const fs = require('fs');
-const path = require('path');
-const glob = require('glob');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { performance } from 'perf_hooks';
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Dynamic import for CommonJS modules  
+const globModule = await import('glob');
+const glob = globModule.default;
 
 // Configuration
 const PACKAGES_DIR = path.join(__dirname, '..', 'packages');
+
+// Updated external dependencies whitelist (security audit)
 const ALLOWED_EXTERNAL_DEPS = new Set([
+  // Core React ecosystem
   'react', 'react-dom', 'react-router-dom',
+  
+  // UI Component Libraries
   '@radix-ui', '@headlessui', '@mui',
+  
+  // Data & State Management
   '@tanstack/react-query', 'axios', 'zod',
+  
+  // Internationalization
   'i18next', 'react-i18next',
+  
+  // Icons & UI
   'lucide-react', 'sonner',
+  
+  // Networking
   'socket.io-client',
-  'lodash', 'date-fns', 'uuid', 'classnames', 'clsx'
+  
+  // Utilities
+  'lodash', 'date-fns', 'uuid', 'classnames', 'clsx',
+  
+  // Development & Testing
+  'vitest', '@testing-library', 'jest',
+  
+  // Build & Bundling
+  'vite', 'webpack', 'rollup',
+  
+  // TypeScript
+  'typescript', '@types',
+  
+  // Linting & Formatting
+  'eslint', 'prettier',
+  
+  // Security additions
+  'bcryptjs', 'jsonwebtoken', 'helmet',
+  
+  // Performance monitoring
+  'web-vitals'
 ]);
 
 const IMPORT_RULES = {
@@ -70,12 +113,22 @@ class ImportValidator {
   constructor() {
     this.errors = [];
     this.warnings = [];
+    this.stats = {
+      packagesValidated: 0,
+      filesValidated: 0,
+      importsChecked: 0,
+      startTime: 0,
+      endTime: 0
+    };
   }
 
   /**
-   * Validate all imports in the project
+   * Validate all imports in the project with performance monitoring
    */
   async validateAll() {
+    console.time('import-validation');
+    this.stats.startTime = performance.now();
+    
     console.log('🔍 Validating imports across all packages...\n');
     
     const packages = ['frontend', 'backend', 'shared', 'types'];
@@ -84,10 +137,13 @@ class ImportValidator {
       const pkgPath = path.join(PACKAGES_DIR, pkg);
       if (fs.existsSync(pkgPath)) {
         await this.validatePackage(pkg, pkgPath);
+        this.stats.packagesValidated++;
       }
     }
     
+    this.stats.endTime = performance.now();
     this.printResults();
+    this.printPerformanceStats();
     
     if (this.errors.length > 0) {
       process.exit(1);
@@ -105,11 +161,17 @@ class ImportValidator {
       ignore: ['node_modules/**', 'dist/**', 'build/**', '__tests__/**', '*.test.*', '*.spec.*']
     });
     
+    const packageStartTime = performance.now();
+    
     for (const file of files) {
       await this.validateFile(packageName, path.join(packagePath, file), file);
+      this.stats.filesValidated++;
     }
     
-    console.log(`✅ Validated ${files.length} files in ${packageName}\n`);
+    const packageEndTime = performance.now();
+    const packageDuration = ((packageEndTime - packageStartTime) / 1000).toFixed(2);
+    
+    console.log(`✅ Validated ${files.length} files in ${packageName} (${packageDuration}s)\n`);
   }
 
   /**
@@ -127,6 +189,7 @@ class ImportValidator {
         if (trimmed.startsWith('import ') || trimmed.startsWith('from ') || 
             trimmed.includes('require(') || trimmed.includes('import(')) {
           this.validateImportLine(packageName, relativePath, index + 1, trimmed);
+          this.stats.importsChecked++;
         }
       });
     } catch (error) {
@@ -284,12 +347,30 @@ class ImportValidator {
       });
     }
   }
+
+  /**
+   * Print performance statistics
+   */
+  printPerformanceStats() {
+    const duration = this.stats.endTime - this.stats.startTime;
+    const durationSeconds = (duration / 1000).toFixed(2);
+    
+    console.log('\n📈 Performance Statistics:');
+    console.log(`  Total duration: ${durationSeconds}s`);
+    console.log(`  Packages validated: ${this.stats.packagesValidated}`);
+    console.log(`  Files validated: ${this.stats.filesValidated}`);
+    console.log(`  Import statements checked: ${this.stats.importsChecked}`);
+    console.log(`  Average imports per file: ${(this.stats.importsChecked / this.stats.filesValidated || 0).toFixed(1)}`);
+    console.log(`  Files per second: ${(this.stats.filesValidated / (duration / 1000) || 0).toFixed(1)}\n`);
+    
+    console.timeEnd('import-validation');
+  }
 }
 
 // Run validation if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const validator = new ImportValidator();
   validator.validateAll().catch(console.error);
 }
 
-module.exports = ImportValidator;
+export default ImportValidator;

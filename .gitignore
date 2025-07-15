@@ -144,3 +144,5 @@ performance_logs/
 .vscode/settings.json
 .idea/workspace.xml
 .idea/tasks.xml
+packages/ml/__pycache__/
+*.pyc

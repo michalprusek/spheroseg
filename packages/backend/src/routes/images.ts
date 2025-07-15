@@ -1226,7 +1226,7 @@ router.get(
 
       // Cache the response (only if no filters)
       if (!name && !req.query.verifyFiles) {
-        await cacheService.cacheImageList(projectId, Number(page || 1), Number(limit), response);
+        await cacheService.cacheImageList(projectId, Number(page || 1), Number(limit), response.images);
       }
 
       res.status(200).json(response);

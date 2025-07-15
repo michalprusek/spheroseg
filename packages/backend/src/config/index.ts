@@ -70,6 +70,7 @@ const config = {
     allowMockUser: validatedEnv.USE_MOCK_USER === 'true' || isDevelopment,
     tokenSecurityMode: validatedEnv.TOKEN_SECURITY_MODE || 'standard',
     jwksUri: validatedEnv.JWKS_URI,
+    useKeyRotation: validatedEnv.USE_JWT_KEY_ROTATION === 'true',
   },
 
   storage: {

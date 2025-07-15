@@ -186,6 +186,9 @@ export class SecurityManager {
       // Detect suspicious patterns
       this.detectSuspiciousActivity(req);
 
+      // Apply security headers
+      this.applySecurityHeaders(res);
+
       next();
     } catch (error) {
       logger.error('Security middleware error', error);
@@ -194,11 +197,9 @@ export class SecurityManager {
   }
 
   /**
-<<<<<<< Updated upstream
-=======
    * Apply security headers to response
    */
-  private applySecurityHeaders(res: Response): void {
+  public applySecurityHeaders(res: Response): void {
     // Prevent MIME type sniffing
     res.setHeader('X-Content-Type-Options', 'nosniff');
     
@@ -221,7 +222,7 @@ export class SecurityManager {
       const nonce = this.generateNonce();
       res.locals.cspNonce = nonce;
       
-      const isDevelopment = this.config.isDevelopment;
+      const isDevelopment = config.isDevelopment;
       const cspPolicy = [
         "default-src 'self'",
         isDevelopment 
@@ -265,7 +266,6 @@ export class SecurityManager {
   }
 
   /**
->>>>>>> Stashed changes
    * Mark an IP as suspicious
    */
   public markAsSuspicious(ip: string): void {
