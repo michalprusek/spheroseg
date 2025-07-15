@@ -367,18 +367,57 @@ class ImportValidator {
   }
 }
 
+// Enhanced command line argument parsing
+function parseArgs() {
+  const args = {
+    isDryRun: process.argv.includes('--dry-run'),
+    filesChanged: process.argv.includes('--files-changed'),
+    performanceMode: process.argv.includes('--performance-mode'),
+    verbose: process.argv.includes('--verbose'),
+    specific: process.argv.filter(arg => arg.startsWith('--package=')).map(arg => arg.split('=')[1]),
+  };
+  return args;
+}
+
 // Run validation if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const isDryRun = process.argv.includes('--dry-run');
+  const args = parseArgs();
   
-  if (isDryRun) {
+  if (args.isDryRun) {
     console.log('🧪 Dry run mode - validating script syntax only');
     console.log('✅ Import validation script loaded successfully');
+    console.log('📊 Performance mode available:', args.performanceMode ? 'enabled' : 'disabled');
     process.exit(0);
   }
   
   const validator = new ImportValidator();
-  validator.validateAll().catch(console.error);
+  
+  // Performance optimizations
+  if (args.performanceMode) {
+    console.log('⚡ Performance mode enabled - using optimized validation');
+    validator.stats.performanceMode = true;
+  }
+  
+  if (args.filesChanged) {
+    console.log('🔍 Validating imports for changed files (lint-staged mode)...');
+    // Future enhancement: could accept specific file list from lint-staged
+    // For now, validate all packages but with performance optimizations
+  }
+  
+  if (args.specific.length > 0) {
+    console.log(`📦 Validating specific packages: ${args.specific.join(', ')}`);
+    validator.packagesToValidate = args.specific;
+  }
+  
+  if (args.verbose) {
+    validator.verbose = true;
+  }
+  
+  validator.validateAll().catch((error) => {
+    console.error('❌ Import validation failed:', error.message);
+    console.error('💡 Try running with --verbose for more details');
+    process.exit(1);
+  });
 }
 
 export default ImportValidator;

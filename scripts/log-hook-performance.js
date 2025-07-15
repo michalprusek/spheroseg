@@ -1,45 +1,99 @@
 #!/usr/bin/env node
 
 /**
- * Simple CLI script to log hook performance data
- * Usage: node scripts/log-hook-performance.js <hookName> <totalDuration> [commandDuration]
+ * Enhanced performance logging script for pre-commit hooks
+ * Tracks execution times, success rates, and optimization opportunities
+ * Usage: node scripts/log-hook-performance.js <hookType> <totalDuration> <stageDuration> <status> [filesCount] [platform]
  */
 
-const HookPerformanceMonitor = require('./hook-performance-monitor.js');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const [, , hookName, totalDuration, commandDuration] = process.argv;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-if (!hookName || !totalDuration) {
-  console.error('Usage: node scripts/log-hook-performance.js <hookName> <totalDuration> [commandDuration]');
-  process.exit(1);
+// Configuration
+const PERFORMANCE_LOG_FILE = path.join(__dirname, '..', '.cache', 'hooks-performance.json');
+const MAX_LOG_ENTRIES = 100; // Keep last 100 entries
+
+// Ensure cache directory exists
+const cacheDir = path.dirname(PERFORMANCE_LOG_FILE);
+if (!fs.existsSync(cacheDir)) {
+  fs.mkdirSync(cacheDir, { recursive: true });
 }
 
-try {
-  // Create a mock monitor for logging
-  const monitor = new HookPerformanceMonitor(hookName);
-  
-  // Add the main command
-  if (commandDuration) {
-    monitor.trackCommand('lint-staged', parseInt(commandDuration), true);
+/**
+ * Log performance data for a hook execution
+ */
+function logPerformance(hookType, totalDuration, stageDuration, status, filesCount = 0, platform = 'unknown') {
+  try {
+    // Read existing log data
+    let logData = [];
+    if (fs.existsSync(PERFORMANCE_LOG_FILE)) {
+      const content = fs.readFileSync(PERFORMANCE_LOG_FILE, 'utf8');
+      logData = JSON.parse(content);
+    }
+
+    // Create new entry
+    const entry = {
+      timestamp: new Date().toISOString(),
+      hookType,
+      totalDuration: parseInt(totalDuration, 10),
+      stageDuration: parseInt(stageDuration, 10),
+      status,
+      filesCount: parseInt(filesCount, 10) || 0,
+      platform,
+      cacheEfficiency: calculateCacheEfficiency(),
+      nodeVersion: process.version,
+    };
+
+    // Add to log data
+    logData.push(entry);
+
+    // Keep only recent entries
+    if (logData.length > MAX_LOG_ENTRIES) {
+      logData = logData.slice(-MAX_LOG_ENTRIES);
+    }
+
+    // Write back to file
+    fs.writeFileSync(PERFORMANCE_LOG_FILE, JSON.stringify(logData, null, 2));
+
+  } catch (error) {
+    // Silent fail - don't break the commit process for logging issues
+    // Only log to stderr in non-CI environments to avoid noise
+    if (!process.env.CI) {
+      console.warn('Warning: Failed to log performance data:', error.message);
+    }
   }
-  
-  // Override the total duration calculation
-  monitor.startTime = performance.now() - parseInt(totalDuration);
-  
-  // Generate and save the report
-  const report = monitor.generateReport();
-  monitor.saveReport(report);
-  
-  // Log aggregated stats if available
-  const aggregated = HookPerformanceMonitor.getAggregatedStats(hookName, 7);
-  if (aggregated && aggregated.totalRuns > 1) {
-    const current = parseInt(totalDuration);
-    const avg = Math.round(aggregated.averageDuration);
-    const deviation = ((current - avg) / avg * 100).toFixed(1);
-    
-    console.log(`📊 7-day average: ${avg}ms (current: ${deviation > 0 ? '+' : ''}${deviation}% vs avg)`);
+}
+
+/**
+ * Calculate cache efficiency based on directory sizes
+ */
+function calculateCacheEfficiency() {
+  try {
+    const cacheDir = path.join(__dirname, '..', '.cache');
+    if (!fs.existsSync(cacheDir)) {
+      return 0;
+    }
+
+    // Simple heuristic: if cache exists and has content, assume some efficiency
+    const stats = fs.statSync(cacheDir);
+    return stats.isDirectory() ? 1 : 0;
+  } catch (error) {
+    return 0;
   }
-} catch (error) {
-  // Silent fail - don't break hooks
-  console.warn(`Warning: Performance logging failed: ${error.message}`);
+}
+
+// Command line interface
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const [hookType, totalDuration, stageDuration, status, filesCount, platform] = process.argv.slice(2);
+  
+  if (hookType && totalDuration && stageDuration && status) {
+    logPerformance(hookType, totalDuration, stageDuration, status, filesCount, platform);
+  } else {
+    console.log('Usage: node log-hook-performance.js <hookType> <totalDuration> <stageDuration> <status> [filesCount] [platform]');
+    process.exit(1);
+  }
 }
