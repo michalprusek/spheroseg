@@ -101,6 +101,7 @@ python -m pytest --cov=app    # Coverage report
 ## Architecture & Key Patterns
 
 ### Frontend Architecture
+
 - **Unified Services Pattern**: All API calls go through centralized services in `packages/frontend/src/services/`
 - **State Management**: React Context for global state, local state for components
 - **Routing**: React Router v6 with protected routes
@@ -108,6 +109,7 @@ python -m pytest --cov=app    # Coverage report
 - **Error Handling**: Unified error boundary and toast notifications
 
 ### Backend Architecture
+
 - **Modular Routes**: Routes organized by feature in `packages/backend/src/routes/`
 - **Authentication**: JWT with refresh tokens, middleware in `packages/backend/src/middleware/auth.ts`
 - **Database**: PostgreSQL with raw SQL queries (no ORM)
@@ -115,12 +117,14 @@ python -m pytest --cov=app    # Coverage report
 - **WebSocket**: Socket.IO for real-time events
 
 ### ML Service Architecture
+
 - **Model**: ResUNet for cell segmentation in `packages/ml/app/model/`
 - **API**: Flask endpoints for segmentation and feature extraction
 - **Processing Pipeline**: Image → Preprocessing → Model → Polygon Extraction → Features
 - **Model Checkpoint**: `packages/ml/checkpoint_epoch_9.pth.tar`
 
 ### Cross-Service Communication
+
 ```
 Frontend <-> NGINX <-> Backend <-> ML Service
                    \-> Assets Server
@@ -128,16 +132,17 @@ Frontend <-> NGINX <-> Backend <-> ML Service
 
 ## Service URLs
 
-- **Frontend Dev**: http://localhost:3000
-- **Frontend Prod**: http://localhost
-- **Backend API**: http://localhost:5001
-- **ML Service**: http://localhost:5002
+- **Frontend Dev**: <http://localhost:3000>
+- **Frontend Prod**: <http://localhost>
+- **Backend API**: <http://localhost:5001>
+- **ML Service**: <http://localhost:5002>
 - **Database**: localhost:5432
-- **Adminer**: http://localhost:8081
+- **Adminer**: <http://localhost:8081>
 
 ## Critical Configuration
 
 ### Environment Variables
+
 ```bash
 # Frontend (.env)
 VITE_API_URL=http://localhost:5001
@@ -154,11 +159,13 @@ MODEL_PATH=/app/checkpoint_epoch_9.pth.tar
 ```
 
 ### TypeScript Configuration
+
 - Strict mode enabled
 - Path aliases configured in tsconfig.json
 - Shared types in `packages/types/`
 
 ### Testing Setup
+
 - Frontend: Vitest + React Testing Library
 - Backend: Jest + Supertest
 - ML: Pytest
@@ -167,6 +174,7 @@ MODEL_PATH=/app/checkpoint_epoch_9.pth.tar
 ## Database Schema
 
 Key tables:
+
 - `users`: User authentication and profile
 - `images`: Uploaded image metadata (uses segmentation_status: 'without_segmentation', 'queued', 'processing', 'completed', 'failed')
 - `segmentation_results`: ML processing results
@@ -194,12 +202,14 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 ## Code Quality Patterns
 
 ### Import Management
+
 - **Lazy Loading**: All page components use React.lazy() with error boundaries
 - **Import Validation**: Pre-commit hooks validate all imports
 - **Path Aliases**: Use `@/` for src imports, avoid relative paths
 - **Import Order**: External deps → Internal modules → Local files → Types
 
 ### Testing Patterns
+
 - **E2E Tests**: Playwright for user flows and navigation
 - **Unit Tests**: Vitest for components, utilities, and services
 - **Test Organization**: Tests in `__tests__` folders next to source
@@ -207,12 +217,14 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 - **Mock Strategy**: Mock external dependencies, use real implementations when possible
 
 ### Configuration Management
+
 - **Centralized Config**: All app settings in `app.config.ts`
 - **Environment Variables**: Use for secrets and environment-specific values
 - **Type Safety**: Configuration object is fully typed with const assertion
 - **Helper Functions**: Provide getters for common config values
 
 ### Pre-commit Quality Gates
+
 - **Husky Git Hooks**: `.husky/pre-commit` and `.husky/commit-msg` for automated checks
 - **Lint-staged**: File-specific linting and formatting via `.lintstagedrc.js`
 - **Import Validation**: Package boundary enforcement via `scripts/validate-imports.js`
@@ -241,16 +253,18 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 ## System Credentials
 
 - **Sudo Password**: Cinoykty
-- **Test User**: testuser@test.com / testuser123
+- **Test User**: <testuser@test.com> / testuser123
 
 ## Testing Methodology & Best Practices
 
 ### Testing Philosophy
+
 Testing is a critical part of the development process. Every feature, fix, or significant change should include appropriate tests. The goal is to maintain high code quality, prevent regressions, and ensure the application works reliably.
 
 ### When to Test
 
-#### ALWAYS write tests when:
+#### ALWAYS write tests when
+
 1. **Adding new features** - Test the happy path and edge cases
 2. **Fixing bugs** - Add tests that would have caught the bug
 3. **Refactoring code** - Ensure behavior remains unchanged
@@ -258,7 +272,8 @@ Testing is a critical part of the development process. Every feature, fix, or si
 5. **Adding API endpoints** - Test success, error, and validation cases
 6. **Creating React components** - Test rendering, interactions, and state changes
 
-#### Test BEFORE committing when:
+#### Test BEFORE committing when
+
 1. You've made changes to existing functionality
 2. You've modified shared utilities or services
 3. You're unsure if your changes might break something
@@ -267,6 +282,7 @@ Testing is a critical part of the development process. Every feature, fix, or si
 ### Testing Strategy by Layer
 
 #### Frontend Testing (Vitest + React Testing Library)
+
 ```bash
 cd packages/frontend
 npm run test                  # Run all tests
@@ -275,6 +291,7 @@ npm run test -- --coverage    # Generate coverage report
 ```
 
 **What to test:**
+
 - Component rendering with different props
 - User interactions (clicks, form submissions)
 - State changes and effects
@@ -283,6 +300,7 @@ npm run test -- --coverage    # Generate coverage report
 - Integration with services/API calls (using mocks)
 
 **Example test structure:**
+
 ```typescript
 describe('ComponentName', () => {
   it('should render with required props', () => {
@@ -300,6 +318,7 @@ describe('ComponentName', () => {
 ```
 
 #### Backend Testing (Jest + Supertest)
+
 ```bash
 cd packages/backend
 npm run test                  # Run all tests
@@ -308,6 +327,7 @@ npm run test -- --coverage    # Coverage report
 ```
 
 **What to test:**
+
 - API endpoints (success/error responses)
 - Middleware functionality
 - Service layer logic
@@ -317,6 +337,7 @@ npm run test -- --coverage    # Coverage report
 - Error handling
 
 **Example test structure:**
+
 ```typescript
 describe('GET /api/resource', () => {
   it('should return 200 with valid data', async () => {
@@ -334,6 +355,7 @@ describe('GET /api/resource', () => {
 ```
 
 #### ML Service Testing (Pytest)
+
 ```bash
 cd packages/ml
 python -m pytest              # Run all tests
@@ -342,6 +364,7 @@ python -m pytest --cov=app    # Coverage report
 ```
 
 **What to test:**
+
 - Model loading and initialization
 - Image preprocessing pipeline
 - Prediction output format
@@ -442,6 +465,7 @@ cd packages/backend && npm run test -- --detectOpenHandles
 ### Continuous Integration
 
 Tests are automatically run on:
+
 1. Every push to the repository
 2. Every pull request
 3. Before deployment to production
@@ -458,6 +482,7 @@ Failed tests will block merging and deployment.
 ### Common Testing Patterns
 
 #### Testing Async Operations
+
 ```typescript
 // Using async/await
 it('should fetch data', async () => {
@@ -472,6 +497,7 @@ it('should handle errors', async () => {
 ```
 
 #### Testing React Hooks
+
 ```typescript
 import { renderHook, act } from '@testing-library/react';
 
@@ -487,6 +513,7 @@ it('should update state', () => {
 ```
 
 #### Testing with Mocks
+
 ```typescript
 // Mock a module
 jest.mock('../api');
@@ -526,7 +553,8 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
 ## Recent Updates & Improvements
 
 ### Performance Optimizations (2025-07-10)
-1. **Database Query Optimization**: 
+
+1. **Database Query Optimization**:
    - Implemented CTE-based queries reducing 15+ queries to 2-3
    - Created `userStatsServiceOptimized.ts` with dependency injection
    - Added composite indexes for common query patterns
@@ -558,12 +586,14 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
    - Process exit handlers ensure resource cleanup
 
 ### Testing Infrastructure
+
 - **Integration Tests**: `packages/backend/src/__tests__/integration/performance.integration.test.ts`
 - **E2E Tests**: `e2e/performance/performance-optimizations.spec.ts`
 - **Unit Tests**: `packages/backend/src/__tests__/unit/performance-monitor.test.ts`
 - **Test Runners**: `run-performance-tests.sh` and `test-performance-demo.js`
 
 ### Performance Metrics Achieved
+
 | Metric | Before | After | Improvement |
 |--------|---------|---------|-------------|
 | User Stats Query | 500ms | 80ms | 84% faster |
@@ -573,19 +603,20 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
 | Static Bandwidth | 100MB | 40MB | 60% reduction |
 
 ### Code Quality Improvements (2025-07-08)
+
 1. **TypeScript Type Safety**: Removed all 'as any' casts
    - Created type-safe lazy loading helper in `lazyComponents.ts`
    - Fixed import type issues across the codebase
    - Added proper type definitions for all components
 
-2. **Performance Optimizations**: 
+2. **Performance Optimizations**:
    - Created centralized performance configuration in `config/performance.ts`
    - Implemented dynamic container memory limit detection
    - Added performance monitoring utilities
    - Created React performance optimization hooks (debounce, throttle, virtual lists)
    - Added database indexes for frequently queried columns
 
-3. **Testing Infrastructure**: 
+3. **Testing Infrastructure**:
    - Added comprehensive test coverage for new utilities
    - Created tests for polygon operations, container info, static cache, and performance optimizations
    - Established testing methodology and best practices documentation
@@ -597,6 +628,7 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
    - Created proper defaults with documentation
 
 ### Recently Fixed Issues (2025-07-08)
+
 1. **Segmentation Queue Enum Mismatch**: Fixed issue where code used 'pending' but database expected 'queued' status
    - Updated `segmentationQueueService.ts` and `segmentation.ts` routes
    - Added database migration with rollback strategy
@@ -622,6 +654,7 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
    - Added optional manual garbage collection with performance tracking
 
 ### Recently Fixed Issues (2025-07-10 - Latest)
+
 1. **Batch Image Deletion UI Sync**: Fixed issue where images remained visible after batch deletion
    - Modified `handleBatchDelete` in `ProjectDetail.tsx` to only update UI after successful API calls
    - Added proper cache cleanup for deleted images using `cleanImageFromAllStorages`
@@ -643,6 +676,7 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
    - Proper cleanup of WebSocket listeners on component unmount
 
 ### Recently Implemented (2025-07-10)
+
 1. **E2E Testing Infrastructure**: Comprehensive Playwright tests for routing
    - Created `e2e/routing/public-routes.spec.ts` with full navigation tests
    - Added Playwright configuration with multiple browser support
@@ -667,6 +701,7 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
 ### Current Architecture Patterns
 
 #### Performance Patterns
+
 - **Lazy Loading**: Type-safe component lazy loading with fallbacks
 - **Memoization**: React.memo with custom comparison for expensive components
 - **Virtual Lists**: For rendering large datasets efficiently
@@ -675,12 +710,14 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
 - **Test Caching**: MD5-based test result caching for faster test runs
 
 #### Error Handling Patterns
+
 - **Graceful Degradation**: Fallback components for lazy loading failures
 - **Rollback Strategies**: All database migrations include rollback scripts
 - **Error Boundaries**: Global error catching with user-friendly messages
 - **Retry Logic**: Automatic retry for transient failures
 
 #### Testing Patterns
+
 - **Co-location**: Tests live next to the code they test in `__tests__` directories
 - **Mock First**: External dependencies are mocked by default
 - **Integration Tests**: Critical paths have full integration tests
@@ -690,14 +727,18 @@ expect(mockFn).toHaveBeenCalledWith('expected', 'args');
 ### Development Environment Setup
 
 #### Required ESLint Dependencies (Backend)
+
 If you encounter ESLint configuration errors, install:
+
 ```bash
 cd packages/backend
 npm install --save-dev @typescript-eslint/eslint-plugin @typescript-eslint/parser
 ```
 
 #### Memory Settings
+
 The application dynamically detects container memory limits. You can override with:
+
 ```bash
 # Backend container memory limit (default: 512MB)
 CONTAINER_MEMORY_LIMIT_MB=1024
@@ -710,6 +751,7 @@ NODE_OPTIONS="--expose-gc"
 ### Database Migrations
 
 All migrations now include rollback scripts. To rollback a migration:
+
 ```bash
 # Connect to database
 docker-compose exec db psql -U postgres -d spheroseg
@@ -721,6 +763,7 @@ docker-compose exec db psql -U postgres -d spheroseg
 ### Performance Monitoring
 
 The application includes built-in performance monitoring:
+
 - Memory usage tracking with container awareness
 - Database query performance logging
 - API endpoint response time tracking
@@ -728,6 +771,7 @@ The application includes built-in performance monitoring:
 - Test performance tracking with caching metrics
 
 Enable detailed monitoring:
+
 ```bash
 # In backend .env
 ENABLE_PERFORMANCE_MONITORING=true
@@ -737,6 +781,7 @@ PERFORMANCE_LOG_LEVEL=debug
 ### Current Status (2025-07-10)
 
 #### ✅ Completed Optimizations
+
 1. **Database Performance**: 84% faster queries with CTEs
 2. **Frontend Performance**: 93% faster rendering with React.memo
 3. **Caching Layer**: Redis integrated, 60% bandwidth reduction
@@ -744,6 +789,7 @@ PERFORMANCE_LOG_LEVEL=debug
 5. **Performance Monitoring**: Comprehensive metrics tracking
 
 #### ⚠️ Known Issues
+
 1. **TypeScript Build Errors** (271 errors)
    - Missing shared module types
    - Import path resolution issues

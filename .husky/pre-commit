@@ -1,14 +1,37 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# Pre-commit hook for Spheroseg
+# Pre-commit hook for Spheroseg with performance monitoring
 # Runs code quality checks before allowing commits
 
 set -e
 
-echo "🔍 Running pre-commit checks..."
+# Enable performance monitoring for hooks
+ENABLE_HOOK_PERFORMANCE_MONITORING=${ENABLE_HOOK_PERFORMANCE_MONITORING:-true}
 
-# Run lint-staged for staged files
-npx lint-staged
-
-echo "✅ All pre-commit checks passed!"
+if [ "$ENABLE_HOOK_PERFORMANCE_MONITORING" = "true" ]; then
+  echo "🔍 Running pre-commit checks with performance monitoring..."
+  
+  # Start performance monitoring
+  START_TIME=$(node -e "console.log(Date.now())")
+  
+  # Run lint-staged for staged files
+  LINT_START=$(node -e "console.log(Date.now())")
+  npx lint-staged
+  LINT_END=$(node -e "console.log(Date.now())")
+  LINT_DURATION=$((LINT_END - LINT_START))
+  
+  # Calculate total duration
+  END_TIME=$(node -e "console.log(Date.now())")
+  TOTAL_DURATION=$((END_TIME - START_TIME))
+  
+  echo "✅ All pre-commit checks passed!"
+  echo "⏱️  Performance: ${TOTAL_DURATION}ms total (lint-staged: ${LINT_DURATION}ms)"
+  
+  # Log performance data (silent fail if monitoring unavailable)
+  node scripts/log-hook-performance.js pre-commit $TOTAL_DURATION $LINT_DURATION 2>/dev/null || true
+else
+  echo "🔍 Running pre-commit checks..."
+  
+  # Run lint-staged for staged files
+  npx lint-staged
+  
+  echo "✅ All pre-commit checks passed!"
+fi

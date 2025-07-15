@@ -91,10 +91,10 @@ export function sanitizeHtml(input: string, options?: {
     RETURN_DOM: false,
     RETURN_DOM_FRAGMENT: false,
     WHOLE_DOCUMENT: false,
-  };
+  } as any;
   
   try {
-    const sanitized = DOMPurify.sanitize(truncated, config);
+    const sanitized = DOMPurify.sanitize(truncated, config) as unknown as string;
     
     // Additional pattern-based cleaning
     let cleaned = sanitized;

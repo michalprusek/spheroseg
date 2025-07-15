@@ -34,11 +34,12 @@
   },
   "dependencies": {
     "@spheroseg/types": "file:../types",
+    "isomorphic-dompurify": "^2.26.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.8",
     "@types/node": "^18.11.9",
+    "@types/uuid": "^9.0.8",
     "typescript": "^5.0.4"
   }
 }

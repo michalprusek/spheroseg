@@ -1,28 +1,14 @@
 /**
  * Enhanced Validation and Sanitization
  * 
- * Combines Zod validation with comprehensive sanitization to provide
- * robust input validation and security protection.
+ * Provides comprehensive validation schemas with built-in sanitization
+ * for secure data processing and validation
  */
 
 import { z } from 'zod';
-import {
-  sanitizeHtml,
-  sanitizeText,
-  sanitizeEmail,
-  sanitizeUrl,
-  sanitizePhone,
-  sanitizeJson
-} from '../utils/sanitization';
-import logger from '../utils/logger';
+import { sanitizeText, sanitizeHtml, sanitizeUrl } from '../utils/sanitization';
 
-// ===========================
-// Enhanced Validation Schemas
-// ===========================
-
-/**
- * Enhanced text validation with sanitization
- */
+// Text validation schema factory
 export const createTextSchema = (options?: {
   minLength?: number;
   maxLength?: number;
@@ -38,13 +24,7 @@ export const createTextSchema = (options?: {
     pattern
   } = options || {};
 
-  let schema = z.string();
-  
-  if (!required) {
-    schema = schema.optional();
-  }
-
-  return schema
+  const baseSchema = z.string()
     .transform(val => {
       if (!val) return val;
       return allowHtml 
@@ -59,22 +39,11 @@ export const createTextSchema = (options?: {
           message: 'Invalid format'
         })
     );
+
+  return required ? baseSchema : baseSchema.optional();
 };
 
-/**
- * Enhanced email validation with sanitization
- */
-export const emailSchema = z.string()
-  .transform(sanitizeEmail)
-  .pipe(
-    z.string()
-      .email('Invalid email format')
-      .max(254, 'Email too long')
-  );
-
-/**
- * Enhanced URL validation with sanitization
- */
+// URL validation schema factory
 export const createUrlSchema = (options?: {
   allowedProtocols?: string[];
   allowRelative?: boolean;
@@ -86,13 +55,7 @@ export const createUrlSchema = (options?: {
     required = true
   } = options || {};
 
-  let schema = z.string();
-  
-  if (!required) {
-    schema = schema.optional();
-  }
-
-  return schema
+  const baseSchema = z.string()
     .transform(val => {
       if (!val) return val;
       return sanitizeUrl(val, { allowedProtocols, allowRelative });
@@ -110,330 +73,155 @@ export const createUrlSchema = (options?: {
           } catch {
             return false;
           }
-        }, 'Invalid URL format')
+        }, {
+          message: 'Invalid URL format'
+        })
     );
+
+  return required ? baseSchema : baseSchema.optional();
 };
 
-/**
- * Enhanced filename validation with sanitization
- */
-export const filenameSchema = z.string()
-  .transform((val) => sanitizeText(val, { allowHtml: false }))
-  .pipe(
-    z.string()
-      .min(1, 'Filename cannot be empty')
-      .max(255, 'Filename too long')
-      .refine(val => !val.startsWith('.'), 'Filename cannot start with a dot')
-  );
+// Email validation schema
+export const emailSchema = z.string()
+  .email('Invalid email address')
+  .transform(val => sanitizeText(val, { maxLength: 254 }));
 
-/**
- * Enhanced phone validation with sanitization
- */
-export const phoneSchema = z.string()
-  .transform(sanitizePhone)
-  .pipe(
-    z.string()
-      .regex(/^[+]?[\d\s()-]{10,15}$/, 'Invalid phone number format')
-  );
+// Filename validation schema
+export const filenameSchema = createTextSchema({
+  minLength: 1,
+  maxLength: 255,
+  pattern: /^[a-zA-Z0-9._-]+$/
+});
 
-/**
- * Enhanced password validation
- */
+// Phone validation schema
+export const phoneSchema = createTextSchema({
+  minLength: 10,
+  maxLength: 20,
+  pattern: /^[+]?[(]?[\d\s\-\(\)]+$/
+});
+
+// Password validation schema
 export const passwordSchema = z.string()
   .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password too long')
-  .refine(val => /[a-z]/.test(val), 'Must contain lowercase letter')
-  .refine(val => /[A-Z]/.test(val), 'Must contain uppercase letter')
-  .refine(val => /\d/.test(val), 'Must contain number')
-  .refine(val => /[!@#$%^&*(),.?":{}|<>]/.test(val), 'Must contain special character');
+  .max(128, 'Password must not exceed 128 characters')
+  .refine(val => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(val), {
+    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+  });
 
-/**
- * Enhanced HTML content validation with sanitization
- */
+// HTML content validation schema
 export const createHtmlSchema = (options?: {
+  maxLength?: number;
   allowedTags?: string[];
   allowedAttributes?: Record<string, string[]>;
-  maxLength?: number;
-}) => z.string()
-  .transform(val => sanitizeHtml(val, options))
-  .pipe(
-    z.string()
-      .max(options?.maxLength || 50000, 'Content too long')
-  );
-
-/**
- * Enhanced JSON validation with sanitization
- */
-export const createJsonSchema = (maxDepth: number = 10) => z.string()
-  .transform(val => {
-    const sanitized = sanitizeJson(val, maxDepth);
-    return sanitized ? JSON.stringify(sanitized) : null;
-  })
-  .pipe(
-    z.string()
-      .nullable()
-      .refine(val => {
-        if (!val) return false;
-        try {
-          JSON.parse(val);
-          return true;
-        } catch {
-          return false;
-        }
-      }, 'Invalid JSON format')
-  );
-
-// ===========================
-// File Upload Validation
-// ===========================
-
-export interface FileValidationOptions {
-  maxSize?: number; // in bytes
-  allowedMimeTypes?: string[];
-  allowedExtensions?: string[];
-  required?: boolean;
-}
-
-export const createFileSchema = (options?: FileValidationOptions) => {
-  const {
-    maxSize = 50 * 1024 * 1024, // 50MB default
-    allowedMimeTypes = ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
-    allowedExtensions = ['.jpg', '.jpeg', '.png', '.tiff', '.bmp']
-  } = options || {};
-
-  return z.object({
-    originalname: filenameSchema,
-    mimetype: z.string()
-      .refine(val => allowedMimeTypes.includes(val), {
-        message: `Invalid file type. Allowed: ${allowedMimeTypes.join(', ')}`
-      }),
-    size: z.number()
-      .max(maxSize, `File too large. Maximum: ${Math.round(maxSize / 1024 / 1024)}MB`),
-    buffer: typeof Buffer !== 'undefined' ? z.instanceof(Buffer).optional() : z.any().optional(),
-    path: z.string().optional(),
-  }).refine(file => {
-    const ext = file.originalname.toLowerCase().split('.').pop();
-    return ext && allowedExtensions.some(allowed => 
-      allowed.toLowerCase().substring(1) === ext
-    );
-  }, {
-    message: `Invalid file extension. Allowed: ${allowedExtensions.join(', ')}`
-  });
+}) => {
+  const { maxLength = 10000, allowedTags, allowedAttributes } = options || {};
+  
+  return z.string()
+    .transform(val => sanitizeHtml(val, { maxLength, allowedTags, allowedAttributes }))
+    .pipe(z.string().max(maxLength, `Content must not exceed ${maxLength} characters`));
 };
 
-// ===========================
-// Enhanced Form Schemas
-// ===========================
-
-/**
- * User registration schema with enhanced validation
- */
+// User registration schema
 export const userRegistrationSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  confirmPassword: z.string(),
-  name: createTextSchema({
-    minLength: 2,
-    maxLength: 100,
-    allowHtml: false
-  }),
+  firstName: createTextSchema({ minLength: 1, maxLength: 50 }),
+  lastName: createTextSchema({ minLength: 1, maxLength: 50 }),
   phone: phoneSchema.optional(),
-  terms: z.boolean().refine(val => val === true, 'Must accept terms'),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
+  organization: createTextSchema({ minLength: 1, maxLength: 100, required: false })
 });
 
-/**
- * User login schema with enhanced validation
- */
-export const userLoginSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(1, 'Password is required'),
-  rememberMe: z.boolean().optional(),
-});
-
-/**
- * Project creation schema with enhanced validation
- */
+// Project creation schema
 export const projectCreationSchema = z.object({
-  name: createTextSchema({
-    minLength: 3,
-    maxLength: 200,
-    allowHtml: false
-  }),
-  description: createTextSchema({
-    minLength: 10,
-    maxLength: 1000,
-    allowHtml: true,
-    required: false
-  }),
-  isPublic: z.boolean().default(false),
-  tags: z.array(
-    createTextSchema({
-      minLength: 1,
-      maxLength: 50,
-      allowHtml: false
-    })
-  ).max(10, 'Too many tags').optional(),
+  name: createTextSchema({ minLength: 1, maxLength: 100 }),
+  description: createTextSchema({ minLength: 1, maxLength: 1000, required: false }),
+  visibility: z.enum(['public', 'private']).default('private'),
+  tags: z.array(createTextSchema({ minLength: 1, maxLength: 50 })).optional()
 });
 
-/**
- * Image upload schema with enhanced validation
- */
-export const imageUploadSchema = z.object({
-  file: createFileSchema({
-    maxSize: 50 * 1024 * 1024, // 50MB
-    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
-    allowedExtensions: ['.jpg', '.jpeg', '.png', '.tiff', '.bmp'],
-  }),
-  description: createTextSchema({
-    maxLength: 500,
-    allowHtml: false,
-    required: false
-  }),
-  tags: z.array(
-    createTextSchema({
-      minLength: 1,
-      maxLength: 50,
-      allowHtml: false
-    })
-  ).max(10, 'Too many tags').optional(),
-});
+// Validation result type
+export type ValidationResult<T> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+  issues?: string[];
+};
 
-/**
- * Profile update schema with enhanced validation
- */
-export const profileUpdateSchema = z.object({
-  name: createTextSchema({
-    minLength: 2,
-    maxLength: 100,
-    allowHtml: false,
-    required: false
-  }),
-  bio: createTextSchema({
-    maxLength: 1000,
-    allowHtml: true,
-    required: false
-  }),
-  phone: phoneSchema.optional(),
-  website: createUrlSchema({
-    allowedProtocols: ['http:', 'https:'],
-    required: false
-  }),
-  avatar: createUrlSchema({
-    allowedProtocols: ['http:', 'https:'],
-    required: false
-  }),
-});
-
-// ===========================
-// Pagination and Search
-// ===========================
-
-export const paginationSchema = z.object({
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
-  sortBy: createTextSchema({
-    maxLength: 50,
-    allowHtml: false,
-    required: false
-  }),
-  sortOrder: z.enum(['asc', 'desc']).default('asc'),
-});
-
-export const searchSchema = z.object({
-  query: createTextSchema({
-    minLength: 1,
-    maxLength: 200,
-    allowHtml: false,
-    required: false
-  }),
-  filters: z.record(
-    createTextSchema({
-      maxLength: 100,
-      allowHtml: false
-    })
-  ).optional(),
-});
-
-// ===========================
-// Request Validation Utilities
-// ===========================
-
-/**
- * Validate and sanitize request body
- */
-export async function validateBody<T>(
+// Body validation middleware
+export const validateBody = async <T>(
   schema: z.ZodSchema<T>,
-  body: unknown,
+  data: unknown,
   context?: string
-): Promise<{ success: true; data: T } | { success: false; errors: z.ZodError }> {
+): Promise<ValidationResult<T>> => {
   try {
-    const data = await schema.parseAsync(body);
-    
-    if (context) {
-      logger.debug(`Validation successful for ${context}`, { dataType: typeof data });
-    }
-    
-    return { success: true, data };
+    const result = await schema.parseAsync(data);
+    return {
+      success: true,
+      data: result
+    };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      if (context) {
-        logger.warn(`Validation failed for ${context}`, {
-          errors: error.errors.map(e => ({
-            path: e.path.join('.'),
-            message: e.message,
-            code: e.code
-          }))
-        });
-      }
-      
-      return { success: false, errors: error };
+      return {
+        success: false,
+        error: `Validation failed${context ? ` for ${context}` : ''}`,
+        issues: error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      };
     }
-    
-    throw error;
+    return {
+      success: false,
+      error: 'Unknown validation error'
+    };
   }
-}
+};
 
-/**
- * Validate and sanitize query parameters
- */
-export async function validateQuery<T>(
+// Query validation middleware
+export const validateQuery = async <T>(
   schema: z.ZodSchema<T>,
-  query: unknown,
+  data: unknown,
   context?: string
-): Promise<{ success: true; data: T } | { success: false; errors: z.ZodError }> {
-  // Convert string values to appropriate types for query parameters
-  const processedQuery = processQueryParams(query);
-  return validateBody(schema, processedQuery, context);
-}
+): Promise<ValidationResult<T>> => {
+  try {
+    // Pre-process query parameters (convert strings to appropriate types)
+    const processedData = preprocessQueryParams(data);
+    const result = await schema.parseAsync(processedData);
+    return {
+      success: true,
+      data: result
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Query validation failed${context ? ` for ${context}` : ''}`,
+        issues: error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      };
+    }
+    return {
+      success: false,
+      error: 'Unknown validation error'
+    };
+  }
+};
 
-/**
- * Process query parameters (convert strings to numbers/booleans where appropriate)
- */
-function processQueryParams(query: unknown): unknown {
-  if (!query || typeof query !== 'object') {
-    return query;
+// Helper function to preprocess query parameters
+const preprocessQueryParams = (data: unknown): unknown => {
+  if (typeof data !== 'object' || data === null) {
+    return data;
   }
 
   const processed: Record<string, unknown> = {};
   
-  for (const [key, value] of Object.entries(query)) {
+  for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string') {
-      // Try to convert to number
-      if (/^\d+$/.test(value)) {
-        processed[key] = parseInt(value, 10);
-      }
-      // Try to convert to boolean
-      else if (value === 'true') {
+      // Try to convert string numbers to numbers
+      const numValue = Number(value);
+      if (!isNaN(numValue) && isFinite(numValue)) {
+        processed[key] = numValue;
+      } else if (value === 'true') {
         processed[key] = true;
-      }
-      else if (value === 'false') {
+      } else if (value === 'false') {
         processed[key] = false;
-      }
-      // Keep as string
-      else {
+      } else {
         processed[key] = value;
       }
     } else {
@@ -442,38 +230,11 @@ function processQueryParams(query: unknown): unknown {
   }
   
   return processed;
-}
-
-// ===========================
-// Exports
-// ===========================
-
-export default {
-  // Schema creators
-  createTextSchema,
-  createUrlSchema,
-  createHtmlSchema,
-  createJsonSchema,
-  createFileSchema,
-  
-  // Individual schemas
-  emailSchema,
-  filenameSchema,
-  phoneSchema,
-  passwordSchema,
-  
-  // Form schemas
-  userRegistrationSchema,
-  userLoginSchema,
-  projectCreationSchema,
-  imageUploadSchema,
-  profileUpdateSchema,
-  
-  // Utility schemas
-  paginationSchema,
-  searchSchema,
-  
-  // Validation functions
-  validateBody,
-  validateQuery,
 };
+
+// Export types
+export type TextSchemaOptions = Parameters<typeof createTextSchema>[0];
+export type UrlSchemaOptions = Parameters<typeof createUrlSchema>[0];
+export type HtmlSchemaOptions = Parameters<typeof createHtmlSchema>[0];
+export type UserRegistration = z.infer<typeof userRegistrationSchema>;
+export type ProjectCreation = z.infer<typeof projectCreationSchema>;

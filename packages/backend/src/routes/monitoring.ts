@@ -11,6 +11,7 @@ import { requireAdmin } from '../security/middleware/auth';
 import { unifiedRegistry } from '../monitoring/unified';
 import { getErrorMetrics } from '../monitoring/errorTracker';
 import { getPerformanceMetrics } from '../monitoring/performanceTracker';
+import { checkSystemHealth, checkDatabaseHealth, checkRedisHealth, checkMLServiceHealth } from '../utils/healthChecks';
 import logger from '../utils/logger';
 import config from '../config';
 
@@ -20,24 +21,41 @@ const router = Router();
  * GET /api/monitoring/health
  * System health check endpoint
  */
-router.get('/health', (req: Request, res: Response) => {
-  const healthData = {
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: config.env,
-    version: process.env.npm_package_version || '1.0.0',
-    node: process.version,
-    memory: process.memoryUsage(),
-    cpu: process.cpuUsage(),
-    services: {
-      database: 'healthy', // TODO: Add actual database health check
-      redis: 'healthy',    // TODO: Add actual Redis health check
-      ml: 'healthy',       // TODO: Add actual ML service health check
-    },
-  };
+router.get('/health', async (req: Request, res: Response) => {
+  try {
+    const systemHealth = await checkSystemHealth();
+    
+    const healthData = {
+      status: systemHealth.overall,
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: config.env,
+      version: process.env.npm_package_version || '1.0.0',
+      node: process.version,
+      memory: process.memoryUsage(),
+      cpu: process.cpuUsage(),
+      services: {
+        database: systemHealth.services.database.status,
+        redis: systemHealth.services.redis.status,
+        ml: systemHealth.services.ml.status,
+      },
+      serviceDetails: systemHealth.services,
+      summary: systemHealth.summary,
+    };
 
-  res.json(healthData);
+    const statusCode = systemHealth.overall === 'healthy' ? 200 : 
+                      systemHealth.overall === 'degraded' ? 200 : 503;
+    
+    res.status(statusCode).json(healthData);
+  } catch (error) {
+    logger.error('Health check failed', error);
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: 'Health check failed',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
 });
 
 /**
@@ -81,10 +99,13 @@ router.get('/performance', requireAdmin, (req: Request, res: Response) => {
  * GET /api/monitoring/dashboard
  * Unified monitoring dashboard data
  */
-router.get('/dashboard', requireAdmin, (req: Request, res: Response) => {
+router.get('/dashboard', requireAdmin, async (req: Request, res: Response) => {
   try {
-    const errorMetrics = getErrorMetrics();
-    const performanceMetrics = getPerformanceMetrics();
+    const [errorMetrics, performanceMetrics, systemHealth] = await Promise.all([
+      getErrorMetrics(),
+      getPerformanceMetrics(),
+      checkSystemHealth(),
+    ]);
     
     const dashboardData = {
       timestamp: new Date().toISOString(),
@@ -96,12 +117,14 @@ router.get('/dashboard', requireAdmin, (req: Request, res: Response) => {
         cpu: process.cpuUsage(),
       },
       health: {
-        overall: 'healthy', // TODO: Calculate based on error rates and performance
+        overall: systemHealth.overall,
         services: {
-          database: 'healthy',
-          redis: 'healthy',
-          ml: 'healthy',
+          database: systemHealth.services.database.status,
+          redis: systemHealth.services.redis.status,
+          ml: systemHealth.services.ml.status,
         },
+        serviceDetails: systemHealth.services,
+        summary: systemHealth.summary,
       },
       errors: {
         total: errorMetrics.stats.totalErrors,

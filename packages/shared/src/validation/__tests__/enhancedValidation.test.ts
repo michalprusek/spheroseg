@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { z } from 'zod';
 import {
   createTextSchema,
   emailSchema,
@@ -182,14 +183,16 @@ describe('Enhanced Validation', () => {
       const validData = {
         email: 'user@example.com',
         password: 'MyStr0ng!Pass',
-        confirmPassword: 'MyStr0ng!Pass',
-        name: 'John Doe',
-        terms: true,
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        organization: 'Test Corp'
       };
       
       const result = await userRegistrationSchema.parseAsync(validData);
       expect(result.email).toBe('user@example.com');
-      expect(result.name).toBe('John Doe');
+      expect(result.firstName).toBe('John');
+      expect(result.lastName).toBe('Doe');
     });
 
     it('should reject mismatched passwords', async () => {
@@ -260,17 +263,17 @@ describe('Enhanced Validation', () => {
       const result2 = await validateBody(schema, 'Hi', 'test');
       expect(result2.success).toBe(false);
       if (!result2.success) {
-        expect(result2.errors).toBeDefined();
+        expect(result2.issues).toBeDefined();
       }
     });
   });
 
   describe('validateQuery', () => {
     it('should process and validate query parameters', async () => {
-      const schema = createTextSchema().and(z => z.number());
+      const schema = createTextSchema().and(z.number());
       
       // String number should be converted
-      const result = await validateQuery(schema, { page: '5' }, 'pagination');
+      const result = await validateQuery(z.number(), { page: '5' }, 'pagination');
       expect(result.success).toBe(true);
       if (result.success) {
         expect(typeof result.data).toBe('number');
