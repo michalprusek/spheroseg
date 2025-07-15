@@ -74,7 +74,9 @@
     "init:db": "node scripts/init-db.js",
     "init:db:docker": "node scripts/init-db-docker.js",
     "db:migrate": "cd packages/backend && npm run migrate:up",
-    "db:create-test-user": "node scripts/create-test-user.js"
+    "db:create-test-user": "node scripts/create-test-user.js",
+    "test:validation-scripts": "node scripts/test-validation-scripts.js",
+    "validate:imports": "node scripts/validate-imports.js"
   },
   "engines": {
     "node": ">=18.0.0"

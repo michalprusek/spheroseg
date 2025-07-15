@@ -3,7 +3,7 @@
  * Enforces conventional commit message format
  */
 
-module.exports = {
+export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
     // Enforce conventional commit format

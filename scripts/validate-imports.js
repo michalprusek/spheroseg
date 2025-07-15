@@ -369,6 +369,14 @@ class ImportValidator {
 
 // Run validation if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
+  const isDryRun = process.argv.includes('--dry-run');
+  
+  if (isDryRun) {
+    console.log('🧪 Dry run mode - validating script syntax only');
+    console.log('✅ Import validation script loaded successfully');
+    process.exit(0);
+  }
+  
   const validator = new ImportValidator();
   validator.validateAll().catch(console.error);
 }

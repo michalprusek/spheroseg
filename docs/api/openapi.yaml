@@ -1,0 +1,1317 @@
+openapi: 3.0.3
+info:
+  title: SpheroSeg API
+  description: |
+    SpheroSeg is a cell segmentation application that uses computer vision and deep learning 
+    to identify and analyze cells in microscopic images. This API provides comprehensive 
+    endpoints for user management, project organization, image processing, and ML-based segmentation.
+    
+    ## Features
+    - User authentication and authorization with JWT tokens
+    - Project-based organization of images
+    - Automated cell segmentation using ResUNet model
+    - Real-time status updates via WebSocket
+    - Comprehensive monitoring and health checks
+    - Batch processing capabilities
+    
+    ## Authentication
+    Most endpoints require authentication using JWT Bearer tokens. Include the token in the 
+    Authorization header: `Authorization: Bearer <token>`
+    
+    ## Rate Limiting
+    API requests are rate limited to prevent abuse. Default limits:
+    - 100 requests per minute for authenticated users
+    - 20 requests per minute for unauthenticated users
+    
+    ## WebSocket Events
+    Real-time updates are available via WebSocket connection at `/socket.io/`.
+    Events include segmentation progress, completion notifications, and system status updates.
+  version: 1.0.0
+  contact:
+    name: SpheroSeg Support
+    email: spheroseg@utia.cas.cz
+    url: https://spherosegapp.utia.cas.cz
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://spherosegapp.utia.cas.cz/api
+    description: Production server
+  - url: http://localhost:5001/api
+    description: Development server
+
+paths:
+  # Authentication endpoints
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a new user
+      description: Create a new user account with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, firstName, lastName]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  example: securePassword123
+                firstName:
+                  type: string
+                  minLength: 1
+                  example: John
+                lastName:
+                  type: string
+                  minLength: 1
+                  example: Doe
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate user
+      description: Login with email and password to receive JWT tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  example: securePassword123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      description: Get a new access token using refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout user
+      description: Invalidate current session and tokens
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # User management endpoints
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      description: Retrieve the authenticated user's profile information
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    
+    put:
+      tags: [Users]
+      summary: Update user profile
+      description: Update the authenticated user's profile information
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  minLength: 1
+                  example: John
+                lastName:
+                  type: string
+                  minLength: 1
+                  example: Doe
+                email:
+                  type: string
+                  format: email
+                  example: newemail@example.com
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /users/me/statistics:
+    get:
+      tags: [Users]
+      summary: Get user statistics
+      description: Retrieve detailed statistics for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStatistics'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Project management endpoints
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List user projects
+      description: Retrieve all projects owned by the authenticated user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of projects to return
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of projects to skip
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: Projects retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  total:
+                    type: integer
+                    example: 15
+                  limit:
+                    type: integer
+                    example: 20
+                  offset:
+                    type: integer
+                    example: 0
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      tags: [Projects]
+      summary: Create new project
+      description: Create a new project for organizing images
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  example: Cell Analysis Project
+                description:
+                  type: string
+                  maxLength: 1000
+                  example: Analysis of cancer cell morphology
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /projects/{projectId}:
+    get:
+      tags: [Projects]
+      summary: Get project by ID
+      description: Retrieve a specific project by its ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: Project ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Project retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      tags: [Projects]
+      summary: Update project
+      description: Update project information
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: Project ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  example: Updated Project Name
+                description:
+                  type: string
+                  maxLength: 1000
+                  example: Updated project description
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags: [Projects]
+      summary: Delete project
+      description: Delete a project and all associated images
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: Project ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Project deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # Image management endpoints
+  /projects/{projectId}/images:
+    get:
+      tags: [Images]
+      summary: List images in project
+      description: Retrieve all images in a specific project
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: Project ID
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: Maximum number of images to return
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of images to skip
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: status
+          in: query
+          description: Filter by segmentation status
+          schema:
+            type: string
+            enum: [without_segmentation, queued, processing, completed, failed]
+      responses:
+        '200':
+          description: Images retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  images:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Image'
+                  total:
+                    type: integer
+                    example: 50
+                  limit:
+                    type: integer
+                    example: 20
+                  offset:
+                    type: integer
+                    example: 0
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    post:
+      tags: [Images]
+      summary: Upload images to project
+      description: Upload one or more images to a project
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: Project ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Image files (JPEG, PNG, TIFF, BMP)
+      responses:
+        '201':
+          description: Images uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploadedImages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Image'
+                  failedUploads:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                        error:
+                          type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /projects/{projectId}/images/{imageId}:
+    get:
+      tags: [Images]
+      summary: Get image by ID
+      description: Retrieve a specific image with its metadata
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: Project ID
+          schema:
+            type: string
+            format: uuid
+        - name: imageId
+          in: path
+          required: true
+          description: Image ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Image retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Image'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags: [Images]
+      summary: Delete image
+      description: Delete an image and its associated data
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: Project ID
+          schema:
+            type: string
+            format: uuid
+        - name: imageId
+          in: path
+          required: true
+          description: Image ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Image deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # Segmentation endpoints
+  /images/{imageId}/segmentation:
+    get:
+      tags: [Segmentation]
+      summary: Get segmentation result
+      description: Retrieve segmentation result for an image
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: imageId
+          in: path
+          required: true
+          description: Image ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Segmentation result retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentationResult'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    post:
+      tags: [Segmentation]
+      summary: Trigger image segmentation
+      description: Start ML-based segmentation process for an image
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: imageId
+          in: path
+          required: true
+          description: Image ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Segmentation process started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Segmentation started
+                  taskId:
+                    type: string
+                    format: uuid
+                    example: 123e4567-e89b-12d3-a456-426614174000
+                  status:
+                    type: string
+                    enum: [queued, processing]
+                    example: queued
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /segmentations/batch:
+    post:
+      tags: [Segmentation]
+      summary: Batch segmentation
+      description: Trigger segmentation for multiple images
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [imageIds]
+              properties:
+                imageIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  example: ["123e4567-e89b-12d3-a456-426614174000", "987fcdeb-51a2-43d7-8765-123456789abc"]
+      responses:
+        '202':
+          description: Batch segmentation started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Batch segmentation started
+                  totalImages:
+                    type: integer
+                    example: 2
+                  queuedImages:
+                    type: integer
+                    example: 2
+                  failedImages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        imageId:
+                          type: string
+                          format: uuid
+                        error:
+                          type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /segmentation/queue:
+    get:
+      tags: [Segmentation]
+      summary: Get segmentation queue status
+      description: Retrieve current status of the segmentation queue
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Queue status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueStatus'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # System endpoints
+  /health:
+    get:
+      tags: [System]
+      summary: System health check
+      description: Check the health status of the application and its dependencies
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: System is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /monitoring/dashboard:
+    get:
+      tags: [Monitoring]
+      summary: Get monitoring dashboard data
+      description: Retrieve comprehensive monitoring data for administrators
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Dashboard data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringDashboard'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    # Authentication schemas
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Registration successful
+        user:
+          $ref: '#/components/schemas/User'
+        tokens:
+          $ref: '#/components/schemas/TokenResponse'
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 900
+        tokenType:
+          type: string
+          example: Bearer
+
+    # User schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        role:
+          type: string
+          enum: [user, admin]
+          example: user
+        isEmailVerified:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+
+    UserStatistics:
+      type: object
+      properties:
+        totalProjects:
+          type: integer
+          example: 5
+        totalImages:
+          type: integer
+          example: 150
+        processedImages:
+          type: integer
+          example: 120
+        pendingImages:
+          type: integer
+          example: 20
+        failedImages:
+          type: integer
+          example: 10
+        totalCells:
+          type: integer
+          example: 45000
+        storageUsed:
+          type: integer
+          description: Storage used in bytes
+          example: 1073741824
+        storageLimit:
+          type: integer
+          description: Storage limit in bytes
+          example: 10737418240
+
+    # Project schemas
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        name:
+          type: string
+          example: Cell Analysis Project
+        description:
+          type: string
+          example: Analysis of cancer cell morphology
+        userId:
+          type: string
+          format: uuid
+          example: 987fcdeb-51a2-43d7-8765-123456789abc
+        imageCount:
+          type: integer
+          example: 25
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+
+    # Image schemas
+    Image:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        name:
+          type: string
+          example: cell_sample_001.tiff
+        originalName:
+          type: string
+          example: Sample Image 1.tiff
+        projectId:
+          type: string
+          format: uuid
+          example: 987fcdeb-51a2-43d7-8765-123456789abc
+        width:
+          type: integer
+          example: 2048
+        height:
+          type: integer
+          example: 2048
+        size:
+          type: integer
+          description: File size in bytes
+          example: 4194304
+        mimeType:
+          type: string
+          example: image/tiff
+        segmentationStatus:
+          type: string
+          enum: [without_segmentation, queued, processing, completed, failed]
+          example: completed
+        url:
+          type: string
+          format: uri
+          example: /uploads/images/123e4567-e89b-12d3-a456-426614174000.tiff
+        thumbnailUrl:
+          type: string
+          format: uri
+          example: /uploads/thumbnails/123e4567-e89b-12d3-a456-426614174000_thumb.jpg
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+
+    # Segmentation schemas
+    SegmentationResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        imageId:
+          type: string
+          format: uuid
+          example: 987fcdeb-51a2-43d7-8765-123456789abc
+        status:
+          type: string
+          enum: [without_segmentation, queued, processing, completed, failed]
+          example: completed
+        polygons:
+          type: array
+          items:
+            $ref: '#/components/schemas/Polygon'
+        cellCount:
+          type: integer
+          example: 1247
+        processingTime:
+          type: number
+          description: Processing time in seconds
+          example: 45.7
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.95
+        imageWidth:
+          type: integer
+          example: 2048
+        imageHeight:
+          type: integer
+          example: 2048
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+
+    Polygon:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        points:
+          type: array
+          items:
+            type: object
+            properties:
+              x:
+                type: number
+                example: 245.7
+              y:
+                type: number
+                example: 187.3
+        area:
+          type: number
+          description: Area in square pixels
+          example: 1247.5
+        perimeter:
+          type: number
+          description: Perimeter in pixels
+          example: 128.4
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.97
+        cellType:
+          type: string
+          example: normal
+        features:
+          type: object
+          properties:
+            circularity:
+              type: number
+              example: 0.85
+            eccentricity:
+              type: number
+              example: 0.23
+            solidity:
+              type: number
+              example: 0.91
+
+    QueueStatus:
+      type: object
+      properties:
+        queueLength:
+          type: integer
+          description: Number of images waiting in queue
+          example: 5
+        runningTasks:
+          type: integer
+          description: Number of currently processing images
+          example: 2
+        completedToday:
+          type: integer
+          description: Number of images processed today
+          example: 47
+        averageProcessingTime:
+          type: number
+          description: Average processing time in seconds
+          example: 42.3
+        estimatedWaitTime:
+          type: number
+          description: Estimated wait time for new submissions in seconds
+          example: 180
+        systemLoad:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Current system load percentage
+          example: 0.65
+
+    # System schemas
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          example: healthy
+        timestamp:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+        uptime:
+          type: number
+          description: System uptime in seconds
+          example: 86400
+        environment:
+          type: string
+          example: production
+        version:
+          type: string
+          example: 1.0.0
+        services:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+              example: healthy
+            redis:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+              example: healthy
+            ml:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+              example: healthy
+        serviceDetails:
+          type: object
+          description: Detailed health information for each service
+
+    MonitoringDashboard:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+        system:
+          type: object
+          properties:
+            uptime:
+              type: number
+              example: 86400
+            environment:
+              type: string
+              example: production
+            memory:
+              type: object
+              properties:
+                used:
+                  type: number
+                  example: 536870912
+                total:
+                  type: number
+                  example: 1073741824
+        health:
+          $ref: '#/components/schemas/HealthStatus'
+        errors:
+          type: object
+          properties:
+            total:
+              type: integer
+              example: 15
+            active:
+              type: integer
+              example: 2
+            topErrors:
+              type: array
+              items:
+                type: object
+                properties:
+                  pattern:
+                    type: string
+                    example: Database connection timeout
+                  count:
+                    type: integer
+                    example: 5
+        performance:
+          type: object
+          properties:
+            healthScore:
+              type: number
+              minimum: 0
+              maximum: 100
+              example: 95
+            avgResponseTime:
+              type: number
+              example: 125.7
+            errorRate:
+              type: number
+              example: 0.02
+
+    # Common schemas
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operation completed successfully
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: Invalid input data
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+
+  responses:
+    ValidationError:
+      description: Invalid input data
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    example: VALIDATION_ERROR
+                  message:
+                    example: Invalid input data
+                  details:
+                    type: object
+                    example:
+                      field: email
+                      message: Invalid email format
+
+    UnauthorizedError:
+      description: Authentication required or invalid
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    example: UNAUTHORIZED
+                  message:
+                    example: Authentication required
+
+    ForbiddenError:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    example: FORBIDDEN
+                  message:
+                    example: Insufficient permissions
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    example: NOT_FOUND
+                  message:
+                    example: Resource not found
+
+    ConflictError:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    example: CONFLICT
+                  message:
+                    example: Resource already exists
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    example: INTERNAL_SERVER_ERROR
+                  message:
+                    example: An unexpected error occurred
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User profile and statistics management
+  - name: Projects
+    description: Project organization and management
+  - name: Images
+    description: Image upload, storage, and metadata management
+  - name: Segmentation
+    description: ML-based cell segmentation operations
+  - name: System
+    description: System health and status endpoints
+  - name: Monitoring
+    description: Application monitoring and metrics

@@ -483,11 +483,11 @@ class TestDeviceSelection:
     """Test device selection logic."""
     
     @patch('torch.cuda.is_available')
-    @patch('hasattr')
-    def test_device_preference_best_cuda(self, mock_hasattr, mock_cuda_available):
+    @patch('torch.backends.mps.is_available')
+    def test_device_preference_best_cuda(self, mock_mps_available, mock_cuda_available):
         """Test 'best' device preference with CUDA available."""
         mock_cuda_available.return_value = True
-        mock_hasattr.return_value = False  # No MPS
+        mock_mps_available.return_value = False  # No MPS
         
         with patch.dict(os.environ, {'DEVICE_PREFERENCE': 'best'}):
             # Would need to test within main() context

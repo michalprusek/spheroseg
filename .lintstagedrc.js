@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   'packages/frontend/src/**/*.{ts,tsx,js,jsx}': [
     'npx eslint --fix --max-warnings 0',
     'prettier --write',
@@ -30,5 +30,9 @@ module.exports = {
   ],
   '**/*.{yml,yaml}': [
     'prettier --write',
+  ],
+  // Import validation for critical files
+  'packages/*/src/**/*.{ts,tsx,js,jsx}': [
+    'node scripts/validate-imports.js',
   ],
 };
