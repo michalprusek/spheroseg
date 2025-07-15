@@ -1,6 +1,6 @@
 /**
  * Enhanced Performance Tracking System
- * 
+ *
  * Provides comprehensive performance monitoring, analysis, and optimization recommendations
  */
 
@@ -10,6 +10,36 @@ import { performance } from 'perf_hooks';
 import logger from '../utils/logger';
 import config from '../config';
 import { unifiedRegistry } from './unified';
+
+// Prevent duplicate metric registration during development restarts
+const clearExistingMetrics = () => {
+  try {
+    // Clear only our specific metrics to prevent conflicts
+    const metricNames = [
+      'spheroseg_performance_duration_seconds',
+      'spheroseg_memory_usage_bytes', 
+      'spheroseg_performance_cpu_usage_percent',
+      'spheroseg_operations_total',
+      'spheroseg_operation_duration_seconds',
+      'spheroseg_response_time_seconds'
+    ];
+    
+    metricNames.forEach(name => {
+      try {
+        unifiedRegistry.removeSingleMetric(name);
+      } catch (e) {
+        // Metric doesn't exist, that's fine
+      }
+    });
+  } catch (error) {
+    // Registry operations may fail, that's ok during development
+  }
+};
+
+// Clear metrics during development to prevent duplicate registration errors
+if (process.env.NODE_ENV !== 'production') {
+  clearExistingMetrics();
+}
 
 // Performance metrics
 const performanceHistogram = new Histogram({
@@ -28,8 +58,8 @@ const memoryUsageGauge = new Gauge({
 });
 
 const cpuUsageGauge = new Gauge({
-  name: 'spheroseg_cpu_usage_percent',
-  help: 'CPU usage percentage',
+  name: 'spheroseg_performance_cpu_usage_percent',
+  help: 'Performance tracking CPU usage percentage',
   labelNames: ['type'],
   registers: [unifiedRegistry],
 });
@@ -111,7 +141,11 @@ class PerformanceTracker {
   /**
    * Start tracking a performance operation
    */
-  public startTracking(operation: string, component: string, metadata?: Record<string, any>): string {
+  public startTracking(
+    operation: string,
+    component: string,
+    metadata?: Record<string, any>
+  ): string {
     const trackingId = this.generateTrackingId();
     const metric: PerformanceMetric = {
       operation,
@@ -148,7 +182,7 @@ class PerformanceTracker {
   ): void {
     const key = `${operation}:${component}`;
     const metrics = this.metrics.get(key);
-    
+
     if (metrics) {
       const metric = metrics[metrics.length - 1];
       if (metric) {
@@ -157,13 +191,9 @@ class PerformanceTracker {
         metric.status = status;
 
         // Update Prometheus metrics
-        performanceHistogram
-          .labels(operation, component, status)
-          .observe(metric.duration / 1000);
+        performanceHistogram.labels(operation, component, status).observe(metric.duration / 1000);
 
-        throughputCounter
-          .labels(operation, status)
-          .inc();
+        throughputCounter.labels(operation, status).inc();
 
         // Check for performance anomalies
         this.checkPerformanceAnomalies(metric);
@@ -182,7 +212,7 @@ class PerformanceTracker {
    */
   public trackMemoryUsage(): void {
     const memUsage = process.memoryUsage();
-    
+
     memoryUsageGauge.labels('heap_used').set(memUsage.heapUsed);
     memoryUsageGauge.labels('heap_total').set(memUsage.heapTotal);
     memoryUsageGauge.labels('external').set(memUsage.external);
@@ -209,7 +239,7 @@ class PerformanceTracker {
   public trackCPUUsage(): void {
     const cpuUsage = process.cpuUsage();
     const totalCPU = cpuUsage.user + cpuUsage.system;
-    
+
     cpuUsageGauge.labels('user').set(cpuUsage.user);
     cpuUsageGauge.labels('system').set(cpuUsage.system);
     cpuUsageGauge.labels('total').set(totalCPU);
@@ -273,25 +303,24 @@ class PerformanceTracker {
   } {
     const allMetrics = Array.from(this.metrics.values()).flat();
     const recentMetrics = allMetrics.filter(
-      metric => Date.now() - metric.startTime < 60000 // Last minute
+      (metric) => Date.now() - metric.startTime < 60000 // Last minute
     );
 
     const totalOperations = recentMetrics.length;
-    const avgResponseTime = recentMetrics.reduce((sum, metric) => 
-      sum + (metric.duration || 0), 0) / totalOperations || 0;
-    
+    const avgResponseTime =
+      recentMetrics.reduce((sum, metric) => sum + (metric.duration || 0), 0) / totalOperations || 0;
+
     const slowOperations = recentMetrics.filter(
-      metric => (metric.duration || 0) > 1000 // > 1 second
+      (metric) => (metric.duration || 0) > 1000 // > 1 second
     ).length;
-    
-    const errorRate = recentMetrics.filter(
-      metric => metric.status === 'error'
-    ).length / totalOperations || 0;
+
+    const errorRate =
+      recentMetrics.filter((metric) => metric.status === 'error').length / totalOperations || 0;
 
     const topSlowOperations = Array.from(this.baselines.values())
       .sort((a, b) => b.p95 - a.p95)
       .slice(0, 5)
-      .map(baseline => ({
+      .map((baseline) => ({
         operation: baseline.operation,
         component: baseline.component,
         avgDuration: baseline.avgDuration,
@@ -303,7 +332,7 @@ class PerformanceTracker {
     if (errorRate > 0.1) healthScore -= 30;
     if (avgResponseTime > 1000) healthScore -= 20;
     if (slowOperations > totalOperations * 0.2) healthScore -= 25;
-    if (this.alerts.filter(a => !a.resolved).length > 5) healthScore -= 25;
+    if (this.alerts.filter((a) => !a.resolved).length > 5) healthScore -= 25;
 
     return {
       summary: {
@@ -326,7 +355,8 @@ class PerformanceTracker {
 
     // Analyze slow operations
     for (const baseline of this.baselines.values()) {
-      if (baseline.p95 > 2000) { // > 2 seconds
+      if (baseline.p95 > 2000) {
+        // > 2 seconds
         recommendations.push({
           id: this.generateRecommendationId(),
           type: 'optimization',
@@ -382,13 +412,13 @@ class PerformanceTracker {
   private updateBaselines(): void {
     for (const [key, metrics] of this.metrics.entries()) {
       const [operation, component] = key.split(':');
-      const validMetrics = metrics.filter(m => m.duration !== undefined);
-      
+      const validMetrics = metrics.filter((m) => m.duration !== undefined);
+
       if (validMetrics.length === 0) continue;
 
-      const durations = validMetrics.map(m => m.duration!).sort((a, b) => a - b);
+      const durations = validMetrics.map((m) => m.duration!).sort((a, b) => a - b);
       const avgDuration = durations.reduce((sum, d) => sum + d, 0) / durations.length;
-      
+
       const p50Index = Math.floor(durations.length * 0.5);
       const p95Index = Math.floor(durations.length * 0.95);
       const p99Index = Math.floor(durations.length * 0.99);
@@ -411,13 +441,11 @@ class PerformanceTracker {
   private checkPerformanceAnomalies(metric: PerformanceMetric): void {
     const key = `${metric.operation}:${metric.component}`;
     const baseline = this.baselines.get(key);
-    
+
     if (baseline && metric.duration) {
       // Check for slow operations (> 3x baseline P95)
       if (metric.duration > baseline.p95 * 3) {
-        performanceAnomalyCounter
-          .labels('slow_operation', metric.component)
-          .inc();
+        performanceAnomalyCounter.labels('slow_operation', metric.component).inc();
 
         this.createAlert({
           type: 'slow_operation',
@@ -443,7 +471,7 @@ class PerformanceTracker {
     };
 
     this.alerts.push(newAlert);
-    
+
     // Keep only recent alerts
     if (this.alerts.length > 100) {
       this.alerts.shift();
@@ -487,32 +515,23 @@ export const performanceTrackingMiddleware = (
   next: NextFunction
 ): void => {
   const startTime = performance.now();
-  const trackingId = performanceTracker.startTracking(
-    req.route?.path || req.path,
-    'http',
-    {
-      method: req.method,
-      url: req.url,
-      userAgent: req.get('User-Agent'),
-    }
-  );
+  const trackingId = performanceTracker.startTracking(req.route?.path || req.path, 'http', {
+    method: req.method,
+    url: req.url,
+    userAgent: req.get('User-Agent'),
+  });
 
   // Override res.end to capture completion time
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function (chunk?: any, encoding?: any) {
     const duration = performance.now() - startTime;
     const status = res.statusCode < 400 ? 'success' : 'error';
-    
-    performanceTracker.stopTracking(
-      trackingId,
-      req.route?.path || req.path,
-      'http',
-      status
-    );
+
+    performanceTracker.stopTracking(trackingId, req.route?.path || req.path, 'http', status);
 
     // Add performance headers
     res.set('X-Response-Time', `${duration.toFixed(2)}ms`);
-    
+
     return originalEnd.call(this, chunk, encoding);
   };
 

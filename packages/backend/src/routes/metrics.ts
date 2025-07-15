@@ -13,7 +13,7 @@ import logger from '../utils/logger';
 import os from 'os';
 import { getContainerInfo } from '../utils/containerInfo';
 import { authenticate as authMiddleware } from '../security/middleware/auth';
-import { 
+import {
   metricsHandler,
   wsActiveConnections,
   wsMessagesTotal,
@@ -31,7 +31,7 @@ import {
   cdnCacheMisses,
   activeUsers,
   imageProcessingQueue,
-  cacheHitRate
+  cacheHitRate,
 } from '../monitoring/prometheus';
 import { getWebSocketBatcher } from '../services/websocketBatcher';
 import { getReplicationLag, getPoolStats } from '../db/readReplica';
@@ -41,7 +41,7 @@ const router: Router = express.Router();
 
 /**
  * GET /api/metrics
- * 
+ *
  * Prometheus metrics endpoint
  */
 router.get('/', metricsHandler);
@@ -155,6 +155,43 @@ router.get('/health', async (req: Request, res: Response) => {
  *
  * Returns a simplified performance summary suitable for dashboards
  */
+/**
+ * POST /api/metrics/performance
+ * 
+ * Accepts performance metrics from frontend and stores them
+ */
+router.post('/performance', async (req: Request, res: Response) => {
+  try {
+    const metrics = req.body;
+    
+    // Log frontend performance metrics
+    logger.info('Frontend performance metrics received', {
+      dnsLookup: metrics.dnsLookup,
+      tcpConnection: metrics.tcpConnection, 
+      requestTime: metrics.requestTime,
+      domProcessing: metrics.domProcessing,
+      totalPageLoad: metrics.totalPageLoad,
+      timestamp: metrics.timestamp,
+      userAgent: req.get('User-Agent'),
+    });
+
+    // You could store these in database or forward to monitoring system
+    // For now, we just acknowledge receipt
+    res.json({ 
+      status: 'success', 
+      message: 'Performance metrics received',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error processing frontend performance metrics', { error });
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Failed to process metrics',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
 router.get('/summary', authMiddleware, async (req: Request, res: Response) => {
   try {
     const summary = await performanceMonitor.getPerformanceSummary();
@@ -197,7 +234,7 @@ router.get('/summary', authMiddleware, async (req: Request, res: Response) => {
 
 /**
  * GET /api/metrics/graphql
- * 
+ *
  * GraphQL specific metrics
  */
 router.get('/graphql', async (req: Request, res: Response) => {
@@ -207,7 +244,7 @@ router.get('/graphql', async (req: Request, res: Response) => {
       total_errors: graphqlErrorsTotal.hashMap,
       resolver_performance: graphqlResolverDuration.hashMap,
     };
-    
+
     res.json(graphqlMetrics);
   } catch (error) {
     logger.error('Error fetching GraphQL metrics:', error);
@@ -217,14 +254,14 @@ router.get('/graphql', async (req: Request, res: Response) => {
 
 /**
  * GET /api/metrics/websocket
- * 
+ *
  * WebSocket specific metrics including batching performance
  */
 router.get('/websocket', async (req: Request, res: Response) => {
   try {
     const batcher = getWebSocketBatcher();
     const enhancedMetrics = getEnhancedMetrics();
-    
+
     const wsMetrics = {
       batcher_metrics: batcher?.getMetrics() || null,
       enhanced_metrics: enhancedMetrics,
@@ -233,7 +270,7 @@ router.get('/websocket', async (req: Request, res: Response) => {
       batches_sent: wsBatchesTotal.hashMap,
       compression_savings: wsCompressionSavings.hashMap,
     };
-    
+
     res.json(wsMetrics);
   } catch (error) {
     logger.error('Error fetching WebSocket metrics:', error);
@@ -243,31 +280,31 @@ router.get('/websocket', async (req: Request, res: Response) => {
 
 /**
  * GET /api/metrics/database
- * 
+ *
  * Database metrics including read replica performance
  */
 router.get('/database', async (req: Request, res: Response) => {
   try {
     const poolStats = await getPoolStats();
     const replicationLag = await getReplicationLag();
-    
+
     // Update Prometheus metrics
     if (poolStats.write_pool) {
       dbPoolConnections.labels('write', 'active').set(poolStats.write_pool.total);
       dbPoolConnections.labels('write', 'idle').set(poolStats.write_pool.idle);
       dbPoolConnections.labels('write', 'waiting').set(poolStats.write_pool.waiting);
     }
-    
+
     if (poolStats.read_pool) {
       dbPoolConnections.labels('read', 'active').set(poolStats.read_pool.total);
       dbPoolConnections.labels('read', 'idle').set(poolStats.read_pool.idle);
       dbPoolConnections.labels('read', 'waiting').set(poolStats.read_pool.waiting);
     }
-    
+
     if (replicationLag !== null) {
       dbReplicationLag.labels('replica1').set(replicationLag);
     }
-    
+
     res.json({
       pool_stats: poolStats,
       replication_lag_seconds: replicationLag,
@@ -340,7 +377,7 @@ router.get('/endpoints', authMiddleware, async (req: Request, res: Response) => 
 
 /**
  * GET /api/metrics/cdn
- * 
+ *
  * CDN performance metrics
  */
 router.get('/cdn', authMiddleware, async (req: Request, res: Response) => {
@@ -348,11 +385,14 @@ router.get('/cdn', authMiddleware, async (req: Request, res: Response) => {
     const cdnMetrics = {
       cache_hits: cdnCacheHits.hashMap,
       cache_misses: cdnCacheMisses.hashMap,
-      hit_rate: cdnCacheHits.hashMap.size > 0 
-        ? (cdnCacheHits.hashMap.size / (cdnCacheHits.hashMap.size + cdnCacheMisses.hashMap.size)) * 100
-        : 0,
+      hit_rate:
+        cdnCacheHits.hashMap.size > 0
+          ? (cdnCacheHits.hashMap.size /
+              (cdnCacheHits.hashMap.size + cdnCacheMisses.hashMap.size)) *
+            100
+          : 0,
     };
-    
+
     res.json(cdnMetrics);
   } catch (error) {
     logger.error('Error fetching CDN metrics:', error);

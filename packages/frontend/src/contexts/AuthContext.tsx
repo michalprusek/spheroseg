@@ -910,7 +910,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
 
   if (context === undefined) {
@@ -935,4 +935,4 @@ export function useAuth() {
   }
 
   return context;
-}
+};
