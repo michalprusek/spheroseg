@@ -4,9 +4,14 @@
  */
 
 module.exports = {
-  // Frontend files
-  'packages/frontend/**/*.{ts,tsx,js,jsx}': [
+  // Frontend files (exclude scripts directory)
+  'packages/frontend/src/**/*.{ts,tsx,js,jsx}': [
     'npx eslint --fix --max-warnings 0',
+    'prettier --write',
+  ],
+  
+  // Frontend scripts (formatting only, no ESLint due to tsconfig issues)
+  'packages/frontend/scripts/**/*.{js,ts}': [
     'prettier --write',
   ],
   

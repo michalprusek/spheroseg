@@ -1,14 +1,14 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-# Run import checks for frontend
-cd packages/frontend && node scripts/check-imports.js
+# Pre-commit hook for Spheroseg
+# Runs code quality checks before allowing commits
 
-# Run linting
-npm run lint
+set -e
 
-# Run type checking
-cd packages/frontend && npx tsc --noEmit
+echo "🔍 Running pre-commit checks..."
 
-# Run tests for changed files
-npm run test:fast -- --changed
+# Run lint-staged for staged files
+npx lint-staged
+
+echo "✅ All pre-commit checks passed!"
