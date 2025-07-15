@@ -194,6 +194,78 @@ export class SecurityManager {
   }
 
   /**
+<<<<<<< Updated upstream
+=======
+   * Apply security headers to response
+   */
+  private applySecurityHeaders(res: Response): void {
+    // Prevent MIME type sniffing
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    
+    // Enable XSS protection
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    
+    // Prevent clickjacking
+    res.setHeader('X-Frame-Options', 'DENY');
+    
+    // Hide server information
+    res.removeHeader('X-Powered-By');
+    
+    // Strict Transport Security (HTTPS only)
+    if (this.config.enableHSTS) {
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    }
+    
+    // Content Security Policy with nonce support
+    if (this.config.enableCSP) {
+      const nonce = this.generateNonce();
+      res.locals.cspNonce = nonce;
+      
+      const isDevelopment = this.config.isDevelopment;
+      const cspPolicy = [
+        "default-src 'self'",
+        isDevelopment 
+          ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' localhost:* ws: wss:` 
+          : `script-src 'self' 'nonce-${nonce}'`,
+        `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
+        "img-src 'self' data: blob: https:",
+        "connect-src 'self' ws: wss: https:",
+        "font-src 'self' https:",
+        "media-src 'self' blob:",
+        "worker-src 'self' blob:",
+        "child-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+        "upgrade-insecure-requests"
+      ].join('; ');
+      
+      res.setHeader('Content-Security-Policy', cspPolicy);
+    }
+    
+    // Referrer Policy
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    
+    // Enhanced Permissions Policy
+    res.setHeader('Permissions-Policy', 
+      'geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), speaker=()');
+    
+    // Cross-Origin Policies
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  }
+
+  /**
+   * Generate a cryptographically secure nonce
+   */
+  private generateNonce(): string {
+    return require('crypto').randomBytes(16).toString('base64');
+  }
+
+  /**
+>>>>>>> Stashed changes
    * Mark an IP as suspicious
    */
   public markAsSuspicious(ip: string): void {

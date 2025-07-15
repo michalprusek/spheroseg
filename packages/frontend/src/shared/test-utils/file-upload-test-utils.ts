@@ -30,10 +30,10 @@ export const createMockDropEvent = (files: File[]): Partial<DragEvent> => {
     stopPropagation: vi.fn(),
     dataTransfer: {
       files: createMockFileList(files),
-      items: [] as any,
+      items: [] as DataTransferItemList,
       types: ['Files'],
-      dropEffect: 'copy' as any,
-      effectAllowed: 'all' as any,
+      dropEffect: 'copy' as DataTransfer['dropEffect'],
+      effectAllowed: 'all' as DataTransfer['effectAllowed'],
       clearData: vi.fn(),
       getData: vi.fn(),
       setData: vi.fn(),
@@ -57,7 +57,7 @@ export const mockFileReader = () => {
     result: mockResult,
     onload: null,
     onerror: null,
-  })) as any;
+  })) as unknown as typeof FileReader;
 
   return { mockReadAsDataURL, mockResult };
 };

@@ -56,6 +56,11 @@ npm run format           # Format code
 npm run code:check       # Run all checks
 npm run code:fix         # Fix all issues
 
+# Pre-commit Hooks (Automatic Quality Gates)
+# These run automatically on every git commit
+# See docs/development/pre-commit-hooks.md for full documentation
+git commit -m "feat(frontend): Add new component"  # Triggers automatic checks
+
 # Testing
 npm run test             # Run all tests
 npm run test:frontend    # Test frontend only
@@ -207,6 +212,14 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 - **Type Safety**: Configuration object is fully typed with const assertion
 - **Helper Functions**: Provide getters for common config values
 
+### Pre-commit Quality Gates
+- **Husky Git Hooks**: `.husky/pre-commit` and `.husky/commit-msg` for automated checks
+- **Lint-staged**: File-specific linting and formatting via `.lintstagedrc.js`
+- **Import Validation**: Package boundary enforcement via `scripts/validate-imports.js`
+- **Conventional Commits**: Enforced via `commitlint.config.js` with custom scopes
+- **Critical Testing**: Automatic test execution for changed packages
+- **Code Formatting**: ESLint + Prettier applied automatically on staged files
+
 ## Development Tips
 
 1. **Before Making Changes**: Run `npm run code:check` to ensure clean baseline
@@ -216,7 +229,13 @@ The codebase has undergone consolidation efforts documented in `/docs/consolidat
 5. **API Changes**: Update both backend routes and frontend services
 6. **ML Model Updates**: Test with sample images before deploying
 7. **Using Context7**: Frequently use the Context7 MCP tool to get up-to-date documentation for libraries and frameworks
-8. **Pre-commit Hooks**: Automatically run import checks, linting, and tests
+8. **Pre-commit Hooks**: Comprehensive quality gates run automatically on every commit
+   - **Automatic**: ESLint + Prettier + TypeScript compilation checks
+   - **Import Validation**: Enforces package boundary rules via `scripts/validate-imports.js`
+   - **Commit Format**: Conventional commits enforced via commitlint
+   - **Critical Tests**: Runs auth/security/validation tests for changed packages
+   - **Documentation**: See `docs/development/pre-commit-hooks.md` for full details
+   - **Bypass (Emergency Only)**: `git commit --no-verify` (avoid if possible)
 9. **Configuration Changes**: Update `app.config.ts` for any contact info or URLs
 
 ## System Credentials
