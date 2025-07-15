@@ -1,6 +1,6 @@
 /**
  * Image Test Factory
- * 
+ *
  * Provides factory functions for creating test image data
  */
 
@@ -46,7 +46,7 @@ export function createMockImage(overrides: Partial<MockImage> = {}): MockImage {
     segmentation_status: 'without_segmentation',
     created_at: new Date(),
     updated_at: new Date(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -61,7 +61,7 @@ export function createMockFile(overrides: Partial<MockFile> = {}): MockFile {
     filename,
     path: `/tmp/uploads/${filename}`,
     size: 1024 * 100, // 100KB
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -70,7 +70,7 @@ export function createMockTiffFile(overrides: Partial<MockFile> = {}): MockFile 
     originalname: 'test-image.tiff',
     mimetype: 'image/tiff',
     filename: `mock-${Date.now()}.tiff`,
-    ...overrides
+    ...overrides,
   });
 }
 
@@ -78,18 +78,17 @@ export function createLargeMockFile(sizeMB: number = 150): MockFile {
   return createMockFile({
     size: sizeMB * 1024 * 1024,
     originalname: `large-image-${sizeMB}mb.tiff`,
-    mimetype: 'image/tiff'
+    mimetype: 'image/tiff',
   });
 }
 
 export function createMockImageBatch(count: number, projectId: string): MockImage[] {
-  return Array.from({ length: count }, (_, i) => 
+  return Array.from({ length: count }, (_, i) =>
     createMockImage({
       project_id: projectId,
       name: `batch-image-${i}.jpg`,
-      segmentation_status: i % 3 === 0 ? 'completed' : 
-                          i % 3 === 1 ? 'queued' : 
-                          'without_segmentation'
+      segmentation_status:
+        i % 3 === 0 ? 'completed' : i % 3 === 1 ? 'queued' : 'without_segmentation',
     })
   );
 }
@@ -99,6 +98,6 @@ export function createMockWebSocketEvent(type: string, data: any) {
     type,
     data,
     projectId: data.projectId || uuidv4(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }

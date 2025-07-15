@@ -1,0 +1,134 @@
+# Test info
+
+- Name: WCAG Accessibility Compliance >> home page should meet WCAG standards
+- Location: /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/accessibility/wcag-compliance.spec.ts:10:3
+
+# Error details
+
+```
+Error: browserType.launch: Executable doesn't exist at /home/cvat/.cache/ms-playwright/firefox-1482/firefox/firefox
+╔═════════════════════════════════════════════════════════════════════════╗
+║ Looks like Playwright Test or Playwright was just installed or updated. ║
+║ Please run the following command to download new browsers:              ║
+║                                                                         ║
+║     npx playwright install                                              ║
+║                                                                         ║
+║ <3 Playwright Team                                                      ║
+╚═════════════════════════════════════════════════════════════════════════╝
+```
+
+# Test source
+
+```ts
+   1 | import { test, expect } from '@playwright/test';
+   2 | import { injectAxe, checkA11y } from 'axe-playwright';
+   3 |
+   4 | test.describe('WCAG Accessibility Compliance', () => {
+   5 |   test.beforeEach(async ({ page }) => {
+   6 |     // Inject axe-core for accessibility testing
+   7 |     await injectAxe(page);
+   8 |   });
+   9 |
+>  10 |   test('home page should meet WCAG standards', async ({ page }) => {
+      |   ^ Error: browserType.launch: Executable doesn't exist at /home/cvat/.cache/ms-playwright/firefox-1482/firefox/firefox
+   11 |     await page.goto('/');
+   12 |     
+   13 |     // Run accessibility checks
+   14 |     await checkA11y(page, null, {
+   15 |       detailedReport: true,
+   16 |       detailedReportOptions: {
+   17 |         html: true,
+   18 |       },
+   19 |     });
+   20 |
+   21 |     // Check for proper heading hierarchy
+   22 |     const headings = await page.$$eval('h1, h2, h3, h4, h5, h6', elements =>
+   23 |       elements.map(el => ({
+   24 |         level: parseInt(el.tagName[1]),
+   25 |         text: el.textContent,
+   26 |       }))
+   27 |     );
+   28 |
+   29 |     // Verify heading hierarchy
+   30 |     let previousLevel = 0;
+   31 |     for (const heading of headings) {
+   32 |       expect(heading.level - previousLevel).toBeLessThanOrEqual(1);
+   33 |       if (heading.level > previousLevel) {
+   34 |         previousLevel = heading.level;
+   35 |       }
+   36 |     }
+   37 |
+   38 |     // Check for skip navigation link
+   39 |     const skipLink = await page.$('a[href="#main"]');
+   40 |     expect(skipLink).toBeTruthy();
+   41 |
+   42 |     // Verify focus indicators
+   43 |     await page.keyboard.press('Tab');
+   44 |     const focusedElement = await page.evaluate(() => {
+   45 |       const el = document.activeElement;
+   46 |       return {
+   47 |         tagName: el?.tagName,
+   48 |         hasFocusStyles: window.getComputedStyle(el).outline !== 'none',
+   49 |       };
+   50 |     });
+   51 |     expect(focusedElement.hasFocusStyles).toBe(true);
+   52 |   });
+   53 |
+   54 |   test('sign-in page should be keyboard navigable', async ({ page }) => {
+   55 |     await page.goto('/sign-in');
+   56 |     await injectAxe(page);
+   57 |     
+   58 |     // Check accessibility
+   59 |     await checkA11y(page);
+   60 |
+   61 |     // Test keyboard navigation
+   62 |     const elements = await page.$$eval(
+   63 |       'input, button, a, select, textarea, [tabindex]:not([tabindex="-1"])',
+   64 |       els => els.length
+   65 |     );
+   66 |
+   67 |     // Navigate through all focusable elements
+   68 |     for (let i = 0; i < elements; i++) {
+   69 |       await page.keyboard.press('Tab');
+   70 |       const activeElement = await page.evaluate(() => ({
+   71 |         tagName: document.activeElement?.tagName,
+   72 |         ariaLabel: document.activeElement?.getAttribute('aria-label'),
+   73 |         placeholder: document.activeElement?.getAttribute('placeholder'),
+   74 |       }));
+   75 |       
+   76 |       // Verify element has accessible name
+   77 |       expect(
+   78 |         activeElement.ariaLabel || activeElement.placeholder || activeElement.tagName
+   79 |       ).toBeTruthy();
+   80 |     }
+   81 |   });
+   82 |
+   83 |   test('images should have alt text', async ({ page }) => {
+   84 |     await page.goto('/');
+   85 |     
+   86 |     const images = await page.$$eval('img', imgs =>
+   87 |       imgs.map(img => ({
+   88 |         src: img.src,
+   89 |         alt: img.alt,
+   90 |         decorative: img.getAttribute('role') === 'presentation',
+   91 |       }))
+   92 |     );
+   93 |
+   94 |     for (const img of images) {
+   95 |       if (!img.decorative) {
+   96 |         expect(img.alt).toBeTruthy();
+   97 |         expect(img.alt.length).toBeGreaterThan(0);
+   98 |       }
+   99 |     }
+  100 |   });
+  101 |
+  102 |   test('forms should have proper labels', async ({ page }) => {
+  103 |     await page.goto('/sign-up');
+  104 |     await injectAxe(page);
+  105 |     
+  106 |     await checkA11y(page);
+  107 |
+  108 |     // Check form inputs have labels
+  109 |     const inputs = await page.$$eval('input, select, textarea', elements =>
+  110 |       elements.map(el => ({
+```

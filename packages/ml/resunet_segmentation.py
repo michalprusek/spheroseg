@@ -298,9 +298,52 @@ def segment_batch(image_paths, model_path, output_dir, batch_size=4):
         
         for image_path in batch_paths:
             try:
-                result = segment_image(image_path, model_path, output_dir, return_polygons=True)
-                result['image_path'] = image_path
-                result['status'] = 'success'
+                # Check if image exists
+                if not os.path.exists(image_path):
+                    raise FileNotFoundError(f"Image not found: {image_path}")
+                
+                # Load image
+                image = cv2.imread(image_path)
+                if image is None:
+                    raise ValueError(f"Failed to load image: {image_path}")
+                
+                # Setup output directory for this image
+                image_output_dir = os.path.join(output_dir, os.path.splitext(os.path.basename(image_path))[0])
+                os.makedirs(image_output_dir, exist_ok=True)
+                
+                # Preprocess image
+                original_shape = image.shape[:2]
+                image_tensor = preprocess_image(image, target_size=(1024, 1024)).to(device)
+                
+                # Perform segmentation using the already loaded model
+                with torch.no_grad():
+                    output = model(image_tensor)
+                    segmentation_mask = torch.sigmoid(output).cpu().numpy()
+                
+                # Convert to binary mask
+                binary_mask = (segmentation_mask[0, 0] > 0.5).astype(np.uint8) * 255
+                
+                # Resize mask to original size
+                binary_mask = cv2.resize(binary_mask, (original_shape[1], original_shape[0]))
+                
+                # Save mask
+                mask_filename = f"{os.path.splitext(os.path.basename(image_path))[0]}_mask.png"
+                mask_path = os.path.join(image_output_dir, mask_filename)
+                cv2.imwrite(mask_path, binary_mask)
+                
+                # Extract polygons
+                polygons = extract_polygons_from_mask(binary_mask)
+                
+                result = {
+                    'image_path': image_path,
+                    'status': 'success',
+                    'mask_path': mask_path,
+                    'polygons': polygons,
+                    'metadata': {
+                        'original_shape': original_shape,
+                        'timestamp': datetime.now().isoformat()
+                    }
+                }
                 batch_results.append(result)
             except Exception as e:
                 batch_results.append({

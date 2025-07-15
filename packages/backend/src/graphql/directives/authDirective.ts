@@ -18,8 +18,8 @@ export function authDirective(schema: GraphQLSchema): GraphQLSchema {
             throw new GraphQLError('You must be logged in to access this resource', {
               extensions: {
                 code: 'UNAUTHENTICATED',
-                http: { status: 401 }
-              }
+                http: { status: 401 },
+              },
             });
           }
 
@@ -28,8 +28,8 @@ export function authDirective(schema: GraphQLSchema): GraphQLSchema {
             throw new GraphQLError('Your account is pending approval', {
               extensions: {
                 code: 'FORBIDDEN',
-                http: { status: 403 }
-              }
+                http: { status: 403 },
+              },
             });
           }
 
@@ -38,8 +38,8 @@ export function authDirective(schema: GraphQLSchema): GraphQLSchema {
             throw new GraphQLError('You must be an admin to access this resource', {
               extensions: {
                 code: 'FORBIDDEN',
-                http: { status: 403 }
-              }
+                http: { status: 403 },
+              },
             });
           }
 

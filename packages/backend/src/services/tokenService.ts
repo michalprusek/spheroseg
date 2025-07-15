@@ -112,7 +112,9 @@ export const generateAccessToken = (
   // Fallback to regular JWT signing
   const jwtSecret = config.auth.jwtSecret;
   if (!jwtSecret) {
-    logger.error('JWT secret is not defined and key rotation is not available. Cannot generate access token.');
+    logger.error(
+      'JWT secret is not defined and key rotation is not available. Cannot generate access token.'
+    );
     throw new Error('JWT secret is not defined');
   }
 
@@ -233,16 +235,16 @@ export const verifyToken = async (
       try {
         // Decode token to get kid (key ID)
         const tokenHeader = jwt.decode(token, { complete: true });
-        
+
         if (tokenHeader && typeof tokenHeader === 'object' && tokenHeader.header.kid) {
           const keyManager = getKeyManager();
           const publicKey = await keyManager.getPublicKey(tokenHeader.header.kid);
-          
+
           if (publicKey) {
             decoded = jwt.verify(token, publicKey, {
               audience: requiredAudience,
               issuer: requiredIssuer,
-              algorithms: ['RS256', 'RS384', 'RS512']
+              algorithms: ['RS256', 'RS384', 'RS512'],
             }) as TokenPayload;
           } else {
             throw new Error('Public key not found for token');
@@ -253,14 +255,15 @@ export const verifyToken = async (
       } catch (keyRotationError) {
         // Fall back to regular JWT verification
         logger.debug('Key rotation verification failed, falling back to regular JWT', {
-          error: keyRotationError instanceof Error ? keyRotationError.message : String(keyRotationError)
+          error:
+            keyRotationError instanceof Error ? keyRotationError.message : String(keyRotationError),
         });
-        
+
         const jwtSecret = config.auth.jwtSecret;
         if (!jwtSecret) {
           throw new Error('JWT secret is not defined and key rotation failed');
         }
-        
+
         decoded = jwt.verify(token, jwtSecret, {
           audience: requiredAudience,
           issuer: requiredIssuer,

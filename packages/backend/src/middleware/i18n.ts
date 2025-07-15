@@ -27,7 +27,7 @@ export async function setUserLanguage(req: Request, res: Response, next: NextFun
 
     // Set language in response header for client
     res.setHeader('Content-Language', req.i18n.language);
-    
+
     next();
   } catch (error) {
     // Don't fail the request if language detection fails
@@ -40,8 +40,8 @@ export async function setUserLanguage(req: Request, res: Response, next: NextFun
  * Helper to get translated validation errors
  */
 export function getValidationErrors(errors: any[], req: Request): any[] {
-  return errors.map(error => ({
+  return errors.map((error) => ({
     ...error,
-    message: req.t(error.msg, error.params || {})
+    message: req.t(error.msg, error.params || {}),
   }));
 }

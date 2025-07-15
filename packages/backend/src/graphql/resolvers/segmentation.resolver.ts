@@ -12,7 +12,7 @@ const segmentationResolvers: IResolvers = {
   },
   SegmentationResult: {
     // SegmentationResult field resolvers will be implemented here
-  }
+  },
 };
 
 export default segmentationResolvers;

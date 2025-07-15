@@ -55,7 +55,10 @@ describe('PerformanceMonitor Unit Tests', () => {
         rss: 1200 * 1024 * 1024,
       };
 
-      (performanceMonitor as any).handleCriticalMemoryPressure(95, mockMemUsage as NodeJS.MemoryUsage);
+      (performanceMonitor as any).handleCriticalMemoryPressure(
+        95,
+        mockMemUsage as NodeJS.MemoryUsage
+      );
 
       expect(spy).toHaveBeenCalled();
     });
@@ -160,7 +163,9 @@ describe('PerformanceMonitor Unit Tests', () => {
       // Should still track the query
       const metrics = performanceMonitor.getMetrics();
       expect(metrics.dbQueries.length).toBeGreaterThan(0);
-      expect(metrics.dbQueries[metrics.dbQueries.length - 1].query).toBe('QUERY_SANITIZATION_FAILED');
+      expect(metrics.dbQueries[metrics.dbQueries.length - 1].query).toBe(
+        'QUERY_SANITIZATION_FAILED'
+      );
     });
   });
 

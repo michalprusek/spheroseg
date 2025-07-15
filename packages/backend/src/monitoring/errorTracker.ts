@@ -1,6 +1,6 @@
 /**
  * Enhanced Error Tracking System
- * 
+ *
  * Provides comprehensive error tracking with metrics, alerting, and analysis
  */
 
@@ -85,19 +85,16 @@ class ErrorTracker {
   private readonly maxRecentErrors = 1000;
   private readonly maxErrorPatterns = 100;
   private readonly errorThresholds = {
-    low: 10,      // 10 errors/minute
-    medium: 50,   // 50 errors/minute
-    high: 100,    // 100 errors/minute
+    low: 10, // 10 errors/minute
+    medium: 50, // 50 errors/minute
+    high: 100, // 100 errors/minute
     critical: 200, // 200 errors/minute
   };
 
   /**
    * Track an error occurrence
    */
-  public trackError(
-    error: Error | ApiError,
-    context: Partial<ErrorContext> = {}
-  ): void {
+  public trackError(error: Error | ApiError, context: Partial<ErrorContext> = {}): void {
     const errorContext: ErrorContext = {
       requestId: context.requestId || this.generateRequestId(),
       userId: context.userId,
@@ -113,16 +110,16 @@ class ErrorTracker {
 
     // Update metrics
     this.updateMetrics(error, errorContext);
-    
+
     // Track error patterns
     this.trackErrorPattern(error, errorContext);
-    
+
     // Store recent error
     this.storeRecentError(errorContext);
-    
+
     // Check for alerts
     this.checkForAlerts(error, errorContext);
-    
+
     // Log error with enhanced context
     this.logError(error, errorContext);
   }
@@ -130,23 +127,18 @@ class ErrorTracker {
   /**
    * Mark an error as resolved
    */
-  public resolveError(
-    errorId: string,
-    recoveryMethod: string = 'manual'
-  ): void {
+  public resolveError(errorId: string, recoveryMethod: string = 'manual'): void {
     const error = this.activeErrors.get(errorId);
     if (error) {
       const recoveryTime = (Date.now() - error.timestamp) / 1000;
-      
-      errorRecoveryTimeHistogram
-        .labels('generic', recoveryMethod)
-        .observe(recoveryTime);
-      
+
+      errorRecoveryTimeHistogram.labels('generic', recoveryMethod).observe(recoveryTime);
+
       this.activeErrors.delete(errorId);
-      
+
       // Update active errors gauge
       activeErrorsGauge.dec();
-      
+
       logger.info('Error resolved', {
         errorId,
         recoveryMethod,
@@ -168,7 +160,7 @@ class ErrorTracker {
     const topErrors = Array.from(this.errorPatterns.values())
       .sort((a, b) => b.count - a.count)
       .slice(0, 10)
-      .map(pattern => ({
+      .map((pattern) => ({
         pattern: pattern.pattern,
         count: pattern.count,
       }));
@@ -193,12 +185,12 @@ class ErrorTracker {
   } {
     const now = Date.now();
     const recentErrors = this.recentErrors.filter(
-      error => now - error.timestamp < 60000 // Last minute
+      (error) => now - error.timestamp < 60000 // Last minute
     );
 
     const errorRate = recentErrors.length;
     const criticalErrors = this.errorAlerts.filter(
-      alert => alert.severity === 'critical' && now - alert.timestamp < 300000 // Last 5 minutes
+      (alert) => alert.severity === 'critical' && now - alert.timestamp < 300000 // Last 5 minutes
     ).length;
 
     let status: 'healthy' | 'degraded' | 'unhealthy' | 'critical';
@@ -242,9 +234,7 @@ class ErrorTracker {
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
 
     // Clean up recent errors
-    this.recentErrors = this.recentErrors.filter(
-      error => now - error.timestamp < maxAge
-    );
+    this.recentErrors = this.recentErrors.filter((error) => now - error.timestamp < maxAge);
 
     // Clean up old error patterns
     for (const [key, pattern] of this.errorPatterns.entries()) {
@@ -254,9 +244,7 @@ class ErrorTracker {
     }
 
     // Clean up old alerts
-    this.errorAlerts = this.errorAlerts.filter(
-      alert => now - alert.timestamp < maxAge
-    );
+    this.errorAlerts = this.errorAlerts.filter((alert) => now - alert.timestamp < maxAge);
   }
 
   private updateMetrics(error: Error | ApiError, context: ErrorContext): void {
@@ -272,7 +260,7 @@ class ErrorTracker {
 
   private trackErrorPattern(error: Error | ApiError, context: ErrorContext): void {
     const patternKey = this.generatePatternKey(error, context);
-    
+
     if (this.errorPatterns.has(patternKey)) {
       const pattern = this.errorPatterns.get(patternKey)!;
       pattern.count++;
@@ -283,8 +271,9 @@ class ErrorTracker {
     } else {
       if (this.errorPatterns.size >= this.maxErrorPatterns) {
         // Remove oldest pattern
-        const oldestPattern = Array.from(this.errorPatterns.entries())
-          .sort(([, a], [, b]) => a.lastSeen - b.lastSeen)[0];
+        const oldestPattern = Array.from(this.errorPatterns.entries()).sort(
+          ([, a], [, b]) => a.lastSeen - b.lastSeen
+        )[0];
         this.errorPatterns.delete(oldestPattern[0]);
       }
 
@@ -304,7 +293,7 @@ class ErrorTracker {
 
   private storeRecentError(context: ErrorContext): void {
     this.recentErrors.push(context);
-    
+
     if (this.recentErrors.length > this.maxRecentErrors) {
       this.recentErrors.shift();
     }
@@ -318,7 +307,7 @@ class ErrorTracker {
   private checkForAlerts(error: Error | ApiError, context: ErrorContext): void {
     const now = Date.now();
     const recentErrors = this.recentErrors.filter(
-      e => now - e.timestamp < 60000 // Last minute
+      (e) => now - e.timestamp < 60000 // Last minute
     );
 
     // Check for error rate spike
@@ -357,7 +346,7 @@ class ErrorTracker {
     };
 
     this.errorAlerts.push(newAlert);
-    
+
     // Keep only recent alerts
     if (this.errorAlerts.length > 100) {
       this.errorAlerts.shift();
@@ -389,10 +378,10 @@ class ErrorTracker {
       if (error.statusCode >= 400) return 'medium';
       return 'low';
     }
-    
+
     if (error.name === 'ValidationError') return 'low';
     if (error.name === 'UnauthorizedError') return 'medium';
-    
+
     return 'high';
   }
 
@@ -400,7 +389,7 @@ class ErrorTracker {
     const errorType = error.constructor.name;
     const route = context.route || 'unknown';
     const method = context.method || 'unknown';
-    
+
     return `${errorType}:${route}:${method}`;
   }
 
@@ -421,9 +410,12 @@ class ErrorTracker {
 export const errorTracker = new ErrorTracker();
 
 // Cleanup job - run every hour
-setInterval(() => {
-  errorTracker.cleanup();
-}, 60 * 60 * 1000);
+setInterval(
+  () => {
+    errorTracker.cleanup();
+  },
+  60 * 60 * 1000
+);
 
 /**
  * Enhanced error tracking middleware
@@ -435,7 +427,7 @@ export const errorTrackingMiddleware = (
   next: NextFunction
 ): void => {
   const context: Partial<ErrorContext> = {
-    requestId: req.headers['x-request-id'] as string || req.requestId,
+    requestId: (req.headers['x-request-id'] as string) || req.requestId,
     userId: (req as any).user?.userId,
     route: req.route?.path || req.path,
     method: req.method,

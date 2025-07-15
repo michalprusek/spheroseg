@@ -30,17 +30,17 @@ export function cdnCacheHeaders(req: Request, res: Response, next: NextFunction)
   const originalSendFile = res.sendFile;
 
   // Override send to add CDN headers
-  res.send = function(data: any) {
+  res.send = function (data: any) {
     setCDNHeaders(req, res);
     return originalSend.call(this, data);
   };
 
-  res.json = function(data: any) {
+  res.json = function (data: any) {
     setCDNHeaders(req, res);
     return originalJson.call(this, data);
   };
 
-  res.sendFile = function(path: string, options?: any, callback?: any) {
+  res.sendFile = function (path: string, options?: any, callback?: any) {
     setCDNHeaders(req, res);
     return originalSendFile.call(this, path, options, callback);
   };
@@ -94,8 +94,8 @@ export function cdnRewriteMiddleware(req: Request, res: Response, next: NextFunc
 
   // Only rewrite for JSON responses
   const originalJson = res.json;
-  
-  res.json = function(data: any) {
+
+  res.json = function (data: any) {
     // Rewrite URLs in the response data
     const rewritten = rewriteUrls(data);
     return originalJson.call(this, rewritten);
@@ -115,8 +115,13 @@ function setCDNHeaders(req: Request, res: Response) {
   });
 
   // Add Vary header for proper caching
-  const existingVary = res.getHeader('Vary') as string || '';
-  const varyHeaders = new Set(existingVary.split(',').map(h => h.trim()).filter(Boolean));
+  const existingVary = (res.getHeader('Vary') as string) || '';
+  const varyHeaders = new Set(
+    existingVary
+      .split(',')
+      .map((h) => h.trim())
+      .filter(Boolean)
+  );
   varyHeaders.add('Accept-Encoding');
   varyHeaders.add('Accept');
   res.setHeader('Vary', Array.from(varyHeaders).join(', '));
@@ -126,7 +131,10 @@ function setCDNHeaders(req: Request, res: Response) {
 
   // Set surrogate control for CDN
   if (cdnConfig.provider === 'cloudflare') {
-    res.setHeader('Cloudflare-CDN-Cache-Control', res.getHeader('Cache-Control') || 'public, max-age=3600');
+    res.setHeader(
+      'Cloudflare-CDN-Cache-Control',
+      res.getHeader('Cache-Control') || 'public, max-age=3600'
+    );
   } else if (cdnConfig.provider === 'cloudfront') {
     res.setHeader('Surrogate-Control', res.getHeader('Cache-Control') || 'public, max-age=3600');
   }
@@ -149,13 +157,13 @@ function rewriteUrls(data: any): any {
 
   // Handle array
   if (Array.isArray(data)) {
-    return data.map(item => rewriteUrls(item));
+    return data.map((item) => rewriteUrls(item));
   }
 
   // Handle object
   if (typeof data === 'object') {
     const rewritten: any = {};
-    
+
     for (const [key, value] of Object.entries(data)) {
       // Special handling for known URL fields
       if (isUrlField(key) && typeof value === 'string' && isAssetUrl(value)) {
@@ -164,7 +172,7 @@ function rewriteUrls(data: any): any {
         rewritten[key] = rewriteUrls(value);
       }
     }
-    
+
     return rewritten;
   }
 
@@ -174,25 +182,39 @@ function rewriteUrls(data: any): any {
 // Check if a string is an asset URL that should be CDN-ified
 function isAssetUrl(url: string): boolean {
   if (!url || typeof url !== 'string') return false;
-  
+
   // Check if it's a relative URL starting with known asset paths
-  return url.startsWith('/assets/') || 
-         url.startsWith('/uploads/') ||
-         url.startsWith('/static/') ||
-         url.includes('/dist/assets/');
+  return (
+    url.startsWith('/assets/') ||
+    url.startsWith('/uploads/') ||
+    url.startsWith('/static/') ||
+    url.includes('/dist/assets/')
+  );
 }
 
 // Check if a field name typically contains URLs
 function isUrlField(fieldName: string): boolean {
   const urlFields = [
-    'url', 'imageUrl', 'thumbnailUrl', 'downloadUrl', 
-    'avatar', 'logo', 'icon', 'src', 'href',
-    'image', 'thumbnail', 'preview', 'poster',
-    'storage_path', 'file_path', 'asset_url'
+    'url',
+    'imageUrl',
+    'thumbnailUrl',
+    'downloadUrl',
+    'avatar',
+    'logo',
+    'icon',
+    'src',
+    'href',
+    'image',
+    'thumbnail',
+    'preview',
+    'poster',
+    'storage_path',
+    'file_path',
+    'asset_url',
   ];
-  
+
   const lowerFieldName = fieldName.toLowerCase();
-  return urlFields.some(field => lowerFieldName.includes(field));
+  return urlFields.some((field) => lowerFieldName.includes(field));
 }
 
 // Middleware to handle CDN origin requests
@@ -201,7 +223,7 @@ export function cdnOriginMiddleware(req: Request, res: Response, next: NextFunct
   if (req.get('X-CDN-Request') || req.get('User-Agent')?.includes('Amazon CloudFront')) {
     // Indicate this is an origin response
     res.setHeader('X-Origin-Response', 'true');
-    
+
     // Add cache tags for intelligent purging
     if (req.path.startsWith('/uploads/')) {
       const projectId = req.path.split('/')[2];

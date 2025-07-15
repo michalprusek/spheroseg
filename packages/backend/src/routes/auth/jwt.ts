@@ -1,6 +1,6 @@
 /**
  * JWT Key Rotation Routes
- * 
+ *
  * Provides endpoints for JWT key rotation management
  */
 
@@ -45,12 +45,12 @@ router.get('/auth/jwt/status', requireAdmin, async (req, res) => {
   try {
     const { getKeyManager } = await import('../../auth/jwtKeyRotation');
     const keyManager = getKeyManager();
-    
+
     res.json({
       message: 'JWT key rotation is active',
       currentKeyId: keyManager.getCurrentKeyId(),
       keyCount: keyManager.getJWKS().keys.length,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('JWT status endpoint error', error);

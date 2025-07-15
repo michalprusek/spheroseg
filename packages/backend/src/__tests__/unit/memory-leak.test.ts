@@ -68,7 +68,7 @@ describe('Memory Leak Detection Tests', () => {
       const memoryGrowthMB = (finalMemory - initialMemory) / (1024 * 1024);
 
       expect(memoryGrowthMB).toBeLessThan(MEMORY_THRESHOLD_MB);
-      
+
       // Verify metrics are properly bounded
       const metrics = performanceMonitor.getMetrics();
       expect(metrics.apiCalls.size).toBeLessThanOrEqual(10); // Should only track 10 unique endpoints
@@ -81,10 +81,10 @@ describe('Memory Leak Detection Tests', () => {
       }
 
       const initialSize = performanceMonitor.getMetrics().apiCalls.size;
-      
+
       // Trigger cleanup
       (performanceMonitor as any).cleanupUnderMemoryPressure();
-      
+
       const finalSize = performanceMonitor.getMetrics().apiCalls.size;
       expect(finalSize).toBeLessThan(initialSize);
     });
@@ -112,7 +112,7 @@ describe('Memory Leak Detection Tests', () => {
       const memoryGrowthMB = (finalMemory - initialMemory) / (1024 * 1024);
 
       expect(memoryGrowthMB).toBeLessThan(MEMORY_THRESHOLD_MB);
-      
+
       // Verify query history is bounded
       const metrics = performanceMonitor.getMetrics();
       expect(metrics.dbQueries.length).toBeLessThanOrEqual(1000); // MAX_QUERY_HISTORY
@@ -144,7 +144,7 @@ describe('Memory Leak Detection Tests', () => {
           external: 0,
           rss: 1200000000,
         });
-        
+
         // Trigger cleanup if needed
         if (monitor.metrics.memoryUsage.length > monitor.maxMemoryHistory) {
           monitor.metrics.memoryUsage.shift();
@@ -160,7 +160,7 @@ describe('Memory Leak Detection Tests', () => {
       const memoryGrowthMB = (finalMemory - initialMemory) / (1024 * 1024);
 
       expect(memoryGrowthMB).toBeLessThan(MEMORY_THRESHOLD_MB);
-      
+
       // Verify memory history is bounded
       const metrics = performanceMonitor.getMetrics();
       expect(metrics.memoryUsage.length).toBeLessThanOrEqual(100); // MAX_MEMORY_HISTORY
@@ -182,7 +182,7 @@ describe('Memory Leak Detection Tests', () => {
       }
 
       // Remove all listeners
-      listeners.forEach(listener => {
+      listeners.forEach((listener) => {
         performanceMonitor.removeListener('highMemoryUsage', listener);
       });
 
@@ -205,7 +205,7 @@ describe('Memory Leak Detection Tests', () => {
       for (let i = 0; i < 1000; i++) {
         performanceMonitor.trackQuery(`SELECT ${i}`, 10, 1);
       }
-      
+
       for (let i = 0; i < 100; i++) {
         performanceMonitor.trackApiCall(`/api/endpoint${i}`, 'GET', 50, 200);
       }

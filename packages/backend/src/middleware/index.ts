@@ -106,12 +106,12 @@ export const configureI18nMiddleware = (app: Application): void => {
   // TODO: Fix i18n imports - temporarily disabled
   // const i18nMiddleware = createI18nMiddleware();
   // app.use(i18nMiddleware);
-  
+
   // Add user language detection middleware (must be after auth)
   // app.use(setUserLanguage);
-  
+
   logger.info('i18n middleware temporarily disabled - requires import fixes', {
-    languages: ['en', 'cs', 'de', 'es', 'fr', 'zh']
+    languages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
   });
 };
 

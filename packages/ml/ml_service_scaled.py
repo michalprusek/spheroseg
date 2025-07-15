@@ -169,7 +169,8 @@ def health():
 @app.route('/metrics', methods=['GET'])
 def metrics():
     """Prometheus metrics endpoint"""
-    return generate_latest()
+    from flask import Response
+    return Response(generate_latest(), mimetype='text/plain; version=0.0.4')
 
 def process_segmentation(task):
     """Process a single segmentation task"""

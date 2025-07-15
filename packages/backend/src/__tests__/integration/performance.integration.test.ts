@@ -167,7 +167,6 @@ describe('Performance Optimizations Integration Tests', () => {
     });
   });
 
-
   describe('Redis Cache Integration', () => {
     it('should use Redis for caching when available', async () => {
       // This test would require Redis to be running

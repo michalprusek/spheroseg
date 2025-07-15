@@ -493,20 +493,20 @@ class SegmentationQueueService extends EventEmitter {
 
     // Validate and normalize the image path to prevent path traversal
     const normalizedPath = path.normalize(imagePath);
-    
+
     // Ensure the path starts with /uploads/ and doesn't contain any traversal attempts
     if (!normalizedPath.startsWith('/uploads/') || normalizedPath.includes('..')) {
       logger.error('Invalid image path detected', { imagePath, normalizedPath });
       throw new Error('Invalid image path');
     }
-    
+
     // Convert the image path for ML service
     // Backend uses /uploads/ but ML service has volumes mounted at /ML/uploads/
     const mlImagePath = normalizedPath.replace(/^\/uploads\//, '/ML/uploads/');
-    logger.debug('Converting image path for ML service', { 
-      originalPath: imagePath, 
+    logger.debug('Converting image path for ML service', {
+      originalPath: imagePath,
       normalizedPath,
-      mlPath: mlImagePath 
+      mlPath: mlImagePath,
     });
 
     const taskPayload = {

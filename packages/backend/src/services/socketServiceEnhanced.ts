@@ -9,11 +9,7 @@ import { Server as HttpServer } from 'http';
 import logger from '../utils/logger';
 import { initializeSocketIO as initSocket, getIO } from '../socket';
 import { createThrottledEmit } from '../utils/socketThrottle';
-import { 
-  initializeWebSocketBatcher, 
-  getWebSocketBatcher,
-  BatchConfig 
-} from './websocketBatcher';
+import { initializeWebSocketBatcher, getWebSocketBatcher, BatchConfig } from './websocketBatcher';
 
 // Socket.IO server instance
 let io: SocketIOServer | null = null;
@@ -68,7 +64,7 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
     socket.on('client-capabilities', (capabilities) => {
       clientSupportsBatching = capabilities.batching || false;
       clientSupportsCompression = capabilities.compression || false;
-      
+
       logger.info('Client capabilities registered', {
         clientId,
         batching: clientSupportsBatching,
@@ -94,16 +90,16 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
     // Enhanced room joining with batching consideration
     const joinRoom = (room: string) => {
       socket.join(room);
-      
+
       // If client supports batching, add to batched room
       if (clientSupportsBatching) {
         socket.join(`${room}:batched`);
       }
-      
-      logger.info('Client joined room', { 
-        clientId, 
+
+      logger.info('Client joined room', {
+        clientId,
         room,
-        batched: clientSupportsBatching 
+        batched: clientSupportsBatching,
       });
     };
 
@@ -118,10 +114,10 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
 
         joinRoom(`project-${projectId}`);
         joinRoom(`project:${projectId}`);
-        
-        socket.emit('joined_project', { 
+
+        socket.emit('joined_project', {
           projectId,
-          batching: clientSupportsBatching 
+          batching: clientSupportsBatching,
         });
       } catch (error) {
         logger.error('Error handling join_project', { clientId, error });
@@ -137,10 +133,10 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
 
         joinRoom(`project-${projectId}`);
         joinRoom(`project:${projectId}`);
-        
-        socket.emit('joined_project', { 
+
+        socket.emit('joined_project', {
           projectId,
-          batching: clientSupportsBatching 
+          batching: clientSupportsBatching,
         });
       } catch (error) {
         logger.error('Error handling join-project', { clientId, error });
@@ -155,9 +151,9 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
         }
 
         joinRoom(room);
-        socket.emit('joined', { 
+        socket.emit('joined', {
           room,
-          batching: clientSupportsBatching 
+          batching: clientSupportsBatching,
         });
       } catch (error) {
         logger.error('Error handling join', { clientId, error });
@@ -177,7 +173,7 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
         socket.leave(`project:${projectId}`);
         socket.leave(`project-${projectId}:batched`);
         socket.leave(`project:${projectId}:batched`);
-        
+
         logger.info('Client left project room', { clientId, projectId });
       } catch (error) {
         logger.error('Error handling leave_project', { clientId, error });
@@ -186,8 +182,8 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
 
     // Enhanced disconnection handling
     socket.on('disconnect', (reason) => {
-      logger.info('Enhanced client disconnected', { 
-        clientId, 
+      logger.info('Enhanced client disconnected', {
+        clientId,
         reason,
         connectionDuration: Date.now() - new Date(clientInfo.timestamp).getTime(),
       });
@@ -195,10 +191,10 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
 
     // Error handling with context
     socket.on('error', (error) => {
-      logger.error('Socket error', { 
-        clientId, 
+      logger.error('Socket error', {
+        clientId,
         error,
-        batching: clientSupportsBatching 
+        batching: clientSupportsBatching,
       });
     });
 
@@ -215,7 +211,7 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
   setInterval(() => {
     const batcherMetrics = batcher.getMetrics();
     const connectedClients = io.sockets.sockets.size;
-    
+
     logger.info('WebSocket performance metrics', {
       connectedClients,
       ...batcherMetrics,
@@ -227,10 +223,13 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
 }
 
 // Cache for throttled and batched emit functions
-const emitCache = new Map<string, {
-  throttled: (event: string, data: unknown) => void;
-  batched: boolean;
-}>();
+const emitCache = new Map<
+  string,
+  {
+    throttled: (event: string, data: unknown) => void;
+    batched: boolean;
+  }
+>();
 
 /**
  * Enhanced broadcast for segmentation updates with batching support
@@ -277,9 +276,7 @@ export function broadcastSegmentationUpdate(
 
     // Backward compatibility
     const backwardCompatibleStatus =
-      status === 'queued' ? 'pending' : 
-      status === 'without_segmentation' ? 'pending' : 
-      status;
+      status === 'queued' ? 'pending' : status === 'without_segmentation' ? 'pending' : status;
 
     const backwardCompatibleData = {
       ...updateData,
@@ -322,19 +319,22 @@ export function broadcastBulkUpdates(
   }
 
   // Group updates by project
-  const groupedUpdates = updates.reduce((acc, update) => {
-    const key = update.projectId;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(update);
-    return acc;
-  }, {} as Record<string, typeof updates>);
+  const groupedUpdates = updates.reduce(
+    (acc, update) => {
+      const key = update.projectId;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(update);
+      return acc;
+    },
+    {} as Record<string, typeof updates>
+  );
 
   // Send grouped updates
   for (const [projectId, projectUpdates] of Object.entries(groupedUpdates)) {
     const roomName = `project-${projectId}`;
-    
+
     io.to(roomName).emit('bulk_updates', {
       projectId,
       updates: projectUpdates,

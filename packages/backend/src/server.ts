@@ -122,21 +122,21 @@ const initializeServices = async (): Promise<void> => {
       const { Pool } = require('pg');
       const testPool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        max: 1
+        max: 1,
       });
-      
+
       logger.info('Created test pool');
-      
+
       const result = await testPool.query('SELECT NOW()');
       logger.info('Database connection verified', { time: result.rows[0].now });
-      
+
       await testPool.end();
       logger.info('Test pool closed');
     } catch (dbError) {
-      logger.error('Database connection test failed', { 
+      logger.error('Database connection test failed', {
         error: dbError,
         message: (dbError as Error).message,
-        stack: (dbError as Error).stack 
+        stack: (dbError as Error).stack,
       });
       throw dbError;
     }

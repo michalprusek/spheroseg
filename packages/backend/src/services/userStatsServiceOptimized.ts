@@ -245,8 +245,8 @@ export class UserStatsServiceOptimized {
       `;
 
       const result = await this.pool.query(activityQuery, [userId]);
-      
-      return result.rows.map(row => ({
+
+      return result.rows.map((row) => ({
         type: row.type,
         description: this.getActivityDescription(row.type, row.item_name),
         timestamp: row.timestamp.toISOString(),
@@ -255,7 +255,7 @@ export class UserStatsServiceOptimized {
         image_id: row.image_id,
         image_name: row.image_name,
         item_id: row.item_id,
-        item_name: row.item_name
+        item_name: row.item_name,
       }));
     } catch (error) {
       logger.error('Error generating recent activity', { userId, error });

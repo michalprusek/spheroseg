@@ -1,16 +1,16 @@
 /**
  * Integration tests for WebSocket Message Batching
- * 
+ *
  * Tests batching efficiency, client capability detection, and compression
  */
 import { Server as SocketIOServer, Socket as ServerSocket } from 'socket.io';
 import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { createServer } from 'http';
-import { 
+import {
   initializeEnhancedSocketIO,
   broadcastSegmentationUpdate,
   broadcastBulkUpdates,
-  getEnhancedMetrics
+  getEnhancedMetrics,
 } from '../../services/socketServiceEnhanced';
 import { getWebSocketBatcher } from '../../services/websocketBatcher';
 import logger from '../../utils/logger';
@@ -28,7 +28,7 @@ describe('WebSocket Batching Integration', () => {
   beforeAll((done) => {
     httpServer = createServer();
     io = initializeEnhancedSocketIO(httpServer);
-    
+
     httpServer.listen(port, () => {
       done();
     });
@@ -117,7 +117,7 @@ describe('WebSocket Batching Integration', () => {
   describe('Message Batching', () => {
     it('should batch multiple messages sent quickly', (done) => {
       const receivedBatches: any[] = [];
-      
+
       // Setup batching client
       clientSocket.emit('client-capabilities', { batching: true });
 
@@ -132,24 +132,18 @@ describe('WebSocket Batching Integration', () => {
       clientSocket.on('joined_project', () => {
         // Trigger multiple updates
         for (let i = 0; i < 10; i++) {
-          broadcastSegmentationUpdate(
-            projectId,
-            `image-${i}`,
-            'processing',
-            undefined,
-            undefined
-          );
+          broadcastSegmentationUpdate(projectId, `image-${i}`, 'processing', undefined, undefined);
         }
 
         // Wait for batch to arrive
         setTimeout(() => {
           expect(receivedBatches.length).toBeGreaterThan(0);
-          
+
           const batch = receivedBatches[0];
           expect(batch).toHaveProperty('messages');
           expect(batch).toHaveProperty('count');
           expect(batch.count).toBeGreaterThan(1);
-          
+
           done();
         }, 200);
       });
@@ -172,12 +166,7 @@ describe('WebSocket Batching Integration', () => {
 
       clientSocket.on('joined_project', () => {
         // Send priority message
-        broadcastSegmentationUpdate(
-          'priority-test',
-          'image-1',
-          'completed',
-          '/path/to/result'
-        );
+        broadcastSegmentationUpdate('priority-test', 'image-1', 'completed', '/path/to/result');
 
         // Verify it arrives immediately
         setTimeout(() => {
@@ -190,7 +179,7 @@ describe('WebSocket Batching Integration', () => {
 
     it('should respect maximum batch size', (done) => {
       const batches: any[] = [];
-      
+
       clientSocket.emit('client-capabilities', { batching: true });
       clientSocket.on('batch-update', (batch) => {
         batches.push(batch);
@@ -201,22 +190,18 @@ describe('WebSocket Batching Integration', () => {
       clientSocket.on('joined_project', () => {
         // Send more messages than max batch size
         for (let i = 0; i < 150; i++) {
-          broadcastSegmentationUpdate(
-            'size-test',
-            `image-${i}`,
-            'queued'
-          );
+          broadcastSegmentationUpdate('size-test', `image-${i}`, 'queued');
         }
 
         // Wait for batches
         setTimeout(() => {
           expect(batches.length).toBeGreaterThan(1);
-          
+
           // Each batch should respect max size
-          batches.forEach(batch => {
+          batches.forEach((batch) => {
             expect(batch.count).toBeLessThanOrEqual(50); // Default max batch size
           });
-          
+
           done();
         }, 500);
       });
@@ -225,9 +210,9 @@ describe('WebSocket Batching Integration', () => {
 
   describe('Compression', () => {
     it('should compress large batches', (done) => {
-      clientSocket.emit('client-capabilities', { 
+      clientSocket.emit('client-capabilities', {
         batching: true,
-        compression: true 
+        compression: true,
       });
 
       clientSocket.on('batch-update', (batch) => {
@@ -244,14 +229,9 @@ describe('WebSocket Batching Integration', () => {
       clientSocket.on('joined_project', () => {
         // Send large messages to trigger compression
         const largeData = 'x'.repeat(500); // Large payload
-        
+
         for (let i = 0; i < 10; i++) {
-          broadcastSegmentationUpdate(
-            'compress-test',
-            `image-${i}`,
-            'processing',
-            largeData
-          );
+          broadcastSegmentationUpdate('compress-test', `image-${i}`, 'processing', largeData);
         }
       });
     });
@@ -259,31 +239,26 @@ describe('WebSocket Batching Integration', () => {
     it('should track compression savings', async () => {
       const batcher = getWebSocketBatcher();
       const initialMetrics = batcher?.getMetrics();
-      
-      clientSocket.emit('client-capabilities', { 
+
+      clientSocket.emit('client-capabilities', {
         batching: true,
-        compression: true 
+        compression: true,
       });
 
       clientSocket.emit('join_project', { projectId: 'savings-test' });
 
       // Send compressible data
       const repetitiveData = 'test'.repeat(1000);
-      
+
       for (let i = 0; i < 5; i++) {
-        broadcastSegmentationUpdate(
-          'savings-test',
-          `image-${i}`,
-          'processing',
-          repetitiveData
-        );
+        broadcastSegmentationUpdate('savings-test', `image-${i}`, 'processing', repetitiveData);
       }
 
       // Wait and check metrics
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       const finalMetrics = batcher?.getMetrics();
-      
+
       if (finalMetrics && initialMetrics) {
         expect(finalMetrics.compressionSavings).toBeGreaterThan(
           initialMetrics.compressionSavings || 0
@@ -297,7 +272,7 @@ describe('WebSocket Batching Integration', () => {
       const receivedUpdates = new Map<string, any[]>();
 
       clientSocket.emit('client-capabilities', { batching: true });
-      
+
       clientSocket.on('bulk_updates', (data) => {
         if (!receivedUpdates.has(data.projectId)) {
           receivedUpdates.set(data.projectId, []);
@@ -309,16 +284,16 @@ describe('WebSocket Batching Integration', () => {
       const projects = ['proj-1', 'proj-2', 'proj-3'];
       let joinedCount = 0;
 
-      projects.forEach(projectId => {
+      projects.forEach((projectId) => {
         clientSocket.emit('join_project', { projectId });
       });
 
       clientSocket.on('joined_project', () => {
         joinedCount++;
-        
+
         if (joinedCount === projects.length) {
           // Send bulk updates
-          const updates = projects.flatMap(projectId => 
+          const updates = projects.flatMap((projectId) =>
             Array.from({ length: 5 }, (_, i) => ({
               projectId,
               imageId: `image-${i}`,
@@ -332,12 +307,12 @@ describe('WebSocket Batching Integration', () => {
           // Verify grouped delivery
           setTimeout(() => {
             expect(receivedUpdates.size).toBe(projects.length);
-            
-            projects.forEach(projectId => {
+
+            projects.forEach((projectId) => {
               const projectUpdates = receivedUpdates.get(projectId);
               expect(projectUpdates).toHaveLength(5);
             });
-            
+
             done();
           }, 200);
         }
@@ -348,12 +323,12 @@ describe('WebSocket Batching Integration', () => {
   describe('Performance Metrics', () => {
     it('should track batching efficiency', async () => {
       const metrics = getEnhancedMetrics();
-      
+
       expect(metrics).toHaveProperty('totalClients');
       expect(metrics).toHaveProperty('batchedClients');
       expect(metrics).toHaveProperty('nonBatchedClients');
       expect(metrics).toHaveProperty('batcherMetrics');
-      
+
       if (metrics.batcherMetrics) {
         expect(metrics.batcherMetrics).toHaveProperty('efficiency');
         expect(metrics.batcherMetrics).toHaveProperty('avgMessagesPerBatch');
@@ -362,22 +337,19 @@ describe('WebSocket Batching Integration', () => {
 
     it('should calculate message reduction percentage', async () => {
       const batcher = getWebSocketBatcher();
-      
+
       // Send many messages
       for (let i = 0; i < 100; i++) {
-        broadcastSegmentationUpdate(
-          'metrics-test',
-          `image-${i}`,
-          'processing'
-        );
+        broadcastSegmentationUpdate('metrics-test', `image-${i}`, 'processing');
       }
 
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
       const metrics = batcher?.getMetrics();
-      
+
       if (metrics && metrics.totalMessages > 0 && metrics.batchesSent > 0) {
-        const reduction = ((metrics.totalMessages - metrics.batchesSent) / metrics.totalMessages) * 100;
+        const reduction =
+          ((metrics.totalMessages - metrics.batchesSent) / metrics.totalMessages) * 100;
         expect(reduction).toBeGreaterThan(50); // Should achieve >50% reduction
       }
     });
@@ -397,17 +369,13 @@ describe('WebSocket Batching Integration', () => {
       clientSocket.on('joined_project', () => {
         // Send multiple updates
         for (let i = 0; i < 5; i++) {
-          broadcastSegmentationUpdate(
-            'compat-test',
-            `image-${i}`,
-            'processing'
-          );
+          broadcastSegmentationUpdate('compat-test', `image-${i}`, 'processing');
         }
 
         // Should receive individual messages, not batches
         setTimeout(() => {
           expect(messages).toHaveLength(5);
-          messages.forEach(msg => {
+          messages.forEach((msg) => {
             expect(msg).toHaveProperty('imageId');
             expect(msg).toHaveProperty('status');
           });
@@ -426,11 +394,7 @@ describe('WebSocket Batching Integration', () => {
       clientSocket.emit('join_project', { projectId: 'legacy-test' });
 
       clientSocket.on('joined_project', () => {
-        broadcastSegmentationUpdate(
-          'legacy-test',
-          'image-1',
-          'queued'
-        );
+        broadcastSegmentationUpdate('legacy-test', 'image-1', 'queued');
 
         setTimeout(() => {
           expect(legacyMessages).toHaveLength(1);
@@ -447,14 +411,12 @@ describe('WebSocket Batching Integration', () => {
       let ackTimeout: NodeJS.Timeout;
 
       clientSocket.emit('client-capabilities', { batching: true });
-      
+
       clientSocket.on('batch-update', (batch) => {
         // Don't send acknowledgment to simulate timeout
         ackTimeout = setTimeout(() => {
           // Server should handle missing ack gracefully
-          expect(logger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('acknowledgment')
-          );
+          expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('acknowledgment'));
           done();
         }, 1000);
       });

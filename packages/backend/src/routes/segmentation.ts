@@ -15,7 +15,7 @@ import {
   triggerSegmentationSchema,
   updateSegmentationSchema,
   triggerProjectBatchSegmentationSchema,
-  createSegmentationJobSchema
+  createSegmentationJobSchema,
 } from '../validators/segmentationValidators';
 import { SEGMENTATION_STATUS } from '../constants/segmentationStatus';
 import { broadcastSegmentationUpdate } from '../services/socketService';
@@ -42,9 +42,43 @@ const triggerBatchSchema = z.object({
 });
 // -----------------------------------------
 
-// GET /api/images/:id/segmentation - Get segmentation result for an image
-// This endpoint returns the segmentation status from the images table to ensure consistency
-// with the image list view. The segmentation_results table may have stale status.
+/**
+ * @openapi
+ * /images/{imageId}/segmentation:
+ *   get:
+ *     tags: [Segmentation]
+ *     summary: Get segmentation result
+ *     description: |
+ *       Retrieve segmentation result for a specific image. Returns the segmentation
+ *       status from the images table to ensure consistency with the image list view.
+ *       Only the image owner can access segmentation results.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: imageId
+ *         in: path
+ *         required: true
+ *         description: Image ID to get segmentation result for
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *     responses:
+ *       200:
+ *         description: Segmentation result retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SegmentationResult'
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       403:
+ *         description: Forbidden - user is not the image owner
+ *       404:
+ *         description: Image not found or no segmentation result available
+ *       500:
+ *         description: Internal server error
+ */
 // @ts-ignore // TS2769: No overload matches this call.
 router.get(
   '/images/:id/segmentation',
@@ -135,7 +169,79 @@ const triggerSingleWithPrioritySchema = z.object({
   }),
 });
 
-// POST /api/images/:id/segmentation - Trigger segmentation process for an image
+/**
+ * @openapi
+ * /images/{imageId}/segmentation:
+ *   post:
+ *     tags: [Segmentation]
+ *     summary: Trigger image segmentation
+ *     description: |
+ *       Start ML-based segmentation process for a specific image.
+ *       The segmentation will be processed asynchronously using the ResUNet model.
+ *       Only the image owner can trigger segmentation.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: imageId
+ *         in: path
+ *         required: true
+ *         description: Image ID to segment
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               parameters:
+ *                 type: object
+ *                 description: Optional segmentation parameters
+ *                 additionalProperties: true
+ *                 example: {"threshold": 0.5, "minArea": 100}
+ *               priority:
+ *                 type: integer
+ *                 minimum: 0
+ *                 maximum: 10
+ *                 default: 1
+ *                 description: Processing priority (0=highest, 10=lowest)
+ *                 example: 1
+ *     responses:
+ *       202:
+ *         description: Segmentation process started
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Segmentation started"
+ *                 taskId:
+ *                   type: string
+ *                   format: uuid
+ *                   example: "456e7890-a12b-34c5-6789-012345678901"
+ *                 status:
+ *                   type: string
+ *                   enum: [queued, processing]
+ *                   example: "queued"
+ *                 priority:
+ *                   type: integer
+ *                   example: 1
+ *       400:
+ *         description: Validation error or segmentation already exists
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       403:
+ *         description: Forbidden - user is not the image owner
+ *       404:
+ *         description: Image not found
+ *       500:
+ *         description: Internal server error
+ */
 // @ts-ignore // TS2769: No overload matches this call.
 router.post(
   '/images/:id/segmentation',
@@ -636,7 +742,91 @@ router.put(
   }
 );
 
-// POST /api/projects/:projectId/segmentation/batch-trigger - Trigger segmentation for all images in a project
+/**
+ * @openapi
+ * /projects/{projectId}/segmentation/batch-trigger:
+ *   post:
+ *     tags: [Segmentation]
+ *     summary: Batch segmentation trigger
+ *     description: |
+ *       Trigger segmentation for multiple images in a project or all images in the project.
+ *       This creates segmentation tasks for processing by the ML service.
+ *       Only the project owner can trigger batch segmentation.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: projectId
+ *         in: path
+ *         required: true
+ *         description: Project ID to process images in
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               imageIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
+ *                 description: Specific image IDs to process (if not provided, processes all images)
+ *                 example: ["456e7890-a12b-34c5-6789-012345678901", "789fcdeb-51a2-43d7-8765-123456789abc"]
+ *               priority:
+ *                 type: integer
+ *                 minimum: 0
+ *                 maximum: 10
+ *                 default: 1
+ *                 description: Processing priority for all tasks
+ *                 example: 1
+ *               model_type:
+ *                 type: string
+ *                 description: ML model type to use for segmentation
+ *                 example: "resunet"
+ *     responses:
+ *       202:
+ *         description: Batch segmentation started
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Batch segmentation started"
+ *                 totalImages:
+ *                   type: integer
+ *                   example: 25
+ *                 queuedImages:
+ *                   type: integer
+ *                   example: 20
+ *                 failedImages:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       imageId:
+ *                         type: string
+ *                         format: uuid
+ *                       error:
+ *                         type: string
+ *                   example: []
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       403:
+ *         description: Forbidden - user is not the project owner
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: Internal server error
+ */
 // @ts-ignore // TS2769: No overload matches this call.
 router.post(
   '/projects/:projectId/segmentation/batch-trigger',
@@ -891,30 +1081,30 @@ router.post(
     try {
       const { imageIds, priority = 1, parameters = {} } = req.body;
       const userId = req.user?.userId;
-      
+
       if (!userId) {
         return res.status(401).json({ message: 'Authentication required' });
       }
-      
+
       logger.info('Creating segmentation job', { imageIds, priority, userId });
-      
+
       // Import the segmentation queue service
-      const segmentationQueueService = (await import('../services/segmentationQueueService')).default;
-      
+      const segmentationQueueService = (await import('../services/segmentationQueueService'))
+        .default;
+
       // Create tasks for each image
       const taskIds = [];
       for (const imageId of imageIds) {
         // Get image details
-        const imageQuery = await pool.getPool().query(
-          'SELECT id, storage_path FROM images WHERE id = $1',
-          [imageId]
-        );
-        
+        const imageQuery = await pool
+          .getPool()
+          .query('SELECT id, storage_path FROM images WHERE id = $1', [imageId]);
+
         if (imageQuery.rows.length === 0) {
           logger.warn('Image not found for segmentation job', { imageId });
           continue;
         }
-        
+
         const image = imageQuery.rows[0];
         const taskId = await segmentationQueueService.addTask(
           image.id,
@@ -924,13 +1114,13 @@ router.post(
         );
         taskIds.push(taskId);
       }
-      
+
       logger.info('Segmentation job created', { taskIds });
-      
+
       res.status(201).json({
         success: true,
         taskIds,
-        message: `Created ${taskIds.length} segmentation tasks`
+        message: `Created ${taskIds.length} segmentation tasks`,
       });
     } catch (error) {
       logger.error('Error creating segmentation job', { error });

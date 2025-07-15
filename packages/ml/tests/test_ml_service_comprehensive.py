@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch, MagicMock
 import threading
 import numpy as np
 import cv2
+import pika
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ml_service import app, generate_mock_polygons, process_message, start_rabbitmq_consumer
@@ -234,7 +235,7 @@ class TestMessageProcessingAdvanced:
                 mock_put.assert_called_once()
                 error_data = mock_put.call_args[1]['json']
                 assert error_data['status'] == 'failed'
-                assert 'timeout' in error_data['error'].lower()
+                assert 'timed out' in error_data['error'].lower()
     
     def test_process_message_memory_error_handling(self, setup_mocks):
         """Test handling of memory errors during processing."""

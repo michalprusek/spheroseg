@@ -13,16 +13,16 @@ export function createImageLoader(db: Pool) {
       JOIN users u ON i.user_id = u.id
       WHERE i.id = ANY($1::uuid[])
     `;
-    
+
     const result = await db.query(query, [imageIds]);
-    
+
     // Create a map for O(1) lookup
     const imageMap = new Map();
-    result.rows.forEach(image => {
+    result.rows.forEach((image) => {
       imageMap.set(image.id, image);
     });
-    
+
     // Return images in the same order as requested
-    return imageIds.map(id => imageMap.get(id) || null);
+    return imageIds.map((id) => imageMap.get(id) || null);
   });
 }

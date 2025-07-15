@@ -29,7 +29,7 @@ interface CreateApolloServerOptions {
 export async function createApolloServer({
   httpServer,
   db,
-  isDevelopment = false
+  isDevelopment = false,
 }: CreateApolloServerOptions): Promise<ApolloServer<Context>> {
   // Apply directives to schema
   let directiveSchema = schema;
@@ -42,32 +42,32 @@ export async function createApolloServer({
     plugins: [
       // Drain HTTP server on shutdown
       ApolloServerPluginDrainHttpServer({ httpServer }),
-      
+
       // Landing page for development
       isDevelopment
-        ? ApolloServerPluginLandingPageLocalDefault({ 
+        ? ApolloServerPluginLandingPageLocalDefault({
             embed: true,
-            includeCookies: true 
+            includeCookies: true,
           })
         : ApolloServerPluginLandingPageLocalDefault({ embed: false }),
-      
+
       // Custom plugins
       complexityPlugin({ maxComplexity: 1000 }),
       loggingPlugin(),
       performancePlugin(),
     ],
-    
+
     // Validation rules
     validationRules: [
       depthLimit(7), // Limit query depth
     ],
-    
+
     // Format errors
     formatError,
-    
+
     // Enable introspection in development
     introspection: isDevelopment,
-    
+
     // Include stack traces in development
     includeStacktraceInErrorResponses: isDevelopment,
   });
@@ -82,7 +82,7 @@ export function createGraphQLMiddleware(server: ApolloServer<Context>, db: Pool)
       maxFileSize: 200 * 1024 * 1024, // 200MB
       maxFiles: 10,
     }),
-    
+
     // Apollo Server middleware
     expressMiddleware(server, {
       context: async ({ req, res }) => createContext(req, res, db),

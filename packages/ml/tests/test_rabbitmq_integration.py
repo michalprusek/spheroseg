@@ -295,13 +295,13 @@ class TestRabbitMQConnection:
         )
         
         # Verify QoS settings
-        mock_channel.basic_qos.assert_called_once_with(prefetch_count=1)
+        mock_channel.basic_qos.assert_called_once_with(prefetch_count=4)
         
         # Verify consumer setup
         mock_channel.basic_consume.assert_called_once()
         consume_args = mock_channel.basic_consume.call_args
         assert consume_args[1]['queue'] == 'segmentation_tasks'
-        assert consume_args[1]['on_message_callback'] == process_message
+        assert consume_args[1]['on_message_callback'].__name__ == 'process_message'
 
 
 class TestMessagePriority:

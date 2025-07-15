@@ -14,16 +14,16 @@ export function createSegmentationLoader(db: Pool) {
       ) c ON sr.id = c.segmentation_result_id
       WHERE sr.image_id = ANY($1::uuid[])
     `;
-    
+
     const result = await db.query(query, [imageIds]);
-    
+
     // Create a map for O(1) lookup by image_id
     const segmentationMap = new Map();
-    result.rows.forEach(segmentation => {
+    result.rows.forEach((segmentation) => {
       segmentationMap.set(segmentation.image_id, segmentation);
     });
-    
+
     // Return segmentations in the same order as requested image IDs
-    return imageIds.map(id => segmentationMap.get(id) || null);
+    return imageIds.map((id) => segmentationMap.get(id) || null);
   });
 }

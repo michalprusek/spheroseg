@@ -35,13 +35,13 @@ abstract class BaseCDNService implements CDNService {
 
   protected buildTransformParams(transform?: UrlOptions['transform']): string {
     if (!transform) return '';
-    
+
     const params: string[] = [];
     if (transform.width) params.push(`w=${transform.width}`);
     if (transform.height) params.push(`h=${transform.height}`);
     if (transform.quality) params.push(`q=${transform.quality}`);
     if (transform.format) params.push(`f=${transform.format}`);
-    
+
     return params.length > 0 ? `?${params.join('&')}` : '';
   }
 }
@@ -63,13 +63,13 @@ class CloudFrontService extends BaseCDNService {
 
   getUrl(path: string, options?: UrlOptions): string {
     const cdnUrl = getCDNUrl(path);
-    
+
     if (options?.transform) {
       // CloudFront uses Lambda@Edge for transformations
       const transformParams = this.buildTransformParams(options.transform);
       return `${cdnUrl}${transformParams}`;
     }
-    
+
     return cdnUrl;
   }
 
@@ -87,17 +87,20 @@ class CloudFrontService extends BaseCDNService {
     );
 
     return new Promise((resolve, reject) => {
-      signer.getSignedUrl({
-        url,
-        expires,
-      }, (err, signedUrl) => {
-        if (err) {
-          logger.error('CloudFront signed URL error:', err);
-          reject(err);
-        } else {
-          resolve(signedUrl);
+      signer.getSignedUrl(
+        {
+          url,
+          expires,
+        },
+        (err, signedUrl) => {
+          if (err) {
+            logger.error('CloudFront signed URL error:', err);
+            reject(err);
+          } else {
+            resolve(signedUrl);
+          }
         }
-      });
+      );
     });
   }
 
@@ -113,7 +116,7 @@ class CloudFrontService extends BaseCDNService {
           CallerReference: `spheroseg-${Date.now()}`,
           Paths: {
             Quantity: paths.length,
-            Items: paths.map(p => p.startsWith('/') ? p : `/${p}`),
+            Items: paths.map((p) => (p.startsWith('/') ? p : `/${p}`)),
           },
         },
       };
@@ -147,10 +150,10 @@ class CloudFrontService extends BaseCDNService {
     };
 
     await this.s3.putObject(params).promise();
-    
+
     // Invalidate the path
     await this.invalidate([cdnPath]);
-    
+
     return getCDNUrl(cdnPath);
   }
 
@@ -161,14 +164,16 @@ class CloudFrontService extends BaseCDNService {
     }
 
     try {
-      await this.s3.deleteObject({
-        Bucket: bucketName,
-        Key: cdnPath,
-      }).promise();
-      
+      await this.s3
+        .deleteObject({
+          Bucket: bucketName,
+          Key: cdnPath,
+        })
+        .promise();
+
       // Invalidate the path
       await this.invalidate([cdnPath]);
-      
+
       return true;
     } catch (error) {
       logger.error('S3 delete error:', error);
@@ -184,19 +189,19 @@ class CloudFrontService extends BaseCDNService {
   private getContentType(path: string): string {
     const ext = path.split('.').pop()?.toLowerCase();
     const mimeTypes: Record<string, string> = {
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg',
-      'png': 'image/png',
-      'gif': 'image/gif',
-      'webp': 'image/webp',
-      'svg': 'image/svg+xml',
-      'css': 'text/css',
-      'js': 'application/javascript',
-      'json': 'application/json',
-      'woff': 'font/woff',
-      'woff2': 'font/woff2',
-      'ttf': 'font/ttf',
-      'eot': 'application/vnd.ms-fontobject',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      svg: 'image/svg+xml',
+      css: 'text/css',
+      js: 'application/javascript',
+      json: 'application/json',
+      woff: 'font/woff',
+      woff2: 'font/woff2',
+      ttf: 'font/ttf',
+      eot: 'application/vnd.ms-fontobject',
     };
     return mimeTypes[ext || ''] || 'application/octet-stream';
   }
@@ -208,22 +213,22 @@ class CloudflareService extends BaseCDNService {
 
   getUrl(path: string, options?: UrlOptions): string {
     const cdnUrl = getCDNUrl(path);
-    
+
     if (options?.transform) {
       // Cloudflare uses URL parameters for image transformations
       const transform = options.transform;
       const variants: string[] = [];
-      
+
       if (transform.width) variants.push(`width=${transform.width}`);
       if (transform.height) variants.push(`height=${transform.height}`);
       if (transform.quality) variants.push(`quality=${transform.quality}`);
       if (transform.format) variants.push(`format=${transform.format}`);
-      
+
       if (variants.length > 0) {
         return `${cdnUrl}/cdn-cgi/image/${variants.join(',')}/${path}`;
       }
     }
-    
+
     return cdnUrl;
   }
 
@@ -231,7 +236,7 @@ class CloudflareService extends BaseCDNService {
     // Cloudflare uses URL signing with HMAC
     const url = getCDNUrl(path);
     const expires = Math.floor(Date.now() / 1000) + (expiresIn || cdnConfig.signedUrlExpiry);
-    
+
     if (!cdnConfig.secretKey) {
       throw new Error('CDN secret key not configured');
     }
@@ -255,17 +260,17 @@ class CloudflareService extends BaseCDNService {
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${cdnConfig.cloudflare.apiToken}`,
+            Authorization: `Bearer ${cdnConfig.cloudflare.apiToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            files: paths.map(p => `${cdnConfig.baseUrl}${p}`),
+            files: paths.map((p) => `${cdnConfig.baseUrl}${p}`),
           }),
         }
       );
 
       const result = await response.json();
-      
+
       if (!result.success) {
         logger.error('Cloudflare purge error:', result.errors);
         return false;
@@ -298,8 +303,8 @@ class CloudflareService extends BaseCDNService {
     }
 
     try {
-      const body = patterns 
-        ? { files: patterns.map(p => `${cdnConfig.baseUrl}${p}`) }
+      const body = patterns
+        ? { files: patterns.map((p) => `${cdnConfig.baseUrl}${p}`) }
         : { purge_everything: true };
 
       const response = await fetch(
@@ -307,7 +312,7 @@ class CloudflareService extends BaseCDNService {
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${cdnConfig.cloudflare.apiToken}`,
+            Authorization: `Bearer ${cdnConfig.cloudflare.apiToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(body),

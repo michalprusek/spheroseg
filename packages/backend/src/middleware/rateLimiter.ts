@@ -1,6 +1,6 @@
 /**
  * Rate Limiting Middleware
- * 
+ *
  * Provides configurable rate limiting for different endpoint types
  */
 
@@ -19,14 +19,14 @@ export const diagnosticsLimiter = rateLimit({
     logger.warn('Rate limit exceeded for diagnostics', {
       ip: req.ip,
       path: req.path,
-      userId: (req as any).user?.userId
+      userId: (req as any).user?.userId,
     });
     res.status(429).json({
       error: 'Too many diagnostic requests',
       message: 'Please wait before making additional diagnostic requests',
-      retryAfter: Math.ceil(req.rateLimit?.resetTime || Date.now() / 1000)
+      retryAfter: Math.ceil(req.rateLimit?.resetTime || Date.now() / 1000),
     });
-  }
+  },
 });
 
 // Rate limiter for image upload endpoints
@@ -39,7 +39,7 @@ export const uploadLimiter = rateLimit({
     // Use user ID if authenticated, otherwise fall back to IP
     const userId = (req as any).user?.userId;
     return userId || req.ip;
-  }
+  },
 });
 
 // Rate limiter for general API endpoints
@@ -51,7 +51,7 @@ export const apiLimiter = rateLimit({
     // Skip rate limiting for certain paths
     const skipPaths = ['/health', '/metrics'];
     return skipPaths.includes(req.path);
-  }
+  },
 });
 
 // Rate limiter for authentication endpoints
@@ -59,7 +59,7 @@ export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 auth attempts per windowMs
   skipSuccessfulRequests: true, // Don't count successful requests
-  message: 'Too many authentication attempts, please try again later'
+  message: 'Too many authentication attempts, please try again later',
 });
 
 // Dynamic rate limiter based on user tier (example)
@@ -78,6 +78,6 @@ export function createDynamicLimiter(options: {
     keyGenerator: (req: Request) => {
       const userId = (req as any).user?.userId;
       return userId || req.ip;
-    }
+    },
   });
 }

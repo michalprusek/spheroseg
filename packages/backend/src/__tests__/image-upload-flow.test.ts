@@ -1,6 +1,6 @@
 /**
  * Comprehensive Image Upload Flow Tests
- * 
+ *
  * Tests the complete image upload and display flow including:
  * - TIFF handling
  * - WebSocket events
@@ -34,58 +34,58 @@ describe('Image Upload Flow', () => {
     // Setup test environment
     process.env.NODE_ENV = 'test';
     process.env.JWT_SECRET = 'test-secret';
-    
+
     // Create Express app
     app = express();
     app.use(express.json());
-    
+
     // Mock Socket.IO
     io = {
       to: jest.fn().mockReturnThis(),
-      emit: jest.fn()
+      emit: jest.fn(),
     } as any;
-    
+
     // Add Socket.IO to app
     (app as any).io = io;
-    
+
     // Mock authentication middleware
     app.use((req: any, res: any, next: () => void) => {
       req.user = { userId: 'test-user-123' };
       req.io = io;
       next();
     });
-    
+
     // Register routes
     const imageRoutes = require('../routes/images').default;
     const diagnosticsRoutes = require('../routes/diagnostics').default;
     app.use('/api/projects/:projectId/images', imageRoutes);
     app.use('/api/images', imageRoutes);
     app.use('/api/diagnostics', diagnosticsRoutes);
-    
+
     // Error handler
     app.use((err: any, req: any, res: any, next: any) => {
       res.status(err.statusCode || 500).json({
-        message: err.message || 'Internal Server Error'
+        message: err.message || 'Internal Server Error',
       });
     });
-    
+
     // Setup test data
     userId = 'test-user-123';
     projectId = 'test-project-456';
     authToken = 'Bearer test-token';
   });
-  
+
   beforeEach(() => {
     // Setup default mock pool
     mockPool = {
       query: jest.fn(),
       connect: jest.fn().mockResolvedValue({
         query: jest.fn(),
-        release: jest.fn()
-      })
+        release: jest.fn(),
+      }),
     };
     (getPool as jest.Mock).mockReturnValue(mockPool);
-    
+
     // Reset all mocks
     jest.clearAllMocks();
   });
@@ -97,7 +97,7 @@ describe('Image Upload Flow', () => {
       jest.spyOn(imageUtils, 'getImageMetadata').mockResolvedValue({
         width: 1024,
         height: 768,
-        format: 'tiff'
+        format: 'tiff',
       });
       jest.spyOn(imageUtils, 'createThumbnail').mockResolvedValue();
 
@@ -106,8 +106,8 @@ describe('Image Upload Flow', () => {
         query: jest.fn().mockResolvedValue({ rows: [{ id: 'image-123' }] }),
         connect: jest.fn().mockResolvedValue({
           query: jest.fn().mockResolvedValue({ rows: [] }),
-          release: jest.fn()
-        })
+          release: jest.fn(),
+        }),
       };
       (getPool as jest.Mock).mockReturnValue(mockPool);
 
@@ -125,11 +125,11 @@ describe('Image Upload Flow', () => {
     it('should reject large TIFF files', async () => {
       // Create a mock large file
       const largeFileSize = 150 * 1024 * 1024; // 150MB
-      
+
       // Mock fs module
       const fsMock = require('fs');
       fsMock.statSync = jest.fn().mockReturnValue({
-        size: largeFileSize
+        size: largeFileSize,
       });
 
       const response = await request(app)
@@ -142,7 +142,8 @@ describe('Image Upload Flow', () => {
     });
 
     it('should handle TIFF conversion errors gracefully', async () => {
-      jest.spyOn(imageUtils, 'convertTiffToWebFriendly')
+      jest
+        .spyOn(imageUtils, 'convertTiffToWebFriendly')
         .mockRejectedValue(new Error('Unsupported TIFF format'));
 
       const response = await request(app)
@@ -164,7 +165,7 @@ describe('Image Upload Flow', () => {
       jest.spyOn(imageUtils, 'getImageMetadata').mockResolvedValue({
         width: 800,
         height: 600,
-        format: 'jpeg'
+        format: 'jpeg',
       });
       jest.spyOn(imageUtils, 'createThumbnail').mockResolvedValue();
 
@@ -181,7 +182,7 @@ describe('Image Upload Flow', () => {
         expect.objectContaining({
           projectId,
           image: expect.any(Object),
-          timestamp: expect.any(String)
+          timestamp: expect.any(String),
         })
       );
     });
@@ -189,7 +190,7 @@ describe('Image Upload Flow', () => {
     it('should emit image:deleted event after deletion', async () => {
       const mockEmit = jest.fn();
       io.to = jest.fn().mockReturnValue({ emit: mockEmit });
-      
+
       const imageId = 'test-image-789';
 
       await request(app)
@@ -203,7 +204,7 @@ describe('Image Upload Flow', () => {
         expect.objectContaining({
           projectId,
           imageId,
-          timestamp: expect.any(String)
+          timestamp: expect.any(String),
         })
       );
     });
@@ -211,7 +212,6 @@ describe('Image Upload Flow', () => {
 
   describe('Database Consistency', () => {
     it('should verify images are in database after upload', async () => {
-      
       // Mock successful upload and verification
       mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] }) // Verification query
@@ -235,11 +235,11 @@ describe('Image Upload Flow', () => {
     it('should return images in both data and images fields', async () => {
       const mockImages = [
         { id: '1', name: 'image1.jpg', segmentation_status: 'completed' },
-        { id: '2', name: 'image2.jpg', segmentation_status: 'queued' }
+        { id: '2', name: 'image2.jpg', segmentation_status: 'queued' },
       ];
-      mockPool.query.mockResolvedValue({ 
+      mockPool.query.mockResolvedValue({
         rows: mockImages,
-        rowCount: 2 
+        rowCount: 2,
       });
 
       const response = await request(app)
@@ -254,16 +254,15 @@ describe('Image Upload Flow', () => {
       expect(response.body.images).toHaveLength(2);
     });
   });
-  
+
   describe('Database Consistency Checks', () => {
     it('should perform consistency check', async () => {
-    
-    // Mock consistency check queries
-    mockPool.query
-      .mockResolvedValueOnce({ rows: [{ count: '10' }] }) // Total images
-      .mockResolvedValueOnce({ rows: [{ count: '2' }] })  // Images without status
-      .mockResolvedValueOnce({ rows: [{ count: '1' }] })  // Invalid status
-      .mockResolvedValueOnce({ rows: [{ count: '0' }] }); // Orphaned images
+      // Mock consistency check queries
+      mockPool.query
+        .mockResolvedValueOnce({ rows: [{ count: '10' }] }) // Total images
+        .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // Images without status
+        .mockResolvedValueOnce({ rows: [{ count: '1' }] }) // Invalid status
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] }); // Orphaned images
 
       const response = await request(app)
         .get(`/api/diagnostics/project/${projectId}/consistency`)
@@ -275,16 +274,16 @@ describe('Image Upload Flow', () => {
         totalImages: 10,
         imagesWithoutStatus: 2,
         imagesWithInvalidStatus: 1,
-        orphanedImages: 0
+        orphanedImages: 0,
       });
     });
 
     it('should fix consistency issues', async () => {
       const mockClient = {
         query: jest.fn(),
-        release: jest.fn()
+        release: jest.fn(),
       };
-      
+
       mockPool.connect.mockResolvedValue(mockClient);
       mockClient.query
         .mockResolvedValueOnce(undefined) // BEGIN

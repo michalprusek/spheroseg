@@ -1,0 +1,133 @@
+# Test info
+
+- Name: Lazy Loading and Error Handling >> should handle deep linking correctly
+- Location: /home/cvat/spheroseg/spheroseg/packages/frontend/e2e/routing/lazy-loading.spec.ts:184:3
+
+# Error details
+
+```
+Error: browserType.launch: Executable doesn't exist at /home/cvat/.cache/ms-playwright/firefox-1482/firefox/firefox
+╔═════════════════════════════════════════════════════════════════════════╗
+║ Looks like Playwright Test or Playwright was just installed or updated. ║
+║ Please run the following command to download new browsers:              ║
+║                                                                         ║
+║     npx playwright install                                              ║
+║                                                                         ║
+║ <3 Playwright Team                                                      ║
+╚═════════════════════════════════════════════════════════════════════════╝
+```
+
+# Test source
+
+```ts
+   84 |
+   85 |   test('should handle JavaScript errors without crashing', async ({ page }) => {
+   86 |     let jsError: Error | null = null;
+   87 |     
+   88 |     // Listen for JavaScript errors
+   89 |     page.on('pageerror', error => {
+   90 |       jsError = error;
+   91 |     });
+   92 |
+   93 |     // Navigate through pages
+   94 |     await navigateAndWaitForLoad(page, urls.home);
+   95 |     await page.click(selectors.navigation.documentation);
+   96 |     await page.waitForURL(urls.documentation);
+   97 |     
+   98 |     // No JavaScript errors should occur during normal navigation
+   99 |     expect(jsError).toBeNull();
+  100 |   });
+  101 |
+  102 |   test('should load pages within acceptable time', async ({ page }) => {
+  103 |     const maxLoadTime = 5000; // 5 seconds
+  104 |     
+  105 |     const pagesToTest = [
+  106 |       urls.home,
+  107 |       urls.documentation,
+  108 |       urls.about,
+  109 |       urls.termsOfService,
+  110 |       urls.privacyPolicy,
+  111 |     ];
+  112 |
+  113 |     for (const url of pagesToTest) {
+  114 |       const startTime = Date.now();
+  115 |       await page.goto(url);
+  116 |       await page.waitForLoadState('networkidle');
+  117 |       const loadTime = Date.now() - startTime;
+  118 |       
+  119 |       expect(loadTime).toBeLessThan(maxLoadTime);
+  120 |     }
+  121 |   });
+  122 |
+  123 |   test('should handle rapid navigation without issues', async ({ page }) => {
+  124 |     await navigateAndWaitForLoad(page, urls.home);
+  125 |     
+  126 |     // Rapidly click through navigation
+  127 |     await page.click(selectors.navigation.documentation);
+  128 |     await page.click(selectors.navigation.termsOfService);
+  129 |     await page.click(selectors.navigation.privacyPolicy);
+  130 |     await page.click(selectors.navigation.about);
+  131 |     
+  132 |     // Wait for final navigation to complete
+  133 |     await page.waitForLoadState('networkidle');
+  134 |     
+  135 |     // Should end up on the last clicked page
+  136 |     await expect(page).toHaveURL(urls.about);
+  137 |     await expect(page.locator('h1')).toContainText('About SpheroSeg');
+  138 |   });
+  139 |
+  140 |   test('should preserve application state during navigation', async ({ page }) => {
+  141 |     await navigateAndWaitForLoad(page, urls.home);
+  142 |     
+  143 |     // Change theme
+  144 |     await page.click(selectors.themeToggle);
+  145 |     
+  146 |     // Get theme state
+  147 |     const htmlElement = page.locator('html');
+  148 |     const initialTheme = await htmlElement.getAttribute('class');
+  149 |     
+  150 |     // Navigate to another page
+  151 |     await page.click(selectors.navigation.documentation);
+  152 |     await page.waitForURL(urls.documentation);
+  153 |     
+  154 |     // Theme should be preserved
+  155 |     const currentTheme = await htmlElement.getAttribute('class');
+  156 |     expect(currentTheme).toBe(initialTheme);
+  157 |   });
+  158 |
+  159 |   test('should handle 404 errors for non-existent routes', async ({ page }) => {
+  160 |     const nonExistentRoutes = [
+  161 |       '/non-existent-page',
+  162 |       '/admin',
+  163 |       '/api/test',
+  164 |       '/projects/invalid-id',
+  165 |     ];
+  166 |
+  167 |     for (const route of nonExistentRoutes) {
+  168 |       await navigateAndWaitForLoad(page, route);
+  169 |       
+  170 |       // Should show 404 page
+  171 |       await expect(page.locator('h1')).toContainText('Page not found');
+  172 |       await expect(page.getByText('The page you requested could not be found')).toBeVisible();
+  173 |       
+  174 |       // Should have link back to home
+  175 |       const homeLink = page.getByRole('link', { name: 'Return to Home' });
+  176 |       await expect(homeLink).toBeVisible();
+  177 |       
+  178 |       // Clicking home link should work
+  179 |       await homeLink.click();
+  180 |       await expect(page).toHaveURL(urls.home);
+  181 |     }
+  182 |   });
+  183 |
+> 184 |   test('should handle deep linking correctly', async ({ page }) => {
+      |   ^ Error: browserType.launch: Executable doesn't exist at /home/cvat/.cache/ms-playwright/firefox-1482/firefox/firefox
+  185 |     // Direct navigation to deep links
+  186 |     await navigateAndWaitForLoad(page, urls.documentation + '#api-reference');
+  187 |     
+  188 |     // Should load the page and scroll to section
+  189 |     await expect(page).toHaveURL(urls.documentation + '#api-reference');
+  190 |     await expect(page.locator('#api-reference')).toBeInViewport();
+  191 |   });
+  192 | });
+```

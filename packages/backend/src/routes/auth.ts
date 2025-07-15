@@ -31,11 +31,11 @@ import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
 import authService from '../services/authService'; // Import the new auth service
 // TODO: Re-enable i18n when fixed
-// import { 
-//   sendSuccess, 
-//   sendCreated, 
-//   sendError, 
-//   sendServerError 
+// import {
+//   sendSuccess,
+//   sendCreated,
+//   sendError,
+//   sendServerError
 // } from '../utils/apiResponsei18n';
 
 const router: Router = express.Router();
@@ -71,7 +71,7 @@ router.get('/test', (req: express.Request, res: Response) => {
  *     tags: [Authentication]
  *     summary: Register a new user
  *     description: |
- *       Create a new user account with email and password. 
+ *       Create a new user account with email and password.
  *       Returns user profile and authentication tokens upon successful registration.
  *     requestBody:
  *       required: true

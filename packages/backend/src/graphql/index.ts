@@ -7,7 +7,11 @@ import { createApolloServer, createGraphQLMiddleware } from './server';
 import { authenticate } from '../middleware/auth';
 import config from '../config';
 
-export async function setupGraphQL(app: Express, db: Pool, httpServer: ReturnType<typeof createServer>) {
+export async function setupGraphQL(
+  app: Express,
+  db: Pool,
+  httpServer: ReturnType<typeof createServer>
+) {
   // Create Apollo Server
   const apolloServer = await createApolloServer({
     httpServer,

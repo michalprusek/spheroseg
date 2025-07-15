@@ -1,6 +1,6 @@
 /**
  * Integration tests for Circuit Breaker Pattern
- * 
+ *
  * Tests circuit breaker functionality for external service calls
  */
 import CircuitBreaker from 'opossum';
@@ -137,7 +137,7 @@ describe('Circuit Breaker Pattern', () => {
 
       // Now calls should use fallback
       const result = await mlServiceBreaker.fire({ imageId: 'test-fallback' });
-      
+
       expect(result).toEqual({
         status: 'fallback',
         message: 'ML service temporarily unavailable',
@@ -222,8 +222,8 @@ describe('Circuit Breaker Pattern', () => {
       }
 
       // Should have 3 successes and 2 failures
-      const successes = results.filter(r => r.success).length;
-      const failures = results.filter(r => !r.success).length;
+      const successes = results.filter((r) => r.success).length;
+      const failures = results.filter((r) => !r.success).length;
 
       expect(successes).toBe(3);
       expect(failures).toBe(2);
@@ -237,7 +237,7 @@ describe('Circuit Breaker Pattern', () => {
     it('should handle CDN service degradation', async () => {
       // Simulate gradual degradation
       const latencies = [100, 200, 500, 1000, 2000, 4000, 6000];
-      
+
       mockCDNService.mockImplementation((url) => {
         const latency = latencies.shift() || 6000;
         return new Promise((resolve, reject) => {
@@ -263,8 +263,8 @@ describe('Circuit Breaker Pattern', () => {
       }
 
       // First few should succeed, last ones should fail
-      const successfulRequests = results.filter(r => r.success);
-      const failedRequests = results.filter(r => !r.success);
+      const successfulRequests = results.filter((r) => r.success);
+      const failedRequests = results.filter((r) => !r.success);
 
       expect(successfulRequests.length).toBeGreaterThan(0);
       expect(failedRequests.length).toBeGreaterThan(0);
@@ -392,7 +392,7 @@ describe('Circuit Breaker Pattern', () => {
 
       // Request cached resource
       const result = await cdnBreaker.fire('https://cdn.example.com/cached.js');
-      
+
       expect(result).toMatchObject({
         url: 'https://cdn.example.com/cached.js',
         content: 'cached content',
@@ -437,7 +437,7 @@ describe('Circuit Breaker Pattern', () => {
 
       expect(queuedResults).toHaveLength(5);
       expect(retryQueue).toHaveLength(5);
-      
+
       // Verify queue positions
       queuedResults.forEach((result, index) => {
         expect((result as any).queuePosition).toBe(index + 1);

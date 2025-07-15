@@ -11,11 +11,11 @@ export function performancePlugin(): ApolloServerPlugin<Context> {
         async willSendResponse(requestContext) {
           const duration = Date.now() - requestStart;
           const { request, contextValue } = requestContext;
-          
+
           // Track operation metrics
           const operationType = request.query?.trim().startsWith('mutation') ? 'mutation' : 'query';
           const operationName = request.operationName || 'anonymous';
-          
+
           // Record metrics
           performanceMonitor.recordGraphQLOperation({
             operationType,
@@ -24,7 +24,7 @@ export function performancePlugin(): ApolloServerPlugin<Context> {
             userId: contextValue.user?.id,
             complexity: requestContext.metrics?.complexity,
           });
-          
+
           // Set response headers for client-side monitoring
           if (contextValue.res && !contextValue.res.headersSent) {
             contextValue.res.setHeader('X-GraphQL-Operation-Name', operationName);
@@ -37,10 +37,10 @@ export function performancePlugin(): ApolloServerPlugin<Context> {
           return {
             willResolveField({ info }) {
               const fieldStart = Date.now();
-              
+
               return () => {
                 const fieldDuration = Date.now() - fieldStart;
-                
+
                 // Only track slow field resolvers (> 100ms)
                 if (fieldDuration > 100) {
                   performanceMonitor.recordSlowField({
@@ -58,7 +58,7 @@ export function performancePlugin(): ApolloServerPlugin<Context> {
 
     async serverWillStart() {
       console.log('GraphQL server starting...');
-      
+
       return {
         async drainServer() {
           console.log('GraphQL server shutting down...');

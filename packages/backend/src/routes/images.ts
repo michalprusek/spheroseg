@@ -255,7 +255,7 @@ async function processAndStoreImage(
     // Provide more specific error messages for common issues
     let errorMessage = processError.message || 'Unknown error';
     let statusCode = 500;
-    
+
     if (errorMessage.includes('file too large')) {
       errorMessage = `Image file is too large. TIFF/BMP files must be under 100MB`;
       statusCode = 413; // Payload Too Large
@@ -266,11 +266,8 @@ async function processAndStoreImage(
       errorMessage = `Image too complex to process. Please try a smaller or simpler image`;
       statusCode = 413;
     }
-    
-    throw new ApiError(
-      `Failed to process ${file.originalname}: ${errorMessage}`,
-      statusCode
-    );
+
+    throw new ApiError(`Failed to process ${file.originalname}: ${errorMessage}`, statusCode);
   }
 
   // Normalize paths for database storage
@@ -335,21 +332,87 @@ async function processAndStoreImage(
 }
 
 /**
- * POST /api/projects/:projectId/images - Upload one or more images to a project
- *
- * This route:
- * 1. Authenticates the user
- * 2. Validates the request parameters
- * 3. Uploads the image files to the project directory
- * 4. Processes the images (generates thumbnails, extracts metadata)
- * 5. Stores the image information in the database
- * 6. Returns the created image records
- *
- * Error handling:
- * - Cleans up any uploaded files if an error occurs
- * - Validates project ownership
- * - Handles missing files
- * - Handles image processing errors
+ * @openapi
+ * /projects/{projectId}/images:
+ *   post:
+ *     tags: [Images]
+ *     summary: Upload images to project
+ *     description: |
+ *       Upload one or more images to a project. Supports JPEG, PNG, TIFF, and BMP formats.
+ *       Automatically generates thumbnails and extracts metadata for each image.
+ *       Only the project owner can upload images.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: projectId
+ *         in: path
+ *         required: true
+ *         description: Project ID to upload images to
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Image files to upload (max 20 files)
+ *                 maxItems: 20
+ *     responses:
+ *       201:
+ *         description: Images uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 uploadedImages:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Image'
+ *                 failedUploads:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       filename:
+ *                         type: string
+ *                         example: "image.jpg"
+ *                       error:
+ *                         type: string
+ *                         example: "Unsupported file format"
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 5
+ *                     successful:
+ *                       type: integer
+ *                       example: 4
+ *                     failed:
+ *                       type: integer
+ *                       example: 1
+ *       400:
+ *         description: Validation error or no files provided
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       403:
+ *         description: Forbidden - user is not the project owner
+ *       404:
+ *         description: Project not found
+ *       413:
+ *         description: Payload too large - file size exceeds limit
+ *       500:
+ *         description: Internal server error
  */
 router.post(
   '/:projectId/images',
@@ -516,19 +579,19 @@ router.post(
         // Verify that images are actually in the database before proceeding
         const verifyQuery = await getPool().query(
           'SELECT COUNT(*) FROM images WHERE project_id = $1 AND id = ANY($2::uuid[])',
-          [projectId, insertedImages.map(img => img.id)]
+          [projectId, insertedImages.map((img) => img.id)]
         );
         const verifiedCount = parseInt(verifyQuery.rows[0].count, 10);
         if (verifiedCount !== insertedImages.length) {
           logger.error('Image count mismatch after commit', {
             expected: insertedImages.length,
             actual: verifiedCount,
-            projectId
+            projectId,
           });
         } else {
           logger.debug('Images verified in database after commit', {
             count: verifiedCount,
-            projectId
+            projectId,
           });
         }
 
@@ -597,7 +660,7 @@ router.post(
                 image,
                 timestamp: new Date().toISOString(),
               });
-              
+
               // Also emit to alternative room formats for compatibility
               io.to(`project_${projectId}`).emit('image:created', {
                 projectId,
@@ -605,7 +668,7 @@ router.post(
                 timestamp: new Date().toISOString(),
               });
             });
-            
+
             logger.debug('Emitted image:created events via WebSocket', {
               projectId,
               imageCount: formattedImages.length,
@@ -661,17 +724,45 @@ router.post(
 );
 
 /**
- * DELETE /api/projects/:projectId/images/:imageId - Delete a specific image in a project
- *
- * This route:
- * 1. Authenticates the user
- * 2. Verifies project ownership
- * 3. Deletes the image from the database
- * 4. Deletes the image and thumbnail files from the filesystem
- *
- * Error handling:
- * - Returns 404 if project not found or user doesn't have access
- * - Returns 404 if image not found in the project
+ * @openapi
+ * /projects/{projectId}/images/{imageId}:
+ *   delete:
+ *     tags: [Images]
+ *     summary: Delete image
+ *     description: |
+ *       Delete a specific image from a project. This removes the image from the database
+ *       and deletes the image and thumbnail files from the filesystem.
+ *       Only the project owner can delete images.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: projectId
+ *         in: path
+ *         required: true
+ *         description: Project ID containing the image
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *       - name: imageId
+ *         in: path
+ *         required: true
+ *         description: Image ID to delete
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "987fcdeb-51a2-43d7-8765-123456789abc"
+ *     responses:
+ *       204:
+ *         description: Image deleted successfully
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       403:
+ *         description: Forbidden - user is not the project owner
+ *       404:
+ *         description: Project or image not found
+ *       500:
+ *         description: Internal server error
  */
 router.delete(
   '/:projectId/images/:imageId',
@@ -748,14 +839,14 @@ router.delete(
               imageId: actualImageId,
               timestamp: new Date().toISOString(),
             });
-            
+
             // Also emit to alternative room formats
             io.to(`project_${projectId}`).emit('image:deleted', {
               projectId,
               imageId: actualImageId,
               timestamp: new Date().toISOString(),
             });
-            
+
             logger.debug('Emitted image:deleted event via WebSocket', {
               projectId,
               imageId: actualImageId,
@@ -813,14 +904,14 @@ router.delete(
           imageId,
           timestamp: new Date().toISOString(),
         });
-        
+
         // Also emit to alternative room formats
         io.to(`project_${projectId}`).emit('image:deleted', {
           projectId,
           imageId,
           timestamp: new Date().toISOString(),
         });
-        
+
         logger.debug('Emitted image:deleted event via WebSocket', {
           projectId,
           imageId,
@@ -977,25 +1068,54 @@ router.delete(
 );
 
 /**
- * GET /api/projects/:projectId/images/:imageId - Get a specific image in a project
- *
- * This route:
- * 1. Authenticates the user
- * 2. Verifies project ownership
- * 3. Finds the image by ID or name
- * 4. Formats the image data for the response
- * 5. Verifies the image file exists
- * 6. Returns the image data
- *
- * The route supports finding images by:
- * - UUID (primary method)
- * - Name in path parameter (fallback)
- * - Name in query parameter (additional fallback)
- *
- * Error handling:
- * - Returns 404 if project not found or user doesn't have access
- * - Returns 404 if image not found
- * - Returns 404 if image file doesn't exist on the filesystem
+ * @openapi
+ * /projects/{projectId}/images/{imageId}:
+ *   get:
+ *     tags: [Images]
+ *     summary: Get image by ID
+ *     description: |
+ *       Retrieve a specific image from a project by its ID or name.
+ *       Supports finding images by UUID, name in path, or name in query parameter.
+ *       Only the project owner can access images.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: projectId
+ *         in: path
+ *         required: true
+ *         description: Project ID containing the image
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *       - name: imageId
+ *         in: path
+ *         required: true
+ *         description: Image ID or name to retrieve
+ *         schema:
+ *           type: string
+ *           example: "987fcdeb-51a2-43d7-8765-123456789abc"
+ *       - name: name
+ *         in: query
+ *         description: Alternative way to specify image name
+ *         schema:
+ *           type: string
+ *           example: "cell_sample.tiff"
+ *     responses:
+ *       200:
+ *         description: Image retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Image'
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       403:
+ *         description: Forbidden - user is not the project owner
+ *       404:
+ *         description: Project or image not found, or image file missing
+ *       500:
+ *         description: Internal server error
  */
 router.get(
   '/:projectId/images/:imageId',
@@ -1226,7 +1346,12 @@ router.get(
 
       // Cache the response (only if no filters)
       if (!name && !req.query.verifyFiles) {
-        await cacheService.cacheImageList(projectId, Number(page || 1), Number(limit), response.images);
+        await cacheService.cacheImageList(
+          projectId,
+          Number(page || 1),
+          Number(limit),
+          response.images
+        );
       }
 
       res.status(200).json(response);

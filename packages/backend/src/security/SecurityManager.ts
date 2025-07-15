@@ -202,31 +202,31 @@ export class SecurityManager {
   public applySecurityHeaders(res: Response): void {
     // Prevent MIME type sniffing
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    
+
     // Enable XSS protection
     res.setHeader('X-XSS-Protection', '1; mode=block');
-    
+
     // Prevent clickjacking
     res.setHeader('X-Frame-Options', 'DENY');
-    
+
     // Hide server information
     res.removeHeader('X-Powered-By');
-    
+
     // Strict Transport Security (HTTPS only)
     if (this.config.enableHSTS) {
       res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     }
-    
+
     // Content Security Policy with nonce support
     if (this.config.enableCSP) {
       const nonce = this.generateNonce();
       res.locals.cspNonce = nonce;
-      
+
       const isDevelopment = config.isDevelopment;
       const cspPolicy = [
         "default-src 'self'",
-        isDevelopment 
-          ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' localhost:* ws: wss:` 
+        isDevelopment
+          ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' localhost:* ws: wss:`
           : `script-src 'self' 'nonce-${nonce}'`,
         `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
         "img-src 'self' data: blob: https:",
@@ -239,19 +239,21 @@ export class SecurityManager {
         "base-uri 'self'",
         "frame-ancestors 'none'",
         "form-action 'self'",
-        "upgrade-insecure-requests"
+        'upgrade-insecure-requests',
       ].join('; ');
-      
+
       res.setHeader('Content-Security-Policy', cspPolicy);
     }
-    
+
     // Referrer Policy
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    
+
     // Enhanced Permissions Policy
-    res.setHeader('Permissions-Policy', 
-      'geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), speaker=()');
-    
+    res.setHeader(
+      'Permissions-Policy',
+      'geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), speaker=()'
+    );
+
     // Cross-Origin Policies
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
