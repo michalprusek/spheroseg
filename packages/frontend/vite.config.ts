@@ -155,7 +155,11 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0', // Allow access from any host
       port: 3000,
       strictPort: true, // Don't try other ports if 3000 is taken
-      cors: true, // Enable CORS for all requests
+      cors: {
+        origin: true, // Allow all origins
+        credentials: false,
+      },
+      origin: '*', // Allow all origins
       hmr: isDevelopment ? {
         port: 3000,
         host: 'localhost',
