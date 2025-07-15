@@ -203,7 +203,7 @@ export class WebSocketBatchHandler {
     }
 
     // Process each message
-    messages.forEach(message => {
+    messages.forEach((message) => {
       this.emitLocalEvent(message.event, message.data);
     });
   }
@@ -213,7 +213,7 @@ export class WebSocketBatchHandler {
    */
   private handleBatchAck(data: { batchId: string; results: any[] }): void {
     // Process acknowledgments for each message in the batch
-    data.results.forEach(result => {
+    data.results.forEach((result) => {
       const pending = this.pendingAcks.get(result.messageId);
       if (pending) {
         clearTimeout(pending.timeout);
@@ -265,7 +265,7 @@ export class WebSocketBatchHandler {
   private emitLocalEvent(event: string, data: any): void {
     if (!this.eventHandlers.has(event)) return;
 
-    this.eventHandlers.get(event)!.forEach(handler => {
+    this.eventHandlers.get(event)!.forEach((handler) => {
       try {
         handler(data);
       } catch (error) {
@@ -306,7 +306,7 @@ export class WebSocketBatchHandler {
       clearTimeout(this.batchTimer);
       this.batchTimer = null;
     }
-    
+
     // Clear all pending acknowledgments
     this.pendingAcks.forEach(({ timeout }) => clearTimeout(timeout));
     this.pendingAcks.clear();

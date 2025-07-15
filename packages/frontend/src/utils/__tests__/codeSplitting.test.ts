@@ -33,22 +33,23 @@ describe('codeSplitting', () => {
       const mockImport = vi.fn().mockResolvedValue({ default: () => null });
       const component = lazyWithRetry(mockImport);
 
-      expect((React.lazy as any)).toHaveBeenCalled();
+      expect(React.lazy as any).toHaveBeenCalled();
       expect(component).toBeDefined();
     });
 
     it('should retry failed imports', async () => {
-      const mockImport = vi.fn()
+      const mockImport = vi
+        .fn()
         .mockRejectedValueOnce(new Error('Network error'))
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce({ default: () => null });
 
       const lazyFn = (React.lazy as any).mock.calls[0][0];
-      
+
       // Execute the lazy function with our mock import
       const component = lazyWithRetry(mockImport);
       const importFn = (component as any)._importFn || lazyFn;
-      
+
       await importFn();
 
       // Should have been called 3 times (2 failures + 1 success)
@@ -125,20 +126,20 @@ describe('codeSplitting', () => {
       const mockImport = vi.fn().mockResolvedValue({ default: () => null });
       const result = createCodeSplitComponent(mockImport, {
         chunkName: 'split-component',
-        prefetch: true
+        prefetch: true,
       });
 
       expect(result).toBeDefined();
       expect(result.Component).toBeDefined();
       expect(result.prefetch).toBeDefined();
       expect(result.preload).toBeDefined();
-      expect((React.lazy as any)).toHaveBeenCalled();
+      expect(React.lazy as any).toHaveBeenCalled();
     });
 
     it('should provide prefetch function', async () => {
       const mockImport = vi.fn().mockResolvedValue({ default: () => null });
       const result = createCodeSplitComponent(mockImport, {
-        chunkName: 'prefetch-component'
+        chunkName: 'prefetch-component',
       });
 
       await result.prefetch();
@@ -148,7 +149,7 @@ describe('codeSplitting', () => {
     it('should provide preload function', async () => {
       const mockImport = vi.fn().mockResolvedValue({ default: () => null });
       const result = createCodeSplitComponent(mockImport, {
-        chunkName: 'preload-component'
+        chunkName: 'preload-component',
       });
 
       const module = await result.preload();
@@ -166,11 +167,11 @@ describe('codeSplitting', () => {
       const SplitComponent = createCodeSplitComponent(mockImport, {
         chunkName: 'integration-test',
         prefetch: true,
-        retryAttempts: 2
+        retryAttempts: 2,
       });
 
       expect(SplitComponent).toBeDefined();
-      expect((React.lazy as any)).toHaveBeenCalled();
+      expect(React.lazy as any).toHaveBeenCalled();
 
       // Verify component structure
       expect(SplitComponent.Component).toBeDefined();
@@ -179,11 +180,9 @@ describe('codeSplitting', () => {
     });
 
     it('should track loading performance', async () => {
-      const mockImport = vi.fn().mockImplementation(() => 
-        new Promise(resolve => 
-          setTimeout(() => resolve({ default: () => null }), 100)
-        )
-      );
+      const mockImport = vi
+        .fn()
+        .mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve({ default: () => null }), 100)));
 
       const component = lazyWithRetry(mockImport, { chunkName: 'perf-test' });
       const lazyFn = (React.lazy as any).mock.calls[0][0];

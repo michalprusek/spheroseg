@@ -179,9 +179,9 @@ const ProjectDetail = () => {
       // Handle image created event - for real-time gallery updates
       const handleImageCreated = (data: any) => {
         if (!isComponentMounted) return;
-        
+
         logger.info('Received image:created event:', data);
-        
+
         // Refresh the project data to include the new image
         if (data && data.projectId === cleanedId) {
           setTimeout(() => {
@@ -193,12 +193,12 @@ const ProjectDetail = () => {
       // Handle image deleted event - for real-time gallery updates
       const handleImageDeleted = (data: any) => {
         if (!isComponentMounted) return;
-        
+
         logger.info('Received image:deleted event:', data);
-        
+
         // If the image belongs to this project, update the UI
         if (data && data.projectId === cleanedId && data.imageId) {
-          setImages(prevImages => prevImages.filter(img => img.id !== data.imageId));
+          setImages((prevImages) => prevImages.filter((img) => img.id !== data.imageId));
           toast.success('Image deleted successfully');
         }
       };
@@ -362,7 +362,7 @@ const ProjectDetail = () => {
   }, [id, refreshData, selectionMode]);
 
   const toggleUploader = useCallback(() => {
-    setShowUploader(prev => !prev);
+    setShowUploader((prev) => !prev);
   }, []);
 
   const toggleSelectionMode = () => {
@@ -377,19 +377,19 @@ const ProjectDetail = () => {
   const handleClearCache = async () => {
     try {
       const { clearProjectImageCache } = await import('@/utils/cacheManager');
-      
+
       // Show confirmation dialog
       const confirmed = window.confirm(
-        'Clear image cache? This will remove all cached image data for this project and refresh the page.'
+        'Clear image cache? This will remove all cached image data for this project and refresh the page.',
       );
-      
+
       if (!confirmed) return;
-      
+
       const cleanedId = projectId?.includes('-') ? projectId.split('-').pop() || projectId : projectId;
       if (cleanedId) {
         await clearProjectImageCache(cleanedId);
         toast.success('Cache cleared successfully. Refreshing...');
-        
+
         // Wait a bit then refresh the data
         setTimeout(() => {
           refreshData();
@@ -677,7 +677,7 @@ const ProjectDetail = () => {
       // Clear the cache before refreshing to ensure we get fresh data from API
       const { clearProjectImageCache } = await import('@/api/projectImages');
       await clearProjectImageCache(projectId);
-      
+
       // Refresh data after a delay to get any server-side updates
       setTimeout(() => {
         refreshData();
@@ -774,16 +774,16 @@ const ProjectDetail = () => {
           } catch (error: any) {
             logger.warn(`Batch ${i + 1}: Failed to trigger segmentation:`, error);
             failCount += batch.length;
-            
+
             // Revert status back to 'without_segmentation' for failed images
             batch.forEach((id) => {
               updateImageStatus(id, 'without_segmentation');
             });
-            
+
             // Show specific error message
             const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
             toast.error(`Failed to queue segmentation: ${errorMessage}`);
-            
+
             // Informujeme uživatele o chybě
             if (batches.length > 1) {
               toast.error(t('project.segmentation.batchError', { current: i + 1, total: batches.length }));
@@ -891,100 +891,103 @@ const ProjectDetail = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-            {id ? (
-              <ProjectUploaderSection
-                projectId={id}
-                onCancel={toggleUploader}
-                onUploadComplete={(uploadedImages: ProjectImage[] | ProjectImage) => {
-                  const imagesArray = Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages];
-                  if (id) {
-                    handleUploadComplete(id, imagesArray);
-                  } else {
-                    logger.error('Project ID is missing in onUploadComplete wrapper');
-                    toast.error('An error occurred during upload completion.');
-                  }
-                }}
-                segmentAfterUpload={segmentAfterUpload}
-                onSegmentAfterUploadChange={setSegmentAfterUpload}
-              />
-            ) : (
-              <p>Error: Project ID is missing.</p>
-            )}
+              {id ? (
+                <ProjectUploaderSection
+                  projectId={id}
+                  onCancel={toggleUploader}
+                  onUploadComplete={(uploadedImages: ProjectImage[] | ProjectImage) => {
+                    const imagesArray = Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages];
+                    if (id) {
+                      handleUploadComplete(id, imagesArray);
+                    } else {
+                      logger.error('Project ID is missing in onUploadComplete wrapper');
+                      toast.error('An error occurred during upload completion.');
+                    }
+                  }}
+                  segmentAfterUpload={segmentAfterUpload}
+                  onSegmentAfterUploadChange={setSegmentAfterUpload}
+                />
+              ) : (
+                <p>Error: Project ID is missing.</p>
+              )}
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               key="content"
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }} 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-            <ProjectToolbar
-              searchTerm={searchTerm}
-              onSearchChange={handleSearch}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-              onToggleUploader={toggleUploader}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              selectionMode={selectionMode}
-              onToggleSelectionMode={toggleSelectionMode}
-              showStatusSort={true}
-              onClearCache={handleClearCache}
-            />
-
-            {loading ? (
-              <motion.div
-                className="flex justify-center items-center h-64"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
-              </motion.div>
-            ) : projectError ? (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                <div className="p-4 bg-red-50 border border-red-200 rounded-md mb-4">
-                  <h3 className="text-red-800 font-medium">Error loading project</h3>
-                  <p className="text-red-600">
-                    {projectError || 'An unknown error occurred while loading the project.'}
-                  </p>
-                </div>
-              </motion.div>
-            ) : filteredImages.length === 0 && !searchTerm ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <EmptyProjectState projectId={id || ''} onUploadClick={toggleUploader} />
-              </motion.div>
-            ) : filteredImages.length === 0 && searchTerm ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <EmptyState hasSearchTerm={true} onUpload={toggleUploader} />
-              </motion.div>
-            ) : (
-              <ProjectImages
-                images={filteredImages}
-                onDelete={handleDeleteImage}
-                onOpen={handleOpenImage}
-                onResegment={handleResegment}
+              <ProjectToolbar
+                searchTerm={searchTerm}
+                onSearchChange={handleSearch}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                onToggleUploader={toggleUploader}
                 viewMode={viewMode}
+                setViewMode={setViewMode}
                 selectionMode={selectionMode}
-                selectedImages={selectedImages}
-                onToggleSelection={toggleImageSelection}
-                selectAll={selectAll}
-                onToggleSelectAll={toggleSelectAll}
-                onBatchResegment={handleBatchResegment}
-                onBatchDelete={handleBatchDelete}
-                onBatchExport={handleBatchExport}
+                onToggleSelectionMode={toggleSelectionMode}
+                showStatusSort={true}
+                onClearCache={handleClearCache}
               />
-            )}
-            
+
+              {loading ? (
+                <motion.div
+                  className="flex justify-center items-center h-64"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+                </motion.div>
+              ) : projectError ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-md mb-4">
+                    <h3 className="text-red-800 font-medium">Error loading project</h3>
+                    <p className="text-red-600">
+                      {projectError || 'An unknown error occurred while loading the project.'}
+                    </p>
+                  </div>
+                </motion.div>
+              ) : filteredImages.length === 0 && !searchTerm ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <EmptyProjectState projectId={id || ''} onUploadClick={toggleUploader} />
+                </motion.div>
+              ) : filteredImages.length === 0 && searchTerm ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <EmptyState hasSearchTerm={true} onUpload={toggleUploader} />
+                </motion.div>
+              ) : (
+                <ProjectImages
+                  images={filteredImages}
+                  onDelete={handleDeleteImage}
+                  onOpen={handleOpenImage}
+                  onResegment={handleResegment}
+                  viewMode={viewMode}
+                  selectionMode={selectionMode}
+                  selectedImages={selectedImages}
+                  onToggleSelection={toggleImageSelection}
+                  selectAll={selectAll}
+                  onToggleSelectAll={toggleSelectAll}
+                  onBatchResegment={handleBatchResegment}
+                  onBatchDelete={handleBatchDelete}
+                  onBatchExport={handleBatchExport}
+                />
+              )}
             </motion.div>
           )}
         </AnimatePresence>

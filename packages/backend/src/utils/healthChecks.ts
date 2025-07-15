@@ -1,7 +1,12 @@
 /**
- * Health Check Utilities
+ * @fileoverview Health Check Utilities
  * 
- * Provides health check functions for external services and dependencies
+ * Provides comprehensive health check functions for external services and dependencies
+ * including database, Redis, and ML service connectivity monitoring.
+ * 
+ * @module healthChecks
+ * @version 1.0.0
+ * @author SpheroSeg Team
  */
 
 import { Pool } from 'pg';

@@ -1,6 +1,6 @@
 /**
  * Lazy-loaded heavy components with code splitting
- * 
+ *
  * This file demonstrates component-level code splitting for heavy components
  * that should be loaded on-demand to improve initial bundle size.
  */
@@ -10,50 +10,55 @@ import LoadingFallback from './LoadingFallback';
 import { createCodeSplitComponent } from '@/utils/codeSplitting';
 
 // Heavy visualization components
-export const LazySegmentationCanvas = lazy(() => 
+export const LazySegmentationCanvas = lazy(() =>
   import(
     /* webpackChunkName: "segmentation-canvas" */
     /* webpackPrefetch: true */
     '@/pages/segmentation/components/canvas/CanvasV2'
-  ).then(module => ({ default: module.default || module.CanvasV2 }))
+  ).then((module) => ({ default: module.default || module.CanvasV2 })),
 );
 
-export const LazyVirtualImageGrid = lazy(() =>
-  import(
-    /* webpackChunkName: "virtual-image-grid" */
-    /* webpackPrefetch: true */
-    '@/components/project/VirtualImageGrid'
-  )
+export const LazyVirtualImageGrid = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "virtual-image-grid" */
+      /* webpackPrefetch: true */
+      '@/components/project/VirtualImageGrid'
+    ),
 );
 
-export const LazyAnalyticsDashboard = lazy(() =>
-  import(
-    /* webpackChunkName: "analytics-dashboard" */
-    '@/components/analytics/AnalyticsDashboardOptimized'
-  )
+export const LazyAnalyticsDashboard = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "analytics-dashboard" */
+      '@/components/analytics/AnalyticsDashboardOptimized'
+    ),
 );
 
 // Export components
-export const LazyExcelExporter = lazy(() =>
-  import(
-    /* webpackChunkName: "excel-exporter" */
-    '@/pages/segmentation/components/project/export/ExcelExporter'
-  )
+export const LazyExcelExporter = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "excel-exporter" */
+      '@/pages/segmentation/components/project/export/ExcelExporter'
+    ),
 );
 
-export const LazyMetricsVisualization = lazy(() =>
-  import(
-    /* webpackChunkName: "metrics-viz" */
-    '@/pages/segmentation/components/project/export/MetricsVisualization'
-  )
+export const LazyMetricsVisualization = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "metrics-viz" */
+      '@/pages/segmentation/components/project/export/MetricsVisualization'
+    ),
 );
 
 // Complex forms and dialogs
-export const LazyProjectExportDialog = lazy(() =>
-  import(
-    /* webpackChunkName: "export-dialog" */
-    '@/pages/export/ProjectExport'
-  )
+export const LazyProjectExportDialog = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "export-dialog" */
+      '@/pages/export/ProjectExport'
+    ),
 );
 
 // 3D visualization components
@@ -62,14 +67,14 @@ export const Lazy3DViewer = lazy(() =>
     /* webpackChunkName: "3d-viewer" */
     '@/components/visualization/3DViewer'
   ).catch(() => ({
-    default: () => <div>3D Viewer not available</div>
-  }))
+    default: () => <div>3D Viewer not available</div>,
+  })),
 );
 
 // Create wrapped components with loading states
 export function withLazyLoading<P extends object>(
   Component: ComponentType<P>,
-  loadingMessage: string = 'Loading component...'
+  loadingMessage: string = 'Loading component...',
 ): ComponentType<P> {
   return (props: P) => (
     <Suspense fallback={<LoadingFallback message={loadingMessage} />}>
@@ -79,63 +84,54 @@ export function withLazyLoading<P extends object>(
 }
 
 // Pre-configured lazy components with loading states
-export const SegmentationCanvas = withLazyLoading(
-  LazySegmentationCanvas,
-  'Loading segmentation canvas...'
-);
+export const SegmentationCanvas = withLazyLoading(LazySegmentationCanvas, 'Loading segmentation canvas...');
 
-export const VirtualImageGrid = withLazyLoading(
-  LazyVirtualImageGrid,
-  'Loading image gallery...'
-);
+export const VirtualImageGrid = withLazyLoading(LazyVirtualImageGrid, 'Loading image gallery...');
 
-export const AnalyticsDashboard = withLazyLoading(
-  LazyAnalyticsDashboard,
-  'Loading analytics...'
-);
+export const AnalyticsDashboard = withLazyLoading(LazyAnalyticsDashboard, 'Loading analytics...');
 
-export const ExcelExporter = withLazyLoading(
-  LazyExcelExporter,
-  'Loading Excel exporter...'
-);
+export const ExcelExporter = withLazyLoading(LazyExcelExporter, 'Loading Excel exporter...');
 
 // Advanced code splitting with prefetch control
 export const advancedComponents = {
   // Heavy chart library
   ChartLibrary: createCodeSplitComponent(
-    () => import(
-      /* webpackChunkName: "charts" */
-      /* webpackPrefetch: true */
-      'recharts'
-    ).then(module => ({
-      default: () => {
-        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = module;
-        return { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend };
-      }
-    })),
-    { chunkName: 'charts', prefetch: true }
+    () =>
+      import(
+        /* webpackChunkName: "charts" */
+        /* webpackPrefetch: true */
+        'recharts'
+      ).then((module) => ({
+        default: () => {
+          const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = module;
+          return { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend };
+        },
+      })),
+    { chunkName: 'charts', prefetch: true },
   ),
 
   // PDF generation
   PDFExporter: createCodeSplitComponent(
-    () => import(
-      /* webpackChunkName: "pdf-export" */
-      'jspdf'
-    ).then(module => ({
-      default: module.default || module.jsPDF
-    })),
-    { chunkName: 'pdf-export' }
+    () =>
+      import(
+        /* webpackChunkName: "pdf-export" */
+        'jspdf'
+      ).then((module) => ({
+        default: module.default || module.jsPDF,
+      })),
+    { chunkName: 'pdf-export' },
   ),
 
   // Image processing
   ImageProcessor: createCodeSplitComponent(
-    () => import(
-      /* webpackChunkName: "image-processing" */
-      'jimp'
-    ).then(module => ({
-      default: module.default || module
-    })),
-    { chunkName: 'image-processing' }
+    () =>
+      import(
+        /* webpackChunkName: "image-processing" */
+        'jimp'
+      ).then((module) => ({
+        default: module.default || module,
+      })),
+    { chunkName: 'image-processing' },
   ),
 };
 
@@ -156,9 +152,7 @@ export function loadFeatureComponent(feature: string) {
 // Dynamic component loader with caching
 const componentCache = new Map<string, ComponentType<any>>();
 
-export async function loadDynamicComponent(
-  componentPath: string
-): Promise<ComponentType<any>> {
+export async function loadDynamicComponent(componentPath: string): Promise<ComponentType<any>> {
   if (componentCache.has(componentPath)) {
     return componentCache.get(componentPath)!;
   }
@@ -175,10 +169,7 @@ export async function loadDynamicComponent(
 }
 
 // Intersection Observer for lazy loading
-export function useLazyComponent(
-  importFn: () => Promise<any>,
-  rootMargin: string = '100px'
-) {
+export function useLazyComponent(importFn: () => Promise<any>, rootMargin: string = '100px') {
   const [Component, setComponent] = useState<ComponentType<any> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -189,22 +180,22 @@ export function useLazyComponent(
 
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting && !Component && !isLoading) {
             setIsLoading(true);
             importFn()
-              .then(module => {
+              .then((module) => {
                 setComponent(() => module.default || module);
                 setIsLoading(false);
               })
-              .catch(err => {
+              .catch((err) => {
                 setError(err);
                 setIsLoading(false);
               });
           }
         });
       },
-      { rootMargin }
+      { rootMargin },
     );
 
     observer.observe(ref.current);
@@ -217,9 +208,12 @@ export function useLazyComponent(
 
 // Example usage component
 export function LazyLoadExample() {
-  const { ref, Component: DynamicComponent, isLoading, error } = useLazyComponent(
-    () => import('@/components/analytics/AnalyticsDashboardOptimized')
-  );
+  const {
+    ref,
+    Component: DynamicComponent,
+    isLoading,
+    error,
+  } = useLazyComponent(() => import('@/components/analytics/AnalyticsDashboardOptimized'));
 
   return (
     <div ref={ref} style={{ minHeight: '200px' }}>

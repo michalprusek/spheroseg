@@ -36,7 +36,6 @@ interface ProfileStats {
   recentActivity?: Activity[];
 }
 
-
 interface MockProject {
   id: string;
   name: string;

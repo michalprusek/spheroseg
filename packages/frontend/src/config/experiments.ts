@@ -1,6 +1,6 @@
 /**
  * A/B Testing Experiments Configuration
- * 
+ *
  * Defines all experiments and feature flags for the application
  */
 
@@ -42,15 +42,19 @@ export const experiments: Experiment[] = [
     ],
     targeting: {
       percentage: 100,
-      segments: [{
-        id: 'new-users',
-        name: 'New Users',
-        conditions: [{
-          property: 'accountAge',
-          operator: 'less_than',
-          value: 30,
-        }],
-      }],
+      segments: [
+        {
+          id: 'new-users',
+          name: 'New Users',
+          conditions: [
+            {
+              property: 'accountAge',
+              operator: 'less_than',
+              value: 30,
+            },
+          ],
+        },
+      ],
     },
     metrics: {
       primary: [
@@ -113,30 +117,38 @@ export const experiments: Experiment[] = [
       },
     ],
     targeting: {
-      segments: [{
-        id: 'first-time-users',
-        name: 'First Time Users',
-        conditions: [{
-          property: 'hasCompletedOnboarding',
-          operator: 'equals',
-          value: false,
-        }],
-      }],
+      segments: [
+        {
+          id: 'first-time-users',
+          name: 'First Time Users',
+          conditions: [
+            {
+              property: 'hasCompletedOnboarding',
+              operator: 'equals',
+              value: false,
+            },
+          ],
+        },
+      ],
     },
     metrics: {
-      primary: [{
-        id: 'onboarding-completion',
-        name: 'Onboarding Completion',
-        type: 'conversion',
-        goal: 'increase',
-        threshold: 80,
-      }],
-      secondary: [{
-        id: 'time-to-first-action',
-        name: 'Time to First Action',
-        type: 'custom',
-        goal: 'decrease',
-      }],
+      primary: [
+        {
+          id: 'onboarding-completion',
+          name: 'Onboarding Completion',
+          type: 'conversion',
+          goal: 'increase',
+          threshold: 80,
+        },
+      ],
+      secondary: [
+        {
+          id: 'time-to-first-action',
+          name: 'Time to First Action',
+          type: 'custom',
+          goal: 'decrease',
+        },
+      ],
     },
     allocation: {
       type: 'random',
@@ -181,12 +193,14 @@ export const experiments: Experiment[] = [
       },
     },
     metrics: {
-      primary: [{
-        id: 'page-load-time',
-        name: 'Page Load Time',
-        type: 'custom',
-        goal: 'decrease',
-      }],
+      primary: [
+        {
+          id: 'page-load-time',
+          name: 'Page Load Time',
+          type: 'custom',
+          goal: 'decrease',
+        },
+      ],
     },
     allocation: {
       type: 'sticky',
@@ -225,15 +239,19 @@ export const experiments: Experiment[] = [
       },
     ],
     targeting: {
-      segments: [{
-        id: 'power-users',
-        name: 'Power Users',
-        conditions: [{
-          property: 'hasUsedSegmentation',
-          operator: 'equals',
-          value: true,
-        }],
-      }],
+      segments: [
+        {
+          id: 'power-users',
+          name: 'Power Users',
+          conditions: [
+            {
+              property: 'hasUsedSegmentation',
+              operator: 'equals',
+              value: true,
+            },
+          ],
+        },
+      ],
     },
     metrics: {
       primary: [
@@ -307,29 +325,37 @@ export const experiments: Experiment[] = [
       },
     ],
     targeting: {
-      segments: [{
-        id: 'free-users',
-        name: 'Free Plan Users',
-        conditions: [{
-          property: 'plan',
-          operator: 'equals',
-          value: 'free',
-        }],
-      }],
+      segments: [
+        {
+          id: 'free-users',
+          name: 'Free Plan Users',
+          conditions: [
+            {
+              property: 'plan',
+              operator: 'equals',
+              value: 'free',
+            },
+          ],
+        },
+      ],
     },
     metrics: {
-      primary: [{
-        id: 'upgrade-conversion',
-        name: 'Upgrade Conversion',
-        type: 'conversion',
-        goal: 'increase',
-      }],
-      secondary: [{
-        id: 'pricing-page-engagement',
-        name: 'Pricing Page Engagement',
-        type: 'engagement',
-        goal: 'increase',
-      }],
+      primary: [
+        {
+          id: 'upgrade-conversion',
+          name: 'Upgrade Conversion',
+          type: 'conversion',
+          goal: 'increase',
+        },
+      ],
+      secondary: [
+        {
+          id: 'pricing-page-engagement',
+          name: 'Pricing Page Engagement',
+          type: 'engagement',
+          goal: 'increase',
+        },
+      ],
     },
     allocation: {
       type: 'random',
@@ -344,22 +370,22 @@ export const featureFlags = {
   'feature.export.formats.pptx': false,
   'feature.collaboration.realtime': false,
   'feature.collaboration.comments': false,
-  
+
   // UI features
   'ui.dark-mode': true,
   'ui.compact-mode': false,
   'ui.keyboard-shortcuts': true,
-  
+
   // Performance features
   'performance.service-worker': false,
   'performance.offline-mode': false,
   'performance.background-sync': false,
-  
+
   // Beta features
   'beta.3d-visualization': false,
   'beta.ai-suggestions': false,
   'beta.voice-commands': false,
-  
+
   // Administrative features
   'admin.usage-analytics': true,
   'admin.audit-logs': false,
@@ -371,15 +397,19 @@ export const experimentPresets = {
   uiRedesign: {
     targeting: {
       percentage: 10, // Start with 10% of users
-      segments: [{
-        id: 'engaged-users',
-        name: 'Engaged Users',
-        conditions: [{
-          property: 'totalProjects',
-          operator: 'greater_than',
-          value: 5,
-        }],
-      }],
+      segments: [
+        {
+          id: 'engaged-users',
+          name: 'Engaged Users',
+          conditions: [
+            {
+              property: 'totalProjects',
+              operator: 'greater_than',
+              value: 5,
+            },
+          ],
+        },
+      ],
     },
     metrics: {
       primary: [
@@ -388,7 +418,7 @@ export const experimentPresets = {
       ],
     },
   },
-  
+
   featureRollout: {
     targeting: {
       percentage: 5, // Start with 5% for new features
@@ -397,7 +427,7 @@ export const experimentPresets = {
       type: 'sticky',
     },
   },
-  
+
   performanceTest: {
     targeting: {
       deviceTargeting: {

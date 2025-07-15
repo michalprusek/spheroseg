@@ -1,6 +1,6 @@
 /**
  * Cache Test Factory
- * 
+ *
  * Provides factory functions for creating test data
  */
 
@@ -12,7 +12,7 @@ export function createMockCacheEntry<T = any>(overrides: Partial<CachedItem<T>> 
     timestamp: Date.now(),
     version: '1.0.0',
     expiresAt: Date.now() + 3600000, // 1 hour
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -22,26 +22,21 @@ export function createMockCacheStats(overrides: Partial<CacheStats> = {}): Cache
     sessionStorageKeys: 0,
     indexedDBDatabases: [],
     clearedItems: 0,
-    ...overrides
+    ...overrides,
   };
 }
 
-export function createExpiredCacheEntry<T = any>(
-  data: T,
-  expiredMs: number = 1000
-): CachedItem<T> {
+export function createExpiredCacheEntry<T = any>(data: T, expiredMs: number = 1000): CachedItem<T> {
   return {
     data,
     timestamp: Date.now() - expiredMs - 1000,
     version: '1.0.0',
-    expiresAt: Date.now() - expiredMs
+    expiresAt: Date.now() - expiredMs,
   };
 }
 
 export function createProjectCacheKeys(projectId: string, count: number = 5): string[] {
-  return Array.from({ length: count }, (_, i) => 
-    `spheroseg_images_${projectId}_${i}`
-  );
+  return Array.from({ length: count }, (_, i) => `spheroseg_images_${projectId}_${i}`);
 }
 
 export function setupMockLocalStorage(entries: Record<string, any>): void {

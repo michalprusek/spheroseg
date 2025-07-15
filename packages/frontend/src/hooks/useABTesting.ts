@@ -1,6 +1,6 @@
 /**
  * React hooks for A/B testing integration
- * 
+ *
  * Provides easy-to-use hooks for:
  * - Feature flags
  * - Experiment variants
@@ -37,7 +37,7 @@ export function useABTestingInit() {
     const initService = async () => {
       try {
         const service = initializeABTesting(AB_TESTING_CONFIG);
-        
+
         const userContext: UserContext = {
           userId: user.id,
           sessionId: sessionStorage.getItem('sessionId') || generateSessionId(),
@@ -85,10 +85,7 @@ export function useExperiment(experimentId: string): ExperimentResult | null {
 /**
  * Get feature flag value
  */
-export function useFeatureFlag<T = boolean>(
-  flagKey: string,
-  defaultValue?: T
-): T {
+export function useFeatureFlag<T = boolean>(flagKey: string, defaultValue?: T): T {
   const [value, setValue] = useState<T>(defaultValue as T);
   const isInitialized = useABTestingInit();
 
@@ -108,9 +105,7 @@ export function useFeatureFlag<T = boolean>(
 /**
  * Get multiple feature flags
  */
-export function useFeatureFlags(
-  flagKeys: string[]
-): Record<string, any> {
+export function useFeatureFlags(flagKeys: string[]): Record<string, any> {
   const [flags, setFlags] = useState<Record<string, any>>({});
   const isInitialized = useABTestingInit();
 
@@ -120,15 +115,16 @@ export function useFeatureFlags(
     const service = getABTestingInstance();
     if (service) {
       const allFlags = service.getAllFeatureFlags();
-      const requestedFlags = allFlags.filter(flag =>
-        flagKeys.includes(flag.key)
+      const requestedFlags = allFlags.filter((flag) => flagKeys.includes(flag.key));
+
+      const flagMap = requestedFlags.reduce(
+        (acc, flag) => ({
+          ...acc,
+          [flag.key]: flag.value,
+        }),
+        {},
       );
-      
-      const flagMap = requestedFlags.reduce((acc, flag) => ({
-        ...acc,
-        [flag.key]: flag.value,
-      }), {});
-      
+
       setFlags(flagMap);
     }
   }, [flagKeys, isInitialized]);
@@ -142,23 +138,29 @@ export function useFeatureFlags(
 export function useABTestingMetrics() {
   const isInitialized = useABTestingInit();
 
-  const trackEvent = useCallback((eventName: string, properties?: Record<string, any>) => {
-    if (!isInitialized) return;
+  const trackEvent = useCallback(
+    (eventName: string, properties?: Record<string, any>) => {
+      if (!isInitialized) return;
 
-    const service = getABTestingInstance();
-    if (service) {
-      service.trackEvent(eventName, properties);
-    }
-  }, [isInitialized]);
+      const service = getABTestingInstance();
+      if (service) {
+        service.trackEvent(eventName, properties);
+      }
+    },
+    [isInitialized],
+  );
 
-  const trackConversion = useCallback((conversionName: string, value?: number) => {
-    if (!isInitialized) return;
+  const trackConversion = useCallback(
+    (conversionName: string, value?: number) => {
+      if (!isInitialized) return;
 
-    const service = getABTestingInstance();
-    if (service) {
-      service.trackConversion(conversionName, value);
-    }
-  }, [isInitialized]);
+      const service = getABTestingInstance();
+      if (service) {
+        service.trackConversion(conversionName, value);
+      }
+    },
+    [isInitialized],
+  );
 
   return {
     trackEvent,
@@ -196,10 +198,7 @@ export function useActiveExperiments(): FeatureFlag[] {
 /**
  * Variant-specific hook for rendering different UI
  */
-export function useVariant(
-  experimentId: string,
-  variantId: string
-): boolean {
+export function useVariant(experimentId: string, variantId: string): boolean {
   const experiment = useExperiment(experimentId);
   return experiment?.variantId === variantId && experiment.isInExperiment;
 }
@@ -207,15 +206,13 @@ export function useVariant(
 /**
  * Multi-variant hook
  */
-export function useVariants(
-  experimentId: string
-): {
+export function useVariants(experimentId: string): {
   variant: string | null;
   isInExperiment: boolean;
   features: Record<string, any>;
 } {
   const experiment = useExperiment(experimentId);
-  
+
   return {
     variant: experiment?.variantId || null,
     isInExperiment: experiment?.isInExperiment || false,
@@ -226,13 +223,9 @@ export function useVariants(
 /**
  * Performance-optimized feature flag hook with memoization
  */
-export function useOptimizedFeatureFlag<T = boolean>(
-  flagKey: string,
-  defaultValue?: T,
-  dependencies: any[] = []
-): T {
+export function useOptimizedFeatureFlag<T = boolean>(flagKey: string, defaultValue?: T, dependencies: any[] = []): T {
   const value = useFeatureFlag(flagKey, defaultValue);
-  
+
   return useMemo(() => value, [value, ...dependencies]);
 }
 

@@ -1,6 +1,6 @@
 /**
  * Advanced Code Splitting Utilities
- * 
+ *
  * This module provides enhanced code splitting capabilities including:
  * - Route-based prefetching
  * - Component-level code splitting
@@ -37,13 +37,9 @@ const loadingPromises = new Map<string, Promise<any>>();
  */
 export function lazyWithRetry<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
-  options: CodeSplitOptions = {}
+  options: CodeSplitOptions = {},
 ): LazyExoticComponent<T> {
-  const {
-    chunkName,
-    retryAttempts = 3,
-    retryDelay = 1000,
-  } = options;
+  const { chunkName, retryAttempts = 3, retryDelay = 1000 } = options;
 
   // Generate cache key
   const cacheKey = chunkName || importFn.toString();
@@ -63,8 +59,8 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       }
 
       // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, retryDelay));
-      
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+
       // Retry with decremented attempts
       return retryImport(attemptsLeft - 1);
     }
@@ -82,10 +78,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
 /**
  * Prefetch a component
  */
-export async function prefetchComponent(
-  importFn: () => Promise<any>,
-  chunkName?: string
-): Promise<void> {
+export async function prefetchComponent(importFn: () => Promise<any>, chunkName?: string): Promise<void> {
   const cacheKey = chunkName || importFn.toString();
 
   // Check if already loading or loaded
@@ -134,9 +127,9 @@ export function prefetchRoutes(currentPath: string): void {
   // Use requestIdleCallback for non-critical prefetching
   if ('requestIdleCallback' in window) {
     window.requestIdleCallback(() => {
-      routePrefetchConfig.forEach(config => {
+      routePrefetchConfig.forEach((config) => {
         if (config.strategy === 'idle') {
-          config.routes.forEach(route => {
+          config.routes.forEach((route) => {
             if (matchPath(route, currentPath)) {
               // Prefetch related routes
               prefetchRelatedRoutes(route);
@@ -159,7 +152,7 @@ function prefetchRelatedRoutes(route: string): void {
   };
 
   const related = relatedRoutes[route] || [];
-  related.forEach(relatedRoute => {
+  related.forEach((relatedRoute) => {
     // Prefetch related components
     // This would be implemented based on your route component mapping
   });
@@ -170,7 +163,7 @@ function prefetchRelatedRoutes(route: string): void {
  */
 export function createCodeSplitComponent<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
-  options: CodeSplitOptions = {}
+  options: CodeSplitOptions = {},
 ): {
   Component: LazyExoticComponent<T>;
   prefetch: () => Promise<void>;
@@ -210,7 +203,7 @@ export const bundleOptimization = {
    */
   sizeThresholds: {
     warning: 244 * 1024, // 244kb
-    error: 500 * 1024,   // 500kb
+    error: 500 * 1024, // 500kb
   },
 };
 
@@ -219,15 +212,16 @@ export const bundleOptimization = {
  */
 export function splitComponent<T extends ComponentType<any>>(
   componentPath: string,
-  options?: CodeSplitOptions
+  options?: CodeSplitOptions,
 ): LazyExoticComponent<T> {
   return lazyWithRetry(
-    () => import(
-      /* webpackChunkName: "[request]" */
-      /* webpackPrefetch: true */
-      componentPath
-    ),
-    options
+    () =>
+      import(
+        /* webpackChunkName: "[request]" */
+        /* webpackPrefetch: true */
+        componentPath
+      ),
+    options,
   );
 }
 
@@ -236,28 +230,25 @@ export function splitComponent<T extends ComponentType<any>>(
  */
 export const heavyComponents = {
   // Segmentation editor components
-  SegmentationCanvas: () => splitComponent<any>(
-    '../pages/segmentation/components/canvas/CanvasV2',
-    { chunkName: 'segmentation-canvas', prefetch: true }
-  ),
-  
+  SegmentationCanvas: () =>
+    splitComponent<any>('../pages/segmentation/components/canvas/CanvasV2', {
+      chunkName: 'segmentation-canvas',
+      prefetch: true,
+    }),
+
   // Export components
-  ExcelExporter: () => splitComponent<any>(
-    '../pages/segmentation/components/project/export/ExcelExporter',
-    { chunkName: 'excel-exporter' }
-  ),
-  
+  ExcelExporter: () =>
+    splitComponent<any>('../pages/segmentation/components/project/export/ExcelExporter', {
+      chunkName: 'excel-exporter',
+    }),
+
   // Analytics dashboard
-  AnalyticsDashboard: () => splitComponent<any>(
-    '../components/analytics/AnalyticsDashboardOptimized',
-    { chunkName: 'analytics-dashboard' }
-  ),
-  
+  AnalyticsDashboard: () =>
+    splitComponent<any>('../components/analytics/AnalyticsDashboardOptimized', { chunkName: 'analytics-dashboard' }),
+
   // Image gallery with virtual scrolling
-  VirtualImageGrid: () => splitComponent<any>(
-    '../components/project/VirtualImageGrid',
-    { chunkName: 'virtual-image-grid', prefetch: true }
-  ),
+  VirtualImageGrid: () =>
+    splitComponent<any>('../components/project/VirtualImageGrid', { chunkName: 'virtual-image-grid', prefetch: true }),
 };
 
 /**
@@ -279,18 +270,18 @@ export function setupVisibilityPrefetching(): void {
   if (!observer && 'IntersectionObserver' in window) {
     observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const element = entry.target as HTMLElement;
             const componentName = element.dataset.prefetch;
-            
+
             if (componentName && heavyComponents[componentName as keyof typeof heavyComponents]) {
               heavyComponents[componentName as keyof typeof heavyComponents]();
             }
           }
         });
       },
-      { rootMargin: '50px' }
+      { rootMargin: '50px' },
     );
   }
 }
@@ -305,7 +296,7 @@ export function monitorChunkLoading(): void {
         if (entry.entryType === 'resource' && entry.name.includes('.chunk.js')) {
           const loadTime = entry.duration;
           const size = (entry as any).transferSize || 0;
-          
+
           // Log slow chunk loads
           if (loadTime > 3000) {
             console.warn(`Slow chunk load: ${entry.name} took ${loadTime}ms (${size} bytes)`);

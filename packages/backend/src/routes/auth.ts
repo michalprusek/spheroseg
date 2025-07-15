@@ -40,13 +40,100 @@ import authService from '../services/authService'; // Import the new auth servic
 
 const router: Router = express.Router();
 
-// GET /api/auth/test - Test route
+/**
+ * @openapi
+ * /auth/test:
+ *   get:
+ *     tags: [Authentication]
+ *     summary: Test authentication routes
+ *     description: Simple test endpoint to verify auth routes are working
+ *     responses:
+ *       200:
+ *         description: Routes are working
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Auth routes are working"
+ */
 router.get('/test', (req: express.Request, res: Response) => {
   logger.info('Test route hit');
   res.json({ message: 'Auth routes are working' });
 });
 
-// POST /api/auth/register - Register a new user
+/**
+ * @openapi
+ * /auth/register:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Register a new user
+ *     description: |
+ *       Create a new user account with email and password. 
+ *       Returns user profile and authentication tokens upon successful registration.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, name]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address (must be unique)
+ *                 example: "user@example.com"
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: User's password (min 8 characters, must include letters and numbers)
+ *                 example: "securePassword123"
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: User's full name
+ *                 example: "John Doe"
+ *               preferred_language:
+ *                 type: string
+ *                 enum: [en, cs, de, es, fr, zh]
+ *                 description: User's preferred language (optional, defaults to 'en')
+ *                 example: "en"
+ *     responses:
+ *       201:
+ *         description: User successfully registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Registration successful"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 tokens:
+ *                   $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: Validation error - invalid input data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: Conflict - email already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/register', validate(registerSchema), async (req: express.Request, res: Response) => {
   logger.info('Register endpoint hit', { body: req.body });
   const { email, password, name, preferred_language } = req.body as RegisterRequest;
@@ -63,7 +150,78 @@ router.post('/register', validate(registerSchema), async (req: express.Request, 
   }
 });
 
-// POST /api/auth/login - Login with email/password
+/**
+ * @openapi
+ * /auth/login:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Authenticate user
+ *     description: |
+ *       Login with email and password to receive JWT access and refresh tokens.
+ *       Supports optional "remember me" functionality for extended sessions.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's registered email address
+ *                 example: "user@example.com"
+ *               password:
+ *                 type: string
+ *                 description: User's password
+ *                 example: "securePassword123"
+ *               remember_me:
+ *                 type: boolean
+ *                 description: Extended session duration when true
+ *                 default: false
+ *                 example: false
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Login successful"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 tokens:
+ *                   $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: Validation error - invalid input format
+ *       401:
+ *         description: Unauthorized - invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid email or password"
+ *                 code:
+ *                   type: string
+ *                   example: "INVALID_CREDENTIALS"
+ *       429:
+ *         description: Too many failed login attempts
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/login', validate(loginSchema), async (req: express.Request, res: Response) => {
   const { email, password, remember_me } = req.body as LoginRequest;
 

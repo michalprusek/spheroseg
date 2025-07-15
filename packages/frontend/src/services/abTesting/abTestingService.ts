@@ -1,6 +1,6 @@
 /**
  * A/B Testing Service
- * 
+ *
  * Provides a comprehensive A/B testing framework with:
  * - Feature flag management
  * - Experiment tracking
@@ -151,12 +151,12 @@ export class ABTestingService {
    */
   public async initialize(userContext: UserContext): Promise<void> {
     this.userContext = userContext;
-    
+
     // Detect device and geo info if not provided
     if (!userContext.device) {
       userContext.device = this.detectDevice();
     }
-    
+
     if (!userContext.geo) {
       userContext.geo = await this.detectGeo();
     }
@@ -170,7 +170,7 @@ export class ABTestingService {
    */
   public getVariant(experimentId: string): ExperimentResult {
     const experiment = this.experiments.get(experimentId);
-    
+
     if (!experiment || !this.userContext) {
       return {
         experimentId,
@@ -182,7 +182,7 @@ export class ABTestingService {
 
     // Check if user is already assigned
     let variantId = this.assignments.get(experimentId);
-    
+
     if (!variantId) {
       // Check if user should be in experiment
       if (!this.shouldIncludeUser(experiment)) {
@@ -198,7 +198,7 @@ export class ABTestingService {
       variantId = this.assignVariant(experiment);
       this.assignments.set(experimentId, variantId);
       this.saveAssignments();
-      
+
       // Track assignment
       this.trackEvent('experiment_assigned', {
         experimentId,
@@ -207,8 +207,8 @@ export class ABTestingService {
       });
     }
 
-    const variant = experiment.variants.find(v => v.id === variantId);
-    
+    const variant = experiment.variants.find((v) => v.id === variantId);
+
     return {
       experimentId,
       variantId,
@@ -224,13 +224,13 @@ export class ABTestingService {
     // Check all running experiments for this feature
     for (const [experimentId, experiment] of this.experiments) {
       if (experiment.status !== 'running') continue;
-      
+
       const result = this.getVariant(experimentId);
       if (result.isInExperiment && key in result.features) {
         return result.features[key];
       }
     }
-    
+
     return defaultValue;
   }
 
@@ -239,10 +239,10 @@ export class ABTestingService {
    */
   public getAllFeatureFlags(): FeatureFlag[] {
     const flags: FeatureFlag[] = [];
-    
+
     for (const [experimentId, experiment] of this.experiments) {
       if (experiment.status !== 'running') continue;
-      
+
       const result = this.getVariant(experimentId);
       if (result.isInExperiment) {
         Object.entries(result.features).forEach(([key, value]) => {
@@ -256,7 +256,7 @@ export class ABTestingService {
         });
       }
     }
-    
+
     return flags;
   }
 
@@ -320,7 +320,7 @@ export class ABTestingService {
             'X-API-Key': this.apiKey,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
     } catch (error) {
       console.error('Failed to flush metrics:', error);
@@ -341,7 +341,7 @@ export class ABTestingService {
     if (targeting.includeUserIds?.includes(this.userContext.userId)) {
       return true;
     }
-    
+
     if (targeting.excludeUserIds?.includes(this.userContext.userId)) {
       return false;
     }
@@ -357,9 +357,7 @@ export class ABTestingService {
 
     // Check segments
     if (targeting.segments) {
-      const inSegment = targeting.segments.some(segment =>
-        this.evaluateSegment(segment)
-      );
+      const inSegment = targeting.segments.some((segment) => this.evaluateSegment(segment));
       if (!inSegment) return false;
     }
 
@@ -367,19 +365,16 @@ export class ABTestingService {
     if (targeting.geoTargeting && this.userContext.geo) {
       const { geoTargeting } = targeting;
       const { geo } = this.userContext;
-      
-      if (geoTargeting.countries && geo.country &&
-          !geoTargeting.countries.includes(geo.country)) {
+
+      if (geoTargeting.countries && geo.country && !geoTargeting.countries.includes(geo.country)) {
         return false;
       }
-      
-      if (geoTargeting.regions && geo.region &&
-          !geoTargeting.regions.includes(geo.region)) {
+
+      if (geoTargeting.regions && geo.region && !geoTargeting.regions.includes(geo.region)) {
         return false;
       }
-      
-      if (geoTargeting.cities && geo.city &&
-          !geoTargeting.cities.includes(geo.city)) {
+
+      if (geoTargeting.cities && geo.city && !geoTargeting.cities.includes(geo.city)) {
         return false;
       }
     }
@@ -388,19 +383,16 @@ export class ABTestingService {
     if (targeting.deviceTargeting && this.userContext.device) {
       const { deviceTargeting } = targeting;
       const { device } = this.userContext;
-      
-      if (deviceTargeting.types &&
-          !deviceTargeting.types.includes(device.type)) {
+
+      if (deviceTargeting.types && !deviceTargeting.types.includes(device.type)) {
         return false;
       }
-      
-      if (deviceTargeting.browsers &&
-          !deviceTargeting.browsers.includes(device.browser)) {
+
+      if (deviceTargeting.browsers && !deviceTargeting.browsers.includes(device.browser)) {
         return false;
       }
-      
-      if (deviceTargeting.os &&
-          !deviceTargeting.os.includes(device.os)) {
+
+      if (deviceTargeting.os && !deviceTargeting.os.includes(device.os)) {
         return false;
       }
     }
@@ -411,16 +403,14 @@ export class ABTestingService {
   private evaluateSegment(segment: UserSegment): boolean {
     if (!this.userContext) return false;
 
-    return segment.conditions.every(condition =>
-      this.evaluateCondition(condition)
-    );
+    return segment.conditions.every((condition) => this.evaluateCondition(condition));
   }
 
   private evaluateCondition(condition: SegmentCondition): boolean {
     if (!this.userContext || !this.userContext.properties) return false;
 
     const value = this.userContext.properties[condition.property];
-    
+
     switch (condition.operator) {
       case 'equals':
         return value === condition.value;
@@ -439,13 +429,13 @@ export class ABTestingService {
 
   private assignVariant(experiment: Experiment): string {
     const { allocation, variants } = experiment;
-    
+
     if (allocation.type === 'deterministic' || allocation.type === 'sticky') {
       // Use consistent hashing for deterministic assignment
       const seed = allocation.seed || experiment.id;
       const hash = this.hashString(`${seed}-${this.userContext!.userId}`);
       const bucket = hash % 100;
-      
+
       let cumulative = 0;
       for (const variant of variants) {
         cumulative += variant.weight;
@@ -457,7 +447,7 @@ export class ABTestingService {
       // Random assignment
       const random = Math.random() * 100;
       let cumulative = 0;
-      
+
       for (const variant of variants) {
         cumulative += variant.weight;
         if (random < cumulative) {
@@ -465,9 +455,9 @@ export class ABTestingService {
         }
       }
     }
-    
+
     // Fallback to control
-    const control = variants.find(v => v.isControl);
+    const control = variants.find((v) => v.isControl);
     return control?.id || variants[0].id;
   }
 
@@ -475,7 +465,7 @@ export class ABTestingService {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash);
@@ -483,7 +473,7 @@ export class ABTestingService {
 
   private detectDevice(): DeviceInfo {
     const userAgent = navigator.userAgent.toLowerCase();
-    
+
     let type: 'desktop' | 'mobile' | 'tablet' = 'desktop';
     if (/tablet|ipad/i.test(userAgent)) {
       type = 'tablet';
@@ -523,15 +513,12 @@ export class ABTestingService {
 
   private async loadExperiments(): Promise<void> {
     try {
-      const response = await axios.get(
-        `${this.analyticsEndpoint}/experiments`,
-        {
-          headers: {
-            'X-API-Key': this.apiKey,
-          },
-        }
-      );
-      
+      const response = await axios.get(`${this.analyticsEndpoint}/experiments`, {
+        headers: {
+          'X-API-Key': this.apiKey,
+        },
+      });
+
       this.experiments.clear();
       response.data.experiments.forEach((exp: Experiment) => {
         this.experiments.set(exp.id, exp);
@@ -590,10 +577,7 @@ export class ABTestingService {
 // Singleton instance
 let instance: ABTestingService | null = null;
 
-export function initializeABTesting(config: {
-  analyticsEndpoint: string;
-  apiKey: string;
-}): ABTestingService {
+export function initializeABTesting(config: { analyticsEndpoint: string; apiKey: string }): ABTestingService {
   if (!instance) {
     instance = new ABTestingService(config);
   }

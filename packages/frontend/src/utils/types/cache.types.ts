@@ -20,7 +20,7 @@ export class CacheOperationError extends Error {
   constructor(
     message: string,
     public readonly operation: string,
-    public readonly cause?: Error
+    public readonly cause?: Error,
   ) {
     super(message);
     this.name = 'CacheOperationError';

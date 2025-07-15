@@ -92,7 +92,8 @@ export function mapApiToUserStatistics(apiData: ApiUserStatistics | null): UserS
     totalProjects: apiData.totalProjects ?? apiData.projects_count ?? 0,
     totalImages: apiData.totalImages ?? apiData.images_count ?? 0,
     segmentedImages: apiData.completedSegmentations ?? apiData.segmentations_count ?? 0,
-    pendingImages: (apiData.processingCount ?? apiData.processing_count ?? 0) + (apiData.queuedCount ?? apiData.queued_count ?? 0),
+    pendingImages:
+      (apiData.processingCount ?? apiData.processing_count ?? 0) + (apiData.queuedCount ?? apiData.queued_count ?? 0),
     failedImages: apiData.failedCount ?? apiData.failed_count ?? 0,
     storageUsed: apiData.storageUsedMB ?? apiData.storage_used_mb ?? 0,
     lastActivity: apiData.last_login ?? new Date().toISOString(),

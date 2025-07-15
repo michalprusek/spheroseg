@@ -21,21 +21,14 @@ describe('useABTesting hooks', () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => {
-    return React.createElement(
-      ABTestingContext.Provider,
-      { value: mockService },
-      children
-    );
+    return React.createElement(ABTestingContext.Provider, { value: mockService }, children);
   };
 
   describe('useExperiment', () => {
     it('should return variant for experiment', () => {
       mockService.getVariant.mockReturnValue('variant-a');
 
-      const { result } = renderHook(
-        () => useExperiment('test-experiment'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useExperiment('test-experiment'), { wrapper });
 
       expect(result.current.variant).toBe('variant-a');
       expect(result.current.isControl).toBe(false);
@@ -46,10 +39,7 @@ describe('useABTesting hooks', () => {
     it('should identify control variant', () => {
       mockService.getVariant.mockReturnValue('control');
 
-      const { result } = renderHook(
-        () => useExperiment('test-experiment'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useExperiment('test-experiment'), { wrapper });
 
       expect(result.current.variant).toBe('control');
       expect(result.current.isControl).toBe(true);
@@ -58,33 +48,24 @@ describe('useABTesting hooks', () => {
     it('should track events with experiment context', () => {
       mockService.getVariant.mockReturnValue('variant-a');
 
-      const { result } = renderHook(
-        () => useExperiment('test-experiment'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useExperiment('test-experiment'), { wrapper });
 
       act(() => {
         result.current.trackEvent('button_click', { buttonId: 'cta' });
       });
 
-      expect(mockService.trackEvent).toHaveBeenCalledWith(
-        'button_click',
-        { buttonId: 'cta' }
-      );
+      expect(mockService.trackEvent).toHaveBeenCalledWith('button_click', { buttonId: 'cta' });
     });
 
     it('should memoize variant result', () => {
       mockService.getVariant.mockReturnValue('variant-a');
 
-      const { result, rerender } = renderHook(
-        () => useExperiment('test-experiment'),
-        { wrapper }
-      );
+      const { result, rerender } = renderHook(() => useExperiment('test-experiment'), { wrapper });
 
       const firstResult = result.current;
-      
+
       rerender();
-      
+
       expect(result.current).toBe(firstResult);
       expect(mockService.getVariant).toHaveBeenCalledTimes(1);
     });
@@ -101,10 +82,7 @@ describe('useABTesting hooks', () => {
     it('should return boolean feature flag value', () => {
       mockService.isFeatureEnabled.mockReturnValue(true);
 
-      const { result } = renderHook(
-        () => useFeatureFlag('new-feature'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useFeatureFlag('new-feature'), { wrapper });
 
       expect(result.current).toBe(true);
       expect(mockService.isFeatureEnabled).toHaveBeenCalledWith('new-feature');
@@ -113,10 +91,7 @@ describe('useABTesting hooks', () => {
     it('should return feature flag with custom value', () => {
       mockService.getFeatureFlagValue.mockReturnValue('blue');
 
-      const { result } = renderHook(
-        () => useFeatureFlag('button-color', 'red'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useFeatureFlag('button-color', 'red'), { wrapper });
 
       expect(result.current).toBe('blue');
       expect(mockService.getFeatureFlagValue).toHaveBeenCalledWith('button-color', 'red');
@@ -125,10 +100,7 @@ describe('useABTesting hooks', () => {
     it('should return default value when flag is not set', () => {
       mockService.getFeatureFlagValue.mockReturnValue(undefined);
 
-      const { result } = renderHook(
-        () => useFeatureFlag('missing-flag', 'default'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useFeatureFlag('missing-flag', 'default'), { wrapper });
 
       expect(result.current).toBe('default');
     });
@@ -142,16 +114,13 @@ describe('useABTesting hooks', () => {
     it('should update when feature flag changes', () => {
       mockService.isFeatureEnabled.mockReturnValue(false);
 
-      const { result, rerender } = renderHook(
-        () => useFeatureFlag('dynamic-flag'),
-        { wrapper }
-      );
+      const { result, rerender } = renderHook(() => useFeatureFlag('dynamic-flag'), { wrapper });
 
       expect(result.current).toBe(false);
 
       // Simulate feature flag change
       mockService.isFeatureEnabled.mockReturnValue(true);
-      
+
       rerender();
 
       expect(result.current).toBe(true);
@@ -160,10 +129,7 @@ describe('useABTesting hooks', () => {
 
   describe('useABTestingEvents', () => {
     it('should provide event tracking functions', () => {
-      const { result } = renderHook(
-        () => useABTestingEvents(),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useABTestingEvents(), { wrapper });
 
       expect(result.current).toHaveProperty('trackEvent');
       expect(result.current).toHaveProperty('trackConversion');
@@ -171,28 +137,19 @@ describe('useABTesting hooks', () => {
     });
 
     it('should track standard events', () => {
-      const { result } = renderHook(
-        () => useABTestingEvents(),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useABTestingEvents(), { wrapper });
 
       act(() => {
         result.current.trackEvent('page_view', { page: '/home' });
       });
 
-      expect(mockService.trackEvent).toHaveBeenCalledWith(
-        'page_view',
-        { page: '/home' }
-      );
+      expect(mockService.trackEvent).toHaveBeenCalledWith('page_view', { page: '/home' });
     });
 
     it('should track conversion events', () => {
       mockService.trackConversion = vi.fn();
 
-      const { result } = renderHook(
-        () => useABTestingEvents(),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useABTestingEvents(), { wrapper });
 
       act(() => {
         result.current.trackConversion('purchase', 99.99);
@@ -204,20 +161,13 @@ describe('useABTesting hooks', () => {
     it('should track timing events', () => {
       mockService.trackTiming = vi.fn();
 
-      const { result } = renderHook(
-        () => useABTestingEvents(),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useABTestingEvents(), { wrapper });
 
       act(() => {
         result.current.trackTiming('page_load', 1500, { page: '/dashboard' });
       });
 
-      expect(mockService.trackTiming).toHaveBeenCalledWith(
-        'page_load',
-        1500,
-        { page: '/dashboard' }
-      );
+      expect(mockService.trackTiming).toHaveBeenCalledWith('page_load', 1500, { page: '/dashboard' });
     });
 
     it('should handle missing service gracefully', () => {
@@ -234,13 +184,10 @@ describe('useABTesting hooks', () => {
     it('should include active experiments in event context', () => {
       mockService.getActiveExperiments.mockReturnValue({
         'exp-1': 'variant-a',
-        'exp-2': 'control'
+        'exp-2': 'control',
       });
 
-      const { result } = renderHook(
-        () => useABTestingEvents(),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useABTestingEvents(), { wrapper });
 
       act(() => {
         result.current.trackEvent('button_click', { buttonId: 'cta' });
@@ -260,9 +207,9 @@ describe('useABTesting hooks', () => {
         () => ({
           experiment: useExperiment('test-exp'),
           featureFlag: useFeatureFlag('new-ui'),
-          events: useABTestingEvents()
+          events: useABTestingEvents(),
         }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.experiment.variant).toBe('variant-a');
@@ -271,18 +218,16 @@ describe('useABTesting hooks', () => {
     });
 
     it('should handle conditional feature rendering', () => {
-      mockService.isFeatureEnabled
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(true);
+      mockService.isFeatureEnabled.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
       const { result, rerender } = renderHook(
         () => {
           const showNewFeature = useFeatureFlag('new-feature');
           const showBetaFeature = useFeatureFlag('beta-feature');
-          
+
           return { showNewFeature, showBetaFeature };
         },
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.showNewFeature).toBe(false);

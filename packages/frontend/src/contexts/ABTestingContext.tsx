@@ -1,6 +1,6 @@
 /**
  * A/B Testing Context Provider
- * 
+ *
  * Provides global A/B testing state and configuration
  */
 
@@ -40,10 +40,7 @@ interface ABTestingProviderProps {
 const ABTestingContext = createContext<ABTestingContextValue | undefined>(undefined);
 
 // Provider component
-export function ABTestingProvider({ 
-  children, 
-  config = {} 
-}: ABTestingProviderProps) {
+export function ABTestingProvider({ children, config = {} }: ABTestingProviderProps) {
   const { user } = useAuth();
   const [isInitialized, setIsInitialized] = useState(false);
   const [service, setService] = useState<ABTestingService | null>(null);
@@ -60,16 +57,12 @@ export function ABTestingProvider({
     const initService = async () => {
       try {
         const abConfig = {
-          analyticsEndpoint: config.analyticsEndpoint || 
-            import.meta.env.VITE_ANALYTICS_ENDPOINT || 
-            '/api/analytics',
-          apiKey: config.apiKey || 
-            import.meta.env.VITE_ANALYTICS_API_KEY || 
-            '',
+          analyticsEndpoint: config.analyticsEndpoint || import.meta.env.VITE_ANALYTICS_ENDPOINT || '/api/analytics',
+          apiKey: config.apiKey || import.meta.env.VITE_ANALYTICS_API_KEY || '',
         };
 
         const abService = initializeABTesting(abConfig);
-        
+
         const userContext: UserContext = {
           userId: user.id,
           sessionId: getOrCreateSessionId(),
@@ -84,14 +77,14 @@ export function ABTestingProvider({
         };
 
         await abService.initialize(userContext);
-        
+
         setService(abService);
         setIsInitialized(true);
-        
+
         // Load active experiments
         const flags = abService.getAllFeatureFlags();
         setActiveExperiments(flags);
-        
+
         // Debug mode
         if (config.debugMode || import.meta.env.DEV) {
           console.log('A/B Testing initialized:', {
@@ -117,7 +110,7 @@ export function ABTestingProvider({
   }, [user, config]);
 
   // Context value methods
-  const getFeatureFlag = <T = boolean>(key: string, defaultValue?: T): T => {
+  const getFeatureFlag = <T = boolean,>(key: string, defaultValue?: T): T => {
     if (!service) return defaultValue as T;
     return service.getFeatureFlag(key, defaultValue);
   };
@@ -139,7 +132,7 @@ export function ABTestingProvider({
 
   const refreshExperiments = async () => {
     if (!service) return;
-    
+
     // Re-initialize to reload experiments
     if (user) {
       const userContext: UserContext = {
@@ -147,7 +140,7 @@ export function ABTestingProvider({
         sessionId: getOrCreateSessionId(),
         properties: getUserProperties(user),
       };
-      
+
       await service.initialize(userContext);
       const flags = service.getAllFeatureFlags();
       setActiveExperiments(flags);
@@ -165,21 +158,17 @@ export function ABTestingProvider({
     refreshExperiments,
   };
 
-  return (
-    <ABTestingContext.Provider value={value}>
-      {children}
-    </ABTestingContext.Provider>
-  );
+  return <ABTestingContext.Provider value={value}>{children}</ABTestingContext.Provider>;
 }
 
 // Hook to use A/B testing context
 export function useABTesting() {
   const context = useContext(ABTestingContext);
-  
+
   if (context === undefined) {
     throw new Error('useABTesting must be used within an ABTestingProvider');
   }
-  
+
   return context;
 }
 
@@ -187,12 +176,12 @@ export function useABTesting() {
 function getOrCreateSessionId(): string {
   const key = 'ab_session_id';
   let sessionId = sessionStorage.getItem(key);
-  
+
   if (!sessionId) {
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     sessionStorage.setItem(key, sessionId);
   }
-  
+
   return sessionId;
 }
 
@@ -200,22 +189,22 @@ function getUserProperties(user: any): Record<string, any> {
   return {
     // User demographics
     accountAge: getAccountAge(user.createdAt),
-    
+
     // Usage metrics
     lastActiveAt: user.lastActiveAt || new Date().toISOString(),
     totalProjects: user.totalProjects || 0,
     totalImages: user.totalImages || 0,
-    
+
     // Engagement
     hasCompletedOnboarding: user.hasCompletedOnboarding || false,
     hasUsedSegmentation: user.hasUsedSegmentation || false,
     hasExportedData: user.hasExportedData || false,
-    
+
     // Technical
     preferredLanguage: user.language || 'en',
     theme: user.theme || 'light',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    
+
     // Custom properties can be added here
   };
 }

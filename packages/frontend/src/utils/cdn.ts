@@ -37,7 +37,7 @@ export function isCDNEnabled(): boolean {
  */
 export function getCDNUrl(path: string, transform?: ImageTransform): string {
   if (!path) return '';
-  
+
   // If CDN is not enabled, return the original path
   if (!isCDNEnabled()) {
     return path;
@@ -77,14 +77,14 @@ export function getCDNUrl(path: string, transform?: ImageTransform): string {
  * Get optimized image URL with transformations
  */
 export function getOptimizedImageUrl(
-  path: string, 
+  path: string,
   options: {
     width?: number;
     height?: number;
     quality?: number;
     format?: 'webp' | 'jpeg' | 'png' | 'auto';
     devicePixelRatio?: number;
-  } = {}
+  } = {},
 ): string {
   if (!cdnConfig.imageOptimization) {
     return getCDNUrl(path);
@@ -105,22 +105,25 @@ export function getOptimizedImageUrl(
 /**
  * Preload critical images
  */
-export function preloadImage(url: string, options?: {
-  as?: 'image';
-  type?: string;
-  media?: string;
-}): void {
+export function preloadImage(
+  url: string,
+  options?: {
+    as?: 'image';
+    type?: string;
+    media?: string;
+  },
+): void {
   if (!url) return;
 
   const link = document.createElement('link');
   link.rel = 'preload';
   link.as = options?.as || 'image';
   link.href = getCDNUrl(url);
-  
+
   if (options?.type) {
     link.type = options.type;
   }
-  
+
   if (options?.media) {
     link.media = options.media;
   }
@@ -137,20 +140,22 @@ export function getImageSrcSet(
   options: {
     quality?: number;
     format?: 'webp' | 'jpeg' | 'png' | 'auto';
-  } = {}
+  } = {},
 ): string {
   if (!cdnConfig.imageOptimization) {
     return getCDNUrl(path);
   }
 
-  const srcset = sizes.map(size => {
-    const url = getOptimizedImageUrl(path, {
-      width: size,
-      quality: options.quality,
-      format: options.format,
-    });
-    return `${url} ${size}w`;
-  }).join(', ');
+  const srcset = sizes
+    .map((size) => {
+      const url = getOptimizedImageUrl(path, {
+        width: size,
+        quality: options.quality,
+        format: options.format,
+      });
+      return `${url} ${size}w`;
+    })
+    .join(', ');
 
   return srcset;
 }
@@ -160,18 +165,18 @@ export function getImageSrcSet(
  */
 export function getAssetUrl(path: string): string {
   if (!path) return '';
-  
+
   // Handle different asset types
   if (path.startsWith('/assets/')) {
     return getCDNUrl(path);
   }
-  
+
   // Handle Vite asset imports
   if (path.includes('/src/assets/')) {
     // This will be handled by Vite's build process
     return path;
   }
-  
+
   return getCDNUrl(path);
 }
 
@@ -183,7 +188,7 @@ export function prefetchResources(urls: string[]): void {
     return;
   }
 
-  urls.forEach(url => {
+  urls.forEach((url) => {
     const link = document.createElement('link');
     link.rel = 'prefetch';
     link.href = getCDNUrl(url);
@@ -195,18 +200,18 @@ export function prefetchResources(urls: string[]): void {
  * Clear CDN cache for specific paths (admin only)
  */
 export async function purgeCDNCache(
-  paths?: string[], 
+  paths?: string[],
   options: {
     patterns?: string[];
     purgeAll?: boolean;
-  } = {}
+  } = {},
 ): Promise<boolean> {
   try {
     const response = await fetch('/api/cdn/purge', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
       },
       body: JSON.stringify({
         paths,
@@ -228,7 +233,7 @@ export async function purgeCDNCache(
 function isImagePath(path: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.tiff'];
   const lowerPath = path.toLowerCase();
-  return imageExtensions.some(ext => lowerPath.includes(ext));
+  return imageExtensions.some((ext) => lowerPath.includes(ext));
 }
 
 function applyImageTransform(url: string, transform: ImageTransform): string {
@@ -246,7 +251,7 @@ function applyImageTransform(url: string, transform: ImageTransform): string {
 
 function applyCloudFrontTransform(url: string, transform: ImageTransform): string {
   const params: string[] = [];
-  
+
   if (transform.width) params.push(`w=${transform.width}`);
   if (transform.height) params.push(`h=${transform.height}`);
   if (transform.quality) params.push(`q=${transform.quality}`);
@@ -265,7 +270,7 @@ function applyCloudFrontTransform(url: string, transform: ImageTransform): strin
 
 function applyCloudflareTransform(url: string, transform: ImageTransform): string {
   const options: string[] = [];
-  
+
   if (transform.width) options.push(`width=${transform.width}`);
   if (transform.height) options.push(`height=${transform.height}`);
   if (transform.quality) options.push(`quality=${transform.quality}`);
@@ -289,7 +294,7 @@ function applyCloudflareTransform(url: string, transform: ImageTransform): strin
 
 function applyFastlyTransform(url: string, transform: ImageTransform): string {
   const params: string[] = [];
-  
+
   if (transform.width) params.push(`width=${transform.width}`);
   if (transform.height) params.push(`height=${transform.height}`);
   if (transform.quality) params.push(`quality=${transform.quality}`);
@@ -306,9 +311,9 @@ function applyFastlyTransform(url: string, transform: ImageTransform): string {
 
 function getQualityForDPR(dpr: number): number {
   // Adjust quality based on device pixel ratio
-  if (dpr >= 3) return 60;  // Very high DPR, lower quality
-  if (dpr >= 2) return 75;  // High DPR, medium quality
-  return 85;                 // Standard DPR, high quality
+  if (dpr >= 3) return 60; // Very high DPR, lower quality
+  if (dpr >= 2) return 75; // High DPR, medium quality
+  return 85; // Standard DPR, high quality
 }
 
 // Export configuration for other components

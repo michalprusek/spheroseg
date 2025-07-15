@@ -169,7 +169,7 @@ const CanvasV2: React.FC<CanvasV2Props> = ({
           // For immediate feedback on drawing operations, also set directly
           // when in CreatePolygon, Slice, or AddPoints mode (when actively adding points)
           if (
-            editMode === EditMode.CreatePolygon || 
+            editMode === EditMode.CreatePolygon ||
             editMode === EditMode.Slice ||
             (editMode === EditMode.AddPoints && interactionState?.isAddingPoints)
           ) {
