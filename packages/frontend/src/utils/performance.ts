@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { getLogger } from '@/utils/logging/unifiedLogger';
+
+// Get logger for performance monitoring
+const logger = getLogger('performance');
 
 /**
  * Initialize performance monitoring
@@ -10,20 +14,20 @@ export const initPerformanceMonitoring = () => {
     const navigationStart = timing.navigationStart;
 
     // Report basic metrics
-    console.debug('[Performance] DNS lookup:', timing.domainLookupEnd - timing.domainLookupStart, 'ms');
-    console.debug('[Performance] TCP connection:', timing.connectEnd - timing.connectStart, 'ms');
-    console.debug('[Performance] Request time:', timing.responseEnd - timing.requestStart, 'ms');
-    console.debug('[Performance] DOM processing:', timing.domComplete - timing.domLoading, 'ms');
-    console.debug('[Performance] Total page load:', timing.loadEventEnd - navigationStart, 'ms');
+    const metrics = {
+      dnsLookup: timing.domainLookupEnd - timing.domainLookupStart,
+      tcpConnection: timing.connectEnd - timing.connectStart,
+      requestTime: timing.responseEnd - timing.requestStart,
+      domProcessing: timing.domComplete - timing.domLoading,
+      totalPageLoad: timing.loadEventEnd - navigationStart,
+    };
+
+    logger.debug('Navigation timing metrics', metrics);
 
     // Send metrics to backend (with error handling)
     if (navigator.sendBeacon) {
-      const metrics = {
-        dnsLookup: timing.domainLookupEnd - timing.domainLookupStart,
-        tcpConnection: timing.connectEnd - timing.connectStart,
-        requestTime: timing.responseEnd - timing.requestStart,
-        domProcessing: timing.domComplete - timing.domLoading,
-        totalPageLoad: timing.loadEventEnd - navigationStart,
+      const metricsPayload = {
+        ...metrics,
         timestamp: new Date().toISOString(),
       };
 
@@ -34,16 +38,16 @@ export const initPerformanceMonitoring = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(metrics),
+          body: JSON.stringify(metricsPayload),
           // Don't block page unload if this fails
           keepalive: true,
         }).catch((error) => {
           // Silently log performance metric failures to avoid noise
-          console.debug('[Performance] Failed to send metrics:', error.message);
+          logger.debug('Failed to send performance metrics to backend', { error: error.message });
         });
       } catch (error) {
         // Fallback - don't throw errors for performance metrics
-        console.debug('[Performance] Metrics collection failed:', error);
+        logger.debug('Performance metrics collection failed', { error });
       }
     }
   }
@@ -53,15 +57,17 @@ export const initPerformanceMonitoring = () => {
     try {
       const observer = new PerformanceObserver((list) => {
         list.getEntries().forEach((entry) => {
-          console.debug(
-            `[Performance] ${entry.name}: ${entry.startTime.toFixed(2)}ms (duration: ${entry.duration.toFixed(2)}ms)`,
-          );
+          logger.debug(`Performance entry: ${entry.name}`, {
+            startTime: entry.startTime.toFixed(2),
+            duration: entry.duration.toFixed(2),
+            entryType: entry.entryType,
+          });
         });
       });
 
       observer.observe({ entryTypes: ['resource', 'paint', 'navigation'] });
     } catch (e) {
-      console.error('Performance observer error:', e);
+      logger.error('Performance observer initialization failed', e);
     }
   }
 };
@@ -72,7 +78,7 @@ export const initPerformanceMonitoring = () => {
 export const markPerformance = (name: string) => {
   if (window.performance && window.performance.mark) {
     window.performance.mark(name);
-    console.debug(`[Performance] Marked: ${name}`);
+    logger.debug(`Performance mark created: ${name}`);
     return true;
   }
   return false;
@@ -88,11 +94,11 @@ export const measurePerformance = (name: string, startMark: string, endMark: str
       const measures = window.performance.getEntriesByName(name, 'measure');
       if (measures.length > 0) {
         const duration = measures[0].duration;
-        console.debug(`[Performance] ${name}: ${duration.toFixed(2)}ms`);
+        logger.debug(`Performance measure: ${name}`, { duration: duration.toFixed(2) });
         return duration;
       }
     } catch (e) {
-      console.error(`[Performance] Error measuring ${name}:`, e);
+      logger.error(`Performance measurement failed for ${name}`, e);
     }
   }
   return null;
@@ -145,7 +151,10 @@ export const usePerformance = () => {
 
       // Log render times if they exceed a threshold (e.g., 50ms)
       if (timeSinceLastRender > 50) {
-        console.debug(`[Performance] Render took ${timeSinceLastRender.toFixed(2)}ms`);
+        logger.debug('Slow render detected', { 
+          duration: timeSinceLastRender.toFixed(2),
+          renderCount: renderCount.current,
+        });
       }
     }
 
@@ -155,7 +164,11 @@ export const usePerformance = () => {
   // Helper to send metrics to analytics
   const sendToAnalytics = useCallback((metric: any) => {
     // You can implement any analytics service here
-    console.debug(`[Web Vitals] ${metric.name}: ${metric.value}`);
+    logger.debug(`Web Vitals: ${metric.name}`, { 
+      value: metric.value,
+      id: metric.id,
+      rating: metric.rating,
+    });
 
     // Optionally send to backend
     if (navigator.sendBeacon) {
@@ -178,7 +191,7 @@ export const usePerformance = () => {
       const start = performance.now();
       operation();
       const duration = performance.now() - start;
-      console.debug(`[Performance] ${label} took ${duration.toFixed(2)}ms`);
+      logger.debug(`Operation timing: ${label}`, { duration: duration.toFixed(2) });
       return duration;
     },
   };
@@ -193,7 +206,10 @@ export const useImageLoadPerformance = () => {
 
     return (event: React.SyntheticEvent<HTMLImageElement>) => {
       const loadTime = performance.now() - startTime;
-      console.debug(`[Performance] Image ${imageUrl} loaded in ${loadTime.toFixed(2)}ms`);
+      logger.debug('Image loaded', { 
+        url: imageUrl,
+        loadTime: loadTime.toFixed(2),
+      });
 
       // Report image load time
       const img = event.currentTarget;
@@ -365,7 +381,7 @@ export function trackOperationTime(operationName: string, operation: () => void)
   const start = performance.now();
   operation();
   const duration = performance.now() - start;
-  console.debug(`[Performance] ${operationName} took ${duration.toFixed(2)}ms`);
+  logger.debug(`Operation completed: ${operationName}`, { duration: duration.toFixed(2) });
   return duration;
 }
 

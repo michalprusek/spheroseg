@@ -34,6 +34,9 @@ import { toast, Toaster } from 'sonner';
 // Import IndexedDB service for cleanup
 import { cleanupOldData, getDBStats, clearEntireDatabase } from './utils/indexedDBService';
 
+// Import performance monitoring
+import { initPerformanceMonitoring } from './utils/performance';
+
 // Import accessibility CSS
 import './components/a11y/SkipLink.css';
 
@@ -213,8 +216,10 @@ const AppLayout = () => {
   ];
   const shouldShowFooter = !noFooterPages.some((page) => location.pathname.startsWith(page));
 
-  // Automatické čištění starých dat při spuštění aplikace
+  // Initialize performance monitoring and automatic data cleanup on app startup
   useEffect(() => {
+    // Start performance monitoring as early as possible
+    initPerformanceMonitoring();
     const cleanupStorage = async () => {
       try {
         // Získáme statistiky před čištěním

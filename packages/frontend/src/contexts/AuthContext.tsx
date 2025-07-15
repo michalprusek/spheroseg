@@ -22,6 +22,7 @@ import {
 } from '@/services/authService'; // Import token services
 import { API_PATHS, formatApiPath } from '@/lib/apiPaths'; // Import centralized API paths
 import userProfileService from '../services/userProfileService';
+import { markPerformance, measurePerformance } from '@/utils/performance';
 
 // Define simplified User type
 interface User {
@@ -555,15 +556,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
 
       try {
-        // Log the attempt
+        // Log the attempt and mark performance
         logger.info(`Attempting to sign in with email: ${email}, rememberMe: ${rememberMe}`);
+        markPerformance('auth-signin-start');
 
         // Set up timeout for the entire sign-in process
         const loginTimeoutPromise = new Promise<boolean>((_, reject) => {
           setTimeout(() => {
-            logger.warn('[authContext] Sign-in operation timed out');
-            reject(new Error('Sign-in timed out. Please try again.'));
-          }, 8000); // Further reduced timeout for quicker failure
+            logger.debug('[authContext] Sign-in operation timed out after 10 seconds');
+            reject(new Error('Authentication request timed out. Please check your connection and try again.'));
+          }, 10000); // 10 second timeout for the entire process
         });
 
         // Create a promise for the login process with direct axios call
@@ -571,9 +573,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Set up abort controller for the login request
           const controller = new AbortController();
           const timeoutId = setTimeout(() => {
-            logger.warn('[authContext] Login request timed out');
+            logger.debug('[authContext] Login request timed out after 5 seconds');
             controller.abort();
-          }, 3000); // 3 second timeout for the request
+          }, 5000); // 5 second timeout for the request
 
           try {
             // Use axios directly to completely bypass httpClient and all interceptors
@@ -583,14 +585,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               { email, password, remember_me: rememberMe },
               {
                 signal: controller.signal,
-                timeout: 3000, // 3 second request timeout
+                timeout: 5000, // 5 second request timeout
                 headers: {
                   'Content-Type': 'application/json',
                 },
               },
             );
 
+            markPerformance('auth-signin-success');
             logger.info('Login successful');
+            const loginDuration = measurePerformance('signin-total', 'auth-signin-start', 'auth-signin-success');
+            logger.info(`Authentication completed in ${loginDuration?.toFixed(0)}ms`);
+
             handleAuthSuccess(response.data, rememberMe);
 
             if (navigate) {
@@ -600,8 +606,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch (error: any) {
             // Cast error to any
             if (error.name === 'AbortError') {
-              logger.error('[authContext] Login request aborted due to timeout');
-              throw new Error('Login request timed out. Please try again.');
+              logger.debug('[authContext] Login request aborted due to timeout');
+              throw new Error('Request timed out. The server may be slow or unreachable.');
             }
 
             if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -656,11 +662,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
           }
         } else {
-          // Non-axios errors
-          toast.error('Connection error', {
-            duration: 5000,
-            description: error.message || 'Unable to connect to the server. Please try again.',
-          });
+          // Non-axios errors (including timeouts)
+          const isTimeout = error.message?.includes('timed out') || error.message?.includes('timeout');
+
+          if (isTimeout) {
+            toast.error('Connection timeout', {
+              duration: 6000,
+              description: 'The server is taking too long to respond. Please check your connection and try again.',
+            });
+          } else {
+            toast.error('Connection error', {
+              duration: 5000,
+              description: error.message || 'Unable to connect to the server. Please try again.',
+            });
+          }
         }
 
         setUserWithStorage(null);
