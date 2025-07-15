@@ -16,7 +16,69 @@ import cacheService from '../services/cacheService';
 
 const router: Router = express.Router();
 
-// GET /api/projects - List projects for the current user
+/**
+ * @openapi
+ * /projects:
+ *   get:
+ *     tags: [Projects]
+ *     summary: List user projects
+ *     description: |
+ *       Retrieve all projects owned by the authenticated user.
+ *       Supports pagination and optional inclusion of shared projects.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: limit
+ *         in: query
+ *         description: Maximum number of projects to return
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *           minimum: 1
+ *           maximum: 100
+ *           example: 20
+ *       - name: offset
+ *         in: query
+ *         description: Number of projects to skip for pagination
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           example: 0
+ *       - name: includeShared
+ *         in: query
+ *         description: Whether to include projects shared with the user
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *           example: true
+ *     responses:
+ *       200:
+ *         description: Projects retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 projects:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Project'
+ *                 total:
+ *                   type: integer
+ *                   description: Total number of projects available
+ *                   example: 15
+ *                 limit:
+ *                   type: integer
+ *                   example: 20
+ *                 offset:
+ *                   type: integer
+ *                   example: 0
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       500:
+ *         description: Internal server error
+ */
 // @ts-ignore
 router.get(
   '/',

@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return cookieToken;
       }
 
-      logger.warn('No access token found during initialization');
+      logger.debug('No access token found during initialization');
       return null;
     } catch (error) {
       logger.error('Error getting initial token:', error);

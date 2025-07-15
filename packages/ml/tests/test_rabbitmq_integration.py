@@ -307,6 +307,19 @@ class TestRabbitMQConnection:
 class TestMessagePriority:
     """Test message priority handling."""
     
+    @pytest.fixture
+    def mock_channel(self):
+        """Create a mock RabbitMQ channel."""
+        channel = Mock()
+        return channel
+    
+    @pytest.fixture
+    def mock_method(self):
+        """Create a mock delivery method."""
+        method = Mock()
+        method.delivery_tag = 'test-delivery-tag-123'
+        return method
+    
     def test_high_priority_message_processing(self, mock_channel, mock_method):
         """Test that high priority messages are handled correctly."""
         high_priority_task = {
@@ -332,6 +345,26 @@ class TestMessagePriority:
 
 class TestErrorRecovery:
     """Test error recovery mechanisms."""
+    
+    @pytest.fixture
+    def mock_channel(self):
+        """Create a mock RabbitMQ channel."""
+        channel = Mock()
+        return channel
+    
+    @pytest.fixture
+    def mock_method(self):
+        """Create a mock delivery method."""
+        method = Mock()
+        method.delivery_tag = 'test-delivery-tag-123'
+        return method
+    
+    @pytest.fixture
+    def temp_upload_dir(self):
+        """Create a temporary upload directory."""
+        temp_dir = tempfile.mkdtemp()
+        yield temp_dir
+        shutil.rmtree(temp_dir)
     
     def test_temporary_file_cleanup_on_error(self, mock_channel, mock_method, temp_upload_dir):
         """Test that temporary files are cleaned up on error."""
@@ -390,6 +423,26 @@ class TestErrorRecovery:
 
 class TestPerformanceMonitoring:
     """Test performance monitoring capabilities."""
+    
+    @pytest.fixture
+    def mock_channel(self):
+        """Create a mock RabbitMQ channel."""
+        channel = Mock()
+        return channel
+    
+    @pytest.fixture
+    def mock_method(self):
+        """Create a mock delivery method."""
+        method = Mock()
+        method.delivery_tag = 'test-delivery-tag-123'
+        return method
+    
+    @pytest.fixture
+    def temp_upload_dir(self):
+        """Create a temporary upload directory."""
+        temp_dir = tempfile.mkdtemp()
+        yield temp_dir
+        shutil.rmtree(temp_dir)
     
     def test_processing_time_measurement(self, mock_channel, mock_method, temp_upload_dir):
         """Test that processing time is measured and reported."""

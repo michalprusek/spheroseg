@@ -16,7 +16,7 @@ export const initPerformanceMonitoring = () => {
     console.debug('[Performance] DOM processing:', timing.domComplete - timing.domLoading, 'ms');
     console.debug('[Performance] Total page load:', timing.loadEventEnd - navigationStart, 'ms');
 
-    // Send metrics to backend
+    // Send metrics to backend (with error handling)
     if (navigator.sendBeacon) {
       const metrics = {
         dnsLookup: timing.domainLookupEnd - timing.domainLookupStart,
@@ -27,7 +27,24 @@ export const initPerformanceMonitoring = () => {
         timestamp: new Date().toISOString(),
       };
 
-      navigator.sendBeacon('/api/metrics/performance', JSON.stringify(metrics));
+      try {
+        // Use fetch instead of sendBeacon for better error handling
+        fetch('/api/metrics/performance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(metrics),
+          // Don't block page unload if this fails
+          keepalive: true,
+        }).catch((error) => {
+          // Silently log performance metric failures to avoid noise
+          console.debug('[Performance] Failed to send metrics:', error.message);
+        });
+      } catch (error) {
+        // Fallback - don't throw errors for performance metrics
+        console.debug('[Performance] Metrics collection failed:', error);
+      }
     }
   }
 

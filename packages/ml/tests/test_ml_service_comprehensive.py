@@ -323,6 +323,16 @@ class TestMessageProcessingAdvanced:
 class TestErrorRecoveryMechanisms:
     """Test error recovery and resilience."""
     
+    @pytest.fixture
+    def setup_mocks(self):
+        """Setup common mocks for message processing tests."""
+        ch = Mock()
+        method = Mock()
+        method.delivery_tag = 'test-tag-123'
+        properties = {}
+        
+        return ch, method, properties
+    
     def test_callback_retry_on_network_error(self, setup_mocks):
         """Test that callback is retried on network errors."""
         ch, method, properties = setup_mocks
@@ -436,6 +446,16 @@ class TestEnvironmentConfiguration:
 class TestMonitoringAndLogging:
     """Test monitoring and logging functionality."""
     
+    @pytest.fixture
+    def setup_mocks(self):
+        """Setup common mocks for message processing tests."""
+        ch = Mock()
+        method = Mock()
+        method.delivery_tag = 'test-tag-123'
+        properties = {}
+        
+        return ch, method, properties
+    
     def test_task_processing_logging(self, setup_mocks):
         """Test that task processing is properly logged."""
         ch, method, properties = setup_mocks
@@ -491,6 +511,16 @@ class TestMonitoringAndLogging:
 
 class TestPerformanceOptimization:
     """Test performance optimization features."""
+    
+    @pytest.fixture
+    def setup_mocks(self):
+        """Setup common mocks for message processing tests."""
+        ch = Mock()
+        method = Mock()
+        method.delivery_tag = 'test-tag-123'
+        properties = {}
+        
+        return ch, method, properties
     
     def test_output_directory_cleanup(self, setup_mocks):
         """Test that output directories are managed properly."""
