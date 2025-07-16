@@ -258,9 +258,9 @@ export function sanitizeSqlInput(input: string): string {
 }
 
 /**
- * Recursively sanitize object values
+ * Recursively sanitize object values (internal helper)
  */
-function sanitizeObject(obj: unknown, maxDepth: number, depth: number = 0): unknown {
+function sanitizeObjectRecursive(obj: unknown, maxDepth: number, depth: number = 0): unknown {
   if (depth > maxDepth) {
     return null;
   }
@@ -270,7 +270,7 @@ function sanitizeObject(obj: unknown, maxDepth: number, depth: number = 0): unkn
   }
   
   if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeObject(item, maxDepth, depth + 1));
+    return obj.map(item => sanitizeObjectRecursive(item, maxDepth, depth + 1));
   }
   
   if (obj && typeof obj === 'object') {
@@ -278,7 +278,7 @@ function sanitizeObject(obj: unknown, maxDepth: number, depth: number = 0): unkn
     for (const [key, value] of Object.entries(obj)) {
       const sanitizedKey = sanitizeText(key);
       if (sanitizedKey) {
-        sanitizedObj[sanitizedKey] = sanitizeObject(value, maxDepth, depth + 1);
+        sanitizedObj[sanitizedKey] = sanitizeObjectRecursive(value, maxDepth, depth + 1);
       }
     }
     return sanitizedObj;
@@ -297,7 +297,7 @@ export function sanitizeJson(input: string, maxDepth: number = 10): unknown {
 
   try {
     const parsed = JSON.parse(input);
-    return sanitizeObject(parsed, maxDepth);
+    return sanitizeObjectRecursive(parsed, maxDepth);
   } catch {
     return null;
   }
