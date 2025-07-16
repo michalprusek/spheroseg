@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   measurePerformance,
   trackOperationTime,
@@ -14,6 +14,7 @@ describe('Performance Utilities', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
 
     // Mock performance.now
     let currentTime = 0;
@@ -22,8 +23,8 @@ describe('Performance Utilities', () => {
     // Helper to advance time
     global.advanceTime = (ms: number) => {
       currentTime += ms;
-      // Run any pending timers
-      vi.runOnlyPendingTimers();
+      // Advance fake timers
+      vi.advanceTimersByTime(ms);
     };
   });
 
@@ -32,6 +33,7 @@ describe('Performance Utilities', () => {
     performance.now = originalPerformanceNow;
     // Remove helper
     delete global.advanceTime;
+    vi.useRealTimers();
   });
 
   describe('measurePerformance', () => {
@@ -76,13 +78,11 @@ describe('Performance Utilities', () => {
   });
 
   describe('trackOperationTime', () => {
-    it('creates a decorator that tracks execution time', async () => {
+    it('creates a decorator that tracks execution time', () => {
       const onComplete = vi.fn();
 
       const trackedFn = trackOperationTime(
-        async (a, b) => {
-          // Simulate async work
-          await new Promise((r) => setTimeout(r, 100));
+        (a, b) => {
           global.advanceTime(100);
           return a + b;
         },
@@ -90,13 +90,13 @@ describe('Performance Utilities', () => {
         onComplete,
       );
 
-      const result = await trackedFn(5, 7);
+      const result = trackedFn(5, 7);
 
       expect(result).toBe(12);
       expect(onComplete).toHaveBeenCalledWith('test-operation', 100);
     });
 
-    it('passes operation name to callback', async () => {
+    it('passes operation name to callback', () => {
       const onComplete = vi.fn();
 
       const operationName = 'custom-operation';
@@ -108,12 +108,12 @@ describe('Performance Utilities', () => {
         onComplete,
       );
 
-      await trackedFn();
+      trackedFn();
 
       expect(onComplete).toHaveBeenCalledWith(operationName, 50);
     });
 
-    it('handles errors in tracked function', async () => {
+    it('handles errors in tracked function', () => {
       const onComplete = vi.fn();
       const onError = vi.fn();
 
@@ -128,7 +128,7 @@ describe('Performance Utilities', () => {
       );
 
       // Should propagate error
-      await expect(trackedFn()).rejects.toThrow('Test error');
+      expect(() => trackedFn()).toThrow('Test error');
 
       // Should still call onComplete with execution time
       expect(onComplete).toHaveBeenCalledWith('error-operation', 50);

@@ -29,7 +29,8 @@ jest.mock('../config', () => ({
   },
 }));
 
-const mockQuery = require('../db').default.query;
+import db from '../db';
+const mockQuery = (db as jest.Mocked<typeof db>).query;
 
 describe('Authentication Service', () => {
   beforeEach(() => {

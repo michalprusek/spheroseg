@@ -8,7 +8,6 @@ import { authenticate as authMiddleware, AuthenticatedRequest } from '../securit
 import logger from '../utils/logger';
 import pool from '../db';
 import { v4 as uuidv4 } from 'uuid';
-import jwt from 'jsonwebtoken';
 import config from '../config';
 import tokenService, { TokenType } from '../services/tokenService';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';

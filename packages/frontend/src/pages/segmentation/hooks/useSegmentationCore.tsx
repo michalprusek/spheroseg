@@ -12,7 +12,6 @@ import type {
   Point, // Import Point type
 } from '@/types';
 import apiClient from '@/lib/apiClient';
-import axios, { AxiosError } from 'axios';
 import { constructUrl } from '@/lib/urlUtils';
 import { v4 as uuidv4 } from 'uuid'; // Import UUID for polygon IDs
 
@@ -289,7 +288,7 @@ export const useSegmentationCore = (
       );
 
       // Make API call to trigger batch segmentation with high priority
-      await apiClient.post(`/api/segmentations/batch`, {
+      await apiClient.post(`/api/segmentation/batch`, {
         imageIds: [finalImageId],
         priority: 10, // High priority for resegmentation
         model_type: 'resunet', // Explicitly specify the model

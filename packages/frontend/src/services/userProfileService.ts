@@ -38,40 +38,79 @@ class UserProfileService {
   private readonly baseUrl = '/api/user-profile';
 
   /**
+   * Check localStorage usage and available space
+   */
+  private getLocalStorageUsage(): { used: number; estimated: number; total: number } {
+    let used = 0;
+    for (const key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        used += localStorage[key].length + key.length;
+      }
+    }
+    
+    const estimated = used * 2; // Account for UTF-16 encoding
+    const total = 5 * 1024 * 1024; // Most browsers limit to 5MB
+    
+    return { used, estimated, total };
+  }
+
+  /**
    * Safely set item in localStorage with quota error handling
    */
   private safeSetLocalStorage(key: string, value: string): boolean {
     try {
-      // Detect and fix over-escaped JSON strings
+      // Validate and clean theme/language values
       let cleanValue = value;
       if (key === 'theme' || key === 'language') {
-        // Keep trying to parse until we get a non-JSON string or valid theme/language value
-        let parsed = value;
-        let attempts = 0;
-        const maxAttempts = 10;
-
-        while (attempts < maxAttempts) {
-          try {
-            parsed = JSON.parse(parsed);
-            attempts++;
-            // If we get a valid value, use it
-            if (
-              typeof parsed === 'string' &&
-              ['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(parsed)
-            ) {
-              cleanValue = JSON.stringify(parsed);
-              break;
-            }
-          } catch {
-            // Not JSON anymore, check if it's a valid value
-            if (
-              typeof parsed === 'string' &&
-              ['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(parsed)
-            ) {
-              cleanValue = JSON.stringify(parsed);
-            }
-            break;
+        const validValues = ['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'];
+        
+        // Try to extract the actual value if it's JSON-encoded
+        let actualValue = value;
+        try {
+          // Only parse once to avoid infinite loops
+          const parsed = JSON.parse(value);
+          if (typeof parsed === 'string') {
+            actualValue = parsed;
           }
+        } catch {
+          // Value is not JSON, use as-is
+          actualValue = value.replace(/['"]/g, ''); // Remove quotes if present
+        }
+        
+        // Validate the actual value
+        if (validValues.includes(actualValue)) {
+          cleanValue = JSON.stringify(actualValue);
+        } else {
+          console.warn(`[UserProfileService] Invalid ${key} value: ${actualValue}, using default`);
+          cleanValue = JSON.stringify(key === 'theme' ? 'system' : 'en');
+        }
+      }
+
+      // Check if the value is too large
+      const newItemSize = (key.length + cleanValue.length) * 2; // UTF-16 encoding
+      if (newItemSize > 1024 * 1024) { // 1MB per item limit
+        console.error(`[UserProfileService] Value too large for key ${key}: ${newItemSize} bytes`);
+        return false;
+      }
+
+      // Check overall localStorage usage
+      const usage = this.getLocalStorageUsage();
+      const spaceNeeded = newItemSize;
+      const availableSpace = usage.total - usage.estimated;
+
+      if (spaceNeeded > availableSpace) {
+        console.warn(`[UserProfileService] Insufficient space for ${key}. Need: ${spaceNeeded}, Available: ${availableSpace}. Attempting cleanup...`);
+        
+        // Aggressive cleanup if space is tight
+        this.cleanupLocalStorage();
+        
+        // Recheck after cleanup
+        const newUsage = this.getLocalStorageUsage();
+        const newAvailableSpace = newUsage.total - newUsage.estimated;
+        
+        if (spaceNeeded > newAvailableSpace) {
+          console.error(`[UserProfileService] Still insufficient space after cleanup. Need: ${spaceNeeded}, Available: ${newAvailableSpace}`);
+          return false;
         }
       }
 
@@ -79,18 +118,20 @@ class UserProfileService {
       return true;
     } catch (error) {
       if (error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22)) {
-        console.warn(`[UserProfileService] localStorage quota exceeded for key: ${key}. Attempting cleanup...`);
+        console.warn(`[UserProfileService] localStorage quota exceeded for key: ${key}. Attempting emergency cleanup...`);
 
-        // Try to clean up old data
-        this.cleanupLocalStorage();
+        // Emergency cleanup - more aggressive
+        this.emergencyCleanup();
 
-        // Try one more time after cleanup
+        // Try one more time after emergency cleanup
         try {
           localStorage.setItem(key, cleanValue);
           return true;
         } catch (retryError) {
-          console.error(`[UserProfileService] Failed to set ${key} even after cleanup:`, retryError);
-          return false;
+          console.error(`[UserProfileService] Failed to set ${key} even after emergency cleanup:`, retryError);
+          
+          // Try to use minimal fallback storage
+          return this.setMinimalStorage(key, cleanValue);
         }
       }
       console.error(`[UserProfileService] Error setting localStorage item ${key}:`, error);
@@ -103,11 +144,13 @@ class UserProfileService {
    */
   private cleanupLocalStorage(): void {
     try {
-      // Remove old cached data
       const keysToCheck = Object.keys(localStorage);
       const now = Date.now();
+      let spaceFreed = 0;
 
       keysToCheck.forEach((key) => {
+        const originalSize = localStorage.getItem(key)?.length || 0;
+
         // Remove old image cache entries (older than 24 hours)
         if (key.startsWith('image-cache-')) {
           try {
@@ -116,12 +159,14 @@ class UserProfileService {
               const parsed = JSON.parse(data);
               if (!parsed.timestamp || now - parsed.timestamp > 24 * 60 * 60 * 1000) {
                 localStorage.removeItem(key);
-                console.log(`[UserProfileService] Removed old cache entry: ${key}`);
+                spaceFreed += originalSize;
+                console.log(`[UserProfileService] Removed old cache entry: ${key} (${originalSize} chars)`);
               }
             }
           } catch (e) {
             // If we can't parse it, remove it
             localStorage.removeItem(key);
+            spaceFreed += originalSize;
           }
         }
 
@@ -139,13 +184,16 @@ class UserProfileService {
 
               if (filteredImages.length < images.length) {
                 try {
-                  localStorage.setItem(key, JSON.stringify(filteredImages));
+                  const newData = JSON.stringify(filteredImages);
+                  localStorage.setItem(key, newData);
+                  spaceFreed += originalSize - newData.length;
                   console.log(
                     `[UserProfileService] Cleaned up ${images.length - filteredImages.length} old images from ${key}`,
                   );
                 } catch (e) {
                   // If we can't save the filtered list, remove the whole key
                   localStorage.removeItem(key);
+                  spaceFreed += originalSize;
                   console.log(`[UserProfileService] Removed entire key ${key} due to quota issues`);
                 }
               }
@@ -154,9 +202,176 @@ class UserProfileService {
             console.error(`[UserProfileService] Error cleaning up ${key}:`, e);
           }
         }
+
+        // Remove old analytics data (older than 30 days)
+        if (key.startsWith('analytics-') || key.startsWith('performance-')) {
+          try {
+            const data = localStorage.getItem(key);
+            if (data) {
+              const parsed = JSON.parse(data);
+              if (parsed.timestamp && now - parsed.timestamp > 30 * 24 * 60 * 60 * 1000) {
+                localStorage.removeItem(key);
+                spaceFreed += originalSize;
+                console.log(`[UserProfileService] Removed old analytics data: ${key}`);
+              }
+            }
+          } catch (e) {
+            // If we can't parse it, remove it
+            localStorage.removeItem(key);
+            spaceFreed += originalSize;
+          }
+        }
       });
+
+      console.log(`[UserProfileService] Cleanup completed. Space freed: ${spaceFreed} characters`);
     } catch (error) {
       console.error('[UserProfileService] Error during localStorage cleanup:', error);
+    }
+  }
+
+  /**
+   * Emergency cleanup - more aggressive space freeing
+   */
+  private emergencyCleanup(): void {
+    try {
+      const keysToCheck = Object.keys(localStorage);
+      const now = Date.now();
+      let spaceFreed = 0;
+
+      // Sort keys by size (largest first) to maximize space recovery
+      const keysBySize = keysToCheck
+        .map(key => ({ key, size: localStorage.getItem(key)?.length || 0 }))
+        .sort((a, b) => b.size - a.size);
+
+      keysBySize.forEach(({ key, size }) => {
+        // Remove any cache entries older than 1 hour
+        if (key.startsWith('image-cache-') || key.startsWith('cache-')) {
+          try {
+            const data = localStorage.getItem(key);
+            if (data) {
+              const parsed = JSON.parse(data);
+              if (!parsed.timestamp || now - parsed.timestamp > 60 * 60 * 1000) { // 1 hour
+                localStorage.removeItem(key);
+                spaceFreed += size;
+                console.log(`[UserProfileService] Emergency removal of cache: ${key} (${size} chars)`);
+              }
+            }
+          } catch (e) {
+            localStorage.removeItem(key);
+            spaceFreed += size;
+          }
+        }
+
+        // Remove uploaded images older than 1 day
+        if (key.startsWith('spheroseg_uploaded_images_')) {
+          try {
+            const data = localStorage.getItem(key);
+            if (data) {
+              const images = JSON.parse(data);
+              const filteredImages = images.filter((img: any) => {
+                const createdAt = img.createdAt || img.uploadedAt;
+                if (!createdAt) return false; // Remove if no timestamp
+                return now - new Date(createdAt).getTime() < 24 * 60 * 60 * 1000; // 1 day
+              });
+
+              if (filteredImages.length === 0) {
+                localStorage.removeItem(key);
+                spaceFreed += size;
+              } else if (filteredImages.length < images.length) {
+                try {
+                  const newData = JSON.stringify(filteredImages);
+                  localStorage.setItem(key, newData);
+                  spaceFreed += size - newData.length;
+                } catch (e) {
+                  localStorage.removeItem(key);
+                  spaceFreed += size;
+                }
+              }
+            }
+          } catch (e) {
+            localStorage.removeItem(key);
+            spaceFreed += size;
+          }
+        }
+
+        // Remove any temporary or debug data
+        if (key.startsWith('debug-') || key.startsWith('temp-') || key.startsWith('test-')) {
+          localStorage.removeItem(key);
+          spaceFreed += size;
+          console.log(`[UserProfileService] Emergency removal of temp data: ${key}`);
+        }
+
+        // Remove old AB testing data
+        if (key.startsWith('ab-test-') || key.startsWith('experiment-')) {
+          try {
+            const data = localStorage.getItem(key);
+            if (data) {
+              const parsed = JSON.parse(data);
+              if (parsed.timestamp && now - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) { // 7 days
+                localStorage.removeItem(key);
+                spaceFreed += size;
+              }
+            }
+          } catch (e) {
+            localStorage.removeItem(key);
+            spaceFreed += size;
+          }
+        }
+      });
+
+      console.log(`[UserProfileService] Emergency cleanup completed. Space freed: ${spaceFreed} characters`);
+    } catch (error) {
+      console.error('[UserProfileService] Error during emergency cleanup:', error);
+    }
+  }
+
+  /**
+   * Fallback storage for critical settings when localStorage is full
+   */
+  private setMinimalStorage(key: string, value: string): boolean {
+    try {
+      // For critical settings like theme and language, try to store in sessionStorage
+      if (key === 'theme' || key === 'language') {
+        sessionStorage.setItem(`fallback_${key}`, value);
+        console.warn(`[UserProfileService] Stored ${key} in sessionStorage as fallback`);
+        
+        // Try to use IndexedDB for persistence
+        this.tryIndexedDBStorage(key, value);
+        return true;
+      }
+      
+      console.error(`[UserProfileService] Cannot store non-critical key ${key} when localStorage is full`);
+      return false;
+    } catch (error) {
+      console.error(`[UserProfileService] Even fallback storage failed for ${key}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Try to store critical settings in IndexedDB
+   */
+  private async tryIndexedDBStorage(key: string, value: string): Promise<void> {
+    try {
+      const request = indexedDB.open('spheroseg_settings', 1);
+      
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains('settings')) {
+          db.createObjectStore('settings', { keyPath: 'key' });
+        }
+      };
+      
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const transaction = db.transaction(['settings'], 'readwrite');
+        const store = transaction.objectStore('settings');
+        
+        store.put({ key, value, timestamp: Date.now() });
+        console.log(`[UserProfileService] Stored ${key} in IndexedDB as backup`);
+      };
+    } catch (error) {
+      console.warn(`[UserProfileService] IndexedDB fallback failed for ${key}:`, error);
     }
   }
 
@@ -361,6 +576,8 @@ class UserProfileService {
         if (currentLocalValue !== dbValueStr) {
           if (this.safeSetLocalStorage(localStorageKey, dbValueStr)) {
             console.log(`[UserProfileService] Updated localStorage ${localStorageKey} with DB value:`, setting.value);
+          } else {
+            console.warn(`[UserProfileService] Failed to update localStorage ${localStorageKey}, using current value`);
           }
         }
 
@@ -371,6 +588,8 @@ class UserProfileService {
         if (!existingValue) {
           if (this.safeSetLocalStorage(localStorageKey, JSON.stringify(defaultValue))) {
             console.log(`[UserProfileService] Set default value for ${localStorageKey}:`, defaultValue);
+          } else {
+            console.warn(`[UserProfileService] Failed to set default value for ${localStorageKey}, storage may be full`);
           }
         }
 
@@ -402,7 +621,7 @@ class UserProfileService {
           if (['system', 'light', 'dark', 'en', 'cs', 'de', 'es', 'fr', 'zh'].includes(localValue)) {
             console.log(`[UserProfileService] Using plain string value for ${localStorageKey}:`, localValue);
             // Store it as JSON for future consistency
-            localStorage.setItem(localStorageKey, JSON.stringify(localValue));
+            this.safeSetLocalStorage(localStorageKey, JSON.stringify(localValue));
             return localValue;
           }
           // For other values, return as string
@@ -412,7 +631,7 @@ class UserProfileService {
 
       // If nothing in localStorage and we have a default, use it
       if (defaultValue !== undefined) {
-        localStorage.setItem(localStorageKey, JSON.stringify(defaultValue));
+        this.safeSetLocalStorage(localStorageKey, JSON.stringify(defaultValue));
         console.log(
           `[UserProfileService] Using default value for ${localStorageKey} due to API failure:`,
           defaultValue,
@@ -474,7 +693,9 @@ class UserProfileService {
       Object.entries(settings).forEach(([key, setting]) => {
         const localStorageKey = this.getLocalStorageKey(key);
         if (localStorageKey) {
-          localStorage.setItem(localStorageKey, JSON.stringify(setting.value));
+          if (!this.safeSetLocalStorage(localStorageKey, JSON.stringify(setting.value))) {
+            console.warn(`[UserProfileService] Failed to initialize setting ${key} in localStorage`);
+          }
         }
       });
     } catch (error) {

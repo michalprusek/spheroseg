@@ -1,6 +1,4 @@
 import React from 'react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Folder } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ProjectToolbar from '@/components/project/ProjectToolbar';
 

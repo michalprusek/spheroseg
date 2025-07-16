@@ -7,7 +7,6 @@ import request from 'supertest';
 import { Pool } from 'pg';
 import app from '../../app';
 import config from '../../config';
-import logger from '../../utils/logger';
 
 // Mock dependencies
 jest.mock('../../config');
@@ -58,7 +57,7 @@ describe('ML Service Scaling', () => {
       const instanceHits = new Map<string, number>();
 
       // Mock ML service responses with instance identification
-      const mockMLResponses = [
+      const _mockMLResponses = [
         { instance: 'ml-1', taskId: '123', status: 'completed' },
         { instance: 'ml-2', taskId: '124', status: 'completed' },
         { instance: 'ml-3', taskId: '125', status: 'completed' },

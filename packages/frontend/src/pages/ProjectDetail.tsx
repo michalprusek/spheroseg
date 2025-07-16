@@ -15,9 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 import { Project, ProjectImage, ImageStatus } from '@/types';
-import axios from 'axios';
 import { useSocket } from '@/contexts/SocketContext';
-import * as socketClient from '@/services/socketClient';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { useTranslation } from 'react-i18next';
 import logger from '@/utils/logger'; // Import logger
@@ -501,7 +499,7 @@ const ProjectDetail = () => {
         }
 
         try {
-          const response = await apiClient.post(`/api/segmentations/batch`, {
+          const response = await apiClient.post(`/api/segmentation/batch`, {
             imageIds: batch,
             priority: 5,
             model_type: 'resunet',
@@ -753,7 +751,7 @@ const ProjectDetail = () => {
           }
 
           try {
-            const response = await apiClient.post(`/api/segmentations/batch`, {
+            const response = await apiClient.post(`/api/segmentation/batch`, {
               imageIds: batch,
               priority: 3,
               model_type: 'resunet',

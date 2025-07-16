@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import axios from 'axios';
 import { useQueryClient } from '@tanstack/react-query';
 
 import DashboardHeader from '@/components/DashboardHeader';
@@ -12,7 +11,6 @@ import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import ProjectsTab from '@/components/dashboard/ProjectsTab';
 import { useDashboardProjects } from '@/hooks/useDashboardProjects';
 import { useProjectDelete } from '@/hooks/useProjectDelete';
-import apiClient from '@/lib/apiClient';
 import { useCacheManager } from '@/hooks/useUnifiedCache';
 
 const Dashboard = () => {

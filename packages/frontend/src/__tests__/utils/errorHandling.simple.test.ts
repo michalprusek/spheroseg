@@ -1,10 +1,9 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import {
   getErrorType,
   getErrorSeverity,
   getErrorMessage,
-  createErrorInfo,
   ErrorType,
   ErrorSeverity,
   AppError,

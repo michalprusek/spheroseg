@@ -8,6 +8,7 @@
 import http from 'http';
 import { AddressInfo } from 'net';
 import v8 from 'v8';
+import { Pool } from 'pg';
 
 import app from './app';
 import config from './config';
@@ -119,7 +120,6 @@ const initializeServices = async (): Promise<void> => {
     logger.info('Testing database connection...');
     try {
       // Create a simple pool without wrapper for testing
-      const { Pool } = require('pg');
       const testPool = new Pool({
         connectionString: process.env.DATABASE_URL,
         max: 1,

@@ -5,7 +5,6 @@
  * and can be run in a clean environment.
  */
 
-import fs from 'fs';
 import path from 'path';
 
 // Mock fs.existsSync and fs.mkdirSync to prevent actual filesystem operations

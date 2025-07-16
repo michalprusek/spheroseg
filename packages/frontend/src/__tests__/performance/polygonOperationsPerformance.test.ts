@@ -14,7 +14,6 @@ import { describe, test, expect } from 'vitest';
 import {
   measurePerformance,
   generateTestPolygon,
-  generateComplexPolygons,
   generateRandomPolygons,
   runScalabilityTest,
 } from './performanceTestingFramework';

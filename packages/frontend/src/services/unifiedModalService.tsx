@@ -9,8 +9,6 @@ import React, { createContext, useContext, useState, useCallback, useRef, ReactN
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createLogger } from '@/utils/logging/unifiedLogger';
-import { handleError, AppError, ErrorType } from '@/utils/error/unifiedErrorHandler';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 const logger = createLogger('UnifiedModalService');

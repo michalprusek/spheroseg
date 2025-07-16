@@ -39,6 +39,20 @@ export const usePerformance = (
   }
 
   useEffect(() => {
+    // Mark mount time on first render (before incrementing render count)
+    if (measureMount && renderCount.current === 0) {
+      markPerformance(`${mountMarkId}-end`);
+      const mountTime = performance.now() - renderStartTimeRef.current;
+      mountTimeRef.current = mountTime;
+
+      if (logMeasurements) {
+        logger.info(`${componentName} mounted`, {
+          component: componentName,
+          mountTime,
+        });
+      }
+    }
+
     // Mark the end of the render and measure render time
     if (measureRender) {
       markPerformance(`${renderMarkId}-end`);
@@ -53,20 +67,6 @@ export const usePerformance = (
       }
 
       renderCount.current += 1;
-    }
-
-    // Mark mount time on first render
-    if (measureMount && renderCount.current === 0) {
-      markPerformance(`${mountMarkId}-end`);
-      const mountTime = performance.now() - renderStartTimeRef.current;
-      mountTimeRef.current = mountTime;
-
-      if (logMeasurements) {
-        logger.info(`${componentName} mounted`, {
-          component: componentName,
-          mountTime,
-        });
-      }
     }
 
     // Cleanup on unmount

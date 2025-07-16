@@ -1,5 +1,4 @@
 import React from 'react';
-import { vi } from 'vitest';
 import { EditMode } from '@/pages/segmentation/hooks/segmentation';
 import { renderWithProviders } from '../../../../../../shared/test-utils/componentTestUtils';
 

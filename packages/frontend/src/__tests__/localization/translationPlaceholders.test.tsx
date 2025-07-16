@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import * as en from '../../translations/en';
 import * as cs from '../../translations/cs';
 import * as de from '../../translations/de';
 import * as es from '../../translations/es';

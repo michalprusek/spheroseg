@@ -1,5 +1,4 @@
 import { test } from './setupVisualRegression';
-import { expect } from '@playwright/test';
 
 test.describe('Segmentation Editor Visual Tests', () => {
   test.beforeEach(async ({ page }) => {

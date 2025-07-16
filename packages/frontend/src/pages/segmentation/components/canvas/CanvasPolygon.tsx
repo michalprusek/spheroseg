@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { cn } from '@/lib/utils';
-import { Polygon, Point } from '@/lib/segmentation';
+import { Polygon } from '@/lib/segmentation';
 import CanvasVertex from './CanvasVertex';
 import PolygonContextMenu from '../context-menu/PolygonContextMenu';
 import { VertexDragState } from '@/pages/segmentation/types';
@@ -10,7 +9,6 @@ import {
   getPolygonFillColor,
   getPolygonStrokeWidth,
   findRelatedHoles,
-  renderPolygonVertices,
 } from '../../../../../shared/utils/CanvasPolygonUtils';
 
 // Constants remain the same for now, but remove zoom-dependent ones if unused

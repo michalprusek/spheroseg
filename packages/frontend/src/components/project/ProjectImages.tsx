@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FixedSizeGrid as Grid, VariableSizeList as List } from 'react-window';
 import { ImageDisplay } from './ImageDisplay';
 import { ProjectImage } from '@spheroseg/types';
-import ImageDebugger from './ImageDebugger';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 

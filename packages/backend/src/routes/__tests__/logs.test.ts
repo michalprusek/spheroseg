@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as logsController from '../logs';
 import { ApiError } from '../../utils/errors';
+import logger from '../../utils/logger';
 
 // Mock the unified logger
 jest.mock('../../utils/logger', () => ({
@@ -12,7 +13,7 @@ jest.mock('../../utils/logger', () => ({
   debug: jest.fn(),
 }));
 
-const logger = require('../../utils/logger');
+// logger is already imported above
 
 describe('Logs API Controller', () => {
   // Common mocks

@@ -6,7 +6,7 @@
  */
 
 import { toast } from 'sonner';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import logger from '@/utils/logger';
 
 // ===========================
@@ -269,6 +269,14 @@ export function getErrorMessage(
     const response = error.response?.data as ApiErrorResponse;
     const message = response?.message || response?.error || error.message;
 
+    // Special handling for 404 errors to distinguish between "not found" and "access denied"
+    if (error.response?.status === 404 && message) {
+      // Check if the message indicates an access issue rather than true "not found"
+      if (message.toLowerCase().includes('access denied') || message.toLowerCase().includes('permission')) {
+        return message; // Return the actual message that clarifies it's an access issue
+      }
+    }
+
     // Provide default messages based on error type
     if (!message || message === 'Network Error') {
       const type = getErrorType(error);
@@ -349,15 +357,151 @@ export function createErrorInfo(error: unknown, context?: Record<string, any>): 
 // ===========================
 
 const toastIds = new Map<string, string>();
+const accessDeniedTimestamps = new Map<string, number>();
+const ACCESS_DENIED_SUPPRESSION_WINDOW = 30000; // 30 seconds
+
+/**
+ * Check if a notification should be suppressed based on recent access denied errors
+ */
+function shouldSuppressNotification(errorInfo: ErrorInfo): boolean {
+  const now = Date.now();
+  
+  // Clean up old timestamps
+  for (const [key, timestamp] of accessDeniedTimestamps.entries()) {
+    if (now - timestamp > ACCESS_DENIED_SUPPRESSION_WINDOW) {
+      accessDeniedTimestamps.delete(key);
+    }
+  }
+  
+  // Check if this is an access denied error that we should track
+  const isAccessDenied = 
+    errorInfo.type === ErrorType.AUTHORIZATION ||
+    (errorInfo.type === ErrorType.SERVER && errorInfo.message.toLowerCase().includes('permission')) ||
+    errorInfo.message.toLowerCase().includes('access denied') ||
+    errorInfo.message.toLowerCase().includes('do not have permission');
+  
+  if (isAccessDenied) {
+    // Extract a context key from the error (e.g., resource type from the message)
+    const contextKey = extractContextKey(errorInfo);
+    accessDeniedTimestamps.set(contextKey, now);
+    logger.debug('Tracked access denied error', { contextKey, message: errorInfo.message });
+    return false; // Don't suppress the access denied error itself
+  }
+  
+  // Check if this is a secondary error that should be suppressed
+  const isSecondaryError = 
+    errorInfo.type === ErrorType.NOT_FOUND ||
+    (errorInfo.severity === ErrorSeverity.WARNING && errorInfo.context?.context?.includes('segmentation'));
+  
+  logger.debug('Checking for secondary error', {
+    isSecondaryError,
+    errorType: errorInfo.type,
+    expectedType: ErrorType.NOT_FOUND,
+    typeMatch: errorInfo.type === ErrorType.NOT_FOUND,
+    severity: errorInfo.severity,
+    message: errorInfo.message,
+  });
+  
+  if (isSecondaryError) {
+    // Check if there was a recent access denied error for a similar context
+    const contextKey = extractContextKey(errorInfo);
+    logger.debug('Checking if secondary error should be suppressed', {
+      contextKey,
+      message: errorInfo.message,
+      existingKeys: Array.from(accessDeniedTimestamps.keys()),
+    });
+    
+    for (const [key, timestamp] of accessDeniedTimestamps.entries()) {
+      if (now - timestamp <= ACCESS_DENIED_SUPPRESSION_WINDOW) {
+        // Check if the contexts are related
+        if (areContextsRelated(key, contextKey)) {
+          logger.debug('Suppressing secondary notification due to recent access denied error', {
+            suppressedError: errorInfo.message,
+            relatedAccessDeniedKey: key,
+            contextKey,
+            errorType: errorInfo.type,
+            errorSeverity: errorInfo.severity,
+          });
+          return true;
+        }
+      }
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Extract a context key from error info for tracking related errors
+ */
+function extractContextKey(errorInfo: ErrorInfo): string {
+  // Try to extract resource type or operation from the message or context
+  const message = errorInfo.message.toLowerCase();
+  const context = errorInfo.context?.context?.toLowerCase() || '';
+  
+  let key = errorInfo.type;
+  
+  if (message.includes('image') || context.includes('image')) {
+    key = 'image-operation';
+  } else if (message.includes('project') || context.includes('project')) {
+    key = 'project-operation';
+  } else if (message.includes('segmentation') || context.includes('segmentation')) {
+    key = 'segmentation-operation';
+  }
+  
+  logger.debug('Extracted context key', {
+    message,
+    context,
+    extractedKey: key,
+    errorType: errorInfo.type,
+  });
+  
+  return key;
+}
+
+/**
+ * Check if two context keys are related
+ */
+function areContextsRelated(key1: string, key2: string): boolean {
+  // Consider contexts related if they're the same or if one is a subset of the other
+  if (key1 === key2) return true;
+  
+  // Special cases for related operations
+  const relatedContexts = [
+    ['image-operation', 'segmentation-operation'],
+    ['project-operation', 'image-operation'],
+  ];
+  
+  for (const [a, b] of relatedContexts) {
+    if ((key1 === a && key2 === b) || (key1 === b && key2 === a)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
 
 /**
  * Show error toast with deduplication
  */
 function showErrorToast(errorInfo: ErrorInfo): void {
+  logger.debug('showErrorToast called', {
+    type: errorInfo.type,
+    severity: errorInfo.severity,
+    message: errorInfo.message,
+  });
+  
+  // Check if we should suppress this notification due to recent access denied error
+  if (shouldSuppressNotification(errorInfo)) {
+    logger.debug('Toast suppressed by shouldSuppressNotification');
+    return;
+  }
+
   const toastKey = `${errorInfo.type}-${errorInfo.message}`;
 
   // Check if similar toast is already shown
   if (toastIds.has(toastKey)) {
+    logger.debug('Toast suppressed - already shown', { toastKey });
     return;
   }
 
@@ -524,6 +668,14 @@ export function isAuthError(error: unknown): boolean {
   return type === ErrorType.AUTHENTICATION || type === ErrorType.AUTHORIZATION;
 }
 
+/**
+ * Clear access denied suppression cache
+ * Useful when navigating to a new page or context
+ */
+export function clearAccessDeniedSuppression(): void {
+  accessDeniedTimestamps.clear();
+}
+
 // ===========================
 // Exports
 // ===========================
@@ -539,6 +691,7 @@ export default {
   formatValidationErrors,
   isErrorType,
   isAuthError,
+  clearAccessDeniedSuppression,
 
   // Error classes
   AppError,

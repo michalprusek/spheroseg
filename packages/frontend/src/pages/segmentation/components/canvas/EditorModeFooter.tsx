@@ -1,4 +1,3 @@
-import React from 'react';
 
 interface EditorModeFooterProps {
   mode: 'edit' | 'slice' | 'add';

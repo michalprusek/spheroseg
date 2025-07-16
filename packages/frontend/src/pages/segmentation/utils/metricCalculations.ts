@@ -1,5 +1,3 @@
-import { Point } from '@/lib/segmentation';
-import { calculatePolygonArea, calculatePerimeter } from '@/lib/segmentation';
 import polygonUtils from '@spheroseg/shared/utils/polygonUtils';
 import logger from '@/utils/logger';
 

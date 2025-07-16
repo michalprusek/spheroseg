@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useSlicing } from '../useSlicing';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { toast } from 'sonner';

@@ -10,25 +10,19 @@
  * - Optimalizované výpočty metrik
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { createLogger } from '@/lib/logger';
 import apiClient from '@/lib/apiClient';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useDebounce } from '@/hooks/useDebounce';
-import { filterVisiblePolygons } from '../utils/polygonVisibility';
-import { calculateMetrics } from '../utils/metricCalculations';
-import { detectPolygonCollisions } from '../utils/polygonCollisions';
 import { simplifyPolygon } from '../utils/polygonSimplification';
-import { loadImageDirectly } from '../utils/directImageLoader';
 import { fetchImageData, fetchSegmentationData, saveSegmentationData } from './segmentation/api';
 
 // Typy
 import type {
   ImageData,
   SegmentationData,
-  Polygon,
   Point,
   TransformState,
   InteractionState,

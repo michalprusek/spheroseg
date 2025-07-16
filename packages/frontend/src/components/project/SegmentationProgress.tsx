@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import apiClient from '@/lib/apiClient';
-import axios from 'axios'; // Import axios directly
+// Import axios directly
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { io, Socket } from 'socket.io-client';
@@ -60,6 +60,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
   const { t } = useLanguage();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Zavře menu při kliknutí mimo
@@ -80,7 +81,14 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
               return; // Končíme, pokud jsme získali data specifická pro projekt
             }
           } catch (projectEndpointError) {
-            console.debug(`Project-specific queue status endpoint failed: ${projectEndpointError.message}`);
+            // Check if this is a 404 error for non-existent project
+            if (projectEndpointError.response?.status === 404) {
+              console.debug(`Project ${projectId} not found, skipping project-specific queue status`);
+              // Don't show error for non-existent projects, just continue to global status
+              return;
+            } else {
+              console.debug(`Project-specific queue status endpoint failed: ${projectEndpointError.message}`);
+            }
             // Continue to global endpoints
           }
         }
@@ -156,11 +164,58 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     };
 
     fetchQueueStatus();
-    // Poll every 10 seconds as fallback if WebSocket doesn't work
-    const interval = setInterval(fetchQueueStatus, 10000);
+    
+    // Intelligent polling with exponential backoff
+    let pollInterval = 10000; // Start with 10 seconds
+    let consecutiveEmptyResponses = 0;
+    let maxInterval = 60000; // Max 60 seconds
+    
+    const intelligentPoll = async () => {
+      // Skip polling if WebSocket is connected and working
+      if (isWebSocketConnected) {
+        console.log('WebSocket connected, skipping polling');
+        return;
+      }
+      
+      try {
+        await fetchQueueStatus();
+        
+        // If queue is empty, increase polling interval
+        if (queueStatus && queueStatus.queueLength === 0 && queueStatus.runningTasks.length === 0) {
+          consecutiveEmptyResponses++;
+          if (consecutiveEmptyResponses > 3) {
+            pollInterval = Math.min(pollInterval * 1.5, maxInterval);
+          }
+        } else {
+          // Reset to normal interval if there's activity
+          consecutiveEmptyResponses = 0;
+          pollInterval = 10000;
+        }
+      } catch (error) {
+        // Increase interval on errors to reduce API spam
+        pollInterval = Math.min(pollInterval * 2, maxInterval);
+        console.warn('Queue status polling failed, increasing interval:', pollInterval);
+      }
+    };
+    
+    // Only poll as fallback if WebSocket is not connected
+    const setupPolling = () => {
+      return setInterval(intelligentPoll, pollInterval);
+    };
+    
+    let interval = setupPolling();
+    
+    // Update interval when pollInterval changes or WebSocket status changes
+    const intervalUpdater = setInterval(() => {
+      clearInterval(interval);
+      interval = setupPolling();
+    }, 30000); // Check for interval updates every 30 seconds
 
-    return () => clearInterval(interval);
-  }, [projectId]); // Re-fetch when projectId changes
+    return () => {
+      clearInterval(interval);
+      clearInterval(intervalUpdater);
+    };
+  }, [projectId, isWebSocketConnected]); // Re-fetch when projectId changes or WebSocket status changes
 
   // Setup WebSocket connection for real-time updates
   useEffect(() => {
@@ -220,7 +275,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           const endpoints = [
             `/api/segmentation/queue-status/${projectId}`,
             `/api/segmentation/queue-status/${projectId}`,
-            `/api/segmentations/queue/status/${projectId}`,
+            `/api/segmentation/queue-status/${projectId}`,
           ];
 
           let success = false;
@@ -256,7 +311,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         const globalEndpoints = [
           '/api/segmentation/queue-status',
           '/api/segmentation/queue',
-          '/api/segmentations/queue/status',
+          '/api/segmentation/queue-status',
         ];
 
         let globalSuccess = false;
@@ -379,12 +434,14 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       // Connection events
       newSocket.on('connect', () => {
         console.log('WebSocket connected for segmentation progress');
+        setIsWebSocketConnected(true);
         // Clear the timeout since we connected successfully
         clearTimeout(socketConnectionTimeout);
       });
 
       newSocket.on('connect_error', (error) => {
         console.warn('WebSocket connection error:', error.message || error);
+        setIsWebSocketConnected(false);
         // Pokud se nepodaří připojit, aktualizujeme data z API
         updateQueueStatus();
       });
@@ -394,12 +451,14 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         if (reason !== 'io client disconnect' && reason !== 'io server disconnect') {
           console.warn('WebSocket disconnected:', reason);
         }
+        setIsWebSocketConnected(false);
         // Pokud se odpojíme, aktualizujeme data z API
         updateQueueStatus();
       });
 
       newSocket.on('error', (error) => {
         console.warn('WebSocket error:', error);
+        setIsWebSocketConnected(false);
         // Pokud nastane chyba, aktualizujeme data z API
         updateQueueStatus();
       });
@@ -505,6 +564,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       // Cleanup function
       return () => {
         isComponentMounted = false;
+        setIsWebSocketConnected(false);
         clearTimeout(socketConnectionTimeout);
 
         // Remove event listener

@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { handleError, ErrorType, ErrorSeverity } from '@/utils/errorHandling';
+import { handleError, ErrorType, ErrorSeverity } from '@/utils/error/unifiedErrorHandler';
 import logger from '@/utils/logger';
 import { getAccessToken, removeTokens, isValidToken } from '@/services/authService';
 

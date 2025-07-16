@@ -1,14 +1,12 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SegmentationPage } from '../SegmentationPage';
 import { setupAllContextMocks } from '@/test-utils/contextMocks';
 import { MemoryRouterWrapper } from '@/test-utils/test-wrapper';
-import { useParams, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useParams } from 'react-router-dom';
 
 // Mock useSegmentationV2 hook
-vi.mock('../hooks/segmentation', () => {
+vi.mock('../hooks/segmentation/useSegmentationV2', () => {
   const mockSetEditMode = vi.fn();
   const mockSetTransform = vi.fn();
   const mockSetHoveredVertex = vi.fn();

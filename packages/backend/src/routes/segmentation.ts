@@ -1,5 +1,5 @@
-import express, { Request, Response, Router, NextFunction } from 'express';
-import type { Request as ExpressRequest } from 'express';
+import express, { Response, Router, NextFunction } from 'express';
+import type { Request as _ExpressRequest } from 'express';
 import pool from '../db';
 import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import {
@@ -12,7 +12,6 @@ import { z } from 'zod';
 import logger from '../utils/logger';
 import {
   getSegmentationSchema,
-  triggerSegmentationSchema,
   updateSegmentationSchema,
   triggerProjectBatchSegmentationSchema,
   createSegmentationJobSchema,
@@ -23,7 +22,7 @@ import { broadcastSegmentationUpdate } from '../services/socketService';
 const router: Router = express.Router();
 
 // --- Validation Schema for Batch Trigger ---
-const triggerBatchSchema = z.object({
+const _triggerBatchSchema = z.object({
   body: z.object({
     imageIds: z
       .array(
@@ -79,7 +78,7 @@ const triggerBatchSchema = z.object({
  *       500:
  *         description: Internal server error
  */
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.get(
   '/images/:id/segmentation',
   authMiddleware,
@@ -242,7 +241,7 @@ const triggerSingleWithPrioritySchema = z.object({
  *       500:
  *         description: Internal server error
  */
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.post(
   '/images/:id/segmentation',
   authMiddleware,
@@ -532,7 +531,7 @@ const authOrInternalMiddleware = async (
 
 // PUT /api/images/:id/segmentation - Update segmentation result (e.g., after manual edit or completion)
 // This might be called by the segmentation service itself upon completion, or by the frontend after editing.
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.put(
   '/images/:id/segmentation',
   authOrInternalMiddleware,
@@ -827,7 +826,7 @@ router.put(
  *       500:
  *         description: Internal server error
  */
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.post(
   '/projects/:projectId/segmentation/batch-trigger',
   authMiddleware,
@@ -845,13 +844,11 @@ router.post(
     }
 
     try {
-      // Verify user has access to the project
-      const projectCheck = await pool.query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
-
-      if (projectCheck.rows.length === 0) {
+      // Verify user has access to the project (including shared projects)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(pool, projectId, userId);
+      
+      if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;
       }
@@ -919,7 +916,7 @@ router.post(
 );
 
 // GET /api/segmentation/queue - Get current segmentation queue status
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.get(
   '/queue',
   authMiddleware,
@@ -944,7 +941,7 @@ router.get(
 );
 
 // GET /api/queue-status/:projectId - Get segmentation queue status for a specific project
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.get(
   '/queue-status/:projectId',
   authMiddleware,
@@ -961,13 +958,11 @@ router.get(
     }
 
     try {
-      // Verify user has access to the project
-      const projectCheck = await pool.query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
-
-      if (projectCheck.rows.length === 0) {
+      // Verify user has access to the project (including shared projects)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(pool, projectId, userId);
+      
+      if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;
       }
@@ -1042,7 +1037,7 @@ router.get(
 // Removed mock-queue-status endpoint - Instead, use the real queue status endpoint at /api/segmentation/queue
 
 // GET /api/segmentation/jobs/:projectId - Get segmentation jobs for a project
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.get(
   '/jobs/:projectId',
   authMiddleware,
@@ -1057,7 +1052,7 @@ router.get(
 );
 
 // GET /api/segmentation/job/:jobId - Get details of a specific segmentation job
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.get(
   '/job/:jobId',
   authMiddleware,
@@ -1072,7 +1067,7 @@ router.get(
 );
 
 // POST /api/segmentation/job - Create a new segmentation job
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.post(
   '/job',
   authMiddleware,
@@ -1130,7 +1125,7 @@ router.post(
 );
 
 // DELETE /api/segmentation/job/:jobId - Delete a segmentation job
-// @ts-ignore // Keep ignore for now
+// @ts-expect-error Keep ignore for now
 router.delete(
   '/job/:jobId',
   authMiddleware,
@@ -1140,7 +1135,7 @@ router.delete(
 );
 
 // POST /api/segmentation/:imageId/resegment - Trigger resegmentation for an image
-// @ts-ignore // TS2769: No overload matches this call.
+// @ts-expect-error TS2769: No overload matches this call.
 router.post(
   '/:imageId/resegment',
   authMiddleware,
@@ -1155,21 +1150,35 @@ router.post(
     }
 
     try {
-      // Verify that the image exists and user has access to it
-      const imageQuery = `
-            SELECT i.id, i.storage_path, i.project_id
-            FROM images i
-            JOIN projects p ON i.project_id = p.id
-            WHERE i.id = $1 AND (p.user_id = $2 OR p.public = true)
-        `;
-      const imageResult = await pool.query(imageQuery, [imageId, userId]);
+      // First get the image to find its project
+      const imageQuery = await pool.query(
+        'SELECT i.id, i.storage_path, i.project_id FROM images i WHERE i.id = $1',
+        [imageId]
+      );
 
-      if (imageResult.rows.length === 0) {
-        res.status(404).json({ message: 'Image not found or access denied' });
+      if (imageQuery.rows.length === 0) {
+        res.status(404).json({ message: 'Image not found' });
         return;
       }
 
-      const image = imageResult.rows[0];
+      const image = imageQuery.rows[0];
+      const projectId = image.project_id;
+
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(pool, projectId, userId);
+      
+      if (!project) {
+        res.status(404).json({ message: 'Image not found or access denied' });
+        return;
+      }
+      
+      // Check if user has edit permission (owner or shared with 'edit' permission)
+      const hasEditPermission = project.is_owner || project.permission === 'edit';
+      if (!hasEditPermission) {
+        res.status(403).json({ message: 'You do not have permission to resegment images in this project' });
+        return;
+      }
 
       // If project_id is provided, verify it matches the image's project
       if (project_id && image.project_id !== project_id) {
@@ -1237,7 +1246,7 @@ router.post(
 );
 
 // Fetch all polygons for a specific image
-// @ts-ignore // TS2769
+// @ts-expect-error TS2769
 router.get(
   '/:imageId/polygons',
   authMiddleware,
@@ -1248,7 +1257,7 @@ router.get(
 );
 
 // Save or update polygons for a specific image
-// @ts-ignore // TS2769
+// @ts-expect-error TS2769
 router.post(
   '/:imageId/polygons',
   authMiddleware,
@@ -1261,7 +1270,7 @@ router.post(
 );
 
 // Clear all polygons for a specific image
-// @ts-ignore // TS2769
+// @ts-expect-error TS2769
 router.delete(
   '/:imageId/polygons',
   authMiddleware,
@@ -1305,13 +1314,11 @@ router.post(
     }
 
     try {
-      // Verify user has access to the project
-      const projectCheck = await pool.query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
-
-      if (projectCheck.rows.length === 0) {
+      // Verify user has access to the project (including shared projects)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(pool, projectId, userId);
+      
+      if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;
       }
@@ -1380,7 +1387,7 @@ router.post(
 );
 
 // GET /api/segmentation/queue-status - Get the current status of the segmentation queue
-// @ts-ignore
+// @ts-expect-error
 router.get(
   '/queue-status',
   authMiddleware,
@@ -1439,7 +1446,7 @@ router.get(
 );
 
 // GET /api/segmentation/queue-status/:projectId - Get queue status filtered by project
-// @ts-ignore
+// @ts-expect-error
 router.get(
   '/queue-status/:projectId',
   authMiddleware,
@@ -1453,13 +1460,11 @@ router.get(
     }
 
     try {
-      // Verify project access
-      const projectCheck = await pool.query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
-
-      if (projectCheck.rows.length === 0) {
+      // Verify project access (including shared projects)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(pool, projectId, userId);
+      
+      if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;
       }
@@ -1535,7 +1540,7 @@ router.get(
 );
 
 // GET /api/segmentation/queue - Get the current segmentation queue
-// @ts-ignore
+// @ts-expect-error
 router.get(
   '/queue',
   authMiddleware,

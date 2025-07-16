@@ -2,7 +2,7 @@
  * Enhanced Cache Manager Tests with Full Type Safety
  */
 
-import { describe, it, expect, beforeEach, vi, MockedFunction } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   clearProjectImageCache,
   clearAllCaches,
@@ -11,7 +11,6 @@ import {
   CacheOperationError,
   CACHE_CONFIG,
 } from '../cacheManager.improved';
-import type { CacheStats, CacheOperationResult } from '../types/cache.types';
 
 // Type-safe mocks
 const mockUnifiedCacheService = {

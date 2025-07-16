@@ -1,6 +1,5 @@
 import { Point } from '@/lib/segmentation';
 import { Intersection } from './intersectionUtils';
-import { v4 as uuidv4 } from 'uuid';
 
 export interface SliceOperation {
   polygonId: string;

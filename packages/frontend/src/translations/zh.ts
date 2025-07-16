@@ -1518,4 +1518,11 @@ export default {
     description: '上传图片以开始分析。',
     uploadButton: '上传图片',
   },
+  shared: {
+    permission: {
+      view: '查看',
+      edit: '编辑',
+      admin: '管理员',
+    },
+  },
 };

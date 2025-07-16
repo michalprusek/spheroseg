@@ -1,4 +1,3 @@
-import { vi } from 'vitest';
 import { formatNumber } from '../metricCalculations';
 
 describe('Metric Calculations', () => {

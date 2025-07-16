@@ -13,8 +13,6 @@ import axios from 'axios';
 import { getSecureStorage, SecureStorage } from './secureStorage';
 import type {
   Experiment,
-  Variant,
-  TargetingRules,
   UserContext,
   ExperimentResult,
   FeatureFlag,

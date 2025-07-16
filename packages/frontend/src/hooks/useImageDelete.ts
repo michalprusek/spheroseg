@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 import axios from 'axios';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ProjectImage } from '@/types';
 import logger from '@/lib/logger';
 
 interface UseImageDeleteOptions {

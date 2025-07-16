@@ -1,4 +1,3 @@
-import { config } from '../config';
 
 export interface CDNConfig {
   enabled: boolean;

@@ -2,14 +2,10 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphqlUploadExpress } from 'graphql-upload';
 import depthLimit from 'graphql-depth-limit';
-import costAnalysis from 'graphql-query-complexity';
 import { Server } from 'http';
-import { Express } from 'express';
 import { Pool } from 'pg';
-import { applyMiddleware } from 'graphql-middleware';
 
 import schema from './schema';
 import { createContext, Context } from './context';
@@ -28,7 +24,7 @@ interface CreateApolloServerOptions {
 
 export async function createApolloServer({
   httpServer,
-  db,
+  db: _db,
   isDevelopment = false,
 }: CreateApolloServerOptions): Promise<ApolloServer<Context>> {
   // Apply directives to schema

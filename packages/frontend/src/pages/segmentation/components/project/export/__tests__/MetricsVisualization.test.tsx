@@ -1,6 +1,4 @@
-import React from 'react';
 import { screen } from '@testing-library/react';
-import { vi } from 'vitest';
 import MetricsVisualization from '../../export/MetricsVisualization';
 import '@testing-library/jest-dom';
 import { resetAllMocks } from '../../../../../../../shared/test-utils/componentTestUtils';

@@ -4,7 +4,7 @@
  * Provides global A/B testing state and configuration
  */
 
-import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import {
   initializeABTesting,

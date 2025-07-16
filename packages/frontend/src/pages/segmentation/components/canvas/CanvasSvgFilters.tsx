@@ -1,4 +1,3 @@
-import React from 'react';
 import { StandardCanvasFilters } from '../../../../../shared/utils/svgFilterUtils';
 
 const CanvasSvgFilters = () => {

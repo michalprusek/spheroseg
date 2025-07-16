@@ -1,12 +1,11 @@
-import React, { useMemo } from 'react';
-import { SegmentationResult, Polygon, Point } from '@/lib/segmentation';
+import { useMemo } from 'react';
+import { Polygon } from '@/lib/segmentation';
 import CanvasPolygon from './CanvasPolygon';
 import { VertexDragState } from '@/pages/segmentation/types';
 import { EditMode } from '@/pages/segmentation/hooks/useSegmentationEditor';
 import {
   sortPolygons,
   simplifyPolygons,
-  AABB,
   separatePolygonsByType,
   createPolygonProps,
 } from '../../../../../shared/utils/CanvasPolygonUtils';

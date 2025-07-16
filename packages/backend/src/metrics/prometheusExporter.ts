@@ -1,4 +1,4 @@
-import { register, Counter, Histogram, Gauge, Summary } from 'prom-client';
+import { register, Counter, Histogram, Gauge } from 'prom-client';
 import { Request, Response, NextFunction } from 'express';
 
 // Initialize Prometheus metrics registry

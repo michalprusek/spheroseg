@@ -1,4 +1,4 @@
-import { renderHook, act, RenderHookResult } from '@testing-library/react-hooks';
+import { act, RenderHookResult } from '@testing-library/react-hooks';
 import { SegmentationResult } from '@/lib/segmentation';
 import { toast } from 'sonner';
 import { vi } from 'vitest';

@@ -79,7 +79,7 @@ const router: Router = express.Router();
  *       500:
  *         description: Internal server error
  */
-// @ts-ignore
+// @ts-expect-error
 router.get(
   '/',
   authMiddleware,
@@ -218,7 +218,7 @@ router.get(
  *       500:
  *         description: Internal server error or database schema error
  */
-// @ts-ignore
+// @ts-expect-error
 router.post(
   '/',
   authMiddleware,
@@ -371,7 +371,7 @@ router.post(
  *       500:
  *         description: Internal server error or database schema error
  */
-// @ts-ignore
+// @ts-expect-error
 router.get(
   '/:id',
   authMiddleware,
@@ -527,7 +527,7 @@ router.get(
  *       500:
  *         description: Internal server error
  */
-// @ts-ignore
+// @ts-expect-error
 router.put(
   '/:id',
   authMiddleware,
@@ -542,17 +542,18 @@ router.put(
     try {
       logger.info('Processing update project request', { userId, projectId, updates });
 
-      // Check project ownership
-      const ownershipCheck = await getPool().query('SELECT user_id FROM projects WHERE id = $1', [
-        projectId,
-      ]);
-
-      if (ownershipCheck.rows.length === 0) {
-        return res.status(404).json({ message: 'Project not found' });
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(getPool(), projectId, userId);
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found or access denied' });
       }
-
-      if (ownershipCheck.rows[0].user_id !== userId) {
-        return res.status(403).json({ message: 'Not authorized to update this project' });
+      
+      // Check if user has edit permission (owner or shared with 'edit' permission)
+      const hasEditPermission = project.is_owner || project.permission === 'edit';
+      if (!hasEditPermission) {
+        return res.status(403).json({ message: 'You do not have permission to update this project' });
       }
 
       // Update the project
@@ -644,7 +645,7 @@ router.put(
  *       500:
  *         description: Internal server error
  */
-// @ts-ignore
+// @ts-expect-error
 router.delete(
   '/:id',
   authMiddleware,
@@ -745,7 +746,7 @@ router.delete(
  *       500:
  *         description: Internal server error
  */
-// @ts-ignore
+// @ts-expect-error
 router.get(
   '/:id/images',
   authMiddleware,
@@ -778,13 +779,10 @@ router.get(
         });
       }
 
-      // Verify user has access to the project
-      const projectCheck = await getPool().query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
+      // Verify user has access to the project (check both ownership and shared access)
+      const project = await projectService.getProjectById(getPool(), projectId, userId);
 
-      if (projectCheck.rows.length === 0) {
+      if (!project) {
         logger.info('Project not found or access denied', { projectId, userId });
         return res.status(404).json({ message: 'Project not found or access denied' });
       }

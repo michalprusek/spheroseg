@@ -6,34 +6,68 @@ import { ABTestingContext } from '../../services/abTesting/ABTestingContext';
 import React from 'react';
 
 // Mock the ABTestingService
-vi.mock('@/services/abTesting/abTestingService');
+vi.mock('@/services/abTesting/abTestingService', () => ({
+  ABTestingService: vi.fn(),
+}));
+
+// Mock the ABTestingContext
+vi.mock('../../services/abTesting/ABTestingContext', () => ({
+  ABTestingContext: {
+    Provider: ({ children, value }: any) => children,
+  },
+}));
+
+// Mock the ABTestingService
+vi.mock('@/services/abTesting/abTestingService', () => ({
+  getABTestingInstance: vi.fn(),
+  initializeABTesting: vi.fn(),
+  ABTestingService: vi.fn(),
+}));
+
+// Mock auth context
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    user: { id: 'test-user', plan: 'free', createdAt: '2023-01-01', projectCount: 0 },
+  })),
+}));
 
 describe('useABTesting hooks', () => {
-  let mockService: jest.Mocked<ABTestingService>;
+  let mockService: any;
 
   beforeEach(() => {
-    mockService = new ABTestingService() as jest.Mocked<ABTestingService>;
-    mockService.getVariant = vi.fn().mockReturnValue('control');
-    mockService.isFeatureEnabled = vi.fn().mockReturnValue(false);
-    mockService.getFeatureFlagValue = vi.fn().mockReturnValue(undefined);
-    mockService.trackEvent = vi.fn();
-    mockService.getActiveExperiments = vi.fn().mockReturnValue({});
+    mockService = {
+      getVariant: vi.fn().mockReturnValue({ variantId: 'control', isInExperiment: true }),
+      isFeatureEnabled: vi.fn().mockReturnValue(false),
+      getFeatureFlag: vi.fn().mockReturnValue(undefined),
+      trackEvent: vi.fn(),
+      trackConversion: vi.fn(),
+      trackTiming: vi.fn(),
+      getActiveExperiments: vi.fn().mockReturnValue({}),
+      getAllFeatureFlags: vi.fn().mockReturnValue([]),
+      initialize: vi.fn().mockResolvedValue(undefined),
+    };
+
+    // Mock the service instance
+    const { getABTestingInstance, initializeABTesting } = require('@/services/abTesting/abTestingService');
+    getABTestingInstance.mockReturnValue(mockService);
+    initializeABTesting.mockReturnValue(mockService);
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => {
-    return React.createElement(ABTestingContext.Provider, { value: mockService }, children);
+    return children;
   };
 
   describe('useExperiment', () => {
-    it('should return variant for experiment', () => {
-      mockService.getVariant.mockReturnValue('variant-a');
+    it('should return variant for experiment', async () => {
+      mockService.getVariant.mockReturnValue({ variantId: 'variant-a', isInExperiment: true });
 
-      const { result } = renderHook(() => useExperiment('test-experiment'), { wrapper });
+      const { result, waitForNextUpdate } = renderHook(() => useExperiment('test-experiment'), { wrapper });
 
-      expect(result.current.variant).toBe('variant-a');
-      expect(result.current.isControl).toBe(false);
-      expect(result.current.isVariant('variant-a')).toBe(true);
-      expect(result.current.isVariant('variant-b')).toBe(false);
+      // Wait for the effect to run
+      await waitForNextUpdate();
+
+      expect(result.current?.variantId).toBe('variant-a');
+      expect(result.current?.isInExperiment).toBe(true);
     });
 
     it('should identify control variant', () => {

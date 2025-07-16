@@ -104,6 +104,10 @@ export default defineConfig(({ mode }) => {
         'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
         'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
       },
+      fs: {
+        strict: false, // Allow serving files from outside of root
+        allow: ['..'],
+      },
       proxy: {
         // Socket.IO proxy - highest priority to avoid conflicts
         '/socket.io': {
@@ -160,6 +164,7 @@ export default defineConfig(({ mode }) => {
         credentials: false,
       },
       origin: '*', // Allow all origins
+      allowedHosts: ['localhost', 'spherosegapp.utia.cas.cz', 'frontend-dev', '0.0.0.0'], // Allow specific hosts
       hmr: isDevelopment ? {
         port: 3000,
         host: 'localhost',

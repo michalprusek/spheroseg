@@ -6,12 +6,11 @@ import {
   acceptProjectInvitation,
   getSharedProjects,
   getProjectShares,
-  checkProjectAccess,
   generateInvitationLink,
 } from '../controllers/projectShareController';
 import { createLogger } from '../utils/logger';
 
-const logger = createLogger('projectSharesRoutes');
+const _logger = createLogger('projectSharesRoutes');
 const router: Router = express.Router();
 
 // Všechny routy jsou chráněné pomocí authMiddleware

@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { usePerformance } from '@/hooks/usePerformance';
 import { markPerformance, measurePerformance } from '@/utils/performance';
 
@@ -21,6 +21,7 @@ vi.mock('@/utils/logger', () => ({
 describe('usePerformance', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     // Mock performance.now
     if (!window.performance) {
       Object.defineProperty(window, 'performance', {

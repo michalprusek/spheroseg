@@ -5,7 +5,7 @@
  * prepared statements, query analysis, and intelligent caching
  */
 
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, QueryResult } from 'pg';
 import logger from '../utils/logger';
 import AdvancedCacheService from './advancedCacheService';
 

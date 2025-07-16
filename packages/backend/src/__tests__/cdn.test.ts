@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { cdnConfig, getCDNUrl, getCacheControl, shouldUseCDN } from '../config/cdn.config';
-import { createCDNService, getCDNService } from '../services/cdnService';
+import { getCDNUrl, getCacheControl, shouldUseCDN } from '../config/cdn.config';
+import { createCDNService } from '../services/cdnService';
 import { cdnMiddleware } from '../middleware/cdn';
 
 // Mock environment variables

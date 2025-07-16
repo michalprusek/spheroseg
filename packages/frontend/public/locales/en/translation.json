@@ -195,6 +195,7 @@
     "zoomOut": "Zoom Out",
     "resetView": "Reset View",
     "editMode": "Edit Mode",
+    "startingResegmentation": "Starting resegmentation...",
     "viewMode": "View Mode",
     "addPolygon": "Add Polygon",
     "deletePolygon": "Delete Polygon",
@@ -214,6 +215,24 @@
       "statusCompleted": "Completed",
       "statusFailed": "Failed",
       "statusPending": "Pending"
+    }
+  },
+  "errors": {
+    "permissions": {
+      "viewImage": "You need at least 'viewer' permission to view this image",
+      "deleteImage": "You need 'editor' or 'owner' permission to delete images",
+      "saveSegmentation": "You need 'editor' or 'owner' permission to save segmentation results",
+      "resegmentImage": "You need 'editor' or 'owner' permission to resegment images",
+      "editSegmentation": "You need 'editor' or 'owner' permission to edit segmentation",
+      "exportData": "You need at least 'viewer' permission to export data",
+      "uploadImage": "You need 'editor' or 'owner' permission to upload images",
+      "createProject": "You need to be logged in to create projects",
+      "editProject": "You need 'owner' permission to edit project settings",
+      "deleteProject": "You need 'owner' permission to delete projects",
+      "inviteUsers": "You need 'owner' permission to invite users to the project",
+      "removeUsers": "You need 'owner' permission to remove users from the project",
+      "changePermissions": "You need 'owner' permission to change user permissions",
+      "generic": "You don't have permission to perform this action"
     }
   },
   "about": {

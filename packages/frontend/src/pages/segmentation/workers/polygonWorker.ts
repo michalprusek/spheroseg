@@ -5,7 +5,6 @@
 // - Simplifying polygons
 // - Calculating polygon area and perimeter
 
-import { Point } from '@spheroseg/types';
 import {
   WorkerRequest,
   WorkerResponse,

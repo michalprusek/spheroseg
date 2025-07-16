@@ -1580,4 +1580,11 @@ export default {
     },
     title: 'O SpheroSeg',
   },
+  shared: {
+    permission: {
+      view: 'Zobrazit',
+      edit: 'Upravit',
+      admin: 'Administrátor',
+    },
+  },
 };

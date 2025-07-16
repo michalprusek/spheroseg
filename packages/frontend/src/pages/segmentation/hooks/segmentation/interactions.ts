@@ -1,6 +1,6 @@
 import { RefObject } from 'react';
-import { EditMode, InteractionState, Point, Polygon, SegmentationData, TransformState } from './types';
-import { distanceToSegment, createPolygon, updateSegmentationWithPolygons } from './geometry';
+import { EditMode, InteractionState, Point, SegmentationData, TransformState } from './types';
+import { distanceToSegment, createPolygon } from './geometry';
 import { isPointInPolygonSync } from './geometry.worker';
 import { getCanvasCoordinates } from './coordinates';
 import { CLOSE_POLYGON_DISTANCE, VERTEX_HIT_RADIUS } from './constants';

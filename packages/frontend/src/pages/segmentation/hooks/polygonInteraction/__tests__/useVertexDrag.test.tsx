@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { vi, beforeEach, describe, it, expect } from 'vitest';
 import { useVertexDrag } from '../useVertexDrag';
 // Create a test segmentation for testing

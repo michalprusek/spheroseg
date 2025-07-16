@@ -5,6 +5,7 @@
 import { generateAccessToken, verifyToken, TokenType } from '../../services/tokenService';
 import { getKeyManager } from '../../auth/jwtKeyRotation';
 import config from '../../config';
+import { SecurityManager } from '../../security/SecurityManager';
 
 describe('JWT Key Rotation Integration', () => {
   const originalConfig = config.auth.useKeyRotation;
@@ -110,7 +111,6 @@ describe('JWT Key Rotation Integration', () => {
 
   describe('Security Headers', () => {
     it('should have proper CSP configuration', () => {
-      const { SecurityManager } = require('../../security/SecurityManager');
       const securityManager = SecurityManager.getInstance();
 
       expect(securityManager).toBeTruthy();

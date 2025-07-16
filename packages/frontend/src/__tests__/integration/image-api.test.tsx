@@ -445,7 +445,7 @@ describe('Image API Integration Tests', () => {
       });
 
       await act(async () => {
-        // @ts-ignore - Intentionally passing invalid status
+        // @ts-expect-error - Intentionally passing invalid status
         await expect(result.current.updateImageStatus('project-1', 'image-1', 'invalid_status')).rejects.toThrow(
           'Invalid status value',
         );

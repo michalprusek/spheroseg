@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { loadImage, getImageDimensions, applyImageFilters, resizeImage, cropImage, rotateImage } from '../imageLoader';
 
+// Mock logger
+vi.mock('@/lib/logger', () => ({
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+  })),
+}));
+
 // Mock Image class
 class MockImage {
   onload: Function = () => {};
@@ -52,7 +62,7 @@ describe('Image Loader Utilities', () => {
     vi.clearAllMocks();
 
     // Reset global Image constructor
-    // @ts-ignore
+    // @ts-expect-error
     global.Image = MockImage;
 
     // Reset mocks

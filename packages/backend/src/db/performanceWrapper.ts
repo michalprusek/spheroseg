@@ -5,7 +5,7 @@
  * including query duration, row counts, and slow query detection.
  */
 
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import performanceMonitor from '../services/performanceMonitor';
 import logger from '../utils/logger';
 

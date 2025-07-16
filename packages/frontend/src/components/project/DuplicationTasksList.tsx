@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import logger from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface DuplicationTasksListProps {
   refreshInterval?: number; // in milliseconds

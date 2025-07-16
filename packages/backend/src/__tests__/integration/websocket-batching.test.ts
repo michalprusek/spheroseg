@@ -412,7 +412,7 @@ describe('WebSocket Batching Integration', () => {
 
       clientSocket.emit('client-capabilities', { batching: true });
 
-      clientSocket.on('batch-update', (batch) => {
+      clientSocket.on('batch-update', (_batch) => {
         // Don't send acknowledgment to simulate timeout
         ackTimeout = setTimeout(() => {
           // Server should handle missing ack gracefully

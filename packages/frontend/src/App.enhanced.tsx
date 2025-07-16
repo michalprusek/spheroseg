@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect } from 'react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -26,7 +26,6 @@ import {
   createCodeSplitComponent,
   setupVisibilityPrefetching,
   monitorChunkLoading,
-  routeLoadingPriorities,
 } from '@/utils/codeSplitting';
 
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -127,7 +126,7 @@ const routeComponents = {
 // Route prefetching hook
 function useRoutePrefetching() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
 
   useEffect(() => {
     // Prefetch routes based on current location

@@ -270,7 +270,7 @@ describe('Enhanced Validation', () => {
 
   describe('validateQuery', () => {
     it('should process and validate query parameters', async () => {
-      const schema = createTextSchema().and(z.number());
+      const _schema = createTextSchema().and(z.number());
       
       // String number should be converted
       const result = await validateQuery(z.number(), { page: '5' }, 'pagination');

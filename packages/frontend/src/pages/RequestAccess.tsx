@@ -4,15 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/lib/apiClient';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { ArrowLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useEmailValidation } from '@/hooks/useEmailValidation';
 import { appConfig } from '@/config/app.config';
 

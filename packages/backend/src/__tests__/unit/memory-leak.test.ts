@@ -3,7 +3,6 @@
  */
 
 import { performanceMonitor } from '../../middleware/performanceMonitoring';
-import logger from '../../utils/logger';
 
 // Mock logger
 jest.mock('../../utils/logger', () => ({
@@ -23,7 +22,7 @@ describe('Memory Leak Detection Tests', () => {
   beforeAll(() => {
     // Enable manual garbage collection for tests
     if (!global.gc) {
-      // @ts-ignore
+      // @ts-expect-error global.gc is not defined in types but available in Node.js
       global.gc = jest.fn();
     }
   });

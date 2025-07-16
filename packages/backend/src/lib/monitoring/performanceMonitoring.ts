@@ -11,7 +11,7 @@ import { performanceMonitoring } from '../../monitoring/unified';
 export class BackendPerformanceMonitoring {
   private static instance = performanceMonitoring;
 
-  public static getInstance(options?: any): typeof performanceMonitoring {
+  public static getInstance(_options?: any): typeof performanceMonitoring {
     return performanceMonitoring;
   }
 
@@ -23,6 +23,6 @@ export class BackendPerformanceMonitoring {
   recordMLInferenceMetric = performanceMonitoring.recordMLInference.bind(performanceMonitoring);
 }
 
-export function createPerformanceMonitoring(options?: any): typeof performanceMonitoring {
+export function createPerformanceMonitoring(_options?: any): typeof performanceMonitoring {
   return performanceMonitoring;
 }

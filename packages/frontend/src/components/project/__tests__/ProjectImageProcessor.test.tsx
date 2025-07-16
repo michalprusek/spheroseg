@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, fireEvent, waitFor, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import ProjectImageProcessor from '@/components/project/ProjectImageProcessor';

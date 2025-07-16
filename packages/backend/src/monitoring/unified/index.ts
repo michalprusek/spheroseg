@@ -18,6 +18,7 @@ import { EventEmitter } from 'events';
 import { PoolClient, QueryResult } from 'pg';
 import NodeCache from 'node-cache';
 import config from '../../config';
+import { ApiError } from '../../utils/ApiError';
 import {
   MetricType,
   PerformanceMonitoringOptions,
@@ -31,6 +32,7 @@ import {
 
 // Extend Express Request type
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       requestId?: string;
@@ -760,8 +762,7 @@ export function errorHandlerMiddleware(err: any, req: Request, res: Response, ne
   const startTime = req.startTime || Date.now();
   const duration = (Date.now() - startTime) / 1000;
 
-  // Import ApiError for proper error handling
-  const { ApiError } = require('../../utils/ApiError');
+  // ApiError is already imported at the top
 
   // Convert to ApiError if needed
   let apiError = err;

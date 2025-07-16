@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, RefObject } from 'react';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
 import { TFunction } from 'i18next';
+import axios from 'axios';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
 import apiClient from '@/lib/apiClient';
 import { createNamespacedLogger } from '@/utils/logger';
@@ -10,7 +10,6 @@ import { createNamespacedLogger } from '@/utils/logger';
 const logger = createNamespacedLogger('useSegmentationV2');
 
 import { EditMode, InteractionState, Point, SegmentationData, TransformState, ImageData } from './types';
-import { MIN_ZOOM, MAX_ZOOM } from './constants';
 import { fetchImageData, fetchSegmentationData, createEmptySegmentation, saveSegmentationData } from './api';
 import { handleMouseDown, handleMouseMove, handleMouseUp, handleWheel, handleDeletePolygon } from './interactions';
 import { calculateCenteringTransform, getCanvasCoordinates } from './coordinates';
@@ -1020,7 +1019,19 @@ export const useSegmentationV2 = (
       isSavingRef.current = false;
     } catch (error) {
       console.error('Error saving segmentation data:', error);
-      toast.error(t('segmentation.saveError') || 'Failed to save segmentation');
+      
+      // Permission errors are already handled by the API client interceptor
+      // Only show generic error for non-permission errors
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        // Don't show additional errors for permission-related status codes
+        if (status !== 403 && status !== 500 && status !== 404) {
+          toast.error(t('segmentation.saveError') || 'Failed to save segmentation');
+        }
+      } else {
+        toast.error(t('segmentation.saveError') || 'Failed to save segmentation');
+      }
+      
       setIsLoading(false);
       isSavingRef.current = false;
     }

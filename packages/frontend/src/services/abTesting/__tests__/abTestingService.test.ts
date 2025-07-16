@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ABTestingService } from '../abTestingService';
-import type { Experiment, ExperimentVariant, User } from '../types';
+import type { Experiment, User } from '../types';
 
 // Mock config
 vi.mock('../../../config/app.config', () => ({

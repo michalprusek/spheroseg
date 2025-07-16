@@ -162,11 +162,29 @@ export function useABTestingMetrics() {
     [isInitialized],
   );
 
+  const trackTiming = useCallback(
+    (timingName: string, duration: number, properties?: Record<string, any>) => {
+      if (!isInitialized) return;
+
+      const service = getABTestingInstance();
+      if (service) {
+        service.trackTiming(timingName, duration, properties);
+      }
+    },
+    [isInitialized],
+  );
+
   return {
     trackEvent,
     trackConversion,
+    trackTiming,
   };
 }
+
+/**
+ * Track A/B testing events - alias for useABTestingMetrics
+ */
+export const useABTestingEvents = useABTestingMetrics;
 
 /**
  * Conditional rendering based on feature flag
@@ -241,6 +259,7 @@ export default {
   useFeatureFlag,
   useFeatureFlags,
   useABTestingMetrics,
+  useABTestingEvents,
   useFeatureEnabled,
   useActiveExperiments,
   useVariant,

@@ -3,17 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Microscope,
   Image,
-  FileUp,
-  FileClock,
   FolderKanban,
   CheckCircle2,
-  ArrowUpRight,
-  ArrowDownRight,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Skeleton } from '@/components/ui/skeleton';
-import { BrainCircuit, FileImage, CheckCircle, CalendarDays } from 'lucide-react';
 import apiClient from '@/lib/apiClient';
 import axios from 'axios';
 import { toast } from 'sonner';

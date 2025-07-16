@@ -6,8 +6,6 @@ import {
   ZoomIn,
   ZoomOut,
   Expand,
-  Eye,
-  Edit,
   PlusSquare,
   Share2,
   Trash2,

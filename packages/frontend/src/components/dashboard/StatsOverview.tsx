@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   ArrowUpRight,
@@ -10,17 +10,13 @@ import {
   HardDrive,
   Activity,
   Clock,
-  ChevronRight,
-  FileText,
   Calendar,
 } from 'lucide-react';
 import { useExtendedUserStatistics } from '@/hooks/useExtendedUserStatistics';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from '@/contexts/ThemeContext';
-import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 
 // Enhanced StatCard with animation and hover effects

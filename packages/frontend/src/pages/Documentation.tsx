@@ -1,10 +1,8 @@
-import React from 'react';
 import Navbar from '@/components/Navbar';
 import ThemedFooter from '@/components/ThemedFooter';
 import { Link } from 'react-router-dom';
 import { FileText, Code, Info, BookOpen, Microscope, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { constructUrl } from '@/lib/urlUtils';
 import { appConfig } from '@/config/app.config';
 
 const Documentation = () => {

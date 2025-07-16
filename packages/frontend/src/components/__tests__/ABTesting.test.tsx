@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
 import {
   FeatureFlag,
   Experiment,
@@ -369,7 +368,7 @@ describe('ABTesting Components', () => {
 
     it('should render in development by default', () => {
       const originalEnv = import.meta.env.DEV;
-      // @ts-ignore
+      // @ts-expect-error
       import.meta.env.DEV = true;
 
       (useActiveExperiments as Mock).mockReturnValue([{ key: 'test', experiment: 'exp', variant: 'v1', value: true }]);
@@ -378,7 +377,7 @@ describe('ABTesting Components', () => {
 
       expect(screen.getByText('A/B Testing Debug')).toBeInTheDocument();
 
-      // @ts-ignore
+      // @ts-expect-error
       import.meta.env.DEV = originalEnv;
     });
   });

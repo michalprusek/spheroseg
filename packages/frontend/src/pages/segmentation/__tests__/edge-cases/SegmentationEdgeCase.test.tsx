@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SegmentationEditorV2 } from '../../components/SegmentationEditorV2';
-import { Point, EditMode } from '@spheroseg/types';
 import { MockApiClientProvider } from '../../../../lib/__mocks__/enhanced/apiClient';
 import { createTestPolygonSet, createMockImageData } from '../../../../__tests__/fixtures/polygonFixtures';
 

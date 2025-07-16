@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import AWS from 'aws-sdk';
 import fetch from 'node-fetch';
+import fs from 'fs';
 import logger from '../utils/logger';
 import { cdnConfig, getCDNUrl, getCacheControl } from '../config/cdn.config';
 
@@ -137,7 +138,7 @@ class CloudFrontService extends BaseCDNService {
       throw new Error('CDN S3 bucket not configured');
     }
 
-    const fileContent = require('fs').readFileSync(localPath);
+    const fileContent = fs.readFileSync(localPath);
     const contentType = this.getContentType(cdnPath);
 
     const params: AWS.S3.PutObjectRequest = {

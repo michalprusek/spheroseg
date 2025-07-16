@@ -6,8 +6,6 @@
 
 import { Pool, PoolClient } from 'pg';
 import express from 'express';
-import { Server } from 'http';
-import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 
 // Type-safe mock pool
@@ -58,7 +56,7 @@ export function createTestApp(): express.Application {
   app.use(express.urlencoded({ extended: true }));
 
   // Mock authentication middleware
-  app.use((req: any, res, next) => {
+  app.use((req: any, _res, next) => {
     req.user = { userId: 'test-user-123' };
     next();
   });
@@ -135,12 +133,12 @@ export function measurePerformance<T>(fn: () => T | Promise<T>): {
 }
 
 // Error matchers
-export function expectErrorWithCode(error: any, code: string): void {
+export function expectErrorWithCode(error: Error & { code?: string }, code: string): void {
   expect(error).toBeInstanceOf(Error);
   expect(error.code).toBe(code);
 }
 
-export function expectValidationError(error: any, field?: string): void {
+export function expectValidationError(error: Error & { name?: string; field?: string }, field?: string): void {
   expect(error).toBeInstanceOf(Error);
   expect(error.name).toBe('ValidationError');
   if (field) {

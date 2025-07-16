@@ -6,6 +6,8 @@
 
 import { Pool } from 'pg';
 import cron from 'node-cron';
+import fs from 'fs';
+import path from 'path';
 import logger from '../utils/logger';
 import config from '../config';
 import fileCleanupService from './fileCleanupService';
@@ -174,8 +176,7 @@ class ScheduledTaskService {
     usedBytes: number;
     totalBytes: number;
   }> {
-    const fs = require('fs');
-    const path = require('path');
+    // fs and path are already imported above
 
     // Calculate used storage
     let usedBytes = 0;
@@ -195,8 +196,7 @@ class ScheduledTaskService {
    * Get directory size recursively
    */
   private async getDirectorySize(dirPath: string): Promise<number> {
-    const fs = require('fs');
-    const path = require('path');
+    // fs and path are already imported above
     let totalSize = 0;
 
     const files = fs.readdirSync(dirPath);

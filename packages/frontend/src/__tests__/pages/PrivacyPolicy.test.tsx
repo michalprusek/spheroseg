@@ -238,16 +238,21 @@ describe('PrivacyPolicy Page', () => {
     expect(navLinks.some((link) => link.textContent?.match(/Sign In/i))).toBeTruthy();
   });
 
-  it('renders the footer', () => {
+  it('renders the bottom navigation buttons', () => {
     renderPrivacyPolicy();
 
-    // Check for footer content using a more flexible approach
-    const footerText = screen.getAllByText(/2023/i);
-    expect(footerText.length).toBeGreaterThan(0);
+    // Check for bottom navigation buttons that actually exist
+    const backToHomeButton = screen.getByRole('link', { name: /back to home/i });
+    expect(backToHomeButton).toBeInTheDocument();
+    expect(backToHomeButton).toHaveAttribute('href', '/');
 
-    // Check that there are links in the page
+    const termsButton = screen.getByRole('link', { name: /terms of service/i });
+    expect(termsButton).toBeInTheDocument();
+    expect(termsButton).toHaveAttribute('href', '/terms-of-service');
+
+    // Check that there are multiple links in the page (nav + buttons)
     const links = screen.getAllByRole('link');
-    expect(links.length).toBeGreaterThan(0);
+    expect(links.length).toBeGreaterThan(2);
   });
 
   // Test translations for different languages

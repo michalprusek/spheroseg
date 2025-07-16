@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SegmentationProvider } from '../../contexts/SegmentationContext';
 import EditorLayout from '../layout/EditorLayout';
@@ -13,7 +13,7 @@ import KeyboardShortcutsHelp from '../KeyboardShortcutsHelp';
 import type { KeyboardShortcutsHelpRef } from '../KeyboardShortcutsHelp';
 
 import { CanvasSegmentationData, ProjectImage, Polygon as CanvasPolygonType } from '@/types';
-import { Point, Polygon } from '@/lib/segmentation';
+import { Point } from '@/lib/segmentation';
 import type { TempPointsState as TempPointsStateType, VertexDragState as VertexDragStateType } from '../../types';
 import { EditMode } from '../../hooks/useSegmentationV2';
 import apiClient from '@/lib/apiClient';

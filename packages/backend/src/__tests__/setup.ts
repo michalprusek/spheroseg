@@ -31,7 +31,6 @@ jest.mock('winston', () => ({
 
 // Test environment setup
 import 'dotenv/config';
-import fs from 'fs';
 import path from 'path';
 
 // Mock environment variables

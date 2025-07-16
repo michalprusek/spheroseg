@@ -1,4 +1,3 @@
-import React from 'react';
 import { render } from '@testing-library/react';
 import { Alert, AlertTitle, AlertDescription } from '../alert';
 import '@testing-library/jest-dom';

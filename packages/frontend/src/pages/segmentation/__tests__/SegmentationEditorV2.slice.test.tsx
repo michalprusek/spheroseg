@@ -1,5 +1,4 @@
-import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { SegmentationEditorV2 } from '../SegmentationEditorV2';
 import { EditMode } from '../hooks/segmentation/types';
 import { useSegmentationV2 } from '../hooks/segmentation';

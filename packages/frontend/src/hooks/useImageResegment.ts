@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 import axios from 'axios';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ImageStatus, ProjectImage } from '@/types';
+import { ImageStatus } from '@/types';
 import logger from '@/lib/logger';
 
 interface UseImageResegmentOptions {
@@ -137,7 +137,7 @@ export const useImageResegment = (options: UseImageResegmentOptions = {}): UseIm
         }
 
         // Call the batch segmentation endpoint with a single image
-        await apiClient.post('/api/segmentations/batch', {
+        await apiClient.post('/api/segmentation/batch', {
           imageIds: [imageId],
           priority,
           model_type: modelType,
@@ -249,7 +249,7 @@ export const useImageResegment = (options: UseImageResegmentOptions = {}): UseIm
           logger.info(`Zpracování dávky ${i + 1}/${batches.length} s ${batch.length} obrázky`);
 
           try {
-            await apiClient.post('/api/segmentations/batch', {
+            await apiClient.post('/api/segmentation/batch', {
               imageIds: batch,
               priority,
               model_type: modelType,

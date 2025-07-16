@@ -10,11 +10,12 @@
 
 import request from 'supertest';
 import express from 'express';
+import fs from 'fs';
 import { getPool } from '../db';
 import * as imageUtils from '../utils/imageUtils.unified';
 import { Server as SocketServer } from 'socket.io';
-import path from 'path';
-import fs from 'fs';
+import imageRoutes from '../routes/images';
+import diagnosticsRoutes from '../routes/diagnostics';
 
 // Mock dependencies
 jest.mock('../db');
@@ -27,7 +28,7 @@ describe('Image Upload Flow', () => {
   let io: SocketServer;
   let authToken: string;
   let projectId: string;
-  let userId: string;
+  let _userId: string;
   let mockPool: any;
 
   beforeAll(() => {
@@ -56,21 +57,19 @@ describe('Image Upload Flow', () => {
     });
 
     // Register routes
-    const imageRoutes = require('../routes/images').default;
-    const diagnosticsRoutes = require('../routes/diagnostics').default;
     app.use('/api/projects/:projectId/images', imageRoutes);
     app.use('/api/images', imageRoutes);
     app.use('/api/diagnostics', diagnosticsRoutes);
 
     // Error handler
-    app.use((err: any, req: any, res: any, next: any) => {
+    app.use((err: any, _req: any, res: any, _next: any) => {
       res.status(err.statusCode || 500).json({
         message: err.message || 'Internal Server Error',
       });
     });
 
     // Setup test data
-    userId = 'test-user-123';
+    _userId = 'test-user-123';
     projectId = 'test-project-456';
     authToken = 'Bearer test-token';
   });
@@ -127,7 +126,7 @@ describe('Image Upload Flow', () => {
       const largeFileSize = 150 * 1024 * 1024; // 150MB
 
       // Mock fs module
-      const fsMock = require('fs');
+      const fsMock = fs as jest.Mocked<typeof fs>;
       fsMock.statSync = jest.fn().mockReturnValue({
         size: largeFileSize,
       });

@@ -6,7 +6,7 @@
  */
 
 import { createLogger } from '@/utils/logging/unifiedLogger';
-import { handleError, AppError, ErrorType } from '@/utils/error/unifiedErrorHandler';
+import { AppError, ErrorType } from '@/utils/error/unifiedErrorHandler';
 import cacheService, { CacheLayer } from '@/services/unifiedCacheService';
 import authService from '@/services/unifiedAuthService';
 import type { User } from '@/services/unifiedAuthService';

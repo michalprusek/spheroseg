@@ -1554,4 +1554,11 @@ export default {
       twitter: 'Suivre sur Twitter',
     },
   },
+  shared: {
+    permission: {
+      view: 'Voir',
+      edit: 'Modifier',
+      admin: 'Administrateur',
+    },
+  },
 };

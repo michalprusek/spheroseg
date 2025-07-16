@@ -1,4 +1,3 @@
-import React from 'react';
 import { Point } from '@/lib/segmentation';
 import { getStrokeWidth, getColors, getPointRadius } from './visualizationUtils';
 import { useCoordinateTransform } from '@/pages/segmentation/hooks/polygonInteraction/useCoordinateTransform';

@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
-import logger from '../utils/logger';
 
 /**
  * Enhanced caching middleware for optimal static resource delivery

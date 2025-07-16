@@ -532,14 +532,21 @@ router.post(
       }
       // --- Storage Limit Check --- END
 
-      const projectCheck = await getPool().query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, requestingUserId]
-      );
-
-      if (projectCheck.rows.length === 0) {
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(getPool(), projectId, requestingUserId);
+      
+      if (!project) {
         if (files) files.forEach((file) => allUploadedFilePaths.push(file.path));
         next(new ApiError('Project not found or access denied', 404));
+        return;
+      }
+      
+      // Check if user has edit permission (owner or shared with 'edit' permission)
+      const hasEditPermission = project.is_owner || project.permission === 'edit';
+      if (!hasEditPermission) {
+        if (files) files.forEach((file) => allUploadedFilePaths.push(file.path));
+        next(new ApiError('You do not have permission to upload images to this project', 403));
         return;
       }
 
@@ -1146,12 +1153,12 @@ router.get(
 
     try {
       const pool = getPool();
-      const projectCheck = await getPool().query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
-
-      if (projectCheck.rows.length === 0) {
+      
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(pool, projectId, userId);
+      
+      if (!project) {
         logger.warn('Project access denied', {
           projectId,
           originalProjectId,
@@ -1244,12 +1251,12 @@ router.get(
       }
 
       const pool = getPool();
-      const projectCheck = await getPool().query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
-
-      if (projectCheck.rows.length === 0) {
+      
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(pool, projectId, userId);
+      
+      if (!project) {
         logger.warn('Project access denied', {
           projectId,
           originalProjectId,
@@ -1402,12 +1409,12 @@ router.get(
 
     try {
       const pool = getPool();
-      const projectCheck = await getPool().query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
-
-      if (projectCheck.rows.length === 0) {
+      
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(pool, projectId, userId);
+      
+      if (!project) {
         logger.warn('Project access denied', {
           projectId,
           originalProjectId,

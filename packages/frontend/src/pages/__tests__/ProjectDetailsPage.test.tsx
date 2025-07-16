@@ -1,5 +1,4 @@
-import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { vi } from 'vitest';
 import ProjectDetailsPage from '@/pages/ProjectDetail';
 import { LanguageProvider } from '@/contexts/LanguageContext';

@@ -33,6 +33,12 @@ describe('useAutoSave', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
+    
+    // Mock global timer functions properly
+    global.setTimeout = vi.fn().mockImplementation(setTimeout);
+    global.clearTimeout = vi.fn().mockImplementation(clearTimeout);
+    global.setInterval = vi.fn().mockImplementation(setInterval);
+    global.clearInterval = vi.fn().mockImplementation(clearInterval);
   });
 
   afterEach(() => {

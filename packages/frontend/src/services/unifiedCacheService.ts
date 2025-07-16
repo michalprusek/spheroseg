@@ -6,7 +6,6 @@
  */
 
 import { createLogger } from '@/utils/logging/unifiedLogger';
-import { handleError, ErrorType } from '@/utils/error/unifiedErrorHandler';
 
 const logger = createLogger('UnifiedCacheService');
 

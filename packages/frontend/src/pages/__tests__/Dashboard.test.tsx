@@ -1,9 +1,7 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import Dashboard from '@/pages/Dashboard';
 import '@testing-library/jest-dom';
-import { BrowserRouter } from 'react-router-dom';
 import { TestWrapper } from '@/tests/utils/testUtils';
 
 // Mock AuthContext

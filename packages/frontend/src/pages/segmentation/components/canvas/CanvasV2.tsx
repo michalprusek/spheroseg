@@ -1,10 +1,8 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Point } from '@/types';
 import { EditMode, InteractionState } from '@/pages/segmentation/hooks/segmentation'; // Import EditMode from refactored location
 import { useDebouncedCallback } from 'use-debounce';
 import { createNamespacedLogger } from '@/utils/logger';
-import filterVisiblePolygons from '../../utils/polygonVisibility';
-import { toast } from 'sonner';
 import CanvasImageLayer from './CanvasImageLayer'; // Import the new component
 import CanvasPolygonLayer from './CanvasPolygonLayer'; // Import the polygon layer component
 import CanvasVertexLayer from './CanvasVertexLayer'; // Import the vertex layer component

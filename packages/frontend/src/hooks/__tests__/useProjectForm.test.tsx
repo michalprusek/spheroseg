@@ -2,7 +2,6 @@ import { renderHook, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { useProjectForm } from '../useProjectForm';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
 import apiClient from '@/lib/apiClient';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -99,7 +98,7 @@ describe('useProjectForm Hook', () => {
     });
 
     // Check if API was called with correct data
-    expect(apiClient.post).toHaveBeenCalledWith('/projects', {
+    expect(apiClient.post).toHaveBeenCalledWith('/api/projects', {
       title: 'Test Project',
       description: 'Test Description',
     });
@@ -134,7 +133,7 @@ describe('useProjectForm Hook', () => {
     });
 
     // Check if API was called with correct data (description should be undefined)
-    expect(apiClient.post).toHaveBeenCalledWith('/projects', {
+    expect(apiClient.post).toHaveBeenCalledWith('/api/projects', {
       title: 'Test Project',
       description: undefined,
     });

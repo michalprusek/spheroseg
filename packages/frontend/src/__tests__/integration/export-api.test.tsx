@@ -81,7 +81,7 @@ describe('Export API Integration Tests', () => {
       });
 
       await act(async () => {
-        // @ts-ignore - Intentionally passing invalid format
+        // @ts-expect-error - Intentionally passing invalid format
         await expect(
           result.current.startExport('project-1', {
             ...mockExportOptions,

@@ -4,9 +4,6 @@
  * Tests circuit breaker functionality for external service calls
  */
 import CircuitBreaker from 'opossum';
-import request from 'supertest';
-import app from '../../app';
-import logger from '../../utils/logger';
 
 // Mock external service calls
 const mockMLService = jest.fn();

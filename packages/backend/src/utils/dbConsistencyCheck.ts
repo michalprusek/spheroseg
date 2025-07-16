@@ -5,7 +5,6 @@
  * related to images and their statuses
  */
 
-import { Pool } from 'pg';
 import { getPool } from '../db';
 import logger from './logger';
 

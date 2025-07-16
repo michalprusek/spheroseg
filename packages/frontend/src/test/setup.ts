@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom';
-import { vi, beforeAll, afterAll, afterEach } from 'vitest';
-import { setupServer } from 'msw/node';
+import { vi, afterEach } from 'vitest';
 import ResizeObserver from 'resize-observer-polyfill';
 
 // Improve test performance by reducing console noise

@@ -1,5 +1,3 @@
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import { GraphQLDateTime, GraphQLJSON, GraphQLJSONObject } from 'graphql-scalars';
 import { mergeTypeDefs, mergeResolvers } from '@graphql-tools/merge';
 
 // Import type definitions

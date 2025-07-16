@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Project } from '@/types';
 import apiClient from '@/lib/apiClient';
-import { AxiosError } from 'axios';
 
 interface ProjectSelectorProps {
   selectedProjectId: string | null;

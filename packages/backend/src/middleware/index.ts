@@ -93,7 +93,7 @@ export const configureLoggingMiddleware = (app: Application): void => {
 /**
  * Body parsing middleware configuration
  */
-export const configureBodyParsingMiddleware = (app: Application): void => {
+export const configureBodyParsingMiddleware = (_app: Application): void => {
   // Body parsing is now handled in app.ts BEFORE any other middleware
   // This ensures security checks have access to parsed body
   logger.info('Body parsing configured in app.ts');
@@ -102,7 +102,7 @@ export const configureBodyParsingMiddleware = (app: Application): void => {
 /**
  * i18n middleware configuration
  */
-export const configureI18nMiddleware = (app: Application): void => {
+export const configureI18nMiddleware = (_app: Application): void => {
   // TODO: Fix i18n imports - temporarily disabled
   // const i18nMiddleware = createI18nMiddleware();
   // app.use(i18nMiddleware);

@@ -12,7 +12,6 @@
 import { Request, Response, NextFunction } from 'express';
 import promClient from 'prom-client';
 import logger from '../utils/logger';
-import config from '../config';
 import pool from '../db';
 
 // =============================================================================
@@ -192,7 +191,7 @@ export const createPerformanceMiddleware = (options: PerformanceOptions = {}) =>
     enableMetrics = true,
     enableLogging = true,
     enableMemoryMonitoring = true,
-    enableDatabaseMonitoring = true,
+    enableDatabaseMonitoring: _enableDatabaseMonitoring = true,
     thresholds = {},
   } = options;
 

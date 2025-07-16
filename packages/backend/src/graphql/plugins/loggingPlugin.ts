@@ -10,7 +10,7 @@ export function loggingPlugin(): ApolloServerPlugin<Context> {
       return {
         async willSendResponse(requestContext) {
           const duration = Date.now() - start;
-          const { request, response, contextValue, errors } = requestContext;
+          const { request, response: _response, contextValue, errors } = requestContext;
 
           // Extract operation info
           const operationType = request.query?.trim().startsWith('mutation') ? 'mutation' : 'query';

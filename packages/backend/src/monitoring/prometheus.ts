@@ -3,7 +3,7 @@
  *
  * Centralized metrics for all performance improvements
  */
-import { register, collectDefaultMetrics, Counter, Gauge, Histogram, Summary } from 'prom-client';
+import { register, collectDefaultMetrics, Counter, Gauge, Histogram } from 'prom-client';
 import { Request, Response, NextFunction } from 'express';
 
 // Collect default metrics (CPU, memory, etc.)

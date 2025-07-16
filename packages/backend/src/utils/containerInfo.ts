@@ -4,6 +4,7 @@
  */
 
 import fs from 'fs';
+import { totalmem } from 'os';
 import logger from './logger';
 
 interface ContainerLimits {
@@ -122,7 +123,7 @@ export async function getContainerInfo(): Promise<{
   const currentUsage = memUsage.rss; // Resident Set Size
   
   // Default to OS total memory if not in container
-  const memoryLimit = containerLimits.memoryLimitBytes || require('os').totalmem();
+  const memoryLimit = containerLimits.memoryLimitBytes || totalmem();
   
   return {
     isContainer: containerLimits.isContainerized,

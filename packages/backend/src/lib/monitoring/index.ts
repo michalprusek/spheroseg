@@ -11,7 +11,7 @@ import { performanceMonitoring } from '../../monitoring/unified';
 export { performanceMonitoring };
 
 // Export the create function for compatibility
-export function createPerformanceMonitoring(options?: any): any {
+export function createPerformanceMonitoring(_options?: any): any {
   // The unified monitoring is already a singleton, so just return it
   return performanceMonitoring;
 }

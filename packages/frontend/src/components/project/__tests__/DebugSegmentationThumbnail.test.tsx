@@ -1,8 +1,6 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import axios from 'axios';
 import DebugSegmentationThumbnail from '../DebugSegmentationThumbnail';
-import * as svgUtils from '@/lib/svgUtils';
 
 // Mock axios
 vi.mock('axios');

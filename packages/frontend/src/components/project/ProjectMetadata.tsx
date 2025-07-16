@@ -1,4 +1,3 @@
-import React from 'react';
 import { Calendar, Image } from 'lucide-react';
 
 interface ProjectMetadataProps {

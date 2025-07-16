@@ -29,8 +29,9 @@ jest.mock('bcryptjs', () => ({
 }));
 
 // Get the mocked functions
-const mockQuery = require('../db').default.query;
-const mockBcrypt = require('bcryptjs');
+import bcryptjs from 'bcryptjs';
+const mockQuery = (db as jest.Mocked<typeof db>).query;
+const mockBcrypt = bcryptjs as jest.Mocked<typeof bcryptjs>;
 
 describe('Authentication Endpoints', () => {
   // Clear mock calls before each test

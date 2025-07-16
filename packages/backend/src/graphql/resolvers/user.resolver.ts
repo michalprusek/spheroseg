@@ -1,6 +1,5 @@
 import { GraphQLError } from 'graphql';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { IResolvers } from '@graphql-tools/utils';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/auth';
 import {
@@ -8,14 +7,12 @@ import {
   getUserById,
   getUserByEmail,
   updateUser,
-  deleteUser,
   getUserStats,
 } from '../../services/userService';
 import { getProjectsByUserId } from '../../services/projectService';
 import { Context } from '../context';
 import { validateEmail, validatePassword, validateName } from '../../utils/validation';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../../services/emailService';
-import { createUserLoader } from '../dataloaders/userLoader';
+import { sendVerificationEmail } from '../../services/emailService';
 
 const userResolvers: IResolvers = {
   Query: {

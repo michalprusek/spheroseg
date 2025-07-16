@@ -1,7 +1,7 @@
 import apiClient from '@/lib/apiClient';
+import axios from 'axios';
 import { ImageData, SegmentationData, Polygon } from './types';
 import { loadImageDirectly } from '@/pages/segmentation/utils/directImageLoader';
-import { generateAlternativeUrls } from '@/pages/segmentation/utils/imageLoader';
 import { createLogger } from '@/lib/logger';
 import { requestDeduplicator } from '@/utils/requestDeduplicator';
 
@@ -476,7 +476,10 @@ export const saveSegmentationData = async (
 
   // If no endpoint succeeded, throw the last error
   if (!savedSuccessfully) {
-    throw new Error(`Failed to save segmentation data for imageId=${imageId}`);
+    // Create a synthetic axios-like error for permission detection
+    const error = new Error(`Failed to save segmentation data for imageId=${imageId}`);
+    // Permission errors are handled by the API client, just throw the error
+    throw error;
   }
 };
 

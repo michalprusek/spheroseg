@@ -3,10 +3,9 @@
  *
  * Tests failover scenarios, replication lag handling, and connection pooling
  */
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import {
   initializeReadReplicas,
-  getPool,
   query,
   transaction,
   getReplicationLag,
@@ -205,7 +204,7 @@ describe('Read Replica Failover', () => {
       expect(lag).toBe(15);
 
       // For time-sensitive reads, should use master
-      const result = await query(
+      const _result = await query(
         'SELECT * FROM users WHERE id = $1',
         [1],
         { forceWrite: true } // Force master for consistency

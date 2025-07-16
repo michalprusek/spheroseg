@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import '@testing-library/jest-dom';
 import ErrorBoundary from '../ErrorBoundary';
-import { handleError, ErrorType, ErrorSeverity } from '@/utils/errorHandling';
+import { handleError } from '@/utils/errorHandling';
 import { toast } from 'sonner';
 
 // Mock dependencies

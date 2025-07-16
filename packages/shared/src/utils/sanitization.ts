@@ -163,7 +163,7 @@ export function sanitizeFilename(input: string): string {
   let sanitized = input;
   
   // Remove path separators and dangerous characters
-  sanitized = sanitized.replace(/[\/\\:*?"<>|]/g, '_');
+  sanitized = sanitized.replace(/[/\\:*?"<>|]/g, '_');
   
   // Remove leading/trailing dots and spaces
   sanitized = sanitized.replace(/^[\s.]+|[\s.]+$/g, '');
@@ -258,6 +258,36 @@ export function sanitizeSqlInput(input: string): string {
 }
 
 /**
+ * Recursively sanitize object values
+ */
+function sanitizeObject(obj: unknown, maxDepth: number, depth: number = 0): unknown {
+  if (depth > maxDepth) {
+    return null;
+  }
+  
+  if (typeof obj === 'string') {
+    return sanitizeText(obj);
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeObject(item, maxDepth, depth + 1));
+  }
+  
+  if (obj && typeof obj === 'object') {
+    const sanitizedObj: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const sanitizedKey = sanitizeText(key);
+      if (sanitizedKey) {
+        sanitizedObj[sanitizedKey] = sanitizeObject(value, maxDepth, depth + 1);
+      }
+    }
+    return sanitizedObj;
+  }
+  
+  return obj;
+}
+
+/**
  * Sanitize JSON input
  */
 export function sanitizeJson(input: string, maxDepth: number = 10): unknown {
@@ -267,36 +297,7 @@ export function sanitizeJson(input: string, maxDepth: number = 10): unknown {
 
   try {
     const parsed = JSON.parse(input);
-    
-    // Recursively sanitize object values
-    function sanitizeObject(obj: unknown, depth: number = 0): unknown {
-      if (depth > maxDepth) {
-        return null;
-      }
-      
-      if (typeof obj === 'string') {
-        return sanitizeText(obj);
-      }
-      
-      if (Array.isArray(obj)) {
-        return obj.map(item => sanitizeObject(item, depth + 1));
-      }
-      
-      if (obj && typeof obj === 'object') {
-        const sanitizedObj: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(obj)) {
-          const sanitizedKey = sanitizeText(key);
-          if (sanitizedKey) {
-            sanitizedObj[sanitizedKey] = sanitizeObject(value, depth + 1);
-          }
-        }
-        return sanitizedObj;
-      }
-      
-      return obj;
-    }
-    
-    return sanitizeObject(parsed);
+    return sanitizeObject(parsed, maxDepth);
   } catch {
     return null;
   }

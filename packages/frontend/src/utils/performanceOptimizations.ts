@@ -2,7 +2,7 @@
  * Performance optimization utilities for React components
  */
 
-import React, { ComponentType, memo, useState, useEffect, useRef } from 'react';
+import React, { ComponentType, memo } from 'react';
 
 /**
  * Custom memo comparison function that performs deep equality check

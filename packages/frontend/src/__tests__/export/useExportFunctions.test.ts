@@ -1,8 +1,6 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
 import { ProjectImage } from '@/pages/segmentation/types';
-import { saveAs } from 'file-saver';
-import { utils, writeFile } from 'xlsx';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock dependencies

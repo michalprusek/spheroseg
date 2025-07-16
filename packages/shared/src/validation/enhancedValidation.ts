@@ -97,7 +97,7 @@ export const filenameSchema = createTextSchema({
 export const phoneSchema = createTextSchema({
   minLength: 10,
   maxLength: 20,
-  pattern: /^[+]?[(]?[\d\s\-\(\)]+$/
+  pattern: /^[+]?[()]?[\d\s\-()]+$/
 });
 
 // Password validation schema

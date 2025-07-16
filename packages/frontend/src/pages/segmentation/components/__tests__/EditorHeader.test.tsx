@@ -1,12 +1,9 @@
-import React from 'react';
 import { screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 import EditorHeader from '../EditorHeader';
 import {
-  mockNavigate,
   resetAllMocks,
-  testButtonClick,
   defaultEditorHeaderProps,
   renderEditorComponent,
 } from '../../../../../shared/test-utils/componentTestUtils';

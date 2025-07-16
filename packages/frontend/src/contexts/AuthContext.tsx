@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 // Import jwt-decode, which is now installed
-import { jwtDecode } from 'jwt-decode';
-import { useNavigate, NavigateFunction, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient'; // Import apiClient
 import axios from 'axios'; // Import axios for direct requests and error checking
 import { Language } from './LanguageContext'; // Import Language type
 import logger from '@/utils/logger'; // Import centralized logger
-import { safeAsync, NetworkErrorType, getErrorType, showEnhancedError } from '@/utils/enhancedErrorHandling'; // Import enhanced error handling
+import { safeAsync } from '@/utils/enhancedErrorHandling'; // Import enhanced error handling
 import {
   getAccessToken,
   getRefreshToken,
@@ -17,10 +16,9 @@ import {
   refreshAccessToken,
   saveCurrentRoute,
   getLastRoute,
-  clearLastRoute,
   shouldPersistSession,
 } from '@/services/authService'; // Import token services
-import { API_PATHS, formatApiPath } from '@/lib/apiPaths'; // Import centralized API paths
+import { API_PATHS } from '@/lib/apiPaths'; // Import centralized API paths
 import userProfileService from '../services/userProfileService';
 import { markPerformance, measurePerformance } from '@/utils/performance';
 
@@ -322,12 +320,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
-          // Nastavíme delší timeout, aby se aplikace nezablokovala, pokud je API pomalejší
+          // Enhanced timeout handling for auth verification
           const timeoutPromise = new Promise<null>((resolve) => {
             setTimeout(() => {
-              logger.warn('Auth API verification timed out, continuing with stored token and user data');
+              logger.warn('Auth API verification timed out after 8 seconds, continuing with stored token and user data');
               resolve(null);
-            }, 5000); // Sníženo na 5 sekund pro rychlejší načítání
+            }, 8000); // Increased to 8 seconds to give auth API more time
           });
 
           // Try to load user from storage first
@@ -340,30 +338,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Verify token by fetching user data using the centralized HTTP client
           const controller = new AbortController();
           const fetchUserPromise = (async () => {
-            let retries = 4; // Zvýšeno na 4 pokusy
-            const retryDelay = 2000; // Zvýšeno na 2s mezi pokusy
+            let retries = 3; // 3 retries for auth verification
+            const baseRetryDelay = 1500; // Base delay between retries
 
             while (retries > 0) {
               try {
                 return await apiClient.get<User>(API_PATHS.USERS.ME, {
                   signal: controller.signal,
-                  timeout: 10000, // Zvýšeno na 10 sekund pro větší toleranci
-                  withCredentials: true, // Důležité pro přenos cookies
+                  timeout: 8000, // 8 second timeout per request
+                  withCredentials: true, // Important for cookie transmission
                 });
               } catch (error) {
                 // Don't retry if token is invalid (401 Unauthorized)
                 if (axios.isAxiosError(error) && error.response?.status === 401) {
-                  logger.warn('Token is invalid, not retrying');
+                  logger.warn('Token is invalid (401), not retrying auth verification');
+                  throw error;
+                }
+
+                // Don't retry if user is forbidden (403)
+                if (axios.isAxiosError(error) && error.response?.status === 403) {
+                  logger.warn('User is forbidden (403), not retrying auth verification');
                   throw error;
                 }
 
                 retries--;
                 if (retries === 0) {
-                  logger.warn('User data fetch failed after all retries', { error });
+                  logger.warn('User data fetch failed after all retries', { 
+                    error: error instanceof Error ? error.message : String(error),
+                    isTimeout: error instanceof Error && (error.message.includes('timeout') || error.message.includes('ECONNABORTED')),
+                    isNetworkError: axios.isAxiosError(error) && !error.response,
+                  });
                   throw error;
                 }
 
-                logger.warn(`User data fetch failed, will retry. Retries left: ${retries}`, { error });
+                // Exponential backoff with jitter
+                const jitter = Math.random() * 500; // Add up to 500ms random jitter
+                const retryDelay = baseRetryDelay * (4 - retries) + jitter; // Exponential increase
+                
+                logger.warn(`Auth verification failed, will retry in ${Math.round(retryDelay)}ms. Retries left: ${retries}`, { 
+                  error: error instanceof Error ? error.message : String(error),
+                  retryDelay: Math.round(retryDelay),
+                });
+                
                 await new Promise((resolve) => setTimeout(resolve, retryDelay));
               }
             }
@@ -387,10 +403,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUserWithStorage(null);
               setToken(null);
 
-              // Show a toast to inform the user about API timeout
-              toast.error('Could not connect to the server. Please try again later.', {
-                id: 'server-connection-error',
-                duration: 5000,
+              // Show a more informative toast about auth timeout
+              toast.error('Authentication server not responding', {
+                id: 'auth-server-timeout',
+                duration: 6000,
+                description: 'Your session may be temporarily unavailable. The app will retry automatically.',
               });
 
               // Redirect to login if there's a navigation function
@@ -563,9 +580,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Set up timeout for the entire sign-in process
         const loginTimeoutPromise = new Promise<boolean>((_, reject) => {
           setTimeout(() => {
-            logger.debug('[authContext] Sign-in operation timed out after 10 seconds');
-            reject(new Error('Authentication request timed out. Please check your connection and try again.'));
-          }, 10000); // 10 second timeout for the entire process
+            logger.debug('[authContext] Sign-in operation timed out after 12 seconds');
+            reject(new Error('Authentication is taking longer than expected. Please check your connection and try again.'));
+          }, 12000); // 12 second timeout for the entire process (slightly longer than request timeout)
         });
 
         // Create a promise for the login process with direct axios call
@@ -573,9 +590,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Set up abort controller for the login request
           const controller = new AbortController();
           const timeoutId = setTimeout(() => {
-            logger.debug('[authContext] Login request timed out after 5 seconds');
+            logger.debug('[authContext] Login request timed out after 8 seconds');
             controller.abort();
-          }, 5000); // 5 second timeout for the request
+          }, 8000); // 8 second timeout for the request
 
           try {
             // Use axios directly to completely bypass httpClient and all interceptors
@@ -585,7 +602,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               { email, password, remember_me: rememberMe },
               {
                 signal: controller.signal,
-                timeout: 5000, // 5 second request timeout
+                timeout: 8000, // 8 second request timeout (matches auth API timeout)
                 headers: {
                   'Content-Type': 'application/json',
                 },
@@ -654,6 +671,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               duration: 5000,
               description: errorMessage || 'Please check your email address and try again.',
             });
+          } else if (status === 502) {
+            // Bad Gateway - server is down or unreachable
+            toast.error('Server unavailable', {
+              duration: 7000,
+              description: 'The authentication server is temporarily unavailable. Please try again in a few moments.',
+            });
+          } else if (status === 503) {
+            // Service Unavailable
+            toast.error('Service maintenance', {
+              duration: 7000,
+              description: 'The authentication service is undergoing maintenance. Please try again later.',
+            });
           } else {
             // Other errors
             toast.error('Login failed', {
@@ -663,17 +692,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           // Non-axios errors (including timeouts)
-          const isTimeout = error.message?.includes('timed out') || error.message?.includes('timeout');
+          const isTimeout = error.message?.includes('timed out') || 
+                           error.message?.includes('timeout') || 
+                           error.message?.includes('longer than expected') ||
+                           error.name === 'AbortError';
 
           if (isTimeout) {
-            toast.error('Connection timeout', {
-              duration: 6000,
-              description: 'The server is taking too long to respond. Please check your connection and try again.',
+            toast.error('Authentication timeout', {
+              duration: 7000,
+              description: 'The authentication server is taking too long to respond. Please check your connection and try again.',
             });
           } else {
             toast.error('Connection error', {
               duration: 5000,
-              description: error.message || 'Unable to connect to the server. Please try again.',
+              description: error.message || 'Unable to connect to the authentication server. Please try again.',
             });
           }
         }

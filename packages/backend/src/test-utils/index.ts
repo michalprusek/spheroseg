@@ -8,6 +8,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import express, { Express } from 'express';
 import request from 'supertest';
+import { createMockDatabase, mockDbModule } from './mockDatabase';
+import { createMockFileSystem, mockFsModule, setupTestFiles } from './mockFileSystem';
+import { createMockAuthWithTestData, mockJwtModule, mockBcryptModule } from './mockAuth';
 
 // Export database mocking utilities
 export * from './mockDatabase';
@@ -101,10 +104,7 @@ export const TEST_IDS = {
  * Setup a complete test environment with database, filesystem, and auth mocks
  */
 export function setupCompleteTestEnvironment() {
-  // Import necessary utilities
-  const { createMockDatabase, mockDbModule } = require('./mockDatabase');
-  const { createMockFileSystem, mockFsModule, setupTestFiles } = require('./mockFileSystem');
-  const { createMockAuthWithTestData, mockJwtModule, mockBcryptModule } = require('./mockAuth');
+  // Use imported utilities
 
   // Setup database mock
   const mockDb = createMockDatabase();

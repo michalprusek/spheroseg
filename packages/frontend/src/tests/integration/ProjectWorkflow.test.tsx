@@ -1,12 +1,5 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import { BrowserRouter, MemoryRouter, Routes, Route } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import { TestWrapper } from '@/tests/utils/testUtils';
-import Dashboard from '@/pages/Dashboard';
-import ProjectDetail from '@/pages/ProjectDetail';
-import SegmentationPage from '@/pages/segmentation/SegmentationPage';
 
 // Mock dependencies
 vi.mock('@/lib/apiClient', () => ({

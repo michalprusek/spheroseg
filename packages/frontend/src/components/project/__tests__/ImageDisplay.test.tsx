@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ImageDisplay } from '../ImageDisplay';
@@ -316,9 +315,9 @@ describe('ImageDisplay Component', () => {
         />,
       );
 
-      // Change the checkbox
+      // Click the checkbox (more realistic user interaction)
       const checkbox = screen.getByRole('checkbox');
-      fireEvent.change(checkbox, { target: { checked: true } });
+      fireEvent.click(checkbox);
 
       // Check if onToggleSelection was called
       expect(onToggleSelection).toHaveBeenCalled();

@@ -11,7 +11,7 @@
  */
 
 import amqp from 'amqplib';
-import { Pool, PoolClient } from 'pg';
+import { PoolClient } from 'pg';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { EventEmitter } from 'events';

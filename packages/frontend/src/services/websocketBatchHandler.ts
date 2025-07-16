@@ -194,7 +194,7 @@ export class WebSocketBatchHandler {
    * Process a batch received from the server
    */
   private processBatch(batch: { messages: BatchMessage[]; compressed?: boolean }): void {
-    let messages = batch.messages;
+    const messages = batch.messages;
 
     // Decompress if needed
     if (batch.compressed && this.config.enableCompression) {

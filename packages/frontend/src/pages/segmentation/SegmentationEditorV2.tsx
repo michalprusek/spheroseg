@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 // Use the refactored version of useSegmentationV2
 import { useSegmentationV2 } from './hooks/segmentation';
 import { EditMode } from './hooks/segmentation/types';
@@ -9,7 +9,6 @@ import { SegmentationErrorBoundary } from './components/SegmentationErrorBoundar
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import apiClient from '@/lib/apiClient';
 
 interface SegmentationEditorV2Props {
   projectId?: string;

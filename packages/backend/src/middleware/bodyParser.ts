@@ -1,5 +1,4 @@
 import express, { Express } from 'express';
-import config from '../config';
 
 /**
  * Configure and apply Express body parser middleware

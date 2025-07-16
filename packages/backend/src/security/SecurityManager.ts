@@ -8,6 +8,7 @@
 import { Application, Request, Response, NextFunction } from 'express';
 import { RateLimiterMemory, RateLimiterRedis } from 'rate-limiter-flexible';
 import Redis from 'ioredis';
+import crypto from 'crypto';
 import config from '../config';
 import logger from '../utils/logger';
 // Removed circular import - configureSecurity
@@ -264,7 +265,7 @@ export class SecurityManager {
    * Generate a cryptographically secure nonce
    */
   private generateNonce(): string {
-    return require('crypto').randomBytes(16).toString('base64');
+    return crypto.randomBytes(16).toString('base64');
   }
 
   /**

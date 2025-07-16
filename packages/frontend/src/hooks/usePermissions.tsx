@@ -10,7 +10,6 @@ import permissionService, {
   Permission,
   Role,
   PermissionCheck,
-  UserPermissions,
 } from '@/services/unifiedPermissionService';
 import { useAuth } from '@/hooks/useUnifiedAuth';
 import { createLogger } from '@/utils/logging/unifiedLogger';

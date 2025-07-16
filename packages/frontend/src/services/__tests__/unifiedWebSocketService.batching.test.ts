@@ -24,7 +24,7 @@ vi.mock('../authService', () => ({
 }));
 
 // Mock socket.io-client
-let mockSocketConnected = false;
+const mockSocketConnected = false;
 const mockSocket = {
   connected: false,
   on: vi.fn((event, handler) => {

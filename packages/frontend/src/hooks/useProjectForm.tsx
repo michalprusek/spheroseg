@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient'; // Import apiClient
 import { Project } from '@/types'; // Import Project type
-import axios, { AxiosError } from 'axios'; // Import axios
+import axios from 'axios'; // Import axios
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface UseProjectFormProps {

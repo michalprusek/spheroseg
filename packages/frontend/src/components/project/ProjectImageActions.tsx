@@ -333,14 +333,23 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           throw new Error(t('images.errors.failedToDeleteImage'));
         }
       } catch (err: unknown) {
-        let message = 'Failed to delete image';
-        if (axios.isAxiosError(err)) {
-          message = err.response?.data?.message || message;
-        } else if (err instanceof Error) {
-          message = err.message;
-        }
+        // Permission errors are already handled by the API client interceptor
+        // We just need to log the error for debugging
         console.error('Error deleting image:', err);
-        toast.error(message);
+        
+        // Only show a generic error if it's not a permission error
+        if (axios.isAxiosError(err)) {
+          const status = err.response?.status;
+          // Don't show additional errors for permission-related status codes
+          // as they're already handled by the permission error handler
+          if (status !== 403 && status !== 500 && status !== 404) {
+            const message = err.response?.data?.message || 'Failed to delete image';
+            toast.error(message);
+          }
+        } else if (err instanceof Error) {
+          // For non-axios errors, show the message
+          toast.error(err.message);
+        }
       } finally {
         setIsDeleting((prev) => ({ ...prev, [imageId]: false }));
       }
@@ -387,7 +396,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
       } else {
         // Alternativně zkusíme získat stav z fronty
         console.log(`Trying to get status from queue for image ${imageId}`);
-        const queueResponse = await apiClient.get(`/api/segmentations/queue/status/${projectId}`);
+        const queueResponse = await apiClient.get(`/api/segmentation/queue-status/${projectId}`);
 
         if (queueResponse.data) {
           // Zkontrolujeme, zda je obrázek v seznamu zpracovávaných obrázků
@@ -529,7 +538,18 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
             toast.success('Resegmentation task has been queued successfully.');
           } catch (apiErr) {
             console.error('Resegmentation API call failed:', apiErr);
-            toast.error('Failed to start resegmentation. Please try again.');
+            
+            // Permission errors are already handled by the API client interceptor
+            // Only show generic error for non-permission errors
+            if (axios.isAxiosError(apiErr)) {
+              const status = apiErr.response?.status;
+              // Don't show additional errors for permission-related status codes
+              if (status !== 403 && status !== 500 && status !== 404) {
+                toast.error('Failed to start resegmentation. Please try again.');
+              }
+            } else {
+              toast.error('Failed to start resegmentation. Please try again.');
+            }
 
             // Reset status on error
             try {
