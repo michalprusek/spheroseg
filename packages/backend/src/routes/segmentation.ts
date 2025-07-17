@@ -1176,7 +1176,7 @@ router.post(
       // Check if user has edit permission (owner or shared with 'edit' permission)
       const hasEditPermission = project.is_owner || project.permission === 'edit';
       if (!hasEditPermission) {
-        res.status(403).json({ message: 'You do not have permission to resegment images in this project' });
+        res.status(403).json({ message: "You need 'edit' or 'owner' permission to resegment images" });
         return;
       }
 

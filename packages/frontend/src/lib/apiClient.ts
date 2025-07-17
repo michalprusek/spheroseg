@@ -303,15 +303,16 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Handle permission errors with specialized handler
-    if (handlePermissionError(error)) {
-      // Permission error was handled, don't show additional error messages
-      logger.debug('Permission error handled by specialized handler');
-      return Promise.reject(error);
-    }
-
-    // Handle other forbidden errors
+    // Handle forbidden errors (403)
     if (status === 403) {
+      // First try to handle as a permission error with specialized handler
+      if (handlePermissionError(error)) {
+        // Permission error was handled, don't show additional error messages
+        logger.debug('Permission error handled by specialized handler');
+        return Promise.reject(error);
+      }
+      
+      // If not a permission error, show generic forbidden message
       handleError(error, {
         context: `API ${method} ${url}`,
         errorInfo: {

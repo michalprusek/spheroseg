@@ -48,14 +48,20 @@ export function getAssetUrl(path: string): string {
     return path;
   }
 
-  // For all other assets, use the configured assets URL
-  // Získání základní URL pro assety z proměnných prostředí
-  const assetsUrl = isDev ? '' : import.meta.env.VITE_ASSETS_URL || '';
-
-  // If we have an assets URL, use it, otherwise use a relative path
-  const url = assetsUrl ? `${assetsUrl}/${cleanPath}` : `/${cleanPath}`;
-  console.log(`Generated asset URL: ${url}`);
-  return url;
+  // For all other assets in development, use direct path
+  // In production, use the assets URL
+  if (isDev) {
+    // In development, Vite serves files from the public directory
+    const url = `/${cleanPath}`;
+    console.log(`Generated asset URL (dev): ${url}`);
+    return url;
+  } else {
+    // In production, use the configured assets URL
+    const assetsUrl = import.meta.env.VITE_ASSETS_URL || '';
+    const url = assetsUrl ? `${assetsUrl}/${cleanPath}` : `/${cleanPath}`;
+    console.log(`Generated asset URL (prod): ${url}`);
+    return url;
+  }
 }
 
 export default getAssetUrl;

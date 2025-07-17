@@ -29,6 +29,11 @@ export const i18nInitializedPromise = (async () => {
       react: {
         useSuspense: false, // Prevent suspense issues during init
       },
+      // Disable language detection to prevent unexpected switching
+      detection: {
+        order: [], // Empty array disables all detection
+        caches: [] // Don't cache detected language
+      },
     });
     logger.info(
       '[i18n] i18next initialized successfully. Loaded languages:',

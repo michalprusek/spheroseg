@@ -220,12 +220,12 @@
   "errors": {
     "permissions": {
       "viewImage": "You need at least 'viewer' permission to view this image",
-      "deleteImage": "You need 'editor' or 'owner' permission to delete images",
-      "saveSegmentation": "You need 'editor' or 'owner' permission to save segmentation results",
-      "resegmentImage": "You need 'editor' or 'owner' permission to resegment images",
-      "editSegmentation": "You need 'editor' or 'owner' permission to edit segmentation",
+      "deleteImage": "You need 'edit' or 'owner' permission to delete images",
+      "saveSegmentation": "You need 'edit' or 'owner' permission to save segmentation results",
+      "resegmentImage": "You need 'edit' or 'owner' permission to resegment images",
+      "editSegmentation": "You need 'edit' or 'owner' permission to edit segmentation",
       "exportData": "You need at least 'viewer' permission to export data",
-      "uploadImage": "You need 'editor' or 'owner' permission to upload images",
+      "uploadImage": "You need 'edit' or 'owner' permission to upload images",
       "createProject": "You need to be logged in to create projects",
       "editProject": "You need 'owner' permission to edit project settings",
       "deleteProject": "You need 'owner' permission to delete projects",

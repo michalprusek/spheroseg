@@ -70,7 +70,7 @@ export async function deleteImage(
     // Check if user has edit permission (owner or shared with 'edit' permission)
     const hasEditPermission = project.is_owner || project.permission === 'edit';
     if (!hasEditPermission) {
-      throw new ApiError('You do not have permission to delete images in this project', 403);
+      throw new ApiError("You need 'edit' or 'owner' permission to delete images", 403);
     }
     
     // Get image data

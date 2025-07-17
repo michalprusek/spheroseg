@@ -149,12 +149,6 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
-        // Static assets
-        '/assets/illustrations': {
-          target: apiUrl,
-          changeOrigin: true,
-          secure: false,
-        },
       },
       host: '0.0.0.0', // Allow access from any host
       port: 3000,
@@ -168,6 +162,7 @@ export default defineConfig(({ mode }) => {
       hmr: isDevelopment ? {
         port: 3000,
         host: 'localhost',
+        protocol: 'ws', // Use ws:// in development to avoid SSL issues
       } : {
         // Production HMR through HTTPS
         clientPort: 443,

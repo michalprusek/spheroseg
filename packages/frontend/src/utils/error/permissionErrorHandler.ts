@@ -113,12 +113,12 @@ function getPermissionMessage(operation: ProtectedOperation): string {
 function getFallbackMessage(operation: ProtectedOperation): string {
   const fallbackMessages: Record<ProtectedOperation, string> = {
     [ProtectedOperation.VIEW_IMAGE]: "You need at least 'viewer' permission to view this image",
-    [ProtectedOperation.DELETE_IMAGE]: "You need 'editor' or 'owner' permission to delete images",
-    [ProtectedOperation.SAVE_SEGMENTATION]: "You need 'editor' or 'owner' permission to save segmentation results",
-    [ProtectedOperation.RESEGMENT_IMAGE]: "You need 'editor' or 'owner' permission to resegment images",
-    [ProtectedOperation.EDIT_SEGMENTATION]: "You need 'editor' or 'owner' permission to edit segmentation",
+    [ProtectedOperation.DELETE_IMAGE]: "You need 'edit' or 'owner' permission to delete images",
+    [ProtectedOperation.SAVE_SEGMENTATION]: "You need 'edit' or 'owner' permission to save segmentation results",
+    [ProtectedOperation.RESEGMENT_IMAGE]: "You need 'edit' or 'owner' permission to resegment images",
+    [ProtectedOperation.EDIT_SEGMENTATION]: "You need 'edit' or 'owner' permission to edit segmentation",
     [ProtectedOperation.EXPORT_DATA]: "You need at least 'viewer' permission to export data",
-    [ProtectedOperation.UPLOAD_IMAGE]: "You need 'editor' or 'owner' permission to upload images",
+    [ProtectedOperation.UPLOAD_IMAGE]: "You need 'edit' or 'owner' permission to upload images",
     [ProtectedOperation.CREATE_PROJECT]: "You need to be logged in to create projects",
     [ProtectedOperation.EDIT_PROJECT]: "You need 'owner' permission to edit project settings",
     [ProtectedOperation.DELETE_PROJECT]: "You need 'owner' permission to delete projects",
@@ -379,9 +379,9 @@ export function hasPermission(userRole: string, operation: ProtectedOperation): 
   // Owner has all permissions
   if (userRole === 'owner') return true;
 
-  // Editor permissions
-  if (userRole === 'editor') {
-    const editorAllowed = [
+  // Edit permissions
+  if (userRole === 'edit') {
+    const editAllowed = [
       ProtectedOperation.VIEW_IMAGE,
       ProtectedOperation.DELETE_IMAGE,
       ProtectedOperation.SAVE_SEGMENTATION,
@@ -390,7 +390,7 @@ export function hasPermission(userRole: string, operation: ProtectedOperation): 
       ProtectedOperation.UPLOAD_IMAGE,
       ProtectedOperation.EXPORT_DATA,
     ];
-    return editorAllowed.includes(operation);
+    return editAllowed.includes(operation);
   }
 
   // Viewer permissions (read-only)

@@ -553,7 +553,7 @@ router.put(
       // Check if user has edit permission (owner or shared with 'edit' permission)
       const hasEditPermission = project.is_owner || project.permission === 'edit';
       if (!hasEditPermission) {
-        return res.status(403).json({ message: 'You do not have permission to update this project' });
+        return res.status(403).json({ message: "You need 'edit' or 'owner' permission to update this project" });
       }
 
       // Update the project

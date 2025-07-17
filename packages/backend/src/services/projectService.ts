@@ -590,7 +590,7 @@ export async function deleteProject(
           userId,
           actualOwnerId: projectExists.rows[0].user_id,
         });
-        throw new ApiError('You do not have permission to delete this project', 403);
+        throw new ApiError("You need to be the project owner to delete this project", 403);
       }
     } catch (err) {
       if (err instanceof ApiError) {

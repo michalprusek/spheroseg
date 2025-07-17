@@ -546,7 +546,7 @@ router.post(
       const hasEditPermission = project.is_owner || project.permission === 'edit';
       if (!hasEditPermission) {
         if (files) files.forEach((file) => allUploadedFilePaths.push(file.path));
-        next(new ApiError('You do not have permission to upload images to this project', 403));
+        next(new ApiError("You need 'edit' or 'owner' permission to upload images", 403));
         return;
       }
 
