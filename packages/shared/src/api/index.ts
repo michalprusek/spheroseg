@@ -14,6 +14,9 @@ export { UnifiedResponseHandler } from './responseHandler';
 // Export all schemas
 export * from './schemas';
 
+// Export entity schemas
+export * from './entitySchemas';
+
 // Re-export commonly used items for convenience
 export { 
   UnifiedResponseHandler as ResponseHandler,
