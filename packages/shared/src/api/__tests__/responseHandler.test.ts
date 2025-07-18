@@ -259,7 +259,7 @@ describe('UnifiedResponseHandler', () => {
         success: true,
         data: { id: '123' },
       };
-      const error: ApiErrorResponse = {
+      const _error: ApiErrorResponse = {
         success: false,
         data: null,
         message: 'Error',

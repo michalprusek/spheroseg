@@ -3,7 +3,7 @@ import {
   UserSchema,
   ProjectSchema,
   ImageSchema,
-  SegmentationResultSchema,
+  SegmentationResultSchema as _SegmentationResultSchema,
   CellSchema,
   BatchDeleteRequestSchema,
   SearchQuerySchema,
