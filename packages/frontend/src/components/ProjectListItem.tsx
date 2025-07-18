@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -26,7 +26,7 @@ interface ProjectListItemProps {
   ownerEmail?: string;
 }
 
-const ProjectListItem = ({
+const ProjectListItemComponent = ({
   id,
   title,
   description,
@@ -116,5 +116,19 @@ const ProjectListItem = ({
     </Card>
   );
 };
+
+const ProjectListItem = React.memo(ProjectListItemComponent, (prevProps, nextProps) => {
+  // Custom comparison - only re-render if key data changes
+  return (
+    prevProps.id === nextProps.id &&
+    prevProps.title === nextProps.title &&
+    prevProps.description === nextProps.description &&
+    prevProps.thumbnailUrl === nextProps.thumbnailUrl &&
+    prevProps.date === nextProps.date &&
+    prevProps.imageCount === nextProps.imageCount &&
+    prevProps.isOwner === nextProps.isOwner &&
+    prevProps.permission === nextProps.permission
+  );
+});
 
 export default ProjectListItem;

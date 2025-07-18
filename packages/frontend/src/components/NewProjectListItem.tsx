@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -6,7 +7,7 @@ interface NewProjectListItemProps {
   onClick: () => void;
 }
 
-const NewProjectListItem = ({ onClick }: NewProjectListItemProps) => {
+const NewProjectListItemComponent = ({ onClick }: NewProjectListItemProps) => {
   const { t } = useLanguage();
 
   return (
@@ -26,5 +27,8 @@ const NewProjectListItem = ({ onClick }: NewProjectListItemProps) => {
     </Card>
   );
 };
+
+// Memoize since this component rarely changes
+const NewProjectListItem = React.memo(NewProjectListItemComponent);
 
 export default NewProjectListItem;

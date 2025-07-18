@@ -28,7 +28,7 @@ interface ImageDisplayProps {
   viewMode?: 'grid' | 'list';
 }
 
-export const ImageDisplay = ({
+const ImageDisplayComponent = ({
   image,
   onDelete,
   onOpen,
@@ -628,3 +628,17 @@ export const ImageDisplay = ({
     </motion.div>
   );
 };
+
+// Memoize the component to prevent unnecessary re-renders
+export const ImageDisplay = React.memo(ImageDisplayComponent, (prevProps, nextProps) => {
+  // Custom comparison - re-render only if key data changes
+  return (
+    prevProps.image.id === nextProps.image.id &&
+    prevProps.image.url === nextProps.image.url &&
+    prevProps.image.thumbnail_url === nextProps.image.thumbnail_url &&
+    prevProps.image.segmentationStatus === nextProps.image.segmentationStatus &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.selectionMode === nextProps.selectionMode &&
+    prevProps.viewMode === nextProps.viewMode
+  );
+});

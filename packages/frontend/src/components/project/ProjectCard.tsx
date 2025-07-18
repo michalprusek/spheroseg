@@ -30,7 +30,7 @@ interface ProjectCardProps {
   onProjectDuplicated: (project: { id: string; name: string }) => void;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, onProjectDeleted, onProjectDuplicated }) => {
+const ProjectCardComponent: React.FC<ProjectCardProps> = ({ project, onProjectDeleted, onProjectDuplicated }) => {
   const { t } = useLanguage();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
@@ -150,5 +150,19 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onProjectDeleted, on
     </Card>
   );
 };
+
+const ProjectCard = React.memo(ProjectCardComponent, (prevProps, nextProps) => {
+  // Custom comparison function - only re-render if key project data changes
+  return (
+    prevProps.project.id === nextProps.project.id &&
+    prevProps.project.name === nextProps.project.name &&
+    prevProps.project.description === nextProps.project.description &&
+    prevProps.project.updated_at === nextProps.project.updated_at &&
+    prevProps.project.image_count === nextProps.project.image_count &&
+    prevProps.project.thumbnail_url === nextProps.project.thumbnail_url &&
+    prevProps.project.is_owner === nextProps.project.is_owner &&
+    prevProps.project.permission === nextProps.project.permission
+  );
+});
 
 export default ProjectCard;
