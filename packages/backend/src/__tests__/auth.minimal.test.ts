@@ -7,6 +7,7 @@
 
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { createMockQueryResult, MockedQuery } from './types/mocks';
 
 // Mock the database
 jest.mock('../db', () => ({
@@ -30,7 +31,7 @@ jest.mock('../config', () => ({
 }));
 
 import db from '../db';
-const mockQuery = (db as jest.Mocked<typeof db>).query;
+const mockQuery = (db as jest.Mocked<typeof db>).query as MockedQuery;
 
 describe('Authentication Service', () => {
   beforeEach(() => {
@@ -90,7 +91,7 @@ describe('Authentication Service', () => {
         password_hash: 'hashed_password',
       };
 
-      mockQuery.mockResolvedValueOnce({ rows: [mockUser] });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser]));
 
       const result = await mockQuery('SELECT * FROM users WHERE email = $1', ['test@example.com']);
 

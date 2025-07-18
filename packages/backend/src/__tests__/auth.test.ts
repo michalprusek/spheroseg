@@ -9,6 +9,7 @@ import app from '../app';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import db from '../db';
+import { createMockQueryResult, MockedQuery, MockedBcryptCompare, MockedBcryptHash } from './types/mocks';
 
 // Mock database queries
 jest.mock('../db', () => {
@@ -30,8 +31,9 @@ jest.mock('bcryptjs', () => ({
 
 // Get the mocked functions
 import bcryptjs from 'bcryptjs';
-const mockQuery = (db as jest.Mocked<typeof db>).query;
-const mockBcrypt = bcryptjs as jest.Mocked<typeof bcryptjs>;
+const mockQuery = (db as jest.Mocked<typeof db>).query as MockedQuery;
+const mockCompare = bcryptjs.compare as MockedBcryptCompare;
+const mockHash = bcryptjs.hash as MockedBcryptHash;
 
 describe('Authentication Endpoints', () => {
   // Clear mock calls before each test
@@ -58,7 +60,7 @@ describe('Authentication Endpoints', () => {
 
     it('should return 401 if user not found', async () => {
       // Mock query to return empty result
-      mockQuery.mockResolvedValueOnce({ rows: [] });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([]));
 
       const response = await request(app)
         .post('/api/auth/login')
@@ -71,18 +73,16 @@ describe('Authentication Endpoints', () => {
 
     it('should return 401 if password is incorrect', async () => {
       // Mock user found but password check fails
-      mockQuery.mockResolvedValueOnce({
-        rows: [
-          {
-            id: '123',
-            email: 'test@example.com',
-            password_hash: 'hashedPasswordInvalid',
-          },
-        ],
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([
+        {
+          id: '123',
+          email: 'test@example.com',
+          password_hash: 'hashedPasswordInvalid',
+        },
+      ]));
 
       // Mock bcrypt.compare to return false (password doesn't match)
-      mockBcrypt.compare.mockResolvedValueOnce(false);
+      mockCompare.mockResolvedValueOnce(false);
 
       const response = await request(app)
         .post('/api/auth/login')
@@ -106,7 +106,7 @@ describe('Authentication Endpoints', () => {
       });
 
       // Mock bcrypt.compare to return true (password matches)
-      mockBcrypt.compare.mockResolvedValueOnce(true);
+      mockCompare.mockResolvedValueOnce(true);
 
       const response = await request(app)
         .post('/api/auth/login')
@@ -116,7 +116,7 @@ describe('Authentication Endpoints', () => {
       expect(response.body).toHaveProperty('token');
       expect(response.body).toHaveProperty('refreshToken');
       expect(mockQuery).toHaveBeenCalled();
-      expect(mockBcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword');
+      expect(mockCompare).toHaveBeenCalledWith('password123', 'hashedPassword');
     });
   });
 
@@ -162,7 +162,7 @@ describe('Authentication Endpoints', () => {
         .mockResolvedValueOnce({});
 
       // Mock bcrypt.hash for password
-      mockBcrypt.hash.mockResolvedValueOnce('hashedPassword');
+      mockHash.mockResolvedValueOnce('hashedPassword');
 
       const response = await request(app).post('/api/auth/register').send({
         email: 'new@example.com',
@@ -173,7 +173,7 @@ describe('Authentication Endpoints', () => {
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('token');
       expect(response.body).toHaveProperty('refreshToken');
-      expect(mockBcrypt.hash).toHaveBeenCalledWith('password123', expect.any(Number));
+      expect(mockHash).toHaveBeenCalledWith('password123', expect.any(Number));
     });
   });
 

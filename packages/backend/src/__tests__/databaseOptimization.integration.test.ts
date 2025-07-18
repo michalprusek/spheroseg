@@ -5,40 +5,37 @@
  * advanced caching, query optimization, and performance monitoring
  */
 
-import { Pool } from 'pg';
+import { Pool, PoolClient, QueryResult } from 'pg';
 import DatabaseOptimizationService from '../services/databaseOptimizationService';
 import AdvancedCacheService from '../services/advancedCacheService';
 import OptimizedQueryService from '../services/optimizedQueryService';
 import { jest } from '@jest/globals';
+import { createMockQueryResult } from './types/mocks';
 
 // Mock dependencies
 jest.mock('../utils/logger');
 
 describe('Database Optimization Integration', () => {
-  let pool: Pool;
+  let pool: jest.Mocked<Pool>;
   let optimizationService: DatabaseOptimizationService;
-  let mockQueryResult: any;
+  let mockQueryResult: QueryResult<any>;
 
   beforeEach(() => {
     // Mock Pool
-    mockQueryResult = {
-      rows: [],
-      rowCount: 0,
-      command: '',
-      oid: 0,
-      fields: [],
+    mockQueryResult = createMockQueryResult([]);
+
+    const mockClient: Partial<PoolClient> = {
+      query: jest.fn().mockResolvedValue(mockQueryResult),
+      release: jest.fn(),
     };
 
     pool = {
       query: jest.fn().mockResolvedValue(mockQueryResult),
-      connect: jest.fn().mockResolvedValue({
-        query: jest.fn().mockResolvedValue(mockQueryResult),
-        release: jest.fn(),
-      }),
+      connect: jest.fn().mockResolvedValue(mockClient as PoolClient),
       totalCount: 10,
       idleCount: 5,
       waitingCount: 0,
-    } as any;
+    } as unknown as jest.Mocked<Pool>;
 
     optimizationService = new DatabaseOptimizationService(pool, {
       enableQueryCache: true,

@@ -114,6 +114,13 @@ yarn.lock.bak
 .eslintcache
 .stylelintcache
 
+# TypeScript build artifacts
+*.tsbuildinfo
+packages/types/src/*.js
+packages/types/src/*.js.map
+packages/types/src/*.d.ts
+!packages/types/src/index.d.ts
+
 # OS generated files
 .DS_Store
 .DS_Store?
