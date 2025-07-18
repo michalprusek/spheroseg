@@ -4,7 +4,6 @@ import path from 'path';
 import { ChildProcess, spawn } from 'child_process';
 import EventEmitter from 'events';
 import { TaskQueue, Task } from '../taskQueueService';
-import config from '../../config';
 
 // Mock dependencies
 jest.mock('fs');

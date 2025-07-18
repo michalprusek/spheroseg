@@ -13,7 +13,6 @@ import { Request, Response, NextFunction } from 'express';
 import { Socket } from 'socket.io';
 import tokenService, { TokenType } from '../../services/tokenService';
 import pool from '../../db';
-import config from '../../config';
 import logger from '../../utils/logger';
 
 // =============================================================================

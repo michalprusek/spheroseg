@@ -7,7 +7,6 @@
 
 import Redis from 'ioredis';
 import logger from '../utils/logger';
-import config from '../config';
 
 // Cache key prefixes for different data types
 const CACHE_PREFIXES = {

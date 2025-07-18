@@ -8,8 +8,7 @@ import { authenticate as authMiddleware, AuthenticatedRequest } from '../securit
 import logger from '../utils/logger';
 import pool from '../db';
 import { v4 as uuidv4 } from 'uuid';
-import config from '../config';
-import tokenService, { TokenType } from '../services/tokenService';
+import tokenService from '../services/tokenService';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
 
 const router: Router = express.Router();
@@ -297,7 +296,7 @@ router.get(
  */
 // POST /api/users/register - Register a new user
 router.post('/register', async (req: Request, res: Response) => {
-  const { email, password, name } = req.body;
+  const { email, password: _password, name } = req.body;
 
   try {
     logger.info('User registration attempt', { email });
@@ -418,7 +417,7 @@ router.post('/register', async (req: Request, res: Response) => {
  */
 // POST /api/users/login - Login with email/password
 router.post('/login', async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password: _password } = req.body;
 
   try {
     logger.info('Login attempt', { email });

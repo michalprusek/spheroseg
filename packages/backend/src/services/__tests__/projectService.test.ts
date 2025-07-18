@@ -2,10 +2,8 @@
  * Tests for the Project Service
  */
 import fs from 'fs';
-import path from 'path';
 import { Pool } from 'pg';
 import projectService from '../projectService';
-import config from '../../config';
 import { ApiError } from '../../utils/errors';
 
 // Mock the database pool

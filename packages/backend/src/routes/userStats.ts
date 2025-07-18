@@ -1,7 +1,6 @@
 import express, { Response, Router } from 'express';
 import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import { userStatsLimiter } from '../security/middleware/rateLimitMiddleware';
-import userStatsService from '../services/userStatsService';
 import { userStatsServiceOptimized } from '../services/userStatsServiceOptimized';
 import pool from '../db';
 import logger from '../utils/logger';
