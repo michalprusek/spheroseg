@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import * as logsController from '../logs';
-import { ApiError } from '../../utils/errors';
 import logger from '../../utils/logger';
 
 // Mock the unified logger

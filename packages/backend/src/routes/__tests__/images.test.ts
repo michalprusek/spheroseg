@@ -4,7 +4,6 @@ import request from 'supertest';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
-import { QueryResult, QueryResultRow, QueryConfig, QueryConfigValues } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock fs module
@@ -13,7 +12,7 @@ jest.mock('fs', () => ({
   mkdirSync: jest.fn(),
   unlinkSync: jest.fn(),
   writeFileSync: jest.fn(),
-  createReadStream: jest.fn().mockImplementation((filePath) => {
+  createReadStream: jest.fn().mockImplementation((_filePath) => {
     // More realistic stream mock for supertest/superagent
     const stream = {
       pipe: jest.fn((destination) => {
@@ -66,7 +65,7 @@ jest.mock('multer', () => {
   // This is the function multer() returns
   const multerInstance = {
     // Mock the .array() method
-    array: (fieldName: string, maxCount?: number) => {
+    array: (fieldName: string, _maxCount?: number) => {
       // Return the Express middleware function
       return (req: any, res: any, next: () => void) => {
         // Check if supertest is sending a file

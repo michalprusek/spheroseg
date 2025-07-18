@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import * as metricsController from '../metricsRoutes';
 import * as metricsService from '../../services/metricsService';
-import { ApiError } from '../../utils/errors';
 
 // Mock services
 jest.mock('../../services/metricsService');

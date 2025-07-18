@@ -3,7 +3,7 @@
  */
 
 import { SecurityManager } from '../SecurityManager';
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import request from 'supertest';
 
 describe('SecurityManager', () => {
@@ -108,14 +108,14 @@ describe('SecurityManager', () => {
     });
 
     it('should detect SQL injection attempts', async () => {
-      const response = await request(app).get("/test?search=' OR 1=1--");
+      await request(app).get("/test?search=' OR 1=1--");
 
       const metrics = securityManager.getMetrics();
       expect(metrics.suspiciousActivities).toBeGreaterThan(0);
     });
 
     it('should detect XSS attempts', async () => {
-      const response = await request(app)
+      await request(app)
         .post('/test')
         .send({ data: '<script>alert("xss")</script>' });
 
