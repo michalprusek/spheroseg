@@ -5,29 +5,13 @@ import { LanguageProvider, useLanguage, Language } from '../../LanguageContext';
 import '@testing-library/jest-dom';
 
 // Mock modules before importing them
-vi.mock('i18next');
 vi.mock('@/lib/apiClient');
 vi.mock('@/services/userProfileService');
 vi.mock('@/i18n');
 
-import i18next from 'i18next';
 import apiClient from '@/lib/apiClient';
-
-// Mock i18n module with initialization promise
-vi.mock('@/i18n', () => ({
-  i18nInitializedPromise: Promise.resolve({
-    language: 'en',
-    changeLanguage: vi.fn().mockResolvedValue(undefined),
-    t: vi.fn((key) => key),
-    isInitialized: true,
-  }),
-  default: {
-    language: 'en',
-    changeLanguage: vi.fn().mockResolvedValue(undefined),
-    t: vi.fn((key) => key),
-    isInitialized: true,
-  },
-}));
+import i18next from 'i18next';
+import i18n from '@/i18n';
 
 // Mock translations with nested structures and plurals
 vi.mock('@/translations/en', () => ({
@@ -82,41 +66,77 @@ vi.mock('@/translations/es', () => ({ default: { hello: 'Hello', greeting: { wel
 vi.mock('@/translations/fr', () => ({ default: { hello: 'Hello', greeting: { welcome: 'Welcome' } } }));
 vi.mock('@/translations/zh', () => ({ default: { hello: 'Hello', greeting: { welcome: 'Welcome' } } }));
 
+// Store current language and translation data globally
+let currentLanguage = 'en';
+const translationData = {
+  en: {
+    hello: 'Hello',
+    'greeting.welcome': 'Welcome',
+    'greeting.morning': 'Good morning',
+    'greeting.evening': 'Good evening',
+    'items.zero': 'No items',
+    'items.one': 'One item',
+    'items.other': '{{count}} items',
+    params: 'Hello, {{name}}! Today is {{date, date}}',
+    'nested.deeply.key': 'Deeply nested key',
+  },
+  cs: {
+    hello: 'Ahoj',
+    'greeting.welcome': 'Vítejte',
+    'greeting.morning': 'Dobré ráno',
+    'greeting.evening': 'Dobrý večer',
+    'items.zero': 'Žádné položky',
+    'items.one': 'Jedna položka',
+    'items.few': '{{count}} položky',
+    'items.many': '{{count}} položek',
+    'items.other': '{{count}} položek',
+    params: 'Ahoj, {{name}}! Dnes je {{date, date}}',
+    'nested.deeply.key': 'Hluboce vnořený klíč',
+  },
+  de: { hello: 'Hallo', 'greeting.welcome': 'Willkommen' },
+  es: { hello: 'Hola', 'greeting.welcome': 'Bienvenido' },
+  fr: { hello: 'Bonjour', 'greeting.welcome': 'Bienvenue' },
+  zh: { hello: '你好', 'greeting.welcome': '欢迎' },
+};
+
+// Create mock t function
+const mockT = vi.fn().mockImplementation((key, options, fallback) => {
+  // Handle null/undefined keys
+  if (!key) return key;
+  
+  const langs = translationData[currentLanguage] || translationData.en;
+
+  // Handle parameters in translation strings
+  if (langs[key] && options) {
+    let translated = langs[key];
+    if (typeof translated === 'string') {
+      Object.entries(options).forEach(([paramKey, paramValue]) => {
+        // Skip i18next internal options (they start with underscore)
+        if (!paramKey.startsWith('_')) {
+          const regex = new RegExp(`{{${paramKey}}}`, 'g');
+          translated = translated.replace(regex, String(paramValue));
+
+          // Simple date format simulation
+          const dateRegex = new RegExp(`{{${paramKey}, date}}`, 'g');
+          if (paramValue instanceof Date && dateRegex.test(translated)) {
+            translated = translated.replace(dateRegex, paramValue.toLocaleDateString());
+          }
+        }
+      });
+      return translated;
+    }
+  }
+
+  // Return the translation, fallback, or key
+  if (langs[key]) return langs[key];
+  // Handle both the fallback parameter and options.defaultValue
+  if (fallback) return fallback;
+  if (options?.defaultValue) return options.defaultValue;
+  return key;
+});
+
 // Mock i18next with more detailed behavior
 vi.mock('i18next', () => {
-  // Store current language and translation data
-  let currentLanguage = 'en';
-  const translationData = {
-    en: {
-      hello: 'Hello',
-      'greeting.welcome': 'Welcome',
-      'greeting.morning': 'Good morning',
-      'greeting.evening': 'Good evening',
-      'items.zero': 'No items',
-      'items.one': 'One item',
-      'items.other': '{{count}} items',
-      params: 'Hello, {{name}}! Today is {{date, date}}',
-      'nested.deeply.key': 'Deeply nested key',
-    },
-    cs: {
-      hello: 'Ahoj',
-      'greeting.welcome': 'Vítejte',
-      'greeting.morning': 'Dobré ráno',
-      'greeting.evening': 'Dobrý večer',
-      'items.zero': 'Žádné položky',
-      'items.one': 'Jedna položka',
-      'items.few': '{{count}} položky',
-      'items.many': '{{count}} položek',
-      'items.other': '{{count}} položek',
-      params: 'Ahoj, {{name}}! Dnes je {{date, date}}',
-      'nested.deeply.key': 'Hluboce vnořený klíč',
-    },
-    de: { hello: 'Hallo', 'greeting.welcome': 'Willkommen' },
-    es: { hello: 'Hola', 'greeting.welcome': 'Bienvenido' },
-    fr: { hello: 'Bonjour', 'greeting.welcome': 'Bienvenue' },
-    zh: { hello: '你好', 'greeting.welcome': '欢迎' },
-  };
-
   return {
     default: {
       init: vi.fn(),
@@ -124,35 +144,7 @@ vi.mock('i18next', () => {
         currentLanguage = lang;
         return Promise.resolve();
       }),
-      t: vi.fn().mockImplementation((key, options) => {
-        const langs = translationData[currentLanguage] || translationData.en;
-
-        // Handle parameters in translation strings
-        if (langs[key] && options) {
-          let translated = langs[key];
-          if (typeof translated === 'string') {
-            Object.entries(options).forEach(([paramKey, paramValue]) => {
-              // Skip i18next internal options (they start with underscore)
-              if (!paramKey.startsWith('_')) {
-                const regex = new RegExp(`{{${paramKey}}}`, 'g');
-                translated = translated.replace(regex, String(paramValue));
-
-                // Simple date format simulation
-                const dateRegex = new RegExp(`{{${paramKey}, date}}`, 'g');
-                if (paramValue instanceof Date && dateRegex.test(translated)) {
-                  translated = translated.replace(dateRegex, paramValue.toLocaleDateString());
-                }
-              }
-            });
-            return translated;
-          }
-        }
-
-        // Return the translation, fallback, or key
-        if (langs[key]) return langs[key];
-        if (options?.defaultValue) return options.defaultValue;
-        return key;
-      }),
+      t: mockT,
       get language() {
         return currentLanguage;
       },
@@ -167,6 +159,26 @@ vi.mock('i18next', () => {
         },
       },
     },
+  };
+});
+
+// Mock i18n module to use the same t function
+vi.mock('@/i18n', () => {
+  const mockI18n = {
+    get language() {
+      return currentLanguage;
+    },
+    changeLanguage: vi.fn().mockImplementation(async (lang) => {
+      currentLanguage = lang;
+      return Promise.resolve();
+    }),
+    t: mockT,
+    isInitialized: true,
+  };
+  
+  return {
+    i18nInitializedPromise: Promise.resolve(mockI18n),
+    default: mockI18n,
   };
 });
 
