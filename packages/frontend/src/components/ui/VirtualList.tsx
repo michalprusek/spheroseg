@@ -17,7 +17,7 @@ interface VirtualListProps<T> {
  * Renders only visible items to handle thousands of items efficiently
  */
 export const VirtualList = memo(
-  <T extends any>({
+  <T,>({
     items,
     height,
     itemHeight,

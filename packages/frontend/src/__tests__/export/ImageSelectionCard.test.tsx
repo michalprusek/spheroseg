@@ -64,7 +64,7 @@ vi.mock('lucide-react', () => ({
 
 // Mock date utils
 vi.mock('@/utils/dateUtils', () => ({
-  safeFormatDate: (date: any) => 'mocked-date',
+  safeFormatDate: (_date: any) => 'mocked-date',
 }));
 
 // Mock types
