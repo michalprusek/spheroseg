@@ -54,7 +54,7 @@ interface CacheMetrics {
 }
 
 class AdvancedCacheService {
-  private memoryCache = new Map<string, CacheItem<any>>();
+  private memoryCache = new Map<string, CacheItem<unknown>>();
   private redis: Redis | null = null;
   private isRedisConnected = false;
   private metrics: CacheMetrics = {

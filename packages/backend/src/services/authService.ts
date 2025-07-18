@@ -8,6 +8,48 @@ import tokenService from './tokenService';
 import { sendPasswordReset } from './emailService';
 import config from '../config';
 
+// Response type interfaces
+interface RegisterResponse {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    created_at: Date;
+  };
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+}
+
+interface LoginResponse {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    created_at: Date;
+    updated_at: Date;
+    [key: string]: unknown; // For profile data
+  };
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+}
+
+interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+}
+
+interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+  created_at: Date;
+  updated_at: Date;
+  [key: string]: unknown; // For profile data
+}
+
 class AuthService {
   /**
    * Registers a new user.
@@ -22,7 +64,7 @@ class AuthService {
     password: string,
     name?: string,
     preferred_language?: string
-  ): Promise<any> {
+  ): Promise<RegisterResponse> {
     logger.info('Processing user registration request', { email });
 
     let client;
@@ -124,7 +166,11 @@ class AuthService {
    * @param remember_me Whether to remember the user (longer token expiry)
    * @returns User object and tokens
    */
-  public async loginUser(email: string, password: string, remember_me?: boolean): Promise<any> {
+  public async loginUser(
+    email: string,
+    password: string,
+    remember_me?: boolean
+  ): Promise<LoginResponse> {
     logger.info('Processing login request', { email });
 
     const client = await db.getPool().connect();
@@ -219,7 +265,7 @@ class AuthService {
    * @param refreshToken The refresh token
    * @returns New access token and refresh token
    */
-  public async refreshAccessToken(refreshToken: string): Promise<any> {
+  public async refreshAccessToken(refreshToken: string): Promise<RefreshTokenResponse> {
     logger.info('Processing token refresh request');
 
     try {
@@ -481,8 +527,11 @@ class AuthService {
           [email]
         );
         hasAccessRequest = accessRequestResult.rows.length > 0;
-      } catch (accessRequestError: any) {
-        if (accessRequestError.code === '42P01') {
+      } catch (accessRequestError) {
+        if (
+          accessRequestError instanceof Error &&
+          (accessRequestError as { code?: string }).code === '42P01'
+        ) {
           logger.debug('access_requests table does not exist, skipping check', { email });
         } else {
           logger.warn('Error checking access_requests table', { error: accessRequestError, email });
@@ -507,7 +556,7 @@ class AuthService {
    * @param userId The ID of the authenticated user
    * @returns User data including profile information
    */
-  public async getCurrentUser(userId: string): Promise<any> {
+  public async getCurrentUser(userId: string): Promise<UserResponse> {
     if (!userId) {
       throw new ApiError('User ID is required', 400);
     }
