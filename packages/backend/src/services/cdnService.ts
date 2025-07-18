@@ -1,9 +1,16 @@
 import crypto from 'crypto';
-import AWS from 'aws-sdk';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import logger from '../utils/logger';
 import { cdnConfig, getCDNUrl, getCacheControl } from '../config/cdn.config';
+
+// Optional AWS SDK import for CloudFront features
+let AWS: any;
+try {
+  AWS = require('aws-sdk');
+} catch (error) {
+  logger.warn('AWS SDK not installed, CloudFront features will be disabled');
+}
 
 export interface CDNService {
   getUrl(path: string, options?: UrlOptions): string;
@@ -49,17 +56,19 @@ abstract class BaseCDNService implements CDNService {
 
 // CloudFront CDN Service
 class CloudFrontService extends BaseCDNService {
-  private cloudfront: AWS.CloudFront;
-  private s3: AWS.S3;
+  private cloudfront: any;
+  private s3: any;
 
   constructor() {
     super();
-    this.cloudfront = new AWS.CloudFront({
-      region: process.env.AWS_REGION || 'us-east-1',
-    });
-    this.s3 = new AWS.S3({
-      region: process.env.AWS_REGION || 'us-east-1',
-    });
+    if (AWS) {
+      this.cloudfront = new AWS.CloudFront({
+        region: process.env.AWS_REGION || 'us-east-1',
+      });
+      this.s3 = new AWS.S3({
+        region: process.env.AWS_REGION || 'us-east-1',
+      });
+    }
   }
 
   getUrl(path: string, options?: UrlOptions): string {
@@ -77,6 +86,10 @@ class CloudFrontService extends BaseCDNService {
   async getSignedUrl(path: string, expiresIn?: number): Promise<string> {
     if (!cdnConfig.cloudfront) {
       throw new Error('CloudFront configuration missing');
+    }
+
+    if (!AWS) {
+      throw new Error('AWS SDK not installed, CloudFront signed URLs are not available');
     }
 
     const url = getCDNUrl(path);
@@ -110,8 +123,12 @@ class CloudFrontService extends BaseCDNService {
       throw new Error('CloudFront configuration missing');
     }
 
+    if (!AWS) {
+      throw new Error('AWS SDK not installed, CloudFront invalidation is not available');
+    }
+
     try {
-      const params: AWS.CloudFront.CreateInvalidationRequest = {
+      const params: any = {
         DistributionId: cdnConfig.cloudfront.distributionId,
         InvalidationBatch: {
           CallerReference: `spheroseg-${Date.now()}`,
@@ -132,6 +149,10 @@ class CloudFrontService extends BaseCDNService {
   }
 
   async uploadFile(localPath: string, cdnPath: string): Promise<string> {
+    if (!AWS) {
+      throw new Error('AWS SDK not installed, S3 upload is not available');
+    }
+    
     // Upload to S3 bucket that CloudFront uses as origin
     const bucketName = process.env.CDN_S3_BUCKET;
     if (!bucketName) {
@@ -141,7 +162,7 @@ class CloudFrontService extends BaseCDNService {
     const fileContent = fs.readFileSync(localPath);
     const contentType = this.getContentType(cdnPath);
 
-    const params: AWS.S3.PutObjectRequest = {
+    const params: any = {
       Bucket: bucketName,
       Key: cdnPath,
       Body: fileContent,
