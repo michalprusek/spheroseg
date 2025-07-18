@@ -78,7 +78,7 @@ const _triggerBatchSchema = z.object({
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/images/:id/segmentation',
   authMiddleware,
@@ -241,7 +241,7 @@ const triggerSingleWithPrioritySchema = z.object({
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.post(
   '/images/:id/segmentation',
   authMiddleware,
@@ -531,7 +531,7 @@ const authOrInternalMiddleware = async (
 
 // PUT /api/images/:id/segmentation - Update segmentation result (e.g., after manual edit or completion)
 // This might be called by the segmentation service itself upon completion, or by the frontend after editing.
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.put(
   '/images/:id/segmentation',
   authOrInternalMiddleware,
@@ -826,7 +826,7 @@ router.put(
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.post(
   '/projects/:projectId/segmentation/batch-trigger',
   authMiddleware,
@@ -916,7 +916,7 @@ router.post(
 );
 
 // GET /api/segmentation/queue - Get current segmentation queue status
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/queue',
   authMiddleware,
@@ -941,7 +941,7 @@ router.get(
 );
 
 // GET /api/queue-status/:projectId - Get segmentation queue status for a specific project
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/queue-status/:projectId',
   authMiddleware,
@@ -1037,7 +1037,7 @@ router.get(
 // Removed mock-queue-status endpoint - Instead, use the real queue status endpoint at /api/segmentation/queue
 
 // GET /api/segmentation/jobs/:projectId - Get segmentation jobs for a project
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/jobs/:projectId',
   authMiddleware,
@@ -1052,7 +1052,7 @@ router.get(
 );
 
 // GET /api/segmentation/job/:jobId - Get details of a specific segmentation job
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/job/:jobId',
   authMiddleware,
@@ -1067,7 +1067,7 @@ router.get(
 );
 
 // POST /api/segmentation/job - Create a new segmentation job
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.post(
   '/job',
   authMiddleware,
@@ -1125,7 +1125,7 @@ router.post(
 );
 
 // DELETE /api/segmentation/job/:jobId - Delete a segmentation job
-// @ts-expect-error Keep ignore for now
+// @ts-expect-error - Router middleware type mismatch with validate function Keep ignore for now
 router.delete(
   '/job/:jobId',
   authMiddleware,
@@ -1135,7 +1135,7 @@ router.delete(
 );
 
 // POST /api/segmentation/:imageId/resegment - Trigger resegmentation for an image
-// @ts-expect-error TS2769: No overload matches this call.
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.post(
   '/:imageId/resegment',
   authMiddleware,
@@ -1246,7 +1246,7 @@ router.post(
 );
 
 // Fetch all polygons for a specific image
-// @ts-expect-error TS2769
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769
 router.get(
   '/:imageId/polygons',
   authMiddleware,
@@ -1257,7 +1257,7 @@ router.get(
 );
 
 // Save or update polygons for a specific image
-// @ts-expect-error TS2769
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769
 router.post(
   '/:imageId/polygons',
   authMiddleware,
@@ -1270,7 +1270,7 @@ router.post(
 );
 
 // Clear all polygons for a specific image
-// @ts-expect-error TS2769
+// @ts-expect-error - Router middleware type mismatch with validate function TS2769
 router.delete(
   '/:imageId/polygons',
   authMiddleware,
@@ -1387,7 +1387,7 @@ router.post(
 );
 
 // GET /api/segmentation/queue-status - Get the current status of the segmentation queue
-// @ts-expect-error
+// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/queue-status',
   authMiddleware,
@@ -1446,7 +1446,7 @@ router.get(
 );
 
 // GET /api/segmentation/queue-status/:projectId - Get queue status filtered by project
-// @ts-expect-error
+// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/queue-status/:projectId',
   authMiddleware,
@@ -1540,7 +1540,7 @@ router.get(
 );
 
 // GET /api/segmentation/queue - Get the current segmentation queue
-// @ts-expect-error
+// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/queue',
   authMiddleware,

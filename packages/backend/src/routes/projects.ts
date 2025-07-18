@@ -79,7 +79,7 @@ const router: Router = express.Router();
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error
+// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/',
   authMiddleware,
@@ -218,7 +218,7 @@ router.get(
  *       500:
  *         description: Internal server error or database schema error
  */
-// @ts-expect-error
+// @ts-expect-error - Router middleware type mismatch with validate function
 router.post(
   '/',
   authMiddleware,
@@ -371,7 +371,7 @@ router.post(
  *       500:
  *         description: Internal server error or database schema error
  */
-// @ts-expect-error
+// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/:id',
   authMiddleware,
@@ -527,7 +527,7 @@ router.get(
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error
+// @ts-expect-error - Router middleware type mismatch with validate function
 router.put(
   '/:id',
   authMiddleware,
@@ -645,7 +645,7 @@ router.put(
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error
+// @ts-expect-error - Router middleware type mismatch with validate function
 router.delete(
   '/:id',
   authMiddleware,
@@ -746,7 +746,7 @@ router.delete(
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error
+// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/:id/images',
   authMiddleware,
