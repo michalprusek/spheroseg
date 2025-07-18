@@ -773,8 +773,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             logger.info('Signup successful');
             // Don't show toast here - let the signup component handle success messages
             return true;
-          } catch (error: any) {
-            // Cast error to any
+          } catch (error) {
             // Propagate all errors without mock workarounds
 
             // Otherwise, propagate the error
@@ -818,7 +817,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Call the backend logout endpoint to invalidate the refresh token
     if (refreshToken) {
       try {
-        // Use direct axios call to avoid any interceptor issues
+        // Use direct axios call to avoid interceptor issues
         await axios.post(
           API_PATHS.AUTH.LOGOUT,
           { refreshToken },
@@ -830,8 +829,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         );
         logger.info('Backend logout successful');
-      } catch (error: any) {
-        // Cast error to any
+      } catch (error) {
         // Non-critical error, just log it
         logger.warn('Backend logout failed, but local session was cleared', {
           error,

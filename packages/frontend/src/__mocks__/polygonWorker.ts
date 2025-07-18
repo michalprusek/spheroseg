@@ -86,7 +86,7 @@ export class MockWorker {
     }
   }
 
-  dispatchEvent(event: Event): boolean {
+  dispatchEvent(_event: Event): boolean {
     return true;
   }
 }
