@@ -139,7 +139,7 @@ const ErrorComponent = ({ shouldThrow = false }) => {
 };
 
 // Test app combining all test components
-const TestApp = () => {
+const _TestApp = () => {
   return (
     <>
       <ApiComponentWithTryCatch />

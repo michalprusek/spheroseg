@@ -87,7 +87,7 @@ describe('AboutPage', () => {
     vi.clearAllMocks();
   });
 
-  const renderAboutPage = (language = 'en') => {
+  const _renderAboutPage = (language = 'en') => {
     localStorage.setItem('language', language);
     return render(
       <BrowserRouter>

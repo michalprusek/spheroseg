@@ -92,7 +92,7 @@ describe('LandingPage', () => {
     vi.clearAllMocks();
   });
 
-  const renderLandingPage = (language = 'en') => {
+  const _renderLandingPage = (language = 'en') => {
     localStorage.setItem('language', language);
     return render(
       <BrowserRouter>

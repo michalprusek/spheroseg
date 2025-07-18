@@ -4,7 +4,7 @@
 import axios from 'axios';
 import logger from '@/utils/logger';
 import { jwtDecode } from 'jwt-decode';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { API_PATHS } from '@/lib/apiPaths';
 
 // Token storage keys

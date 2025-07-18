@@ -16,7 +16,7 @@ import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { createLogger } from '@/lib/logger';
 import { formatISODate } from '@/utils/dateUtils';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations';
 import type { ProjectImage, Polygon, SegmentationResult } from '@/pages/segmentation/types';
 
@@ -420,8 +420,8 @@ ${options.includeMetadata ? '- Metadata for all images\n' : ''}${options.include
 /**
  * Připraví data metrik pro export
  */
-async function prepareMetricsData(images: ProjectImage[]): Promise<any[]> {
-  const worksheetRows: any[] = [];
+async function prepareMetricsData(images: ProjectImage[]): Promise<unknown[]> {
+  const worksheetRows: unknown[] = [];
 
   for (const image of images) {
     try {
@@ -498,14 +498,14 @@ async function getSegmentationData(image: ProjectImage): Promise<SegmentationRes
 /**
  * Konvertuje segmentace do COCO formátu
  */
-function convertToCOCO(images: ProjectImage[], projectTitle: string = 'project'): any {
+function convertToCOCO(images: ProjectImage[], projectTitle: string = 'project'): unknown {
   // Používáme dvě kategorie: "cell" pro externí polygony a "hole" pro interní polygony (díry)
   const categories = [
     { id: 1, name: 'cell', supercategory: 'cell' },
     { id: 2, name: 'hole', supercategory: 'cell' },
   ];
-  const annotations: any[] = [];
-  const cocoImages: any[] = [];
+  const annotations: unknown[] = [];
+  const cocoImages: unknown[] = [];
 
   let annotationId = 1;
 

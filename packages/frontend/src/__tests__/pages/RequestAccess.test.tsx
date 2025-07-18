@@ -81,7 +81,7 @@ const MockRequestAccess = ({ language = 'en', onSubmit = vi.fn() }) => {
     try {
       await onSubmit({ email, name, organization, reason });
       setShowSuccess(true);
-    } catch (error) {
+    } catch (_error) {
       toast.error('An error occurred while processing your request.');
     }
   };
