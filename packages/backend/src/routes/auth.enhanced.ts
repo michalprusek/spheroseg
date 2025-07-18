@@ -156,7 +156,7 @@ router.post(
       hasName: !!req.validatedBody?.name,
     });
 
-    const { email, password, name, confirmPassword, terms, preferred_language } = req.validatedBody;
+    const { email, password, name, preferred_language } = req.validatedBody;
 
     try {
       const result = await authService.registerUser(email, password, name, preferred_language);

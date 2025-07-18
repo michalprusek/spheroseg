@@ -4,12 +4,9 @@ import { AuthenticatedRequest, authenticate as authMiddleware } from '../securit
 import { getPool } from '../db';
 import logger from '../utils/logger';
 import { ApiError } from '../utils/ApiError';
-import { pipeline } from 'stream';
-import { promisify } from 'util';
 import archiver from 'archiver';
 
 const router = express.Router();
-const pipelineAsync = promisify(pipeline);
 
 /**
  * GET /api/download/image/:imageId - Stream download of image file

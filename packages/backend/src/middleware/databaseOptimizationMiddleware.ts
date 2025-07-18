@@ -322,6 +322,7 @@ export async function shutdownOptimizationService(): Promise<void> {
 
 // Express middleware declarations for TypeScript
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       optimizationService?: DatabaseOptimizationService;
