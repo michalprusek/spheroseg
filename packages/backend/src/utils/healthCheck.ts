@@ -57,10 +57,10 @@ export const checkDatabaseHealth = async (): Promise<HealthStatus> => {
       responseTime,
       lastChecked: new Date().toISOString(),
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       status: 'unhealthy',
-      message: error.message || 'Database connection failed',
+      message: error instanceof Error ? error.message : 'Database connection failed',
       responseTime: Date.now() - startTime,
       lastChecked: new Date().toISOString(),
     };
@@ -111,10 +111,10 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
         lastChecked: new Date().toISOString(),
       };
     }
-  } catch (error: any) {
+  } catch (error) {
     return {
       status: 'unhealthy',
-      message: error.message || 'Storage check failed',
+      message: error instanceof Error ? error.message : 'Storage check failed',
       lastChecked: new Date().toISOString(),
     };
   }

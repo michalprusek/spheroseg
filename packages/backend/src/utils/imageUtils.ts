@@ -31,7 +31,7 @@ export interface ImageData {
   thumbnail_path?: string;
   width?: number;
   height?: number;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   src?: string;
@@ -39,7 +39,7 @@ export interface ImageData {
   thumbnail_path_full?: string;
   file_exists?: boolean;
   thumbnail_exists?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

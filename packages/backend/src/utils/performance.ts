@@ -144,11 +144,15 @@ export const measureExecutionTime = async <T>(name: string, fn: () => Promise<T>
 /**
  * Decorator for measuring method execution time
  */
-export function measureTime(target: any, propertyName: string, descriptor: PropertyDescriptor) {
+export function measureTime(
+  target: unknown,
+  propertyName: string,
+  descriptor: PropertyDescriptor
+) {
   const originalMethod = descriptor.value;
 
-  descriptor.value = async function (...args: any[]) {
-    const className = target.constructor.name;
+  descriptor.value = async function (this: unknown, ...args: unknown[]) {
+    const className = (target as { constructor: { name: string } }).constructor.name;
     const methodName = `${className}.${propertyName}`;
 
     return measureExecutionTime(methodName, () => originalMethod.apply(this, args));
