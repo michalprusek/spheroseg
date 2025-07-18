@@ -1,6 +1,5 @@
 import request from 'supertest';
 import { Express } from 'express';
-import { IMemoryDb, newDb } from 'pg-mem';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';

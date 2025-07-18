@@ -1,11 +1,10 @@
 import request from 'supertest';
 // Delay app import until after mocks are set up
 // import { app } from '@/server';
-import { IMemoryDb, newDb } from 'pg-mem';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
-import { Pool, QueryResult, QueryResultRow, QueryConfig, QueryConfigValues } from 'pg';
+import { QueryResult, QueryResultRow, QueryConfig, QueryConfigValues } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock fs module
@@ -57,20 +56,10 @@ jest.mock('fs', () => ({
 jest.mock('sharp');
 import { createMockSharp } from '../../test-utils/mockFactories';
 
-// Mock the database
-let db: IMemoryDb;
-
 // --- Define test constants ---
 const testUserId = '550e8400-e29b-41d4-a716-446655440000';
 const validProjectId = '660e8400-e29b-41d4-a716-446655440001';
 const imageToDeleteId = '770e8400-e29b-41d4-a716-446655440002';
-const newImageId = '880e8400-e29b-41d4-a716-446655440003';
-
-// Define a type for the specific query overload we are mocking
-type SimpleQuery = <R extends QueryResultRow = any, I extends any[] = any[]>(
-  queryTextOrConfig: string | QueryConfig<I>,
-  values?: QueryConfigValues<I>
-) => Promise<QueryResult<R>>;
 
 // --- Mock Multer to work with supertest.attach() ---
 jest.mock('multer', () => {

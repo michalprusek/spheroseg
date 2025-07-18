@@ -5,7 +5,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { Histogram, Counter, Gauge, Summary } from 'prom-client';
+import { Histogram, Counter, Gauge } from 'prom-client';
 import { performance } from 'perf_hooks';
 import logger from '../utils/logger';
 import { unifiedRegistry } from './unified';
