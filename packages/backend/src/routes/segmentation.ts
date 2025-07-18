@@ -836,7 +836,7 @@ router.post(
     // projectId is now validated by the middleware
     const { projectId } = req.params as { projectId: string };
     // imageIds, priority, model_type are validated by the middleware if present in body
-    const { priority, model_type, imageIds: requestedImageIds, ...otherParams } = req.body;
+    const { priority, model_type, imageIds: requestedImageIds } = req.body;
 
     if (!userId) {
       res.status(401).json({ message: 'Authentication error' });

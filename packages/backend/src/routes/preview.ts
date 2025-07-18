@@ -26,7 +26,7 @@ const upload = multer({
 router.post(
   '/generate',
   upload.single('file'),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const file = req.file;
 
     if (!file) {
