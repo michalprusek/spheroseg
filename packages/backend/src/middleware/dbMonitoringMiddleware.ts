@@ -227,7 +227,7 @@ function generateMetricsDashboard(req: Request): string {
         
         // Pattern
         const patternCell = row.insertCell(0);
-        patternCell.innerHTML = \`<pre>\${query.normalized.substring(0, 80)}...\</pre>\`;
+        patternCell.innerHTML = \`<pre>\${query.normalized.substring(0, 80)}...</pre>\`;
         
         // Operation
         const opCell = row.insertCell(1);

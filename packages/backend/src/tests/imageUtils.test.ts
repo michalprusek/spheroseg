@@ -6,6 +6,7 @@ import {
   ImageData,
 } from '../utils/imageUtils';
 import path from 'path';
+import * as fs from 'fs';
 
 describe('imageUtils', () => {
   describe('formatImagePaths', () => {
@@ -143,7 +144,6 @@ describe('imageUtils', () => {
 
   describe('verifyImageFiles', () => {
     const uploadDir = '/app/uploads';
-    const fs = require('fs');
 
     // Mock fs.existsSync
     const originalExistsSync = fs.existsSync;

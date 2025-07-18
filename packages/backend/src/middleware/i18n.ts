@@ -3,6 +3,7 @@ import authService from '../services/authService';
 
 // Extend Express Request type to include translation function
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       t: (key: string, options?: any) => string;

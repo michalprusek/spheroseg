@@ -16,6 +16,7 @@ import logger from '../utils/logger';
 // ===========================
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       validatedBody?: unknown;

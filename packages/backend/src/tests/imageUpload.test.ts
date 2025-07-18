@@ -1,6 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import { jest } from '@jest/globals';
+import * as db from '../db';
 
 // Mock config
 jest.mock('../config', () => ({
@@ -195,8 +196,6 @@ describe('Image Upload API', () => {
 
     it('should return 404 if project does not exist', async () => {
       // Mock db.query to return empty rows for project check
-      const db = require('../db');
-
       // Použijeme typově bezpečnou implementaci
       (db.query as jest.Mock).mockImplementationOnce((query: unknown) => {
         // Testujeme SELECT projekt
