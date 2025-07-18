@@ -1,5 +1,5 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import { Request, Response, NextFunction } from 'express';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { Request, Response } from 'express';
 import * as segmentationController from '../../controllers/segmentationController';
 import * as segmentationService from '../../services/segmentationService';
 import * as segmentationQueueService from '../../services/segmentationQueueService';

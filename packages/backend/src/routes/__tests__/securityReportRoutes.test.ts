@@ -1,5 +1,5 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import { Request, Response, NextFunction } from 'express';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { Request, Response } from 'express';
 import * as securityController from '../../controllers/securityController';
 import * as securityService from '../../services/securityService';
 import { ApiError } from '../../utils/errors';

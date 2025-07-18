@@ -1,13 +1,10 @@
 import request from 'supertest';
 import { Express } from 'express';
-import fs from 'fs';
-import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 // --- Define test constants ---
 const testUserId = '550e8400-e29b-41d4-a716-446655440000';
 const testEmail = 'test@example.com';
-const adminUserId = '550e8400-e29b-41d4-a716-446655440001';
 
 // Mock fs module
 jest.mock('fs', () => ({
