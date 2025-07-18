@@ -247,19 +247,25 @@ export class UnifiedResponseHandler {
       }
     }
 
-    return {
+    const result: ApiErrorResponse = {
       success: false,
       data: null,
       message,
-      errors: validationErrors,
-      error: apiError || {
-        code,
-        message,
-        details: { status: error.status },
-        ...(context?.path ? { path: context.path } : {}),
-      },
       metadata: this.generateMetadata(),
     };
+    
+    if (validationErrors !== undefined) {
+      result.errors = validationErrors;
+    }
+    
+    result.error = apiError || {
+      code,
+      message,
+      details: { status: error.status },
+      ...(context?.path ? { path: context.path } : {}),
+    };
+    
+    return result;
   }
 
   /**

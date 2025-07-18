@@ -598,17 +598,25 @@ export const calculateConvexHull = (points: Point[]): Point[] => {
   // Remove duplicates
   const uniquePoints: Point[] = [];
   for (let i = 0; i < sortedPoints.length; i++) {
-    if (i === 0 || 
-        sortedPoints[i].x !== sortedPoints[i - 1].x || 
-        sortedPoints[i].y !== sortedPoints[i - 1].y) {
-      uniquePoints.push(sortedPoints[i]);
+    const current = sortedPoints[i];
+    const previous = i > 0 ? sortedPoints[i - 1] : undefined;
+    if (!current) continue;
+    
+    if (i === 0 || !previous ||
+        current.x !== previous.x || 
+        current.y !== previous.y) {
+      uniquePoints.push(current);
     }
   }
 
   // Graham scan algorithm
   if (uniquePoints.length < 3) return uniquePoints;
 
-  const hull: Point[] = [uniquePoints[0], uniquePoints[1]];
+  const firstPoint = uniquePoints[0];
+  const secondPoint = uniquePoints[1];
+  if (!firstPoint || !secondPoint) return uniquePoints;
+  
+  const hull: Point[] = [firstPoint, secondPoint];
 
   for (let i = 2; i < uniquePoints.length; i++) {
     while (hull.length >= 2) {
@@ -616,6 +624,8 @@ export const calculateConvexHull = (points: Point[]): Point[] => {
       const p1 = hull[n - 2];
       const p2 = hull[n - 1];
       const p3 = uniquePoints[i];
+      
+      if (!p1 || !p2 || !p3) break;
 
       // Calculate the cross product to determine if we make a right turn
       const cross = (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
@@ -628,7 +638,10 @@ export const calculateConvexHull = (points: Point[]): Point[] => {
       }
     }
 
-    hull.push(uniquePoints[i]);
+    const point = uniquePoints[i];
+    if (point) {
+      hull.push(point);
+    }
   }
 
   return hull;
