@@ -13,7 +13,7 @@ import {
   calculateBoundingBoxRect as calculateBoundingBox,
   calculateConvexHull,
   calculateMetrics,
-} from '@spheroseg/shared/utils/polygonUtils';
+} from '@spheroseg/shared';
 import { Point, Polygon } from '../types/geometry';
 
 /**

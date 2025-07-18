@@ -64,6 +64,7 @@
   "devDependencies": {
     "@spheroseg/types": "file:../types",
     "@types/amqplib": "^0.10.7",
+    "@types/archiver": "^6.0.3",
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.8.1",
