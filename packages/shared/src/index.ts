@@ -57,3 +57,6 @@ export { default as imageUtils } from './utils/imageUtils';
 // Export path utilities
 export * from './utils/pathUtils';
 export { default as pathUtils } from './utils/pathUtils';
+
+// Export API response handling utilities
+export * from './api';
