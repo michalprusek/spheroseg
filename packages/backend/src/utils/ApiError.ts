@@ -23,7 +23,7 @@ export enum ErrorCode {
 
 export interface ErrorDetails {
   field?: string;
-  value?: any;
+  value?: unknown;
   constraint?: string;
   message?: string;
 }

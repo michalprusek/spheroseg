@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { z, ZodError, ZodType } from 'zod';
 import { sendBadRequest } from './responseHelpers';
 
@@ -56,7 +56,9 @@ export function validateBody<T>(schema: ZodType<T>) {
 export function validateQuery<T>(schema: ZodType<T>) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.query = validateData(schema, req.query) as any;
+      const validated = validateData(schema, req.query);
+      // Type assertion is needed here as Express types are not fully compatible
+      (req as Request & { query: T }).query = validated;
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -78,7 +80,9 @@ export function validateQuery<T>(schema: ZodType<T>) {
 export function validateParams<T>(schema: ZodType<T>) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.params = validateData(schema, req.params) as any;
+      const validated = validateData(schema, req.params);
+      // Type assertion is needed here as Express types are not fully compatible
+      (req as Request & { params: T }).params = validated;
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -97,12 +101,12 @@ export function validateParams<T>(schema: ZodType<T>) {
 /**
  * Combine multiple validation middlewares
  */
-export function validateRequest<TBody = any, TQuery = any, TParams = any>(options: {
+export function validateRequest<TBody = unknown, TQuery = unknown, TParams = unknown>(options: {
   body?: ZodType<TBody>;
   query?: ZodType<TQuery>;
   params?: ZodType<TParams>;
 }) {
-  const middlewares: any[] = [];
+  const middlewares: RequestHandler[] = [];
 
   if (options.body) {
     middlewares.push(validateBody(options.body));

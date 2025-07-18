@@ -24,25 +24,25 @@ export { unifiedLogger as logger };
 export function createLogger(moduleName: string) {
   // Create a child logger with module context
   return {
-    error: (message: string, meta?: any) => {
+    error: (message: string, meta?: Record<string, unknown>) => {
       unifiedLogger.error(message, { module: moduleName, ...meta });
     },
-    warn: (message: string, meta?: any) => {
+    warn: (message: string, meta?: Record<string, unknown>) => {
       unifiedLogger.warn(message, { module: moduleName, ...meta });
     },
-    info: (message: string, meta?: any) => {
+    info: (message: string, meta?: Record<string, unknown>) => {
       unifiedLogger.info(message, { module: moduleName, ...meta });
     },
-    http: (message: string, meta?: any) => {
+    http: (message: string, meta?: Record<string, unknown>) => {
       unifiedLogger.http(message, { module: moduleName, ...meta });
     },
-    debug: (message: string, meta?: any) => {
+    debug: (message: string, meta?: Record<string, unknown>) => {
       unifiedLogger.debug(message, { module: moduleName, ...meta });
     },
-    verbose: (message: string, meta?: any) => {
+    verbose: (message: string, meta?: Record<string, unknown>) => {
       unifiedLogger.verbose(message, { module: moduleName, ...meta });
     },
-    silly: (message: string, meta?: any) => {
+    silly: (message: string, meta?: Record<string, unknown>) => {
       unifiedLogger.silly(message, { module: moduleName, ...meta });
     },
   };

@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { UnifiedResponseHandler, ApiResponse, ApiErrorResponse } from '@spheroseg/shared';
 import { ApiError } from './errors';
 import logger from './logger';
@@ -166,10 +166,10 @@ export function sendPaginated<T>(
 /**
  * Wrap an async route handler to automatically handle errors
  */
-export function asyncHandler<T = any>(
-  fn: (req: any, res: Response) => Promise<T>
+export function asyncHandler<T = void>(
+  fn: (req: Request, res: Response) => Promise<T>
 ) {
-  return async (req: any, res: Response) => {
+  return async (req: Request, res: Response) => {
     try {
       await fn(req, res);
     } catch (error) {
