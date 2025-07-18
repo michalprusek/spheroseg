@@ -762,7 +762,7 @@ export class MockFileSystem {
   /**
    * fs.statSync implementation
    */
-  public statSync(path: string, options?: { bigint?: boolean } | null): fs.Stats {
+  public statSync(path: string, _options?: { bigint?: boolean } | null): fs.Stats {
     const normalizedPath = this.normalizePath(path);
 
     // Check if path exists

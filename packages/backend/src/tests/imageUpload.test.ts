@@ -197,7 +197,7 @@ describe('Image Upload API', () => {
     it('should return 404 if project does not exist', async () => {
       // Mock db.query to return empty rows for project check
       // Použijeme typově bezpečnou implementaci
-      (db.query as jest.Mock).mockImplementationOnce((query: unknown) => {
+      (db.query as jest.Mock).mockImplementationOnce((_query: unknown) => {
         // Testujeme SELECT projekt
         return { rows: [] };
       });
