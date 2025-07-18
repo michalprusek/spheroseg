@@ -41,7 +41,7 @@ describe('usePerformance', () => {
   });
 
   it('should mark component mount and render', () => {
-    const { result, unmount } = renderHook(() => usePerformance('TestComponent'));
+    const { unmount } = renderHook(() => usePerformance('TestComponent'));
 
     // Should have marked render start and end
     expect(markPerformance).toHaveBeenCalledWith('TestComponent-render-0-start');
@@ -97,7 +97,7 @@ describe('usePerformance', () => {
   });
 
   it('should respect options to disable measurements', () => {
-    const { result, unmount } = renderHook(() =>
+    const { unmount } = renderHook(() =>
       usePerformance('TestComponent', {
         measureMount: false,
         measureRender: false,

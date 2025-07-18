@@ -39,8 +39,8 @@ export interface ToastOptions extends ExternalToast {
   description?: string;
 
   // Callbacks
-  onDismiss?: (toast: any) => void;
-  onAutoClose?: (toast: any) => void;
+  onDismiss?: (toast: unknown) => void;
+  onAutoClose?: (toast: unknown) => void;
 }
 
 // Default durations for different toast types
@@ -64,7 +64,7 @@ const DEFAULT_ICONS: Record<ToastType, React.ReactNode> = {
 };
 
 class ToastService {
-  private activeToasts = new Map<string, any>();
+  private activeToasts = new Map<string, { type: string; message: string }>();
   private defaultOptions: Partial<ToastOptions> = {
     position: 'bottom-right',
     dismissible: true,
@@ -169,7 +169,7 @@ class ToastService {
     messages: {
       loading: string;
       success: string | ((data: T) => string);
-      error: string | ((error: any) => string);
+      error: string | ((error: unknown) => string);
     },
     options?: ToastOptions,
   ) {
@@ -229,7 +229,7 @@ class ToastService {
    * Show a multi-line toast with title and description
    */
   multiline(title: string, description: string, type: ToastType = 'info', options?: ToastOptions) {
-    const typeMethod = this[type as keyof ToastService] as any;
+    const typeMethod = this[type as keyof ToastService] as unknown;
     if (typeof typeMethod === 'function') {
       return typeMethod.call(this, title, {
         description,
