@@ -2,7 +2,7 @@
  * Authentication Routes
  * Handles user registration, login, token refresh, and related functionality
  */
-import express, { Request, Response, Router } from 'express';
+import express, { Response, Router } from 'express';
 import { validate } from '../middleware/validationMiddleware';
 import {
   registerSchema,

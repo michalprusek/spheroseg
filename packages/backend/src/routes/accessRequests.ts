@@ -1,4 +1,4 @@
-import express, { Request, Response, Router, NextFunction } from 'express';
+import express, { Request, Response, Router } from 'express';
 import db from '../db';
 import { AuthenticatedRequest } from '../security/middleware/auth'; // Optional: To link logged-in user
 import { createLogger } from '../utils/logger';

@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate as authMiddleware, requireAdmin } from '../security/middleware/auth';
+import { requireAdmin } from '../security/middleware/auth';
 import stuckImageCleanupService from '../services/stuckImageCleanup';
 import logger from '../utils/logger';
 

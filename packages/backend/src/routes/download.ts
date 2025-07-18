@@ -1,6 +1,5 @@
 import express, { Response, NextFunction } from 'express';
 import fs from 'fs';
-import path from 'path';
 import { AuthenticatedRequest, authenticate as authMiddleware } from '../security/middleware/auth';
 import { getPool } from '../db';
 import logger from '../utils/logger';

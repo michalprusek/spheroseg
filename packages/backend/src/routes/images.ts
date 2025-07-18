@@ -12,7 +12,6 @@ import {
   imageDetailSchema,
   imageIdSchema,
   deleteImageSchema,
-  batchDeleteImagesSchema,
 } from '../validators/imageValidators';
 import imageDeleteService from '../services/imageDeleteService';
 import { ApiError } from '../utils/ApiError';

@@ -7,7 +7,7 @@
 
 import express, { Router } from 'express';
 import v1Routes from './v1';
-import { getMetrics, getMetricsContentType } from '../monitoring/unified';
+import { getMetricsContentType } from '../monitoring/unified';
 
 // Import legacy routes for backward compatibility
 import authRoutes from './auth';

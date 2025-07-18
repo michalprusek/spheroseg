@@ -5,7 +5,7 @@
  * performance metrics, error tracking, and operational insights
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { register as promRegister } from 'prom-client';
 import { requireAdmin } from '../security/middleware/auth';
 import { unifiedRegistry } from '../monitoring/unified';

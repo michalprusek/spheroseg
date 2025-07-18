@@ -142,7 +142,7 @@ router.post('/batch', async (req: Request, res: Response, next: NextFunction) =>
 /**
  * Helper function to handle batch logs
  */
-async function handleBatchLogs(req: Request, res: Response, next: NextFunction) {
+async function handleBatchLogs(req: Request, res: Response, _next: NextFunction) {
   try {
     // Validate request
     const validation = batchLogsSchema.safeParse(req.body);

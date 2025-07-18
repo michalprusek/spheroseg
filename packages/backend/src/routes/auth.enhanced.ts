@@ -2,13 +2,11 @@
  * Enhanced Authentication Routes
  * Handles user registration, login, token refresh with enhanced validation and sanitization
  */
-import express, { Request, Response, Router } from 'express';
+import express, { Response, Router } from 'express';
 import { z } from 'zod';
 import {
   validateRequestBody,
   validateRequestQuery,
-  createValidationMiddleware,
-  csrfProtection,
   rateLimitByIP,
   validateContentType,
   sanitizeRequest,

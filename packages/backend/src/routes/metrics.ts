@@ -18,7 +18,6 @@ import {
   wsActiveConnections,
   wsMessagesTotal,
   wsBatchesTotal,
-  wsBatchSize,
   wsCompressionSavings,
   graphqlRequestDuration,
   graphqlResolverDuration,
