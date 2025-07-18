@@ -1,9 +1,7 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import sharp from 'sharp';
 import { createThumbnail } from '../imageUtils.unified';
 import logger from '../logger';
-import { createMockSharp } from '../../test-utils/mockFactories';
 
 // Mock dependencies
 jest.mock('fs');

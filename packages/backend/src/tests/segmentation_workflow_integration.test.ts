@@ -179,8 +179,7 @@ describe('Segmentation Workflow Integration', () => {
 
       // Skip test if segmentation not completed
       if (checkResponse.status !== 200 || !checkResponse.body.polygons) {
-        // Skip test with a message for test reports
-        const skipReason = 'Skipping modification test - segmentation not completed';
+        // Skip test - segmentation not completed
         return;
       }
 
@@ -252,8 +251,7 @@ describe('Segmentation Workflow Integration', () => {
       );
 
       if (checkResponse.status !== 200 || !checkResponse.body.polygons) {
-        // Skip test with a message for test reports
-        const skipReason = 'Skipping export test - segmentation not available';
+        // Skip test - segmentation not available
         return;
       }
 
@@ -283,8 +281,7 @@ describe('Segmentation Workflow Integration', () => {
       );
 
       if (checkResponse.status !== 200 || !checkResponse.body.polygons) {
-        // Skip test with a message for test reports
-        const skipReason = 'Skipping metrics test - segmentation not available';
+        // Skip test - segmentation not available
         return;
       }
 

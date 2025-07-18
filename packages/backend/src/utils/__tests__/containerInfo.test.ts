@@ -45,6 +45,7 @@ describe('Container Info Utilities', () => {
     }));
     
     // Import functions after mocking
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const containerInfo = require('../containerInfo');
     getContainerLimits = containerInfo.getContainerLimits;
     getEffectiveMemoryLimit = containerInfo.getEffectiveMemoryLimit;
@@ -78,7 +79,7 @@ describe('Container Info Utilities', () => {
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
         return false;
       });
-      mockReadFileSync.mockImplementation((path, encoding) => {
+      mockReadFileSync.mockImplementation((path, _encoding) => {
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
           return limitBytes.toString();
         }
@@ -113,7 +114,7 @@ describe('Container Info Utilities', () => {
         if (path === '/sys/fs/cgroup/memory.max') return true;
         return false;
       });
-      mockReadFileSync.mockImplementation((path, encoding) => {
+      mockReadFileSync.mockImplementation((path, _encoding) => {
         if (path === '/sys/fs/cgroup/memory.max') {
           return limitBytes.toString();
         }
@@ -175,7 +176,7 @@ describe('Container Info Utilities', () => {
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
         return false;
       });
-      mockReadFileSync.mockImplementation((path, encoding) => {
+      mockReadFileSync.mockImplementation((path, _encoding) => {
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
           return '268435456'; // 256MB
         }
@@ -202,7 +203,7 @@ describe('Container Info Utilities', () => {
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
         return false;
       });
-      mockReadFileSync.mockImplementation((path, encoding) => {
+      mockReadFileSync.mockImplementation((path, _encoding) => {
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
           return '1073741824'; // 1GB
         }
