@@ -8,7 +8,7 @@
 import { createLogger } from '@/utils/logging/unifiedLogger';
 import { handleError, AppError, ErrorType } from '@/utils/error/unifiedErrorHandler';
 import cacheService, { CacheLayer } from '@/services/unifiedCacheService';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { apiPaths } from '@/lib/apiPaths';
 
 const logger = createLogger('UnifiedAuthService');
@@ -23,7 +23,7 @@ export interface User {
   username: string;
   role: 'admin' | 'user' | 'guest';
   avatar?: string;
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -100,8 +100,8 @@ class UnifiedAuthService {
   private tokenRefreshTimer: NodeJS.Timeout | null = null;
   private eventListeners: Map<string, Set<(payload: AuthEventPayload) => void>> = new Map();
   private requestQueue: Array<{
-    resolve: (value: any) => void;
-    reject: (error: any) => void;
+    resolve: (value: unknown) => void;
+    reject: (error: unknown) => void;
   }> = [];
 
   constructor() {
@@ -671,7 +671,7 @@ class UnifiedAuthService {
     window.dispatchEvent(new CustomEvent('auth-state-change', { detail: payload }));
   }
 
-  private setCookie(name: string, value: string, options: any = {}): void {
+  private setCookie(name: string, value: string, options: Record<string, unknown> = {}): void {
     let cookie = `${name}=${encodeURIComponent(value)}`;
 
     if (options.expires) {
