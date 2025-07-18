@@ -738,6 +738,9 @@ export const slicePolygon = (
   }
 
   const [int1, int2] = intersections;
+  if (!int1 || !int2) {
+    return [polygon]; // Return original polygon if intersections are invalid
+  }
   
   // Create two new polygons
   const poly1: Point[] = [];
@@ -749,7 +752,10 @@ export const slicePolygon = (
   // Add points from first edge to second edge
   let currentIndex = (int1.edgeIndex + 1) % polygon.length;
   while (currentIndex !== (int2.edgeIndex + 1) % polygon.length) {
-    poly1.push(polygon[currentIndex]);
+    const point = polygon[currentIndex];
+    if (point) {
+      poly1.push(point);
+    }
     currentIndex = (currentIndex + 1) % polygon.length;
   }
   
@@ -761,7 +767,10 @@ export const slicePolygon = (
   
   currentIndex = (int2.edgeIndex + 1) % polygon.length;
   while (currentIndex !== (int1.edgeIndex + 1) % polygon.length) {
-    poly2.push(polygon[currentIndex]);
+    const point = polygon[currentIndex];
+    if (point) {
+      poly2.push(point);
+    }
     currentIndex = (currentIndex + 1) % polygon.length;
   }
   

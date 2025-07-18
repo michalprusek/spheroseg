@@ -38,6 +38,11 @@ interface MulterRequest extends Express.Request {
   };
 }
 
+// Interface for authenticated requests with uploaded files
+interface AuthenticatedRequestWithFiles extends AuthenticatedRequest {
+  files?: Express.Multer.File[];
+}
+
 // Using ImageData interface imported from imageUtils.ts
 
 const router: Router = express.Router();
@@ -425,7 +430,7 @@ router.post(
   '/:projectId/images',
   authMiddleware,
   validate(uploadImagesSchema),
-  (req: any, res: any, next: any) => {
+  (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     logger.info('Upload endpoint hit - before multer', {
       projectId: req.params.projectId,
       contentType: req.headers['content-type'],
