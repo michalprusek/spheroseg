@@ -68,7 +68,7 @@ export const mockAuthenticatedUser = (user = createUserFixture()) => {
  */
 export const mockDatabasePool = (queryResponses: Record<string, any> = {}) => {
   const mockPool = {
-    query: jest.fn((query, params) => {
+    query: jest.fn((query, _params) => {
       const queryText = typeof query === 'string' ? query : query.text;
 
       // Check if there's a specific mock response for this query

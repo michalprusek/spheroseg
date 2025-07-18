@@ -14,7 +14,6 @@ import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
 import logger from '../utils/logger';
-import config from '../config';
 import { ApiError } from '../utils/errors';
 
 // Promisifikace funkcí

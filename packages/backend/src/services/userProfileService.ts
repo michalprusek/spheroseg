@@ -132,6 +132,7 @@ export const createUserProfile = async (
         let counter = 1;
         let uniqueUsername = `${username}${counter}`;
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
           const check = await client.query(
             'SELECT COUNT(*) FROM user_profiles WHERE username = $1',

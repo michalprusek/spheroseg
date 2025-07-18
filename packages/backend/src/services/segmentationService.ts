@@ -1,5 +1,4 @@
 import pool from '../db';
-import config from '../config';
 import logger from '../utils/logger';
 import segmentationQueueService from './segmentationQueueService';
 

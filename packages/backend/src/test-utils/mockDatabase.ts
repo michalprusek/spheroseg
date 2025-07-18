@@ -151,6 +151,7 @@ export class MockDatabase {
    * @returns Mock pool object
    */
   public createMockPool(): Pool {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     return {

@@ -573,7 +573,7 @@ export function createMockJwtVerify(options: MockAuthOptions = {}): jest.Mock {
 export function createMockBcryptHash(options: MockAuthOptions = {}): jest.Mock {
   const mockAuth = new MockAuth(options);
 
-  return jest.fn((data: string, saltOrRounds: string | number): Promise<string> => {
+  return jest.fn((data: string, _saltOrRounds: string | number): Promise<string> => {
     return Promise.resolve(mockAuth.hashPassword(data));
   });
 }
@@ -620,7 +620,7 @@ export function mockBcryptModule(options: MockAuthOptions = {}): void {
     return {
       hash: createMockBcryptHash(options),
       compare: createMockBcryptCompare(options),
-      genSalt: jest.fn((rounds?: number) => Promise.resolve('$2b$10$mockSalt')),
+      genSalt: jest.fn((_rounds?: number) => Promise.resolve('$2b$10$mockSalt')),
     };
   });
 }

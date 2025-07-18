@@ -47,7 +47,7 @@ export class WebSocketBatcher {
   private setupInterceptors(): void {
     const originalEmit = this.io.emit.bind(this.io);
     const originalTo = this.io.to.bind(this.io);
-    const originalIn = this.io.in.bind(this.io);
+    // const originalIn = this.io.in.bind(this.io); // TODO: Implement .in() interception if needed
 
     // Override io.emit
     this.io.emit = (event: string, ...args: any[]): boolean => {
