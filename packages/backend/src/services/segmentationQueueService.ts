@@ -28,8 +28,8 @@ const RABBITMQ_QUEUE = process.env.RABBITMQ_QUEUE || 'segmentation_tasks';
 
 // Konfigurace
 const ML_SERVICE_URL = config.ml.serviceUrl || 'http://ml:5002';
-const MAX_RETRIES = config.ml.maxRetries || 3;
-const RETRY_DELAY = config.ml.retryDelay || 5000; // ms
+// const MAX_RETRIES = config.ml.maxRetries || 3; // TODO: Implement retry logic
+// const RETRY_DELAY = config.ml.retryDelay || 5000; // ms // TODO: Implement retry logic
 const MAX_CONCURRENT_TASKS = config.ml.maxConcurrentTasks || 2;
 const HEALTH_CHECK_INTERVAL = config.ml.healthCheckInterval || 60000; // ms
 const QUEUE_UPDATE_INTERVAL = config.ml.queueUpdateInterval || 5000; // ms

@@ -7,8 +7,7 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import logger from '../utils/logger';
-import { initializeSocketIO as initSocket, getIO } from '../socket';
-import { createThrottledEmit } from '../utils/socketThrottle';
+import { initializeSocketIO as initSocket } from '../socket';
 import { initializeWebSocketBatcher, getWebSocketBatcher, BatchConfig } from './websocketBatcher';
 
 // Socket.IO server instance
@@ -223,13 +222,14 @@ export function initializeEnhancedSocketIO(server: HttpServer): SocketIOServer {
 }
 
 // Cache for throttled and batched emit functions
-const emitCache = new Map<
-  string,
-  {
-    throttled: (event: string, data: unknown) => void;
-    batched: boolean;
-  }
->();
+// TODO: Implement emit caching for performance optimization
+// const emitCache = new Map<
+//   string,
+//   {
+//     throttled: (event: string, data: unknown) => void;
+//     batched: boolean;
+//   }
+// >();
 
 /**
  * Enhanced broadcast for segmentation updates with batching support
@@ -363,7 +363,7 @@ export function sendTargetedMessage(
   if (!io) return;
 
   const batcher = getWebSocketBatcher();
-  const { priority = false, compress = false } = options || {};
+  const { priority = false } = options || {}; // compress option removed - not implemented yet
 
   if (priority || !batcher) {
     // Send immediately for priority messages

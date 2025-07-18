@@ -93,7 +93,7 @@ export async function getSecurityIssueById(id: string) {
  * @param userId User ID
  * @returns Updated security issue
  */
-export async function updateSecurityIssue(id: string, updateData: any, userId: string) {
+export async function updateSecurityIssue(id: string, updateData: any, _userId: string) {
   if (id === 'non-existent') {
     throw new ApiError('Security issue not found', 404);
   }

@@ -7,7 +7,6 @@
 
 import { Registry, Gauge, Counter, Histogram } from 'prom-client';
 import axios from 'axios';
-import config from '../config';
 import logger from '../utils/logger';
 
 // ML service metrics endpoint
@@ -165,7 +164,7 @@ async function fetchAndUpdateMlMetrics(): Promise<void> {
 
       // Update task count metrics
       const taskCounts = extractMetricsWithLabels(metricsText, 'ml_segmentation_tasks_total');
-      for (const { labels, value } of taskCounts) {
+      for (const { labels } of taskCounts) {
         ML_TASK_COUNT.labels({
           model: labels.model || 'unknown',
           status: labels.status || 'unknown',

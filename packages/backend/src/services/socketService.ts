@@ -7,8 +7,7 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import logger from '../utils/logger';
-import { initializeSocketIO as initSocket, getIO } from '../socket';
-import { createThrottledEmit } from '../utils/socketThrottle';
+import { initializeSocketIO as initSocket } from '../socket';
 
 // Socket.IO server instance
 let io: SocketIOServer | null = null;

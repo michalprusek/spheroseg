@@ -72,7 +72,7 @@ class OptimizedQueryService {
       usePreparedStatement = true,
       timeout = 30000,
       retries = 2,
-      readReplica = false,
+      // readReplica = false, // TODO: Implement read replica support
     } = options;
 
     try {
@@ -191,7 +191,7 @@ class OptimizedQueryService {
    */
   async executeBatch<T = any>(
     queries: { text: string; params?: any[] }[],
-    options: QueryOptions = {}
+    _options: QueryOptions = {}
   ): Promise<QueryResult<T>[]> {
     const client = await this.pool.connect();
 

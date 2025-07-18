@@ -14,7 +14,7 @@ import {
   calculateConvexHull,
   calculateMetrics,
 } from '@spheroseg/shared';
-import { Point, Polygon } from '../types/geometry';
+import { Point } from '../types/geometry';
 
 /**
  * Calculate the area of the convex hull

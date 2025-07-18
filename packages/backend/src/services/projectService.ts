@@ -6,7 +6,6 @@
  */
 import { Pool } from 'pg';
 import fs from 'fs/promises';
-import fsSync from 'fs';
 import path from 'path';
 import config from '../config';
 import logger from '../utils/logger';

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import { ApiError } from '../utils/errors';
-import { ErrorCode } from '../utils/ApiError';
 import logger from '../utils/logger';
 import { sendError, sendServerError } from '../utils/apiResponsei18n';
 

@@ -7,7 +7,6 @@ import { Pool, PoolClient } from 'pg';
 import fs from 'fs/promises';
 import path from 'path';
 import logger from '../utils/logger';
-import config from '../config';
 
 interface DuplicationOptions {
   includeImages?: boolean;
@@ -96,7 +95,7 @@ export async function duplicateProject(
  */
 export async function duplicateProjectViaApi(
   projectId: string,
-  options: DuplicationOptions = {}
+  _options: DuplicationOptions = {}
 ): Promise<{ projectId: string; message: string }> {
   // This would typically make an API call to the backend
   // For now, returning a stub response

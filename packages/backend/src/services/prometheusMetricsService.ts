@@ -5,7 +5,7 @@
  * while using the unified monitoring registry internally.
  */
 
-import { Registry, Summary, Counter, Gauge } from 'prom-client';
+import { Summary, Counter, Gauge } from 'prom-client';
 import { unifiedRegistry } from '../monitoring/unified';
 
 // Use the unified registry instead of creating a new one
