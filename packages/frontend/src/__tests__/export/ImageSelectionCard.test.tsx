@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, beforeEach, expect } from 'vitest';
 import ImageSelectionCard from '@/pages/export/components/ImageSelectionCard';

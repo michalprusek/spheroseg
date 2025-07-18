@@ -9,8 +9,6 @@
 import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import logger from '@/utils/logger';
-import { ErrorType, ErrorSeverity } from './unifiedErrorHandler';
-import { requestDeduplicator } from '@/utils/requestDeduplication';
 
 export interface PermissionErrorInfo {
   isPermissionError: boolean;

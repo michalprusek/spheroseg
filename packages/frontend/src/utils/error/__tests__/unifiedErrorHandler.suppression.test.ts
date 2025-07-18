@@ -5,15 +5,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { 
   handleError, 
-  ErrorType, 
-  ErrorSeverity, 
   clearAccessDeniedSuppression,
   AuthorizationError,
   NotFoundError,
   ServerError,
 } from '../unifiedErrorHandler';
 import { toast } from 'sonner';
-import axios from 'axios';
 import logger from '@/utils/logger';
 
 // Mock sonner toast

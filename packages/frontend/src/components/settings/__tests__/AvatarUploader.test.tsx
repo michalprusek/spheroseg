@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import AvatarUploader from '../AvatarUploader';
@@ -97,7 +96,6 @@ const createMockFile = (name: string, size: number, type: string = 'image/jpeg')
 
 // Import mocked functions
 import { showSuccess, showError } from '@/utils/toastUtils';
-import { useProfile } from '@/contexts/ProfileContext';
 
 describe('AvatarUploader Component', () => {
   const mockOnAvatarChange = vi.fn();

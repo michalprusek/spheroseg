@@ -3,7 +3,7 @@
  * Handles user profile and settings operations via API
  */
 
-import apiClient, { isApiSuccess, isApiError, type ApiError } from '@/services/api/client';
+import apiClient, { type ApiError } from '@/services/api/client';
 import uploadClient from '@/lib/uploadClient';
 import logger from '@/utils/logger';
 

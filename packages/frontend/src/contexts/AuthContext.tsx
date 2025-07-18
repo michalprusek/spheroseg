@@ -48,7 +48,7 @@ interface AuthContextType {
   // session: Session | null; // Removed
   user: User | null;
   token: string | null;
-  // profile: any | null; // Removed profile from AuthContext
+  // profile: unknown | null; // Removed profile from AuthContext
   loading: boolean;
   signIn: (email: string, password: string) => Promise<boolean>; // Return boolean success
   signUp: (email: string, password: string, name: string) => Promise<boolean>; // Add name parameter
@@ -131,8 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (sessionUserData) {
         return JSON.parse(sessionUserData);
       }
-    } catch (e: any) {
-      // Cast e to any
+    } catch (e) {
       logger.error('Error reading persisted user from session storage:', e);
     }
     return null;
@@ -146,8 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Pokud máme uživatele, uložíme ho do session pro případ ztráty
       try {
         sessionStorage.setItem('spheroseg_persisted_user', JSON.stringify(loadedUser));
-      } catch (e: any) {
-        // Cast e to any
+      } catch (e) {
         logger.error('Error saving user to session storage:', e);
       }
       return loadedUser;
@@ -229,8 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (newUser) {
       try {
         sessionStorage.setItem('spheroseg_persisted_user', JSON.stringify(newUser));
-      } catch (e: any) {
-        // Cast e to any
+      } catch (e) {
         logger.error('Error saving user to session storage:', e);
       }
     } else {
@@ -432,8 +429,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setTimeout(() => navigate(savedRoute), 100);
             }
           }
-        } catch (error: any) {
-          // Cast error to any
+        } catch (error) {
           logger.error('Token verification failed:', { error });
 
           // Try to use stored user data as fallback
@@ -534,8 +530,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await userProfileService.initializeUserSettings();
 
           logger.info(`Data migration completed for user ${data.user.id}`);
-        } catch (error: any) {
-          // Cast error to any
+        } catch (error) {
           logger.error('Error during data migration:', {
             error,
             userId: data.user.id,
@@ -557,8 +552,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 },
               );
               logger.info(`Language preference updated via fallback for user ${data.user.id}`);
-            } catch (fallbackErr: any) {
-              // Cast fallbackErr to any
+            } catch (fallbackErr) {
               logger.error('Fallback language update also failed:', fallbackErr);
             }
           }
@@ -620,9 +614,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               navigate('/dashboard');
             }
             return true;
-          } catch (error: any) {
-            // Cast error to any
-            if (error.name === 'AbortError') {
+          } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') {
               logger.debug('[authContext] Login request aborted due to timeout');
               throw new Error('Request timed out. The server may be slow or unreachable.');
             }
@@ -643,7 +636,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const success = await Promise.race([loginProcess, loginTimeoutPromise]);
         setLoading(false);
         return success;
-      } catch (error: any) {
+      } catch (error) {
         logger.error('Error signing in:', { error });
 
         // Special handling for auth errors
@@ -758,8 +751,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     signal: new AbortController().signal,
                     timeout: 3000,
                   });
-                } catch (error: any) {
-                  // Cast error to any
+                } catch (error) {
                   // Don't retry if user already exists (409 Conflict)
                   if (axios.isAxiosError(error) && error.response?.status === 409) {
                     logger.warn('User already exists, not retrying', { email });

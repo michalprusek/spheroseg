@@ -168,7 +168,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     // Intelligent polling with exponential backoff
     let pollInterval = 10000; // Start with 10 seconds
     let consecutiveEmptyResponses = 0;
-    let maxInterval = 60000; // Max 60 seconds
+    const maxInterval = 60000; // Max 60 seconds
     
     const intelligentPoll = async () => {
       // Skip polling if WebSocket is connected and working

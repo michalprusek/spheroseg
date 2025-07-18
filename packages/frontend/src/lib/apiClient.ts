@@ -413,7 +413,7 @@ apiClient.interceptors.response.use(
     // Handle network and timeout errors
     if (!status) {
       let errorMessage = 'Network error. Please check your connection.';
-      let showToast = true;
+      const showToast = true;
       
       // Check for timeout errors
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {

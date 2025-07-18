@@ -1,5 +1,4 @@
 import apiClient from '@/lib/apiClient';
-import axios from 'axios';
 import { ImageData, SegmentationData, Polygon } from './types';
 import { loadImageDirectly } from '@/pages/segmentation/utils/directImageLoader';
 import { createLogger } from '@/lib/logger';

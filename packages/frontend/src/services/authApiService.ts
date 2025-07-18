@@ -1,4 +1,4 @@
-import apiClient, { isApiSuccess, isApiError, type ApiError } from '@/services/api/client';
+import apiClient, { type ApiError } from '@/services/api/client';
 import logger from '@/utils/logger';
 
 export interface ChangePasswordRequest {

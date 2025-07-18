@@ -8,7 +8,7 @@
 import { createLogger } from '@/utils/logging/unifiedLogger';
 import { handleError, ErrorType, ErrorSeverity } from '@/utils/error/unifiedErrorHandler';
 import { toast } from 'sonner';
-import apiClient, { type ApiError, type ApiRequestConfig } from '@/services/api/client';
+import apiClient, { type ApiRequestConfig } from '@/services/api/client';
 import type { ProjectImage } from '@/pages/segmentation/types';
 
 // Create logger instance

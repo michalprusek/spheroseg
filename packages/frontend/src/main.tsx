@@ -8,8 +8,6 @@ import './styles/tailwind.css';
 import './App.css';
 import { initPerformanceMonitoring, markPerformance } from './utils/performance';
 import logger from './utils/logger';
-import * as serviceWorkerRegistration from './utils/serviceWorkerRegistration';
-import { showUpdateNotification } from './utils/notifications';
 
 // Global error handler
 const handleError = (error: ErrorEvent) => {

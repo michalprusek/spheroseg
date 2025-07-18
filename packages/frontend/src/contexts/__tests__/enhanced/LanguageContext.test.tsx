@@ -11,7 +11,6 @@ vi.mock('@/i18n');
 
 import apiClient from '@/lib/apiClient';
 import i18next from 'i18next';
-import i18n from '@/i18n';
 
 // Mock translations with nested structures and plurals
 vi.mock('@/translations/en', () => ({
