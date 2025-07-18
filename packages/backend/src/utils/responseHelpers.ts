@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { UnifiedResponseHandler, ApiResponse, ApiErrorResponse } from '@spheroseg/shared';
+import { UnifiedResponseHandler, ApiErrorResponse } from '@spheroseg/shared';
 import { ApiError } from './errors';
 import logger from './logger';
 

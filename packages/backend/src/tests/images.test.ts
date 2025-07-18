@@ -2,10 +2,10 @@ import request from 'supertest';
 import express from 'express';
 import { jest } from '@jest/globals';
 import imagesRouter from '../routes/images';
-import authMiddleware from '../security/middleware/auth';
-import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
+// import authMiddleware from '../security/middleware/auth';
+// import multer from 'multer';
+// import fs from 'fs';
+// import path from 'path';
 import db from '../db';
 
 // Mock dependencies

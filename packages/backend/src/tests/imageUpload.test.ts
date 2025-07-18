@@ -163,7 +163,7 @@ jest.mock('../utils/imageUtils.unified', () => ({
 
 // Import after all mocks have been defined
 import imagesRouter from '../routes/images';
-import authMiddleware from '../security/middleware/auth';
+// import authMiddleware from '../security/middleware/auth';
 
 describe('Image Upload API', () => {
   let app: express.Application;
