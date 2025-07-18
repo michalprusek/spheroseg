@@ -8,7 +8,6 @@ import { Request, Response, NextFunction } from 'express';
 import { Histogram, Counter, Gauge, Summary } from 'prom-client';
 import { performance } from 'perf_hooks';
 import logger from '../utils/logger';
-import config from '../config';
 import { unifiedRegistry } from './unified';
 
 // Prevent duplicate metric registration during development restarts
@@ -75,13 +74,6 @@ const performanceAnomalyCounter = new Counter({
   name: 'spheroseg_performance_anomalies_total',
   help: 'Performance anomalies detected',
   labelNames: ['anomaly_type', 'component'],
-  registers: [unifiedRegistry],
-});
-
-const resourceUtilizationSummary = new Summary({
-  name: 'spheroseg_resource_utilization',
-  help: 'Resource utilization summary',
-  labelNames: ['resource', 'component'],
   registers: [unifiedRegistry],
 });
 

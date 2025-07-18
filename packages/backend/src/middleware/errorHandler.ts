@@ -11,11 +11,11 @@ export const errorHandler: ErrorRequestHandler = (
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   // Don't respond if response was already sent
   if (res.headersSent) {
-    return next(err);
+    return _next(err);
   }
 
   let error = err;

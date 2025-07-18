@@ -8,7 +8,6 @@ import { Request, Response, NextFunction } from 'express';
 import { Counter, Histogram, Gauge } from 'prom-client';
 import { ApiError } from '../utils/ApiError';
 import logger from '../utils/logger';
-import config from '../config';
 import { unifiedRegistry } from './unified';
 
 // Error tracking metrics
@@ -16,14 +15,6 @@ const errorCounter = new Counter({
   name: 'spheroseg_errors_total',
   help: 'Total number of errors by type and severity',
   labelNames: ['error_type', 'error_code', 'severity', 'route', 'method'],
-  registers: [unifiedRegistry],
-});
-
-const errorRateHistogram = new Histogram({
-  name: 'spheroseg_error_rate',
-  help: 'Error rate over time windows',
-  labelNames: ['time_window', 'error_type'],
-  buckets: [0, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0],
   registers: [unifiedRegistry],
 });
 

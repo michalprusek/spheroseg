@@ -207,9 +207,9 @@ export const validationRules = {
 export const customValidators = {
   // Check email uniqueness
   uniqueEmail: () =>
-    body('email').custom(async (email) => {
+    body('email').custom(async (_email) => {
       // TODO: Implement database check
-      // const exists = await userService.emailExists(email);
+      // const exists = await userService.emailExists(_email);
       // if (exists) {
       //   throw new Error('Email is already registered');
       // }
@@ -231,9 +231,9 @@ export const customValidators = {
     body('_csrf')
       .notEmpty()
       .withMessage('CSRF token is required')
-      .custom((token, { req }) => {
+      .custom((_token, { req: _req }) => {
         // TODO: Implement CSRF validation
-        // if (!validateCsrfToken(req, token)) {
+        // if (!validateCsrfToken(_req, _token)) {
         //   throw new Error('Invalid CSRF token');
         // }
         return true;
