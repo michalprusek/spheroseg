@@ -99,9 +99,9 @@ services:
         reservations:
           memory: 256M
     environment:
-      POSTGRES_DB: spheroseg
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-spheroseg}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./packages/backend/src/db:/docker-entrypoint-initdb.d
@@ -125,8 +125,8 @@ services:
       - "5672:5672" # AMQP protocol port
       - "15672:15672" # Management UI port
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-rabbitmq}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     networks:
       - spheroseg-network
 
@@ -191,8 +191,8 @@ services:
       - APP_URL=https://spherosegapp.utia.cas.cz # Public URL for emails
       - NODE_ENV=${NODE_ENV:-production} # Allow overriding NODE_ENV from host
       - LOG_LEVEL=${LOG_LEVEL:-info} # Allow overriding LOG_LEVEL from host
-      - JWT_SECRET=${JWT_SECRET:-development_secret_key_that_is_32_chars_long}
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@${DB_HOST:-db}:${DB_PORT:-5432}/${DB_NAME:-spheroseg}
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@${DB_HOST:-db}:${DB_PORT:-5432}/${DB_NAME:-spheroseg}
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@${RABBITMQ_HOST:-rabbitmq}:${RABBITMQ_PORT:-5672}
       - RABBITMQ_QUEUE=${RABBITMQ_QUEUE:-segmentation_tasks}
       - REDIS_URL=redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}
