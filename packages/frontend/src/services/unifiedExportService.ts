@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { createLogger } from '@/utils/logging/unifiedLogger';
 import { handleError } from '@/utils/error/unifiedErrorHandler';
 import { formatISODate, formatDateTime } from '@/utils/dateUtils';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations';
 import type { ProjectImage, SegmentationResult } from '@/pages/segmentation/types';
 
@@ -246,7 +246,7 @@ async function exportAsJSON(
   onProgress?: (progress: ExportProgress) => void,
 ): Promise<ExportResult> {
   try {
-    const exportData: any = {
+    const exportData: Record<string, unknown> = {
       project: projectTitle,
       exportDate: formatDateTime(new Date()),
       imageCount: images.length,
@@ -317,8 +317,8 @@ async function exportAsCOCO(
         date_created: formatDateTime(new Date()),
       },
       licenses: [],
-      images: [] as any[],
-      annotations: [] as any[],
+      images: [] as unknown[],
+      annotations: [] as unknown[],
       categories: [
         {
           id: 1,
@@ -725,9 +725,9 @@ async function prepareMetricsData(
   images: ProjectImage[],
   options: ExportOptions = {},
   onProgress?: (current: number, total: number) => void,
-): Promise<{ metrics: any[]; metadata: any[]; warnings?: string[] }> {
-  const metrics: any[] = [];
-  const metadata: any[] = [];
+): Promise<{ metrics: unknown[]; metadata: unknown[]; warnings?: string[] }> {
+  const metrics: unknown[] = [];
+  const metadata: unknown[] = [];
   const warnings: string[] = [];
 
   for (let i = 0; i < images.length; i++) {
@@ -791,7 +791,7 @@ async function prepareMetricsData(
 /**
  * Prepare metadata for export
  */
-async function prepareMetadata(images: ProjectImage[]): Promise<any[]> {
+async function prepareMetadata(images: ProjectImage[]): Promise<unknown[]> {
   return images.map((image) => ({
     id: image.id,
     name: image.name,
@@ -810,8 +810,8 @@ async function prepareMetadata(images: ProjectImage[]): Promise<any[]> {
 async function prepareSegmentations(
   images: ProjectImage[],
   onProgress?: (current: number, total: number) => void,
-): Promise<any[]> {
-  const segmentations: any[] = [];
+): Promise<unknown[]> {
+  const segmentations: unknown[] = [];
 
   for (let i = 0; i < images.length; i++) {
     const image = images[i];
@@ -862,7 +862,7 @@ async function fetchImageBlob(url: string): Promise<Blob> {
 /**
  * Convert data to CSV format
  */
-function convertToCSV(data: any[]): string {
+function convertToCSV(data: unknown[]): string {
   if (!data || data.length === 0) return '';
 
   const headers = Object.keys(data[0]);
@@ -884,7 +884,7 @@ function convertToCSV(data: any[]): string {
 /**
  * Configure Excel sheet formatting
  */
-function configureExcelSheet(worksheet: any): void {
+function configureExcelSheet(worksheet: unknown): void {
   // Set column widths
   const colWidths = [
     { wch: 20 }, // Image Name
@@ -911,7 +911,7 @@ function configureExcelSheet(worksheet: any): void {
 /**
  * Calculate statistics from metrics
  */
-function calculateStatistics(metrics: any[]): any {
+function calculateStatistics(metrics: unknown[]): unknown {
   if (!metrics || metrics.length === 0) {
     return { message: 'No data available for statistics' };
   }
@@ -930,7 +930,7 @@ function calculateStatistics(metrics: any[]): any {
     'Feret Diameter Min (px)',
   ];
 
-  const stats: any = {
+  const stats: Record<string, unknown> = {
     'Total Objects': metrics.length,
     'Total Images': new Set(metrics.map((m) => m['Image Name'])).size,
   };
@@ -1016,7 +1016,7 @@ For questions or support, please contact the SpherosegV4 team.
  * Generate HTML report
  */
 function generateHTMLReport(
-  metrics: any[],
+  metrics: unknown[],
   projectTitle: string,
   options: { includeCharts?: boolean; includeStatistics?: boolean; includeImages?: boolean } = {},
 ): string {
@@ -1219,7 +1219,7 @@ async function generateVisualization(image: ProjectImage): Promise<Blob | null> 
 /**
  * Prepare COCO format data
  */
-async function prepareCocoData(images: ProjectImage[]): Promise<any> {
+async function prepareCocoData(images: ProjectImage[]): Promise<unknown> {
   // Implementation similar to exportAsCOCO but returns data instead of saving
   const cocoData = {
     info: {
@@ -1229,8 +1229,8 @@ async function prepareCocoData(images: ProjectImage[]): Promise<any> {
       date_created: formatDateTime(new Date()),
     },
     licenses: [],
-    images: [] as any[],
-    annotations: [] as any[],
+    images: [] as unknown[],
+    annotations: [] as unknown[],
     categories: [{ id: 1, name: 'spheroid', supercategory: 'cell' }],
   };
 
@@ -1270,8 +1270,8 @@ async function prepareYoloData(image: ProjectImage): Promise<string | null> {
 /**
  * Prepare polygon format data
  */
-async function preparePolygonData(images: ProjectImage[]): Promise<any[]> {
-  const polygonData: any[] = [];
+async function preparePolygonData(images: ProjectImage[]): Promise<unknown[]> {
+  const polygonData: unknown[] = [];
 
   for (const image of images) {
     try {
