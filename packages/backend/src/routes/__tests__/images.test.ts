@@ -5,6 +5,8 @@ import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
+import express from 'express';
+import imageRoutes from '../images';
 
 // Mock fs module
 jest.mock('fs', () => ({
@@ -138,8 +140,6 @@ jest.mock('multer', () => {
 describe('Image Routes', () => {
   // Instead of importing the full app, create a simple Express app
   // with just the imageRoutes registered
-  const express = require('express');
-  const imageRoutes = require('../images').default;
 
   // Create a simple mock Express app
   const app = express();
@@ -157,7 +157,7 @@ describe('Image Routes', () => {
   app.use('/api/images', imageRoutes);
 
   // Add error handler
-  app.use((err: any, req: any, res: any, next: any) => {
+  app.use((err: any, req: any, res: any, _next: any) => {
     res.status(err.statusCode || 500).json({
       message: err.message || 'Internal Server Error',
       errors: err.errors,

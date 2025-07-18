@@ -81,7 +81,7 @@ describe('Enhanced Auth Routes', () => {
         terms: true,
       };
 
-      const response = await request(app)
+      await request(app)
         .post('/api/auth/register')
         .send(maliciousData)
         .expect(201);
@@ -183,7 +183,7 @@ describe('Enhanced Auth Routes', () => {
         password: 'StrongPass123!',
       };
 
-      const response = await request(app).post('/api/auth/login').send(loginData).expect(200);
+      await request(app).post('/api/auth/login').send(loginData).expect(200);
 
       // Email should be normalized to lowercase and trimmed
       expect(mockAuthService.loginUser).toHaveBeenCalledWith(

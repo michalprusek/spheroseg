@@ -1,6 +1,7 @@
 import request from 'supertest';
-import { Express } from 'express';
+import express, { Express } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import userRoutes from '../users';
 
 // --- Define test constants ---
 const testUserId = '550e8400-e29b-41d4-a716-446655440000';
@@ -179,8 +180,6 @@ describe('User Routes', () => {
 
   beforeAll(() => {
     // Setup Express app with only the user routes
-    const express = require('express');
-    const userRoutes = require('../users').default;
 
     app = express();
     app.use(express.json());
@@ -189,7 +188,7 @@ describe('User Routes', () => {
     app.use('/api/users', userRoutes);
 
     // Add error handling middleware
-    app.use((err: any, req: any, res: any, next: () => void) => {
+    app.use((err: any, req: any, res: any, _next: () => void) => {
       res.status(err.statusCode || 500).json({
         message: err.message || 'Internal Server Error',
         errors: err.errors,
