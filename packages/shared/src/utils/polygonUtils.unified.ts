@@ -208,7 +208,11 @@ export const calculatePolygonPerimeter = (points: Point[]): number => {
   
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
-    perimeter += distance(points[i], points[j]);
+    const p1 = points[i];
+    const p2 = points[j];
+    if (p1 && p2) {
+      perimeter += distance(p1, p2);
+    }
   }
   
   return perimeter;
@@ -227,10 +231,14 @@ export const calculateCentroid = (points: Point[]): Point => {
 
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
-    const cross = points[i].x * points[j].y - points[j].x * points[i].y;
-    area += cross;
-    cx += (points[i].x + points[j].x) * cross;
-    cy += (points[i].y + points[j].y) * cross;
+    const p1 = points[i];
+    const p2 = points[j];
+    if (p1 && p2) {
+      const cross = p1.x * p2.y - p2.x * p1.y;
+      area += cross;
+      cx += (p1.x + p2.x) * cross;
+      cy += (p1.y + p2.y) * cross;
+    }
   }
 
   area /= 2;

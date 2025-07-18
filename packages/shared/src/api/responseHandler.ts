@@ -29,12 +29,15 @@ export class UnifiedResponseHandler {
       // If response already has our structure, validate and return
       if (this.isStandardResponse(response)) {
         const data = schema ? schema.parse(response.data) : response.data as T;
-        return {
+        const result: ApiResponse<T> = {
           success: true,
           data,
-          message: response.message,
           metadata: this.generateMetadata(response.metadata),
         };
+        if (response.message !== undefined) {
+          result.message = response.message;
+        }
+        return result;
       }
 
       // Transform non-standard response
@@ -83,9 +86,9 @@ export class UnifiedResponseHandler {
           message: error.message,
           details: {
             name: error.name,
-            stack: process.env['NODE_ENV'] === 'development' ? error.stack : undefined,
+            ...(process.env['NODE_ENV'] === 'development' && error.stack ? { stack: error.stack } : {}),
           },
-          path: context?.path,
+          ...(context?.path ? { path: context.path } : {}),
         },
         metadata: this.generateMetadata(),
       };
@@ -99,7 +102,7 @@ export class UnifiedResponseHandler {
       error: {
         code: 'UNKNOWN_ERROR',
         message: String(error),
-        path: context?.path,
+        ...(context?.path ? { path: context.path } : {}),
       },
       metadata: this.generateMetadata(),
     };
@@ -113,12 +116,15 @@ export class UnifiedResponseHandler {
     message?: string,
     metadata?: Partial<ResponseMetadata>
   ): ApiResponse<T> {
-    return {
+    const result: ApiResponse<T> = {
       success: true,
       data,
-      message,
       metadata: this.generateMetadata(metadata),
     };
+    if (message !== undefined) {
+      result.message = message;
+    }
+    return result;
   }
 
   /**
@@ -129,14 +135,19 @@ export class UnifiedResponseHandler {
     code?: string,
     errors?: ValidationError[]
   ): ApiErrorResponse {
-    return {
+    const result: ApiErrorResponse = {
       success: false,
       data: null,
       message,
-      errors,
-      error: code ? { code, message } : undefined,
       metadata: this.generateMetadata(),
     };
+    if (errors !== undefined) {
+      result.errors = errors;
+    }
+    if (code !== undefined) {
+      result.error = { code, message };
+    }
+    return result;
   }
 
   /**
@@ -245,7 +256,7 @@ export class UnifiedResponseHandler {
         code,
         message,
         details: { status: error.status },
-        path: context?.path,
+        ...(context?.path ? { path: context.path } : {}),
       },
       metadata: this.generateMetadata(),
     };
@@ -277,10 +288,9 @@ export class UnifiedResponseHandler {
   ): ApiResponse<T[]> {
     const totalPages = Math.ceil(pagination.totalItems / pagination.pageSize);
     
-    return {
+    const result: ApiResponse<T[]> = {
       success: true,
       data,
-      message,
       metadata: {
         timestamp: new Date().toISOString(),
         pagination: {
@@ -291,5 +301,9 @@ export class UnifiedResponseHandler {
         },
       },
     };
+    if (message !== undefined) {
+      result.message = message;
+    }
+    return result;
   }
 }

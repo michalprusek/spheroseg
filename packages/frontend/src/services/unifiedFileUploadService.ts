@@ -8,7 +8,7 @@
 import { createLogger } from '@/utils/logging/unifiedLogger';
 import { handleError, ErrorType, ErrorSeverity } from '@/utils/error/unifiedErrorHandler';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient';
+import apiClient, { type ApiError, type ApiRequestConfig } from '@/services/api/client';
 import type { ProjectImage } from '@/pages/segmentation/types';
 
 // Create logger instance
@@ -39,7 +39,7 @@ export interface UploadFile {
   status: UploadStatus;
   progress: number;
   error?: string;
-  result?: any;
+  result?: unknown;
 }
 
 export enum UploadStatus {
@@ -312,14 +312,9 @@ class UnifiedFileUploadService {
       }
 
       // Upload file
-      const response = await apiClient.post('/images/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        signal: abortController.signal,
-        onUploadProgress: (progressEvent) => {
-          const progress = progressEvent.total ? Math.round((progressEvent.loaded * 100) / progressEvent.total) : 0;
-
+      const response = await apiClient.upload<ProjectImage>('/images/upload', formData, {
+        cancelToken: abortController,
+        onUploadProgress: (progress) => {
           this.updateFileProgress(uploadFile.id, progress);
 
           options.onProgress?.({
@@ -327,11 +322,11 @@ class UnifiedFileUploadService {
             fileName: file.name,
             progress,
             status: UploadStatus.UPLOADING,
-            uploaded: progressEvent.loaded,
-            total: progressEvent.total || 0,
+            uploaded: Math.round((file.size * progress) / 100),
+            total: file.size,
           });
         },
-      });
+      } as ApiRequestConfig);
 
       // Update status
       this.updateFileStatus(uploadFile.id, UploadStatus.COMPLETE);
@@ -627,12 +622,15 @@ class UnifiedFileUploadService {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await apiClient.post('/preview/generate', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        responseType: 'blob',
-      });
+      const response = await apiClient.upload<Blob>('/preview/generate', formData);
 
-      return URL.createObjectURL(response.data);
+      // If the response is a blob, create object URL
+      if (response.data instanceof Blob) {
+        return URL.createObjectURL(response.data);
+      }
+      
+      // If not a blob, assume it's a data URL or error
+      throw new Error('Invalid preview response format');
     } catch (error) {
       logger.warn('Server preview generation failed, using fallback:', error);
       // Fallback to canvas-based preview with file info
