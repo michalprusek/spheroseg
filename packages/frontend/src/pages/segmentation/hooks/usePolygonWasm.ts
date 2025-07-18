@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Point } from '@/types';
-import { polygonWasm, usePolygonWasm as useSharedPolygonWasm } from '@spheroseg/shared/utils/polygonWasmUtils';
+import { usePolygonWasm as useSharedPolygonWasm } from '@spheroseg/shared/utils/polygonWasmUtils';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('segmentation:usePolygonWasm');

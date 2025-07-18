@@ -3,10 +3,68 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import FileList, { FileWithPreview } from '../FileList';
 import '@testing-library/jest-dom';
-import { setupFileUploadMocks, createSampleMockFiles } from '../../../../shared/test-utils/file-upload-test-utils';
 
-// Setup mocks
-setupFileUploadMocks();
+// Mock UI components
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+}));
+
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, onClick, ...props }: any) => <button onClick={onClick} {...props}>{children}</button>,
+}));
+
+vi.mock('@/components/ui/progress', () => ({
+  Progress: ({ value, ...props }: any) => <div role="progressbar" aria-valuenow={value} {...props} />,
+}));
+
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  ImagePlus: () => <div data-testid="image-plus-icon" />,
+  FileX: () => <div data-testid="file-x-icon" />,
+  CheckCircle: () => <div data-testid="check-circle-icon" />,
+  X: () => <div data-testid="x-icon" />,
+}));
+
+// Mock language context
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    t: (key: string) => key,
+  }),
+}));
+
+// Create sample mock files
+const createSampleMockFiles = (): FileWithPreview[] => [
+  {
+    name: 'image1.jpg',
+    size: 500 * 1024, // 500 KB
+    type: 'image/jpeg',
+    preview: 'preview-url-1',
+    status: 'pending',
+    lastModified: Date.now(),
+  } as FileWithPreview,
+  {
+    name: 'image2.jpg',
+    size: 2.5 * 1024 * 1024, // 2.5 MB
+    type: 'image/jpeg',
+    status: 'uploading',
+    lastModified: Date.now(),
+  } as FileWithPreview,
+  {
+    name: 'image3.jpg',
+    size: 100 * 1024, // 100 KB
+    type: 'image/jpeg',
+    preview: 'preview-url-3',
+    status: 'complete',
+    lastModified: Date.now(),
+  } as FileWithPreview,
+  {
+    name: 'image4.jpg',
+    size: 5 * 1024 * 1024, // 5 MB
+    type: 'image/jpeg',
+    status: 'error',
+    lastModified: Date.now(),
+  } as FileWithPreview,
+];
 
 describe('FileList Component', () => {
   const mockFiles = createSampleMockFiles();
@@ -39,7 +97,7 @@ describe('FileList Component', () => {
     expect(screen.getByText('500 KB')).toBeInTheDocument();
     expect(screen.getByText('2.5 MB')).toBeInTheDocument();
     expect(screen.getByText('100 KB')).toBeInTheDocument();
-    expect(screen.getByText('5 MB')).toBeInTheDocument();
+    expect(screen.getByText('5.0 MB')).toBeInTheDocument(); // toFixed(1) produces "5.0" not "5"
   });
 
   it('displays preview images when available', () => {
@@ -83,13 +141,13 @@ describe('FileList Component', () => {
     // Pending status for first file
     expect(screen.getByText('dashboard.pending')).toBeInTheDocument();
 
-    // Uploading status for second file
-    expect(screen.getByText('files.uploading')).toBeInTheDocument();
+    // Uploading status for second file - component uses 'dashboard.processing' not 'files.uploading'
+    expect(screen.getByText('dashboard.processing')).toBeInTheDocument();
 
-    // Complete status for third file
-    expect(screen.getByText('files.complete')).toBeInTheDocument();
+    // Complete status for third file - shown as icon
+    expect(screen.getByTestId('check-circle-icon')).toBeInTheDocument();
 
-    // Error status for fourth file
-    expect(screen.getByText('files.error')).toBeInTheDocument();
+    // Error status for fourth file - shown as icon
+    expect(screen.getByTestId('file-x-icon')).toBeInTheDocument();
   });
 });

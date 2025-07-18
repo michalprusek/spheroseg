@@ -418,7 +418,7 @@ export const MockApiClientProvider: React.FC<{
     };
   }, [mockResponses]);
   
-  return <>{children}</>;
+  return children;
 };
 
 export default apiClient;

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   calculatePolygonArea,
   calculatePolygonPerimeter,
@@ -268,7 +268,7 @@ describe('Metric Calculations Utilities', () => {
     });
 
     it('handles invalid unit by defaulting to meters', () => {
-      // @ts-ignore - intentionally testing invalid unit
+      // @ts-expect-error - intentionally testing invalid unit
       expect(convertPixelsToRealUnits(100, 10, 'lightyears')).toBe(10);
     });
   });

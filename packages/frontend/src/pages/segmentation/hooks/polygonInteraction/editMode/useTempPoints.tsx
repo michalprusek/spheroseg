@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Point } from '@/lib/segmentation';
 import { TempPointsState } from '@/pages/segmentation/types';
-import { getCanvasCoordinates, screenToImageCoordinates } from '../coordinateUtils';
+import { getCanvasCoordinates } from '../coordinateUtils';
 
 /**
  * Hook for managing temporary points during edit mode

@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate as authMiddleware } from '../security/middleware/auth';
+import { authenticate as authMiddleware, requireAdmin } from '../security/middleware/auth';
 import stuckImageCleanupService from '../services/stuckImageCleanup';
 import logger from '../utils/logger';
 
@@ -11,11 +11,8 @@ const router = express.Router();
  *
  * Requires authentication
  */
-router.post('/cleanup-stuck-images', authMiddleware, async (req, res, next) => {
+router.post('/cleanup-stuck-images', requireAdmin, async (req, res, next) => {
   try {
-    // TODO: Add admin role check here
-    // For now, any authenticated user can trigger cleanup
-
     logger.info('Manual stuck image cleanup triggered', { userId: req.user?.userId });
 
     const count = await stuckImageCleanupService.forceCleanup();

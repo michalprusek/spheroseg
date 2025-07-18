@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { cdnConfig, getCDNUrl, getCacheControl, shouldUseCDN } from '../config/cdn.config';
-import { createCDNService, getCDNService } from '../services/cdnService';
+import { getCDNUrl, getCacheControl, shouldUseCDN } from '../config/cdn.config';
+import { createCDNService } from '../services/cdnService';
 import { cdnMiddleware } from '../middleware/cdn';
 
 // Mock environment variables
@@ -65,8 +65,12 @@ describe('CDN Configuration', () => {
     });
 
     it('should transform upload URLs correctly', () => {
-      expect(getCDNUrl('/uploads/image.jpg')).toBe('https://cdn.example.com/uploads/uploads/image.jpg');
-      expect(getCDNUrl('uploads/image.jpg')).toBe('https://cdn.example.com/uploads/uploads/image.jpg');
+      expect(getCDNUrl('/uploads/image.jpg')).toBe(
+        'https://cdn.example.com/uploads/uploads/image.jpg'
+      );
+      expect(getCDNUrl('uploads/image.jpg')).toBe(
+        'https://cdn.example.com/uploads/uploads/image.jpg'
+      );
     });
 
     it('should handle trailing slashes in base URL', () => {
@@ -142,7 +146,7 @@ describe('CDN Service', () => {
 
     it('should handle getUrl', () => {
       const url = service.getUrl('/assets/image.jpg', {
-        transform: { width: 300, height: 200, quality: 80 }
+        transform: { width: 300, height: 200, quality: 80 },
       });
       expect(url).toBe('/assets/image.jpg');
     });
@@ -202,7 +206,7 @@ describe('CDN Middleware', () => {
   describe('cdnUrlMiddleware', () => {
     it('should add CDN URL helper to response locals', () => {
       cdnMiddleware.url(req as Request, res as Response, next);
-      
+
       expect(res.locals?.getCDNUrl).toBeDefined();
       expect(res.locals?.cdnEnabled).toBeDefined();
       expect(next).toHaveBeenCalled();
@@ -215,7 +219,7 @@ describe('CDN Middleware', () => {
       process.env.NODE_ENV = 'production';
 
       cdnMiddleware.url(req as Request, res as Response, next);
-      
+
       const cdnUrl = res.locals?.getCDNUrl('/assets/test.jpg');
       expect(cdnUrl).toContain('cdn.example.com');
     });
@@ -229,10 +233,10 @@ describe('CDN Middleware', () => {
       process.env.NODE_ENV = 'production';
 
       cdnMiddleware.cache(req as Request, res as Response, next);
-      
+
       // Trigger send
       (res.send as jest.Mock).call(res, 'test');
-      
+
       expect(res.setHeader).toHaveBeenCalledWith(
         expect.stringContaining('X-CDN'),
         expect.any(String)
@@ -243,10 +247,10 @@ describe('CDN Middleware', () => {
       process.env.CDN_ENABLED = 'false';
 
       cdnMiddleware.cache(req as Request, res as Response, next);
-      
+
       // Trigger send
       (res.send as jest.Mock).call(res, 'test');
-      
+
       expect(res.setHeader).not.toHaveBeenCalled();
     });
   });
@@ -260,51 +264,51 @@ describe('CDN Middleware', () => {
 
     it('should require admin permission', async () => {
       req.user = { id: '123', isAdmin: false };
-      
+
       await cdnMiddleware.purge(req as Request, res as Response, next);
-      
+
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.json).toHaveBeenCalledWith({ error: 'Unauthorized' });
     });
 
     it('should handle purge with paths', async () => {
       req.body = { paths: ['/assets/old.css', '/uploads/old.jpg'] };
-      
+
       await cdnMiddleware.purge(req as Request, res as Response, next);
-      
+
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        message: 'CDN cache purged successfully'
+        message: 'CDN cache purged successfully',
       });
     });
 
     it('should handle purge with patterns', async () => {
       req.body = { patterns: ['/assets/*', '/uploads/*'] };
-      
+
       await cdnMiddleware.purge(req as Request, res as Response, next);
-      
+
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        message: 'CDN cache purged successfully'
+        message: 'CDN cache purged successfully',
       });
     });
 
     it('should handle purge all', async () => {
       req.body = {};
-      
+
       await cdnMiddleware.purge(req as Request, res as Response, next);
-      
+
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        message: 'CDN cache purged successfully'
+        message: 'CDN cache purged successfully',
       });
     });
 
     it('should pass through non-purge requests', async () => {
       (req as any).path = '/api/other';
-      
+
       await cdnMiddleware.purge(req as Request, res as Response, next);
-      
+
       expect(next).toHaveBeenCalled();
       expect(res.json).not.toHaveBeenCalled();
     });
@@ -320,15 +324,15 @@ describe('CDN Middleware', () => {
 
     it('should rewrite URLs in JSON responses', () => {
       cdnMiddleware.rewrite(req as Request, res as Response, next);
-      
+
       const data = {
         imageUrl: '/assets/photo.jpg',
         thumbnailUrl: '/uploads/thumb.jpg',
-        other: 'not-a-url'
+        other: 'not-a-url',
       };
-      
+
       (res.json as jest.Mock).call(res, data);
-      
+
       const calledData = (res.json as jest.Mock).mock.calls[0][0];
       expect(calledData.imageUrl).toContain('cdn.example.com');
       expect(calledData.thumbnailUrl).toContain('cdn.example.com');
@@ -337,18 +341,18 @@ describe('CDN Middleware', () => {
 
     it('should handle nested objects', () => {
       cdnMiddleware.rewrite(req as Request, res as Response, next);
-      
+
       const data = {
         user: {
           avatar: '/uploads/avatar.jpg',
           profile: {
-            backgroundImage: '/assets/bg.png'
-          }
-        }
+            backgroundImage: '/assets/bg.png',
+          },
+        },
       };
-      
+
       (res.json as jest.Mock).call(res, data);
-      
+
       const calledData = (res.json as jest.Mock).mock.calls[0][0];
       expect(calledData.user.avatar).toContain('cdn.example.com');
       expect(calledData.user.profile.backgroundImage).toContain('cdn.example.com');
@@ -356,17 +360,13 @@ describe('CDN Middleware', () => {
 
     it('should handle arrays', () => {
       cdnMiddleware.rewrite(req as Request, res as Response, next);
-      
+
       const data = {
-        images: [
-          { url: '/assets/1.jpg' },
-          { url: '/assets/2.jpg' },
-          { url: '/assets/3.jpg' }
-        ]
+        images: [{ url: '/assets/1.jpg' }, { url: '/assets/2.jpg' }, { url: '/assets/3.jpg' }],
       };
-      
+
       (res.json as jest.Mock).call(res, data);
-      
+
       const calledData = (res.json as jest.Mock).mock.calls[0][0];
       calledData.images.forEach((img: any) => {
         expect(img.url).toContain('cdn.example.com');
@@ -375,13 +375,13 @@ describe('CDN Middleware', () => {
 
     it('should not rewrite when CDN is disabled', () => {
       process.env.CDN_ENABLED = 'false';
-      
+
       cdnMiddleware.rewrite(req as Request, res as Response, next);
-      
+
       const data = { imageUrl: '/assets/photo.jpg' };
-      
+
       (res.json as jest.Mock).call(res, data);
-      
+
       expect(next).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith(data);
     });

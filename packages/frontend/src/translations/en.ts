@@ -1484,4 +1484,11 @@ export default {
       twitter: 'Follow on Twitter',
     },
   },
+  shared: {
+    permission: {
+      view: 'View',
+      edit: 'Edit',
+      admin: 'Admin',
+    },
+  },
 };

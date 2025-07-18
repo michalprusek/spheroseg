@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect } from 'react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -26,7 +26,6 @@ import {
   createCodeSplitComponent,
   setupVisibilityPrefetching,
   monitorChunkLoading,
-  routeLoadingPriorities,
 } from '@/utils/codeSplitting';
 
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -50,92 +49,84 @@ import './components/a11y/SkipLink.css';
 // Enhanced lazy loading with code splitting
 const routeComponents = {
   // Critical routes (loaded immediately)
-  Index: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "index" */ './pages/Index'),
-    { chunkName: 'index', prefetch: true }
-  ),
-  SignIn: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "auth" */ './pages/SignIn'),
-    { chunkName: 'auth', prefetch: true }
-  ),
-  SignUp: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "auth" */ './pages/SignUp'),
-    { chunkName: 'auth' }
-  ),
+  Index: createCodeSplitComponent(() => import(/* webpackChunkName: "index" */ './pages/Index'), {
+    chunkName: 'index',
+    prefetch: true,
+  }),
+  SignIn: createCodeSplitComponent(() => import(/* webpackChunkName: "auth" */ './pages/SignIn'), {
+    chunkName: 'auth',
+    prefetch: true,
+  }),
+  SignUp: createCodeSplitComponent(() => import(/* webpackChunkName: "auth" */ './pages/SignUp'), {
+    chunkName: 'auth',
+  }),
 
   // High priority routes
-  Dashboard: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "dashboard" */ './pages/Dashboard'),
-    { chunkName: 'dashboard', prefetch: true }
-  ),
-  ProjectDetail: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "project" */ './pages/ProjectDetail'),
-    { chunkName: 'project', prefetch: true }
-  ),
+  Dashboard: createCodeSplitComponent(() => import(/* webpackChunkName: "dashboard" */ './pages/Dashboard'), {
+    chunkName: 'dashboard',
+    prefetch: true,
+  }),
+  ProjectDetail: createCodeSplitComponent(() => import(/* webpackChunkName: "project" */ './pages/ProjectDetail'), {
+    chunkName: 'project',
+    prefetch: true,
+  }),
 
   // Medium priority routes
-  Settings: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "settings" */ './pages/Settings'),
-    { chunkName: 'settings' }
-  ),
-  Profile: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "profile" */ './pages/Profile'),
-    { chunkName: 'profile' }
-  ),
-  Documentation: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "docs" */ './pages/Documentation'),
-    { chunkName: 'docs' }
-  ),
+  Settings: createCodeSplitComponent(() => import(/* webpackChunkName: "settings" */ './pages/Settings'), {
+    chunkName: 'settings',
+  }),
+  Profile: createCodeSplitComponent(() => import(/* webpackChunkName: "profile" */ './pages/Profile'), {
+    chunkName: 'profile',
+  }),
+  Documentation: createCodeSplitComponent(() => import(/* webpackChunkName: "docs" */ './pages/Documentation'), {
+    chunkName: 'docs',
+  }),
 
   // Low priority routes
-  AboutPage: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "static" */ './pages/AboutPage'),
-    { chunkName: 'static' }
-  ),
-  TermsOfService: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "static" */ './pages/TermsOfService'),
-    { chunkName: 'static' }
-  ),
-  PrivacyPolicy: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "static" */ './pages/PrivacyPolicy'),
-    { chunkName: 'static' }
-  ),
-  RequestAccess: createCodeSplitComponent(
-    () => import(/* webpackChunkName: "static" */ './pages/RequestAccess'),
-    { chunkName: 'static' }
-  ),
+  AboutPage: createCodeSplitComponent(() => import(/* webpackChunkName: "static" */ './pages/AboutPage'), {
+    chunkName: 'static',
+  }),
+  TermsOfService: createCodeSplitComponent(() => import(/* webpackChunkName: "static" */ './pages/TermsOfService'), {
+    chunkName: 'static',
+  }),
+  PrivacyPolicy: createCodeSplitComponent(() => import(/* webpackChunkName: "static" */ './pages/PrivacyPolicy'), {
+    chunkName: 'static',
+  }),
+  RequestAccess: createCodeSplitComponent(() => import(/* webpackChunkName: "static" */ './pages/RequestAccess'), {
+    chunkName: 'static',
+  }),
 
   // Heavy components with separate chunks
   SegmentationPage: createCodeSplitComponent(
-    () => import(
-      /* webpackChunkName: "segmentation" */
-      /* webpackPreload: true */
-      './pages/segmentation/SegmentationPage'
-    ),
-    { chunkName: 'segmentation' }
+    () =>
+      import(
+        /* webpackChunkName: "segmentation" */
+        /* webpackPreload: true */
+        './pages/segmentation/SegmentationPage'
+      ),
+    { chunkName: 'segmentation' },
   ),
   ProjectExport: createCodeSplitComponent(
-    () => import(
-      /* webpackChunkName: "export" */
-      './pages/export/ProjectExport'
-    ),
-    { chunkName: 'export' }
+    () =>
+      import(
+        /* webpackChunkName: "export" */
+        './pages/export/ProjectExport'
+      ),
+    { chunkName: 'export' },
   ),
 
   // Other routes
   VerifyEmail: lazyWithRetry(() => import('./pages/VerifyEmail')),
   NotFound: lazyWithRetry(() => import('./pages/NotFound')),
   ForgotPassword: lazyWithRetry(() => import('./pages/ForgotPassword')),
-  SegmentationEditorRedirect: lazyWithRetry(
-    () => import('./pages/segmentation/SegmentationEditorRedirect')
-  ),
+  SegmentationEditorRedirect: lazyWithRetry(() => import('./pages/segmentation/SegmentationEditorRedirect')),
   AcceptInvitation: lazyWithRetry(() => import('./pages/AcceptInvitation')),
 };
 
 // Route prefetching hook
 function useRoutePrefetching() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
 
   useEffect(() => {
     // Prefetch routes based on current location
@@ -145,10 +136,10 @@ function useRoutePrefetching() {
     const handleLinkHover = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const link = target.closest('a');
-      
+
       if (link && link.href.startsWith(window.location.origin)) {
         const path = link.href.replace(window.location.origin, '');
-        
+
         // Prefetch component based on route
         if (path.includes('/dashboard')) {
           routeComponents.Dashboard.prefetch();
@@ -557,7 +548,7 @@ const router = createBrowserRouter(routes, {
 if (typeof window !== 'undefined') {
   // Prefetch auth routes immediately
   routeComponents.SignIn.prefetch();
-  
+
   // Prefetch dashboard after a delay
   setTimeout(() => {
     routeComponents.Dashboard.prefetch();

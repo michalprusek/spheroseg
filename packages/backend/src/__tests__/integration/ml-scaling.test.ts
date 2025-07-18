@@ -1,13 +1,12 @@
 /**
  * Integration tests for ML Service Scaling
- * 
+ *
  * Tests load distribution, failover, and health monitoring
  */
 import request from 'supertest';
 import { Pool } from 'pg';
 import app from '../../app';
 import config from '../../config';
-import logger from '../../utils/logger';
 
 // Mock dependencies
 jest.mock('../../config');
@@ -31,12 +30,14 @@ describe('ML Service Scaling', () => {
     mockPool.query.mockImplementation((query: string) => {
       if (query.includes('SELECT * FROM users WHERE email')) {
         return Promise.resolve({
-          rows: [{
-            id: 1,
-            email: 'test@test.com',
-            password_hash: '$2b$10$YourHashHere',
-            name: 'Test User'
-          }]
+          rows: [
+            {
+              id: 1,
+              email: 'test@test.com',
+              password_hash: '$2b$10$YourHashHere',
+              name: 'Test User',
+            },
+          ],
         });
       }
       return Promise.resolve({ rows: [] });
@@ -54,9 +55,9 @@ describe('ML Service Scaling', () => {
     it('should distribute load across multiple ML instances', async () => {
       // Track which instances receive requests
       const instanceHits = new Map<string, number>();
-      
+
       // Mock ML service responses with instance identification
-      const mockMLResponses = [
+      const _mockMLResponses = [
         { instance: 'ml-1', taskId: '123', status: 'completed' },
         { instance: 'ml-2', taskId: '124', status: 'completed' },
         { instance: 'ml-3', taskId: '125', status: 'completed' },
@@ -71,7 +72,7 @@ describe('ML Service Scaling', () => {
             .set('Authorization', `Bearer ${authToken}`)
             .send({
               imageId: `test-image-${i}`,
-              projectId: 'test-project'
+              projectId: 'test-project',
             })
         );
       }
@@ -79,7 +80,7 @@ describe('ML Service Scaling', () => {
       const responses = await Promise.all(requests);
 
       // Verify responses
-      responses.forEach(res => {
+      responses.forEach((res) => {
         expect(res.status).toBe(200);
         const instance = res.body.instance;
         instanceHits.set(instance, (instanceHits.get(instance) || 0) + 1);
@@ -87,11 +88,11 @@ describe('ML Service Scaling', () => {
 
       // Verify load is distributed (each instance should get roughly 1/3)
       expect(instanceHits.size).toBeGreaterThanOrEqual(2); // At least 2 instances used
-      
+
       const hitCounts = Array.from(instanceHits.values());
       const avgHits = 30 / 3; // Expected average per instance
-      
-      hitCounts.forEach(count => {
+
+      hitCounts.forEach((count) => {
         // Allow 50% deviation from perfect distribution
         expect(count).toBeGreaterThan(avgHits * 0.5);
         expect(count).toBeLessThan(avgHits * 1.5);
@@ -114,7 +115,7 @@ describe('ML Service Scaling', () => {
               .send({
                 imageId: `slow-${i}`,
                 projectId: 'test-project',
-                processingTime: 5000 // 5 seconds
+                processingTime: 5000, // 5 seconds
               })
           );
         } else {
@@ -126,20 +127,17 @@ describe('ML Service Scaling', () => {
               .send({
                 imageId: `fast-${i}`,
                 projectId: 'test-project',
-                processingTime: 100 // 100ms
+                processingTime: 100, // 100ms
               })
           );
         }
       }
 
       // Wait for all requests
-      const allResponses = await Promise.all([
-        ...slowInstanceRequests,
-        ...fastInstanceRequests
-      ]);
+      const allResponses = await Promise.all([...slowInstanceRequests, ...fastInstanceRequests]);
 
       // Verify all succeeded
-      allResponses.forEach(res => {
+      allResponses.forEach((res) => {
         expect(res.status).toBe(200);
       });
 
@@ -157,7 +155,7 @@ describe('ML Service Scaling', () => {
 
       const responses = await Promise.all(healthChecks);
 
-      responses.forEach(res => {
+      responses.forEach((res) => {
         expect(res.status).toBe(200);
         expect(res.body).toMatchObject({
           status: 'healthy',
@@ -174,7 +172,7 @@ describe('ML Service Scaling', () => {
     it('should handle instance failure gracefully', async () => {
       // Simulate one instance being down
       const mockFailedInstance = 'ml-2';
-      
+
       // Mock health check failure for one instance
       jest.spyOn(global, 'fetch').mockImplementation((url) => {
         if (url.toString().includes(mockFailedInstance)) {
@@ -182,7 +180,7 @@ describe('ML Service Scaling', () => {
         }
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ status: 'healthy' })
+          json: () => Promise.resolve({ status: 'healthy' }),
         } as Response);
       });
 
@@ -195,7 +193,7 @@ describe('ML Service Scaling', () => {
             .set('Authorization', `Bearer ${authToken}`)
             .send({
               imageId: `failover-test-${i}`,
-              projectId: 'test-project'
+              projectId: 'test-project',
             })
         );
       }
@@ -203,7 +201,7 @@ describe('ML Service Scaling', () => {
       const responses = await Promise.all(requests);
 
       // All requests should succeed despite one instance being down
-      responses.forEach(res => {
+      responses.forEach((res) => {
         expect(res.status).toBe(200);
         // Verify the failed instance was not used
         expect(res.body.instance).not.toBe(mockFailedInstance);
@@ -215,7 +213,7 @@ describe('ML Service Scaling', () => {
 
     it('should retry failed requests on healthy instances', async () => {
       let attemptCount = 0;
-      
+
       // Mock intermittent failures
       jest.spyOn(global, 'fetch').mockImplementation(() => {
         attemptCount++;
@@ -226,11 +224,12 @@ describe('ML Service Scaling', () => {
         // Subsequent attempts succeed
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            status: 'completed',
-            taskId: '123',
-            instance: 'ml-1'
-          })
+          json: () =>
+            Promise.resolve({
+              status: 'completed',
+              taskId: '123',
+              instance: 'ml-1',
+            }),
         } as Response);
       });
 
@@ -239,33 +238,31 @@ describe('ML Service Scaling', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           imageId: 'retry-test',
-          projectId: 'test-project'
+          projectId: 'test-project',
         });
 
       expect(response.status).toBe(200);
       expect(attemptCount).toBeGreaterThan(1); // Verify retry happened
-      
+
       (global.fetch as jest.Mock).mockRestore();
     });
 
     it('should handle complete ML service outage', async () => {
       // Mock all instances being down
-      jest.spyOn(global, 'fetch').mockRejectedValue(
-        new Error('All instances down')
-      );
+      jest.spyOn(global, 'fetch').mockRejectedValue(new Error('All instances down'));
 
       const response = await request(app)
         .post('/api/images/segment')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           imageId: 'outage-test',
-          projectId: 'test-project'
+          projectId: 'test-project',
         });
 
       expect(response.status).toBe(503); // Service Unavailable
       expect(response.body).toMatchObject({
         error: expect.stringContaining('ML service unavailable'),
-        retryAfter: expect.any(Number)
+        retryAfter: expect.any(Number),
       });
 
       (global.fetch as jest.Mock).mockRestore();
@@ -290,7 +287,7 @@ describe('ML Service Scaling', () => {
             .set('Authorization', `Bearer ${authToken}`)
             .send({
               imageId: `metrics-test-${i}`,
-              projectId: 'test-project'
+              projectId: 'test-project',
             })
         );
       }
@@ -304,17 +301,14 @@ describe('ML Service Scaling', () => {
 
       const afterMetrics = afterMetricsResponse.body;
 
-      expect(afterMetrics.totalRequests).toBeGreaterThan(
-        beforeMetrics.totalRequests || 0
-      );
+      expect(afterMetrics.totalRequests).toBeGreaterThan(beforeMetrics.totalRequests || 0);
       expect(afterMetrics.successRate).toBeGreaterThan(0);
       expect(afterMetrics.avgResponseTime).toBeGreaterThan(0);
       expect(afterMetrics.instanceMetrics).toBeDefined();
     });
 
     it('should expose Prometheus metrics for ML scaling', async () => {
-      const response = await request(app)
-        .get('/api/metrics');
+      const response = await request(app).get('/api/metrics');
 
       expect(response.status).toBe(200);
       expect(response.text).toContain('ml_tasks_queued');
@@ -335,7 +329,7 @@ describe('ML Service Scaling', () => {
             .set('Authorization', `Bearer ${authToken}`)
             .send({
               imageId: `queue-test-${i}`,
-              projectId: 'test-project'
+              projectId: 'test-project',
             })
         );
       }
@@ -347,7 +341,7 @@ describe('ML Service Scaling', () => {
       let queuedCount = 0;
       let rejectedCount = 0;
 
-      responses.forEach(res => {
+      responses.forEach((res) => {
         if (res.status === 200) {
           successCount++;
         } else if (res.status === 202) {
@@ -368,7 +362,7 @@ describe('ML Service Scaling', () => {
 
     it('should process queue in FIFO order', async () => {
       const taskIds: string[] = [];
-      
+
       // Submit tasks with identifiers
       for (let i = 0; i < 10; i++) {
         const response = await request(app)
@@ -377,7 +371,7 @@ describe('ML Service Scaling', () => {
           .send({
             imageId: `fifo-test-${i}`,
             projectId: 'test-project',
-            priority: 'normal'
+            priority: 'normal',
           });
 
         if (response.body.taskId) {
@@ -386,16 +380,14 @@ describe('ML Service Scaling', () => {
       }
 
       // Wait a bit for processing
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Check completion order
       const completionOrder = await request(app)
         .get('/api/ml/tasks/completion-order')
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(completionOrder.body.order).toEqual(
-        expect.arrayContaining(taskIds)
-      );
+      expect(completionOrder.body.order).toEqual(expect.arrayContaining(taskIds));
     });
   });
 });

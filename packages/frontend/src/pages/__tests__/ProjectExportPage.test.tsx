@@ -1,12 +1,26 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
+import { render } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ProjectExportPage from '@/pages/export/ProjectExport';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import apiClient from '@/lib/apiClient';
+
+// Mock radix-optimized library
+vi.mock('@/lib/radix-optimized', () => ({
+  CheckboxRoot: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CheckboxIndicator: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogRoot: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogTrigger: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  DialogPortal: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogOverlay: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogTitle: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
+  DialogDescription: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+  DialogClose: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}));
 
 // Mock react-i18next
 vi.mock('react-i18next', () => ({

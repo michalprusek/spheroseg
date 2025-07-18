@@ -65,7 +65,7 @@ export const VirtualList = memo(
       if (!scrollElementRef.current) return { start: 0, end: 0 };
 
       const containerHeight = scrollElementRef.current.clientHeight;
-      let accumulatedHeight = 0;
+      const accumulatedHeight = 0;
       let start = 0;
       let end = items.length;
 

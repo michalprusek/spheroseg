@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Point, Polygon, Intersection, SegmentationData } from './types';
+import { Point, Polygon, SegmentationData } from './types';
 import usePolygonWorker from '../usePolygonWorker';
 import { createLogger } from '@/lib/logger';
 import {
@@ -11,7 +11,6 @@ import {
 import {
   slicePolygon as slicePolygonShared,
   distanceToLineSegment,
-  getPointSideOfLine,
   createPolygon,
 } from '@/shared/utils/polygonSlicingUtils';
 

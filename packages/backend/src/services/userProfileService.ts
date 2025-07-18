@@ -2,7 +2,7 @@
  * User Profile Service
  * Handles all user profile operations including avatar management
  */
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';

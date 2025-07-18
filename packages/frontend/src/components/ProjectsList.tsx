@@ -10,7 +10,6 @@ import ProjectDialogForm from '@/components/project/ProjectDialogForm';
 import NewProjectCardUI from '@/components/project/NewProjectCardUI';
 import { formatDistanceToNow } from 'date-fns';
 import { cs, enUS } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
 
 export interface ProjectsListProps {
   projects: Array<

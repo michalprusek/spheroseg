@@ -1,4 +1,3 @@
-import React from 'react';
 import { ZoomIn, ZoomOut, Maximize2, Pencil, Undo2, Redo2, Scissors, PlusCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';

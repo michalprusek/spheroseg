@@ -31,16 +31,17 @@ export const TestRouterWrapper: React.FC<{ children: React.ReactNode }> = ({ chi
  * Create a memory router with future flags for testing
  */
 export const createTestRouter = (routes: any[], initialEntries = ['/', '/about']) => {
-  // Ensure flags are set before creating the router
-  if (!window.REACT_ROUTER_FUTURE_FLAGS) {
-    window.REACT_ROUTER_FUTURE_FLAGS = {
+  return createMemoryRouter(routes, { 
+    initialEntries,
+    future: {
       v7_startTransition: true,
       v7_relativeSplatPath: true,
       v7_normalizeFormMethod: true,
-    };
-  }
-
-  return createMemoryRouter(routes, { initialEntries });
+      v7_fetcherPersist: true,
+      v7_partialHydration: true,
+      v7_skipActionErrorRevalidation: true,
+    },
+  });
 };
 
 /**

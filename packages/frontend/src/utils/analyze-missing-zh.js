@@ -1,5 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Function to flatten nested object
 function flattenObject(obj, prefix = '') {
@@ -15,8 +20,8 @@ function flattenObject(obj, prefix = '') {
 }
 
 // Load translations
-const enPath = path.join(process.cwd(), 'src/translations/en.ts');
-const zhPath = path.join(process.cwd(), 'src/translations/zh.ts');
+const enPath = path.join(__dirname, '..', 'translations', 'en.ts');
+const zhPath = path.join(__dirname, '..', 'translations', 'zh.ts');
 
 const enContent = fs.readFileSync(enPath, 'utf-8');
 const zhContent = fs.readFileSync(zhPath, 'utf-8');

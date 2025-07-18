@@ -7,6 +7,7 @@ import logger from '../utils/logger';
 import { ApiError } from '../utils/ApiError';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
+import archiver from 'archiver';
 
 const router = express.Router();
 const pipelineAsync = promisify(pipeline);
@@ -29,20 +30,27 @@ router.get(
     }
 
     try {
-      // Verify user has access to the image
-      const imageResult = await getPool().query(
-        `SELECT i.*, p.user_id 
-         FROM images i 
-         JOIN projects p ON i.project_id = p.id 
-         WHERE i.id = $1 AND p.user_id = $2`,
-        [imageId, userId]
+      // First get the image to find its project
+      const imageQuery = await getPool().query(
+        'SELECT i.*, i.project_id FROM images i WHERE i.id = $1',
+        [imageId]
       );
 
-      if (imageResult.rows.length === 0) {
+      if (imageQuery.rows.length === 0) {
+        throw new ApiError('Image not found', 404);
+      }
+
+      const image = imageQuery.rows[0];
+      const projectId = image.project_id;
+
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(getPool(), projectId, userId);
+      
+      if (!project) {
         throw new ApiError('Image not found or access denied', 404);
       }
 
-      const image = imageResult.rows[0];
       const filePath = image.storage_path;
 
       // Check if file exists
@@ -137,20 +145,15 @@ router.get(
     }
 
     try {
-      // Verify user has access to the project
-      const projectResult = await getPool().query(
-        'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
-
-      if (projectResult.rows.length === 0) {
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(getPool(), projectId, userId);
+      
+      if (!project) {
         throw new ApiError('Project not found or access denied', 404);
       }
 
-      const project = projectResult.rows[0];
-
-      // Import archiver dynamically
-      const archiver = require('archiver');
+      // Use archiver for zip creation
 
       // Set headers for ZIP download
       res.setHeader('Content-Type', 'application/zip');

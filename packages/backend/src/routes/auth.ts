@@ -31,22 +31,109 @@ import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
 import authService from '../services/authService'; // Import the new auth service
 // TODO: Re-enable i18n when fixed
-// import { 
-//   sendSuccess, 
-//   sendCreated, 
-//   sendError, 
-//   sendServerError 
+// import {
+//   sendSuccess,
+//   sendCreated,
+//   sendError,
+//   sendServerError
 // } from '../utils/apiResponsei18n';
 
 const router: Router = express.Router();
 
-// GET /api/auth/test - Test route
+/**
+ * @openapi
+ * /auth/test:
+ *   get:
+ *     tags: [Authentication]
+ *     summary: Test authentication routes
+ *     description: Simple test endpoint to verify auth routes are working
+ *     responses:
+ *       200:
+ *         description: Routes are working
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Auth routes are working"
+ */
 router.get('/test', (req: express.Request, res: Response) => {
   logger.info('Test route hit');
   res.json({ message: 'Auth routes are working' });
 });
 
-// POST /api/auth/register - Register a new user
+/**
+ * @openapi
+ * /auth/register:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Register a new user
+ *     description: |
+ *       Create a new user account with email and password.
+ *       Returns user profile and authentication tokens upon successful registration.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, name]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address (must be unique)
+ *                 example: "user@example.com"
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: User's password (min 8 characters, must include letters and numbers)
+ *                 example: "securePassword123"
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: User's full name
+ *                 example: "John Doe"
+ *               preferred_language:
+ *                 type: string
+ *                 enum: [en, cs, de, es, fr, zh]
+ *                 description: User's preferred language (optional, defaults to 'en')
+ *                 example: "en"
+ *     responses:
+ *       201:
+ *         description: User successfully registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Registration successful"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 tokens:
+ *                   $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: Validation error - invalid input data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: Conflict - email already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/register', validate(registerSchema), async (req: express.Request, res: Response) => {
   logger.info('Register endpoint hit', { body: req.body });
   const { email, password, name, preferred_language } = req.body as RegisterRequest;
@@ -63,7 +150,78 @@ router.post('/register', validate(registerSchema), async (req: express.Request, 
   }
 });
 
-// POST /api/auth/login - Login with email/password
+/**
+ * @openapi
+ * /auth/login:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Authenticate user
+ *     description: |
+ *       Login with email and password to receive JWT access and refresh tokens.
+ *       Supports optional "remember me" functionality for extended sessions.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's registered email address
+ *                 example: "user@example.com"
+ *               password:
+ *                 type: string
+ *                 description: User's password
+ *                 example: "securePassword123"
+ *               remember_me:
+ *                 type: boolean
+ *                 description: Extended session duration when true
+ *                 default: false
+ *                 example: false
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Login successful"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 tokens:
+ *                   $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: Validation error - invalid input format
+ *       401:
+ *         description: Unauthorized - invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid email or password"
+ *                 code:
+ *                   type: string
+ *                   example: "INVALID_CREDENTIALS"
+ *       429:
+ *         description: Too many failed login attempts
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/login', validate(loginSchema), async (req: express.Request, res: Response) => {
   const { email, password, remember_me } = req.body as LoginRequest;
 
@@ -79,7 +237,62 @@ router.post('/login', validate(loginSchema), async (req: express.Request, res: R
   }
 });
 
-// POST /api/auth/refresh - Refresh access token using refresh token
+/**
+ * @openapi
+ * /auth/refresh:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Refresh access token
+ *     description: |
+ *       Use a valid refresh token to obtain a new access token and refresh token pair.
+ *       This endpoint implements token rotation for enhanced security.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [refreshToken]
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Valid refresh token from previous login or refresh
+ *                 example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Token refreshed successfully"
+ *                 tokens:
+ *                   $ref: '#/components/schemas/TokenResponse'
+ *       401:
+ *         description: Invalid or expired refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid refresh token"
+ *                 code:
+ *                   type: string
+ *                   example: "INVALID_REFRESH_TOKEN"
+ *       500:
+ *         description: Internal server error
+ */
 router.post(
   '/refresh',
   validate(refreshTokenSchema),
@@ -99,7 +312,49 @@ router.post(
   }
 );
 
-// POST /api/auth/forgot-password - Request password reset
+/**
+ * @openapi
+ * /auth/forgot-password:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Request password reset
+ *     description: |
+ *       Send a password reset email to the specified email address.
+ *       If the email exists in the system, a new temporary password will be generated and sent.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email address of the account to reset
+ *                 example: "user@example.com"
+ *     responses:
+ *       200:
+ *         description: Password reset email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "A new password has been sent to your email"
+ *       400:
+ *         description: Validation error - invalid email format
+ *       404:
+ *         description: Email not found in system
+ *       500:
+ *         description: Internal server error
+ */
 router.post(
   '/forgot-password',
   validate(forgotPasswordSchema),
@@ -122,7 +377,53 @@ router.post(
   }
 );
 
-// POST /api/auth/reset-password - Reset password with token
+/**
+ * @openapi
+ * /auth/reset-password:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Reset password with token
+ *     description: |
+ *       Reset user password using a valid reset token from email.
+ *       The token is typically sent via the forgot-password endpoint.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, password]
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Password reset token from email
+ *                 example: "reset-token-abc123"
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: New password (min 8 characters)
+ *                 example: "newSecurePassword123"
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Password has been reset successfully"
+ *       400:
+ *         description: Validation error - invalid input
+ *       401:
+ *         description: Invalid or expired reset token
+ *       500:
+ *         description: Internal server error
+ */
 router.post(
   '/reset-password',
   validate(resetPasswordSchema),
@@ -142,7 +443,45 @@ router.post(
   }
 );
 
-// POST /api/auth/logout - Invalidate refresh token on logout
+/**
+ * @openapi
+ * /auth/logout:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Logout user
+ *     description: |
+ *       Invalidate the current user session and refresh token.
+ *       This endpoint can be called with or without authentication for graceful logout.
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh token to invalidate
+ *                 example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Logged out successfully"
+ *       500:
+ *         description: Internal server error (logout still considered successful)
+ */
 router.post('/logout', optionalAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const { refreshToken } = req.body;
   const userId = req.user?.userId;
@@ -158,7 +497,36 @@ router.post('/logout', optionalAuthMiddleware, async (req: AuthenticatedRequest,
   }
 });
 
-// POST /api/auth/revoke - Revoke all refresh tokens for current user
+/**
+ * @openapi
+ * /auth/revoke:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Revoke all user sessions
+ *     description: |
+ *       Revoke all refresh tokens for the authenticated user, effectively logging out
+ *       from all devices and sessions. Requires valid authentication.
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All sessions revoked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "All sessions revoked successfully"
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/revoke', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
@@ -174,7 +542,60 @@ router.post('/revoke', authMiddleware, async (req: AuthenticatedRequest, res: Re
   }
 });
 
-// GET /api/auth/check-email - Check if email exists in the system
+/**
+ * @openapi
+ * /auth/check-email:
+ *   get:
+ *     tags: [Authentication]
+ *     summary: Check email availability
+ *     description: |
+ *       Check if an email address is already registered in the system.
+ *       Useful for registration form validation and user existence checks.
+ *     parameters:
+ *       - name: email
+ *         in: query
+ *         required: true
+ *         description: Email address to check
+ *         schema:
+ *           type: string
+ *           format: email
+ *           example: "user@example.com"
+ *     responses:
+ *       200:
+ *         description: Email check completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *                   description: Whether the email is already registered
+ *                   example: true
+ *                 hasAccessRequest:
+ *                   type: boolean
+ *                   description: Whether there's a pending access request for this email
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Human-readable status message
+ *                   example: "Email is already registered"
+ *       400:
+ *         description: Missing or invalid email parameter
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Email parameter is required"
+ *       500:
+ *         description: Internal server error
+ */
 router.get('/check-email', async (req: express.Request, res: Response) => {
   const { email } = req.query;
 
@@ -208,7 +629,40 @@ router.get('/check-email', async (req: express.Request, res: Response) => {
   }
 });
 
-// GET /api/auth/me - Get current user (useful for token verification)
+/**
+ * @openapi
+ * /auth/me:
+ *   get:
+ *     tags: [Authentication]
+ *     summary: Get current user profile
+ *     description: |
+ *       Retrieve the authenticated user's profile information.
+ *       Useful for token verification and getting current user data.
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized - authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       500:
+ *         description: Internal server error
+ */
 router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
@@ -228,7 +682,55 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
   }
 });
 
-// PUT /api/auth/change-password - Change user password
+/**
+ * @openapi
+ * /auth/change-password:
+ *   put:
+ *     tags: [Authentication]
+ *     summary: Change user password
+ *     description: |
+ *       Change the authenticated user's password. Requires current password verification
+ *       for security. User must be authenticated to use this endpoint.
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [current_password, new_password]
+ *             properties:
+ *               current_password:
+ *                 type: string
+ *                 description: Current password for verification
+ *                 example: "currentPassword123"
+ *               new_password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: New password (min 8 characters)
+ *                 example: "newSecurePassword123"
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Password changed successfully"
+ *       400:
+ *         description: Validation error - invalid input
+ *       401:
+ *         description: Unauthorized or incorrect current password
+ *       500:
+ *         description: Internal server error
+ */
 router.put(
   '/change-password',
   authMiddleware,
@@ -254,7 +756,54 @@ router.put(
   }
 );
 
-// DELETE /api/auth/account - Delete user account
+/**
+ * @openapi
+ * /auth/account:
+ *   delete:
+ *     tags: [Authentication]
+ *     summary: Delete user account
+ *     description: |
+ *       Permanently delete the authenticated user's account and all associated data.
+ *       This action is irreversible. Requires username and password confirmation.
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [username, password]
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Username confirmation for account deletion
+ *                 example: "john.doe"
+ *               password:
+ *                 type: string
+ *                 description: Current password for verification
+ *                 example: "currentPassword123"
+ *     responses:
+ *       200:
+ *         description: Account deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Account deleted successfully"
+ *       400:
+ *         description: Validation error - invalid input
+ *       401:
+ *         description: Unauthorized or incorrect credentials
+ *       500:
+ *         description: Internal server error
+ */
 router.delete(
   '/account',
   authMiddleware,
@@ -280,7 +829,47 @@ router.delete(
   }
 );
 
-// POST /api/auth/send-verification-email - Send verification email
+/**
+ * @openapi
+ * /auth/send-verification-email:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Send email verification
+ *     description: |
+ *       Send a verification email to the specified email address.
+ *       Used for confirming email ownership during registration or email changes.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email address to send verification to
+ *                 example: "user@example.com"
+ *     responses:
+ *       200:
+ *         description: Verification email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Verification email sent successfully"
+ *       400:
+ *         description: Validation error - invalid email format
+ *       500:
+ *         description: Internal server error
+ */
 router.post(
   '/send-verification-email',
   validate(sendVerificationEmailSchema),
@@ -300,7 +889,44 @@ router.post(
   }
 );
 
-// GET /api/auth/verify-email - Verify email with token
+/**
+ * @openapi
+ * /auth/verify-email:
+ *   get:
+ *     tags: [Authentication]
+ *     summary: Verify email address
+ *     description: |
+ *       Verify email address using a verification token sent via email.
+ *       This confirms email ownership and activates the email verification status.
+ *     parameters:
+ *       - name: token
+ *         in: query
+ *         required: true
+ *         description: Email verification token from email
+ *         schema:
+ *           type: string
+ *           example: "verify-token-abc123"
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Email verified successfully"
+ *       400:
+ *         description: Validation error - invalid or missing token
+ *       401:
+ *         description: Invalid or expired verification token
+ *       500:
+ *         description: Internal server error
+ */
 router.get(
   '/verify-email',
   validate(verifyEmailSchema),

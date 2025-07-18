@@ -45,7 +45,9 @@ function generateEmailTemplate(content: {
       <h2 style="color: #333;">${title}</h2>
       <p>${greeting}</p>
       <p>${body}</p>
-      ${actionUrl ? `
+      ${
+        actionUrl
+          ? `
         <div style="margin: 30px 0;">
           <a href="${actionUrl}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
             ${actionText || 'Click here'}
@@ -53,7 +55,9 @@ function generateEmailTemplate(content: {
         </div>
         <p style="color: #666; font-size: 14px;">Or copy and paste this link into your browser:</p>
         <p style="color: #666; font-size: 14px; word-break: break-all;">${actionUrl}</p>
-      ` : ''}
+      `
+          : ''
+      }
       <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
       <p style="color: #666; font-size: 14px;">${footer}</p>
     </div>
@@ -83,25 +87,25 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
 
   try {
     const invitationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invitation/${invitationToken}`;
-    
+
     const { html, text } = generateEmailTemplate({
       title: t('email.invitationSubject', { projectName: projectTitle }),
       greeting: t('common.hello', { name: to.split('@')[0] }),
-      body: t('email.invitationBody', { 
-        ownerName, 
+      body: t('email.invitationBody', {
+        ownerName,
         projectName: projectTitle,
-        permission: t(`project.permissions.${permission}`)
+        permission: t(`project.permissions.${permission}`),
       }),
       actionText: t('email.invitationAction'),
       actionUrl: invitationUrl,
-      footer: t('email.invitationExpires')
+      footer: t('email.invitationExpires'),
     });
 
     const emailContent = {
       to,
       subject: t('email.invitationSubject', { projectName: projectTitle }),
       html,
-      text
+      text,
     };
 
     // Log email sending attempt
@@ -109,7 +113,7 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
       to: emailContent.to,
       subject: emailContent.subject,
       invitationUrl,
-      language: recipientLanguage || 'en'
+      language: recipientLanguage || 'en',
     });
 
     // In development, log to console
@@ -125,7 +129,6 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
 
     // TODO: Integrate with actual email service provider
     // await sendgrid.send(emailContent);
-
   } catch (error) {
     logger.error('Failed to send project invitation email', { error, to });
     throw error;
@@ -135,7 +138,9 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
 /**
  * Sends notification when invitation is accepted
  */
-export async function sendInvitationAcceptedNotification(params: SendInvitationAcceptedParams): Promise<void> {
+export async function sendInvitationAcceptedNotification(
+  params: SendInvitationAcceptedParams
+): Promise<void> {
   const { to, projectTitle, acceptedByName, acceptedByEmail, ownerLanguage } = params;
   const t = getTranslator(ownerLanguage);
 
@@ -146,22 +151,22 @@ export async function sendInvitationAcceptedNotification(params: SendInvitationA
       body: t('email.invitationAcceptedBody', {
         userName: acceptedByName,
         userEmail: acceptedByEmail,
-        projectName: projectTitle
+        projectName: projectTitle,
       }),
-      footer: t('email.footer')
+      footer: t('email.footer'),
     });
 
     const emailContent = {
       to,
       subject: t('email.invitationAcceptedSubject', { userName: acceptedByName }),
       html,
-      text
+      text,
     };
 
     logger.info('Sending invitation accepted notification', {
       to: emailContent.to,
       subject: emailContent.subject,
-      language: ownerLanguage || 'en'
+      language: ownerLanguage || 'en',
     });
 
     // In development, log to console
@@ -175,7 +180,6 @@ export async function sendInvitationAcceptedNotification(params: SendInvitationA
     }
 
     // TODO: Integrate with actual email service provider
-
   } catch (error) {
     logger.error('Failed to send invitation accepted notification', { error, to });
     throw error;
@@ -195,31 +199,30 @@ export async function sendPasswordResetEmail(params: {
 
   try {
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
-    
+
     const { html, text } = generateEmailTemplate({
       title: t('email.passwordResetSubject'),
       greeting: t('common.hello'),
       body: t('email.passwordResetBody'),
       actionText: t('email.passwordResetAction'),
       actionUrl: resetUrl,
-      footer: t('email.passwordResetExpires')
+      footer: t('email.passwordResetExpires'),
     });
 
     const emailContent = {
       to,
       subject: t('email.passwordResetSubject'),
       html,
-      text
+      text,
     };
 
     logger.info('Sending password reset email', {
       to: emailContent.to,
       subject: emailContent.subject,
-      language: language || 'en'
+      language: language || 'en',
     });
 
     // TODO: Send actual email
-
   } catch (error) {
     logger.error('Failed to send password reset email', { error, to });
     throw error;
@@ -227,6 +230,4 @@ export async function sendPasswordResetEmail(params: {
 }
 
 // Re-export the original functions for backward compatibility
-export { 
-  sendProjectInvitation as sendProjectInvitationLegacy 
-} from './emailService';
+export { sendProjectInvitation as sendProjectInvitationLegacy } from './emailService';

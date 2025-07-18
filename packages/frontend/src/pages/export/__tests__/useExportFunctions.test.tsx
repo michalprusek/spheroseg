@@ -4,7 +4,6 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 import { saveAs } from 'file-saver';
-import React from 'react';
 import { AllProvidersWrapper } from '@/test-utils/test-wrapper';
 
 // Mock dependencies
@@ -34,7 +33,9 @@ const mockImages = [
     name: 'test-image-1.jpg',
     width: 800,
     height: 600,
+    url: '/images/test-image-1.jpg',
     createdAt: new Date('2023-01-01'),
+    updatedAt: new Date('2023-01-01'),
     segmentationStatus: 'completed',
     segmentationResult: {
       polygons: [
@@ -56,7 +57,9 @@ const mockImages = [
     name: 'test-image-2.jpg',
     width: 800,
     height: 600,
+    url: '/images/test-image-2.jpg',
     createdAt: new Date('2023-01-02'),
+    updatedAt: new Date('2023-01-02'),
     segmentationStatus: 'pending',
     segmentationResult: null,
   },
@@ -88,9 +91,18 @@ vi.mock('@/contexts/ThemeContext', () => ({
   ThemeProvider: ({ children }) => <>{children}</>,
 }));
 
+// Mock fetch for image loading
+global.fetch = vi.fn(() =>
+  Promise.resolve({
+    ok: true,
+    blob: () => Promise.resolve(new Blob(['mock image data'], { type: 'image/jpeg' })),
+  })
+) as any;
+
 describe('useExportFunctions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (global.fetch as any).mockClear();
   });
 
   it('should initialize with default values', () => {

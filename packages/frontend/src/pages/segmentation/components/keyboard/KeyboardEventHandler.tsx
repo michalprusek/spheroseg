@@ -1,4 +1,4 @@
-import React, { useEffect, ReactNode } from 'react';
+import { useEffect, ReactNode } from 'react';
 
 interface KeyboardEventHandlerProps {
   children: ReactNode;

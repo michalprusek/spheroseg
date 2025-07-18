@@ -12,7 +12,7 @@ import unifiedMonitoring from '../../monitoring/unified';
 // Re-export unified monitoring functions with database-specific interface
 const dbMonitoring = {
   // Monitored query functions
-  query: async function <T>(text: string, params?: any[]): Promise<any> {
+  query: async function (text: string, params?: any[]): Promise<any> {
     return unifiedMonitoring.monitorQuery(text, params || [], () => getPool().query(text, params));
   },
   withTransaction: async function <T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {

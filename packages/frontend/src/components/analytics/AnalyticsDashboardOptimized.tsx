@@ -1,5 +1,5 @@
-import React, { useState, useEffect, memo, useMemo, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, memo, useMemo, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
@@ -9,16 +9,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Activity,
   BarChart3,
-  Clock,
   Download,
-  Filter,
   RefreshCw,
   TrendingUp,
   Users,
   Zap,
   AlertCircle,
-  CheckCircle,
-  XCircle,
 } from 'lucide-react';
 import {
   Area,
@@ -37,7 +33,7 @@ import {
   YAxis,
   Legend,
 } from 'recharts';
-import { format, startOfDay, endOfDay, subDays } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';

@@ -1,17 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { showSuccess, showError, showInfo, showWarning } from '../toastUtils';
-import { toast } from 'react-hot-toast';
 
-// Mock react-hot-toast
-vi.mock('react-hot-toast', () => ({
+// Mock sonner
+vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
-    // Default toast function
-    __esModule: true,
-    default: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
   },
 }));
+
+// Import mocked toast
+import { toast } from 'sonner';
 
 describe('toastUtils', () => {
   beforeEach(() => {
@@ -25,12 +26,6 @@ describe('toastUtils', () => {
 
       expect(toast.success).toHaveBeenCalledWith(message, {
         duration: 3000,
-        style: {
-          padding: '16px',
-          borderRadius: '8px',
-          background: '#10B981',
-          color: '#FFFFFF',
-        },
       });
     });
 
@@ -41,7 +36,6 @@ describe('toastUtils', () => {
 
       expect(toast.success).toHaveBeenCalledWith(message, {
         duration: customDuration,
-        style: expect.any(Object),
       });
     });
   });
@@ -53,12 +47,6 @@ describe('toastUtils', () => {
 
       expect(toast.error).toHaveBeenCalledWith(message, {
         duration: 4000,
-        style: {
-          padding: '16px',
-          borderRadius: '8px',
-          background: '#EF4444',
-          color: '#FFFFFF',
-        },
       });
     });
 
@@ -69,24 +57,17 @@ describe('toastUtils', () => {
 
       expect(toast.error).toHaveBeenCalledWith(message, {
         duration: customDuration,
-        style: expect.any(Object),
       });
     });
   });
 
   describe('showInfo', () => {
-    it('should call toast with the correct parameters', () => {
+    it('should call toast.info with the correct parameters', () => {
       const message = 'Info message';
       showInfo(message);
 
-      expect(toast).toHaveBeenCalledWith(message, {
+      expect(toast.info).toHaveBeenCalledWith(message, {
         duration: 3000,
-        style: {
-          padding: '16px',
-          borderRadius: '8px',
-          background: '#3B82F6',
-          color: '#FFFFFF',
-        },
       });
     });
 
@@ -95,27 +76,19 @@ describe('toastUtils', () => {
       const customDuration = 7000;
       showInfo(message, customDuration);
 
-      expect(toast).toHaveBeenCalledWith(message, {
+      expect(toast.info).toHaveBeenCalledWith(message, {
         duration: customDuration,
-        style: expect.any(Object),
       });
     });
   });
 
   describe('showWarning', () => {
-    it('should call toast with the correct parameters', () => {
+    it('should call toast.warning with the correct parameters', () => {
       const message = 'Warning message';
       showWarning(message);
 
-      expect(toast).toHaveBeenCalledWith(message, {
+      expect(toast.warning).toHaveBeenCalledWith(message, {
         duration: 3500,
-        style: {
-          padding: '16px',
-          borderRadius: '8px',
-          background: '#F59E0B',
-          color: '#FFFFFF',
-        },
-        icon: '⚠️',
       });
     });
 
@@ -124,10 +97,8 @@ describe('toastUtils', () => {
       const customDuration = 8000;
       showWarning(message, customDuration);
 
-      expect(toast).toHaveBeenCalledWith(message, {
+      expect(toast.warning).toHaveBeenCalledWith(message, {
         duration: customDuration,
-        style: expect.any(Object),
-        icon: '⚠️',
       });
     });
   });

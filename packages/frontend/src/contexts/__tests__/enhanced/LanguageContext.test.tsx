@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
 import { LanguageProvider, useLanguage, Language } from '../../LanguageContext';
 import '@testing-library/jest-dom';
@@ -153,7 +153,6 @@ vi.mock('i18next', () => {
         if (options?.defaultValue) return options.defaultValue;
         return key;
       }),
-      language: currentLanguage,
       get language() {
         return currentLanguage;
       },

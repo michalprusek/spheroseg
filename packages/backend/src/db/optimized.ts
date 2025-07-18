@@ -14,7 +14,6 @@ export * from './unified';
 export { default } from './unified';
 
 // Legacy named export for queryCache (for compatibility)
-import { getCacheStats } from './unified';
 export const queryCache = {
   keys: () => [],
   get: () => undefined,

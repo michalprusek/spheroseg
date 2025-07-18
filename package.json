@@ -4,6 +4,7 @@
   "description": "SpheroSeg - Cell Segmentation Application",
   "private": true,
   "packageManager": "npm@10.5.0",
+  "type": "module",
   "workspaces": [
     "packages/*"
   ],
@@ -16,6 +17,7 @@
     "usehooks-ts": "^3.1.1"
   },
   "devDependencies": {
+    "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.25.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.14",
@@ -36,6 +38,7 @@
     "jest-junit": "^16.0.0",
     "jscpd": "^4.0.0",
     "jsdom": "^26.1.0",
+    "markdownlint-cli": "^0.45.0",
     "prettier": "^3.2.5",
     "turbo": "^2.5.3",
     "typescript": "^5.8.3",
@@ -71,7 +74,9 @@
     "init:db": "node scripts/init-db.js",
     "init:db:docker": "node scripts/init-db-docker.js",
     "db:migrate": "cd packages/backend && npm run migrate:up",
-    "db:create-test-user": "node scripts/create-test-user.js"
+    "db:create-test-user": "node scripts/create-test-user.js",
+    "test:validation-scripts": "node scripts/test-validation-scripts.js",
+    "validate:imports": "node scripts/validate-imports.js"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -60,9 +60,7 @@ describe('WebSocketBatchHandler', () => {
     beforeEach(() => {
       handler.initialize(mockSocket as Socket);
       // Simulate server capabilities response
-      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find(
-        (call: any) => call[0] === 'capabilities'
-      )[1];
+      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find((call: any) => call[0] === 'capabilities')[1];
       capabilitiesHandler({
         supportsBatching: true,
         supportsCompression: false,
@@ -71,10 +69,7 @@ describe('WebSocketBatchHandler', () => {
     });
 
     it('should batch messages up to maxBatchSize', async () => {
-      const promises = [
-        handler.send('event1', { data: 1 }),
-        handler.send('event2', { data: 2 }),
-      ];
+      const promises = [handler.send('event1', { data: 1 }), handler.send('event2', { data: 2 })];
 
       // Should not send yet
       expect(mockSocket.emit).not.toHaveBeenCalledWith('batch', expect.any(Object));
@@ -82,15 +77,18 @@ describe('WebSocketBatchHandler', () => {
       // Third message should trigger batch send
       promises.push(handler.send('event3', { data: 3 }));
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('batch', expect.objectContaining({
-        batchId: expect.stringMatching(/^batch_/),
-        messages: expect.arrayContaining([
-          expect.objectContaining({ event: 'event1', data: { data: 1 } }),
-          expect.objectContaining({ event: 'event2', data: { data: 2 } }),
-          expect.objectContaining({ event: 'event3', data: { data: 3 } }),
-        ]),
-        compressed: false,
-      }));
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'batch',
+        expect.objectContaining({
+          batchId: expect.stringMatching(/^batch_/),
+          messages: expect.arrayContaining([
+            expect.objectContaining({ event: 'event1', data: { data: 1 } }),
+            expect.objectContaining({ event: 'event2', data: { data: 2 } }),
+            expect.objectContaining({ event: 'event3', data: { data: 3 } }),
+          ]),
+          compressed: false,
+        }),
+      );
     });
 
     it('should send batch after maxBatchWaitTime', async () => {
@@ -103,12 +101,15 @@ describe('WebSocketBatchHandler', () => {
       // Advance time to trigger batch send
       vi.advanceTimersByTime(100);
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('batch', expect.objectContaining({
-        messages: expect.arrayContaining([
-          expect.objectContaining({ event: 'event1' }),
-          expect.objectContaining({ event: 'event2' }),
-        ]),
-      }));
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'batch',
+        expect.objectContaining({
+          messages: expect.arrayContaining([
+            expect.objectContaining({ event: 'event1' }),
+            expect.objectContaining({ event: 'event2' }),
+          ]),
+        }),
+      );
     });
 
     it('should handle immediate send without batching', () => {
@@ -119,9 +120,7 @@ describe('WebSocketBatchHandler', () => {
 
     it('should fallback to direct emit when batching not supported', async () => {
       // Reset capabilities to not support batching
-      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find(
-        (call: any) => call[0] === 'capabilities'
-      )[1];
+      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find((call: any) => call[0] === 'capabilities')[1];
       capabilitiesHandler({
         supportsBatching: false,
         supportsCompression: false,
@@ -138,9 +137,7 @@ describe('WebSocketBatchHandler', () => {
     beforeEach(() => {
       handler.initialize(mockSocket as Socket);
       // Enable batching
-      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find(
-        (call: any) => call[0] === 'capabilities'
-      )[1];
+      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find((call: any) => call[0] === 'capabilities')[1];
       capabilitiesHandler({ supportsBatching: true, supportsCompression: false, version: '1.0.0' });
     });
 
@@ -150,15 +147,11 @@ describe('WebSocketBatchHandler', () => {
       const promise3 = handler.send('event3', { data: 3 });
 
       // Get the batch that was sent
-      const batchCall = (mockSocket.emit as any).mock.calls.find(
-        (call: any) => call[0] === 'batch'
-      );
+      const batchCall = (mockSocket.emit as any).mock.calls.find((call: any) => call[0] === 'batch');
       const batch = batchCall[1];
 
       // Simulate acknowledgment
-      const ackHandler = (mockSocket.on as any).mock.calls.find(
-        (call: any) => call[0] === 'batch_ack'
-      )[1];
+      const ackHandler = (mockSocket.on as any).mock.calls.find((call: any) => call[0] === 'batch_ack')[1];
 
       ackHandler({
         batchId: batch.batchId,
@@ -169,33 +162,31 @@ describe('WebSocketBatchHandler', () => {
       });
 
       const results = await Promise.all([promise1, promise2, promise3]);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toEqual({ success: true });
       });
     });
 
     it('should reject promises on error acknowledgment', async () => {
       const promise = handler.send('event', { data: 'test' });
-      
+
       // Trigger batch send
       handler.flush();
 
-      const batchCall = (mockSocket.emit as any).mock.calls.find(
-        (call: any) => call[0] === 'batch'
-      );
+      const batchCall = (mockSocket.emit as any).mock.calls.find((call: any) => call[0] === 'batch');
       const batch = batchCall[1];
 
       // Simulate error acknowledgment
-      const ackHandler = (mockSocket.on as any).mock.calls.find(
-        (call: any) => call[0] === 'batch_ack'
-      )[1];
+      const ackHandler = (mockSocket.on as any).mock.calls.find((call: any) => call[0] === 'batch_ack')[1];
 
       ackHandler({
         batchId: batch.batchId,
-        results: [{
-          messageId: batch.messages[0].id,
-          error: 'Processing failed',
-        }],
+        results: [
+          {
+            messageId: batch.messages[0].id,
+            error: 'Processing failed',
+          },
+        ],
       });
 
       await expect(promise).rejects.toThrow('Processing failed');
@@ -222,9 +213,7 @@ describe('WebSocketBatchHandler', () => {
       handler.on('custom_event', eventHandler);
 
       // Simulate incoming batch
-      const batchHandler = (mockSocket.on as any).mock.calls.find(
-        (call: any) => call[0] === 'batch'
-      )[1];
+      const batchHandler = (mockSocket.on as any).mock.calls.find((call: any) => call[0] === 'batch')[1];
 
       batchHandler({
         messages: [
@@ -248,19 +237,14 @@ describe('WebSocketBatchHandler', () => {
 
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const batchHandler = (mockSocket.on as any).mock.calls.find(
-        (call: any) => call[0] === 'batch'
-      )[1];
+      const batchHandler = (mockSocket.on as any).mock.calls.find((call: any) => call[0] === 'batch')[1];
 
       batchHandler({
         messages: [{ id: '1', event: 'error_event', data: {}, timestamp: Date.now() }],
       });
 
       expect(errorHandler).toHaveBeenCalled();
-      expect(consoleError).toHaveBeenCalledWith(
-        'Error in batch event handler for error_event:',
-        expect.any(Error)
-      );
+      expect(consoleError).toHaveBeenCalledWith('Error in batch event handler for error_event:', expect.any(Error));
     });
   });
 
@@ -268,9 +252,7 @@ describe('WebSocketBatchHandler', () => {
     beforeEach(() => {
       handler.initialize(mockSocket as Socket);
       // Enable batching
-      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find(
-        (call: any) => call[0] === 'capabilities'
-      )[1];
+      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find((call: any) => call[0] === 'capabilities')[1];
       capabilitiesHandler({ supportsBatching: true, supportsCompression: false, version: '1.0.0' });
     });
 
@@ -282,12 +264,15 @@ describe('WebSocketBatchHandler', () => {
 
       handler.flush();
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('batch', expect.objectContaining({
-        messages: expect.arrayContaining([
-          expect.objectContaining({ event: 'event1' }),
-          expect.objectContaining({ event: 'event2' }),
-        ]),
-      }));
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'batch',
+        expect.objectContaining({
+          messages: expect.arrayContaining([
+            expect.objectContaining({ event: 'event1' }),
+            expect.objectContaining({ event: 'event2' }),
+          ]),
+        }),
+      );
     });
 
     it('should clear all pending messages and timers', () => {
@@ -361,21 +346,17 @@ describe('WebSocketBatchHandler', () => {
     it('should generate unique message IDs', () => {
       handler.initialize(mockSocket as Socket);
       // Enable batching
-      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find(
-        (call: any) => call[0] === 'capabilities'
-      )[1];
+      const capabilitiesHandler = (mockSocket.on as any).mock.calls.find((call: any) => call[0] === 'capabilities')[1];
       capabilitiesHandler({ supportsBatching: true, supportsCompression: false, version: '1.0.0' });
 
       const promises = [];
       for (let i = 0; i < 10; i++) {
         promises.push(handler.send(`event${i}`, {}));
       }
-      
+
       handler.flush();
 
-      const batchCalls = (mockSocket.emit as any).mock.calls.filter(
-        (call: any) => call[0] === 'batch'
-      );
+      const batchCalls = (mockSocket.emit as any).mock.calls.filter((call: any) => call[0] === 'batch');
 
       const messageIds = new Set();
       batchCalls.forEach((call: any) => {

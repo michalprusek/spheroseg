@@ -1,6 +1,6 @@
-import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { Readable } from 'stream';
 import sharp from 'sharp';
 import pool from '../../db';
 import config from '../../config';
@@ -20,7 +20,6 @@ jest.mock('fs', () => ({
   mkdirSync: jest.fn(),
   existsSync: jest.fn().mockReturnValue(true),
   createReadStream: jest.fn().mockImplementation(() => {
-    const { Readable } = require('stream');
     return new Readable({
       read() {
         this.push(Buffer.alloc(1024 * 1024)); // 1MB of data

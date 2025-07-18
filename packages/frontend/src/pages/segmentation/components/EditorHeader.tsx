@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Loader2, ChevronLeft, Save, Download, RefreshCcw, Image as ImageIcon, ChevronRight } from 'lucide-react';

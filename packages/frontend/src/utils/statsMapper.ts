@@ -12,6 +12,9 @@ export interface ApiUserStatistics {
   totalProjects: number;
   totalImages: number;
   completedSegmentations: number;
+  processingCount?: number;
+  queuedCount?: number;
+  failedCount?: number;
   storageUsedBytes: string;
   storageLimitBytes: string;
   storageUsedMB: number;
@@ -31,6 +34,9 @@ export interface ApiUserStatistics {
   projects_count?: number;
   images_count?: number;
   segmentations_count?: number;
+  processing_count?: number;
+  queued_count?: number;
+  failed_count?: number;
   storage_used_mb?: number;
   storage_used_bytes?: string;
   storage_limit_bytes?: string;
@@ -86,8 +92,9 @@ export function mapApiToUserStatistics(apiData: ApiUserStatistics | null): UserS
     totalProjects: apiData.totalProjects ?? apiData.projects_count ?? 0,
     totalImages: apiData.totalImages ?? apiData.images_count ?? 0,
     segmentedImages: apiData.completedSegmentations ?? apiData.segmentations_count ?? 0,
-    pendingImages: 0, // TODO: This needs to be calculated or added to API
-    failedImages: 0, // TODO: This needs to be calculated or added to API
+    pendingImages:
+      (apiData.processingCount ?? apiData.processing_count ?? 0) + (apiData.queuedCount ?? apiData.queued_count ?? 0),
+    failedImages: apiData.failedCount ?? apiData.failed_count ?? 0,
     storageUsed: apiData.storageUsedMB ?? apiData.storage_used_mb ?? 0,
     lastActivity: apiData.last_login ?? new Date().toISOString(),
   };

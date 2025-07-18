@@ -1,4 +1,3 @@
-import React from 'react';
 import { Grid2X2, List as ListIcon } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 

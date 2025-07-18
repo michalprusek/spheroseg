@@ -1,11 +1,9 @@
-import React from 'react';
 import { screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 import EditorToolbar from '../EditorToolbar';
 import {
   resetAllMocks,
-  testButtonClick,
   renderEditorComponent,
   defaultEditorToolbarProps,
   verifyModeButtonState,

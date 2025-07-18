@@ -1,25 +1,20 @@
 /**
  * Example implementation of A/B testing in a real component
- * 
+ *
  * This demonstrates how to use the A/B testing framework in practice
  */
 
 import React from 'react';
-import { 
-  FeatureFlag, 
-  Experiment, 
-  Variant, 
+import {
+  FeatureFlag,
+  Experiment,
+  Variant,
   VariantSwitch,
   TrackEvent,
   TrackConversion,
   ABTestDebugPanel,
 } from '@/components/ABTesting';
-import { 
-  useFeatureFlag, 
-  useExperiment,
-  useABTestingMetrics,
-  useVariants,
-} from '@/hooks/useABTesting';
+import { useFeatureFlag, useExperiment, useABTestingMetrics, useVariants } from '@/hooks/useABTesting';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -46,8 +41,8 @@ export function NewFeatureButton() {
   }
 
   return (
-    <Button 
-      onClick={handleClick} 
+    <Button
+      onClick={handleClick}
       variant="default"
       className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
     >
@@ -62,13 +57,8 @@ export function NewFeatureButton() {
 export function ConditionalFeature() {
   return (
     <div>
-      <FeatureFlag 
-        flag="feature.export.pdf" 
-        fallback={<p>PDF export coming soon!</p>}
-      >
-        <Button variant="outline">
-          Export as PDF
-        </Button>
+      <FeatureFlag flag="feature.export.pdf" fallback={<p>PDF export coming soon!</p>}>
+        <Button variant="outline">Export as PDF</Button>
       </FeatureFlag>
     </div>
   );
@@ -88,30 +78,30 @@ export function PricingPageExample() {
           case 'cards':
             return (
               <div className="grid grid-cols-3 gap-4">
-                <PricingCard 
-                  plan="Basic" 
-                  price="$9" 
+                <PricingCard
+                  plan="Basic"
+                  price="$9"
                   highlighted={features['pricing.highlight-popular'] && false}
                   onSelect={() => trackConversion('pricing_plan_selected', 9)}
                 />
-                <PricingCard 
-                  plan="Pro" 
-                  price="$29" 
+                <PricingCard
+                  plan="Pro"
+                  price="$29"
                   highlighted={features['pricing.highlight-popular'] && true}
                   onSelect={() => trackConversion('pricing_plan_selected', 29)}
                 />
-                <PricingCard 
-                  plan="Enterprise" 
-                  price="$99" 
+                <PricingCard
+                  plan="Enterprise"
+                  price="$99"
                   highlighted={false}
                   onSelect={() => trackConversion('pricing_plan_selected', 99)}
                 />
               </div>
             );
-          
+
           case 'comparison':
             return <ComparisonTable onSelect={trackConversion} />;
-          
+
           default:
             return <StandardPricingTable onSelect={trackConversion} />;
         }
@@ -130,11 +120,11 @@ export function OnboardingFlow() {
         <Variant experimentId="onboarding-flow-optimization" variantId="control">
           <StandardOnboarding />
         </Variant>
-        
+
         <Variant experimentId="onboarding-flow-optimization" variantId="guided">
           <GuidedTutorial />
         </Variant>
-        
+
         <Variant experimentId="onboarding-flow-optimization" variantId="video">
           <VideoOnboarding />
         </Variant>
@@ -149,10 +139,10 @@ export function OnboardingFlow() {
 export function OptimizedImageGallery() {
   const enableLazyLoading = useFeatureFlag('performance.lazy-loading', false);
   const enableVirtualization = useFeatureFlag('performance.virtualization', false);
-  
+
   // Track performance metrics
   const { trackEvent } = useABTestingMetrics();
-  
+
   React.useEffect(() => {
     // Measure and track load time
     const loadTime = performance.now();
@@ -175,23 +165,19 @@ export function OptimizedImageGallery() {
  */
 export function UpgradePrompt() {
   const experiment = useExperiment('pricing-page-optimization');
-  
+
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">
-        Upgrade to Pro
-      </h3>
-      
+      <h3 className="text-lg font-semibold mb-4">Upgrade to Pro</h3>
+
       <FeatureFlag flag="pricing.testimonials">
         <div className="mb-4 text-sm text-gray-600">
           "SpherosegV4 helped us increase productivity by 40%!" - Happy Customer
         </div>
       </FeatureFlag>
-      
+
       <TrackConversion name="upgrade_button_clicked" value={29}>
-        <Button className="w-full">
-          Upgrade Now - $29/month
-        </Button>
+        <Button className="w-full">Upgrade Now - $29/month</Button>
       </TrackConversion>
     </Card>
   );
@@ -222,23 +208,17 @@ export function SegmentationToolbar() {
 
   return (
     <div className="flex gap-2 p-2 bg-gray-100 rounded-lg">
-      {tools.map(tool => (
-        tool.enabled && (
-          <Button
-            key={tool.id}
-            variant="ghost"
-            size="sm"
-            onClick={() => handleToolSelect(tool.id)}
-          >
-            {tool.name}
-            {tool.id === 'ai-assist' && (
-              <span className="ml-1 text-xs bg-blue-100 text-blue-600 px-1 rounded">
-                Beta
-              </span>
-            )}
-          </Button>
-        )
-      ))}
+      {tools.map(
+        (tool) =>
+          tool.enabled && (
+            <Button key={tool.id} variant="ghost" size="sm" onClick={() => handleToolSelect(tool.id)}>
+              {tool.name}
+              {tool.id === 'ai-assist' && (
+                <span className="ml-1 text-xs bg-blue-100 text-blue-600 px-1 rounded">Beta</span>
+              )}
+            </Button>
+          ),
+      )}
     </div>
   );
 }
@@ -250,7 +230,7 @@ export function ABTestingDemoPage() {
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">A/B Testing Examples</h1>
-      
+
       <div className="grid gap-6">
         {/* Feature Flags */}
         <section>
@@ -298,11 +278,7 @@ function PricingCard({ plan, price, highlighted, onSelect }: any) {
     <Card className={`p-6 ${highlighted ? 'ring-2 ring-blue-500' : ''}`}>
       <h3 className="text-lg font-semibold">{plan}</h3>
       <p className="text-2xl font-bold mt-2">{price}/mo</p>
-      <Button 
-        className="w-full mt-4" 
-        variant={highlighted ? 'default' : 'outline'}
-        onClick={() => onSelect()}
-      >
+      <Button className="w-full mt-4" variant={highlighted ? 'default' : 'outline'} onClick={() => onSelect()}>
         Select Plan
       </Button>
     </Card>

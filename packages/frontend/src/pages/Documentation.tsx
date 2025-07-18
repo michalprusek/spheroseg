@@ -1,10 +1,8 @@
-import React from 'react';
 import Navbar from '@/components/Navbar';
 import ThemedFooter from '@/components/ThemedFooter';
 import { Link } from 'react-router-dom';
 import { FileText, Code, Info, BookOpen, Microscope, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { constructUrl } from '@/lib/urlUtils';
 import { appConfig } from '@/config/app.config';
 
 const Documentation = () => {
@@ -19,7 +17,9 @@ const Documentation = () => {
             <div className="inline-block bg-blue-100 dark:bg-blue-900 px-4 py-2 rounded-full mb-4">
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">{t('documentation.tag')}</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-gray-100">{t('documentation.title')}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+              {t('documentation.title')}
+            </h1>
             <p className="text-xl text-gray-600 dark:text-gray-400">{t('documentation.subtitle')}</p>
           </div>
 
@@ -107,7 +107,9 @@ const Documentation = () => {
                         />
                       </div>
                       <div className="md:w-2/3">
-                        <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('documentation.introduction.whatIs.title')}</h3>
+                        <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                          {t('documentation.introduction.whatIs.title')}
+                        </h3>
                         <p className="text-gray-700 dark:text-gray-300">
                           {t('documentation.introduction.whatIs.paragraph1')}
                         </p>
@@ -115,9 +117,13 @@ const Documentation = () => {
                     </div>
                   </div>
 
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">{t('documentation.introduction.whatIs.paragraph2')}</p>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {t('documentation.introduction.whatIs.paragraph2')}
+                  </p>
 
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">{t('documentation.introduction.whatIs.paragraph3')}</p>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {t('documentation.introduction.whatIs.paragraph3')}
+                  </p>
                 </section>
 
                 <section id="getting-started" className="mb-12">
@@ -128,7 +134,9 @@ const Documentation = () => {
                   <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">
                     {t('documentation.gettingStarted.accountCreation.title')}
                   </h3>
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">{t('documentation.gettingStarted.accountCreation.paragraph1')}</p>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {t('documentation.gettingStarted.accountCreation.paragraph1')}
+                  </p>
                   <ol className="list-decimal pl-6 mb-6 space-y-2 text-gray-700 dark:text-gray-300">
                     <li>
                       {t('documentation.gettingStarted.accountCreation.step1Prefix')}{' '}
@@ -144,7 +152,9 @@ const Documentation = () => {
                   <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">
                     {t('documentation.gettingStarted.creatingProject.title')}
                   </h3>
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">{t('documentation.gettingStarted.creatingProject.paragraph1')}</p>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {t('documentation.gettingStarted.creatingProject.paragraph1')}
+                  </p>
                   <ol className="list-decimal pl-6 mb-6 space-y-2 text-gray-700 dark:text-gray-300">
                     <li>{t('documentation.gettingStarted.creatingProject.step1')}</li>
                     <li>{t('documentation.gettingStarted.creatingProject.step2')}</li>
@@ -158,10 +168,16 @@ const Documentation = () => {
                     {t('documentation.uploadingImages.title')}
                   </h2>
 
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">{t('documentation.uploadingImages.paragraph1')}</p>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {t('documentation.uploadingImages.paragraph1')}
+                  </p>
 
-                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">{t('documentation.uploadingImages.methods.title')}</h3>
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">{t('documentation.uploadingImages.methods.paragraph1')}</p>
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                    {t('documentation.uploadingImages.methods.title')}
+                  </h3>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {t('documentation.uploadingImages.methods.paragraph1')}
+                  </p>
                   <ul className="list-disc pl-6 mb-6 space-y-2 text-gray-700 dark:text-gray-300">
                     <li>{t('documentation.uploadingImages.methods.step1')}</li>
                     <li>{t('documentation.uploadingImages.methods.step2')}</li>
@@ -199,12 +215,16 @@ const Documentation = () => {
                     {t('documentation.segmentationProcess.title')}
                   </h2>
 
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">{t('documentation.segmentationProcess.paragraph1')}</p>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {t('documentation.segmentationProcess.paragraph1')}
+                  </p>
 
                   <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">
                     {t('documentation.segmentationProcess.automatic.title')}
                   </h3>
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">{t('documentation.segmentationProcess.automatic.paragraph1')}</p>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {t('documentation.segmentationProcess.automatic.paragraph1')}
+                  </p>
                   <ol className="list-decimal pl-6 mb-6 space-y-2 text-gray-700 dark:text-gray-300">
                     <li>{t('documentation.segmentationProcess.automatic.step1')}</li>
                     <li>{t('documentation.segmentationProcess.automatic.step2')}</li>
@@ -212,8 +232,12 @@ const Documentation = () => {
                     <li>{t('documentation.segmentationProcess.automatic.step4')}</li>
                   </ol>
 
-                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">{t('documentation.segmentationProcess.manual.title')}</h3>
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">{t('documentation.segmentationProcess.manual.paragraph1')}</p>
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                    {t('documentation.segmentationProcess.manual.title')}
+                  </h3>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {t('documentation.segmentationProcess.manual.paragraph1')}
+                  </p>
                   <ul className="list-disc pl-6 mb-6 space-y-2 text-gray-700 dark:text-gray-300">
                     <li>{t('documentation.segmentationProcess.manual.step1')}</li>
                     <li>{t('documentation.segmentationProcess.manual.step2')}</li>
@@ -252,7 +276,10 @@ const Documentation = () => {
 
                   <p className="mb-4 text-gray-700 dark:text-gray-300">
                     {t('documentation.apiReference.contactPrefix')}{' '}
-                    <a href={`mailto:${appConfig.contact.developer.email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                    <a
+                      href={`mailto:${appConfig.contact.developer.email}`}
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                    >
                       {appConfig.contact.developer.email}
                     </a>
                     .
@@ -260,11 +287,17 @@ const Documentation = () => {
                 </section>
 
                 <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <Link to="/" className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                  <Link
+                    to="/"
+                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                  >
                     <ArrowRight className="w-4 h-4 mr-2 transform rotate-180" />
                     {t('documentation.backToHome')}
                   </Link>
-                  <a href="#introduction" className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                  <a
+                    href="#introduction"
+                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                  >
                     {t('documentation.backToTop')}
                     <ArrowRight className="w-4 h-4 ml-2 transform -rotate-90" />
                   </a>

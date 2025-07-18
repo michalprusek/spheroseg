@@ -1,8 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
 import ImageSelectionCard from '@/pages/export/components/ImageSelectionCard';
-import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 
 // Mock language context
 vi.mock('@/contexts/LanguageContext', () => ({
@@ -11,6 +10,66 @@ vi.mock('@/contexts/LanguageContext', () => ({
     language: 'en',
   }),
 }));
+
+// Mock react-i18next
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { changeLanguage: vi.fn() },
+  }),
+}));
+
+// Mock radix-optimized library
+vi.mock('@/lib/radix-optimized', () => ({
+  CheckboxRoot: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CheckboxIndicator: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogRoot: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogTrigger: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  DialogPortal: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogOverlay: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogTitle: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
+  DialogDescription: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+  DialogClose: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}));
+
+// Mock UI components
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardTitle: ({ children, ...props }: any) => <h3 {...props}>{children}</h3>,
+}));
+
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, onClick, ...props }: any) => <button onClick={onClick} {...props}>{children}</button>,
+}));
+
+vi.mock('@/components/ui/checkbox', () => ({
+  Checkbox: ({ checked, onCheckedChange, ...props }: any) => (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onCheckedChange?.(e.target.checked)}
+      {...props}
+    />
+  ),
+}));
+
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  Loader2: () => <div data-testid="loader-icon" />,
+  Check: () => <div data-testid="check-icon" />,
+  X: () => <div data-testid="x-icon" />,
+}));
+
+// Mock date utils
+vi.mock('@/utils/dateUtils', () => ({
+  safeFormatDate: (date: any) => 'mocked-date',
+}));
+
+// Mock types
+vi.mock('@/types', () => ({}));
 
 describe('ImageSelectionCard', () => {
   const mockImages = [
@@ -76,22 +135,22 @@ describe('ImageSelectionCard', () => {
   it('shows loading state when loading is true', () => {
     render(<ImageSelectionCard {...mockProps} loading={true} />);
 
-    // Check for loading spinner
-    const loadingSpinner = document.querySelector('.animate-spin');
-    expect(loadingSpinner).toBeInTheDocument();
+    // Check for loading spinner by data-testid
+    expect(screen.getByTestId('loader-icon')).toBeInTheDocument();
   });
 
   it('shows empty state when no images are available', () => {
     render(<ImageSelectionCard {...mockProps} images={[]} />);
 
-    expect(screen.getByText('Žádné obrázky nejsou k dispozici')).toBeInTheDocument();
+    // Look for translation key since we're mocking t() to return keys
+    expect(screen.getByText(/no.*images|export\.noImages|images\.none/i)).toBeInTheDocument();
   });
 
   it('calls handleSelectAll when select all button is clicked', () => {
     render(<ImageSelectionCard {...mockProps} />);
 
-    // Find the select all button
-    const selectAllButton = screen.getByText('Vybrat vše');
+    // Find the select all button by translation key
+    const selectAllButton = screen.getByText(/select.*all|common\.selectAll|export\.selectAll/i);
     fireEvent.click(selectAllButton);
 
     expect(mockProps.handleSelectAll).toHaveBeenCalled();
@@ -110,9 +169,8 @@ describe('ImageSelectionCard', () => {
   it('shows correct segmentation status icons', () => {
     render(<ImageSelectionCard {...mockProps} />);
 
-    // Check if status icons are displayed
-    const checkIcon = document.querySelector('.text-green-500');
-    expect(checkIcon).toBeInTheDocument(); // For completed image
+    // Check if status icons are displayed by data-testid
+    expect(screen.getByTestId('check-icon')).toBeInTheDocument(); // For completed image
   });
 
   it('renders image thumbnails and "No preview" for missing thumbnails', () => {

@@ -214,31 +214,45 @@ export async function getProjectById(
   projectId: string,
   userId: string
 ): Promise<ProjectResponse | null> {
+  logger.info('getProjectById called', { projectId, userId });
+  
   // Try to get from cache first
   const cacheKey = `project:${projectId}:${userId}`;
-  const cached = await cacheService.getCachedProject(cacheKey);
+  try {
+    const cached = await cacheService.getCachedProject(cacheKey);
 
-  if (cached) {
-    logger.debug('Returning cached project', { projectId, userId });
-    return cached;
+    if (cached) {
+      logger.debug('Returning cached project', { projectId, userId });
+      return cached;
+    }
+  } catch (error) {
+    logger.warn('Cache error, continuing without cache', { error, projectId, userId });
   }
   // First try to fetch the project owned by the user
+  logger.info('Checking if user owns project', { projectId, userId });
   const ownedProject = await pool.query('SELECT * FROM projects WHERE id = $1 AND user_id = $2', [
     projectId,
     userId,
   ]);
 
   if (ownedProject.rows.length > 0) {
+    logger.info('User owns project', { projectId, userId });
     const project = {
       ...ownedProject.rows[0],
       is_owner: true,
     };
 
     // Cache the project
-    await cacheService.cacheProject(cacheKey, project);
+    try {
+      await cacheService.cacheProject(cacheKey, project);
+    } catch (error) {
+      logger.warn('Cache error when storing owned project', { error, projectId, userId });
+    }
 
     return project;
   }
+  
+  logger.info('User does not own project, checking shared access', { projectId, userId });
 
   // Check if project is shared with the user
   try {
@@ -254,23 +268,31 @@ export async function getProjectById(
       [projectId, userId]
     );
 
+    logger.info('Shared project query result', { projectId, userId, rowCount: sharedProject.rows.length });
+
     if (sharedProject.rows.length > 0) {
+      logger.info('User has shared access to project', { projectId, userId });
       const project = sharedProject.rows[0];
 
       // Cache the project
-      await cacheService.cacheProject(cacheKey, project);
+      try {
+        await cacheService.cacheProject(cacheKey, project);
+      } catch (error) {
+        logger.warn('Cache error when storing shared project', { error, projectId, userId });
+      }
 
       return project;
     }
   } catch (error) {
     // Project shares table might not exist, just return null
-    logger.debug('Error checking for shared project', {
+    logger.error('Error checking for shared project', {
       error,
       projectId,
       userId,
     });
   }
 
+  logger.info('Project not found or no access', { projectId, userId });
   return null;
 }
 
@@ -568,7 +590,7 @@ export async function deleteProject(
           userId,
           actualOwnerId: projectExists.rows[0].user_id,
         });
-        throw new ApiError('You do not have permission to delete this project', 403);
+        throw new ApiError("You need to be the project owner to delete this project", 403);
       }
     } catch (err) {
       if (err instanceof ApiError) {

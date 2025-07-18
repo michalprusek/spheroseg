@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { handleError, ErrorType, ErrorSeverity } from '@/utils/errorHandling';
+import { handleError, ErrorType, ErrorSeverity } from '@/utils/error/unifiedErrorHandler';
+import { handlePermissionError } from '@/utils/error/permissionErrorHandler';
 import logger from '@/utils/logger';
 import { getAccessToken, removeTokens, isValidToken } from '@/services/authService';
 
@@ -31,10 +32,26 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
+// Enhanced timeout configuration based on request type
+const getTimeoutForRequest = (config: any): number => {
+  // Longer timeout for auth operations
+  if (config.url?.includes('/auth/')) {
+    return 15000; // 15 seconds for auth requests
+  }
+  
+  // Longer timeout for file uploads
+  if (config.data instanceof FormData) {
+    return 60000; // 60 seconds for file uploads
+  }
+  
+  // Standard timeout for other requests
+  return 10000; // 10 seconds for regular API calls
+};
+
 // Create an Axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: EFFECTIVE_BASE_URL, // Use the effective base URL that handles Docker environment
-  timeout: 30000, // 30 seconds timeout
+  timeout: 10000, // Default 10 seconds timeout (will be overridden per request)
   headers: {
     'Content-Type': 'application/json',
   },
@@ -46,6 +63,9 @@ const apiClient: AxiosInstance = axios.create({
 // Add authorization token to headers if available
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Set dynamic timeout based on request type
+    config.timeout = getTimeoutForRequest(config);
+    
     // Check if the request data is FormData
     const isFormData = config.data instanceof FormData;
 
@@ -70,6 +90,7 @@ apiClient.interceptors.request.use(
         method: config.method,
         formDataInfo,
         headers: Object.keys(config.headers),
+        timeout: config.timeout,
       });
     }
 
@@ -282,8 +303,16 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Handle forbidden errors
+    // Handle forbidden errors (403)
     if (status === 403) {
+      // First try to handle as a permission error with specialized handler
+      if (handlePermissionError(error)) {
+        // Permission error was handled, don't show additional error messages
+        logger.debug('Permission error handled by specialized handler');
+        return Promise.reject(error);
+      }
+      
+      // If not a permission error, show generic forbidden message
       handleError(error, {
         context: `API ${method} ${url}`,
         errorInfo: {
@@ -300,15 +329,42 @@ apiClient.interceptors.response.use(
 
     // Handle not found errors
     if (status === 404) {
+      // Check if this is actually a permission error
+      if (handlePermissionError(error)) {
+        logger.debug('404 error was actually a permission error');
+        return Promise.reject(error);
+      }
+
+      // Get the error message from the server if available
+      const serverMessage = error.response?.data?.message;
+      const isPermissionError = serverMessage?.includes('access denied') || serverMessage?.includes('permission');
+      
+      // Check if this is a polling request for segmentation status
+      const pollingPatterns = [
+        '/segmentation-results/',
+        '/segmentation/status',
+        '/segmentation', // Matches endpoints like /api/images/{id}/segmentation
+        '/queue-status/',
+        '/processing-status/',
+      ];
+      
+      const isPollingRequest = pollingPatterns.some(pattern => url?.includes(pattern));
+      
+      // Don't show error for expected 404s during polling
+      if (isPollingRequest) {
+        logger.debug('Suppressing 404 error for polling request', { url });
+        return Promise.reject(error);
+      }
+      
       handleError(error, {
         context: `API ${method} ${url}`,
         errorInfo: {
           type: ErrorType.NOT_FOUND,
           severity: ErrorSeverity.WARNING,
-          message: 'The requested resource was not found.',
+          message: serverMessage || 'The requested resource was not found.',
         },
-        // Don't show toast for 404 errors by default
-        showToast: false,
+        // Only show toast for non-polling requests
+        showToast: !isPollingRequest,
       });
 
       return Promise.reject(error);
@@ -316,31 +372,86 @@ apiClient.interceptors.response.use(
 
     // Handle server errors
     if (status && status >= 500) {
+      // Check if this might be a permission error disguised as a server error
+      if (handlePermissionError(error)) {
+        logger.debug('Server error was actually a permission error');
+        return Promise.reject(error);
+      }
+
+      let errorMessage = 'Server error. Please try again later.';
+      let showToast = true;
+      
+      // Special handling for 502 Bad Gateway
+      if (status === 502) {
+        errorMessage = 'The server is temporarily unavailable. Please try again in a few moments.';
+        
+        // Don't show toast for performance metrics endpoints that don't exist
+        if (url?.includes('/metrics/')) {
+          showToast = false;
+          logger.debug('Suppressing 502 error toast for metrics endpoint');
+        }
+      }
+      
+      // Special handling for 503 Service Unavailable
+      if (status === 503) {
+        errorMessage = 'The service is undergoing maintenance. Please try again later.';
+      }
+      
       handleError(error, {
         context: `API ${method} ${url}`,
         errorInfo: {
           type: ErrorType.SERVER,
           severity: ErrorSeverity.ERROR,
-          message: 'Server error. Please try again later.',
+          message: errorMessage,
         },
-        // Show toast for server errors
-        showToast: true,
+        showToast,
       });
 
       return Promise.reject(error);
     }
 
-    // Handle network errors
+    // Handle network and timeout errors
     if (!status) {
+      let errorMessage = 'Network error. Please check your connection.';
+      let showToast = true;
+      
+      // Check for timeout errors
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMessage = 'Request timed out. The server may be busy, please try again.';
+        
+        // Different timeout messages for different request types
+        if (url?.includes('/auth/')) {
+          errorMessage = 'Authentication request timed out. Please check your connection and try again.';
+        } else if (error.config?.data instanceof FormData) {
+          errorMessage = 'File upload timed out. Please check your connection and try again.';
+        }
+        
+        logger.warn('Request timeout detected', {
+          url,
+          method,
+          timeout: error.config?.timeout,
+          message: error.message,
+        });
+      }
+      
+      // Check for connection refused errors
+      else if (error.code === 'ECONNREFUSED' || error.message?.includes('ERR_CONNECTION_REFUSED')) {
+        errorMessage = 'Could not connect to the server. Please try again later.';
+      }
+      
+      // Check for network connectivity issues
+      else if (error.code === 'ERR_NETWORK' || !navigator.onLine) {
+        errorMessage = 'Network connection lost. Please check your internet connection.';
+      }
+
       handleError(error, {
         context: `API ${method} ${url}`,
         errorInfo: {
           type: ErrorType.NETWORK,
           severity: ErrorSeverity.ERROR,
-          message: 'Network error. Please check your connection.',
+          message: errorMessage,
         },
-        // Show toast for network errors
-        showToast: true,
+        showToast,
       });
 
       return Promise.reject(error);

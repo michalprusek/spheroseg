@@ -1,6 +1,6 @@
 /**
  * WebSocket Batching Usage Examples
- * 
+ *
  * This file demonstrates how to use the WebSocket batching functionality
  * in the SpherosegV4 application.
  */
@@ -15,8 +15,8 @@ export function connectWithBatching() {
       token: localStorage.getItem('authToken') || '',
     },
     batchConfig: {
-      maxBatchSize: 50,        // Send batch when 50 messages accumulate
-      maxBatchWaitTime: 100,   // Or after 100ms, whichever comes first
+      maxBatchSize: 50, // Send batch when 50 messages accumulate
+      maxBatchWaitTime: 100, // Or after 100ms, whichever comes first
       enableCompression: false, // Enable if server supports compression
     },
   });
@@ -64,7 +64,7 @@ export function manualBatchControl() {
 // Example 5: Monitoring batch status
 export function monitorBatchStatus() {
   const status = unifiedWebSocketService.getBatchStatus();
-  
+
   console.log('Batching enabled:', status.enabled);
   console.log('Messages in queue:', status.queueLength);
   console.log('Pending acknowledgments:', status.pendingAcks);
@@ -90,8 +90,8 @@ export function setupBatchEventHandlers() {
 export function updateBatchingForHighThroughput() {
   // Adjust batching parameters for high-throughput scenarios
   unifiedWebSocketService.updateBatchConfig({
-    maxBatchSize: 100,      // Increase batch size
-    maxBatchWaitTime: 50,   // Decrease wait time for lower latency
+    maxBatchSize: 100, // Increase batch size
+    maxBatchWaitTime: 50, // Decrease wait time for lower latency
   });
 }
 
@@ -99,7 +99,7 @@ export function updateBatchingForHighThroughput() {
 export function gracefulDisconnect() {
   // Ensure all pending messages are sent before disconnecting
   unifiedWebSocketService.flushBatch();
-  
+
   // Small delay to ensure batch is processed
   setTimeout(() => {
     unifiedWebSocketService.disconnect();
@@ -112,7 +112,7 @@ export function useWebSocketBatch() {
     if (!unifiedWebSocketService.isConnected()) {
       throw new Error('WebSocket not connected');
     }
-    
+
     return unifiedWebSocketService.sendBatched(event, data);
   };
 
@@ -121,7 +121,7 @@ export function useWebSocketBatch() {
       console.error('WebSocket not connected');
       return;
     }
-    
+
     unifiedWebSocketService.sendImmediate(event, data);
   };
 
@@ -137,11 +137,11 @@ export function useWebSocketBatch() {
 export class ImageServiceWithBatching {
   async processMultipleImages(imageIds: string[]) {
     // Enable batching for bulk operations
-    const promises = imageIds.map(id => 
+    const promises = imageIds.map((id) =>
       unifiedWebSocketService.sendBatched('image:process', {
         imageId: id,
         timestamp: Date.now(),
-      })
+      }),
     );
 
     try {

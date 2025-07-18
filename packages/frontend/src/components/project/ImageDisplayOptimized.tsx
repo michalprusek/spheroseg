@@ -10,7 +10,6 @@ import { constructUrl } from '@/lib/urlUtils';
 import { safeFormatDate } from '@/utils/dateUtils';
 import { getImageBlob, storeImageBlob } from '@/utils/indexedDBService';
 import SegmentationThumbnail from './SegmentationThumbnail';
-import DebugSegmentationThumbnail from './DebugSegmentationThumbnail';
 import useSocketConnection from '@/hooks/useSocketConnection';
 import apiClient from '@/lib/apiClient';
 import { useTranslations } from '@/hooks/useTranslations';

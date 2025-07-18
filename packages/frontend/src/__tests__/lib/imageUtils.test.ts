@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { calculatePolygonArea, calculatePerimeter, Point, Polygon } from '@/lib/segmentation';
 
 // Mock canvas and context for browser environment

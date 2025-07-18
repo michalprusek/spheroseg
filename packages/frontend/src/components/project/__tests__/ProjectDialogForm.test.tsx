@@ -1,9 +1,8 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ProjectDialogForm from '../ProjectDialogForm';
 import '@testing-library/jest-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useProjectForm } from '@/hooks/useProjectForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 

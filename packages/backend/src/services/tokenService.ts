@@ -8,6 +8,7 @@ import ms, { StringValue } from 'ms';
 import pool from '../db';
 import config from '../config';
 import logger from '../utils/logger';
+import { getKeyManager, signJWTWithRotation } from '../auth/jwtKeyRotation';
 
 // Define token types
 export enum TokenType {
@@ -77,12 +78,6 @@ export const generateAccessToken = (
     tokenVersion?: number;
   } = {}
 ): string => {
-  const jwtSecret = config.auth.jwtSecret;
-  if (!jwtSecret) {
-    logger.error('JWT secret is not defined. Cannot generate access token.');
-    throw new Error('JWT secret is not defined');
-  }
-
   const {
     expiry = config.auth.accessTokenExpiry || '15m',
     jti = generateTokenId(),
@@ -100,13 +95,30 @@ export const generateAccessToken = (
     fingerprint,
   };
 
-  const secret: Secret = jwtSecret;
   const signOpts: SignOptions = {
     expiresIn: ms(expiry as StringValue) / 1000,
     audience: 'spheroseg-api',
     issuer: 'spheroseg-auth',
   };
 
+  // Use JWT key rotation system if available, fallback to regular signing
+  if (config.auth.useKeyRotation) {
+    const rotatedToken = signJWTWithRotation(payload, signOpts);
+    if (rotatedToken) {
+      return rotatedToken;
+    }
+  }
+
+  // Fallback to regular JWT signing
+  const jwtSecret = config.auth.jwtSecret;
+  if (!jwtSecret) {
+    logger.error(
+      'JWT secret is not defined and key rotation is not available. Cannot generate access token.'
+    );
+    throw new Error('JWT secret is not defined');
+  }
+
+  const secret: Secret = jwtSecret;
   return jwt.sign(payload, secret, signOpts);
 };
 
@@ -200,7 +212,7 @@ export const generateRefreshToken = async (
  * @param options Additional verification options
  * @returns The verified token payload
  */
-export const verifyToken = (
+export const verifyToken = async (
   token: string,
   type: TokenType,
   options: {
@@ -208,13 +220,7 @@ export const verifyToken = (
     requiredIssuer?: string;
     requiredAudience?: string;
   } = {}
-): TokenPayload => {
-  const jwtSecret = config.auth.jwtSecret;
-  if (!jwtSecret) {
-    logger.error('JWT secret is not defined. Cannot verify token.');
-    throw new Error('JWT secret is not defined');
-  }
-
+): Promise<TokenPayload> => {
   const {
     validateFingerprint = false,
     requiredAudience = 'spheroseg-api',
@@ -222,10 +228,60 @@ export const verifyToken = (
   } = options;
 
   try {
-    const decoded = jwt.verify(token, jwtSecret, {
-      audience: requiredAudience,
-      issuer: requiredIssuer,
-    }) as TokenPayload;
+    let decoded: TokenPayload;
+
+    // Try JWT key rotation verification first if enabled
+    if (config.auth.useKeyRotation) {
+      try {
+        // Decode token to get kid (key ID)
+        const tokenHeader = jwt.decode(token, { complete: true });
+
+        if (tokenHeader && typeof tokenHeader === 'object' && tokenHeader.header.kid) {
+          const keyManager = getKeyManager();
+          const publicKey = await keyManager.getPublicKey(tokenHeader.header.kid);
+
+          if (publicKey) {
+            decoded = jwt.verify(token, publicKey, {
+              audience: requiredAudience,
+              issuer: requiredIssuer,
+              algorithms: ['RS256', 'RS384', 'RS512'],
+            }) as TokenPayload;
+          } else {
+            throw new Error('Public key not found for token');
+          }
+        } else {
+          throw new Error('No key ID in token header');
+        }
+      } catch (keyRotationError) {
+        // Fall back to regular JWT verification
+        logger.debug('Key rotation verification failed, falling back to regular JWT', {
+          error:
+            keyRotationError instanceof Error ? keyRotationError.message : String(keyRotationError),
+        });
+
+        const jwtSecret = config.auth.jwtSecret;
+        if (!jwtSecret) {
+          throw new Error('JWT secret is not defined and key rotation failed');
+        }
+
+        decoded = jwt.verify(token, jwtSecret, {
+          audience: requiredAudience,
+          issuer: requiredIssuer,
+        }) as TokenPayload;
+      }
+    } else {
+      // Regular JWT verification
+      const jwtSecret = config.auth.jwtSecret;
+      if (!jwtSecret) {
+        logger.error('JWT secret is not defined. Cannot verify token.');
+        throw new Error('JWT secret is not defined');
+      }
+
+      decoded = jwt.verify(token, jwtSecret, {
+        audience: requiredAudience,
+        issuer: requiredIssuer,
+      }) as TokenPayload;
+    }
 
     if (decoded.type !== type) {
       logger.warn('Token type mismatch', {

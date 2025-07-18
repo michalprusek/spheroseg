@@ -142,7 +142,7 @@ export class SocketThrottler {
    * Clear all pending batches
    */
   clearAll(): void {
-    for (const [key, batch] of this.eventQueues) {
+    for (const [_key, batch] of this.eventQueues) {
       if (batch.timer) {
         clearTimeout(batch.timer);
       }

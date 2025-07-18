@@ -83,7 +83,7 @@
     "@types/node-fetch": "^2.6.12",
     "@types/nodemailer": "^6.4.17",
     "@types/opossum": "^8.1.9",
-    "@types/pg": "^8.11.10",
+    "@types/pg": "^8.15.4",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",

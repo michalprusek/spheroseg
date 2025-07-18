@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ImageIcon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';

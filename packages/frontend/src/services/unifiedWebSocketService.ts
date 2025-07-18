@@ -97,7 +97,7 @@ class UnifiedWebSocketService {
 
   // Event emitter for connection state changes
   private stateChangeHandlers: Set<(state: ConnectionState) => void> = new Set();
-  
+
   // Batching
   private batchingEnabled = false;
 

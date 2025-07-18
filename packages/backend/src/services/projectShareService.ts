@@ -247,8 +247,10 @@ export class ProjectShareService {
     const userEmail = userResult.rows[0].email;
 
     // For link-based invitations, the email might be a placeholder
-    if (invitation.email !== 'pending@invitation.link' && 
-        invitation.email.toLowerCase() !== userEmail.toLowerCase()) {
+    if (
+      invitation.email !== 'pending@invitation.link' &&
+      invitation.email.toLowerCase() !== userEmail.toLowerCase()
+    ) {
       throw new ApiError('This invitation is not intended for this user', 403);
     }
 
@@ -401,12 +403,12 @@ export class ProjectShareService {
 
     // For invitation links, we use a placeholder email that will be updated when accepted
     await this.query(insertQuery, [
-      projectId, 
+      projectId,
       ownerId,
       'pending@invitation.link', // Placeholder email
-      permission, 
+      permission,
       invitationToken,
-      invitationExpiresAt
+      invitationExpiresAt,
     ]);
 
     logger.info(`Invitation link generated for project ${projectId}`);

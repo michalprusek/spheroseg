@@ -1,21 +1,10 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Loader2 } from 'lucide-react';
-import { useTranslations } from '@/hooks/useTranslations';
 
 const LoadingFallback: React.FC = () => {
-  const { t } = useTranslations();
-
-  // Log when this component mounts
-  useEffect(() => {
-    console.log('LoadingFallback component mounted');
-
-    return () => {
-      console.log('LoadingFallback component unmounted');
-    };
-  }, []);
-
-  // Provide a fallback text in case translations aren't loaded yet
-  const loadingText = t('common.loadingApplication') || 'Loading application...';
+  // Don't use translations here as this component may render before i18next is initialized
+  // This is used as a Suspense fallback, so it needs to be completely independent
+  const loadingText = 'Loading application...';
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">

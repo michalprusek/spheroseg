@@ -36,11 +36,7 @@ export class WebSocketBatcher {
       maxBatchDelay: config?.maxBatchDelay || 100, // ms
       compressionThreshold: config?.compressionThreshold || 1024, // bytes
       enableCompression: config?.enableCompression !== false,
-      priorityEvents: config?.priorityEvents || [
-        'error',
-        'critical-update',
-        'auth-change',
-      ],
+      priorityEvents: config?.priorityEvents || ['error', 'critical-update', 'auth-change'],
     };
 
     this.setupInterceptors();
@@ -66,7 +62,7 @@ export class WebSocketBatcher {
     this.io.to = (room: string) => {
       const chainableObj = originalTo(room);
       const originalRoomEmit = chainableObj.emit.bind(chainableObj);
-      
+
       chainableObj.emit = (event: string, ...args: any[]): boolean => {
         if (this.shouldBatch(event)) {
           this.addToBatch(room, event, args[0], room);
@@ -74,7 +70,7 @@ export class WebSocketBatcher {
         }
         return originalRoomEmit(event, ...args);
       };
-      
+
       return chainableObj;
     };
 
@@ -98,13 +94,7 @@ export class WebSocketBatcher {
   }
 
   // Add message to batch
-  private addToBatch(
-    key: string,
-    event: string,
-    data: any,
-    room?: string,
-    userId?: string
-  ): void {
+  private addToBatch(key: string, event: string, data: any, room?: string, userId?: string): void {
     const message: BatchedMessage = {
       event,
       data,
@@ -132,7 +122,7 @@ export class WebSocketBatcher {
         const timer = setTimeout(() => {
           this.sendBatch(key);
         }, this.config.maxBatchDelay);
-        
+
         this.batchTimers.set(key, timer);
       }
     }
@@ -154,7 +144,7 @@ export class WebSocketBatcher {
 
     // Group messages by event type
     const groupedMessages = this.groupMessagesByEvent(queue);
-    
+
     // Create batch payload
     const batch = {
       timestamp: Date.now(),
@@ -163,9 +153,7 @@ export class WebSocketBatcher {
     };
 
     // Apply compression if needed
-    const payload = this.config.enableCompression
-      ? this.compressPayload(batch)
-      : batch;
+    const payload = this.config.enableCompression ? this.compressPayload(batch) : batch;
 
     // Send to appropriate destination
     if (key === 'global') {
@@ -177,7 +165,7 @@ export class WebSocketBatcher {
     // Update metrics
     this.metrics.batchesSent++;
     this.metrics.messagesPerBatch.push(queue.length);
-    
+
     // Clear queue
     this.messageQueue.delete(key);
 
@@ -192,7 +180,7 @@ export class WebSocketBatcher {
       if (!grouped[message.event]) {
         grouped[message.event] = [];
       }
-      
+
       grouped[message.event].push({
         data: message.data,
         timestamp: message.timestamp,
@@ -207,7 +195,7 @@ export class WebSocketBatcher {
   // Compress payload if it's large enough
   private compressPayload(data: any): any {
     const jsonStr = JSON.stringify(data);
-    
+
     if (jsonStr.length < this.config.compressionThreshold) {
       return data;
     }
@@ -217,7 +205,7 @@ export class WebSocketBatcher {
       const compressed = this.compress(jsonStr);
       const savings = jsonStr.length - compressed.length;
       this.metrics.compressionSavings += savings;
-      
+
       return {
         compressed: true,
         data: compressed,
@@ -247,15 +235,11 @@ export class WebSocketBatcher {
   }
 
   // Force send a specific message immediately
-  public sendImmediate(
-    event: string,
-    data: any,
-    target?: string | string[]
-  ): void {
+  public sendImmediate(event: string, data: any, target?: string | string[]): void {
     if (!target) {
       this.io.emit(event, data);
     } else if (Array.isArray(target)) {
-      target.forEach(room => this.io.to(room).emit(event, data));
+      target.forEach((room) => this.io.to(room).emit(event, data));
     } else {
       this.io.to(target).emit(event, data);
     }
@@ -263,9 +247,11 @@ export class WebSocketBatcher {
 
   // Get current metrics
   public getMetrics() {
-    const avgMessagesPerBatch = this.metrics.messagesPerBatch.length > 0
-      ? this.metrics.messagesPerBatch.reduce((a, b) => a + b, 0) / this.metrics.messagesPerBatch.length
-      : 0;
+    const avgMessagesPerBatch =
+      this.metrics.messagesPerBatch.length > 0
+        ? this.metrics.messagesPerBatch.reduce((a, b) => a + b, 0) /
+          this.metrics.messagesPerBatch.length
+        : 0;
 
     return {
       totalMessages: this.metrics.totalMessages,
@@ -273,9 +259,14 @@ export class WebSocketBatcher {
       avgMessagesPerBatch,
       compressionSavings: this.metrics.compressionSavings,
       pendingBatches: this.messageQueue.size,
-      efficiency: this.metrics.totalMessages > 0
-        ? ((this.metrics.totalMessages - this.metrics.batchesSent) / this.metrics.totalMessages * 100).toFixed(2) + '%'
-        : '0%',
+      efficiency:
+        this.metrics.totalMessages > 0
+          ? (
+              ((this.metrics.totalMessages - this.metrics.batchesSent) /
+                this.metrics.totalMessages) *
+              100
+            ).toFixed(2) + '%'
+          : '0%',
     };
   }
 
@@ -300,10 +291,10 @@ export class WebSocketBatcher {
     for (const timer of this.batchTimers.values()) {
       clearTimeout(timer);
     }
-    
+
     // Send any pending messages
     this.flush();
-    
+
     // Clear data structures
     this.messageQueue.clear();
     this.batchTimers.clear();
@@ -360,7 +351,7 @@ export function initializeWebSocketBatcher(
   if (batcherInstance) {
     batcherInstance.destroy();
   }
-  
+
   batcherInstance = new WebSocketBatcher(io, config);
   return batcherInstance;
 }

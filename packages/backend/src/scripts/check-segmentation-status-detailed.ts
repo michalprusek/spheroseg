@@ -8,7 +8,7 @@ import logger from '../utils/logger';
 
 async function checkDetailedStatus() {
   const pool = getPool();
-  
+
   try {
     // 1. Check overall image status counts
     logger.info('=== Image Status Summary ===');
@@ -22,7 +22,7 @@ async function checkDetailedStatus() {
     `;
     const imageStatusResult = await pool.query(imageStatusQuery);
     logger.info('Image status counts:', imageStatusResult.rows);
-    
+
     // 2. Check segmentation_results status counts
     logger.info('\n=== Segmentation Results Status Summary ===');
     const segResultsQuery = `
@@ -35,7 +35,7 @@ async function checkDetailedStatus() {
     `;
     const segResultsResult = await pool.query(segResultsQuery);
     logger.info('Segmentation results status counts:', segResultsResult.rows);
-    
+
     // 3. Check segmentation_tasks status counts
     logger.info('\n=== Segmentation Tasks Status Summary ===');
     const segTasksQuery = `
@@ -48,7 +48,7 @@ async function checkDetailedStatus() {
     `;
     const segTasksResult = await pool.query(segTasksQuery);
     logger.info('Segmentation tasks status counts:', segTasksResult.rows);
-    
+
     // 4. Check for mismatches between tables
     logger.info('\n=== Status Mismatches ===');
     const mismatchQuery = `
@@ -76,16 +76,16 @@ async function checkDetailedStatus() {
     const mismatchResult = await pool.query(mismatchQuery);
     logger.info(`Found ${mismatchResult.rows.length} images with status mismatches`);
     if (mismatchResult.rows.length > 0) {
-      mismatchResult.rows.forEach(row => {
+      mismatchResult.rows.forEach((row) => {
         logger.info(`Image ${row.id} (${row.name}):`, {
           imageStatus: row.image_status,
           resultStatus: row.result_status,
           taskStatus: row.task_status,
-          mismatchType: row.mismatch_type
+          mismatchType: row.mismatch_type,
         });
       });
     }
-    
+
     // 5. Check processing count calculation as done in SegmentationProgress component
     logger.info('\n=== Processing Count Calculation (Frontend Logic) ===');
     const processingCountQuery = `
@@ -117,16 +117,16 @@ async function checkDetailedStatus() {
     `;
     const processingCountResult = await pool.query(processingCountQuery);
     logger.info('Processing counts by project:');
-    processingCountResult.rows.forEach(row => {
+    processingCountResult.rows.forEach((row) => {
       logger.info(`Project "${row.project_name}":`, {
         totalImages: row.total_images,
         processingInImages: row.processing_count_images,
         processingInResults: row.processing_count_results,
         processingInTasks: row.processing_count_tasks,
-        maxProcessingCount: row.max_processing_count
+        maxProcessingCount: row.max_processing_count,
       });
     });
-    
+
     // 6. Check for orphaned records
     logger.info('\n=== Orphaned Records Check ===');
     const orphanedResultsQuery = `
@@ -135,17 +135,17 @@ async function checkDetailedStatus() {
       WHERE NOT EXISTS (SELECT 1 FROM images i WHERE i.id = sr.image_id);
     `;
     const orphanedResultsResult = await pool.query(orphanedResultsQuery);
-    
+
     const orphanedTasksQuery = `
       SELECT COUNT(*) as orphaned_tasks
       FROM segmentation_tasks st
       WHERE NOT EXISTS (SELECT 1 FROM images i WHERE i.id = st.image_id);
     `;
     const orphanedTasksResult = await pool.query(orphanedTasksQuery);
-    
+
     logger.info('Orphaned segmentation_results:', orphanedResultsResult.rows[0].orphaned_results);
     logger.info('Orphaned segmentation_tasks:', orphanedTasksResult.rows[0].orphaned_tasks);
-    
+
     // 7. Check images by project with their status
     logger.info('\n=== Images by Project ===');
     const imagesByProjectQuery = `
@@ -160,14 +160,14 @@ async function checkDetailedStatus() {
     `;
     const imagesByProjectResult = await pool.query(imagesByProjectQuery);
     let currentProject = '';
-    imagesByProjectResult.rows.forEach(row => {
+    imagesByProjectResult.rows.forEach((row) => {
       if (row.project_name !== currentProject) {
         currentProject = row.project_name;
         logger.info(`\nProject: ${currentProject}`);
       }
       logger.info(`  ${row.segmentation_status}: ${row.count}`);
     });
-    
+
     // 8. Check if there's a specific query that might return 17 processing
     logger.info('\n=== Checking for "17 processing" source ===');
     const checkSeventeenQuery = `
@@ -204,14 +204,13 @@ async function checkDetailedStatus() {
     `;
     const checkSeventeenResult = await pool.query(checkSeventeenQuery);
     logger.info('Possible sources for "17 processing":');
-    checkSeventeenResult.rows.forEach(row => {
+    checkSeventeenResult.rows.forEach((row) => {
       if (row.processing_count === '17' || row.processing_count === 17) {
         logger.warn(`FOUND: ${row.source} has exactly 17 items!`);
       } else {
         logger.info(`${row.source}: ${row.processing_count}`);
       }
     });
-    
   } catch (error) {
     logger.error('Error checking detailed status:', error);
     throw error;
@@ -221,7 +220,7 @@ async function checkDetailedStatus() {
 // Command line execution
 if (require.main === module) {
   logger.info('Starting detailed segmentation status check');
-  
+
   checkDetailedStatus()
     .then(() => {
       logger.info('Check completed successfully');

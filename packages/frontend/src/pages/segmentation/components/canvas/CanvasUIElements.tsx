@@ -1,4 +1,3 @@
-import React from 'react';
 import { Point } from '@/lib/segmentation';
 import CanvasZoomInfo from './CanvasZoomInfo';
 import EditorHelpTips from '../EditorHelpTips';

@@ -6,7 +6,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { promises as fs } from 'fs';
 import path from 'path';
-import crypto from 'crypto';
 
 // Cache for ETags to avoid repeated file stats
 const etagCache = new Map<string, { etag: string; mtime: number }>();

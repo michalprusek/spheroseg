@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
-import { ThemeProvider, useTheme, Theme } from '../../ThemeContext';
+import { ThemeProvider, useTheme } from '../../ThemeContext';
 import '@testing-library/jest-dom';
 
 // Mock AuthContext with multiple user scenarios

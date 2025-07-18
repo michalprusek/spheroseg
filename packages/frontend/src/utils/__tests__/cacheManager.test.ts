@@ -15,15 +15,15 @@ vi.mock('@/utils/logging/unifiedLogger', () => ({
     info: vi.fn(),
     debug: vi.fn(),
     error: vi.fn(),
-    warn: vi.fn()
-  })
+    warn: vi.fn(),
+  }),
 }));
 
 describe('Cache Manager', () => {
   beforeEach(() => {
     // Clear localStorage
     localStorage.clear();
-    
+
     // Reset mocks
     vi.clearAllMocks();
   });
@@ -31,18 +31,21 @@ describe('Cache Manager', () => {
   describe('clearProjectImageCache', () => {
     it('should clear project-specific image caches', async () => {
       const projectId = 'test-project-123';
-      
+
       // Setup localStorage with test data
-      localStorage.setItem(`spheroseg_images_${projectId}`, JSON.stringify([
-        { id: '1', name: 'test1.jpg' },
-        { id: '2', name: 'test2.jpg' }
-      ]));
+      localStorage.setItem(
+        `spheroseg_images_${projectId}`,
+        JSON.stringify([
+          { id: '1', name: 'test1.jpg' },
+          { id: '2', name: 'test2.jpg' },
+        ]),
+      );
       localStorage.setItem(`project-images:${projectId}`, 'cached-data');
       localStorage.setItem('unrelated-key', 'should-remain');
 
       // Mock unified cache service
       const mockCacheService = {
-        invalidate: vi.fn().mockResolvedValue(undefined)
+        invalidate: vi.fn().mockResolvedValue(undefined),
       };
       vi.spyOn(unifiedCacheService, 'default', 'get').mockReturnValue(mockCacheService as any);
 
@@ -79,7 +82,7 @@ describe('Cache Manager', () => {
 
       // Mock unified cache to throw error
       const mockCacheService = {
-        invalidate: vi.fn().mockRejectedValue(new Error('Cache error'))
+        invalidate: vi.fn().mockRejectedValue(new Error('Cache error')),
       };
       vi.spyOn(unifiedCacheService, 'default', 'get').mockReturnValue(mockCacheService as any);
 
@@ -101,7 +104,7 @@ describe('Cache Manager', () => {
       // Mock IndexedDB databases
       const mockDatabases = [
         { name: 'db1', version: 1 },
-        { name: 'db2', version: 1 }
+        { name: 'db2', version: 1 },
       ];
       global.indexedDB.databases = vi.fn().mockResolvedValue(mockDatabases);
       global.indexedDB.deleteDatabase = vi.fn().mockResolvedValue(undefined);
@@ -130,7 +133,7 @@ describe('Cache Manager', () => {
       // Should still clear other storage
       expect(localStorage.length).toBe(0);
       expect(sessionStorage.length).toBe(0);
-      
+
       // Stats should reflect what was cleared
       expect(stats.indexedDBDatabases).toEqual([]);
     });
@@ -176,7 +179,7 @@ describe('Cache Manager', () => {
     it('should add utilities to window in dev mode', async () => {
       // In Vite test environment with --mode development, import.meta.env.DEV is true
       // The cacheManager module should have already added utilities to window
-      
+
       // Verify window utilities exist
       expect((window as any).cacheManager).toBeDefined();
       expect((window as any).cacheManager.clearProjectImageCache).toBeDefined();

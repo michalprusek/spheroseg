@@ -3,9 +3,7 @@
  * Handles HTTP requests for user profile and settings management
  */
 import { Response } from 'express';
-import { Pool } from 'pg';
 import multer from 'multer';
-import path from 'path';
 import sharp from 'sharp';
 import userProfileService from '../services/userProfileService';
 import logger from '../utils/logger';

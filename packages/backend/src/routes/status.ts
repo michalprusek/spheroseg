@@ -96,13 +96,11 @@ router.get(
     }
 
     try {
-      // Verify project access
-      const projectCheck = await pool.query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
-
-      if (projectCheck.rows.length === 0) {
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(pool, projectId, userId);
+      
+      if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;
       }

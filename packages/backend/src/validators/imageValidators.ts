@@ -50,3 +50,10 @@ export const batchDeleteImagesSchema = z.object({
     imageIds: z.array(uuidSchema).min(1, { message: 'At least one image ID is required' }),
   }),
 });
+
+// Schema for validating image ID parameter
+export const imageIdSchema = z.object({
+  params: z.object({
+    imageId: uuidSchema,
+  }),
+});

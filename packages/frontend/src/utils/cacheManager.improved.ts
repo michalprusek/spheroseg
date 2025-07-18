@@ -1,17 +1,12 @@
 /**
  * Enhanced Cache Manager for SpheroSeg Application
- * 
+ *
  * Provides robust utilities to manage various caches with proper error handling,
  * performance monitoring, retry logic, and type safety.
  */
 
 import { createLogger } from '@/utils/logging/unifiedLogger';
-import type { 
-  CacheStats, 
-  CacheOperationResult, 
-  CacheConfig,
-  CachedItem 
-} from './types/cache.types';
+import type { CacheStats, CacheOperationResult, CacheConfig, CachedItem } from './types/cache.types';
 
 const logger = createLogger('CacheManager');
 
@@ -21,7 +16,7 @@ const CACHE_CONFIG: CacheConfig = {
   maxSizeBytes: 50 * 1024 * 1024, // 50MB
   expirationMs: 7 * 24 * 60 * 60 * 1000, // 7 days
   retryAttempts: 3,
-  retryDelayMs: 100
+  retryDelayMs: 100,
 };
 
 // Custom error class
@@ -29,7 +24,7 @@ export class CacheOperationError extends Error {
   constructor(
     message: string,
     public readonly operation: string,
-    public readonly cause?: Error
+    public readonly cause?: Error,
   ) {
     super(message);
     this.name = 'CacheOperationError';
@@ -43,14 +38,14 @@ function validateProjectId(projectId: string): string {
   if (!projectId || typeof projectId !== 'string') {
     throw new CacheOperationError('Invalid projectId', 'validation');
   }
-  
+
   // Sanitize projectId to prevent injection attacks
   const sanitizedId = projectId.replace(/[^a-zA-Z0-9-_]/g, '');
-  
+
   if (sanitizedId.length === 0) {
     throw new CacheOperationError('Invalid projectId after sanitization', 'validation');
   }
-  
+
   return sanitizedId;
 }
 
@@ -61,21 +56,20 @@ export async function clearProjectImageCache(projectId: string): Promise<CacheOp
   const errors: Error[] = [];
   const stats: Partial<CacheStats> = {
     localStorageKeys: 0,
-    clearedItems: 0
+    clearedItems: 0,
   };
-  
+
   const startTime = performance.now();
-  
+
   try {
     const sanitizedId = validateProjectId(projectId);
-    const cleanProjectId = sanitizedId.startsWith('project-') ? 
-      sanitizedId.substring(8) : sanitizedId;
-    
+    const cleanProjectId = sanitizedId.startsWith('project-') ? sanitizedId.substring(8) : sanitizedId;
+
     logger.info(`Clearing image cache for project: ${cleanProjectId}`);
-    
+
     // Clear localStorage entries with async iteration
     const keysToRemove = await getProjectCacheKeys(cleanProjectId);
-    
+
     for (const key of keysToRemove) {
       try {
         localStorage.removeItem(key);
@@ -83,14 +77,10 @@ export async function clearProjectImageCache(projectId: string): Promise<CacheOp
         stats.clearedItems = (stats.clearedItems || 0) + 1;
         logger.debug(`Removed localStorage key: ${key}`);
       } catch (error) {
-        errors.push(new CacheOperationError(
-          `Failed to remove key: ${key}`,
-          'localStorage',
-          error as Error
-        ));
+        errors.push(new CacheOperationError(`Failed to remove key: ${key}`, 'localStorage', error as Error));
       }
     }
-    
+
     // Clear unified cache service entries with retry
     try {
       await retryOperation(async () => {
@@ -100,13 +90,9 @@ export async function clearProjectImageCache(projectId: string): Promise<CacheOp
       logger.debug('Cleared unified cache service entries');
       stats.clearedItems = (stats.clearedItems || 0) + 1;
     } catch (error) {
-      errors.push(new CacheOperationError(
-        'Failed to clear unified cache',
-        'unifiedCache',
-        error as Error
-      ));
+      errors.push(new CacheOperationError('Failed to clear unified cache', 'unifiedCache', error as Error));
     }
-    
+
     // Clear IndexedDB entries
     try {
       const { deleteProjectImages } = await import('@/utils/indexedDBService');
@@ -114,32 +100,28 @@ export async function clearProjectImageCache(projectId: string): Promise<CacheOp
       logger.debug('Cleared IndexedDB entries');
       stats.clearedItems = (stats.clearedItems || 0) + 1;
     } catch (error) {
-      errors.push(new CacheOperationError(
-        'Failed to clear IndexedDB',
-        'indexedDB',
-        error as Error
-      ));
+      errors.push(new CacheOperationError('Failed to clear IndexedDB', 'indexedDB', error as Error));
     }
-    
+
     const duration = performance.now() - startTime;
     const success = errors.length === 0;
-    
+
     if (success) {
       logger.info(`Successfully cleared image cache for project: ${cleanProjectId} in ${duration.toFixed(2)}ms`);
     } else {
       logger.warn(`Partially cleared cache for project: ${cleanProjectId} in ${duration.toFixed(2)}ms`, { errors });
     }
-    
+
     return {
       success,
       error: errors.length > 0 ? errors[0] : undefined,
-      stats
+      stats,
     };
   } catch (error) {
     logger.error('Error clearing project image cache:', error);
     return {
       success: false,
-      error: error as Error
+      error: error as Error,
     };
   }
 }
@@ -150,19 +132,19 @@ export async function clearProjectImageCache(projectId: string): Promise<CacheOp
 async function getProjectCacheKeys(projectId: string): Promise<string[]> {
   const keys: string[] = [];
   const totalKeys = localStorage.length;
-  
+
   for (let i = 0; i < totalKeys; i++) {
     // Yield to UI thread periodically
     if (i % 100 === 0 && i > 0) {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    
+
     const key = localStorage.key(i);
     if (key && shouldRemoveKey(key, projectId)) {
       keys.push(key);
     }
   }
-  
+
   return keys;
 }
 
@@ -170,9 +152,11 @@ async function getProjectCacheKeys(projectId: string): Promise<string[]> {
  * Check if a key should be removed for a project
  */
 function shouldRemoveKey(key: string, projectId: string): boolean {
-  return key.includes(`spheroseg_images_${projectId}`) ||
-         key.includes(`spheroseg_uploaded_images_${projectId}`) ||
-         key.includes(`project-images:${projectId}`);
+  return (
+    key.includes(`spheroseg_images_${projectId}`) ||
+    key.includes(`spheroseg_uploaded_images_${projectId}`) ||
+    key.includes(`project-images:${projectId}`)
+  );
 }
 
 /**
@@ -185,46 +169,38 @@ export async function clearAllCaches(): Promise<CacheOperationResult<CacheStats>
     localStorageKeys: 0,
     sessionStorageKeys: 0,
     indexedDBDatabases: [],
-    clearedItems: 0
+    clearedItems: 0,
   };
-  
+
   const startTime = performance.now();
-  
+
   try {
     // Check storage quota before clearing
     await checkStorageQuota();
-    
+
     // Clear localStorage with size tracking
     const localStorageSize = await estimateStorageSize('localStorage');
     stats.localStorageKeys = localStorage.length;
-    
+
     try {
       localStorage.clear();
       stats.clearedItems += stats.localStorageKeys;
       logger.debug(`Cleared ${stats.localStorageKeys} localStorage keys (${formatBytes(localStorageSize)})`);
     } catch (error) {
-      errors.push(new CacheOperationError(
-        'Failed to clear localStorage',
-        'localStorage',
-        error as Error
-      ));
+      errors.push(new CacheOperationError('Failed to clear localStorage', 'localStorage', error as Error));
     }
-    
+
     // Clear sessionStorage
     stats.sessionStorageKeys = sessionStorage.length;
-    
+
     try {
       sessionStorage.clear();
       stats.clearedItems += stats.sessionStorageKeys;
       logger.debug(`Cleared ${stats.sessionStorageKeys} sessionStorage keys`);
     } catch (error) {
-      errors.push(new CacheOperationError(
-        'Failed to clear sessionStorage',
-        'sessionStorage',
-        error as Error
-      ));
+      errors.push(new CacheOperationError('Failed to clear sessionStorage', 'sessionStorage', error as Error));
     }
-    
+
     // Clear all IndexedDB databases
     if ('indexedDB' in window) {
       try {
@@ -237,37 +213,31 @@ export async function clearAllCaches(): Promise<CacheOperationResult<CacheStats>
               stats.clearedItems++;
               logger.debug(`Deleted IndexedDB database: ${db.name}`);
             } catch (dbError) {
-              errors.push(new CacheOperationError(
-                `Failed to delete database: ${db.name}`,
-                'indexedDB',
-                dbError as Error
-              ));
+              errors.push(
+                new CacheOperationError(`Failed to delete database: ${db.name}`, 'indexedDB', dbError as Error),
+              );
             }
           }
         }
       } catch (error) {
-        errors.push(new CacheOperationError(
-          'Failed to enumerate IndexedDB databases',
-          'indexedDB',
-          error as Error
-        ));
+        errors.push(new CacheOperationError('Failed to enumerate IndexedDB databases', 'indexedDB', error as Error));
       }
     }
-    
+
     const duration = performance.now() - startTime;
     const success = errors.length === 0;
-    
+
     if (success) {
       logger.info(`Successfully cleared all caches in ${duration.toFixed(2)}ms`, stats);
     } else {
       logger.warn(`Partially cleared caches in ${duration.toFixed(2)}ms`, { stats, errors });
     }
-    
+
     return {
       success,
       data: stats,
       error: errors.length > 0 ? errors[0] : undefined,
-      stats
+      stats,
     };
   } catch (error) {
     logger.error('Error clearing all caches:', error);
@@ -275,7 +245,7 @@ export async function clearAllCaches(): Promise<CacheOperationResult<CacheStats>
       success: false,
       data: stats,
       error: error as Error,
-      stats
+      stats,
     };
   }
 }
@@ -288,9 +258,9 @@ export function getCacheStats(): CacheStats {
     localStorageKeys: localStorage.length,
     sessionStorageKeys: sessionStorage.length,
     indexedDBDatabases: [],
-    clearedItems: 0
+    clearedItems: 0,
   };
-  
+
   // Count image-related keys
   let imageRelatedKeys = 0;
   for (let i = 0; i < localStorage.length; i++) {
@@ -299,13 +269,13 @@ export function getCacheStats(): CacheStats {
       imageRelatedKeys++;
     }
   }
-  
-  logger.debug('Cache statistics', { 
-    ...stats, 
+
+  logger.debug('Cache statistics', {
+    ...stats,
     imageRelatedKeys,
-    storageEstimate: navigator.storage?.estimate ? 'available' : 'unavailable'
+    storageEstimate: navigator.storage?.estimate ? 'available' : 'unavailable',
   });
-  
+
   return stats;
 }
 
@@ -314,10 +284,10 @@ export function getCacheStats(): CacheStats {
  */
 async function retryOperation<T>(
   operation: () => Promise<T>,
-  attempts: number = CACHE_CONFIG.retryAttempts || 3
+  attempts: number = CACHE_CONFIG.retryAttempts || 3,
 ): Promise<T> {
   let lastError: Error | undefined;
-  
+
   for (let i = 0; i < attempts; i++) {
     try {
       return await operation();
@@ -325,12 +295,12 @@ async function retryOperation<T>(
       lastError = error as Error;
       if (i < attempts - 1) {
         const delay = (CACHE_CONFIG.retryDelayMs || 100) * Math.pow(2, i);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         logger.debug(`Retrying operation after ${delay}ms (attempt ${i + 1}/${attempts})`);
       }
     }
   }
-  
+
   throw lastError;
 }
 
@@ -359,7 +329,7 @@ async function checkStorageQuota(): Promise<void> {
 async function estimateStorageSize(type: 'localStorage' | 'sessionStorage'): Promise<number> {
   const storage = type === 'localStorage' ? localStorage : sessionStorage;
   let totalSize = 0;
-  
+
   for (let i = 0; i < storage.length; i++) {
     const key = storage.key(i);
     if (key) {
@@ -367,7 +337,7 @@ async function estimateStorageSize(type: 'localStorage' | 'sessionStorage'): Pro
       totalSize += key.length + value.length;
     }
   }
-  
+
   return totalSize * 2; // Approximate UTF-16 encoding
 }
 
@@ -388,11 +358,11 @@ function formatBytes(bytes: number): string {
 export async function cleanExpiredCache(): Promise<CacheOperationResult> {
   const errors: Error[] = [];
   let cleanedItems = 0;
-  
+
   try {
     const now = Date.now();
     const keysToRemove: string[] = [];
-    
+
     // Check localStorage for expired items
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -411,34 +381,30 @@ export async function cleanExpiredCache(): Promise<CacheOperationResult> {
         }
       }
     }
-    
+
     // Remove expired items
     for (const key of keysToRemove) {
       try {
         localStorage.removeItem(key);
         cleanedItems++;
       } catch (error) {
-        errors.push(new CacheOperationError(
-          `Failed to remove expired key: ${key}`,
-          'cleanup',
-          error as Error
-        ));
+        errors.push(new CacheOperationError(`Failed to remove expired key: ${key}`, 'cleanup', error as Error));
       }
     }
-    
+
     const success = errors.length === 0;
     logger.info(`Cleaned ${cleanedItems} expired cache items`);
-    
+
     return {
       success,
       error: errors.length > 0 ? errors[0] : undefined,
-      stats: { clearedItems: cleanedItems }
+      stats: { clearedItems: cleanedItems },
     };
   } catch (error) {
     logger.error('Error cleaning expired cache:', error);
     return {
       success: false,
-      error: error as Error
+      error: error as Error,
     };
   }
 }
@@ -450,7 +416,7 @@ if (typeof window !== 'undefined' && import.meta.env.DEV) {
     clearProjectImageCache,
     clearAllCaches,
     getCacheStats,
-    version: CACHE_CONFIG.version
+    version: CACHE_CONFIG.version,
   };
   logger.info('Cache manager utilities available in window.cacheManager (dev mode only)');
 }

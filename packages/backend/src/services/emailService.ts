@@ -21,7 +21,7 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
   try {
     // In production, replace this with actual email service integration
     const invitationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/accept-invitation/${invitationToken}`;
-    
+
     const emailContent = {
       to,
       subject: `You've been invited to collaborate on "${projectTitle}"`,
@@ -52,14 +52,14 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
         
         Best regards,
         The SpherosegV4 Team
-      `
+      `,
     };
 
     // Log email sending attempt (in production, actually send the email here)
     logger.info('Email would be sent:', {
       to: emailContent.to,
       subject: emailContent.subject,
-      invitationUrl
+      invitationUrl,
     });
 
     // In development, you can log the email content to console
@@ -82,13 +82,12 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
     //   html: emailContent.html,
     // };
     // await sgMail.send(msg);
-
   } catch (error) {
     logger.error('Failed to send project invitation email', {
       error,
       to,
       projectTitle,
-      invitationToken
+      invitationToken,
     });
     // Don't throw the error - we don't want to fail the share operation if email fails
     // The user can still share the invitation link manually
@@ -130,12 +129,12 @@ export async function sendInvitationAcceptedNotification(
         
         Best regards,
         The SpherosegV4 Team
-      `
+      `,
     };
 
     logger.info('Acceptance notification would be sent:', {
       to: emailContent.to,
-      subject: emailContent.subject
+      subject: emailContent.subject,
     });
 
     // TODO: Send actual email in production
@@ -144,7 +143,7 @@ export async function sendInvitationAcceptedNotification(
       error,
       ownerEmail,
       acceptorName,
-      projectTitle
+      projectTitle,
     });
   }
 }

@@ -57,7 +57,7 @@ export type WebSocketEventMap = {
   'ws:connected': void;
   'ws:disconnected': string;
   'ws:error': Error;
-  
+
   // Segmentation events
   'segmentation:update': {
     imageId: string;
@@ -65,7 +65,7 @@ export type WebSocketEventMap = {
     progress?: number;
     message?: string;
   };
-  
+
   // Image events
   'image:created': {
     imageId: string;
@@ -79,7 +79,7 @@ export type WebSocketEventMap = {
   'image:deleted': {
     imageId: string;
   };
-  
+
   // Cell events
   'cell:created': {
     cellId: string;
@@ -93,15 +93,15 @@ export type WebSocketEventMap = {
   'cell:deleted': {
     cellId: string;
   };
-  
+
   // Batch events
-  'batch': {
+  batch: {
     messages: BatchMessage[];
     compressed?: boolean;
   };
-  'batch_ack': BatchAcknowledgment;
-  'batch_error': BatchError;
-  'capabilities': BatchCapabilities;
+  batch_ack: BatchAcknowledgment;
+  batch_error: BatchError;
+  capabilities: BatchCapabilities;
 };
 
 // Type-safe event emitter interface

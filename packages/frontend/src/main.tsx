@@ -56,24 +56,25 @@ ReactDOM.createRoot(document.getElementById('root')!).render(app);
 // Mark application rendered
 markPerformance('app-init-end');
 
-// Register service worker in production
-serviceWorkerRegistration.register({
-  onSuccess: () => {
-    logger.info('Service worker registered successfully');
-  },
-  onUpdate: (registration) => {
-    logger.info('New app version available');
-    // Show update notification to user
-    if (showUpdateNotification) {
-      showUpdateNotification(() => {
-        // Skip waiting and reload
-        serviceWorkerRegistration.skipWaiting().then(() => {
-          window.location.reload();
-        });
-      });
-    }
-  },
-  onError: (error) => {
-    logger.error('Service worker registration failed', { error });
-  },
-});
+// Temporarily disable service worker to avoid no-op fetch handler warnings
+// TODO: Re-enable when service worker is properly configured for production
+// serviceWorkerRegistration.register({
+//   onSuccess: () => {
+//     logger.info('Service worker registered successfully');
+//   },
+//   onUpdate: (registration) => {
+//     logger.info('New app version available');
+//     // Show update notification to user
+//     if (showUpdateNotification) {
+//       showUpdateNotification(() => {
+//         // Skip waiting and reload
+//         serviceWorkerRegistration.skipWaiting().then(() => {
+//           window.location.reload();
+//         });
+//       });
+//     }
+//   },
+//   onError: (error) => {
+//     logger.error('Service worker registration failed', { error });
+//   },
+// });

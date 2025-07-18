@@ -1,9 +1,8 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { usePolygonActions } from '../usePolygonActions';
 import { SegmentationResult, Point } from '@/lib/segmentation';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
 
 // Mock dependencies
 vi.mock('@/lib/apiClient');

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ABTestingService } from '../abTestingService';
-import type { Experiment, ExperimentVariant, User } from '../types';
+import type { Experiment, User } from '../types';
 
 // Mock config
 vi.mock('../../../config/app.config', () => ({
@@ -8,9 +8,9 @@ vi.mock('../../../config/app.config', () => ({
     analytics: {
       enabled: true,
       trackingId: 'test-tracking-id',
-      apiEndpoint: 'https://analytics.test.com'
-    }
-  }
+      apiEndpoint: 'https://analytics.test.com',
+    },
+  },
 }));
 
 describe('ABTestingService', () => {
@@ -25,13 +25,13 @@ describe('ABTestingService', () => {
       properties: {
         country: 'US',
         language: 'en',
-        plan: 'premium'
-      }
+        plan: 'premium',
+      },
     };
-    
+
     // Clear localStorage
     localStorage.clear();
-    
+
     // Mock console methods
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -49,11 +49,11 @@ describe('ABTestingService', () => {
         description: 'Testing experiment creation',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'active',
         startDate: new Date().toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(experiment);
@@ -66,12 +66,10 @@ describe('ABTestingService', () => {
       const experiment: Experiment = {
         id: 'status-test',
         name: 'Status Test',
-        variants: [
-          { id: 'control', name: 'Control', weight: 100 }
-        ],
+        variants: [{ id: 'control', name: 'Control', weight: 100 }],
         status: 'draft',
         startDate: new Date().toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(experiment);
@@ -89,7 +87,7 @@ describe('ABTestingService', () => {
           variants: [{ id: 'control', name: 'Control', weight: 100 }],
           status: 'active',
           startDate: new Date().toISOString(),
-          targeting: {}
+          targeting: {},
         },
         {
           id: 'exp-2',
@@ -97,15 +95,15 @@ describe('ABTestingService', () => {
           variants: [{ id: 'control', name: 'Control', weight: 100 }],
           status: 'paused',
           startDate: new Date().toISOString(),
-          targeting: {}
-        }
+          targeting: {},
+        },
       ];
 
-      experiments.forEach(exp => service.createExperiment(exp));
+      experiments.forEach((exp) => service.createExperiment(exp));
       const allExperiments = service.getAllExperiments();
 
       expect(allExperiments).toHaveLength(2);
-      expect(allExperiments.map(e => e.id)).toEqual(['exp-1', 'exp-2']);
+      expect(allExperiments.map((e) => e.id)).toEqual(['exp-1', 'exp-2']);
     });
   });
 
@@ -116,11 +114,11 @@ describe('ABTestingService', () => {
         name: 'Weight Test',
         variants: [
           { id: 'control', name: 'Control', weight: 70 },
-          { id: 'variant-a', name: 'Variant A', weight: 30 }
+          { id: 'variant-a', name: 'Variant A', weight: 30 },
         ],
         status: 'active',
         startDate: new Date().toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(experiment);
@@ -136,11 +134,11 @@ describe('ABTestingService', () => {
         name: 'Inactive Test',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'paused',
         startDate: new Date().toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(experiment);
@@ -156,11 +154,11 @@ describe('ABTestingService', () => {
         name: 'Persist Test',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'active',
         startDate: new Date().toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(experiment);
@@ -178,11 +176,11 @@ describe('ABTestingService', () => {
         name: 'Force Test',
         variants: [
           { id: 'control', name: 'Control', weight: 100 },
-          { id: 'variant-a', name: 'Variant A', weight: 0 }
+          { id: 'variant-a', name: 'Variant A', weight: 0 },
         ],
         status: 'active',
         startDate: new Date().toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(experiment);
@@ -201,19 +199,19 @@ describe('ABTestingService', () => {
         name: 'Targeting Test',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'active',
         startDate: new Date().toISOString(),
         targeting: {
           userProperties: {
-            plan: ['premium', 'enterprise']
-          }
-        }
+            plan: ['premium', 'enterprise'],
+          },
+        },
       };
 
       service.createExperiment(experiment);
-      
+
       // Premium user should be included
       service.setUser(mockUser);
       const premiumVariant = service.getVariant('targeting-test');
@@ -222,7 +220,7 @@ describe('ABTestingService', () => {
       // Free user should get control
       service.setUser({
         ...mockUser,
-        properties: { ...mockUser.properties, plan: 'free' }
+        properties: { ...mockUser.properties, plan: 'free' },
       });
       const freeVariant = service.getVariant('targeting-test');
       expect(freeVariant).toBe('control');
@@ -234,13 +232,13 @@ describe('ABTestingService', () => {
         name: 'Percentage Test',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'active',
         startDate: new Date().toISOString(),
         targeting: {
-          percentage: 50 // Only 50% of users should be in experiment
-        }
+          percentage: 50, // Only 50% of users should be in experiment
+        },
       };
 
       service.createExperiment(experiment);
@@ -248,10 +246,10 @@ describe('ABTestingService', () => {
       // Test with multiple users
       const results = new Set<string>();
       for (let i = 0; i < 100; i++) {
-        service.setUser({ 
-          id: `user-${i}`, 
+        service.setUser({
+          id: `user-${i}`,
           email: `user${i}@example.com`,
-          properties: {} 
+          properties: {},
         });
         results.add(service.getVariant('percentage-test'));
       }
@@ -272,11 +270,11 @@ describe('ABTestingService', () => {
         name: 'Future Test',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'active',
         startDate: futureDate.toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       const pastExperiment: Experiment = {
@@ -284,12 +282,12 @@ describe('ABTestingService', () => {
         name: 'Past Test',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'active',
         startDate: pastDate.toISOString(),
         endDate: pastDate.toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(futureExperiment);
@@ -298,7 +296,7 @@ describe('ABTestingService', () => {
 
       // Future experiment should return control
       expect(service.getVariant('future-test')).toBe('control');
-      
+
       // Past experiment should return control
       expect(service.getVariant('past-test')).toBe('control');
     });
@@ -311,16 +309,16 @@ describe('ABTestingService', () => {
         name: 'Tracking Test',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'active',
         startDate: new Date().toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(experiment);
       service.setUser(mockUser);
-      
+
       const variant = service.getVariant('tracking-test');
       service.trackEvent('button_click', { buttonId: 'cta' });
 
@@ -330,9 +328,9 @@ describe('ABTestingService', () => {
         eventName: 'button_click',
         userId: mockUser.id,
         experiments: {
-          'tracking-test': variant
+          'tracking-test': variant,
         },
-        properties: { buttonId: 'cta' }
+        properties: { buttonId: 'cta' },
       });
     });
 
@@ -342,16 +340,16 @@ describe('ABTestingService', () => {
         name: 'Conversion Test',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'active',
         startDate: new Date().toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(experiment);
       service.setUser(mockUser);
-      
+
       service.getVariant('conversion-test');
       service.trackConversion('purchase', 99.99);
 
@@ -361,8 +359,8 @@ describe('ABTestingService', () => {
         eventName: 'conversion',
         properties: {
           conversionType: 'purchase',
-          value: 99.99
-        }
+          value: 99.99,
+        },
       });
     });
   });
@@ -397,16 +395,16 @@ describe('ABTestingService', () => {
         name: 'Storage Test',
         variants: [
           { id: 'control', name: 'Control', weight: 50 },
-          { id: 'variant-a', name: 'Variant A', weight: 50 }
+          { id: 'variant-a', name: 'Variant A', weight: 50 },
         ],
         status: 'active',
         startDate: new Date().toISOString(),
-        targeting: {}
+        targeting: {},
       };
 
       service.createExperiment(experiment);
       service.setUser(mockUser);
-      
+
       const variant = service.getVariant('storage-test');
 
       const stored = localStorage.getItem(`ab_assignment_${mockUser.id}_storage-test`);
@@ -430,26 +428,26 @@ describe('ABTestingService', () => {
           name: 'Experiment 1',
           variants: [
             { id: 'control', name: 'Control', weight: 50 },
-            { id: 'variant-a', name: 'Variant A', weight: 50 }
+            { id: 'variant-a', name: 'Variant A', weight: 50 },
           ],
           status: 'active',
           startDate: new Date().toISOString(),
-          targeting: {}
+          targeting: {},
         },
         {
           id: 'exp-2',
           name: 'Experiment 2',
           variants: [
             { id: 'control', name: 'Control', weight: 50 },
-            { id: 'variant-b', name: 'Variant B', weight: 50 }
+            { id: 'variant-b', name: 'Variant B', weight: 50 },
           ],
           status: 'active',
           startDate: new Date().toISOString(),
-          targeting: {}
-        }
+          targeting: {},
+        },
       ];
 
-      experiments.forEach(exp => service.createExperiment(exp));
+      experiments.forEach((exp) => service.createExperiment(exp));
       service.setUser(mockUser);
 
       // Get variants to establish assignments

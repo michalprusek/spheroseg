@@ -63,17 +63,17 @@ export const createDataUrl = async (url: string): Promise<string | null> => {
   }
 };
 
-export const loadImageFromApi = async (projectId: string, imageId: string): Promise<any> => {
+export const loadImageFromApi = async (projectId: string, imageId: string): Promise<null> => {
   console.warn('loadImageFromApi is deprecated. Use shared utilities instead.');
   return null;
 };
 
-export const loadImageByPath = async (projectId: string, imageId: string): Promise<any> => {
+export const loadImageByPath = async (projectId: string, imageId: string): Promise<null> => {
   console.warn('loadImageByPath is deprecated. Use shared utilities instead.');
   return null;
 };
 
-export const loadImage = async (projectId: string, imageId: string): Promise<any> => {
+export const loadImage = async (projectId: string, imageId: string): Promise<null> => {
   console.warn('loadImage is deprecated. Use shared utilities instead.');
   return null;
 };

@@ -5,7 +5,7 @@ import axios from 'axios';
 import logger from '@/utils/logger';
 import { jwtDecode } from 'jwt-decode';
 import apiClient from '@/lib/apiClient';
-import { API_PATHS, formatApiPath } from '@/lib/apiPaths';
+import { API_PATHS } from '@/lib/apiPaths';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'spheroseg_access_token';

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 // Use types from @/types
 import { Project } from '@/types';
 import apiClient from '@/lib/apiClient';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 // Type for the API response from GET /api/projects
 interface ProjectsApiResponse {

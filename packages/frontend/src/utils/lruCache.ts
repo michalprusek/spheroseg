@@ -13,7 +13,7 @@ export class LRUCache<K, V> {
     if (maxSize <= 0) {
       throw new Error('Cache size must be positive');
     }
-    
+
     this.maxSize = maxSize;
     this.cache = new Map();
     this.accessOrder = new Map();
@@ -131,7 +131,7 @@ export class PromiseCache<K> {
         // Remove from cache on error
         this.cache.delete(key);
         throw error;
-      }
+      },
     );
 
     this.cache.set(key, promise);
@@ -144,7 +144,7 @@ export class PromiseCache<K> {
     }
 
     this.pendingCleanup.add(key);
-    
+
     // Clean up resolved promises after a delay
     setTimeout(() => {
       this.pendingCleanup.delete(key);

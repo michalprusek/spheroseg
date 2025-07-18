@@ -1,5 +1,3 @@
-import request from 'supertest';
-import express from 'express';
 import authRouter from '../auth';
 import pool from '../../db';
 import bcrypt from 'bcryptjs';

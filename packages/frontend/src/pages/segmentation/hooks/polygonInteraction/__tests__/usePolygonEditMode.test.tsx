@@ -1,6 +1,6 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { SegmentationResult, Point } from '@/lib/segmentation';
+import { SegmentationResult } from '@/lib/segmentation';
 import { usePolygonEditMode } from '../usePolygonEditMode';
 
 // Mock the dependencies

@@ -48,7 +48,11 @@ export const validators = {
 
   // Pagination
   pagination: () => [
-    query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive number').toInt(),
+    query('page')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Page must be a positive number')
+      .toInt(),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
@@ -67,8 +71,7 @@ export const validators = {
       .escape(),
 
   // Phone number
-  phone: () =>
-    body('phone').optional().isMobilePhone('any').withMessage('Invalid phone number'),
+  phone: () => body('phone').optional().isMobilePhone('any').withMessage('Invalid phone number'),
 
   // URL
   url: (field: string = 'url') =>

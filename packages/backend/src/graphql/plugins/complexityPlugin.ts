@@ -1,10 +1,6 @@
 import { ApolloServerPlugin } from '@apollo/server';
 import { GraphQLError } from 'graphql';
-import { 
-  simpleEstimator, 
-  fieldExtensionsEstimator, 
-  getComplexity 
-} from 'graphql-query-complexity';
+import { simpleEstimator, fieldExtensionsEstimator, getComplexity } from 'graphql-query-complexity';
 import { Context } from '../context';
 
 interface ComplexityPluginOptions {
@@ -21,10 +17,7 @@ export function complexityPlugin(options: ComplexityPluginOptions): ApolloServer
             operationName: request.operationName,
             query: document,
             variables: request.variables || {},
-            estimators: [
-              fieldExtensionsEstimator(),
-              simpleEstimator({ defaultComplexity: 1 }),
-            ],
+            estimators: [fieldExtensionsEstimator(), simpleEstimator({ defaultComplexity: 1 })],
           });
 
           if (complexity > options.maxComplexity) {

@@ -114,8 +114,24 @@ class UnifiedLogger {
   }
 
   error(message: string, error?: Error | any, context?: Record<string, any>): void {
-    const errorObj = error instanceof Error ? error : new Error(String(error));
-    this.log(LogLevel.ERROR, message, { error: errorObj.message, stack: errorObj.stack }, context);
+    let errorData: any = {};
+    
+    if (error instanceof Error) {
+      errorData = { error: error.message, stack: error.stack };
+    } else if (error && typeof error === 'object') {
+      // Handle objects (like Axios error responses)
+      errorData = {
+        error: error.message || error.toString?.() || JSON.stringify(error),
+        stack: error.stack || '',
+        ...(error.response && { response: error.response }),
+        ...(error.status && { status: error.status }),
+        ...(error.code && { code: error.code }),
+      };
+    } else if (error) {
+      errorData = { error: String(error) };
+    }
+    
+    this.log(LogLevel.ERROR, message, errorData, context);
   }
 
   // Main logging function
@@ -375,7 +391,17 @@ export function overrideConsole(): void {
   };
 
   console.error = (...args: any[]) => {
-    globalLogger.error(args.map((arg) => String(arg)).join(' '));
+    const message = args[0];
+    const error = args[1];
+    if (args.length > 1 && (error instanceof Error || (error && typeof error === 'object'))) {
+      globalLogger.error(String(message), error);
+    } else {
+      globalLogger.error(args.map((arg) => {
+        if (arg instanceof Error) return arg.message;
+        if (arg && typeof arg === 'object') return JSON.stringify(arg);
+        return String(arg);
+      }).join(' '));
+    }
   };
 
   // Store reference to restore later if needed

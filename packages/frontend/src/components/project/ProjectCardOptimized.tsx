@@ -1,6 +1,6 @@
 import React, { useState, memo, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Image, Share2 } from 'lucide-react';
+import { Image } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ProjectActions from '@/components/project/ProjectActions';

@@ -34,6 +34,12 @@ import { toast, Toaster } from 'sonner';
 // Import IndexedDB service for cleanup
 import { cleanupOldData, getDBStats, clearEntireDatabase } from './utils/indexedDBService';
 
+// Import performance monitoring
+import { initPerformanceMonitoring } from './utils/performance';
+
+// Import localStorage cleanup
+import { cleanCorruptedLocalStorage, getLocalStorageStats, emergencyClearLocalStorage } from './utils/localStorageCleanup';
+
 // Import accessibility CSS
 import './components/a11y/SkipLink.css';
 
@@ -213,8 +219,50 @@ const AppLayout = () => {
   ];
   const shouldShowFooter = !noFooterPages.some((page) => location.pathname.startsWith(page));
 
-  // Automatické čištění starých dat při spuštění aplikace
+  // Initialize performance monitoring and automatic data cleanup on app startup
   useEffect(() => {
+    // Start performance monitoring as early as possible
+    initPerformanceMonitoring();
+    
+    // Clean corrupted localStorage immediately on startup
+    const cleanupLocalStorage = () => {
+      try {
+        // Get stats before cleanup
+        const statsBefore = getLocalStorageStats();
+        console.log('localStorage stats before cleanup:', statsBefore);
+        
+        // Clean corrupted values
+        const cleanupResult = cleanCorruptedLocalStorage();
+        console.log('localStorage cleanup result:', cleanupResult);
+        
+        // Get stats after cleanup
+        const statsAfter = getLocalStorageStats();
+        console.log('localStorage stats after cleanup:', statsAfter);
+        
+        // If we freed significant space, inform the user
+        if (cleanupResult.spaceFreed > 10 * 1024) { // More than 10KB
+          toast.success(`Cleaned up ${cleanupResult.cleaned.length} corrupted localStorage items, freed ${(cleanupResult.spaceFreed / 1024).toFixed(1)}KB`);
+        }
+        
+        // If there were errors, log them
+        if (cleanupResult.errors.length > 0) {
+          console.error('localStorage cleanup errors:', cleanupResult.errors);
+        }
+        
+        // If we're still critically low on space, perform emergency cleanup
+        if (statsAfter && statsAfter.usagePercent > 90) {
+          console.warn('localStorage usage still critical after cleanup, performing emergency clear...');
+          emergencyClearLocalStorage();
+          toast.warning('Performed emergency localStorage cleanup. Some settings may have been reset.');
+        }
+      } catch (error) {
+        console.error('Error during localStorage cleanup:', error);
+      }
+    };
+    
+    // Run localStorage cleanup immediately
+    cleanupLocalStorage();
+    
     const cleanupStorage = async () => {
       try {
         // Získáme statistiky před čištěním
@@ -528,6 +576,7 @@ const router = createBrowserRouter(routes, {
     v7_fetcherPersist: true,
     v7_partialHydration: true,
     v7_skipActionErrorRevalidation: true,
+    v7_startTransition: true,
   },
 });
 

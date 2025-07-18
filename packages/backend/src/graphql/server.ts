@@ -2,14 +2,10 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphqlUploadExpress } from 'graphql-upload';
 import depthLimit from 'graphql-depth-limit';
-import costAnalysis from 'graphql-query-complexity';
 import { Server } from 'http';
-import { Express } from 'express';
 import { Pool } from 'pg';
-import { applyMiddleware } from 'graphql-middleware';
 
 import schema from './schema';
 import { createContext, Context } from './context';
@@ -28,8 +24,8 @@ interface CreateApolloServerOptions {
 
 export async function createApolloServer({
   httpServer,
-  db,
-  isDevelopment = false
+  db: _db,
+  isDevelopment = false,
 }: CreateApolloServerOptions): Promise<ApolloServer<Context>> {
   // Apply directives to schema
   let directiveSchema = schema;
@@ -42,32 +38,32 @@ export async function createApolloServer({
     plugins: [
       // Drain HTTP server on shutdown
       ApolloServerPluginDrainHttpServer({ httpServer }),
-      
+
       // Landing page for development
       isDevelopment
-        ? ApolloServerPluginLandingPageLocalDefault({ 
+        ? ApolloServerPluginLandingPageLocalDefault({
             embed: true,
-            includeCookies: true 
+            includeCookies: true,
           })
         : ApolloServerPluginLandingPageLocalDefault({ embed: false }),
-      
+
       // Custom plugins
       complexityPlugin({ maxComplexity: 1000 }),
       loggingPlugin(),
       performancePlugin(),
     ],
-    
+
     // Validation rules
     validationRules: [
       depthLimit(7), // Limit query depth
     ],
-    
+
     // Format errors
     formatError,
-    
+
     // Enable introspection in development
     introspection: isDevelopment,
-    
+
     // Include stack traces in development
     includeStacktraceInErrorResponses: isDevelopment,
   });
@@ -82,7 +78,7 @@ export function createGraphQLMiddleware(server: ApolloServer<Context>, db: Pool)
       maxFileSize: 200 * 1024 * 1024, // 200MB
       maxFiles: 10,
     }),
-    
+
     // Apollo Server middleware
     expressMiddleware(server, {
       context: async ({ req, res }) => createContext(req, res, db),

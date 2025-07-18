@@ -1,14 +1,14 @@
 import { GraphQLError } from 'graphql';
 import { IResolvers } from '@graphql-tools/utils';
 import { Context } from '../context';
-import { 
+import {
   createProject,
   getProjectById,
   updateProject,
   deleteProject,
   getProjectsByUserId,
   getProjectStats,
-  duplicateProject as duplicateProjectService
+  duplicateProject as duplicateProjectService,
 } from '../../services/projectService';
 import { getImagesByProjectId } from '../../services/imageService';
 
@@ -17,7 +17,7 @@ const projectResolvers: IResolvers = {
     projects: async (_parent, args, context: Context) => {
       if (!context.user) {
         throw new GraphQLError('Not authenticated', {
-          extensions: { code: 'UNAUTHENTICATED' }
+          extensions: { code: 'UNAUTHENTICATED' },
         });
       }
 
@@ -28,33 +28,32 @@ const projectResolvers: IResolvers = {
     project: async (_parent, args, context: Context) => {
       if (!context.user) {
         throw new GraphQLError('Not authenticated', {
-          extensions: { code: 'UNAUTHENTICATED' }
+          extensions: { code: 'UNAUTHENTICATED' },
         });
       }
 
       const project = await context.loaders.project.load(args.id);
-      
+
       if (!project) {
         throw new GraphQLError('Project not found', {
-          extensions: { code: 'NOT_FOUND' }
+          extensions: { code: 'NOT_FOUND' },
         });
       }
 
       // Check permissions
-      const hasAccess = project.user_id === context.user.id || 
-                       project.public || 
-                       context.user.isAdmin;
-      
+      const hasAccess =
+        project.user_id === context.user.id || project.public || context.user.isAdmin;
+
       if (!hasAccess) {
         // Check if user has share access
         const shareResult = await context.db.query(
           'SELECT permission FROM project_shares WHERE project_id = $1 AND user_id = $2',
           [project.id, context.user.id]
         );
-        
+
         if (shareResult.rows.length === 0) {
           throw new GraphQLError('Not authorized to view this project', {
-            extensions: { code: 'FORBIDDEN' }
+            extensions: { code: 'FORBIDDEN' },
           });
         }
       }
@@ -89,7 +88,7 @@ const projectResolvers: IResolvers = {
 
       const [projects, countResult] = await Promise.all([
         context.db.query(query, params),
-        context.db.query('SELECT COUNT(*) FROM projects WHERE public = true', [])
+        context.db.query('SELECT COUNT(*) FROM projects WHERE public = true', []),
       ]);
 
       const total = parseInt(countResult.rows[0].count);
@@ -99,22 +98,22 @@ const projectResolvers: IResolvers = {
         total,
         offset,
         limit,
-        hasMore: offset + limit < total
+        hasMore: offset + limit < total,
       };
-    }
+    },
   },
 
   Mutation: {
     createProject: async (_parent, args, context: Context) => {
       if (!context.user) {
         throw new GraphQLError('Not authenticated', {
-          extensions: { code: 'UNAUTHENTICATED' }
+          extensions: { code: 'UNAUTHENTICATED' },
         });
       }
 
       if (!context.user.isApproved) {
         throw new GraphQLError('Account not approved', {
-          extensions: { code: 'FORBIDDEN' }
+          extensions: { code: 'FORBIDDEN' },
         });
       }
 
@@ -122,7 +121,7 @@ const projectResolvers: IResolvers = {
 
       if (!title || title.trim().length < 1) {
         throw new GraphQLError('Project title is required', {
-          extensions: { code: 'BAD_USER_INPUT', field: 'title' }
+          extensions: { code: 'BAD_USER_INPUT', field: 'title' },
         });
       }
 
@@ -131,7 +130,7 @@ const projectResolvers: IResolvers = {
         title: title.trim(),
         description: description?.trim(),
         tags: tags || [],
-        public: isPublic || false
+        public: isPublic || false,
       });
 
       return project;
@@ -140,30 +139,30 @@ const projectResolvers: IResolvers = {
     updateProject: async (_parent, args, context: Context) => {
       if (!context.user) {
         throw new GraphQLError('Not authenticated', {
-          extensions: { code: 'UNAUTHENTICATED' }
+          extensions: { code: 'UNAUTHENTICATED' },
         });
       }
 
       const project = await getProjectById(context.db, args.id);
-      
+
       if (!project) {
         throw new GraphQLError('Project not found', {
-          extensions: { code: 'NOT_FOUND' }
+          extensions: { code: 'NOT_FOUND' },
         });
       }
 
       if (project.user_id !== context.user.id && !context.user.isAdmin) {
         throw new GraphQLError('Not authorized to update this project', {
-          extensions: { code: 'FORBIDDEN' }
+          extensions: { code: 'FORBIDDEN' },
         });
       }
 
       const updates: any = {};
-      
+
       if (args.input.title !== undefined) {
         if (!args.input.title.trim()) {
           throw new GraphQLError('Project title cannot be empty', {
-            extensions: { code: 'BAD_USER_INPUT', field: 'title' }
+            extensions: { code: 'BAD_USER_INPUT', field: 'title' },
           });
         }
         updates.title = args.input.title.trim();
@@ -182,31 +181,31 @@ const projectResolvers: IResolvers = {
       }
 
       const updatedProject = await updateProject(context.db, args.id, updates);
-      
+
       // Clear cache
       context.loaders.project.clear(args.id);
-      
+
       return updatedProject;
     },
 
     deleteProject: async (_parent, args, context: Context) => {
       if (!context.user) {
         throw new GraphQLError('Not authenticated', {
-          extensions: { code: 'UNAUTHENTICATED' }
+          extensions: { code: 'UNAUTHENTICATED' },
         });
       }
 
       const project = await getProjectById(context.db, args.id);
-      
+
       if (!project) {
         throw new GraphQLError('Project not found', {
-          extensions: { code: 'NOT_FOUND' }
+          extensions: { code: 'NOT_FOUND' },
         });
       }
 
       if (project.user_id !== context.user.id && !context.user.isAdmin) {
         throw new GraphQLError('Not authorized to delete this project', {
-          extensions: { code: 'FORBIDDEN' }
+          extensions: { code: 'FORBIDDEN' },
         });
       }
 
@@ -214,45 +213,44 @@ const projectResolvers: IResolvers = {
 
       return {
         success: true,
-        message: 'Project deleted successfully'
+        message: 'Project deleted successfully',
       };
     },
 
     duplicateProject: async (_parent, args, context: Context) => {
       if (!context.user) {
         throw new GraphQLError('Not authenticated', {
-          extensions: { code: 'UNAUTHENTICATED' }
+          extensions: { code: 'UNAUTHENTICATED' },
         });
       }
 
       const sourceProject = await getProjectById(context.db, args.id);
-      
+
       if (!sourceProject) {
         throw new GraphQLError('Project not found', {
-          extensions: { code: 'NOT_FOUND' }
+          extensions: { code: 'NOT_FOUND' },
         });
       }
 
       // Check if user has access to source project
-      const hasAccess = sourceProject.user_id === context.user.id || 
-                       sourceProject.public || 
-                       context.user.isAdmin;
+      const hasAccess =
+        sourceProject.user_id === context.user.id || sourceProject.public || context.user.isAdmin;
 
       if (!hasAccess) {
         throw new GraphQLError('Not authorized to duplicate this project', {
-          extensions: { code: 'FORBIDDEN' }
+          extensions: { code: 'FORBIDDEN' },
         });
       }
 
       const newProject = await duplicateProjectService(
-        context.db, 
-        args.id, 
+        context.db,
+        args.id,
         context.user.id,
         args.title
       );
 
       return newProject;
-    }
+    },
   },
 
   Project: {
@@ -265,10 +263,9 @@ const projectResolvers: IResolvers = {
     },
 
     imageCount: async (parent, _args, context: Context) => {
-      const result = await context.db.query(
-        'SELECT COUNT(*) FROM images WHERE project_id = $1',
-        [parent.id]
-      );
+      const result = await context.db.query('SELECT COUNT(*) FROM images WHERE project_id = $1', [
+        parent.id,
+      ]);
       return parseInt(result.rows[0].count);
     },
 
@@ -334,8 +331,8 @@ const projectResolvers: IResolvers = {
       }
 
       return null;
-    }
-  }
+    },
+  },
 };
 
 export default projectResolvers;

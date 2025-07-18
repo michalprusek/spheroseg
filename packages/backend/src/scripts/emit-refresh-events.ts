@@ -9,12 +9,12 @@ async function emitRefreshEvents() {
   try {
     // Connect to socket server
     const socket = io('http://localhost:5001', {
-      transports: ['polling', 'websocket']
+      transports: ['polling', 'websocket'],
     });
-    
+
     socket.on('connect', () => {
       logger.info('Connected to socket server');
-      
+
       // Emit queue update event
       socket.emit('segmentation_queue_update', {
         queueLength: 0,
@@ -25,12 +25,12 @@ async function emitRefreshEvents() {
         images: {
           processing_count: 0,
           pending_count: 0,
-          completed_count: 32
-        }
+          completed_count: 32,
+        },
       });
-      
+
       logger.info('Emitted segmentation_queue_update event');
-      
+
       // Emit individual image status updates for test2 project
       const test2Images = [
         'edb08bf2-bfdf-4c08-a1bf-7af8074f0448',
@@ -45,33 +45,35 @@ async function emitRefreshEvents() {
         'ab2ceb62-112e-4b7d-a28e-1f8dfa23f5e6',
         'e3d5f59f-4833-4da2-be66-ed7ce6fe9883',
         '71c2961b-db03-4589-927a-e68025119247',
-        'a03399d9-e1aa-48d9-8c6c-80e481939eb5'
+        'a03399d9-e1aa-48d9-8c6c-80e481939eb5',
       ];
-      
+
       test2Images.forEach((imageId, index) => {
         setTimeout(() => {
           socket.emit('segmentation_update', {
             imageId,
             status: 'completed',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
           logger.info(`Emitted segmentation_update for image ${imageId}`);
         }, index * 100); // Stagger the events
       });
-      
+
       // Disconnect after all events are sent
-      setTimeout(() => {
-        socket.disconnect();
-        logger.info('Disconnected from socket server');
-        process.exit(0);
-      }, test2Images.length * 100 + 1000);
+      setTimeout(
+        () => {
+          socket.disconnect();
+          logger.info('Disconnected from socket server');
+          process.exit(0);
+        },
+        test2Images.length * 100 + 1000
+      );
     });
-    
+
     socket.on('error', (error) => {
       logger.error('Socket error:', error);
       process.exit(1);
     });
-    
   } catch (error) {
     logger.error('Error emitting refresh events:', error);
     process.exit(1);

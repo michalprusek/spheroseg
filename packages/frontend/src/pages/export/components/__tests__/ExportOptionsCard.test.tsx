@@ -1,7 +1,62 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import ExportOptionsCard, { AnnotationFormat, MetricsFormat } from '../ExportOptionsCard';
+
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  FileSpreadsheet: () => <div data-testid="file-spreadsheet-icon" />,
+  Image: () => <div data-testid="image-icon" />,
+  FileText: () => <div data-testid="file-text-icon" />,
+}));
+
+// Mock UI components
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardTitle: ({ children, ...props }: any) => <h3 {...props}>{children}</h3>,
+}));
+
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}));
+
+vi.mock('@/components/ui/checkbox', () => ({
+  Checkbox: ({ checked, onCheckedChange, id, ...props }: any) => (
+    <input
+      type="checkbox"
+      id={id}
+      checked={checked}
+      onChange={(e) => onCheckedChange && onCheckedChange(e.target.checked)}
+      {...props}
+    />
+  ),
+}));
+
+vi.mock('@/components/ui/label', () => ({
+  Label: ({ children, htmlFor, ...props }: any) => (
+    <label htmlFor={htmlFor} {...props}>{children}</label>
+  ),
+}));
+
+vi.mock('@/components/ui/select', () => ({
+  Select: ({ children, value, onValueChange, ...props }: any) => (
+    <div {...props}>
+      <select
+        value={value}
+        onChange={(e) => onValueChange && onValueChange(e.target.value)}
+      >
+        {children}
+      </select>
+    </div>
+  ),
+  SelectTrigger: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  SelectValue: ({ placeholder, ...props }: any) => <span {...props}>{placeholder}</span>,
+  SelectContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  SelectItem: ({ children, value, ...props }: any) => (
+    <option value={value} {...props}>{children}</option>
+  ),
+}));
 
 // Mock the useLanguage hook
 vi.mock('@/contexts/LanguageContext', () => ({
@@ -186,4 +241,3 @@ describe('ExportOptionsCard Component', () => {
     expect(screen.getByText('Comma-separated values')).toBeInTheDocument();
   });
 });
-EOF < /dev/llnu;

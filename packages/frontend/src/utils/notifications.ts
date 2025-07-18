@@ -9,14 +9,11 @@ import { toastService } from '@/services/toastService';
  */
 export function showUpdateNotification(onUpdate: () => void): void {
   // Use existing toast service
-  toastService.info(
-    'A new version is available! Click to update.',
-    {
-      duration: 0, // Keep visible until dismissed
-      action: {
-        label: 'Update',
-        onClick: onUpdate,
-      },
-    }
-  );
+  toastService.info('A new version is available! Click to update.', {
+    duration: 0, // Keep visible until dismissed
+    action: {
+      label: 'Update',
+      onClick: onUpdate,
+    },
+  });
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Microscope, Github, Mail, Heart } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';

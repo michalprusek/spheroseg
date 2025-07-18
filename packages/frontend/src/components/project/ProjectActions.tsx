@@ -1,7 +1,7 @@
 /**
  * Project action buttons component
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MoreVertical, Edit, Trash2, Share2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {

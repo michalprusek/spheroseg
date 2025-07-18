@@ -2,7 +2,6 @@ import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import { ApiError } from '../utils/errors';
 import { ErrorCode } from '../utils/ApiError';
 import logger from '../utils/logger';
-import config from '../config';
 import { sendError, sendServerError } from '../utils/apiResponsei18n';
 
 /**
@@ -40,41 +39,29 @@ export const errorHandleri18n: ErrorRequestHandler = (
   if (err.name === 'ValidationError') {
     return sendError(req, res, 'error.validationFailed', undefined, 400, err.details);
   }
-  
+
   if (err.name === 'CastError') {
-    return sendError(
-      req, 
-      res, 
-      'validation.invalidFormat', 
-      { field: err.path }, 
-      400
-    );
+    return sendError(req, res, 'validation.invalidFormat', { field: err.path }, 400);
   }
-  
+
   if (err.code === 11000) {
     // MongoDB duplicate key error
     const field = Object.keys(err.keyValue)[0];
-    return sendError(
-      req, 
-      res, 
-      'validation.alreadyExists', 
-      { field }, 
-      409
-    );
+    return sendError(req, res, 'validation.alreadyExists', { field }, 409);
   }
-  
+
   if (err.name === 'JsonWebTokenError') {
     return sendError(req, res, 'auth.invalidToken', undefined, 401);
   }
-  
+
   if (err.name === 'TokenExpiredError') {
     return sendError(req, res, 'auth.tokenExpired', undefined, 401);
   }
-  
+
   if (err.code === 'LIMIT_FILE_SIZE') {
     return sendError(req, res, 'error.fileTooLarge', undefined, 413);
   }
-  
+
   if (err.code === 'LIMIT_UNEXPECTED_FILE') {
     return sendError(req, res, 'error.unexpectedField', undefined, 400);
   }

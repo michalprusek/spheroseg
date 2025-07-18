@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
-import { 
-  FeatureFlag, 
-  Experiment, 
-  Variant, 
-  VariantSwitch, 
+import {
+  FeatureFlag,
+  Experiment,
+  Variant,
+  VariantSwitch,
   ABTestDebugPanel,
   TrackEvent,
-  TrackConversion 
+  TrackConversion,
 } from '../ABTesting';
 
 // Mock the hooks
@@ -20,12 +19,12 @@ vi.mock('@/hooks/useABTesting', () => ({
   useABTestingMetrics: vi.fn(),
 }));
 
-import { 
+import {
   useFeatureFlag,
   useVariant,
   useVariants,
   useActiveExperiments,
-  useABTestingMetrics
+  useABTestingMetrics,
 } from '@/hooks/useABTesting';
 
 describe('ABTesting Components', () => {
@@ -40,7 +39,7 @@ describe('ABTesting Components', () => {
       render(
         <FeatureFlag flag="new-feature">
           <div>Feature Content</div>
-        </FeatureFlag>
+        </FeatureFlag>,
       );
 
       expect(screen.getByText('Feature Content')).toBeInTheDocument();
@@ -52,7 +51,7 @@ describe('ABTesting Components', () => {
       render(
         <FeatureFlag flag="disabled-feature">
           <div>Hidden Content</div>
-        </FeatureFlag>
+        </FeatureFlag>,
       );
 
       expect(screen.queryByText('Hidden Content')).not.toBeInTheDocument();
@@ -62,12 +61,9 @@ describe('ABTesting Components', () => {
       (useFeatureFlag as Mock).mockReturnValue(false);
 
       render(
-        <FeatureFlag 
-          flag="disabled-feature" 
-          fallback={<div>Feature Coming Soon</div>}
-        >
+        <FeatureFlag flag="disabled-feature" fallback={<div>Feature Coming Soon</div>}>
           <div>Hidden Content</div>
-        </FeatureFlag>
+        </FeatureFlag>,
       );
 
       expect(screen.getByText('Feature Coming Soon')).toBeInTheDocument();
@@ -80,15 +76,13 @@ describe('ABTesting Components', () => {
       (useVariants as Mock).mockReturnValue({
         variant: 'control',
         isInExperiment: true,
-        features: {}
+        features: {},
       });
 
       render(
         <Experiment experimentId="test-experiment">
-          {(variant, features) => (
-            <div>Current variant: {variant}</div>
-          )}
-        </Experiment>
+          {(variant, features) => <div>Current variant: {variant}</div>}
+        </Experiment>,
       );
 
       expect(screen.getByText('Current variant: control')).toBeInTheDocument();
@@ -98,18 +92,13 @@ describe('ABTesting Components', () => {
       (useVariants as Mock).mockReturnValue({
         variant: null,
         isInExperiment: false,
-        features: {}
+        features: {},
       });
 
       render(
-        <Experiment 
-          experimentId="test-experiment"
-          fallback={<div>Not in experiment</div>}
-        >
-          {(variant, features) => (
-            <div>Current variant: {variant}</div>
-          )}
-        </Experiment>
+        <Experiment experimentId="test-experiment" fallback={<div>Not in experiment</div>}>
+          {(variant, features) => <div>Current variant: {variant}</div>}
+        </Experiment>,
       );
 
       expect(screen.getByText('Not in experiment')).toBeInTheDocument();
@@ -119,7 +108,7 @@ describe('ABTesting Components', () => {
       (useVariants as Mock).mockReturnValue({
         variant: 'treatment',
         isInExperiment: true,
-        features: { newUI: true, darkMode: false }
+        features: { newUI: true, darkMode: false },
       });
 
       render(
@@ -129,7 +118,7 @@ describe('ABTesting Components', () => {
               Variant: {variant}, New UI: {features.newUI ? 'Yes' : 'No'}
             </div>
           )}
-        </Experiment>
+        </Experiment>,
       );
 
       expect(screen.getByText('Variant: treatment, New UI: Yes')).toBeInTheDocument();
@@ -143,7 +132,7 @@ describe('ABTesting Components', () => {
       render(
         <Variant experimentId="test" variantId="variant-a">
           <div>Variant A Content</div>
-        </Variant>
+        </Variant>,
       );
 
       expect(screen.getByText('Variant A Content')).toBeInTheDocument();
@@ -155,7 +144,7 @@ describe('ABTesting Components', () => {
       render(
         <Variant experimentId="test" variantId="variant-a">
           <div>Variant A Content</div>
-        </Variant>
+        </Variant>,
       );
 
       expect(screen.queryByText('Variant A Content')).not.toBeInTheDocument();
@@ -167,7 +156,7 @@ describe('ABTesting Components', () => {
       (useVariants as Mock).mockReturnValue({
         variant: 'variant-a',
         isInExperiment: true,
-        features: {}
+        features: {},
       });
 
       render(
@@ -181,7 +170,7 @@ describe('ABTesting Components', () => {
           <Variant experimentId="test" variantId="variant-b">
             <div>Variant B Content</div>
           </Variant>
-        </VariantSwitch>
+        </VariantSwitch>,
       );
 
       // Mock useVariant to return true for the matching variant
@@ -199,7 +188,7 @@ describe('ABTesting Components', () => {
           <Variant experimentId="test" variantId="variant-b">
             <div>Variant B Content</div>
           </Variant>
-        </VariantSwitch>
+        </VariantSwitch>,
       );
 
       expect(screen.getByText('Variant A Content')).toBeInTheDocument();
@@ -209,18 +198,15 @@ describe('ABTesting Components', () => {
       (useVariants as Mock).mockReturnValue({
         variant: null,
         isInExperiment: false,
-        features: {}
+        features: {},
       });
 
       render(
-        <VariantSwitch 
-          experimentId="test"
-          fallback={<div>Default Content</div>}
-        >
+        <VariantSwitch experimentId="test" fallback={<div>Default Content</div>}>
           <Variant experimentId="test" variantId="variant-a">
             <div>Variant A</div>
           </Variant>
-        </VariantSwitch>
+        </VariantSwitch>,
       );
 
       expect(screen.getByText('Default Content')).toBeInTheDocument();
@@ -234,7 +220,7 @@ describe('ABTesting Components', () => {
       trackEventMock = vi.fn();
       (useABTestingMetrics as Mock).mockReturnValue({
         trackEvent: trackEventMock,
-        trackConversion: vi.fn()
+        trackConversion: vi.fn(),
       });
     });
 
@@ -242,7 +228,7 @@ describe('ABTesting Components', () => {
       render(
         <TrackEvent event="page_view" properties={{ page: 'home' }} trigger="mount">
           <div>Content</div>
-        </TrackEvent>
+        </TrackEvent>,
       );
 
       expect(trackEventMock).toHaveBeenCalledWith('page_view', { page: 'home' });
@@ -252,7 +238,7 @@ describe('ABTesting Components', () => {
       render(
         <TrackEvent event="button_click" trigger="click">
           <button>Click me</button>
-        </TrackEvent>
+        </TrackEvent>,
       );
 
       expect(trackEventMock).not.toHaveBeenCalled();
@@ -266,7 +252,7 @@ describe('ABTesting Components', () => {
       render(
         <TrackEvent event="element_hover" trigger="hover">
           <div>Hover me</div>
-        </TrackEvent>
+        </TrackEvent>,
       );
 
       expect(trackEventMock).not.toHaveBeenCalled();
@@ -280,7 +266,7 @@ describe('ABTesting Components', () => {
       render(
         <TrackEvent event="text_click" trigger="click">
           Just text
-        </TrackEvent>
+        </TrackEvent>,
       );
 
       const wrapper = screen.getByText('Just text');
@@ -295,7 +281,7 @@ describe('ABTesting Components', () => {
       trackConversionMock = vi.fn();
       (useABTestingMetrics as Mock).mockReturnValue({
         trackEvent: vi.fn(),
-        trackConversion: trackConversionMock
+        trackConversion: trackConversionMock,
       });
     });
 
@@ -303,7 +289,7 @@ describe('ABTesting Components', () => {
       render(
         <TrackConversion name="signup" value={100} trigger="mount">
           <div>Content</div>
-        </TrackConversion>
+        </TrackConversion>,
       );
 
       expect(trackConversionMock).toHaveBeenCalledWith('signup', 100);
@@ -313,7 +299,7 @@ describe('ABTesting Components', () => {
       render(
         <TrackConversion name="purchase" value={50} trigger="click">
           <button>Buy Now</button>
-        </TrackConversion>
+        </TrackConversion>,
       );
 
       expect(trackConversionMock).not.toHaveBeenCalled();
@@ -327,7 +313,7 @@ describe('ABTesting Components', () => {
       render(
         <TrackConversion name="cta_click" trigger="click">
           <button className="cta">Click Here</button>
-        </TrackConversion>
+        </TrackConversion>,
       );
 
       const button = screen.getByText('Click Here');
@@ -359,14 +345,14 @@ describe('ABTesting Components', () => {
           key: 'test-experiment',
           experiment: 'new-ui-test',
           variant: 'treatment',
-          value: true
+          value: true,
         },
         {
           key: 'feature.flag',
           experiment: null,
           variant: null,
-          value: 'premium'
-        }
+          value: 'premium',
+        },
       ]);
 
       render(<ABTestDebugPanel show={true} />);
@@ -382,18 +368,16 @@ describe('ABTesting Components', () => {
 
     it('should render in development by default', () => {
       const originalEnv = import.meta.env.DEV;
-      // @ts-ignore
+      // @ts-expect-error
       import.meta.env.DEV = true;
 
-      (useActiveExperiments as Mock).mockReturnValue([
-        { key: 'test', experiment: 'exp', variant: 'v1', value: true }
-      ]);
+      (useActiveExperiments as Mock).mockReturnValue([{ key: 'test', experiment: 'exp', variant: 'v1', value: true }]);
 
       render(<ABTestDebugPanel />);
 
       expect(screen.getByText('A/B Testing Debug')).toBeInTheDocument();
 
-      // @ts-ignore
+      // @ts-expect-error
       import.meta.env.DEV = originalEnv;
     });
   });

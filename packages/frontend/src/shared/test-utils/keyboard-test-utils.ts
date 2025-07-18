@@ -57,7 +57,7 @@ export const mockKeyboardShortcuts = () => {
 
 export const keyboardTestSequence = async (
   element: Element | Document,
-  sequence: Array<{ key: string; delay?: number; options?: any }>,
+  sequence: Array<{ key: string; delay?: number; options?: Partial<KeyboardEventInit> }>,
 ) => {
   for (const { key, delay = 0, options = {} } of sequence) {
     pressKey(element, key, options);

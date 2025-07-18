@@ -1,15 +1,5 @@
-// Mock logger before any imports
 import { vi } from 'vitest';
-vi.mock('@/utils/logger', () => ({
-  default: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
 
-import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -74,13 +64,6 @@ vi.mock('@/lib/apiClient', () => ({
   },
 }));
 
-vi.mock('@/utils/logger', () => ({
-  default: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
 
 vi.mock('@/utils/enhancedErrorHandling', () => ({
   safeAsync: vi.fn((fn, options) =>

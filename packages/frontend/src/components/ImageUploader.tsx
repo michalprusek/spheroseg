@@ -245,18 +245,22 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       onUploadComplete(projectId, allUploadedImages);
 
       // Dispatch event for statistics update
-      window.dispatchEvent(new CustomEvent('image-uploaded', {
-        detail: {
-          projectId,
-          imageCount: allUploadedImages.length,
-          images: allUploadedImages
-        }
-      }));
-      
+      window.dispatchEvent(
+        new CustomEvent('image-uploaded', {
+          detail: {
+            projectId,
+            imageCount: allUploadedImages.length,
+            images: allUploadedImages,
+          },
+        }),
+      );
+
       // Also dispatch a generic statistics update event
-      window.dispatchEvent(new CustomEvent('statistics-update-needed', {
-        detail: { reason: 'images-uploaded' }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('statistics-update-needed', {
+          detail: { reason: 'images-uploaded' },
+        }),
+      );
 
       // Clear the uploaded files after successful upload
       clearAllFiles();

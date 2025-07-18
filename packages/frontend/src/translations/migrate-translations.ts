@@ -6,7 +6,6 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 
 // Mapping of old flat keys to new nested keys
 const KEY_MAPPING: Record<string, string> = {

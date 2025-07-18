@@ -1,14 +1,8 @@
-import React from 'react';
-import { Grid2X2, List as ListIcon, ArrowUpDown } from 'lucide-react';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Grid2X2, List as ListIcon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from './ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
+
 
 interface DashboardActionsProps {
   viewMode: 'grid' | 'list';

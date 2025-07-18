@@ -5,7 +5,7 @@
  * It provides comprehensive export capabilities for all data formats.
  */
 
-import { utils, writeFile, WorkBook } from 'xlsx';
+import { utils, writeFile } from 'xlsx';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
@@ -14,8 +14,7 @@ import { handleError } from '@/utils/error/unifiedErrorHandler';
 import { formatISODate, formatDateTime } from '@/utils/dateUtils';
 import apiClient from '@/lib/apiClient';
 import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations';
-import type { ProjectImage, Polygon, SegmentationResult } from '@/pages/segmentation/types';
-import type { SpheroidMetric } from '@/types';
+import type { ProjectImage, SegmentationResult } from '@/pages/segmentation/types';
 
 // Create logger instance
 const logger = createLogger('UnifiedExportService');

@@ -17,6 +17,8 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [showRetryButton, setShowRetryButton] = useState(false);
   const navigate = useNavigate();
   const { signIn, user } = useAuth();
   const { t } = useLanguage(); // Přidáme použití useLanguage
@@ -30,9 +32,37 @@ const SignIn = () => {
     }
 
     setIsLoading(true);
+    setShowRetryButton(false);
 
-    const success = await signIn(email, password, rememberMe);
-    setIsLoading(false);
+    try {
+      const success = await signIn(email, password, rememberMe);
+      
+      if (success) {
+        // Reset retry count on successful login
+        setRetryCount(0);
+        setShowRetryButton(false);
+      } else {
+        // Increment retry count on failed login
+        const newRetryCount = retryCount + 1;
+        setRetryCount(newRetryCount);
+        
+        // Show retry button after 2 failed attempts
+        if (newRetryCount >= 2) {
+          setShowRetryButton(true);
+        }
+      }
+    } catch (error) {
+      // Increment retry count on error
+      const newRetryCount = retryCount + 1;
+      setRetryCount(newRetryCount);
+      
+      // Show retry button after 2 failed attempts
+      if (newRetryCount >= 2) {
+        setShowRetryButton(true);
+      }
+    } finally {
+      setIsLoading(false);
+    }
 
     // signIn function already handles error toasts in AuthContext
     // No need to show additional toasts here
@@ -139,6 +169,24 @@ const SignIn = () => {
                 t('auth.signIn')
               )}
             </Button>
+
+            {/* Show retry information after failed attempts */}
+            {showRetryButton && retryCount >= 2 && (
+              <div className="text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  {t('auth.loginFailed')} ({retryCount} {t('auth.attempts')})
+                </p>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleSubmit}
+                  className="w-full h-8 text-sm"
+                  disabled={isLoading}
+                >
+                  {t('auth.tryAgain')}
+                </Button>
+              </div>
+            )}
           </form>
         </div>
         <div className="p-6 bg-gray-50 dark:bg-gray-800/70 border-t border-gray-100 dark:border-gray-700/50">

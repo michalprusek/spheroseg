@@ -59,9 +59,7 @@ const CDNImage: React.FC<CDNImageProps> = ({
   });
 
   // Generate srcset for responsive images
-  const srcSet = responsive && isCDNEnabled() 
-    ? getImageSrcSet(src, responsiveSizes, { quality, format })
-    : undefined;
+  const srcSet = responsive && isCDNEnabled() ? getImageSrcSet(src, responsiveSizes, { quality, format }) : undefined;
 
   // Intersection Observer for lazy loading
   useEffect(() => {
@@ -82,7 +80,7 @@ const CDNImage: React.FC<CDNImageProps> = ({
       {
         rootMargin: '50px',
         threshold: 0.01,
-      }
+      },
     );
 
     if (imgRef.current) {
@@ -131,7 +129,7 @@ const CDNImage: React.FC<CDNImageProps> = ({
   const handleError = () => {
     setError(true);
     setLoading(false);
-    
+
     // Try fallback source
     if (fallbackSrc && currentSrc !== fallbackSrc) {
       setCurrentSrc(fallbackSrc);
@@ -235,40 +233,20 @@ const CDNImage: React.FC<CDNImageProps> = ({
 // Wrapper component for gallery images
 export const GalleryImage: React.FC<CDNImageProps> = (props) => {
   return (
-    <CDNImage
-      {...props}
-      responsive
-      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-      quality={85}
-    />
+    <CDNImage {...props} responsive sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" quality={85} />
   );
 };
 
 // Wrapper component for thumbnail images
 export const ThumbnailImage: React.FC<CDNImageProps> = (props) => {
   return (
-    <CDNImage
-      {...props}
-      responsive={false}
-      quality={70}
-      width={props.width || 300}
-      height={props.height || 300}
-    />
+    <CDNImage {...props} responsive={false} quality={70} width={props.width || 300} height={props.height || 300} />
   );
 };
 
 // Wrapper component for hero/banner images
 export const HeroImage: React.FC<CDNImageProps> = (props) => {
-  return (
-    <CDNImage
-      {...props}
-      priority
-      responsive
-      sizes="100vw"
-      quality={90}
-      placeholder="blur"
-    />
-  );
+  return <CDNImage {...props} priority responsive sizes="100vw" quality={90} placeholder="blur" />;
 };
 
 export default CDNImage;

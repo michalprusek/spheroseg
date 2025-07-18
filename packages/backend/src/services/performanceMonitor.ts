@@ -145,7 +145,7 @@ class PerformanceMonitor extends EventEmitter {
         logger.warn('High memory usage detected', {
           usage: `${memoryUsage.percentage.toFixed(1)}%`,
           used: `${Math.round(memoryUsage.used / 1024 / 1024)}MB`,
-          total: `${Math.round(memoryUsage.total / 1024 / 1024)}MB`
+          total: `${Math.round(memoryUsage.total / 1024 / 1024)}MB`,
         });
       }
 
@@ -161,9 +161,9 @@ class PerformanceMonitor extends EventEmitter {
     } catch (error) {
       // Only log actual errors, not expected issues
       if (error instanceof Error && error.message) {
-        logger.error('Error collecting system metrics', { 
+        logger.error('Error collecting system metrics', {
           error: error.message,
-          stack: error.stack 
+          stack: error.stack,
         });
       }
     }

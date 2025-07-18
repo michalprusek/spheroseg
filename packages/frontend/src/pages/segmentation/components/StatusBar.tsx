@@ -1,4 +1,3 @@
-import React from 'react';
 import { SegmentationResult } from '@/lib/segmentation';
 import { useLanguage } from '@/contexts/LanguageContext';
 

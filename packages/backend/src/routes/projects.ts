@@ -16,8 +16,70 @@ import cacheService from '../services/cacheService';
 
 const router: Router = express.Router();
 
-// GET /api/projects - List projects for the current user
-// @ts-ignore
+/**
+ * @openapi
+ * /projects:
+ *   get:
+ *     tags: [Projects]
+ *     summary: List user projects
+ *     description: |
+ *       Retrieve all projects owned by the authenticated user.
+ *       Supports pagination and optional inclusion of shared projects.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: limit
+ *         in: query
+ *         description: Maximum number of projects to return
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *           minimum: 1
+ *           maximum: 100
+ *           example: 20
+ *       - name: offset
+ *         in: query
+ *         description: Number of projects to skip for pagination
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           example: 0
+ *       - name: includeShared
+ *         in: query
+ *         description: Whether to include projects shared with the user
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *           example: true
+ *     responses:
+ *       200:
+ *         description: Projects retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 projects:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Project'
+ *                 total:
+ *                   type: integer
+ *                   description: Total number of projects available
+ *                   example: 15
+ *                 limit:
+ *                   type: integer
+ *                   example: 20
+ *                 offset:
+ *                   type: integer
+ *                   example: 0
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       500:
+ *         description: Internal server error
+ */
+// @ts-expect-error
 router.get(
   '/',
   authMiddleware,
@@ -101,8 +163,62 @@ router.get(
   }
 );
 
-// POST /api/projects - Create a new project
-// @ts-ignore
+/**
+ * @openapi
+ * /projects:
+ *   post:
+ *     tags: [Projects]
+ *     summary: Create new project
+ *     description: |
+ *       Create a new project for organizing images and segmentation tasks.
+ *       The project will be owned by the authenticated user.
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [title]
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 255
+ *                 description: Project title
+ *                 example: "Cell Analysis Project"
+ *               description:
+ *                 type: string
+ *                 maxLength: 1000
+ *                 description: Optional project description
+ *                 example: "Analysis of cancer cell morphology"
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Optional tags for project categorization
+ *                 example: ["cancer", "research", "morphology"]
+ *               public:
+ *                 type: boolean
+ *                 description: Whether the project is publicly visible
+ *                 default: false
+ *                 example: false
+ *     responses:
+ *       201:
+ *         description: Project created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Project'
+ *       400:
+ *         description: Validation error - invalid input data
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       500:
+ *         description: Internal server error or database schema error
+ */
+// @ts-expect-error
 router.post(
   '/',
   authMiddleware,
@@ -221,8 +337,41 @@ router.post(
   }
 );
 
-// GET /api/projects/:id - Get a specific project by ID, or return a project template for "new"
-// @ts-ignore
+/**
+ * @openapi
+ * /projects/{projectId}:
+ *   get:
+ *     tags: [Projects]
+ *     summary: Get project by ID
+ *     description: |
+ *       Retrieve a specific project by its ID. Special case: passing "new" as the ID
+ *       returns a template for creating a new project.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: projectId
+ *         in: path
+ *         required: true
+ *         description: Project ID or "new" for template
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *     responses:
+ *       200:
+ *         description: Project retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Project'
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       404:
+ *         description: Project not found or user doesn't have access
+ *       500:
+ *         description: Internal server error or database schema error
+ */
+// @ts-expect-error
 router.get(
   '/:id',
   authMiddleware,
@@ -312,8 +461,73 @@ router.get(
   }
 );
 
-// PUT /api/projects/:id - Update a project by ID
-// @ts-ignore
+/**
+ * @openapi
+ * /projects/{projectId}:
+ *   put:
+ *     tags: [Projects]
+ *     summary: Update project
+ *     description: |
+ *       Update project information. Only the project owner can update the project.
+ *       Fields not provided in the request will remain unchanged.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: projectId
+ *         in: path
+ *         required: true
+ *         description: Project ID to update
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 255
+ *                 description: Updated project title
+ *                 example: "Updated Project Name"
+ *               description:
+ *                 type: string
+ *                 maxLength: 1000
+ *                 description: Updated project description
+ *                 example: "Updated project description"
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Updated tags for project categorization
+ *                 example: ["cancer", "research", "updated"]
+ *               public:
+ *                 type: boolean
+ *                 description: Updated public visibility setting
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Project updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Project'
+ *       400:
+ *         description: Validation error or no valid fields to update
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       403:
+ *         description: Forbidden - user is not the project owner
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: Internal server error
+ */
+// @ts-expect-error
 router.put(
   '/:id',
   authMiddleware,
@@ -328,18 +542,18 @@ router.put(
     try {
       logger.info('Processing update project request', { userId, projectId, updates });
 
-      // Check project ownership
-      const ownershipCheck = await getPool().query(
-        'SELECT user_id FROM projects WHERE id = $1',
-        [projectId]
-      );
-
-      if (ownershipCheck.rows.length === 0) {
-        return res.status(404).json({ message: 'Project not found' });
+      // Use projectService to check access (ownership or sharing)
+      const projectService = await import('../services/projectService');
+      const project = await projectService.getProjectById(getPool(), projectId, userId);
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found or access denied' });
       }
-
-      if (ownershipCheck.rows[0].user_id !== userId) {
-        return res.status(403).json({ message: 'Not authorized to update this project' });
+      
+      // Check if user has edit permission (owner or shared with 'edit' permission)
+      const hasEditPermission = project.is_owner || project.permission === 'edit';
+      if (!hasEditPermission) {
+        return res.status(403).json({ message: "You need 'edit' or 'owner' permission to update this project" });
       }
 
       // Update the project
@@ -389,18 +603,49 @@ router.put(
       logger.info('Project updated successfully', { projectId });
       res.json(result.rows[0]);
     } catch (error: any) {
-      logger.error('Error updating project', { 
-        error: error?.message || error, 
+      logger.error('Error updating project', {
+        error: error?.message || error,
         stack: error?.stack,
-        projectId 
+        projectId,
       });
       next(error);
     }
   }
 );
 
-// DELETE /api/projects/:id - Delete a project by ID
-// @ts-ignore
+/**
+ * @openapi
+ * /projects/{projectId}:
+ *   delete:
+ *     tags: [Projects]
+ *     summary: Delete project
+ *     description: |
+ *       Delete a project and all associated images and data.
+ *       Only the project owner can delete the project. This action is irreversible.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: projectId
+ *         in: path
+ *         required: true
+ *         description: Project ID to delete
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *     responses:
+ *       204:
+ *         description: Project deleted successfully
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       403:
+ *         description: Forbidden - user is not the project owner
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: Internal server error
+ */
+// @ts-expect-error
 router.delete(
   '/:id',
   authMiddleware,
@@ -458,9 +703,50 @@ router.delete(
   }
 );
 
-
-// GET /api/projects/:id/images - Get images for a specific project
-// @ts-ignore
+/**
+ * @openapi
+ * /projects/{projectId}/images:
+ *   get:
+ *     tags: [Projects, Images]
+ *     summary: List images in project
+ *     description: |
+ *       Retrieve all images in a specific project with their segmentation status.
+ *       Only the project owner can access the images.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: projectId
+ *         in: path
+ *         required: true
+ *         description: Project ID to get images from
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *     responses:
+ *       200:
+ *         description: Images retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 images:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Image'
+ *                 total:
+ *                   type: integer
+ *                   description: Total number of images in the project
+ *                   example: 25
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       404:
+ *         description: Project not found or access denied
+ *       500:
+ *         description: Internal server error
+ */
+// @ts-expect-error
 router.get(
   '/:id/images',
   authMiddleware,
@@ -493,13 +779,10 @@ router.get(
         });
       }
 
-      // Verify user has access to the project
-      const projectCheck = await getPool().query(
-        'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
-        [projectId, userId]
-      );
+      // Verify user has access to the project (check both ownership and shared access)
+      const project = await projectService.getProjectById(getPool(), projectId, userId);
 
-      if (projectCheck.rows.length === 0) {
+      if (!project) {
         logger.info('Project not found or access denied', { projectId, userId });
         return res.status(404).json({ message: 'Project not found or access denied' });
       }

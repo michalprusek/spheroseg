@@ -1,10 +1,11 @@
 import request from 'supertest';
 import express from 'express';
 import { jest } from '@jest/globals';
-import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
+import { promises as fsPromises } from 'fs';
+import db from '../db';
 
 // Mock dependencies
 jest.mock('../security/middleware/auth', () => {
@@ -376,7 +377,7 @@ describe('Export API Comprehensive Tests', () => {
   describe('Export error handling', () => {
     it('should return 404 if project does not exist', async () => {
       // Mock db to return empty rows
-      const db = require('../db');
+      // db is already imported above
       db.query.mockImplementationOnce(() => ({ rows: [] }));
 
       const response = await request(app).get('/api/projects/non-existent-project/export').query({
@@ -406,7 +407,7 @@ describe('Export API Comprehensive Tests', () => {
 
     it('should handle file read errors gracefully', async () => {
       // Mock file read failure
-      const fsPromises = require('fs').promises;
+      // fsPromises is already imported above
       fsPromises.readFile.mockRejectedValueOnce(new Error('File not found'));
 
       const response = await request(app)

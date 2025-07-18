@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { SegmentationResult, Point } from '@/lib/segmentation';
+import { SegmentationResult } from '@/lib/segmentation';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 

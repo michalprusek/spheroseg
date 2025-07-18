@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import userProfileService, { UserProfile as APIUserProfile } from '../services/userProfileService';
+import userProfileService from '../services/userProfileService';
 
 // Define the profile data structure
 export interface UserProfile {

@@ -3,7 +3,6 @@
  */
 
 import dbMonitoring from '../index';
-import fs from 'fs';
 import { exportPatternsToJson, generateGrafanaDashboard } from '../exportPatterns';
 
 // Mock fs module

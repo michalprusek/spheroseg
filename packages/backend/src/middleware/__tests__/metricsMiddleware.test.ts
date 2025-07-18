@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import fs from 'fs';
 
 // Mock fs to avoid real directory creation
 jest.mock('fs', () => {
@@ -12,7 +11,7 @@ jest.mock('fs', () => {
       }
       return actualFs.existsSync(path);
     }),
-    mkdirSync: jest.fn().mockImplementation((path, options) => {
+    mkdirSync: jest.fn().mockImplementation((path, _options) => {
       // Just log the call but don't actually create directories
       console.log(`Mock: Creating directory ${path}`);
       return undefined;

@@ -1,10 +1,8 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SegmentationEditorV2 } from '../../SegmentationEditorV2';
 import { setupAllContextMocks } from '@/test-utils/contextMocks';
 import { MemoryRouterWrapper } from '@/test-utils/test-wrapper';
-import { toast } from 'sonner';
 
 // Mock config
 vi.mock('@/config', () => ({

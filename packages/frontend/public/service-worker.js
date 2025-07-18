@@ -77,6 +77,7 @@ self.addEventListener('fetch', (event) => {
   const shouldSkip = SKIP_PATTERNS.some((pattern) => pattern.test(url.pathname));
 
   if (!shouldCache || shouldSkip) {
+    // Return early without calling respondWith to avoid no-op warning
     return;
   }
 

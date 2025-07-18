@@ -2,12 +2,7 @@
  * Frontend-specific test utilities
  */
 import { render, RenderOptions } from '@testing-library/react';
-import React, { ReactElement } from 'react';
-import { MemoryRouter } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { LanguageProvider } from '@/contexts/LanguageContext';
-import { ProfileProvider } from '@/contexts/ProfileContext';
+import { ReactElement } from 'react';
 import { createUserFixture } from '../../../shared/test-utils/fixtures';
 
 // Export the polygon action test utilities

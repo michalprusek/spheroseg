@@ -1,4 +1,3 @@
-import React from 'react';
 import { Trash2, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/useTranslations';

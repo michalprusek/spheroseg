@@ -9,7 +9,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { useNavigate, useLocation } from 'react-router-dom';
 import authService, {
   User,
-  AuthTokens,
   LoginCredentials,
   RegisterCredentials,
   AuthEventPayload,

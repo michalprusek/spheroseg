@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import EditorModeFooter from '../EditorModeFooter';
@@ -35,7 +34,7 @@ describe('EditorModeFooter Component', () => {
   });
 
   it('applies the blue gradient class for unknown mode', () => {
-    // @ts-ignore - testing default case with invalid mode
+    // @ts-expect-error - testing default case with invalid mode
     const { container } = render(<EditorModeFooter mode="unknown" text="Unknown Mode" />);
     const footer = container.firstChild as HTMLElement;
     expect(footer).toHaveClass('bg-gradient-to-r');
@@ -107,7 +106,7 @@ describe('EditorModeFooter Component', () => {
   });
 
   it('renders with unknown mode text', () => {
-    // @ts-ignore - testing default case with invalid mode
+    // @ts-expect-error - testing default case with invalid mode
     render(<EditorModeFooter mode="unknown" text="Unknown Mode" />);
     expect(screen.getByText('Unknown Mode')).toBeInTheDocument();
   });

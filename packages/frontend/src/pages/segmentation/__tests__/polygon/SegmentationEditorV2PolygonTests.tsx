@@ -1,5 +1,4 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SegmentationEditorV2 } from '../../SegmentationEditorV2';
 import { setupAllContextMocks } from '@/test-utils/contextMocks';

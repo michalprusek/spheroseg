@@ -87,6 +87,7 @@ class TestModelLoading:
         """Test successful model loading."""
         # Mock model
         mock_model = Mock()
+        mock_model.to.return_value = mock_model  # Return itself when moved to device
         mock_resunet_class.return_value = mock_model
         
         # Mock checkpoint
@@ -212,7 +213,7 @@ class TestSegmentImage:
             batch_size = x.shape[0]
             return torch.ones(batch_size, 1, x.shape[2], x.shape[3]) * 5.0  # High values for sigmoid
         
-        mock_model.return_value = mock_forward
+        mock_model.side_effect = mock_forward
         mock_load_model.return_value = mock_model
         
         result = segment_image(
@@ -239,9 +240,11 @@ class TestSegmentImage:
         with pytest.raises(FileNotFoundError):
             segment_image('/nonexistent/image.png', '/fake/model.pth')
     
+    @patch('os.path.exists')
     @patch('cv2.imread')
-    def test_segment_image_invalid_file(self, mock_imread):
+    def test_segment_image_invalid_file(self, mock_imread, mock_exists):
         """Test segmentation with invalid image file."""
+        mock_exists.return_value = True  # File exists but is invalid
         mock_imread.return_value = None
         
         with pytest.raises(ValueError) as exc_info:
@@ -255,7 +258,7 @@ class TestSegmentImage:
         """Test polygon extraction from segmentation."""
         # Mock model
         mock_model = Mock()
-        mock_model.return_value = torch.ones(1, 1, 1024, 1024) * 5.0
+        mock_model.side_effect = lambda x: torch.ones(1, 1, 1024, 1024) * 5.0
         mock_load_model.return_value = mock_model
         
         # Mock polygon extraction
@@ -276,6 +279,13 @@ class TestBatchSegmentation:
     """Test batch segmentation functionality."""
     
     @pytest.fixture
+    def temp_dir(self):
+        """Create temporary directory for test files."""
+        temp_dir = tempfile.mkdtemp()
+        yield temp_dir
+        shutil.rmtree(temp_dir)
+    
+    @pytest.fixture
     def test_images(self, temp_dir):
         """Create multiple test images."""
         image_paths = []
@@ -292,7 +302,7 @@ class TestBatchSegmentation:
         """Test successful batch segmentation."""
         # Mock model
         mock_model = Mock()
-        mock_model.return_value = torch.ones(1, 1, 1024, 1024) * 5.0
+        mock_model.side_effect = lambda x: torch.ones(1, 1, 1024, 1024) * 5.0
         mock_load_model.return_value = mock_model
         
         results = segment_batch(test_images, '/fake/model.pth', temp_dir, batch_size=2)
@@ -312,7 +322,7 @@ class TestBatchSegmentation:
         
         # Mock model
         mock_model = Mock()
-        mock_model.return_value = torch.ones(1, 1, 1024, 1024) * 5.0
+        mock_model.side_effect = lambda x: torch.ones(1, 1, 1024, 1024) * 5.0
         mock_load_model.return_value = mock_model
         
         results = segment_batch(test_images, '/fake/model.pth', temp_dir)
@@ -331,7 +341,7 @@ class TestBatchSegmentation:
     def test_segment_batch_memory_efficient(self, mock_load_model, test_images):
         """Test that batch segmentation loads model only once."""
         mock_model = Mock()
-        mock_model.return_value = torch.ones(1, 1, 1024, 1024) * 5.0
+        mock_model.side_effect = lambda x: torch.ones(1, 1, 1024, 1024) * 5.0
         mock_load_model.return_value = mock_model
         
         segment_batch(test_images, '/fake/model.pth', '/tmp')
@@ -388,8 +398,15 @@ class TestMainFunction:
         with patch('sys.argv', test_args):
             with patch('resunet_segmentation.ResUNet') as mock_model_class:
                 mock_model = Mock()
-                mock_model.eval = Mock()
-                mock_model.return_value = torch.ones(1, 1, 1024, 1024) * 5.0
+                mock_model.eval = Mock(return_value=mock_model)
+                mock_model.to = Mock(return_value=mock_model)
+                
+                def mock_forward(x):
+                    return torch.ones(1, 1, 1024, 1024) * 5.0
+                
+                mock_model.forward = mock_forward
+                mock_model.side_effect = mock_forward
+                mock_model.__call__ = mock_forward
                 mock_model_class.return_value = mock_model
                 
                 with patch('os.makedirs'):
@@ -424,15 +441,18 @@ class TestMainFunction:
                 assert exit_code == 1
     
     @patch('cv2.imread')
+    @patch('resunet_segmentation.load_checkpoint')
     @patch('resunet_segmentation.ResUNet')
-    def test_main_cuda_error_handling(self, mock_model_class, mock_imread):
+    def test_main_cuda_error_handling(self, mock_model_class, mock_load_checkpoint, mock_imread):
         """Test CUDA error handling in main function."""
         mock_imread.return_value = np.zeros((200, 200, 3), dtype=np.uint8)
         
-        # Mock CUDA OOM error
+        # Mock successful checkpoint loading but CUDA OOM during inference
         mock_model = Mock()
+        mock_model.eval = Mock(return_value=mock_model)
+        mock_model.to = Mock(return_value=mock_model)
         mock_model.side_effect = torch.cuda.OutOfMemoryError('CUDA OOM')
-        mock_model_class.return_value.side_effect = torch.cuda.OutOfMemoryError('CUDA OOM')
+        mock_model_class.return_value = mock_model
         
         test_args = [
             'script.py',
@@ -483,11 +503,11 @@ class TestDeviceSelection:
     """Test device selection logic."""
     
     @patch('torch.cuda.is_available')
-    @patch('hasattr')
-    def test_device_preference_best_cuda(self, mock_hasattr, mock_cuda_available):
+    @patch('torch.backends.mps.is_available')
+    def test_device_preference_best_cuda(self, mock_mps_available, mock_cuda_available):
         """Test 'best' device preference with CUDA available."""
         mock_cuda_available.return_value = True
-        mock_hasattr.return_value = False  # No MPS
+        mock_mps_available.return_value = False  # No MPS
         
         with patch.dict(os.environ, {'DEVICE_PREFERENCE': 'best'}):
             # Would need to test within main() context
@@ -508,7 +528,8 @@ class TestErrorRecovery:
     
     @patch('cv2.imread')
     @patch('cv2.imwrite')
-    def test_mask_save_failure_handling(self, mock_imwrite, mock_imread):
+    @patch('resunet_segmentation.load_checkpoint')
+    def test_mask_save_failure_handling(self, mock_load_checkpoint, mock_imwrite, mock_imread):
         """Test handling of mask save failures."""
         mock_imread.return_value = np.zeros((200, 200, 3), dtype=np.uint8)
         mock_imwrite.return_value = False  # Simulate write failure
@@ -523,7 +544,19 @@ class TestErrorRecovery:
         
         with patch('sys.argv', test_args):
             with patch('os.makedirs'):
-                with patch('resunet_segmentation.ResUNet'):
+                with patch('resunet_segmentation.ResUNet') as mock_resunet:
+                    # Mock successful model creation and loading
+                    mock_model = Mock()
+                    mock_model.eval = Mock(return_value=mock_model)
+                    mock_model.to = Mock(return_value=mock_model)
+                    
+                    # Mock forward pass
+                    def mock_forward(x):
+                        return torch.ones(1, 1, 1024, 1024) * 5.0
+                    
+                    mock_model.side_effect = mock_forward
+                    mock_resunet.return_value = mock_model
+                    
                     exit_code = main()
                     
                     assert exit_code == 1  # Should fail gracefully

@@ -10,7 +10,7 @@
  * - Generování vizualizací segmentací
  */
 
-import { utils, writeFile, WorkBook } from 'xlsx';
+import { utils, writeFile } from 'xlsx';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
@@ -19,7 +19,6 @@ import { formatISODate } from '@/utils/dateUtils';
 import apiClient from '@/lib/apiClient';
 import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations';
 import type { ProjectImage, Polygon, SegmentationResult } from '@/pages/segmentation/types';
-import { SpheroidMetric } from '@/types';
 
 // Vytvoření loggeru
 const logger = createLogger('exportService');

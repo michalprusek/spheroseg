@@ -8,11 +8,11 @@ export class MockWorker {
   private messageQueue: MessageEvent[] = [];
   private terminated = false;
 
-  constructor(url: string | URL, options?: WorkerOptions) {
+  constructor(_url: string | URL, _options?: WorkerOptions) {
     // Mock constructor
   }
 
-  postMessage(message: any, transfer?: Transferable[]): void {
+  postMessage(message: any, _transfer?: Transferable[]): void {
     if (this.terminated) {
       return;
     }

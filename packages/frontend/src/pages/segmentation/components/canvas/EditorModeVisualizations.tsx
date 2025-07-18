@@ -1,4 +1,3 @@
-import React from 'react';
 import { Point } from '@/lib/segmentation';
 import { TempPointsState } from '@/pages/segmentation/types';
 import TemporaryEditPath from './TemporaryEditPath';

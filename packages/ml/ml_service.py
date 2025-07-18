@@ -107,57 +107,85 @@ def process_message(ch, method, properties, body):
         output_dir = os.path.join(UPLOADS_DIR, f"segmentation_{task_id}")
         os.makedirs(output_dir, exist_ok=True)
 
-        # Run segmentation using subprocess
-        import subprocess
-
         try:
-            # Prepare command
-            # Make sure image_path is absolute
-            if not image_path.startswith('/'):
-                image_path = os.path.join(UPLOADS_DIR, image_path)
-            
-            cmd = [
-                'python', '/ML/resunet_segmentation.py',
-                '--image_path', image_path,
-                '--output_path', os.path.join(output_dir, 'result.json'),
-                '--checkpoint_path', MODEL_PATH,
-                '--output_dir', output_dir
-            ]
-
-            logger.info(f"Running command: {' '.join(cmd)}")
-
-            # Run the segmentation
             start_time = time.time()
-            process = subprocess.run(cmd, capture_output=True, text=True)
-            processing_time = time.time() - start_time
-
-            if process.returncode != 0:
-                logger.error(f"Segmentation failed: {process.stderr}")
-                raise Exception(f"Segmentation failed: {process.stderr}")
-
-            # Read the result
-            result_path = os.path.join(output_dir, 'result.json')
-            if os.path.exists(result_path):
-                with open(result_path, 'r') as f:
-                    segmentation_result = json.load(f)
-
+            
+            # Handle DEBUG mode with mock polygons
+            # Check DEBUG at runtime to allow for environment variable patching in tests
+            debug_mode = os.environ.get('DEBUG', 'false').lower() == 'true'
+            if debug_mode:
+                logger.info("DEBUG mode: Using mock polygons")
+                # Generate mock polygons for development
+                mock_polygons = generate_mock_polygons()
+                processing_time = time.time() - start_time
+                
                 result_data = {
+                    'taskId': task_id,
+                    'imageId': image_id,
                     'status': 'completed',
-                    'result_data': {
-                        'polygons': segmentation_result.get('polygons', []),
-                        'processing_time': processing_time,
-                        'timestamp': datetime.now().isoformat()
-                    },
-                    'parameters': parameters
+                    'polygons': mock_polygons,
+                    'processing_time': processing_time,
+                    'timestamp': datetime.now().isoformat()
                 }
-                logger.info(f"Segmentation completed for {image_id}. Sending result to {callback_url}")
-                response = requests.put(callback_url, json=result_data)
-                response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
-                logger.info(f"Successfully sent result for {image_id} to backend.")
+                logger.info(f"Mock segmentation completed for {image_id}. Sending result to {callback_url}")
+                response = requests.post(callback_url, data=json.dumps(result_data), headers={'Content-Type': 'application/json'})
+                response.raise_for_status()
+                logger.info(f"Successfully sent mock result for {image_id} to backend.")
                 ch.basic_ack(method.delivery_tag)
             else:
-                logger.error(f"Result file not found at: {result_path}")
-                raise Exception("Result file not found")
+                # Production mode: Run actual segmentation using subprocess
+                import subprocess
+                
+                # Prepare command
+                # Make sure image_path is absolute
+                if not image_path.startswith('/'):
+                    image_path = os.path.join(UPLOADS_DIR, image_path)
+                
+                cmd = [
+                    'python', '/ML/resunet_segmentation.py',
+                    '--image_path', image_path,
+                    '--output_path', os.path.join(output_dir, 'result.json'),
+                    '--checkpoint_path', MODEL_PATH,
+                    '--output_dir', output_dir
+                ]
+
+                logger.info(f"Running command: {' '.join(cmd)}")
+
+                # Run the segmentation
+                process = subprocess.run(cmd, capture_output=True, text=True)
+                processing_time = time.time() - start_time
+
+                if process.returncode != 0:
+                    logger.error(f"Segmentation failed: {process.stderr}")
+                    raise Exception(f"Segmentation failed: {process.stderr}")
+
+                # Read the result
+                result_path = os.path.join(output_dir, 'result.json')
+                if os.path.exists(result_path):
+                    with open(result_path, 'r') as f:
+                        segmentation_result = json.load(f)
+
+                    result_data = {
+                        'status': 'completed',
+                        'result_data': {
+                            'polygons': segmentation_result.get('polygons', []),
+                            'processing_time': processing_time,
+                            'timestamp': datetime.now().isoformat()
+                        },
+                        'parameters': parameters
+                    }
+                    logger.info(f"Segmentation completed for {image_id}. Sending result to {callback_url}")
+                    try:
+                        response = requests.put(callback_url, json=result_data)
+                        response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+                        logger.info(f"Successfully sent result for {image_id} to backend.")
+                    except Exception as callback_e:
+                        logger.error(f"Failed to send success callback for {image_id}: {str(callback_e)}")
+                        # Still ack the message since segmentation succeeded
+                    ch.basic_ack(method.delivery_tag)
+                else:
+                    logger.error(f"Result file not found at: {result_path}")
+                    raise Exception("Result file not found")
 
         except Exception as e:
             logger.error(f"Error during segmentation for task {task_id}: {str(e)}")

@@ -1,6 +1,6 @@
 /**
  * React components for A/B testing
- * 
+ *
  * Provides components for:
  * - Feature flag based rendering
  * - Experiment variants
@@ -61,12 +61,8 @@ interface TrackConversionProps {
  */
 export function FeatureFlag({ flag, children, fallback = null }: FeatureFlagProps) {
   const isEnabled = useFeatureFlag(flag, false);
-  
-  return (
-    <ErrorBoundary componentName={`FeatureFlag:${flag}`}>
-      {isEnabled ? children : fallback}
-    </ErrorBoundary>
-  );
+
+  return <ErrorBoundary componentName={`FeatureFlag:${flag}`}>{isEnabled ? children : fallback}</ErrorBoundary>;
 }
 
 /**
@@ -75,16 +71,12 @@ export function FeatureFlag({ flag, children, fallback = null }: FeatureFlagProp
  */
 export function Experiment({ experimentId, children, fallback = null }: ExperimentProps) {
   const { variant, isInExperiment, features } = useVariants(experimentId);
-  
+
   if (!isInExperiment) {
     return <>{fallback}</>;
   }
-  
-  return (
-    <ErrorBoundary componentName={`Experiment:${experimentId}`}>
-      {children(variant, features)}
-    </ErrorBoundary>
-  );
+
+  return <ErrorBoundary componentName={`Experiment:${experimentId}`}>{children(variant, features)}</ErrorBoundary>;
 }
 
 /**
@@ -93,7 +85,7 @@ export function Experiment({ experimentId, children, fallback = null }: Experime
  */
 export function Variant({ experimentId, variantId, children }: VariantProps) {
   const isVariant = useVariant(experimentId, variantId);
-  
+
   return isVariant ? <>{children}</> : null;
 }
 
@@ -108,11 +100,11 @@ interface VariantSwitchProps {
 
 export function VariantSwitch({ experimentId, children, fallback }: VariantSwitchProps) {
   const { variant, isInExperiment } = useVariants(experimentId);
-  
+
   if (!isInExperiment) {
     return <>{fallback}</>;
   }
-  
+
   // Find matching variant child
   const variantChildren = React.Children.toArray(children);
   const matchingChild = variantChildren.find((child) => {
@@ -121,83 +113,69 @@ export function VariantSwitch({ experimentId, children, fallback }: VariantSwitc
     }
     return false;
   });
-  
-  return (
-    <ErrorBoundary componentName={`VariantSwitch:${experimentId}`}>
-      {matchingChild || fallback}
-    </ErrorBoundary>
-  );
+
+  return <ErrorBoundary componentName={`VariantSwitch:${experimentId}`}>{matchingChild || fallback}</ErrorBoundary>;
 }
 
 /**
  * Track event component
  */
-export function TrackEvent({ 
-  event, 
-  properties, 
-  children, 
-  trigger = 'mount' 
-}: TrackEventProps) {
+export function TrackEvent({ event, properties, children, trigger = 'mount' }: TrackEventProps) {
   const { trackEvent } = useABTestingMetrics();
-  
+
   useEffect(() => {
     if (trigger === 'mount') {
       trackEvent(event, properties);
     }
     // No cleanup needed as trackEvent doesn't create subscriptions
   }, [event, properties, trackEvent, trigger]);
-  
+
   const handleInteraction = () => {
     if (trigger !== 'mount') {
       trackEvent(event, properties);
     }
   };
-  
+
   const interactionProps = {
     ...(trigger === 'click' && { onClick: handleInteraction }),
     ...(trigger === 'hover' && { onMouseEnter: handleInteraction }),
     ...(trigger === 'focus' && { onFocus: handleInteraction }),
   };
-  
+
   if (React.isValidElement(children)) {
     // Properly type the cloneElement call
     const element = children as ReactElement<Record<string, any>>;
     return React.cloneElement(element, interactionProps);
   }
-  
+
   return <div {...interactionProps}>{children}</div>;
 }
 
 /**
  * Track conversion component
  */
-export function TrackConversion({ 
-  name, 
-  value, 
-  children, 
-  trigger = 'click' 
-}: TrackConversionProps) {
+export function TrackConversion({ name, value, children, trigger = 'click' }: TrackConversionProps) {
   const { trackConversion } = useABTestingMetrics();
-  
+
   useEffect(() => {
     if (trigger === 'mount') {
       trackConversion(name, value);
     }
     // No cleanup needed as trackConversion doesn't create subscriptions
   }, [name, value, trackConversion, trigger]);
-  
+
   const handleClick = () => {
     if (trigger === 'click') {
       trackConversion(name, value);
     }
   };
-  
+
   if (React.isValidElement(children)) {
     // Properly type the cloneElement call
     const element = children as ReactElement<{ onClick?: () => void }>;
     return React.cloneElement(element, { onClick: handleClick });
   }
-  
+
   return <div onClick={handleClick}>{children}</div>;
 }
 
@@ -207,11 +185,11 @@ export function TrackConversion({
  */
 export function ABTestDebugPanel({ show = import.meta.env.DEV }: ABTestDebugPanelProps) {
   const experiments = useActiveExperiments();
-  
+
   if (!show || experiments.length === 0) {
     return null;
   }
-  
+
   return (
     <ErrorBoundary componentName="ABTestDebugPanel">
       <div className="fixed bottom-4 right-4 p-4 bg-gray-900 text-white rounded-lg shadow-lg max-w-sm z-50">
@@ -220,15 +198,9 @@ export function ABTestDebugPanel({ show = import.meta.env.DEV }: ABTestDebugPane
           {experiments.map((flag) => (
             <div key={flag.key} className="border-b border-gray-700 pb-1">
               <div className="font-medium">{flag.key}</div>
-              <div className="text-gray-400">
-                Experiment: {flag.experiment || 'none'}
-              </div>
-              <div className="text-gray-400">
-                Variant: {flag.variant || 'control'}
-              </div>
-              <div className="text-gray-400">
-                Value: {JSON.stringify(flag.value)}
-              </div>
+              <div className="text-gray-400">Experiment: {flag.experiment || 'none'}</div>
+              <div className="text-gray-400">Variant: {flag.variant || 'control'}</div>
+              <div className="text-gray-400">Value: {JSON.stringify(flag.value)}</div>
             </div>
           ))}
         </div>
@@ -247,11 +219,7 @@ export function NewUIExperiment({ children }: { children: ReactNode }) {
     <Experiment experimentId="new-ui-2024">
       {(variant, features) => {
         if (variant === 'modern') {
-          return (
-            <div className={features.darkMode ? 'dark' : ''}>
-              {children}
-            </div>
-          );
+          return <div className={features.darkMode ? 'dark' : ''}>{children}</div>;
         }
         return <>{children}</>;
       }}
@@ -281,7 +249,7 @@ export function PerformanceOptimizationWrapper({ children }: { children: ReactNo
   const enableLazyLoading = useFeatureFlag('performance.lazy-loading', false);
   const enableVirtualization = useFeatureFlag('performance.virtualization', false);
   const enableWebWorkers = useFeatureFlag('performance.web-workers', false);
-  
+
   return (
     <div
       data-lazy-loading={enableLazyLoading}

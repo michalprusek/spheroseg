@@ -6,12 +6,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mail, Share2, UserPlus, X, Eye, Edit, Trash, Link, Copy } from 'lucide-react';
+import { Loader2, Mail, UserPlus, X, Eye, Edit, Trash, Link, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { z } from 'zod';

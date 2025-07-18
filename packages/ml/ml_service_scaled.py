@@ -105,7 +105,16 @@ def health():
         rabbitmq_connected = rabbitmq_connection and not rabbitmq_connection.is_closed
         
         # Get active tasks count
-        active_count = active_tasks._value.get(INSTANCE_ID, 0)
+        active_count = 0
+        try:
+            # Use collect() method to get current gauge values
+            for metric in active_tasks.collect():
+                for sample in metric.samples:
+                    if sample.labels.get('instance') == INSTANCE_ID:
+                        active_count = sample.value
+                        break
+        except Exception:
+            active_count = 0
         
         health_status = {
             'status': 'healthy',
@@ -160,7 +169,8 @@ def health():
 @app.route('/metrics', methods=['GET'])
 def metrics():
     """Prometheus metrics endpoint"""
-    return generate_latest()
+    from flask import Response
+    return Response(generate_latest(), mimetype='text/plain; version=0.0.4')
 
 def process_segmentation(task):
     """Process a single segmentation task"""

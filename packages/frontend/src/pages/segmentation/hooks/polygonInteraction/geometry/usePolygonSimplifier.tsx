@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
-import { SegmentationResult, Point } from '@/lib/segmentation';
+import { SegmentationResult } from '@/lib/segmentation';
 import polygonOperations from '@/utils/polygonOperations';
-import { toast } from 'sonner';
 
 /**
  * Hook pro zjednodušení polygonů

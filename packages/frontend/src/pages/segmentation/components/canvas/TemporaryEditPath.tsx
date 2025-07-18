@@ -1,4 +1,3 @@
-import React from 'react';
 import { TempPointsState } from '@/pages/segmentation/types';
 import { Point } from '@/lib/segmentation';
 import { useCoordinateTransform } from '@/pages/segmentation/hooks/polygonInteraction/useCoordinateTransform';

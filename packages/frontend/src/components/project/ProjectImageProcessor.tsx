@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { SegmentationData, ProjectImage, SegmentationApiResponse, ImageStatus } from '@/types'; // Import necessary types
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext'; // Add useLanguage import
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, AlertTriangle, Play, Save } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Play } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import apiClient from '@/lib/apiClient'; // Import apiClient
 import axios from 'axios'; // Import axios for error checking

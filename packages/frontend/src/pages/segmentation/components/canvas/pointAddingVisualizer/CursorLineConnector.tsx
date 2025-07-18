@@ -1,4 +1,3 @@
-import React from 'react';
 import { Point } from '@/lib/segmentation';
 import { getStrokeWidth, getColors } from './visualizationUtils';
 

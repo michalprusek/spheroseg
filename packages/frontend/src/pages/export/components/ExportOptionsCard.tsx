@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export type AnnotationFormat = 'COCO' | 'YOLO' | 'MASK' | 'POLYGONS' | 'DATUMARO' | 'CVAT_MASKS' | 'CVAT_YAML';

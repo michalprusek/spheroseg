@@ -122,7 +122,8 @@ class PerformanceMetricsService {
     this.renderMetrics.set(componentName, existing);
 
     // Track if render is slow
-    if (renderTime > 16) { // More than one frame (60fps)
+    if (renderTime > 16) {
+      // More than one frame (60fps)
       this.track({
         name: `slow_render_${componentName}`,
         value: renderTime,
@@ -160,7 +161,7 @@ class PerformanceMetricsService {
     // Get CLS (Cumulative Layout Shift)
     const clsEntries = performance.getEntriesByType('layout-shift') as any[];
     let cls = 0;
-    clsEntries.forEach(entry => {
+    clsEntries.forEach((entry) => {
       if (!entry.hadRecentInput) {
         cls += entry.value;
       }
@@ -266,7 +267,7 @@ class PerformanceMetricsService {
         const resourceObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             const resourceEntry = entry as PerformanceResourceTiming;
-            
+
             // Track slow resources
             if (resourceEntry.duration > 1000) {
               this.track({
@@ -362,7 +363,7 @@ class PerformanceMetricsService {
    */
   destroy(): void {
     // Stop observers
-    this.observers.forEach(observer => observer.disconnect());
+    this.observers.forEach((observer) => observer.disconnect());
     this.observers.clear();
 
     // Stop batch reporting

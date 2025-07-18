@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { getLogger } from '@/utils/logging/unifiedLogger';
+
+// Get logger for performance monitoring
+const logger = getLogger('performance');
 
 /**
  * Initialize performance monitoring
@@ -10,24 +14,50 @@ export const initPerformanceMonitoring = () => {
     const navigationStart = timing.navigationStart;
 
     // Report basic metrics
-    console.debug('[Performance] DNS lookup:', timing.domainLookupEnd - timing.domainLookupStart, 'ms');
-    console.debug('[Performance] TCP connection:', timing.connectEnd - timing.connectStart, 'ms');
-    console.debug('[Performance] Request time:', timing.responseEnd - timing.requestStart, 'ms');
-    console.debug('[Performance] DOM processing:', timing.domComplete - timing.domLoading, 'ms');
-    console.debug('[Performance] Total page load:', timing.loadEventEnd - navigationStart, 'ms');
+    const metrics = {
+      dnsLookup: timing.domainLookupEnd - timing.domainLookupStart,
+      tcpConnection: timing.connectEnd - timing.connectStart,
+      requestTime: timing.responseEnd - timing.requestStart,
+      domProcessing: timing.domComplete - timing.domLoading,
+      totalPageLoad: timing.loadEventEnd - navigationStart,
+    };
 
-    // Send metrics to backend
+    logger.debug('Navigation timing metrics', metrics);
+
+    // Send metrics to backend (with error handling)
     if (navigator.sendBeacon) {
-      const metrics = {
-        dnsLookup: timing.domainLookupEnd - timing.domainLookupStart,
-        tcpConnection: timing.connectEnd - timing.connectStart,
-        requestTime: timing.responseEnd - timing.requestStart,
-        domProcessing: timing.domComplete - timing.domLoading,
-        totalPageLoad: timing.loadEventEnd - navigationStart,
+      const metricsPayload = {
+        ...metrics,
         timestamp: new Date().toISOString(),
       };
 
-      navigator.sendBeacon('/api/metrics/performance', JSON.stringify(metrics));
+      try {
+        // Check if performance metrics endpoint is available
+        // Disable performance metrics if the endpoint doesn't exist
+        const performanceMetricsEnabled = false; // Disabled until backend endpoint is available
+        
+        if (performanceMetricsEnabled) {
+          // Use fetch instead of sendBeacon for better error handling
+          fetch('/api/metrics/performance', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(metricsPayload),
+            // Don't block page unload if this fails
+            keepalive: true,
+          }).catch((error) => {
+            // Silently log performance metric failures to avoid noise
+            logger.debug('Failed to send performance metrics to backend', { error: error.message });
+          });
+        } else {
+          // Log metrics locally only
+          logger.debug('Performance metrics (local only)', metricsPayload);
+        }
+      } catch (error) {
+        // Fallback - don't throw errors for performance metrics
+        logger.debug('Performance metrics collection failed', { error });
+      }
     }
   }
 
@@ -36,15 +66,17 @@ export const initPerformanceMonitoring = () => {
     try {
       const observer = new PerformanceObserver((list) => {
         list.getEntries().forEach((entry) => {
-          console.debug(
-            `[Performance] ${entry.name}: ${entry.startTime.toFixed(2)}ms (duration: ${entry.duration.toFixed(2)}ms)`,
-          );
+          logger.debug(`Performance entry: ${entry.name}`, {
+            startTime: entry.startTime.toFixed(2),
+            duration: entry.duration.toFixed(2),
+            entryType: entry.entryType,
+          });
         });
       });
 
       observer.observe({ entryTypes: ['resource', 'paint', 'navigation'] });
     } catch (e) {
-      console.error('Performance observer error:', e);
+      logger.error('Performance observer initialization failed', e);
     }
   }
 };
@@ -55,31 +87,66 @@ export const initPerformanceMonitoring = () => {
 export const markPerformance = (name: string) => {
   if (window.performance && window.performance.mark) {
     window.performance.mark(name);
-    console.debug(`[Performance] Marked: ${name}`);
+    logger.debug(`Performance mark created: ${name}`);
     return true;
   }
   return false;
 };
 
 /**
- * Measure time between two performance marks
+ * Measure time between two performance marks OR measure function execution time
  */
-export const measurePerformance = (name: string, startMark: string, endMark: string) => {
-  if (window.performance && window.performance.measure) {
+export function measurePerformance<T extends (...args: any[]) => any>(
+  nameOrFunction: string | T,
+  startMark?: string,
+  endMark?: string
+): number | { result?: ReturnType<T>; executionTime: number; error?: Error } | null {
+  // Function execution measurement
+  if (typeof nameOrFunction === 'function') {
+    const fn = nameOrFunction;
+    const start = performance.now();
+    
     try {
-      window.performance.measure(name, startMark, endMark);
-      const measures = window.performance.getEntriesByName(name, 'measure');
-      if (measures.length > 0) {
-        const duration = measures[0].duration;
-        console.debug(`[Performance] ${name}: ${duration.toFixed(2)}ms`);
-        return duration;
-      }
-    } catch (e) {
-      console.error(`[Performance] Error measuring ${name}:`, e);
+      const result = fn();
+      const executionTime = performance.now() - start;
+      
+      logger.debug(`Function execution time`, { executionTime: executionTime.toFixed(2) });
+      
+      return {
+        result,
+        executionTime,
+      };
+    } catch (error) {
+      const executionTime = performance.now() - start;
+      
+      logger.error(`Function execution failed`, { error, executionTime: executionTime.toFixed(2) });
+      
+      return {
+        executionTime,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
     }
   }
+  
+  // Performance marks measurement
+  if (typeof nameOrFunction === 'string' && startMark && endMark) {
+    if (window.performance && window.performance.measure) {
+      try {
+        window.performance.measure(nameOrFunction, startMark, endMark);
+        const measures = window.performance.getEntriesByName(nameOrFunction, 'measure');
+        if (measures.length > 0) {
+          const duration = measures[0].duration;
+          logger.debug(`Performance measure: ${nameOrFunction}`, { duration: duration.toFixed(2) });
+          return duration;
+        }
+      } catch (e) {
+        logger.error(`Performance measurement failed for ${nameOrFunction}`, e);
+      }
+    }
+  }
+  
   return null;
-};
+}
 
 /**
  * Utility to measure and report frontend performance metrics
@@ -94,8 +161,10 @@ export const usePerformance = () => {
     if (initialRenderTime.current === null) {
       initialRenderTime.current = performance.now();
 
-      // Report initial load time to backend (optional)
-      if (navigator.sendBeacon) {
+      // Report initial load time to backend (disabled until backend endpoint is available)
+      const frontendMetricsEnabled = false; // Disabled until backend endpoint is available
+      
+      if (frontendMetricsEnabled && navigator.sendBeacon) {
         const metrics = {
           initialLoadTime: initialRenderTime.current,
           userAgent: navigator.userAgent,
@@ -104,7 +173,16 @@ export const usePerformance = () => {
           screenHeight: window.innerHeight,
         };
 
+        // Only send if endpoint exists
         navigator.sendBeacon('/api/metrics/frontend', JSON.stringify(metrics));
+      } else {
+        // Log metrics locally only
+        logger.debug('Frontend initial load metrics (local only)', {
+          initialLoadTime: initialRenderTime.current,
+          userAgent: navigator.userAgent,
+          screenWidth: window.innerWidth,
+          screenHeight: window.innerHeight,
+        });
       }
 
       // Record web vitals
@@ -128,7 +206,10 @@ export const usePerformance = () => {
 
       // Log render times if they exceed a threshold (e.g., 50ms)
       if (timeSinceLastRender > 50) {
-        console.debug(`[Performance] Render took ${timeSinceLastRender.toFixed(2)}ms`);
+        logger.debug('Slow render detected', { 
+          duration: timeSinceLastRender.toFixed(2),
+          renderCount: renderCount.current,
+        });
       }
     }
 
@@ -138,10 +219,16 @@ export const usePerformance = () => {
   // Helper to send metrics to analytics
   const sendToAnalytics = useCallback((metric: any) => {
     // You can implement any analytics service here
-    console.debug(`[Web Vitals] ${metric.name}: ${metric.value}`);
+    logger.debug(`Web Vitals: ${metric.name}`, { 
+      value: metric.value,
+      id: metric.id,
+      rating: metric.rating,
+    });
 
-    // Optionally send to backend
-    if (navigator.sendBeacon) {
+    // Optionally send to backend (disabled until backend endpoint is available)
+    const webVitalsMetricsEnabled = false; // Disabled until backend endpoint is available
+    
+    if (webVitalsMetricsEnabled && navigator.sendBeacon) {
       navigator.sendBeacon(
         '/api/metrics/vitals',
         JSON.stringify({
@@ -161,7 +248,7 @@ export const usePerformance = () => {
       const start = performance.now();
       operation();
       const duration = performance.now() - start;
-      console.debug(`[Performance] ${label} took ${duration.toFixed(2)}ms`);
+      logger.debug(`Operation timing: ${label}`, { duration: duration.toFixed(2) });
       return duration;
     },
   };
@@ -176,7 +263,10 @@ export const useImageLoadPerformance = () => {
 
     return (event: React.SyntheticEvent<HTMLImageElement>) => {
       const loadTime = performance.now() - startTime;
-      console.debug(`[Performance] Image ${imageUrl} loaded in ${loadTime.toFixed(2)}ms`);
+      logger.debug('Image loaded', { 
+        url: imageUrl,
+        loadTime: loadTime.toFixed(2),
+      });
 
       // Report image load time
       const img = event.currentTarget;
@@ -188,8 +278,13 @@ export const useImageLoadPerformance = () => {
         timestamp: new Date().toISOString(),
       };
 
-      if (navigator.sendBeacon) {
+      // Disable image load metrics until backend endpoint is available
+      const imageLoadMetricsEnabled = false; // Disabled until backend endpoint is available
+      
+      if (imageLoadMetricsEnabled && navigator.sendBeacon) {
         navigator.sendBeacon('/api/metrics/image-load', JSON.stringify(metrics));
+      } else {
+        logger.debug('Image load metrics (local only)', metrics);
       }
 
       if (onLoaded) {
@@ -247,6 +342,7 @@ export const useLazyLoading = () => {
  */
 export class PerformanceMonitor {
   private metrics: Map<string, number[]> = new Map();
+  private activeOperations: Map<string, number> = new Map();
 
   start(label: string): () => void {
     const startTime = performance.now();
@@ -258,6 +354,66 @@ export class PerformanceMonitor {
       }
       this.metrics.get(label)!.push(duration);
     };
+  }
+
+  startOperation(operationName: string): void {
+    this.activeOperations.set(operationName, performance.now());
+  }
+
+  endOperation(operationName: string): number | null {
+    const startTime = this.activeOperations.get(operationName);
+    if (startTime === undefined) {
+      return null;
+    }
+    
+    const duration = performance.now() - startTime;
+    this.activeOperations.delete(operationName);
+    
+    if (!this.metrics.has(operationName)) {
+      this.metrics.set(operationName, []);
+    }
+    this.metrics.get(operationName)!.push(duration);
+    
+    return duration;
+  }
+
+  trackOperation<T extends (...args: any[]) => any>(operationName: string, fn: T): T {
+    return ((...args: Parameters<T>) => {
+      this.startOperation(operationName);
+      try {
+        const result = fn(...args);
+        this.endOperation(operationName);
+        return result;
+      } catch (error) {
+        this.endOperation(operationName);
+        throw error;
+      }
+    }) as T;
+  }
+
+  getStats(): Record<string, {
+    count: number;
+    totalTime: number;
+    averageTime: number;
+    minTime: number;
+    maxTime: number;
+  }> {
+    const stats: Record<string, any> = {};
+    
+    for (const [label, values] of this.metrics.entries()) {
+      if (values.length > 0) {
+        const totalTime = values.reduce((sum, val) => sum + val, 0);
+        stats[label] = {
+          count: values.length,
+          totalTime,
+          averageTime: totalTime / values.length,
+          minTime: Math.min(...values),
+          maxTime: Math.max(...values),
+        };
+      }
+    }
+    
+    return stats;
   }
 
   getMetrics(label: string): {
@@ -284,9 +440,22 @@ export class PerformanceMonitor {
   reset(label?: string): void {
     if (label) {
       this.metrics.delete(label);
+      this.activeOperations.delete(label);
     } else {
       this.metrics.clear();
+      this.activeOperations.clear();
     }
+  }
+
+  getReport(): string {
+    const stats = this.getStats();
+    const lines = ['Performance Report:', '=================='];
+    
+    for (const [operation, data] of Object.entries(stats)) {
+      lines.push(`${operation}: ${data.count} calls, avg: ${data.averageTime.toFixed(2)}ms, total: ${data.totalTime.toFixed(2)}ms`);
+    }
+    
+    return lines.join('\n');
   }
 
   getAllMetrics(): Map<string, number[]> {
@@ -298,27 +467,54 @@ export class PerformanceMonitor {
  * Simple debounce implementation
  */
 export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
-  let timeoutId: NodeJS.Timeout;
+  let timeoutId: number;
 
   return function (...args: Parameters<T>) {
     clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
+    timeoutId = setTimeout(() => fn(...args), delay) as unknown as number;
   };
 }
 
 /**
  * Simple throttle implementation
  */
-export function throttle<T extends (...args: any[]) => any>(fn: T, limit: number): (...args: Parameters<T>) => void {
+export function throttle<T extends (...args: any[]) => any>(
+  fn: T, 
+  limit: number, 
+  options: { leading?: boolean; trailing?: boolean } = {}
+): (...args: Parameters<T>) => void {
+  const { leading = true, trailing = false } = options;
   let inThrottle = false;
+  let lastArgs: Parameters<T> | null = null;
+  let lastThis: any;
+  let timeoutId: number;
+  let hasInvoked = false;
 
-  return function (...args: Parameters<T>) {
+  return function (this: any, ...args: Parameters<T>) {
+    lastArgs = args;
+    lastThis = this;
+
     if (!inThrottle) {
-      fn(...args);
+      if (leading) {
+        fn.apply(this, args);
+        hasInvoked = true;
+      }
       inThrottle = true;
-      setTimeout(() => {
+      
+      timeoutId = setTimeout(() => {
         inThrottle = false;
-      }, limit);
+        if (trailing && lastArgs && (!leading || hasInvoked)) {
+          fn.apply(lastThis, lastArgs);
+        }
+        if (!leading && !hasInvoked && lastArgs) {
+          fn.apply(lastThis, lastArgs);
+        }
+        lastArgs = null;
+        hasInvoked = false;
+      }, limit) as unknown as number;
+    } else if (trailing) {
+      lastArgs = args;
+      lastThis = this;
     }
   };
 }
@@ -326,11 +522,14 @@ export function throttle<T extends (...args: any[]) => any>(fn: T, limit: number
 /**
  * Simple memoize implementation
  */
-export function memoize<T extends (...args: any[]) => any>(fn: T): T {
+export function memoize<T extends (...args: any[]) => any>(
+  fn: T, 
+  resolver?: (...args: Parameters<T>) => string
+): T {
   const cache = new Map<string, ReturnType<T>>();
 
   return ((...args: Parameters<T>) => {
-    const key = JSON.stringify(args);
+    const key = resolver ? resolver(...args) : JSON.stringify(args);
     if (cache.has(key)) {
       return cache.get(key)!;
     }
@@ -342,14 +541,42 @@ export function memoize<T extends (...args: any[]) => any>(fn: T): T {
 }
 
 /**
- * Track operation time
+ * Track operation time with callbacks
  */
-export function trackOperationTime(operationName: string, operation: () => void): number {
-  const start = performance.now();
-  operation();
-  const duration = performance.now() - start;
-  console.debug(`[Performance] ${operationName} took ${duration.toFixed(2)}ms`);
-  return duration;
+export function trackOperationTime<T extends (...args: any[]) => any>(
+  operation: T,
+  operationName: string,
+  onComplete?: (name: string, duration: number) => void,
+  onError?: (error: Error) => void
+): (...args: Parameters<T>) => ReturnType<T> {
+  return ((...args: Parameters<T>) => {
+    const start = performance.now();
+    try {
+      const result = operation(...args);
+      const duration = performance.now() - start;
+      
+      logger.debug(`Operation completed: ${operationName}`, { duration: duration.toFixed(2) });
+      
+      if (onComplete) {
+        onComplete(operationName, duration);
+      }
+      
+      return result;
+    } catch (error) {
+      const duration = performance.now() - start;
+      
+      logger.error(`Operation failed: ${operationName}`, { error, duration: duration.toFixed(2) });
+      
+      if (onComplete) {
+        onComplete(operationName, duration);
+      }
+      if (onError && error instanceof Error) {
+        onError(error);
+      }
+      
+      throw error;
+    }
+  }) as (...args: Parameters<T>) => ReturnType<T>;
 }
 
 export default {

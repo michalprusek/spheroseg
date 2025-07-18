@@ -128,7 +128,7 @@ describe('Performance Optimizations Integration Tests', () => {
   describe('Performance Monitoring Integration', () => {
     it('should track API performance metrics', async () => {
       // Make multiple API calls
-      const responses = await Promise.all([
+      const _responses = await Promise.all([
         request(app).get('/api/user/test-123/stats'),
         request(app).get('/api/user/test-456/stats'),
         request(app).get('/api/user/test-789/stats'),
@@ -166,7 +166,6 @@ describe('Performance Optimizations Integration Tests', () => {
       expect(metrics.memoryUsage.length).toBeLessThanOrEqual(10);
     });
   });
-
 
   describe('Redis Cache Integration', () => {
     it('should use Redis for caching when available', async () => {

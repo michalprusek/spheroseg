@@ -2,8 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import logger from '@/utils/logger';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { handleError, ErrorType, ErrorSeverity } from '@/utils/errorHandling';
-import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react';
+import { handleError, ErrorType, ErrorSeverity } from '@/utils/error/unifiedErrorHandler';
 
 interface ErrorBoundaryProps {
   children: ReactNode;

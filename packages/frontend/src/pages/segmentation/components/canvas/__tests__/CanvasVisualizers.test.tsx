@@ -1,4 +1,3 @@
-import React from 'react';
 import TemporaryEditPath from '../TemporaryEditPath';
 import SlicingModeVisualizer from '../SlicingModeVisualizer';
 import PointAddingVisualizer from '../pointAddingVisualizer';

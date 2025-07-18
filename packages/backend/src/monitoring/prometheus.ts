@@ -1,9 +1,9 @@
 /**
  * Prometheus Metrics Collection
- * 
+ *
  * Centralized metrics for all performance improvements
  */
-import { register, collectDefaultMetrics, Counter, Gauge, Histogram, Summary } from 'prom-client';
+import { register, collectDefaultMetrics, Counter, Gauge, Histogram } from 'prom-client';
 import { Request, Response, NextFunction } from 'express';
 
 // Collect default metrics (CPU, memory, etc.)
@@ -200,27 +200,28 @@ export const apiThrottlingEvents = new Counter({
 // Express middleware for HTTP metrics
 export function prometheusMiddleware(req: Request, res: Response, next: NextFunction) {
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = (Date.now() - start) / 1000;
     const route = req.route?.path || 'unknown';
-    
-    httpRequestDuration
-      .labels(req.method, route, res.statusCode.toString())
-      .observe(duration);
+
+    httpRequestDuration.labels(req.method, route, res.statusCode.toString()).observe(duration);
   });
-  
+
   next();
 }
 
 // Metrics endpoint handler
 export function metricsHandler(req: Request, res: Response) {
   res.set('Content-Type', register.contentType);
-  register.metrics().then(metrics => {
-    res.end(metrics);
-  }).catch(err => {
-    res.status(500).end(err.message);
-  });
+  register
+    .metrics()
+    .then((metrics) => {
+      res.end(metrics);
+    })
+    .catch((err) => {
+      res.status(500).end(err.message);
+    });
 }
 
 // Helper functions to update metrics
@@ -237,7 +238,11 @@ export function updateActiveConnections(room: string, supportsBatching: boolean,
   wsActiveConnections.labels(room, supportsBatching.toString()).inc(delta);
 }
 
-export function recordGraphQLRequest(operationName: string, operationType: string, duration: number) {
+export function recordGraphQLRequest(
+  operationName: string,
+  operationType: string,
+  duration: number
+) {
   graphqlRequestDuration.labels(operationName, operationType).observe(duration);
 }
 
@@ -245,12 +250,22 @@ export function recordGraphQLError(operationName: string, errorType: string) {
   graphqlErrorsTotal.labels(operationName, errorType).inc();
 }
 
-export function recordDatabaseQuery(pool: 'read' | 'write', queryType: string, duration: number, fallback: boolean = false) {
+export function recordDatabaseQuery(
+  pool: 'read' | 'write',
+  queryType: string,
+  duration: number,
+  fallback: boolean = false
+) {
   dbQueryDuration.labels(pool, queryType).observe(duration);
   dbReadWriteSplit.labels(pool, fallback.toString()).inc();
 }
 
-export function updateDatabasePoolMetrics(pool: 'read' | 'write', active: number, idle: number, waiting: number) {
+export function updateDatabasePoolMetrics(
+  pool: 'read' | 'write',
+  active: number,
+  idle: number,
+  waiting: number
+) {
   dbPoolConnections.labels(pool, 'active').set(active);
   dbPoolConnections.labels(pool, 'idle').set(idle);
   dbPoolConnections.labels(pool, 'waiting').set(waiting);
@@ -264,7 +279,13 @@ export function updateMLQueueSize(priority: string, size: number) {
   mlTasksQueued.labels(priority).set(size);
 }
 
-export function recordCDNMetrics(assetType: string, provider: string, hit: boolean, responseTime: number, bytes: number) {
+export function recordCDNMetrics(
+  assetType: string,
+  provider: string,
+  hit: boolean,
+  responseTime: number,
+  bytes: number
+) {
   if (hit) {
     cdnCacheHits.labels(assetType, provider).inc();
     cdnBandwidthSaved.labels(assetType, provider).inc(bytes);

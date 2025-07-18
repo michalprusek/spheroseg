@@ -45,7 +45,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
  * Normalize path to avoid high cardinality in metrics
  * e.g. /api/users/123 -> /api/users/:id
  */
-function normalizePath(path: string): string {
+function _normalizePath(path: string): string {
   // Replace numeric IDs with :id
   return path
     .replace(/\/api\/projects\/[0-9a-f-]+/g, '/api/projects/:id')

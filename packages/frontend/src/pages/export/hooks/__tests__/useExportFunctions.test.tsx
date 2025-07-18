@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useExportFunctions } from '../useExportFunctions';
 import { saveAs } from 'file-saver';
@@ -8,8 +8,6 @@ import {
   mockLanguageContext,
   mockApiClient,
   mockExportDependencies,
-  mockSelectedImages,
-  mockProjectData,
 } from '../../../../../shared/test-utils/export-test-utils';
 import { toast } from 'sonner';
 

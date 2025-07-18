@@ -1,5 +1,4 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { vi } from 'vitest';
 import CreateProjectDialog from '@/components/project/CreateProjectDialog';
 import { LanguageProvider } from '@/contexts/LanguageContext';

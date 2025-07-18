@@ -9,7 +9,7 @@ const imageResolvers: IResolvers = {
   },
   Image: {
     // Image field resolvers will be implemented here
-  }
+  },
 };
 
 export default imageResolvers;

@@ -4,7 +4,6 @@
 
 import polygonOperations from '../polygonOperations';
 import { SegmentationResult } from '@/lib/segmentation';
-import { v4 as uuidv4 } from 'uuid';
 
 // Mock uuid
 vi.mock('uuid', () => ({

@@ -22,17 +22,17 @@ export class SecureStorage {
   async initialize(): Promise<void> {
     // Initialize encryption key from server or generate one
     this.encryptionKey = await this.getOrCreateEncryptionKey();
-    
+
     // Open IndexedDB
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, 1);
-      
+
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         this.db = request.result;
         resolve();
       };
-      
+
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains(this.storeName)) {
@@ -52,9 +52,9 @@ export class SecureStorage {
         length: 256,
       },
       true,
-      ['encrypt', 'decrypt']
+      ['encrypt', 'decrypt'],
     );
-    
+
     return keyMaterial;
   }
 
@@ -65,14 +65,14 @@ export class SecureStorage {
 
     const encoder = new TextEncoder();
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    
+
     const encrypted = await crypto.subtle.encrypt(
       {
         name: 'AES-GCM',
         iv: iv,
       },
       this.encryptionKey,
-      encoder.encode(data)
+      encoder.encode(data),
     );
 
     return { encrypted, iv };
@@ -89,7 +89,7 @@ export class SecureStorage {
         iv: iv,
       },
       this.encryptionKey,
-      encrypted
+      encrypted,
     );
 
     const decoder = new TextDecoder();
@@ -103,12 +103,12 @@ export class SecureStorage {
 
     const stringValue = JSON.stringify(value);
     const { encrypted, iv } = await this.encrypt(stringValue);
-    
+
     // Combine IV and encrypted data
     const combined = new Uint8Array(iv.length + encrypted.byteLength);
     combined.set(iv, 0);
     combined.set(new Uint8Array(encrypted), iv.length);
-    
+
     // Convert to base64 for storage
     const base64 = btoa(String.fromCharCode(...combined));
 
@@ -123,17 +123,17 @@ export class SecureStorage {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
-      
+
       // First, delete any existing item with the same key
       const index = store.index('key');
       const deleteRequest = index.openCursor(IDBKeyRange.only(key));
-      
+
       deleteRequest.onsuccess = () => {
         const cursor = deleteRequest.result;
         if (cursor) {
           cursor.delete();
         }
-        
+
         // Then add the new item
         const addRequest = store.add(item);
         addRequest.onsuccess = () => resolve();
@@ -162,12 +162,12 @@ export class SecureStorage {
 
         try {
           // Decode base64
-          const combined = Uint8Array.from(atob(item.value), c => c.charCodeAt(0));
-          
+          const combined = Uint8Array.from(atob(item.value), (c) => c.charCodeAt(0));
+
           // Extract IV and encrypted data
           const iv = combined.slice(0, 12);
           const encrypted = combined.slice(12);
-          
+
           // Decrypt
           const decrypted = await this.decrypt(encrypted.buffer, iv);
           resolve(JSON.parse(decrypted));
@@ -225,7 +225,7 @@ export class SecureStorage {
       await this.initialize();
     }
 
-    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([this.storeName], 'readwrite');

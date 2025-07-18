@@ -3,7 +3,6 @@ import {
   createProjectSchema,
   projectIdSchema,
   deleteProjectSchema,
-  updateProjectSchema,
 } from '../projectValidators';
 
 describe('projectValidators', () => {

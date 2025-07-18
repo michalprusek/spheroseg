@@ -1,5 +1,5 @@
 import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
-import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import apiClient from '../apiClient';
 import { handleError, ErrorType, ErrorSeverity } from '@/utils/errorHandling';
 import logger from '@/utils/logger';

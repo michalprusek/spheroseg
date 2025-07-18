@@ -98,7 +98,7 @@ export const checkStorageHealth = async (): Promise<HealthStatus> => {
 
     // Check disk space (if available)
     try {
-      const stats = fs.statSync(uploadDir);
+      const _stats = fs.statSync(uploadDir);
       return {
         status: 'healthy',
         message: 'Storage accessible and writable',

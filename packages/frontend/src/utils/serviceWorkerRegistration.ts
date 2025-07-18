@@ -11,10 +11,8 @@ type Config = {
 
 const isLocalhost = Boolean(
   window.location.hostname === 'localhost' ||
-  window.location.hostname === '[::1]' ||
-  window.location.hostname.match(
-    /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
-  )
+    window.location.hostname === '[::1]' ||
+    window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/),
 );
 
 export function register(config?: Config): void {
@@ -38,9 +36,7 @@ export function register(config?: Config): void {
 
         // Add some additional logging to localhost
         navigator.serviceWorker.ready.then(() => {
-          console.log(
-            'This web app is being served cache-first by a service worker.'
-          );
+          console.log('This web app is being served cache-first by a service worker.');
         });
       } else {
         // Is not localhost. Just register service worker
@@ -60,16 +56,14 @@ function registerValidSW(swUrl: string, config?: Config): void {
         if (installingWorker == null) {
           return;
         }
-        
+
         installingWorker.onstatechange = () => {
           if (installingWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
               // At this point, the updated content has been fetched,
               // but the previous service worker will still serve the older
               // content until all client tabs are closed.
-              console.log(
-                'New content is available and will be used when all tabs for this page are closed.'
-              );
+              console.log('New content is available and will be used when all tabs for this page are closed.');
 
               // Execute callback
               if (config && config.onUpdate) {
@@ -89,9 +83,12 @@ function registerValidSW(swUrl: string, config?: Config): void {
       };
 
       // Periodically check for updates
-      setInterval(() => {
-        registration.update();
-      }, 60 * 60 * 1000); // Check every hour
+      setInterval(
+        () => {
+          registration.update();
+        },
+        60 * 60 * 1000,
+      ); // Check every hour
     })
     .catch((error) => {
       console.error('Error during service worker registration:', error);
@@ -109,10 +106,7 @@ function checkValidServiceWorker(swUrl: string, config?: Config): void {
     .then((response) => {
       // Ensure service worker exists, and that we really are getting a JS file.
       const contentType = response.headers.get('content-type');
-      if (
-        response.status === 404 ||
-        (contentType != null && contentType.indexOf('javascript') === -1)
-      ) {
+      if (response.status === 404 || (contentType != null && contentType.indexOf('javascript') === -1)) {
         // No service worker found. Probably a different app. Reload the page.
         navigator.serviceWorker.ready.then((registration) => {
           registration.unregister().then(() => {
@@ -150,10 +144,10 @@ export async function clearCache(): Promise<void> {
   }
 
   const registration = await navigator.serviceWorker.ready;
-  
+
   return new Promise((resolve, reject) => {
     const messageChannel = new MessageChannel();
-    
+
     messageChannel.port1.onmessage = (event) => {
       if (event.data.success) {
         resolve();
@@ -162,10 +156,7 @@ export async function clearCache(): Promise<void> {
       }
     };
 
-    registration.active?.postMessage(
-      { type: 'CLEAR_CACHE' },
-      [messageChannel.port2]
-    );
+    registration.active?.postMessage({ type: 'CLEAR_CACHE' }, [messageChannel.port2]);
   });
 }
 
@@ -182,18 +173,15 @@ export async function getCacheStatus(): Promise<{
   }
 
   const registration = await navigator.serviceWorker.ready;
-  
+
   return new Promise((resolve) => {
     const messageChannel = new MessageChannel();
-    
+
     messageChannel.port1.onmessage = (event) => {
       resolve(event.data);
     };
 
-    registration.active?.postMessage(
-      { type: 'CACHE_STATUS' },
-      [messageChannel.port2]
-    );
+    registration.active?.postMessage({ type: 'CACHE_STATUS' }, [messageChannel.port2]);
   });
 }
 
@@ -206,6 +194,6 @@ export async function skipWaiting(): Promise<void> {
   }
 
   const registration = await navigator.serviceWorker.ready;
-  
+
   registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
 }

@@ -13,7 +13,6 @@ import {
   AlertCircle,
   FileIcon,
   Image as ImageIcon,
-  File,
   Loader2,
   RefreshCw,
   Trash2,

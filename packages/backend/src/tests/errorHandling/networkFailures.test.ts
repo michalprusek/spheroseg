@@ -189,14 +189,16 @@ describe('Network Failure Tests', () => {
     segmentationServicePromise
       .then((segmentationService) => {
         // Ensure we're using our mock service
-        (segmentationService as any)._callMlService = jest.fn().mockImplementation(async (endpoint: string) => {
-          // Call our test endpoint
-          const response = await axios.get(`${mockServerUrl}${endpoint}`);
-          if (response.status >= 400) {
-            throw new Error(`HTTP error: ${response.status}`);
-          }
-          return response.data;
-        });
+        (segmentationService as any)._callMlService = jest
+          .fn()
+          .mockImplementation(async (endpoint: string) => {
+            // Call our test endpoint
+            const response = await axios.get(`${mockServerUrl}${endpoint}`);
+            if (response.status >= 400) {
+              throw new Error(`HTTP error: ${response.status}`);
+            }
+            return response.data;
+          });
 
         // Call segmentation with retries
         return (segmentationService as any)._callMlService('/retry-success', {});

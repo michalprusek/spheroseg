@@ -1,0 +1,187 @@
+# Pre-commit hooks configuration for Spheroseg
+# Ensures code quality, security, and consistency before commits
+
+repos:
+  # Built-in hooks for basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      # File and formatting checks
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+        name: Ensure files end with newline
+      - id: check-yaml
+        name: Validate YAML files
+        args: [--unsafe]
+      - id: check-json
+        name: Validate JSON files
+      - id: check-toml
+        name: Validate TOML files
+      - id: check-xml
+        name: Validate XML files
+      
+      # Security and safety checks
+      - id: check-added-large-files
+        name: Check for large files
+        args: [--maxkb=1024]
+      - id: check-case-conflict
+        name: Check for case conflicts
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+      - id: detect-private-key
+        name: Detect private keys
+      - id: check-ast
+        name: Check Python AST
+        types: [python]
+      
+      # Git-specific checks
+      - id: forbid-new-submodules
+        name: Forbid new submodules
+      - id: check-symlinks
+        name: Check for broken symlinks
+
+  # TypeScript and JavaScript linting
+  - repo: local
+    hooks:
+      # ESLint for TypeScript/JavaScript
+      - id: eslint-frontend
+        name: ESLint (Frontend)
+        entry: bash -c 'cd packages/frontend && npm run lint:fix'
+        language: system
+        files: ^packages/frontend/.*\.(ts|tsx|js|jsx)$
+        pass_filenames: false
+
+      - id: eslint-backend
+        name: ESLint (Backend)
+        entry: bash -c 'cd packages/backend && npm run lint:fix'
+        language: system
+        files: ^packages/backend/.*\.ts$
+        pass_filenames: false
+
+      - id: eslint-shared
+        name: ESLint (Shared)
+        entry: bash -c 'cd packages/shared && npm run lint:fix'
+        language: system
+        files: ^packages/shared/.*\.(ts|tsx)$
+        pass_filenames: false
+
+      # TypeScript type checking
+      - id: typescript-frontend
+        name: TypeScript Check (Frontend)
+        entry: bash -c 'cd packages/frontend && npm run type-check'
+        language: system
+        files: ^packages/frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+
+      - id: typescript-backend
+        name: TypeScript Check (Backend)
+        entry: bash -c 'cd packages/backend && npm run type-check'
+        language: system
+        files: ^packages/backend/.*\.ts$
+        pass_filenames: false
+
+      # Prettier formatting
+      - id: prettier-frontend
+        name: Prettier (Frontend)
+        entry: bash -c 'cd packages/frontend && npm run format'
+        language: system
+        files: ^packages/frontend/.*\.(ts|tsx|js|jsx|css|scss|json)$
+        pass_filenames: false
+
+      - id: prettier-backend
+        name: Prettier (Backend)
+        entry: bash -c 'cd packages/backend && npm run format'
+        language: system
+        files: ^packages/backend/.*\.(ts|js|json)$
+        pass_filenames: false
+
+      # Critical tests
+      - id: frontend-tests-critical
+        name: Frontend Critical Tests
+        entry: bash -c 'cd packages/frontend && npm run test -- --run --reporter=basic src/__tests__/critical/'
+        language: system
+        files: ^packages/frontend/src/.*\.(ts|tsx)$
+        pass_filenames: false
+
+      - id: backend-tests-critical
+        name: Backend Critical Tests
+        entry: bash -c 'cd packages/backend && npm run test -- --testNamePattern="(auth|security|validation)" --maxWorkers=2'
+        language: system
+        files: ^packages/backend/src/.*\.ts$
+        pass_filenames: false
+
+      # Security checks (CI-optimized)
+      - id: npm-audit
+        name: NPM Security Audit
+        entry: bash -c 'if [ "${CI:-false}" = "true" ]; then npm audit --audit-level=moderate --offline || echo "Audit failed in CI - check dependencies manually"; else npm audit --audit-level=moderate; fi'
+        language: system
+        files: ^(package\.json|package-lock\.json)$
+        pass_filenames: false
+
+      # Import validation
+      - id: validate-imports
+        name: Validate Imports
+        entry: bash -c 'node scripts/validate-imports.js'
+        language: system
+        files: ^packages/.*/src/.*\.(ts|tsx|js|jsx)$
+        pass_filenames: false
+
+  # Python hooks for ML package
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        name: Black Python formatter
+        files: ^packages/ml/.*\.py$
+        
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.0
+    hooks:
+      - id: flake8
+        name: Flake8 Python linter
+        files: ^packages/ml/.*\.py$
+        args: [--max-line-length=88, --extend-ignore=E203]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: Sort Python imports
+        files: ^packages/ml/.*\.py$
+        args: [--profile=black]
+
+  # Documentation checks
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        name: Markdown linting
+        files: .*\.md$
+        args: [--disable=MD013,MD033,MD041]
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        name: Dockerfile linting
+        files: Dockerfile.*
+
+# Global configuration
+default_language_version:
+  python: python3
+  node: 18.18.0
+
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

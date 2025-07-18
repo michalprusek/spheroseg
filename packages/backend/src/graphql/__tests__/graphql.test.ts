@@ -34,7 +34,7 @@ describe('GraphQL API', () => {
   beforeEach(async () => {
     // Reset mocks
     jest.clearAllMocks();
-    
+
     // Create server
     server = await createApolloServer({
       httpServer: mockHttpServer,
@@ -106,10 +106,9 @@ describe('GraphQL API', () => {
 
       expect(result.errors).toBeUndefined();
       expect(result.data.checkEmail).toBe(true);
-      expect(mockDb.query).toHaveBeenCalledWith(
-        'SELECT id FROM users WHERE email = $1',
-        ['existing@example.com']
-      );
+      expect(mockDb.query).toHaveBeenCalledWith('SELECT id FROM users WHERE email = $1', [
+        'existing@example.com',
+      ]);
     });
   });
 
@@ -117,15 +116,19 @@ describe('GraphQL API', () => {
     it('should register a new user', async () => {
       mockDb.query
         .mockResolvedValueOnce({ rows: [] }) // Email doesn't exist
-        .mockResolvedValueOnce({ // Create user
-          rows: [{
-            ...testUser,
-            id: 'new-user-id',
-            email: 'newuser@example.com',
-            name: 'New User',
-          }],
+        .mockResolvedValueOnce({
+          // Create user
+          rows: [
+            {
+              ...testUser,
+              id: 'new-user-id',
+              email: 'newuser@example.com',
+              name: 'New User',
+            },
+          ],
         })
-        .mockResolvedValueOnce({ // Create refresh token
+        .mockResolvedValueOnce({
+          // Create refresh token
           rows: [{ token: 'refresh-token' }],
         });
 
@@ -167,8 +170,8 @@ describe('GraphQL API', () => {
     });
 
     it('should handle registration with existing email', async () => {
-      mockDb.query.mockResolvedValueOnce({ 
-        rows: [{ id: 'existing-user' }] 
+      mockDb.query.mockResolvedValueOnce({
+        rows: [{ id: 'existing-user' }],
       });
 
       const REGISTER_MUTATION = gql`
@@ -271,12 +274,14 @@ describe('GraphQL API', () => {
       const publicClient = createTestClient(server, () => publicContext);
 
       mockDb.query
-        .mockResolvedValueOnce({ 
-          rows: [{
-            id: 'public-project',
-            title: 'Public Project',
-            public: true,
-          }] 
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              id: 'public-project',
+              title: 'Public Project',
+              public: true,
+            },
+          ],
         })
         .mockResolvedValueOnce({ rows: [{ count: '1' }] });
 

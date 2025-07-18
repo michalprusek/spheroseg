@@ -5,7 +5,7 @@
  * including query duration, row counts, and slow query detection.
  */
 
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import performanceMonitor from '../services/performanceMonitor';
 import logger from '../utils/logger';
 
@@ -19,7 +19,7 @@ export function wrapPoolClient(client: PoolClient): PoolClient {
   const wrappedQuery = async function (...args: any[]): Promise<any> {
     const startTime = Date.now();
     let queryText = 'Unknown query';
-    
+
     try {
       // Extract query text based on argument format
       if (args.length > 0) {
@@ -90,7 +90,7 @@ export function wrapPool(pool: Pool): Pool {
   pool.query = async function (...args: any[]): Promise<any> {
     const startTime = Date.now();
     let queryText = 'Unknown query';
-    
+
     try {
       // Extract query text based on argument format
       if (args.length > 0) {

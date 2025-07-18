@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import ImageSelectionCard from '../ImageSelectionCard';
@@ -6,6 +5,88 @@ import ImageSelectionCard from '../ImageSelectionCard';
 // Mock format from date-fns
 vi.mock('date-fns', () => ({
   format: vi.fn(() => '2023-05-15'),
+}));
+
+// Mock radix-optimized components
+vi.mock('@/lib/radix-optimized', () => ({
+  CheckboxRoot: ({ children, onCheckedChange, checked, ...props }: any) => (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onCheckedChange && onCheckedChange(e.target.checked)}
+      {...props}
+    />
+  ),
+  CheckboxIndicator: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+}));
+
+// Mock UI components
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardTitle: ({ children, ...props }: any) => <h3 {...props}>{children}</h3>,
+}));
+
+vi.mock('@/components/ui/checkbox', () => ({
+  Checkbox: ({ checked, onCheckedChange, ...props }: any) => (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onCheckedChange && onCheckedChange(e.target.checked)}
+      {...props}
+    />
+  ),
+}));
+
+vi.mock('@/components/ui/label', () => ({
+  Label: ({ children, htmlFor, ...props }: any) => (
+    <label htmlFor={htmlFor} {...props}>{children}</label>
+  ),
+}));
+
+vi.mock('@/components/ui/skeleton', () => ({
+  Skeleton: ({ className, ...props }: any) => (
+    <div className={className} {...props}>Loading...</div>
+  ),
+}));
+
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  Check: () => <div data-testid="check-icon" />,
+  Image: () => <div data-testid="image-icon" />,
+  X: () => <div data-testid="x-icon" />,
+  Loader2: () => <div data-testid="loader2-icon" />,
+  CheckCircle: () => <div data-testid="check-circle-icon" />,
+  Clock: () => <div data-testid="clock-icon" />,
+  AlertCircle: () => <div data-testid="alert-circle-icon" />,
+}));
+
+// Mock react-i18next
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'export.selectImagesToExport': 'Select Images to Export',
+        'common.selectAll': 'Select All',
+        'common.deselectAll': 'Deselect All',
+        'export.noImagesAvailable': 'No images available for export',
+        'export.imageSelection.loading': 'Loading images...',
+        'export.imageSelection.noPreview': 'No preview',
+        'export.imageSelection.imageStatus.completed': 'Completed',
+        'export.imageSelection.imageStatus.processing': 'Processing',
+        'export.imageSelection.imageStatus.failed': 'Failed',
+        'export.imageSelection.imageStatus.pending': 'Pending',
+        'export.imageSelection.createdAt': 'Created',
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
+// Mock date utils
+vi.mock('@/utils/dateUtils', () => ({
+  safeFormatDate: vi.fn(() => 'July 16, 2025'),
 }));
 
 describe('ImageSelectionCard Component', () => {
@@ -155,4 +236,3 @@ describe('ImageSelectionCard Component', () => {
     expect(screen.getByText('No preview')).toBeInTheDocument();
   });
 });
-EOF < /dev/llnu;

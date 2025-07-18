@@ -13,7 +13,7 @@ import config from '../config';
 /**
  * Swagger options
  */
-const swaggerOptions = {
+const _swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -66,7 +66,7 @@ const swaggerOptions = {
  * Apply Swagger middleware to Express app
  * @param app Express application
  */
-export const applySwagger = (app: Express | Application) => {
+export const applySwagger = (_app: Express | Application) => {
   // Swagger is disabled in development mode
   logger.info('Swagger middleware disabled in development mode');
 };

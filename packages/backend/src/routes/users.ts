@@ -8,13 +8,115 @@ import { authenticate as authMiddleware, AuthenticatedRequest } from '../securit
 import logger from '../utils/logger';
 import pool from '../db';
 import { v4 as uuidv4 } from 'uuid';
-import jwt from 'jsonwebtoken';
 import config from '../config';
 import tokenService, { TokenType } from '../services/tokenService';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
 
 const router: Router = express.Router();
 
+/**
+ * @openapi
+ * /users/me:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get current user profile
+ *     description: |
+ *       Retrieve the authenticated user's complete profile information including
+ *       basic user data and extended profile details from user_profiles table.
+ *       Returns fallback values when extended profile is not available.
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                   description: User's unique identifier
+ *                   example: "123e4567-e89b-12d3-a456-426614174000"
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   description: User's email address
+ *                   example: "user@example.com"
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Account creation timestamp
+ *                   example: "2023-12-01T10:30:00Z"
+ *                 profile:
+ *                   type: object
+ *                   description: Extended user profile information
+ *                   properties:
+ *                     username:
+ *                       type: string
+ *                       description: User's display username
+ *                       example: "john_doe"
+ *                     full_name:
+ *                       type: string
+ *                       description: User's full name
+ *                       example: "John Doe"
+ *                     title:
+ *                       type: string
+ *                       nullable: true
+ *                       description: Professional title or position
+ *                       example: "Research Scientist"
+ *                     organization:
+ *                       type: string
+ *                       nullable: true
+ *                       description: Organization or company name
+ *                       example: "University Research Lab"
+ *                     bio:
+ *                       type: string
+ *                       nullable: true
+ *                       description: User biography or description
+ *                       example: "Cell biology researcher with 10 years experience"
+ *                     location:
+ *                       type: string
+ *                       nullable: true
+ *                       description: User's location
+ *                       example: "Boston, MA"
+ *                     avatar_url:
+ *                       type: string
+ *                       nullable: true
+ *                       description: URL to user's profile picture
+ *                       example: "https://example.com/avatars/user123.jpg"
+ *       401:
+ *         description: Unauthorized - authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Authentication required"
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ *       500:
+ *         description: Internal server error or database schema error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Database schema not initialized"
+ */
 // GET /api/users/me - Get current user's profile
 router.get(
   '/me',
@@ -109,6 +211,90 @@ router.get(
   }
 );
 
+/**
+ * @openapi
+ * /users/register:
+ *   post:
+ *     tags: [Users]
+ *     summary: Register a new user
+ *     description: |
+ *       Register a new user with basic information. This is a development endpoint
+ *       that creates users without authentication. In production, this endpoint
+ *       would include proper validation and security measures.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, name]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address (must be unique)
+ *                 example: "newuser@example.com"
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: User password (not currently validated in this endpoint)
+ *                 example: "securePassword123"
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: User's full name
+ *                 example: "John Doe"
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User registered successfully"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                       description: Generated user ID
+ *                       example: "123e4567-e89b-12d3-a456-426614174000"
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                       example: "newuser@example.com"
+ *                     name:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2023-12-01T10:30:00Z"
+ *       409:
+ *         description: Conflict - user with email already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User with this email already exists"
+ *       500:
+ *         description: Internal server error or database schema error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Database schema not initialized"
+ */
 // POST /api/users/register - Register a new user
 router.post('/register', async (req: Request, res: Response) => {
   const { email, password, name } = req.body;
@@ -163,6 +349,73 @@ router.post('/register', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @openapi
+ * /users/login:
+ *   post:
+ *     tags: [Users]
+ *     summary: User login
+ *     description: |
+ *       Authenticate user with email and password. This is a development endpoint
+ *       that provides lenient authentication - creates users if they don't exist
+ *       and doesn't validate passwords. Returns JWT tokens for authentication.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address
+ *                 example: "user@example.com"
+ *               password:
+ *                 type: string
+ *                 description: User password (not validated in development mode)
+ *                 example: "password123"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Login successful"
+ *                 token:
+ *                   type: string
+ *                   description: JWT access token for API authentication
+ *                   example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                       example: "123e4567-e89b-12d3-a456-426614174000"
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                       example: "user@example.com"
+ *                     name:
+ *                       type: string
+ *                       example: "Development User"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error during login"
+ */
 // POST /api/users/login - Login with email/password
 router.post('/login', async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -271,6 +524,183 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @openapi
+ * /users/me/statistics:
+ *   get:
+ *     tags: [Users, Statistics]
+ *     summary: Get user statistics
+ *     description: |
+ *       Retrieve comprehensive statistics for the authenticated user including
+ *       project counts, image counts, segmentation results, storage usage,
+ *       and recent activity. Returns data in both new flat format and legacy
+ *       nested format for backward compatibility.
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 # New flat format
+ *                 totalProjects:
+ *                   type: integer
+ *                   description: Total number of projects owned by user
+ *                   example: 5
+ *                 totalImages:
+ *                   type: integer
+ *                   description: Total number of images across all projects
+ *                   example: 150
+ *                 completedSegmentations:
+ *                   type: integer
+ *                   description: Number of images with completed segmentation
+ *                   example: 120
+ *                 storageUsedBytes:
+ *                   type: string
+ *                   description: Storage used in bytes (as string for precision)
+ *                   example: "1073741824"
+ *                 storageLimitBytes:
+ *                   type: string
+ *                   description: Storage limit in bytes
+ *                   example: "10737418240"
+ *                 storageUsedMB:
+ *                   type: number
+ *                   description: Storage used in megabytes (rounded)
+ *                   example: 1024.0
+ *                 recentActivity:
+ *                   type: array
+ *                   description: Recent user activities (last 10)
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       type:
+ *                         type: string
+ *                         enum: [project_created, image_uploaded, segmentation_completed]
+ *                         example: "image_uploaded"
+ *                       item_id:
+ *                         type: string
+ *                         format: uuid
+ *                         example: "123e4567-e89b-12d3-a456-426614174000"
+ *                       item_name:
+ *                         type: string
+ *                         example: "cell_sample_001.jpg"
+ *                       timestamp:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2023-12-01T10:30:00Z"
+ *                       project_id:
+ *                         type: string
+ *                         format: uuid
+ *                         example: "456e7890-e89b-12d3-a456-426614174000"
+ *                       project_name:
+ *                         type: string
+ *                         example: "Cancer Cell Study"
+ *                 recentProjects:
+ *                   type: array
+ *                   description: Recently created projects
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       name:
+ *                         type: string
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                 recentImages:
+ *                   type: array
+ *                   description: Recently uploaded images
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       name:
+ *                         type: string
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                       project_id:
+ *                         type: string
+ *                         format: uuid
+ *                       project_name:
+ *                         type: string
+ *                 comparisons:
+ *                   type: object
+ *                   description: Month-over-month comparison metrics
+ *                   properties:
+ *                     projectsThisMonth:
+ *                       type: integer
+ *                       description: Projects created this month (to be implemented)
+ *                       example: 0
+ *                     projectsLastMonth:
+ *                       type: integer
+ *                       example: 0
+ *                     projectsChange:
+ *                       type: integer
+ *                       example: 0
+ *                 # Legacy nested format (for backward compatibility)
+ *                 projects:
+ *                   type: object
+ *                   properties:
+ *                     count:
+ *                       type: integer
+ *                       example: 5
+ *                     recent:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                 images:
+ *                   type: object
+ *                   properties:
+ *                     count:
+ *                       type: integer
+ *                       example: 150
+ *                     recent:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                 segmentations:
+ *                   type: object
+ *                   properties:
+ *                     count:
+ *                       type: integer
+ *                       example: 120
+ *                     recent:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                 storage:
+ *                   type: object
+ *                   properties:
+ *                     used:
+ *                       type: integer
+ *                       description: Storage used in bytes
+ *                       example: 1073741824
+ *                     limit:
+ *                       type: integer
+ *                       description: Storage limit in bytes
+ *                       example: 10737418240
+ *                     percentage:
+ *                       type: integer
+ *                       description: Storage usage percentage
+ *                       example: 10
+ *                 activity:
+ *                   type: array
+ *                   description: Recent activity (legacy format)
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       500:
+ *         description: Internal server error
+ */
 // GET /api/users/me/statistics - Get current user's statistics
 router.get(
   '/me/statistics',
@@ -455,6 +885,73 @@ router.get(
   }
 );
 
+/**
+ * @openapi
+ * /users/me/stats:
+ *   get:
+ *     tags: [Users, Statistics]
+ *     summary: Get simplified user statistics
+ *     description: |
+ *       Retrieve simplified statistics for the authenticated user including
+ *       basic counts for projects, images, and completed segmentations.
+ *       This is a lightweight alternative to the full /me/statistics endpoint.
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 # New format
+ *                 totalProjects:
+ *                   type: integer
+ *                   description: Total number of projects owned by user
+ *                   example: 5
+ *                 totalImages:
+ *                   type: integer
+ *                   description: Total number of images across all projects
+ *                   example: 150
+ *                 completedSegmentations:
+ *                   type: integer
+ *                   description: Number of images with completed segmentation
+ *                   example: 120
+ *                 # Legacy format (for backward compatibility)
+ *                 projects_count:
+ *                   type: integer
+ *                   description: Total number of projects (legacy field name)
+ *                   example: 5
+ *                 images_count:
+ *                   type: integer
+ *                   description: Total number of images (legacy field name)
+ *                   example: 150
+ *                 segmentations_count:
+ *                   type: integer
+ *                   description: Number of completed segmentations (legacy field name)
+ *                   example: 120
+ *       401:
+ *         description: Unauthorized - authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Authentication required"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to fetch user stats"
+ */
 // GET /api/users/me/stats - Alternative endpoint for statistics (simplified)
 router.get(
   '/me/stats',
@@ -511,6 +1008,136 @@ router.get(
   }
 );
 
+/**
+ * @openapi
+ * /users/me:
+ *   put:
+ *     tags: [Users]
+ *     summary: Update user profile
+ *     description: |
+ *       Update the authenticated user's profile information including basic user data
+ *       and extended profile fields. Creates or updates the user_profiles record
+ *       with additional profile information like title, organization, and bio.
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: User's display name (updates users table)
+ *                 example: "John Doe"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address (must be unique if changed)
+ *                 example: "john.doe@example.com"
+ *               username:
+ *                 type: string
+ *                 description: User's username for profile
+ *                 example: "john_doe"
+ *               full_name:
+ *                 type: string
+ *                 description: User's full name
+ *                 example: "John Michael Doe"
+ *               title:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Professional title or position
+ *                 example: "Senior Research Scientist"
+ *               organization:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Organization or company name
+ *                 example: "University Research Lab"
+ *               bio:
+ *                 type: string
+ *                 nullable: true
+ *                 description: User biography or description
+ *                 example: "Cell biology researcher specializing in cancer cell analysis"
+ *               location:
+ *                 type: string
+ *                 nullable: true
+ *                 description: User's location
+ *                 example: "Boston, MA, USA"
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                   example: "123e4567-e89b-12d3-a456-426614174000"
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   example: "john.doe@example.com"
+ *                 name:
+ *                   type: string
+ *                   example: "John Doe"
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2023-12-01T10:30:00Z"
+ *                 username:
+ *                   type: string
+ *                   example: "john_doe"
+ *                 full_name:
+ *                   type: string
+ *                   example: "John Michael Doe"
+ *                 title:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "Senior Research Scientist"
+ *                 organization:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "University Research Lab"
+ *                 bio:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "Cell biology researcher specializing in cancer cell analysis"
+ *                 location:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "Boston, MA, USA"
+ *                 avatar_url:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "https://example.com/avatars/user123.jpg"
+ *       401:
+ *         description: Unauthorized - authentication required
+ *       404:
+ *         description: User not found
+ *       409:
+ *         description: Conflict - email already in use by another account
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Email already in use by another account"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to update user profile"
+ */
 // PUT /api/users/me - Update current user's profile
 router.put('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
@@ -638,6 +1265,78 @@ router.put('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
   }
 });
 
+/**
+ * @openapi
+ * /users/me/avatar:
+ *   post:
+ *     tags: [Users]
+ *     summary: Update user avatar
+ *     description: |
+ *       Update the authenticated user's avatar by providing an avatar URL.
+ *       This is a simplified implementation that accepts avatar URLs rather than
+ *       file uploads. Creates or updates the user_profiles record with the new avatar.
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [avatar_url]
+ *             properties:
+ *               avatar_url:
+ *                 type: string
+ *                 format: uri
+ *                 description: URL to the user's avatar image
+ *                 example: "https://example.com/avatars/user123.jpg"
+ *     responses:
+ *       200:
+ *         description: Avatar updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Avatar uploaded successfully"
+ *                 avatar_url:
+ *                   type: string
+ *                   format: uri
+ *                   description: The updated avatar URL
+ *                   example: "https://example.com/avatars/user123.jpg"
+ *       400:
+ *         description: Bad request - no avatar URL provided
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No avatar URL provided"
+ *       401:
+ *         description: Unauthorized - authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Authentication required"
+ *       500:
+ *         description: Internal server error or user profiles not supported
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User profiles not supported"
+ */
 // POST /api/users/me/avatar - Upload user avatar
 router.post('/me/avatar', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;

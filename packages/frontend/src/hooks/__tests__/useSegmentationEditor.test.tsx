@@ -1,6 +1,5 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { vi, describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import '@testing-library/jest-dom';
 
 // Create a simple mock hook user component

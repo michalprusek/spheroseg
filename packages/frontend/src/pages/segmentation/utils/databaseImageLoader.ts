@@ -3,7 +3,6 @@
  */
 
 import apiClient from '@/lib/apiClient';
-import { toast } from 'sonner';
 
 /**
  * Attempts to load image data directly from the database

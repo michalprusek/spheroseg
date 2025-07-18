@@ -3,7 +3,17 @@
  */
 
 // Mock logger first
-jest.mock('../logger');
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
+
+jest.mock('../logger', () => ({
+  default: mockLogger,
+  ...mockLogger,
+}));
 
 describe('Container Info Utilities', () => {
   let mockExistsSync: jest.Mock;
@@ -14,6 +24,12 @@ describe('Container Info Utilities', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     delete process.env.CONTAINER_MEMORY_LIMIT_MB;
+    
+    // Clear logger mock calls
+    mockLogger.debug.mockClear();
+    mockLogger.info.mockClear();
+    mockLogger.warn.mockClear();
+    mockLogger.error.mockClear();
     
     // Clear the module cache
     jest.resetModules();
@@ -153,7 +169,6 @@ describe('Container Info Utilities', () => {
 
   describe('getEffectiveMemoryLimit', () => {
     it('should use detected container limit', () => {
-      const logger = require('../logger').default;
       mockExistsSync.mockImplementation((path) => {
         if (path === '/.dockerenv') return false;
         if (path === '/proc/self/cgroup') return false;
@@ -169,16 +184,15 @@ describe('Container Info Utilities', () => {
 
       const limit = getEffectiveMemoryLimit(512);
       expect(limit).toBe(256);
-      expect(logger.info).toHaveBeenCalledWith('Using detected container memory limit: 256MB');
+      expect(mockLogger.info).toHaveBeenCalledWith('Using detected container memory limit: 256MB');
     });
 
     it('should use default limit when no container limit detected', () => {
-      const logger = require('../logger').default;
       mockExistsSync.mockReturnValue(false);
 
       const limit = getEffectiveMemoryLimit(512);
       expect(limit).toBe(512);
-      expect(logger.info).toHaveBeenCalledWith('Using default memory limit: 512MB');
+      expect(mockLogger.info).toHaveBeenCalledWith('Using default memory limit: 512MB');
     });
 
     it('should prefer detected limit over default', () => {

@@ -1,17 +1,16 @@
 /**
  * Integration tests for PostgreSQL Read Replica Failover
- * 
+ *
  * Tests failover scenarios, replication lag handling, and connection pooling
  */
-import { Pool, PoolClient } from 'pg';
-import { 
-  initializeReadReplicas, 
-  getPool, 
-  query, 
+import { Pool } from 'pg';
+import {
+  initializeReadReplicas,
+  query,
   transaction,
   getReplicationLag,
   getPoolStats,
-  closeReadReplicaPools
+  closeReadReplicaPools,
 } from '../../db/readReplica';
 import logger from '../../utils/logger';
 import config from '../../config';
@@ -24,7 +23,7 @@ jest.mock('../../config', () => ({
     query: jest.fn(),
     connect: jest.fn(),
     end: jest.fn(),
-  }
+  },
 }));
 
 describe('Read Replica Failover', () => {
@@ -35,7 +34,7 @@ describe('Read Replica Failover', () => {
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
-    
+
     // Reset environment variables
     process.env.ENABLE_READ_REPLICAS = 'true';
     process.env.DATABASE_WRITE_URL = 'postgresql://postgres:pass@master:5432/test';
@@ -87,7 +86,7 @@ describe('Read Replica Failover', () => {
       // Mock replica failure
       mockReadPool.query.mockRejectedValueOnce({
         code: 'ECONNREFUSED',
-        message: 'Connection refused'
+        message: 'Connection refused',
       });
 
       // Mock master success
@@ -106,9 +105,7 @@ describe('Read Replica Failover', () => {
       expect(result.rows[0]).toEqual({ id: 1, name: 'Test' });
 
       // Verify warning was logged
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Read replica unavailable, falling back to master'
-      );
+      expect(logger.warn).toHaveBeenCalledWith('Read replica unavailable, falling back to master');
     });
 
     it('should handle replica timeout gracefully', async () => {
@@ -146,7 +143,7 @@ describe('Read Replica Failover', () => {
       for (let i = 0; i < 5; i++) {
         mockReadPool.query.mockRejectedValueOnce({
           code: 'ECONNREFUSED',
-          message: 'Connection refused'
+          message: 'Connection refused',
         });
 
         mockMasterPool.query.mockResolvedValueOnce({
@@ -207,17 +204,14 @@ describe('Read Replica Failover', () => {
       expect(lag).toBe(15);
 
       // For time-sensitive reads, should use master
-      const result = await query(
+      const _result = await query(
         'SELECT * FROM users WHERE id = $1',
         [1],
         { forceWrite: true } // Force master for consistency
       );
 
       expect(mockWritePool.query).toHaveBeenCalled();
-      expect(mockReadPool.query).not.toHaveBeenCalledWith(
-        'SELECT * FROM users WHERE id = $1',
-        [1]
-      );
+      expect(mockReadPool.query).not.toHaveBeenCalledWith('SELECT * FROM users WHERE id = $1', [1]);
     });
 
     it('should return null lag when replicas are disabled', async () => {
@@ -267,9 +261,7 @@ describe('Read Replica Failover', () => {
 
       // Should log warning about pool exhaustion
       if (stats.read_pool!.waiting > 5) {
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Connection pool')
-        );
+        expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Connection pool'));
       }
     });
 
@@ -408,7 +400,7 @@ describe('Read Replica Failover', () => {
       // Perform some queries
       await query('SELECT * FROM users');
       await query('INSERT INTO logs (data) VALUES ($1)', ['test']);
-      
+
       // Get pool stats for metrics
       const stats = await getPoolStats();
 

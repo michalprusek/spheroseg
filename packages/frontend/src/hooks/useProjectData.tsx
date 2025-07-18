@@ -2,13 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Project, Image, ProjectImage, ImageStatus } from '@/types';
+import type { Project, ProjectImage, ImageStatus } from '@/types';
 import apiClient from '@/lib/apiClient';
-import axios, { AxiosError } from 'axios';
-import { Socket } from 'socket.io-client';
-import socketClient from '@/services/socketClient';
+import axios from 'axios';
 import config from '@/config';
-import { getProjectImages, mapApiImageToProjectImage } from '@/api/projectImages';
+import { getProjectImages } from '@/api/projectImages';
 import { requestDeduplicator } from '@/utils/requestDeduplicator';
 
 // The mapApiImageToProjectImage function is now imported from @/api/projectImages
@@ -71,13 +69,12 @@ export const useProjectData = (projectId: string | undefined) => {
       // Try different API endpoints for project data
       let projectResponse;
 
-      // Define all possible endpoints to try
-      const projectEndpoints = [`/projects/${cleanedProjectId}`, `/api/projects/${cleanedProjectId}`];
+      // Define all possible endpoints to try - always use /api prefix
+      const projectEndpoints = [`/api/projects/${cleanedProjectId}`];
 
       // If the ID has a prefix, also try without it
       if (cleanedProjectId.startsWith('project-')) {
         const idWithoutPrefix = cleanedProjectId.substring(8);
-        projectEndpoints.push(`/projects/${idWithoutPrefix}`);
         projectEndpoints.push(`/api/projects/${idWithoutPrefix}`);
       }
 
@@ -160,7 +157,7 @@ export const useProjectData = (projectId: string | undefined) => {
         errorMessage = responseData?.message || errorMessage;
 
         if (status === 404 || status === 403) {
-          errorMessage = 'Project not found or access denied.';
+          errorMessage = responseData?.message || 'Project not found or access denied.';
           console.log(`Permission error (${status}): ${errorMessage}`);
 
           // Check if the project ID is a timestamp and it's in the future
@@ -173,6 +170,7 @@ export const useProjectData = (projectId: string | undefined) => {
             }
           }
 
+          // Always show toast for permission errors
           toast.error(errorMessage, {
             duration: 5000,
             id: `project-error-${cleanedProjectId}`,
@@ -273,7 +271,7 @@ export const useProjectData = (projectId: string | undefined) => {
       const endpoints = [
         `/api/segmentation/queue-status/${cleanedProjectId}`,
         `/api/segmentation/queue-status/${cleanedProjectId}`,
-        `/api/segmentations/queue/status/${cleanedProjectId}`,
+        `/api/segmentation/queue-status/${cleanedProjectId}`,
       ];
 
       // Try each endpoint until one works

@@ -1,11 +1,9 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SegmentationEditorV2 } from '../../SegmentationEditorV2';
 import { setupAllContextMocks } from '@/test-utils/contextMocks';
 import { MemoryRouterWrapper } from '@/test-utils/test-wrapper';
 import { toast } from 'sonner';
-import { API_BASE_URL } from '@/config';
 
 // Mock API_BASE_URL
 vi.mock('@/config', () => ({

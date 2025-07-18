@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch, MagicMock
 import threading
 import numpy as np
 import cv2
+import pika
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ml_service import app, generate_mock_polygons, process_message, start_rabbitmq_consumer
@@ -234,7 +235,7 @@ class TestMessageProcessingAdvanced:
                 mock_put.assert_called_once()
                 error_data = mock_put.call_args[1]['json']
                 assert error_data['status'] == 'failed'
-                assert 'timeout' in error_data['error'].lower()
+                assert 'timed out' in error_data['error'].lower()
     
     def test_process_message_memory_error_handling(self, setup_mocks):
         """Test handling of memory errors during processing."""
@@ -322,6 +323,16 @@ class TestMessageProcessingAdvanced:
 
 class TestErrorRecoveryMechanisms:
     """Test error recovery and resilience."""
+    
+    @pytest.fixture
+    def setup_mocks(self):
+        """Setup common mocks for message processing tests."""
+        ch = Mock()
+        method = Mock()
+        method.delivery_tag = 'test-tag-123'
+        properties = {}
+        
+        return ch, method, properties
     
     def test_callback_retry_on_network_error(self, setup_mocks):
         """Test that callback is retried on network errors."""
@@ -436,6 +447,16 @@ class TestEnvironmentConfiguration:
 class TestMonitoringAndLogging:
     """Test monitoring and logging functionality."""
     
+    @pytest.fixture
+    def setup_mocks(self):
+        """Setup common mocks for message processing tests."""
+        ch = Mock()
+        method = Mock()
+        method.delivery_tag = 'test-tag-123'
+        properties = {}
+        
+        return ch, method, properties
+    
     def test_task_processing_logging(self, setup_mocks):
         """Test that task processing is properly logged."""
         ch, method, properties = setup_mocks
@@ -491,6 +512,16 @@ class TestMonitoringAndLogging:
 
 class TestPerformanceOptimization:
     """Test performance optimization features."""
+    
+    @pytest.fixture
+    def setup_mocks(self):
+        """Setup common mocks for message processing tests."""
+        ch = Mock()
+        method = Mock()
+        method.delivery_tag = 'test-tag-123'
+        properties = {}
+        
+        return ch, method, properties
     
     def test_output_directory_cleanup(self, setup_mocks):
         """Test that output directories are managed properly."""

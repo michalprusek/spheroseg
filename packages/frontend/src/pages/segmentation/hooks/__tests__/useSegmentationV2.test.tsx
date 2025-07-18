@@ -1,5 +1,3 @@
-import React from 'react';
-import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 
 // Define EditMode enum directly to avoid circular dependency

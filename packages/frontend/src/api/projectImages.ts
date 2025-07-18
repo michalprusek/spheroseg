@@ -577,21 +577,21 @@ export const storeUploadedImages = async (projectId: string, imagesToStore: Proj
  */
 export const clearProjectImageCache = async (projectId: string): Promise<void> => {
   const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
-  
+
   try {
     // 1. Clear unified cache
     const cacheKey = `${CACHE_KEY_PREFIX}:${cleanProjectId}`;
     await cacheService.delete(cacheKey);
-    
+
     // 2. Clear legacy project images cache
     if (projectImagesCache[cleanProjectId]) {
       delete projectImagesCache[cleanProjectId];
     }
-    
+
     // 3. Clear localStorage
     const storageKey = getLocalStorageKey(cleanProjectId);
     localStorage.removeItem(storageKey);
-    
+
     console.log(`Cleared all caches for project ${cleanProjectId}`);
   } catch (error) {
     console.error(`Failed to clear cache for project ${cleanProjectId}:`, error);

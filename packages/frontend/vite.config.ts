@@ -101,6 +101,12 @@ export default defineConfig(({ mode }) => {
       },
       headers: {
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+      },
+      fs: {
+        strict: false, // Allow serving files from outside of root
+        allow: ['..'],
       },
       proxy: {
         // Socket.IO proxy - highest priority to avoid conflicts
@@ -143,19 +149,22 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
-        // Static assets
-        '/assets/illustrations': {
-          target: apiUrl,
-          changeOrigin: true,
-          secure: false,
-        },
       },
-      host: true, // This allows access from any host
+      host: '0.0.0.0', // Allow access from any host
       port: 3000,
       strictPort: true, // Don't try other ports if 3000 is taken
-      cors: true, // Enable CORS for all requests
-      hmr: {
-        // Always use secure WebSocket when served over HTTPS
+      cors: {
+        origin: true, // Allow all origins
+        credentials: false,
+      },
+      origin: '*', // Allow all origins
+      allowedHosts: ['localhost', 'spherosegapp.utia.cas.cz', 'frontend-dev', '0.0.0.0'], // Allow specific hosts
+      hmr: isDevelopment ? {
+        port: 3000,
+        host: 'localhost',
+        protocol: 'ws', // Use ws:// in development to avoid SSL issues
+      } : {
+        // Production HMR through HTTPS
         clientPort: 443,
         protocol: 'wss',
         host: 'spherosegapp.utia.cas.cz',

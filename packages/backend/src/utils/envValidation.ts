@@ -83,6 +83,7 @@ const envSchema = z.object({
   SEGMENTATION_MAX_RETRIES: z.string().optional(),
   SEGMENTATION_RETRY_DELAY: z.string().optional(),
   JWKS_URI: z.string().optional(),
+  USE_JWT_KEY_ROTATION: z.string().optional(),
   METRICS_ENABLED: z.string().optional(),
   REQUEST_TIMEOUT_MS: z.string().optional(),
   METRICS_PREFIX: z.string().optional(),

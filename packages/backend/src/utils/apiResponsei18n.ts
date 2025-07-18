@@ -8,7 +8,6 @@
 import { Request, Response } from 'express';
 import {
   ApiResponseMeta,
-  ApiSuccessResponse,
   ApiErrorResponse,
   sendSuccess as baseSendSuccess,
   sendNoContent,
@@ -39,7 +38,7 @@ export const sendCreated = <T>(
   data: T,
   resource: string = 'Resource'
 ): Response => {
-  const message = req.t('success.created', { resource });
+  const _message = req.t('success.created', { resource });
   return sendSuccess(req, res, data, undefined, undefined, 201);
 };
 
@@ -52,7 +51,7 @@ export const sendUpdated = <T>(
   data: T,
   resource: string = 'Resource'
 ): Response => {
-  const message = req.t('success.updated', { resource });
+  const _message = req.t('success.updated', { resource });
   return sendSuccess(req, res, data, undefined, undefined, 200);
 };
 

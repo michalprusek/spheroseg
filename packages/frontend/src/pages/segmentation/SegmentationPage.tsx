@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, Keyboard } from 'lucide-react';
 import { toast } from 'sonner';
 
-export const SegmentationPage: React.FC = () => {
+const SegmentationPage: React.FC = () => {
   const { projectId, imageId } = useParams<{
     projectId: string;
     imageId: string;

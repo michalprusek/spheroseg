@@ -17,7 +17,7 @@ import {
   ServerError,
 } from '../errorHandling';
 import logger from '../logger';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 
 // Mock dependencies
 vi.mock('../logger', () => ({

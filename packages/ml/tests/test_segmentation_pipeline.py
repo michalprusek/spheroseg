@@ -32,7 +32,7 @@ class TestSegmentationPipeline:
             return output
         
         model.forward = mock_forward
-        model.__call__ = mock_forward  # Make sure __call__ also returns tensor
+        model.side_effect = mock_forward  # Make sure __call__ also returns tensor
         model.eval = Mock(return_value=model)
         model.to = Mock(return_value=model)
         # Add named_parameters for state dict loading test
@@ -149,6 +149,28 @@ class TestBatchProcessing:
     """Test batch processing capabilities."""
     
     @pytest.fixture
+    def mock_model(self):
+        """Create a mock model that returns a binary mask."""
+        model = Mock()
+        
+        def mock_forward(x):
+            batch_size = x.shape[0]
+            # Return a tensor with some "segmented" regions
+            output = torch.zeros(batch_size, 1, x.shape[2], x.shape[3])
+            # Add some fake segmented regions
+            output[:, :, 10:30, 10:30] = 5.0  # Will be > 0.5 after sigmoid
+            output[:, :, 50:70, 50:70] = 5.0
+            return output
+        
+        model.forward = mock_forward
+        model.side_effect = mock_forward  # Make sure __call__ also returns tensor
+        model.eval = Mock(return_value=model)
+        model.to = Mock(return_value=model)
+        # Add named_parameters for state dict loading test
+        model.named_parameters = Mock(return_value=[])
+        return model
+    
+    @pytest.fixture
     def batch_images(self, tmp_path):
         """Create multiple test images."""
         image_paths = []
@@ -187,6 +209,28 @@ class TestBatchProcessing:
 
 class TestPerformanceMetrics:
     """Test performance and resource usage."""
+    
+    @pytest.fixture
+    def mock_model(self):
+        """Create a mock model that returns a binary mask."""
+        model = Mock()
+        
+        def mock_forward(x):
+            batch_size = x.shape[0]
+            # Return a tensor with some "segmented" regions
+            output = torch.zeros(batch_size, 1, x.shape[2], x.shape[3])
+            # Add some fake segmented regions
+            output[:, :, 10:30, 10:30] = 5.0  # Will be > 0.5 after sigmoid
+            output[:, :, 50:70, 50:70] = 5.0
+            return output
+        
+        model.forward = mock_forward
+        model.side_effect = mock_forward  # Make sure __call__ also returns tensor
+        model.eval = Mock(return_value=model)
+        model.to = Mock(return_value=model)
+        # Add named_parameters for state dict loading test
+        model.named_parameters = Mock(return_value=[])
+        return model
     
     def test_memory_usage(self, mock_model):
         """Test that model doesn't leak memory during inference."""

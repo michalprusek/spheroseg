@@ -5,7 +5,7 @@ import {
   Polygon as ApiPolygon,
   SegmentationResult as ApiSegmentationResult,
 } from '@/lib/segmentation/types';
-import { createSvgPath, scalePolygons, darkenColor } from '@/lib/svgUtils';
+import { createSvgPath, scalePolygons } from '@/lib/svgUtils';
 import { createNamespacedLogger } from '@/utils/logger';
 
 const CLogger = createNamespacedLogger('SegmentationThumbnail');
@@ -97,7 +97,7 @@ const SegmentationThumbnail: React.FC<SegmentationThumbnailProps> = ({
           { name: 'Primary Endpoint', url: `/api/images/${imageId}/segmentation` },
           // Only try these if needed
           { name: 'Project Endpoint', url: `/api/projects/${projectId}/images/${imageId}/segmentation` },
-          { name: 'Legacy Endpoint', url: `/api/segmentations/${imageId}` },
+          { name: 'Legacy Endpoint', url: `/api/segmentation/${imageId}` },
         ];
 
         // Try each endpoint

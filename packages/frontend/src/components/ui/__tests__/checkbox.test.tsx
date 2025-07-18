@@ -4,6 +4,37 @@ import { Checkbox } from '../checkbox';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Mock radix-optimized library
+vi.mock('@/lib/radix-optimized', () => ({
+  CheckboxRoot: React.forwardRef(({ children, className, 'data-state': dataState, checked, onCheckedChange, ...props }: any, ref: any) => {
+    const state = checked === true ? 'checked' : checked === 'indeterminate' ? 'indeterminate' : 'unchecked';
+    return (
+      <button
+        ref={ref}
+        type="button"
+        role="checkbox"
+        aria-checked={checked === 'indeterminate' ? 'mixed' : checked}
+        data-state={dataState || state}
+        className={className}
+        onClick={() => {
+          if (!props.disabled && onCheckedChange) {
+            onCheckedChange(!checked);
+          }
+        }}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  }),
+  CheckboxIndicator: ({ children, className }: any) => <span className={className}>{children}</span>,
+}));
+
+// Mock lucide-react
+vi.mock('lucide-react', () => ({
+  Check: () => <svg data-testid="check-icon" />,
+}));
+
 describe('Checkbox Component', () => {
   it('renders unchecked by default', () => {
     const { container } = render(<Checkbox />);

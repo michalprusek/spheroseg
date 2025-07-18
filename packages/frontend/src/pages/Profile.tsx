@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -9,9 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb';
-import { showSuccess, showError } from '@/utils/toastUtils';
-import { tryCatch } from '@/utils/errorUtils';
+import { showError } from '@/utils/toastUtils';
 import apiClient from '@/lib/apiClient';
 import { useExtendedUserStatistics } from '@/hooks/useExtendedUserStatistics';
 import { useQueryClient } from '@tanstack/react-query';
@@ -35,7 +33,6 @@ interface ProfileStats {
   storageUsed?: string;
   recentActivity?: Activity[];
 }
-
 
 interface MockProject {
   id: string;
