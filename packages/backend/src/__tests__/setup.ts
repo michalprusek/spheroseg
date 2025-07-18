@@ -34,16 +34,16 @@ import 'dotenv/config';
 import path from 'path';
 
 // Mock environment variables
-process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET = 'test-jwt-secret-that-is-at-least-32-characters-long';
-process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/spheroseg_test';
-process.env.PORT = '5001';
-process.env.ML_SERVICE_URL = 'http://localhost:5002';
-process.env.ALLOWED_ORIGINS = 'http://localhost:3000,http://localhost';
+process.env['NODE_ENV'] = 'test';
+process.env['JWT_SECRET'] = 'test-jwt-secret-that-is-at-least-32-characters-long';
+process.env['DATABASE_URL'] = 'postgresql://postgres:postgres@localhost:5432/spheroseg_test';
+process.env['PORT'] = '5001';
+process.env['ML_SERVICE_URL'] = 'http://localhost:5002';
+process.env['ALLOWED_ORIGINS'] = 'http://localhost:3000,http://localhost';
 
 // Set test-specific paths
-process.env.UPLOAD_DIR = path.join(__dirname, '../../test-uploads');
-process.env.LOG_DIR = path.join(__dirname, '../../test-logs');
+process.env['UPLOAD_DIR'] = path.join(__dirname, '../../test-uploads');
+process.env['LOG_DIR'] = path.join(__dirname, '../../test-logs');
 
 // Already mocked at the top of the file
 

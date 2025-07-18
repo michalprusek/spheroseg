@@ -83,7 +83,7 @@ export class UnifiedResponseHandler {
           message: error.message,
           details: {
             name: error.name,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+            stack: process.env['NODE_ENV'] === 'development' ? error.stack : undefined,
           },
           path: context?.path,
         },

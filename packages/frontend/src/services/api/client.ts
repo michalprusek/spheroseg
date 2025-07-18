@@ -2,6 +2,13 @@ import { configService } from '@/config';
 import { useStore } from '@/store';
 import toastService from '@/services/toastService';
 import logger from '@/utils/logger';
+import type { 
+  ApiResult, 
+  ApiResponse as SharedApiResponse, 
+  ApiErrorResponse,
+  isApiSuccess,
+  isApiError 
+} from '@spheroseg/shared';
 
 /**
  * Unified API Client for SpherosegV4
@@ -24,23 +31,25 @@ export interface ApiRequestConfig extends RequestInit {
   onUploadProgress?: (progress: number) => void;
   cancelToken?: AbortController;
   // Request data
-  params?: Record<string, any>;
-  data?: any;
+  params?: Record<string, unknown>;
+  data?: unknown;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   status: number;
   headers: Headers;
   config: ApiRequestConfig;
+  raw: ApiResult<T>;
 }
 
 export interface ApiError {
   message: string;
   code?: string;
   status?: number;
-  data?: any;
+  data?: unknown;
   config?: ApiRequestConfig;
+  raw?: ApiErrorResponse;
 }
 
 // Default configuration
@@ -147,7 +156,7 @@ class ApiClient {
   /**
    * Make API request
    */
-  async request<T = any>(config: ApiRequestConfig): Promise<ApiResponse<T>> {
+  async request<T = unknown>(config: ApiRequestConfig): Promise<ApiResponse<T>> {
     // Merge with default config
     let requestConfig: ApiRequestConfig = {
       ...DEFAULT_CONFIG,
@@ -191,12 +200,23 @@ class ApiClient {
       // Parse response
       const responseData = await this.parseResponse<T>(response);
 
+      // Check if response is an error
+      if (!responseData.success) {
+        const errorResponse = responseData as ApiErrorResponse;
+        throw this.createError(
+          response.status,
+          errorResponse,
+          requestConfig
+        );
+      }
+
       // Create API response
       let apiResponse: ApiResponse<T> = {
-        data: responseData,
+        data: responseData.data,
         status: response.status,
         headers: response.headers,
         config: requestConfig,
+        raw: responseData,
       };
 
       // Apply response interceptors
@@ -206,13 +226,8 @@ class ApiClient {
         }
       }
 
-      // Handle non-2xx status codes
-      if (!response.ok) {
-        throw this.createError(response.status, responseData, requestConfig);
-      }
-
       return apiResponse;
-    } catch (error: any) {
+    } catch (error) {
       // Clear timeout
       if (timeoutId) clearTimeout(timeoutId);
 
@@ -257,7 +272,7 @@ class ApiClient {
   /**
    * GET request
    */
-  get<T = any>(url: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+  get<T = unknown>(url: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({
       ...config,
       method: 'GET',
@@ -268,7 +283,7 @@ class ApiClient {
   /**
    * POST request
    */
-  post<T = any>(url: string, data?: any, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+  post<T = unknown>(url: string, data?: unknown, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({
       ...config,
       method: 'POST',
@@ -280,7 +295,7 @@ class ApiClient {
   /**
    * PUT request
    */
-  put<T = any>(url: string, data?: any, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+  put<T = unknown>(url: string, data?: unknown, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({
       ...config,
       method: 'PUT',
@@ -292,7 +307,7 @@ class ApiClient {
   /**
    * PATCH request
    */
-  patch<T = any>(url: string, data?: any, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+  patch<T = unknown>(url: string, data?: unknown, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({
       ...config,
       method: 'PATCH',
@@ -304,7 +319,7 @@ class ApiClient {
   /**
    * DELETE request
    */
-  delete<T = any>(url: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+  delete<T = unknown>(url: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({
       ...config,
       method: 'DELETE',
@@ -315,7 +330,7 @@ class ApiClient {
   /**
    * Upload file with progress
    */
-  async upload<T = any>(url: string, file: File | FormData, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+  async upload<T = unknown>(url: string, file: File | FormData, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     const formData = file instanceof FormData ? file : new FormData();
     if (file instanceof File) {
       formData.append('file', file);
@@ -357,7 +372,7 @@ class ApiClient {
   /**
    * Build URL with query parameters
    */
-  private buildUrl(endpoint: string, params?: Record<string, any>): string {
+  private buildUrl(endpoint: string, params?: Record<string, unknown>): string {
     const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
 
     if (!params || Object.keys(params).length === 0) {
@@ -377,7 +392,7 @@ class ApiClient {
   /**
    * Prepare request body
    */
-  private prepareBody(data: any, headers: any): any {
+  private prepareBody(data: unknown, headers: Record<string, string>): BodyInit | undefined {
     if (!data) return undefined;
 
     // FormData should be sent as-is
@@ -394,24 +409,86 @@ class ApiClient {
   /**
    * Parse response based on content type
    */
-  private async parseResponse<T>(response: Response): Promise<T> {
+  private async parseResponse<T>(response: Response): Promise<ApiResult<T>> {
     const contentType = response.headers.get('content-type');
 
     if (contentType?.includes('application/json')) {
-      return response.json();
+      const data = await response.json();
+      // Check if response follows standardized format
+      if ('success' in data && 'data' in data) {
+        return data as ApiResult<T>;
+      }
+      // Wrap legacy responses in standardized format
+      if (response.ok) {
+        return {
+          success: true,
+          data: data as T,
+          metadata: {
+            timestamp: new Date().toISOString()
+          }
+        } as SharedApiResponse<T>;
+      } else {
+        return {
+          success: false,
+          data: null,
+          message: data.message || 'An error occurred',
+          error: {
+            code: data.code || 'UNKNOWN_ERROR',
+            message: data.message || 'An error occurred',
+            details: data
+          },
+          metadata: {
+            timestamp: new Date().toISOString()
+          }
+        } as ApiErrorResponse;
+      }
     } else if (contentType?.includes('text/')) {
-      return response.text() as any;
+      const text = await response.text();
+      return {
+        success: true,
+        data: text as T,
+        metadata: {
+          timestamp: new Date().toISOString()
+        }
+      } as SharedApiResponse<T>;
     } else if (response.status === 204) {
-      return null as any;
+      return {
+        success: true,
+        data: null as T,
+        metadata: {
+          timestamp: new Date().toISOString()
+        }
+      } as SharedApiResponse<T>;
     } else {
-      return response.blob() as any;
+      const blob = await response.blob();
+      return {
+        success: true,
+        data: blob as T,
+        metadata: {
+          timestamp: new Date().toISOString()
+        }
+      } as SharedApiResponse<T>;
     }
   }
 
   /**
    * Create API error
    */
-  private createError(status: number, data: any, config: ApiRequestConfig): ApiError {
+  private createError(status: number, data: unknown, config: ApiRequestConfig): ApiError {
+    // Handle standardized error response
+    if (data && typeof data === 'object' && 'success' in data && !data.success) {
+      const errorResponse = data as ApiErrorResponse;
+      return {
+        message: errorResponse.message || this.getErrorMessage({ status }),
+        code: errorResponse.error?.code,
+        status,
+        data: errorResponse.errors || errorResponse.error?.details,
+        config,
+        raw: errorResponse,
+      };
+    }
+
+    // Handle legacy error format
     return {
       message: this.getErrorMessage({ status, data }),
       status,
@@ -423,13 +500,14 @@ class ApiClient {
   /**
    * Normalize error to ApiError format
    */
-  private normalizeError(error: any, config: ApiRequestConfig): ApiError {
-    if (error.status !== undefined) {
-      return error;
+  private normalizeError(error: unknown, config: ApiRequestConfig): ApiError {
+    if (error && typeof error === 'object' && 'status' in error) {
+      return error as ApiError;
     }
 
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred';
     return {
-      message: error.message || 'An error occurred',
+      message: errorMessage,
       status: 0,
       data: error,
       config,
@@ -439,10 +517,12 @@ class ApiClient {
   /**
    * Get user-friendly error message
    */
-  private getErrorMessage(error: ApiError | { status?: number; data?: any }): string {
-    // Check for server error message
-    if (typeof error.data === 'object' && error.data?.message) {
-      return error.data.message;
+  private getErrorMessage(error: ApiError | { status?: number; data?: unknown }): string {
+    // Check for standardized error response
+    if (error.data && typeof error.data === 'object') {
+      if ('message' in error.data && typeof error.data.message === 'string') {
+        return error.data.message;
+      }
     }
 
     if (typeof error.data === 'string') {
@@ -514,4 +594,5 @@ export const apiClient = new ApiClient();
 
 // Export types
 export type { ApiClient };
+export { isApiSuccess, isApiError } from '@spheroseg/shared';
 export default apiClient;

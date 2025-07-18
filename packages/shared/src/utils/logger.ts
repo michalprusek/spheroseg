@@ -30,7 +30,7 @@ class SharedLogger {
     }
     
     // Set log level from environment
-    const envLevel = (typeof process !== 'undefined' && process.env?.LOG_LEVEL) || 'info';
+    const envLevel = (typeof process !== 'undefined' && process.env?.['LOG_LEVEL']) || 'info';
     this.setLevel(envLevel);
   }
 

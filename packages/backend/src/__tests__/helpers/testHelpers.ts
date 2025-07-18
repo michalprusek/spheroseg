@@ -66,7 +66,7 @@ export function createTestApp(): express.Application {
 
 // JWT token generation
 export function generateTestToken(userId: string = 'test-user-123'): string {
-  return jwt.sign({ userId, email: 'test@example.com' }, process.env.JWT_SECRET || 'test-secret', {
+  return jwt.sign({ userId, email: 'test@example.com' }, process.env['JWT_SECRET'] || 'test-secret', {
     expiresIn: '1h',
   });
 }
