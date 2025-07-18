@@ -1,4 +1,4 @@
-import { z, ZodError, ZodType } from 'zod';
+import { ZodError, ZodType } from 'zod';
 import { 
   ApiResponse, 
   ApiErrorResponse, 
@@ -178,17 +178,23 @@ export class UnifiedResponseHandler {
       code: err.code,
     }));
 
+    const apiError: ApiError = {
+      code: 'VALIDATION_ERROR',
+      message: 'Request validation failed',
+    };
+    if (context?.operation) {
+      apiError.details = { operation: context.operation };
+    }
+    if (context?.path) {
+      apiError.path = context.path;
+    }
+    
     return {
       success: false,
       data: null,
       message: 'Validation failed',
       errors,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Request validation failed',
-        details: { operation: context?.operation },
-        path: context?.path,
-      },
+      error: apiError,
       metadata: this.generateMetadata(),
     };
   }

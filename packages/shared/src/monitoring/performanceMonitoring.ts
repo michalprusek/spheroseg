@@ -109,12 +109,15 @@ export abstract class PerformanceMonitoring {
    * Create a base metric with common fields
    */
   protected createBaseMetric(type: MetricType, value: number, labels?: Record<string, string>): BaseMetric {
-    return {
+    const metric: BaseMetric = {
       type,
       timestamp: Date.now(),
       value,
-      labels,
     };
+    if (labels !== undefined) {
+      metric.labels = labels;
+    }
+    return metric;
   }
 
   /**

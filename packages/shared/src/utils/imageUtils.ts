@@ -52,7 +52,7 @@ export function isImageFormatSupported(extension: string): boolean {
 
 export function getImageExtension(filename: string): string {
   const parts = filename.split('.');
-  return parts[parts.length - 1].toLowerCase();
+  return parts[parts.length - 1]?.toLowerCase() || '';
 }
 
 export function isImage(filename: string): boolean {
