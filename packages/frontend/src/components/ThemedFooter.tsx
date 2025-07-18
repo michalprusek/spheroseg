@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Microscope, Github, Mail, Heart } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -13,7 +13,7 @@ import esTranslations from '@/translations/es';
 import frTranslations from '@/translations/fr';
 import zhTranslations from '@/translations/zh';
 
-const ThemedFooter = () => {
+const ThemedFooterComponent = () => {
   const { language } = useLanguage();
   const { theme } = useTheme();
   const [forceUpdate, setForceUpdate] = useState(0);
@@ -256,5 +256,8 @@ const ThemedFooter = () => {
     </footer>
   );
 };
+
+// Memoize footer since it only updates on language/theme changes
+const ThemedFooter = React.memo(ThemedFooterComponent);
 
 export default ThemedFooter;
