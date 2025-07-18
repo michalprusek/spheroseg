@@ -11,8 +11,8 @@
 
 import request from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import fs from 'fs';
+// import path from 'path';
+// import fs from 'fs';
 import app from '../../app';
 import pool from '../../db';
 import { SEGMENTATION_STATUS } from '../../constants/segmentationStatus';

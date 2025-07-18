@@ -54,7 +54,7 @@ describe('Project Service - createProject', () => {
 
   it('should create a project with a valid title', async () => {
     // Mock the database responses
-    mockClient.query.mockImplementation((query: string, params?: any[]) => {
+    mockClient.query.mockImplementation((query: string, _params?: any[]) => {
       if (query.includes('SELECT id FROM projects WHERE user_id')) {
         // No existing project with this title
         return { rows: [] };
@@ -107,7 +107,7 @@ describe('Project Service - createProject', () => {
 
   it('should create a project with a short title', async () => {
     // Mock the database responses
-    mockClient.query.mockImplementation((query: string, params?: any[]) => {
+    mockClient.query.mockImplementation((query: string, _params?: any[]) => {
       if (query.includes('SELECT id FROM projects WHERE user_id')) {
         // No existing project with this title
         return { rows: [] };
@@ -162,7 +162,7 @@ describe('Project Service - createProject', () => {
 
   it('should throw an error if a project with the same title already exists', async () => {
     // Mock the database responses
-    mockClient.query.mockImplementation((query: string, params?: any[]) => {
+    mockClient.query.mockImplementation((query: string, _params?: any[]) => {
       if (query.includes('SELECT id FROM projects WHERE user_id')) {
         // Existing project with this title
         return { rows: [{ id: 'existing-project-id' }] };

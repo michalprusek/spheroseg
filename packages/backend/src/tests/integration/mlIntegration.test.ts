@@ -82,7 +82,7 @@ describe('ML Integration Tests', () => {
     });
 
     // Mock database queries
-    (pool.query as jest.Mock).mockImplementation((query, params) => {
+    (pool.query as jest.Mock).mockImplementation((query, _params) => {
       if (query.includes('SELECT user_id FROM images')) {
         return Promise.resolve({ rows: [{ user_id: TEST_USER_ID }] });
       }
