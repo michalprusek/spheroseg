@@ -116,8 +116,16 @@ export const createHtmlSchema = (options?: {
 }) => {
   const { maxLength = 10000, allowedTags, allowedAttributes } = options || {};
   
+  const sanitizeOptions: Parameters<typeof sanitizeHtml>[1] = { maxLength };
+  if (allowedTags !== undefined) {
+    sanitizeOptions.allowedTags = allowedTags;
+  }
+  if (allowedAttributes !== undefined) {
+    sanitizeOptions.allowedAttributes = allowedAttributes;
+  }
+  
   return z.string()
-    .transform(val => sanitizeHtml(val, { maxLength, allowedTags, allowedAttributes }))
+    .transform(val => sanitizeHtml(val, sanitizeOptions))
     .pipe(z.string().max(maxLength, `Content must not exceed ${maxLength} characters`));
 };
 

@@ -3,8 +3,9 @@
  * Handles user profile and settings operations via API
  */
 
-import apiClient from '@/lib/apiClient';
+import apiClient, { isApiSuccess, isApiError, type ApiError } from '@/services/api/client';
 import uploadClient from '@/lib/uploadClient';
+import logger from '@/utils/logger';
 
 export interface UserProfile {
   id: string;
@@ -24,14 +25,14 @@ export interface UserProfile {
 
 export interface UserSetting {
   key: string;
-  value: any;
+  value: unknown;
   category: string;
   updated_at?: string;
 }
 
 export interface ProfileWithSettings {
   profile: UserProfile | null;
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
 }
 
 class UserProfileService {
@@ -380,12 +381,14 @@ class UserProfileService {
    */
   async getUserProfile(): Promise<UserProfile | null> {
     try {
-      const response = await apiClient.get(this.baseUrl);
+      const response = await apiClient.get<UserProfile>(this.baseUrl);
       return response.data;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.status === 404) {
         return null;
       }
+      logger.error('Error fetching user profile:', apiError);
       throw error;
     }
   }
@@ -395,10 +398,11 @@ class UserProfileService {
    */
   async getUserProfileWithSettings(): Promise<ProfileWithSettings> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/with-settings`);
+      const response = await apiClient.get<ProfileWithSettings>(`${this.baseUrl}/with-settings`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching user profile with settings:', error);
+      const apiError = error as ApiError;
+      logger.error('Error fetching user profile with settings:', apiError);
       throw error;
     }
   }
@@ -408,10 +412,11 @@ class UserProfileService {
    */
   async createUserProfile(profileData: Partial<UserProfile>): Promise<UserProfile> {
     try {
-      const response = await apiClient.post(this.baseUrl, profileData);
+      const response = await apiClient.post<UserProfile>(this.baseUrl, profileData);
       return response.data;
     } catch (error) {
-      console.error('Error creating user profile:', error);
+      const apiError = error as ApiError;
+      logger.error('Error creating user profile:', apiError);
       throw error;
     }
   }
@@ -421,10 +426,11 @@ class UserProfileService {
    */
   async updateUserProfile(profileData: Partial<UserProfile>): Promise<UserProfile> {
     try {
-      const response = await apiClient.put(this.baseUrl, profileData);
+      const response = await apiClient.put<UserProfile>(this.baseUrl, profileData);
       return response.data;
     } catch (error) {
-      console.error('Error updating user profile:', error);
+      const apiError = error as ApiError;
+      logger.error('Error updating user profile:', apiError);
       throw error;
     }
   }
@@ -451,10 +457,11 @@ class UserProfileService {
    */
   async deleteAvatar(): Promise<{ message: string }> {
     try {
-      const response = await apiClient.delete(`${this.baseUrl}/avatar`);
+      const response = await apiClient.delete<{ message: string }>(`${this.baseUrl}/avatar`);
       return response.data;
     } catch (error) {
-      console.error('Error deleting avatar:', error);
+      const apiError = error as ApiError;
+      logger.error('Error deleting avatar:', apiError);
       throw error;
     }
   }
@@ -464,16 +471,14 @@ class UserProfileService {
    */
   async getUserSetting(key: string): Promise<UserSetting | null> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/settings/${key}`);
-      return {
-        key: response.data.key,
-        value: response.data.value,
-        category: response.data.category,
-      };
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+      const response = await apiClient.get<UserSetting>(`${this.baseUrl}/settings/${key}`);
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.status === 404) {
         return null;
       }
+      logger.error('Error fetching user setting:', apiError);
       throw error;
     }
   }
@@ -483,10 +488,11 @@ class UserProfileService {
    */
   async getUserSettings(): Promise<Record<string, UserSetting>> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/settings`);
+      const response = await apiClient.get<Record<string, UserSetting>>(`${this.baseUrl}/settings`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching user settings:', error);
+      const apiError = error as ApiError;
+      logger.error('Error fetching user settings:', apiError);
       throw error;
     }
   }
@@ -494,22 +500,18 @@ class UserProfileService {
   /**
    * Set user setting
    */
-  async setUserSetting(key: string, value: any, category: string = 'general'): Promise<UserSetting> {
+  async setUserSetting(key: string, value: unknown, category: string = 'general'): Promise<UserSetting> {
     try {
-      const response = await apiClient.put(`${this.baseUrl}/settings/${key}`, {
+      const response = await apiClient.put<UserSetting>(`${this.baseUrl}/settings/${key}`, {
         value,
         category,
       });
-      console.log(`[UserProfileService] Successfully saved ${key} to database:`, value);
-      return {
-        key: response.data.key,
-        value: response.data.value,
-        category: response.data.category,
-        updated_at: response.data.updated_at,
-      };
-    } catch (error: any) {
-      const errorMessage = error.response?.status === 502 ? 'API Gateway error (502)' : 'API error';
-      console.warn(`[UserProfileService] Error setting user setting ${key} (${errorMessage}):`, error.message || error);
+      logger.info(`[UserProfileService] Successfully saved ${key} to database:`, value);
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      const errorMessage = apiError.status === 502 ? 'API Gateway error (502)' : 'API error';
+      logger.warn(`[UserProfileService] Error setting user setting ${key} (${errorMessage}):`, apiError.message);
       throw error;
     }
   }
@@ -519,10 +521,11 @@ class UserProfileService {
    */
   async deleteUserSetting(key: string): Promise<{ message: string }> {
     try {
-      const response = await apiClient.delete(`${this.baseUrl}/settings/${key}`);
+      const response = await apiClient.delete<{ message: string }>(`${this.baseUrl}/settings/${key}`);
       return response.data;
     } catch (error) {
-      console.error('Error deleting user setting:', error);
+      const apiError = error as ApiError;
+      logger.error('Error deleting user setting:', apiError);
       throw error;
     }
   }
@@ -531,13 +534,14 @@ class UserProfileService {
    * Batch update user settings
    */
   async batchUpdateUserSettings(
-    settings: Record<string, { value: any; category?: string }>,
+    settings: Record<string, { value: unknown; category?: string }>,
   ): Promise<Record<string, UserSetting>> {
     try {
-      const response = await apiClient.post(`${this.baseUrl}/settings/batch`, { settings });
+      const response = await apiClient.post<Record<string, UserSetting>>(`${this.baseUrl}/settings/batch`, { settings });
       return response.data;
     } catch (error) {
-      console.error('Error batch updating user settings:', error);
+      const apiError = error as ApiError;
+      logger.error('Error batch updating user settings:', apiError);
       throw error;
     }
   }
@@ -558,14 +562,14 @@ class UserProfileService {
         await this.setUserSetting(key, parsedValue, category);
       }
     } catch (error) {
-      console.error(`Error syncing ${key} to database:`, error);
+      logger.error(`Error syncing ${key} to database:`, error);
     }
   }
 
   /**
    * Load setting from database to localStorage
    */
-  async loadSettingFromDatabase(key: string, localStorageKey: string, defaultValue?: any): Promise<any> {
+  async loadSettingFromDatabase(key: string, localStorageKey: string, defaultValue?: unknown): Promise<unknown> {
     try {
       const setting = await this.getUserSetting(key);
       if (setting && setting.value !== undefined && setting.value !== null) {

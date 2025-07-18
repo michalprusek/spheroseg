@@ -129,9 +129,12 @@ export class PolygonWasmProcessor {
     let inside = false;
     const n = polygon.length;
     let p1 = polygon[0];
+    if (!p1) return false;
     
     for (let i = 1; i <= n; i++) {
       const p2 = polygon[i % n];
+      if (!p2) continue;
+      
       if (point.y > Math.min(p1.y, p2.y)) {
         if (point.y <= Math.max(p1.y, p2.y)) {
           if (point.x <= Math.max(p1.x, p2.x)) {
@@ -212,8 +215,10 @@ export function usePolygonWasm() {
       polygonWasmProcessor.calculatePerimeter(polygon),
     calculateBoundingBox: (polygon: Array<{x: number; y: number}>) => {
       if (!polygon.length) return null;
-      let minX = polygon[0].x, maxX = polygon[0].x;
-      let minY = polygon[0].y, maxY = polygon[0].y;
+      const firstPoint = polygon[0];
+      if (!firstPoint) return null;
+      let minX = firstPoint.x, maxX = firstPoint.x;
+      let minY = firstPoint.y, maxY = firstPoint.y;
       
       for (const p of polygon) {
         minX = Math.min(minX, p.x);
