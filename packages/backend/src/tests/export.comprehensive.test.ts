@@ -1,8 +1,8 @@
 import request from 'supertest';
 import express from 'express';
 import { jest } from '@jest/globals';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+// import path from 'path';
+// import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import { promises as fsPromises } from 'fs';
 import db from '../db';
@@ -16,7 +16,7 @@ jest.mock('../security/middleware/auth', () => {
 });
 
 jest.mock('../db', () => ({
-  query: jest.fn().mockImplementation((query: string, params: any[]) => {
+  query: jest.fn().mockImplementation((query: string, _params: any[]) => {
     // Mock project data
     if (query.includes('SELECT * FROM projects WHERE id')) {
       return {

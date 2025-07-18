@@ -33,8 +33,8 @@ import authService from '../services/authService'; // Import the new auth servic
 import {
   sendSuccess,
   sendCreated,
-  sendError,
-  sendServerError,
+  // sendError,
+  // sendServerError,
   sendUnauthorized,
   asyncHandler
 } from '../utils/responseHelpers';

@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import pool from '../db';
 import imageRoutes from '../routes/images';
 import { errorHandler } from '../middleware/errorHandler';
-import path from 'path';
+// import path from 'path';
 import fs from 'fs';
 
 // Import the AuthenticatedRequest interface

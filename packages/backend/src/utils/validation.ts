@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { z, ZodError, ZodType } from 'zod';
+import { ZodError, ZodType } from 'zod';
 import { sendBadRequest } from './responseHelpers';
 
 /**
@@ -38,7 +38,7 @@ export function validateBody<T>(schema: ZodType<T>) {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const validationErrors = error.errors.map(err => ({
+        const _validationErrors = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message,
           code: err.code,
@@ -62,7 +62,7 @@ export function validateQuery<T>(schema: ZodType<T>) {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const validationErrors = error.errors.map(err => ({
+        const _validationErrors = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message,
           code: err.code,
@@ -86,7 +86,7 @@ export function validateParams<T>(schema: ZodType<T>) {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const validationErrors = error.errors.map(err => ({
+        const _validationErrors = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message,
           code: err.code,

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
 import request from 'supertest';
 import { app } from '../server';
 import pool from '../db';
-import { createTestUser, deleteTestUser, createTestProject, createTestImage } from './testUtils';
+import { createTestUser, deleteTestUser, createTestProject } from './testUtils';
 import path from 'path';
 import fs from 'fs';
 import JSZip from 'jszip';

@@ -164,7 +164,7 @@ export async function cleanupTestData(
 /**
  * Generate a valid JWT token for testing
  */
-export function generateTestToken(user: { id: string; email: string; role?: string }) {
+export function generateTestToken(_user: { id: string; email: string; role?: string }) {
   // This is a mock implementation - in real tests you might want to use the actual tokenService
   return 'test-jwt-token';
 }
