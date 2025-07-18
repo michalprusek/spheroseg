@@ -1473,7 +1473,7 @@ router.get(
 
     try {
       const pool = getPool();
-      const imageResult = await getPool().query(
+      const imageResult = await pool.query(
         'SELECT i.id, i.project_id, i.storage_path FROM images i JOIN projects p ON i.project_id = p.id WHERE i.id = $1 AND p.user_id = $2',
         [imageId, userId]
       );
