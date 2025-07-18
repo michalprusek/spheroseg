@@ -381,12 +381,13 @@ class DatabaseOptimizationService {
   async invalidateRelatedCaches(type: 'user' | 'project' | 'image', id: string): Promise<void> {
     try {
       switch (type) {
-        case 'user':
+        case 'user': {
           await this.cacheService.invalidatePattern(`user_stats*:${id}*`);
           await this.cacheService.invalidatePattern(`project_list:${id}*`);
           break;
+        }
 
-        case 'project':
+        case 'project': {
           await this.cacheService.invalidatePattern(`image_list:${id}*`);
           await this.cacheService.invalidatePattern(`project_stats:${id}*`);
           // Also invalidate user stats for project owner
@@ -398,8 +399,9 @@ class DatabaseOptimizationService {
             await this.cacheService.invalidatePattern(`project_list:${userId}*`);
           }
           break;
+        }
 
-        case 'image':
+        case 'image': {
           // Invalidate project and user caches
           const imageProjectQuery = `
             SELECT p.id as project_id, p.user_id 
@@ -414,6 +416,7 @@ class DatabaseOptimizationService {
             await this.cacheService.invalidatePattern(`user_stats*:${user_id}*`);
           }
           break;
+        }
       }
     } catch (error) {
       logger.error('Error invalidating related caches', { type, id, error });

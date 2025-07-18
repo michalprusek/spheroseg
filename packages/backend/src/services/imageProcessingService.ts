@@ -13,14 +13,11 @@ import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
-import { pipeline } from 'stream';
-import { createHash } from 'crypto';
 import logger from '../utils/logger';
 import config from '../config';
 import { ApiError } from '../utils/errors';
 
 // Promisifikace funkcí
-const pipelineAsync = promisify(pipeline);
 const statAsync = promisify(fs.stat);
 const mkdirAsync = promisify(fs.mkdir);
 const existsAsync = promisify(fs.exists);

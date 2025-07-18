@@ -317,7 +317,7 @@ class CloudflareService extends BaseCDNService {
     return getCDNUrl(cdnPath);
   }
 
-  async deleteFile(cdnPath: string): Promise<boolean> {
+  async deleteFile(_cdnPath: string): Promise<boolean> {
     // Files should be deleted from origin server
     logger.warn('Cloudflare deleteFile not implemented - delete from origin server');
     return true;
