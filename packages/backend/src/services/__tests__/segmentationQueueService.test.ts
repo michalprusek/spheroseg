@@ -715,23 +715,11 @@ describe('segmentationQueueService', () => {
 
   describe('updateSegmentationStatus', () => {
     // Get a reference to the updateSegmentationStatus function
-    let updateSegmentationStatus: Function;
+    let updateSegmentationStatus: ((imageId: string, status: string, taskData?: any) => Promise<void>) | undefined;
 
     beforeEach(() => {
       // Extract updateSegmentationStatus using a workaround
       // Since it's a private function, we need to monkey-patch the module
-      const mockTask = {
-        id: 'test-task-id',
-        type: 'segmentation',
-        data: {
-          imageId: 'test-image-id',
-          imagePath: '/uploads/test-image.jpg',
-          parameters: {},
-        },
-        priority: 1,
-        status: 'processing' as const,
-        addedAt: new Date(),
-      };
 
       // Add a proxy method to access the private function
       // Note: updateSegmentationStatus is private and can't be directly accessed in tests

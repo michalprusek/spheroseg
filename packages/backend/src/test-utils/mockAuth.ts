@@ -538,7 +538,7 @@ export function createMockJwtSign(options: MockAuthOptions = {}): jest.Mock {
 export function createMockJwtVerify(options: MockAuthOptions = {}): jest.Mock {
   const mockAuth = new MockAuth(options);
 
-  return jest.fn((token: string, secret: string, options: any = {}, callback?: Function) => {
+  return jest.fn((token: string, secret: string, _options: any = {}, callback?: (err: Error | null, decoded?: any) => void) => {
     try {
       const payload = mockAuth.verifyToken(token);
 

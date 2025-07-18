@@ -23,7 +23,7 @@ describe('Performance Monitoring Middleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction;
-  let finishCallback: Function;
+  let finishCallback: () => void;
 
   beforeEach(() => {
     // Reset mocks
