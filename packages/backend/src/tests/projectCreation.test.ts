@@ -133,7 +133,7 @@ router.post('/', mockAuthMiddleware, mockValidate(), async (req: Request, res: R
 
   try {
     // Verify table exists (simplified check for testing)
-    const tableCheck = await mockDbQuery(
+    const _tableCheck = await mockDbQuery(
       `
       SELECT EXISTS (
         SELECT 1
@@ -169,7 +169,7 @@ router.post(
   async (req: Request, res: Response) => {
     const userId = (req as any).user?.userId;
     const projectId = req.params.id;
-    const { newTitle } = req.body;
+    const { newTitle: _newTitle } = req.body;
 
     try {
       // Check if project exists and belongs to user

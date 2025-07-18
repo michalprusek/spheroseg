@@ -359,14 +359,14 @@ except ImportError as e:
 
       if (pythonProcess.stdout) {
         pythonProcess.stdout.on('data', (data) => {
-          stdoutData += data.toString();
+          _stdoutData += data.toString();
           console.log(`Python stdout: ${data.toString()}`);
         });
       }
 
       if (pythonProcess.stderr) {
         pythonProcess.stderr.on('data', (data) => {
-          stderrData += data.toString();
+          _stderrData += data.toString();
           console.error(`Python stderr: ${data.toString()}`);
         });
       }

@@ -390,7 +390,7 @@ describe('Segmentation Version Management', () => {
   it('should handle access control for version management', async () => {
     // Override the auth middleware mock to simulate unauthorized access
     const originalAuthMiddleware = authMiddleware;
-    (authMiddleware as jest.Mock).mockImplementation((req, res, next) => {
+    (authMiddleware as jest.Mock).mockImplementation((req, res, _next) => {
       res.status(401).json({ message: 'Authentication error' });
     });
 

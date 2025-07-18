@@ -152,7 +152,7 @@ describe('Segmentation Workflow Integration', () => {
         // Check the final status (don't fail the test if not completed,
         // as it might depend on ML model availability)
         // Set a variable for inspection in the test report instead of using console.log
-        const statusMessage = `Segmentation final status: ${finalStatus}`;
+        const _statusMessage = `Segmentation final status: ${finalStatus}`;
 
         // Mark as passed if the status is valid
         expect(['pending', 'processing', 'completed', 'failed']).toContain(finalStatus);
