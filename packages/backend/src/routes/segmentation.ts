@@ -1,6 +1,7 @@
 import express, { Response, Router, NextFunction } from 'express';
 import type { Request as _ExpressRequest } from 'express';
 import pool from '../db';
+import type { QueryResult } from 'pg';
 import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import {
   triggerSegmentationTask,
@@ -408,7 +409,7 @@ async function handleBatchSegmentation(
       foundImagesMap.set(row.id, { storage_path: row.storage_path })
     );
 
-    const segmentationPromises: Promise<any>[] = [];
+    const segmentationPromises: Promise<QueryResult>[] = [];
 
     // Připravíme kompletní parametry pro segmentaci
     const combinedParameters = {

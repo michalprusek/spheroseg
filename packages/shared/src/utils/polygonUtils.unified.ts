@@ -836,9 +836,15 @@ export const simplifyPolygon = (
 
   const firstPoint = points[0];
   const lastPoint = points[points.length - 1];
+  
+  if (!firstPoint || !lastPoint) {
+    return points; // Return original if endpoints are invalid
+  }
 
   for (let i = 1; i < points.length - 1; i++) {
-    const dist = perpendicularDistance(points[i], firstPoint, lastPoint);
+    const p = points[i];
+    if (!p) continue;
+    const dist = perpendicularDistance(p, firstPoint, lastPoint);
 
     if (dist > maxDistance) {
       maxDistance = dist;
@@ -856,7 +862,7 @@ export const simplifyPolygon = (
     return [...firstHalf.slice(0, -1), ...secondHalf];
   } else {
     // Base case
-    return [firstPoint, lastPoint];
+    return [firstPoint, lastPoint].filter((p): p is Point => p !== undefined);
   }
 };
 
@@ -875,8 +881,12 @@ export const simplifyClosedPolygon = (points: Point[], epsilon: number): Point[]
   // let maxJ = 0;
 
   for (let i = 0; i < points.length; i++) {
+    const p1 = points[i];
+    if (!p1) continue;
     for (let j = i + 1; j < points.length; j++) {
-      const dist = distance(points[i], points[j]);
+      const p2 = points[j];
+      if (!p2) continue;
+      const dist = distance(p1, p2);
       if (dist > maxDistance) {
         maxDistance = dist;
         maxI = i;
@@ -888,20 +898,28 @@ export const simplifyClosedPolygon = (points: Point[], epsilon: number): Point[]
   // Reorder the points to start at maxI and end at maxJ
   const reordered: Point[] = [];
   for (let i = maxI; i < points.length; i++) {
-    reordered.push(points[i]);
+    const p = points[i];
+    if (p) {
+      reordered.push(p);
+    }
   }
   for (let i = 0; i < maxI; i++) {
-    reordered.push(points[i]);
+    const p = points[i];
+    if (p) {
+      reordered.push(p);
+    }
   }
 
   // Simplify the reordered points
   const simplified = simplifyPolygon(reordered, epsilon);
 
   // Ensure the polygon is closed
-  if (simplified.length > 0 && 
-      (simplified[0].x !== simplified[simplified.length - 1].x || 
-       simplified[0].y !== simplified[simplified.length - 1].y)) {
-    simplified.push({ ...simplified[0] });
+  const firstPoint = simplified[0];
+  const lastPoint = simplified[simplified.length - 1];
+  if (simplified.length > 0 && firstPoint && lastPoint &&
+      (firstPoint.x !== lastPoint.x || 
+       firstPoint.y !== lastPoint.y)) {
+    simplified.push({ ...firstPoint });
   }
 
   return simplified;
