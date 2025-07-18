@@ -13,9 +13,6 @@ import { getErrorMetrics } from '../monitoring/errorTracker';
 import { getPerformanceMetrics } from '../monitoring/performanceTracker';
 import {
   checkSystemHealth,
-  checkDatabaseHealth,
-  checkRedisHealth,
-  checkMLServiceHealth,
 } from '../utils/healthChecks';
 import logger from '../utils/logger';
 import config from '../config';

@@ -24,13 +24,8 @@ import {
   graphqlErrorsTotal,
   dbPoolConnections,
   dbReplicationLag,
-  mlTasksQueued,
-  mlInstanceUtilization,
   cdnCacheHits,
   cdnCacheMisses,
-  activeUsers,
-  imageProcessingQueue,
-  cacheHitRate,
 } from '../monitoring/prometheus';
 import { getWebSocketBatcher } from '../services/websocketBatcher';
 import { getReplicationLag, getPoolStats } from '../db/readReplica';

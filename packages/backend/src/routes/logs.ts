@@ -166,8 +166,7 @@ async function handleBatchLogs(req: Request, res: Response, _next: NextFunction)
 
     // Process each log
     for (const log of logs) {
-      const { level, levelName, message, data } = log;
-      const timestamp = log.timestamp || new Date().toISOString();
+      const { level, message } = log;
 
       // Log with appropriate level (but with less detail in console for batch processing)
       if (level === 0) {
