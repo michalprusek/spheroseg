@@ -660,7 +660,11 @@ export const isClockwise = (points: Point[]): boolean => {
   let sum = 0;
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
-    sum += (points[j].x - points[i].x) * (points[j].y + points[i].y);
+    const p1 = points[i];
+    const p2 = points[j];
+    if (p1 && p2) {
+      sum += (p2.x - p1.x) * (p2.y + p1.y);
+    }
   }
   return sum > 0;
 };

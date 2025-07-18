@@ -21,7 +21,7 @@ interface CreateProjectParams {
   public?: boolean;
 }
 
-interface ProjectResponse {
+export interface ProjectResponse {
   id: string;
   title: string;
   description: string | null;

@@ -11,6 +11,7 @@ import {
 } from '../validators/projectValidators';
 import logger from '../utils/logger';
 import * as projectService from '../services/projectService';
+import type { ProjectResponse } from '../services/projectService';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
 import cacheService from '../services/cacheService';
 
@@ -128,7 +129,7 @@ router.get(
 
       // Try to get from cache first
       const cacheKey = `project_list:${userId}:${limit}:${offset}:${includeShared}`;
-      const cached = await cacheService.get<{ projects: any[]; total: number }>(cacheKey);
+      const cached = await cacheService.get<{ projects: ProjectResponse[]; total: number }>(cacheKey);
 
       if (cached) {
         logger.debug('Returning cached project list', { userId, limit, offset });
@@ -602,10 +603,13 @@ router.put(
 
       logger.info('Project updated successfully', { projectId });
       res.json(result.rows[0]);
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       logger.error('Error updating project', {
-        error: error?.message || error,
-        stack: error?.stack,
+        error: errorMessage,
+        stack: errorStack,
         projectId,
       });
       next(error);
