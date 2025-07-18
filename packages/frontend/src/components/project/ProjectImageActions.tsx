@@ -314,15 +314,10 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           });
           window.dispatchEvent(event);
 
-          // Also dispatch an event to update queue status if needed
-          const queueUpdateEvent = new CustomEvent('queue-status-update', {
-            detail: {
-              refresh: true,
-              projectId: cleanProjectId,
-              forceRefresh: true,
-            },
-          });
-          window.dispatchEvent(queueUpdateEvent);
+          // Note: We don't dispatch queue-status-update here because:
+          // 1. Deleting an image doesn't affect the segmentation queue
+          // 2. It causes unnecessary API calls that can fail with permission errors
+          // 3. If the deleted image was in the queue, the backend will handle queue cleanup
 
           if (isLocalImage) {
             toast.success(t('images.success.localImageDeleted'));
