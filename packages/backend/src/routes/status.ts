@@ -23,7 +23,7 @@ router.get('/check', (_req: Request, res: Response) => {
 });
 
 // GET /api/queue-status - Get the current status of the segmentation queue with image details
-// @ts-ignore // TODO: Define AuthenticatedRequest properly if needed
+// @ts-expect-error - AuthenticatedRequest type not properly defined yet
 router.get(
   '/queue-status',
   authMiddleware,

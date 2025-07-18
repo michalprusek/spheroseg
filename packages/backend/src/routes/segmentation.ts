@@ -1129,7 +1129,7 @@ router.post(
 router.delete(
   '/job/:jobId',
   authMiddleware,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (_req: AuthenticatedRequest, _res: Response, _next: NextFunction) => {
     // ... handler code ...
   }
 );
@@ -1250,8 +1250,8 @@ router.post(
 router.get(
   '/:imageId/polygons',
   authMiddleware,
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { imageId } = req.params;
+  async (req: AuthenticatedRequest, _res: Response) => {
+    const { imageId: _imageId } = req.params;
     // ... existing code ...
   }
 );
@@ -1261,10 +1261,10 @@ router.get(
 router.post(
   '/:imageId/polygons',
   authMiddleware,
-  /* validatePolygonData, */ async (req: AuthenticatedRequest, res: Response) => {
+  /* validatePolygonData, */ async (req: AuthenticatedRequest, _res: Response) => {
     // TODO: Uncomment validatePolygonData when implemented
-    const { imageId } = req.params;
-    const { polygons } = req.body;
+    const { imageId: _imageId } = req.params;
+    const { polygons: _polygons } = req.body;
     // ... existing code ...
   }
 );
@@ -1274,8 +1274,8 @@ router.post(
 router.delete(
   '/:imageId/polygons',
   authMiddleware,
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { imageId } = req.params;
+  async (req: AuthenticatedRequest, _res: Response) => {
+    const { imageId: _imageId } = req.params;
     // ... existing code ...
   }
 );

@@ -390,7 +390,7 @@ class PerformanceMonitor extends EventEmitter {
   private async getDatabasePoolStats(): Promise<any> {
     try {
       const pool = getPool();
-      // @ts-ignore - accessing private pool properties
+      // @ts-expect-error - accessing private pool properties
       const poolStats = {
         totalCount: pool.totalCount || 0,
         idleCount: pool.idleCount || 0,
