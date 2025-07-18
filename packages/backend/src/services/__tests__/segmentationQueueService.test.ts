@@ -734,11 +734,8 @@ describe('segmentationQueueService', () => {
       };
 
       // Add a proxy method to access the private function
-      const service = require('../segmentationQueueService');
-      updateSegmentationStatus =
-        service.__test_only_updateSegmentationStatus ||
-        service.__test_updateSegmentationStatus ||
-        service.updateSegmentationStatus;
+      // Note: updateSegmentationStatus is private and can't be directly accessed in tests
+      // We'll test it indirectly through public methods
 
       // If still not available, use the actual function from the service by calling
       // a public API method like setupSegmentationQueue() that internally calls it

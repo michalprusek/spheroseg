@@ -11,6 +11,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import segmentationRouter from '../../routes/segmentation';
 import authMiddleware from '../../security/middleware/auth';
+import db from '../../db';
 
 // Mock dependencies
 jest.mock('../../security/middleware/auth', () => {
@@ -294,8 +295,6 @@ describe('Segmentation Version Management', () => {
     const nonExistentVersion = 999;
 
     // Override mock for this specific test to return empty rows
-    // Import mock from the module system
-    const db = require('../../db').default;
     const originalQuery = db.query;
     db.query = jest.fn().mockImplementation((query, params) => {
       if (

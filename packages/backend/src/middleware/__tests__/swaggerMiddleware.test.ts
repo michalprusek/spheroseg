@@ -6,6 +6,7 @@
 
 import request from 'supertest';
 import express from 'express';
+import logger from '../../utils/logger';
 
 // Mock logger to avoid issues
 jest.mock('../../utils/logger', () => ({
@@ -33,12 +34,8 @@ import { applySwagger } from '../swaggerMiddleware';
 
 describe('Swagger Middleware', () => {
   let app: express.Application;
-  let logger: any;
 
   beforeEach(() => {
-    // Get the mocked logger
-    logger = require('../../utils/logger');
-
     // Create a new Express app for each test
     app = express();
 

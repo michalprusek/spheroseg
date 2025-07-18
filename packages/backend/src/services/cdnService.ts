@@ -6,11 +6,15 @@ import { cdnConfig, getCDNUrl, getCacheControl } from '../config/cdn.config';
 
 // Optional AWS SDK import for CloudFront features
 let AWS: any;
-try {
-  AWS = require('aws-sdk');
-} catch (error) {
-  logger.warn('AWS SDK not installed, CloudFront features will be disabled');
+async function loadAWS() {
+  try {
+    AWS = await import('aws-sdk');
+  } catch (error) {
+    logger.warn('AWS SDK not installed, CloudFront features will be disabled');
+  }
 }
+// Load AWS SDK on startup
+loadAWS();
 
 export interface CDNService {
   getUrl(path: string, options?: UrlOptions): string;

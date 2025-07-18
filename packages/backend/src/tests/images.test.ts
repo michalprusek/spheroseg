@@ -6,6 +6,7 @@ import authMiddleware from '../security/middleware/auth';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import db from '../db';
 
 // Mock dependencies
 jest.mock('../security/middleware/auth', () => {
@@ -102,7 +103,6 @@ describe('Images API Routes', () => {
 
     it('should return 404 if project does not exist', async () => {
       // Mock db.query to return empty rows for project check
-      const db = require('../db');
       db.query.mockImplementationOnce(() => ({ rows: [] }));
 
       const response = await request(app)
@@ -118,7 +118,6 @@ describe('Images API Routes', () => {
   describe('GET /api/projects/:projectId/images', () => {
     it('should get images for a project', async () => {
       // Mock db.query to return test images
-      const db = require('../db');
       db.query.mockImplementationOnce(() => ({
         rows: [
           {

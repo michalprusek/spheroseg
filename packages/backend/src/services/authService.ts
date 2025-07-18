@@ -1,6 +1,7 @@
 import db from '../db';
 import bcryptjs from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
 import tokenService from './tokenService';
@@ -701,7 +702,6 @@ class AuthService {
    */
   private generateSecurePassword(length: number = 12): string {
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
-    const crypto = require('crypto');
     let password = '';
 
     for (let i = 0; i < length; i++) {
@@ -739,7 +739,6 @@ class AuthService {
       }
 
       // Generate verification token
-      const crypto = require('crypto');
       const token = crypto.randomBytes(32).toString('hex');
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours expiry
