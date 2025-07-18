@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
@@ -6,21 +7,16 @@
     "types": ["node", "jest"],
     "outDir": "dist",
     "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@spheroseg/types": ["../types/dist"]
+      "@spheroseg/types": ["../types/src"],
+      "@spheroseg/shared": ["../shared/src"]
     },
-    "resolveJsonModule": true,
-    "declaration": true,
-    "sourceMap": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "moduleResolution": "node",
+    "noEmit": false,
+    "allowImportingTsExtensions": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

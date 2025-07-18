@@ -1,15 +1,14 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "skipLibCheck": true,
-
+    
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
@@ -17,16 +16,11 @@
     "paths": {
       "@/*": ["src/*"],
       "@shared/*": ["../shared/src/*"],
-      "@spheroseg/shared/*": ["../shared/src/*"]
-    },
-
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+      "@spheroseg/shared": ["../shared/src"],
+      "@spheroseg/types": ["../types/src"]
+    }
   },
   "include": ["src"],
+  "exclude": ["node_modules", "dist", "**/*.test.tsx", "**/*.spec.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
-  // Adding a comment to force a reload of the TS server
 }
