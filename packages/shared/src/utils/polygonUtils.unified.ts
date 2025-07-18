@@ -263,10 +263,13 @@ export const isPointInPolygon = (point: Point, polygon: Point[]): boolean => {
 
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i].x;
-    const yi = polygon[i].y;
-    const xj = polygon[j].x;
-    const yj = polygon[j].y;
+    const pi = polygon[i];
+    const pj = polygon[j];
+    if (!pi || !pj) continue;
+    const xi = pi.x;
+    const yi = pi.y;
+    const xj = pj.x;
+    const yj = pj.y;
 
     const intersect = ((yi > point.y) !== (yj > point.y)) &&
       (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
@@ -508,9 +511,12 @@ export const calculateLinePolygonIntersections = (
 
   for (let i = 0; i < polygon.length; i++) {
     const j = (i + 1) % polygon.length;
+    const p1 = polygon[i];
+    const p2 = polygon[j];
+    if (!p1 || !p2) continue;
     // Use the extended line for intersection calculation
     const intersection = calculateLineSegmentIntersection(
-      extendedStart, extendedEnd, polygon[i], polygon[j]
+      extendedStart, extendedEnd, p1, p2
     );
 
     if (intersection) {
@@ -560,10 +566,14 @@ export const calculateConvexHull = (points: Point[]): Point[] => {
 
   // Find the point with the lowest y-coordinate (and leftmost if tied)
   let lowestPoint = points[0];
+  if (!lowestPoint) return [];
+  
   for (let i = 1; i < points.length; i++) {
-    if (points[i].y < lowestPoint.y || 
-        (points[i].y === lowestPoint.y && points[i].x < lowestPoint.x)) {
-      lowestPoint = points[i];
+    const p = points[i];
+    if (!p) continue;
+    if (p.y < lowestPoint.y || 
+        (p.y === lowestPoint.y && p.x < lowestPoint.x)) {
+      lowestPoint = p;
     }
   }
 
