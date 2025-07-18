@@ -30,7 +30,7 @@ const MockSignUp = ({ signUpSuccess = true, language = 'en' }) => {
   const [lastName, setLastName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const mockSignUp = vi.fn().mockImplementation((email, password, name) => {
+  const mockSignUp = vi.fn().mockImplementation((_email, _password, _name) => {
     if (signUpSuccess) {
       return Promise.resolve(true);
     } else {
@@ -61,7 +61,7 @@ const MockSignUp = ({ signUpSuccess = true, language = 'en' }) => {
     try {
       await mockSignUp(email, password, `${firstName} ${lastName}`);
       mockToastSuccess('Registration successful');
-    } catch (error) {
+    } catch (_error) {
       mockToastError('Registration failed');
     }
   };

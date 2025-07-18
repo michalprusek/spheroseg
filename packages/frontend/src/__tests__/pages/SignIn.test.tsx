@@ -118,7 +118,7 @@ vi.mock('@/pages/SignIn', () => ({
 }));
 
 describe('SignIn Page', () => {
-  const mockSignIn = vi.fn();
+  const _mockSignIn = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();

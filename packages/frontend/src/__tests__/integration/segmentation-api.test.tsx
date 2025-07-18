@@ -38,13 +38,15 @@ vi.mock('react-router-dom', () => ({
 }));
 
 // Toast notification mock
+const toastMock = {
+  success: vi.fn(),
+  error: vi.fn(),
+  loading: vi.fn(),
+  custom: vi.fn(),
+};
+
 vi.mock('react-hot-toast', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    loading: vi.fn(),
-    custom: vi.fn(),
-  },
+  toast: toastMock,
 }));
 
 // Test wrapper for context providers
@@ -163,7 +165,7 @@ describe('Segmentation API Integration', () => {
     });
 
     // Verify success toast
-    expect(require('react-hot-toast').toast.success).toHaveBeenCalled();
+    expect(toastMock.success).toHaveBeenCalled();
   });
 
   it('should handle save errors correctly', async () => {
@@ -197,7 +199,7 @@ describe('Segmentation API Integration', () => {
     });
 
     // Verify error toast
-    expect(require('react-hot-toast').toast.error).toHaveBeenCalled();
+    expect(toastMock.error).toHaveBeenCalled();
   });
 
   it('should handle slow network responses with loading indicators', async () => {
@@ -294,7 +296,7 @@ describe('Segmentation API Integration', () => {
 
     // Verify success notification
     await waitFor(() => {
-      expect(require('react-hot-toast').toast.success).toHaveBeenCalled();
+      expect(toastMock.success).toHaveBeenCalled();
     });
   });
 

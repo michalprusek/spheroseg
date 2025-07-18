@@ -230,7 +230,7 @@ describe('RequestAccess Page', () => {
 
   it('submits the form with valid data', async () => {
     // Mock the API call to return success
-    (apiClient.post as vi.Mock).mockImplementation(async (url, data) => {
+    (apiClient.post as vi.Mock).mockImplementation(async (_url, _data) => {
       return { data: { message: 'Access request submitted successfully.' } };
     });
 
