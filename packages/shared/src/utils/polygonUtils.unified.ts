@@ -996,12 +996,18 @@ export const calculateFeretDiameter = (
 
   // For each pair of points in the convex hull
   for (let i = 0; i < hull.length; i++) {
+    const p1 = hull[i];
+    if (!p1) continue;
+    
     for (let j = i + 1; j < hull.length; j++) {
-      const dist = distance(hull[i], hull[j]);
+      const p2 = hull[j];
+      if (!p2) continue;
+      
+      const dist = distance(p1, p2);
 
       if (dist > maxDiameter) {
         maxDiameter = dist;
-        maxAngle = Math.atan2(hull[j].y - hull[i].y, hull[j].x - hull[i].x);
+        maxAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
       }
     }
   }
