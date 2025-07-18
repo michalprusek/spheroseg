@@ -16,13 +16,28 @@ import {
 } from '@/services/abTesting/abTestingService';
 
 // Types
+interface ABTestingUser {
+  id: string;
+  email: string;
+  createdAt: string;
+  plan?: string;
+  role?: string;
+  lastActiveAt?: string;
+  totalProjects?: number;
+  totalImages?: number;
+  hasCompletedOnboarding?: boolean;
+  hasUsedSegmentation?: boolean;
+  hasExportedData?: boolean;
+  language?: string;
+  theme?: string;
+}
 interface ABTestingContextValue {
   isInitialized: boolean;
   service: ABTestingService | null;
   activeExperiments: FeatureFlag[];
   getFeatureFlag: <T = boolean>(key: string, defaultValue?: T) => T;
   getExperiment: (experimentId: string) => ExperimentResult | null;
-  trackEvent: (eventName: string, properties?: Record<string, any>) => void;
+  trackEvent: (eventName: string, properties?: Record<string, unknown>) => void;
   trackConversion: (conversionName: string, value?: number) => void;
   refreshExperiments: () => Promise<void>;
 }
@@ -63,16 +78,23 @@ export function ABTestingProvider({ children, config = {} }: ABTestingProviderPr
 
         const abService = initializeABTesting(abConfig);
 
+        const abTestingUser: ABTestingUser = {
+          id: user.id,
+          email: user.email,
+          createdAt: new Date().toISOString(), // Default if not available
+          ...user,
+        };
+
         const userContext: UserContext = {
-          userId: user.id,
+          userId: abTestingUser.id,
           sessionId: getOrCreateSessionId(),
           properties: {
-            email: user.email,
-            plan: user.plan || 'free',
-            createdAt: user.createdAt,
-            role: user.role,
+            email: abTestingUser.email,
+            plan: abTestingUser.plan || 'free',
+            createdAt: abTestingUser.createdAt,
+            role: abTestingUser.role,
             // Add custom properties
-            ...getUserProperties(user),
+            ...getUserProperties(abTestingUser),
           },
         };
 
@@ -120,7 +142,7 @@ export function ABTestingProvider({ children, config = {} }: ABTestingProviderPr
     return service.getVariant(experimentId);
   };
 
-  const trackEvent = (eventName: string, properties?: Record<string, any>) => {
+  const trackEvent = (eventName: string, properties?: Record<string, unknown>) => {
     if (!service) return;
     service.trackEvent(eventName, properties);
   };
@@ -135,10 +157,17 @@ export function ABTestingProvider({ children, config = {} }: ABTestingProviderPr
 
     // Re-initialize to reload experiments
     if (user) {
+      const abTestingUser: ABTestingUser = {
+        id: user.id,
+        email: user.email,
+        createdAt: new Date().toISOString(), // Default if not available
+        ...user,
+      };
+
       const userContext: UserContext = {
-        userId: user.id,
+        userId: abTestingUser.id,
         sessionId: getOrCreateSessionId(),
-        properties: getUserProperties(user),
+        properties: getUserProperties(abTestingUser),
       };
 
       await service.initialize(userContext);
@@ -185,7 +214,7 @@ function getOrCreateSessionId(): string {
   return sessionId;
 }
 
-function getUserProperties(user: any): Record<string, any> {
+function getUserProperties(user: ABTestingUser): Record<string, unknown> {
   return {
     // User demographics
     accountAge: getAccountAge(user.createdAt),
