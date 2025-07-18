@@ -35,6 +35,7 @@ import {
   sendCreated,
   sendError,
   sendServerError,
+  sendUnauthorized,
   asyncHandler
 } from '../utils/responseHelpers';
 
@@ -458,20 +459,20 @@ router.post(
  *       500:
  *         description: Internal server error (logout still considered successful)
  */
-router.post('/logout', optionalAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/logout', optionalAuthMiddleware, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { refreshToken } = req.body;
   const userId = req.user?.userId;
 
   try {
     await authService.logoutUser(refreshToken, userId);
-    res.json({ message: 'Logged out successfully' });
   } catch (error) {
     logger.error('Logout error', { error, userId });
-    // Still return success to client - even if DB operation failed, the client
-    // will discard tokens so the user is effectively logged out
-    res.json({ message: 'Logged out successfully' });
+    // Continue with logout even if DB operation failed
   }
-});
+  
+  // Always return success - client will discard tokens
+  return sendSuccess(res, { message: 'Logged out successfully' });
+}));
 
 /**
  * @openapi
@@ -639,24 +640,16 @@ router.get('/check-email', async (req: express.Request, res: Response) => {
  *       500:
  *         description: Internal server error
  */
-router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me', authMiddleware, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return sendUnauthorized(res, 'User not authenticated');
   }
 
-  try {
-    const user = await authService.getCurrentUser(userId);
-    res.json(user);
-  } catch (error) {
-    logger.error('Error fetching current user', { error, userId });
-    if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({ message: error.message, code: error.code });
-    }
-    res.status(500).json({ message: 'Failed to fetch user data' });
-  }
-});
+  const user = await authService.getCurrentUser(userId);
+  return sendSuccess(res, user);
+}));
 
 /**
  * @openapi
