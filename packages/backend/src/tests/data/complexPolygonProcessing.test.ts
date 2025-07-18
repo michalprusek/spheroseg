@@ -17,7 +17,7 @@ describe('Complex Polygon Processing Tests', () => {
     jest.clearAllMocks();
 
     // Mock database responses
-    (pool.query as jest.Mock).mockImplementation((query, params) => {
+    (pool.query as jest.Mock).mockImplementation((query, _params) => {
       if (query.includes('INSERT INTO')) {
         return Promise.resolve({
           rows: [{ id: 'test-id' }],
@@ -38,7 +38,7 @@ describe('Complex Polygon Processing Tests', () => {
       return [poly1[0], ...(poly2 || [])];
     });
 
-    (polygonClipping.intersection as jest.Mock).mockImplementation((poly1, poly2) => {
+    (polygonClipping.intersection as jest.Mock).mockImplementation((_poly1, _poly2) => {
       // Return a smaller polygon as the intersection
       return [
         [

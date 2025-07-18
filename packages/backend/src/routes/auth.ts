@@ -30,13 +30,13 @@ import {
 import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
 import authService from '../services/authService'; // Import the new auth service
-// TODO: Re-enable i18n when fixed
-// import {
-//   sendSuccess,
-//   sendCreated,
-//   sendError,
-//   sendServerError
-// } from '../utils/apiResponsei18n';
+import {
+  sendSuccess,
+  sendCreated,
+  sendError,
+  sendServerError,
+  asyncHandler
+} from '../utils/responseHelpers';
 
 const router: Router = express.Router();
 
@@ -61,7 +61,7 @@ const router: Router = express.Router();
  */
 router.get('/test', (req: express.Request, res: Response) => {
   logger.info('Test route hit');
-  res.json({ message: 'Auth routes are working' });
+  return sendSuccess(res, { message: 'Auth routes are working' });
 });
 
 /**
@@ -134,21 +134,13 @@ router.get('/test', (req: express.Request, res: Response) => {
  *       500:
  *         description: Internal server error
  */
-router.post('/register', validate(registerSchema), async (req: express.Request, res: Response) => {
+router.post('/register', validate(registerSchema), asyncHandler(async (req: express.Request, res: Response) => {
   logger.info('Register endpoint hit', { body: req.body });
   const { email, password, name, preferred_language } = req.body as RegisterRequest;
 
-  try {
-    const result = await authService.registerUser(email, password, name, preferred_language);
-    res.status(201).json(result);
-  } catch (error) {
-    logger.error('Registration error', { error, email });
-    if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({ message: error.message, code: error.code });
-    }
-    res.status(500).json({ message: 'Failed to register user' });
-  }
-});
+  const result = await authService.registerUser(email, password, name, preferred_language);
+  return sendCreated(res, result, 'Registration successful');
+}));
 
 /**
  * @openapi
@@ -222,20 +214,12 @@ router.post('/register', validate(registerSchema), async (req: express.Request, 
  *       500:
  *         description: Internal server error
  */
-router.post('/login', validate(loginSchema), async (req: express.Request, res: Response) => {
+router.post('/login', validate(loginSchema), asyncHandler(async (req: express.Request, res: Response) => {
   const { email, password, remember_me } = req.body as LoginRequest;
 
-  try {
-    const result = await authService.loginUser(email, password, remember_me);
-    res.json(result);
-  } catch (error) {
-    logger.error('Login error', { error, email });
-    if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({ message: error.message, code: error.code });
-    }
-    res.status(500).json({ message: 'Failed to login' });
-  }
-});
+  const result = await authService.loginUser(email, password, remember_me);
+  return sendSuccess(res, result, 'Login successful');
+}));
 
 /**
  * @openapi
@@ -296,20 +280,12 @@ router.post('/login', validate(loginSchema), async (req: express.Request, res: R
 router.post(
   '/refresh',
   validate(refreshTokenSchema),
-  async (req: express.Request, res: Response) => {
+  asyncHandler(async (req: express.Request, res: Response) => {
     const { refreshToken } = req.body as RefreshTokenRequest;
 
-    try {
-      const result = await authService.refreshAccessToken(refreshToken);
-      res.json(result);
-    } catch (error) {
-      logger.warn('Token refresh failed', { error });
-      if (error instanceof ApiError) {
-        return res.status(error.statusCode).json({ message: error.message, code: error.code });
-      }
-      res.status(500).json({ message: 'Invalid refresh token' });
-    }
-  }
+    const result = await authService.refreshAccessToken(refreshToken);
+    return sendSuccess(res, result, 'Token refreshed successfully');
+  })
 );
 
 /**

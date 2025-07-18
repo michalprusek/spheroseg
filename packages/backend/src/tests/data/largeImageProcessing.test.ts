@@ -1,9 +1,7 @@
 import path from 'path';
-import { execSync } from 'child_process';
 import { Readable } from 'stream';
 import sharp from 'sharp';
 import pool from '../../db';
-import config from '../../config';
 // Remove unused import - segmentImage is not exported from segmentationService
 import { createMockSharp } from '../../test-utils/mockFactories';
 
@@ -43,7 +41,6 @@ describe('Large Image Processing Tests', () => {
   // File paths for test images
   const testDir = path.join(process.cwd(), 'test_assets');
   const largeImagePath = path.join(testDir, 'large_test_image.jpg');
-  const complexImagePath = path.join(testDir, 'complex_test_image.jpg');
 
   // Setup test environment
   beforeAll(() => {
@@ -52,7 +49,7 @@ describe('Large Image Processing Tests', () => {
     (sharp as unknown as jest.Mock) = mockSharp;
 
     // Mock database responses
-    (pool.query as jest.Mock).mockImplementation((query, params) => {
+    (pool.query as jest.Mock).mockImplementation((query, _params) => {
       if (query.includes('INSERT INTO images')) {
         return Promise.resolve({
           rows: [{ id: 'test-image-id' }],
