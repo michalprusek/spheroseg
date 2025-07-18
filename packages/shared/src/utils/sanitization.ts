@@ -81,7 +81,7 @@ export function sanitizeHtml(input: string, options?: {
   const truncated = input.length > maxLength ? input.substring(0, maxLength) : input;
   
   // Configure DOMPurify
-  const config = {
+  const config: DOMPurify.Config = {
     ALLOWED_TAGS: options?.allowedTags || SANITIZATION_CONFIG.HTML_ALLOWED_TAGS,
     ALLOWED_ATTR: options?.allowedAttributes || SANITIZATION_CONFIG.HTML_ALLOWED_ATTRIBUTES,
     KEEP_CONTENT: true,
@@ -91,7 +91,7 @@ export function sanitizeHtml(input: string, options?: {
     RETURN_DOM: false,
     RETURN_DOM_FRAGMENT: false,
     WHOLE_DOCUMENT: false,
-  } as any;
+  };
   
   try {
     const sanitized = DOMPurify.sanitize(truncated, config) as unknown as string;

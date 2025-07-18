@@ -47,7 +47,7 @@ export const IMAGE_FORMATS = {
 export const SUPPORTED_IMAGE_EXTENSIONS = Object.values(IMAGE_FORMATS);
 
 export function isImageFormatSupported(extension: string): boolean {
-  return SUPPORTED_IMAGE_EXTENSIONS.includes(extension.toLowerCase() as any);
+  return SUPPORTED_IMAGE_EXTENSIONS.includes(extension.toLowerCase() as typeof SUPPORTED_IMAGE_EXTENSIONS[number]);
 }
 
 export function getImageExtension(filename: string): string {

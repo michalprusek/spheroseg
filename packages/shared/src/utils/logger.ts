@@ -61,8 +61,10 @@ class SharedLogger {
     const fullMessage = `${prefix} ${message}`;
     
     if (args.length > 0) {
+      // eslint-disable-next-line no-console
       console.log(fullMessage, ...args);
     } else {
+      // eslint-disable-next-line no-console
       console.log(fullMessage);
     }
   }
