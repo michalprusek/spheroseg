@@ -20,6 +20,13 @@ import {
 import { SEGMENTATION_STATUS } from '../constants/segmentationStatus';
 import { broadcastSegmentationUpdate } from '../services/socketService';
 
+// Type definitions
+interface QueuedImageDetail {
+  id: string;
+  name: string;
+  projectId: string;
+}
+
 const router: Router = express.Router();
 
 // --- Validation Schema for Batch Trigger ---
@@ -1497,7 +1504,7 @@ router.get(
       // Get queued images for this project
       // Note: pendingTasks contains segmentation_task IDs, not image IDs
       let projectQueuedTasks: string[] = [];
-      let queuedImageDetails: any[] = [];
+      let queuedImageDetails: QueuedImageDetail[] = [];
       if (pendingTasks && pendingTasks.length > 0) {
         const queuedQuery = await pool.query(
           `SELECT DISTINCT i.id, i.name, st.id as task_id

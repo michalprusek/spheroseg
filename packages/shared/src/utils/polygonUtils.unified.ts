@@ -957,7 +957,12 @@ export const doPolygonsIntersect = (poly1: Point[], poly2: Point[]): boolean => 
     for (let k = 0; k < poly2.length; k++) {
       const l = (k + 1) % poly2.length;
 
-      if (calculateIntersection(poly1[i], poly1[j], poly2[k], poly2[l])) {
+      const p1i = poly1[i];
+      const p1j = poly1[j];
+      const p2k = poly2[k];
+      const p2l = poly2[l];
+      
+      if (p1i && p1j && p2k && p2l && calculateIntersection(p1i, p1j, p2k, p2l)) {
         return true;
       }
     }
