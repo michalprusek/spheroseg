@@ -945,7 +945,7 @@ router.get(
 router.get(
   '/queue-status/:projectId',
   authMiddleware,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
 
@@ -1450,7 +1450,7 @@ router.get(
 router.get(
   '/queue-status/:projectId',
   authMiddleware,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     const userId = req.user?.userId;
     const projectId = req.params.projectId;
 
@@ -1544,7 +1544,7 @@ router.get(
 router.get(
   '/queue',
   authMiddleware,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     console.log('GET /api/segmentation/queue called');
     const userId = req.user?.userId;
 

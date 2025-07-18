@@ -82,11 +82,11 @@ router.get(
 );
 
 // GET /api/queue-status/:projectId - Get queue status filtered by project
-// @ts-ignore
+// @ts-expect-error - AuthenticatedRequest type not properly defined yet
 router.get(
   '/queue-status/:projectId',
   authMiddleware,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     const userId = req.user?.userId;
     const projectId = req.params.projectId;
 
@@ -163,7 +163,7 @@ router.get(
 );
 
 // GET /api/mock-queue-status - Get mock queue status for development
-// @ts-ignore
+// @ts-expect-error - AuthenticatedRequest type not properly defined yet
 router.get(
   '/mock-queue-status',
   authMiddleware,
@@ -209,7 +209,7 @@ router.get(
 );
 
 // GET /api/mock-queue-status/:projectId - Get mock queue status for a specific project
-// @ts-ignore
+// @ts-expect-error - AuthenticatedRequest type not properly defined yet
 router.get(
   '/mock-queue-status/:projectId',
   authMiddleware,
