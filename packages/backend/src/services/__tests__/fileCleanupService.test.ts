@@ -1,6 +1,5 @@
 import { Pool } from 'pg';
 import * as fs from 'fs';
-import path from 'path';
 import { cleanupProjectFiles } from '../fileCleanupService';
 import imageUtils from '../../utils/imageUtils.unified';
 
@@ -62,7 +61,7 @@ describe('fileCleanupService', () => {
       ];
 
       // Mock image query response
-      mockPool.query.mockImplementation((query, params) => {
+      mockPool.query.mockImplementation((query, _params) => {
         if (query.includes('FROM images')) {
           return { rows: mockImages };
         } else if (query.includes('FROM segmentation_results')) {

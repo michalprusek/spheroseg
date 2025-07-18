@@ -20,8 +20,7 @@ import scheduledTaskService from './services/scheduledTaskService';
 import segmentationQueueService from './services/segmentationQueueService';
 import stuckImageCleanupService from './services/stuckImageCleanup';
 import db, { getPool } from './db';
-import { startPerformanceMonitoring, stopPerformanceMonitoring } from './utils/performance';
-import { monitorQuery } from './monitoring/unified';
+import { startPerformanceMonitoring } from './utils/performance';
 import performanceConfig from './config/performance';
 import performanceMonitor from './services/performanceMonitor';
 
