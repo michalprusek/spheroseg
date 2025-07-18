@@ -8,6 +8,7 @@
 import { Pool, QueryResult } from 'pg';
 import logger from '../utils/logger';
 import AdvancedCacheService from './advancedCacheService';
+import { QueryParameters, QueryRow, BatchQuery } from '../types/database';
 
 interface QueryOptions {
   useCache?: boolean;
@@ -58,9 +59,9 @@ class OptimizedQueryService {
   /**
    * Execute optimized query with caching and performance monitoring
    */
-  async query<T = any>(
+  async query<T extends QueryRow = QueryRow>(
     text: string,
-    params: any[] = [],
+    params: QueryParameters = [],
     options: QueryOptions = {}
   ): Promise<QueryResult<T>> {
     const startTime = Date.now();
@@ -121,9 +122,9 @@ class OptimizedQueryService {
   /**
    * Execute query with prepared statement
    */
-  private async executePreparedQuery<T>(
+  private async executePreparedQuery<T extends QueryRow>(
     text: string,
-    params: any[],
+    params: QueryParameters,
     timeout: number
   ): Promise<QueryResult<T>> {
     const preparedName = this.getOrCreatePreparedStatement(text, params.length);
@@ -149,9 +150,9 @@ class OptimizedQueryService {
   /**
    * Execute direct query with retry logic
    */
-  private async executeDirectQuery<T>(
+  private async executeDirectQuery<T extends QueryRow>(
     text: string,
-    params: any[],
+    params: QueryParameters,
     timeout: number,
     retries: number
   ): Promise<QueryResult<T>> {
@@ -189,8 +190,8 @@ class OptimizedQueryService {
   /**
    * Batch execute multiple queries in a transaction
    */
-  async executeBatch<T = any>(
-    queries: { text: string; params?: any[] }[],
+  async executeBatch<T extends QueryRow = QueryRow>(
+    queries: BatchQuery[],
     _options: QueryOptions = {}
   ): Promise<QueryResult<T>[]> {
     const client = await this.pool.connect();
@@ -218,9 +219,9 @@ class OptimizedQueryService {
   /**
    * Execute query with streaming for large result sets
    */
-  async queryStream<T = any>(
+  async queryStream<T extends QueryRow = QueryRow>(
     text: string,
-    params: any[] = [],
+    params: QueryParameters = [],
     batchSize: number = 1000
   ): Promise<AsyncIterable<T[]>> {
     const client = await this.pool.connect();
@@ -292,7 +293,7 @@ class OptimizedQueryService {
   /**
    * Generate cache key for query and parameters
    */
-  private generateCacheKey(text: string, params: any[]): string {
+  private generateCacheKey(text: string, params: QueryParameters): string {
     const queryHash = this.hashQuery(text);
     const paramsHash = this.hashParams(params);
     return `query:${queryHash}:${paramsHash}`;
@@ -322,7 +323,7 @@ class OptimizedQueryService {
   /**
    * Hash parameters for cache key
    */
-  private hashParams(params: any[]): string {
+  private hashParams(params: QueryParameters): string {
     const paramString = JSON.stringify(params);
     return this.hashQuery(paramString);
   }
@@ -347,7 +348,7 @@ class OptimizedQueryService {
   /**
    * Check if error is retryable
    */
-  private isRetryableError(error: any): boolean {
+  private isRetryableError(error: unknown): boolean {
     const retryableErrors = [
       'ECONNRESET',
       'ENOTFOUND',
@@ -356,7 +357,7 @@ class OptimizedQueryService {
       'connection terminated',
     ];
 
-    const errorMessage = error.message?.toLowerCase() || '';
+    const errorMessage = (error instanceof Error ? error.message : String(error)).toLowerCase();
     return retryableErrors.some((retryable) => errorMessage.includes(retryable));
   }
 
@@ -456,7 +457,19 @@ class OptimizedQueryService {
   /**
    * Get current metrics
    */
-  getMetrics(): QueryMetrics & { cacheMetrics: any } {
+  getMetrics(): QueryMetrics & {
+    cacheMetrics: {
+      hits: number;
+      misses: number;
+      evictions: number;
+      memoryUsage: number;
+      redisConnected: boolean;
+      lastCleanup: number;
+      memoryCacheSize: number;
+      hitRate: number;
+      memoryHitRate: number;
+    };
+  } {
     return {
       ...this.metrics,
       cacheMetrics: this.cache.getMetrics(),
@@ -466,12 +479,15 @@ class OptimizedQueryService {
   /**
    * Analyze query performance
    */
-  async analyzeQuery(text: string, params: any[] = []): Promise<any> {
+  async analyzeQuery(
+    text: string,
+    params: QueryParameters = []
+  ): Promise<Record<string, unknown>> {
     const client = await this.pool.connect();
     try {
       const explainQuery = `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${text}`;
       const result = await client.query(explainQuery, params);
-      return result.rows[0]['QUERY PLAN'][0];
+      return result.rows[0]['QUERY PLAN'][0] as Record<string, unknown>;
     } finally {
       client.release();
     }
