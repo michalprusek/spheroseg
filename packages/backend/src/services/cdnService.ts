@@ -356,11 +356,11 @@ class CloudflareService extends BaseCDNService {
 
 // No-op CDN Service (for development/testing)
 class NoOpCDNService extends BaseCDNService {
-  getUrl(path: string, options?: UrlOptions): string {
+  getUrl(path: string, _options?: UrlOptions): string {
     return path;
   }
 
-  async getSignedUrl(path: string, expiresIn?: number): Promise<string> {
+  async getSignedUrl(path: string, _expiresIn?: number): Promise<string> {
     return path;
   }
 

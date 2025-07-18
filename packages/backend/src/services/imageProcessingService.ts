@@ -23,7 +23,6 @@ const mkdirAsync = promisify(fs.mkdir);
 const existsAsync = promisify(fs.exists);
 
 // Konfigurace
-const UPLOAD_DIR = config.storage.uploadDir || path.join(__dirname, '../../uploads');
 const THUMBNAIL_SIZE = { width: 300, height: 300 };
 const MAX_IMAGE_SIZE = 100 * 1024 * 1024; // 100 MB
 const SUPPORTED_FORMATS = ['jpeg', 'jpg', 'png', 'tiff', 'tif', 'webp', 'bmp'];
