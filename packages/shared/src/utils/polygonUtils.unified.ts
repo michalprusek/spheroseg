@@ -184,8 +184,12 @@ export const calculatePolygonArea = (points: Point[]): number => {
   
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
-    area += points[i].x * points[j].y;
-    area -= points[j].x * points[i].y;
+    const pi = points[i];
+    const pj = points[j];
+    if (pi && pj) {
+      area += pi.x * pj.y;
+      area -= pj.x * pi.y;
+    }
   }
   
   return Math.abs(area / 2);

@@ -18,9 +18,9 @@ export * from './schemas';
 export * from './entitySchemas';
 
 // Re-export commonly used items for convenience
+export { UnifiedResponseHandler as ResponseHandler } from './responseHandler';
 export { 
-  UnifiedResponseHandler as ResponseHandler,
   ApiResponseSchema,
   ApiErrorResponseSchema,
   createPaginatedSchema,
-} from './responseHandler';
+} from './schemas';
