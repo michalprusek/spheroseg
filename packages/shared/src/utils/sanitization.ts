@@ -83,7 +83,6 @@ export function sanitizeHtml(input: string, options?: {
   // Configure DOMPurify
   const config: DOMPurify.Config = {
     ALLOWED_TAGS: (options?.allowedTags || SANITIZATION_CONFIG.HTML_ALLOWED_TAGS) as string[],
-    ALLOWED_ATTR: (options?.allowedAttributes as string[] | undefined) || SANITIZATION_CONFIG.HTML_ALLOWED_ATTRIBUTES,
     KEEP_CONTENT: true,
     ALLOW_DATA_ATTR: false,
     SANITIZE_DOM: true,
@@ -92,6 +91,11 @@ export function sanitizeHtml(input: string, options?: {
     RETURN_DOM_FRAGMENT: false,
     WHOLE_DOCUMENT: false,
   };
+  
+  // Set ALLOWED_ATTR if it's a string array
+  if (options?.allowedAttributes && Array.isArray(options.allowedAttributes)) {
+    config.ALLOWED_ATTR = options.allowedAttributes;
+  }
   
   try {
     const sanitized = DOMPurify.sanitize(truncated, config) as unknown as string;
