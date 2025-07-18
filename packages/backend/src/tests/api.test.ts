@@ -205,13 +205,6 @@ mockApp.post('/api/segmentation/:imageId/resegment', authMiddleware, (req, res) 
 // Use the mock app instead of the real app
 const app = mockApp;
 
-// Mock user for authentication
-const mockUser = {
-  id: '00000000-0000-0000-0000-000000000000',
-  email: 'test@example.com',
-  username: 'testuser',
-};
-
 // Generate a valid JWT token for testing
 const generateValidToken = () => {
   // Using our mocked jwt.sign function

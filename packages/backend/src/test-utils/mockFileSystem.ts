@@ -1418,6 +1418,7 @@ export function setupTestFiles(fileSystem: MockFileSystem): void {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace fs {
   // Define minimal Dirent interface needed for the mock
   export interface Dirent {

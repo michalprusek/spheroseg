@@ -1,8 +1,5 @@
 import polygonClipping from 'polygon-clipping';
 import pool from '../../db';
-// Mock the shared utilities
-const calculateArea = jest.fn((points: any[]) => 100); // Mock area calculation
-const calculatePerimeter = jest.fn((points: any[]) => 40); // Mock perimeter calculation
 
 // Mock database connection
 jest.mock('../../db');

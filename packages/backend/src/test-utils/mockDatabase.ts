@@ -172,7 +172,7 @@ export class MockDatabase {
       end: (): Promise<void> => {
         return Promise.resolve();
       },
-      on: (event: string, listener: (...args: any[]) => void): Pool => {
+      on: (_event: string, _listener: (...args: any[]) => void): Pool => {
         // Do nothing
         return this.createMockPool();
       },
@@ -227,7 +227,7 @@ export class MockDatabase {
             /([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/
           );
           if (match) {
-            const [, column, operator, stringValue, numberValue, placeholder] = match;
+            const [, column, , stringValue, numberValue, placeholder] = match;
 
             // For placeholder values, we'll handle them separately
             if (!placeholder) {
@@ -301,7 +301,7 @@ export class MockDatabase {
             /([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/
           );
           if (match) {
-            const [, column, operator, stringValue, numberValue, placeholder] = match;
+            const [, column, , stringValue, numberValue, placeholder] = match;
 
             // For placeholder values, we'll handle them separately
             if (!placeholder) {
@@ -334,7 +334,7 @@ export class MockDatabase {
             /([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(?:'([^']*)'|(\d+)|(\$\d+))/
           );
           if (match) {
-            const [, column, operator, stringValue, numberValue, placeholder] = match;
+            const [, column, , stringValue, numberValue, placeholder] = match;
 
             // For placeholder values, we'll handle them separately
             if (!placeholder) {
@@ -385,10 +385,10 @@ export class MockDatabase {
           // Extract conditions with placeholders
           const conditionParts = conditions.split('AND').map((part) => part.trim());
 
-          conditionParts.forEach((condition, index) => {
+          conditionParts.forEach((condition) => {
             const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(\$\d+)/);
             if (match) {
-              const [, column, operator, placeholder] = match;
+              const [, column, , placeholder] = match;
               const paramIndex = parseInt(placeholder.substring(1)) - 1;
 
               if (paramIndex >= 0 && paramIndex < values.length) {
@@ -413,7 +413,7 @@ export class MockDatabase {
         if (setMatch) {
           const setParts = setMatch[1].split(',').map((part) => part.trim());
 
-          setParts.forEach((part, index) => {
+          setParts.forEach((part) => {
             const match = part.match(/([^\s=]+)\s*=\s*(\$\d+)/);
             if (match) {
               const [, column, placeholder] = match;
@@ -433,10 +433,10 @@ export class MockDatabase {
           const conditions = whereMatch[1];
 
           const conditionParts = conditions.split('AND').map((part) => part.trim());
-          conditionParts.forEach((condition, index) => {
+          conditionParts.forEach((condition) => {
             const match = condition.match(/([^\s=<>]+)\s*(=|<>|>|<|>=|<=)\s*(\$\d+)/);
             if (match) {
-              const [, column, operator, placeholder] = match;
+              const [, column, , placeholder] = match;
               const paramIndex = parseInt(placeholder.substring(1)) - 1;
 
               if (paramIndex >= 0 && paramIndex < values.length) {
