@@ -244,7 +244,7 @@ describe('projectDuplicationService', () => {
       jest.clearAllMocks();
 
       // Mock client.query for different query patterns
-      (mockClient.query as jest.Mock).mockImplementation((query, params) => {
+      (mockClient.query as jest.Mock).mockImplementation((query, _params) => {
         if (query.includes('SELECT title, description')) {
           return Promise.resolve({
             rows: [

@@ -88,7 +88,7 @@ beforeEach(() => {
   (spawn as jest.Mock).mockReturnValue(mockChildProcess);
 
   // Mock database
-  (pool.query as jest.Mock).mockImplementation((query: string, params: any[]) => {
+  (pool.query as jest.Mock).mockImplementation((query: string, _params: any[]) => {
     if (query.includes('UPDATE segmentation_results')) {
       return Promise.resolve({ rowCount: 1 });
     }
@@ -732,7 +732,7 @@ describe('segmentationQueueService', () => {
         const mockQueue = new TaskQueue() as any;
         setupSegmentationQueue();
         const calls = mockQueue.registerExecutor.mock.calls;
-        const executeSegmentationTask = calls[0][1];
+        const _executeSegmentationTask = calls[0][1];
 
         // Now executeSegmentationTask is available, we can proceed with tests
         // using it as a proxy to updateSegmentationStatus

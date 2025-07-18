@@ -10,12 +10,6 @@ import logger from '../utils/logger';
 import { Pool } from 'pg';
 
 // Cache layers and TTL strategies
-const CACHE_LAYERS = {
-  L1_MEMORY: 'L1', // In-memory cache (fastest)
-  L2_REDIS: 'L2', // Redis cache (fast)
-  L3_DATABASE: 'L3', // Database with query optimization (slowest)
-} as const;
-
 const CACHE_STRATEGIES = {
   // Hot data - frequently accessed
   HOT: {

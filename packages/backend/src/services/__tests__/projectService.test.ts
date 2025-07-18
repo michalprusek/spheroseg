@@ -55,7 +55,7 @@ describe('Project Service', () => {
   describe('createProject', () => {
     it('should create a new project in the database and create project directories', async () => {
       // Mock client transaction methods
-      mockClient.query.mockImplementation((query, params) => {
+      mockClient.query.mockImplementation((query, _params) => {
         if (query === 'BEGIN' || query === 'COMMIT') {
           return Promise.resolve();
         }
@@ -287,7 +287,7 @@ describe('Project Service', () => {
   describe('getUserProjects', () => {
     it('should return owned and shared projects with count', async () => {
       // Mock database queries
-      (pool.query as jest.Mock).mockImplementation((query, params) => {
+      (pool.query as jest.Mock).mockImplementation((query, _params) => {
         if (query.includes('SELECT EXISTS') && query.includes('images')) {
           return Promise.resolve({ rows: [{ exists: true }] });
         }
@@ -366,7 +366,7 @@ describe('Project Service', () => {
 
     it('should return only owned projects when includeShared is false', async () => {
       // Mock database queries
-      (pool.query as jest.Mock).mockImplementation((query, params) => {
+      (pool.query as jest.Mock).mockImplementation((query, _params) => {
         if (query.includes('SELECT EXISTS') && query.includes('images')) {
           return Promise.resolve({ rows: [{ exists: true }] });
         }
@@ -408,7 +408,7 @@ describe('Project Service', () => {
   describe('deleteProject', () => {
     it('should delete a project and its associated resources', async () => {
       // Mock client transaction methods
-      mockClient.query.mockImplementation((query, params) => {
+      mockClient.query.mockImplementation((query, _params) => {
         if (query === 'BEGIN' || query === 'COMMIT') {
           return Promise.resolve();
         }
