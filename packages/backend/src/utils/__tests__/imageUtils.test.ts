@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as util from 'util';
 import sharp from 'sharp';
 import { createThumbnail } from '../imageUtils.unified';
 import logger from '../logger';
@@ -81,8 +82,7 @@ describe('imageUtils', () => {
       const targetPath = '/test/thumb.png';
 
       // Mock util.promisify
-      const util = require('util');
-      util.promisify = jest.fn(() => jest.fn().mockResolvedValue({ stdout: '', stderr: '' }));
+      (util as any).promisify = jest.fn(() => jest.fn().mockResolvedValue({ stdout: '', stderr: '' }));
 
       await createThumbnail(sourcePath, targetPath);
 

@@ -14,7 +14,7 @@ jest.mock('fs', () => {
       }
       return actualFs.existsSync(path);
     }),
-    mkdirSync: jest.fn().mockImplementation((path, options) => {
+    mkdirSync: jest.fn().mockImplementation((path, _options) => {
       // Pouze logujeme volání, ale skutečně nevytváříme adresáře
       console.log(`Mock: Creating directory ${path}`);
       return undefined;
@@ -24,7 +24,7 @@ jest.mock('fs', () => {
 
 import config from '../../config';
 import segmentationQueueService from '../../services/segmentationQueueService';
-const triggerSegmentationTask = (segmentationQueueService as any).triggerSegmentationTask || segmentationQueueService.addToQueue;
+const _triggerSegmentationTask = (segmentationQueueService as any).triggerSegmentationTask || segmentationQueueService.addToQueue;
 
 // Mock necessary modules
 jest.mock('../../db');
@@ -38,7 +38,7 @@ describe('ML Integration Tests', () => {
   // Test image path (use a small test image)
   const TEST_IMAGE_PATH = path.join(process.cwd(), 'test_assets', 'test_image.png');
   const TEST_IMAGE_ID = 'test-image-123';
-  const TEST_PROJECT_ID = 'test-project-123';
+  const _TEST_PROJECT_ID = 'test-project-123';
   const TEST_USER_ID = 'test-user-123';
 
   // Output paths
@@ -70,7 +70,7 @@ describe('ML Integration Tests', () => {
 
     // Mock configuration for testing
     // Use Object.defineProperty instead of jest.spyOn for configurating storage.uploadDir
-    const originalConfig = { ...config };
+    const _originalConfig = { ...config };
     const originalStorage = { ...config.storage };
 
     // Override the config object's storage property
@@ -331,7 +331,7 @@ except ImportError as e:
 
     // Generate output paths
     const outputJsonPath = path.join(resultOutputDir, 'segmentation-result.json');
-    const outputVisualizationPath = path.join(resultOutputDir, 'visualization.png');
+    const _outputVisualizationPath = path.join(resultOutputDir, 'visualization.png');
 
     // Run Python script directly
     return new Promise<void>((resolve, reject) => {
@@ -354,8 +354,8 @@ except ImportError as e:
 
       // Execute Python script
       pythonProcess = spawn('python3', args);
-      let stdoutData = '';
-      let stderrData = '';
+      let _stdoutData = '';
+      let _stderrData = '';
 
       if (pythonProcess.stdout) {
         pythonProcess.stdout.on('data', (data) => {
