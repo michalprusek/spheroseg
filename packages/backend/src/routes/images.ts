@@ -21,6 +21,14 @@ import { ImageData } from '../utils/imageUtils';
 import config from '../config';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
 import cacheService from '../services/cacheService';
+import {
+  sendSuccess,
+  sendCreated,
+  sendError,
+  sendNotFound,
+  sendPaginated,
+  asyncHandler
+} from '../utils/responseHelpers';
 
 // Type definition for multer request with params
 interface MulterRequest extends Express.Request {
@@ -1360,7 +1368,11 @@ router.get(
         );
       }
 
-      res.status(200).json(response);
+      return sendPaginated(res, response.images, {
+        page: Number(page || 1),
+        pageSize: Number(limit),
+        totalItems: totalCount
+      }, 'Images retrieved successfully');
     } catch (error) {
       logger.error('Error fetching images', {
         projectId,
