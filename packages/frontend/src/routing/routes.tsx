@@ -10,7 +10,7 @@ import { RouterErrorBoundary } from './RouterErrorBoundary';
 // Helper to create route with proper error boundary and suspense
 const createRouteElement = (
   componentName: string,
-  loadComponent: () => Promise<{ default: React.ComponentType<any> }>,
+  loadComponent: () => Promise<{ default: React.ComponentType<unknown> }>,
   isProtected = false
 ): ReactNode => {
   const Component = createLazyComponent(
