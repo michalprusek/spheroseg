@@ -425,7 +425,7 @@ export function createProtectedComponent<P extends object>(
 /**
  * Create action handler that checks permissions
  */
-export function createPermissionedAction<T extends (...args: any[]) => any>(
+export function createPermissionedAction<T extends (...args: unknown[]) => unknown>(
   action: T,
   permission: Permission | PermissionCheck,
   onDenied?: () => void,

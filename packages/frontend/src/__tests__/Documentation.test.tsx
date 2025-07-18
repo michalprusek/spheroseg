@@ -83,7 +83,7 @@ describe('Documentation Page', () => {
 
     // Get the image element
     const image = screen.getByAltText(/documentation.introduction.imageAlt/i) as HTMLImageElement;
-    const originalSrc = image.src;
+    const _originalSrc = image.src;
 
     // Simulate an error loading the image
     fireImageErrorEvent(image);
