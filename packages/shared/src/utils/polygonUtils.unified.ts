@@ -1185,7 +1185,7 @@ export const executePolygonWorkerOperation = async <T>(
   points: Point[],
   polygonWorker: PolygonWorker,
   operation: (points: Point[]) => Promise<T>,
-  operationName: string,
+  _operationName: string,
   defaultValue: T
 ): Promise<T> => {
   try {

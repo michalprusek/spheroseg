@@ -17,6 +17,11 @@ const logger = createLogger('UnifiedSocketContext');
 // Types and Interfaces
 // ===========================
 
+// Type for event data
+type EventData = unknown;
+type EventArgs = EventData[];
+type EventHandler = (...args: EventArgs) => void;
+
 export interface SocketContextValue {
   // Connection state
   isConnected: boolean;
@@ -29,10 +34,10 @@ export interface SocketContextValue {
   disconnect: () => Promise<void>;
 
   // Event handling
-  emit: (event: string, ...args: any[]) => void;
-  emitWithAck: (event: string, ...args: any[]) => Promise<any>;
-  on: (event: string, handler: (...args: any[]) => void) => () => void;
-  off: (event: string, handler?: (...args: any[]) => void) => void;
+  emit: (event: string, ...args: EventArgs) => void;
+  emitWithAck: (event: string, ...args: EventArgs) => Promise<unknown>;
+  on: (event: string, handler: EventHandler) => () => void;
+  off: (event: string, handler?: EventHandler) => void;
 
   // Room management
   joinRoom: (room: string) => Promise<void>;
@@ -152,15 +157,15 @@ export function UnifiedSocketProvider({
   }, []);
 
   // Event handling methods
-  const emit = useCallback((event: string, ...args: any[]) => {
+  const emit = useCallback((event: string, ...args: EventArgs) => {
     webSocketService.emit(event, ...args);
   }, []);
 
-  const emitWithAck = useCallback(async (event: string, ...args: any[]) => {
+  const emitWithAck = useCallback(async (event: string, ...args: EventArgs) => {
     return webSocketService.emitWithAck(event, ...args);
   }, []);
 
-  const on = useCallback((event: string, handler: (...args: any[]) => void) => {
+  const on = useCallback((event: string, handler: EventHandler) => {
     const id = webSocketService.on(event, handler);
 
     // Return cleanup function
@@ -169,7 +174,7 @@ export function UnifiedSocketProvider({
     };
   }, []);
 
-  const off = useCallback((event: string, handler?: (...args: any[]) => void) => {
+  const off = useCallback((event: string, handler?: EventHandler) => {
     webSocketService.off(event, handler);
   }, []);
 

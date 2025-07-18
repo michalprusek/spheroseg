@@ -98,8 +98,12 @@ export class PolygonWasmProcessor {
     const n = points.length;
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n;
-      area += points[i].x * points[j].y;
-      area -= points[j].x * points[i].y;
+      const p1 = points[i];
+      const p2 = points[j];
+      if (p1 && p2) {
+        area += p1.x * p2.y;
+        area -= p2.x * p1.y;
+      }
     }
     return Math.abs(area / 2);
   }
@@ -113,9 +117,13 @@ export class PolygonWasmProcessor {
     const n = points.length;
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n;
-      const dx = points[j].x - points[i].x;
-      const dy = points[j].y - points[i].y;
-      perimeter += Math.sqrt(dx * dx + dy * dy);
+      const p1 = points[i];
+      const p2 = points[j];
+      if (p1 && p2) {
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        perimeter += Math.sqrt(dx * dx + dy * dy);
+      }
     }
     return perimeter;
   }

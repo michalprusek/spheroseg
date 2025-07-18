@@ -83,7 +83,7 @@ export function sanitizeHtml(input: string, options?: {
   // Configure DOMPurify
   const config: DOMPurify.Config = {
     ALLOWED_TAGS: (options?.allowedTags || SANITIZATION_CONFIG.HTML_ALLOWED_TAGS) as string[],
-    ALLOWED_ATTR: (options?.allowedAttributes || SANITIZATION_CONFIG.HTML_ALLOWED_ATTRIBUTES) as string[],
+    ALLOWED_ATTR: options?.allowedAttributes as string[] || SANITIZATION_CONFIG.HTML_ALLOWED_ATTRIBUTES,
     KEEP_CONTENT: true,
     ALLOW_DATA_ATTR: false,
     SANITIZE_DOM: true,
