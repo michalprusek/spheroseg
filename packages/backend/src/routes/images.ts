@@ -439,10 +439,10 @@ router.post(
     next();
   },
   upload.array('images', 20), // Zvýšíme limit na 20 obrázků najednou
-  (req: any, res: any, next: any) => {
+  (req: AuthenticatedRequestWithFiles, res: Response, next: NextFunction) => {
     logger.info('Upload endpoint - after multer', {
       filesReceived: req.files?.length || 0,
-      files: req.files?.map((f: any) => ({ name: f.originalname, size: f.size })),
+      files: req.files?.map((f) => ({ name: f.originalname, size: f.size })),
     });
     next();
   },
