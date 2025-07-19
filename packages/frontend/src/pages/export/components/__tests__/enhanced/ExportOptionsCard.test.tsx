@@ -279,17 +279,18 @@ describe('ExportOptionsCard Component (Enhanced)', () => {
     const propsWithNoImages = {
       ...mockProps,
       getSelectedCount: vi.fn(() => 0),
+      includeObjectMetrics: true,
     };
     
     render(<ExportOptionsCard {...propsWithNoImages} />);
     
-    expect(screen.getByText('Please select images for export')).toBeInTheDocument();
+    expect(screen.getByText('export.selectImagesForExport')).toBeInTheDocument();
   });
 
   it('handles different format descriptions correctly', () => {
     render(<ExportOptionsCard {...mockProps} includeObjectMetrics={true} />);
     
-    // Check if format descriptions are shown
-    expect(screen.getByText('Excel spreadsheet with multiple worksheets')).toBeInTheDocument();
+    // Check if format descriptions are shown - using translation keys
+    expect(screen.getByText('export.metricsRequireSegmentation')).toBeInTheDocument();
   });
 });

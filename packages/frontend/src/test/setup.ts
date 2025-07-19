@@ -10,10 +10,16 @@ import './mocks/radix';
 import './mocks/apiClient';
 
 // Fix missing globals - use direct assignment
-global.clearInterval = clearInterval;
-global.setInterval = setInterval;
-global.clearTimeout = clearTimeout;
-global.setTimeout = setTimeout;
+// Store references first to avoid any timing issues
+const nodeClearInterval = clearInterval;
+const nodeSetInterval = setInterval;
+const nodeClearTimeout = clearTimeout;
+const nodeSetTimeout = setTimeout;
+
+global.clearInterval = nodeClearInterval;
+global.setInterval = nodeSetInterval;
+global.clearTimeout = nodeClearTimeout;
+global.setTimeout = nodeSetTimeout;
 
 // Improve test performance by reducing console noise
 global.console.error = vi.fn();

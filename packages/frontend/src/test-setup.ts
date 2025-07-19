@@ -461,6 +461,35 @@ vi.mock('@/services/userProfileService', () => {
     setLanguage: vi.fn().mockResolvedValue(undefined),
     getTheme: vi.fn().mockResolvedValue('light'),
     setTheme: vi.fn().mockResolvedValue(undefined),
+    updateUserProfile: vi.fn().mockResolvedValue({
+      id: '1',
+      user_id: '1',
+      username: 'testuser',
+      full_name: 'Test User',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }),
+    deleteAvatar: vi.fn().mockResolvedValue({ message: 'Avatar deleted' }),
+    getUserProfile: vi.fn().mockResolvedValue({
+      id: '1',
+      user_id: '1',
+      username: 'testuser',
+      full_name: 'Test User',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }),
+    uploadAvatar: vi.fn().mockResolvedValue({ avatar_url: 'https://example.com/avatar.jpg' }),
+    getUserProfileWithSettings: vi.fn().mockResolvedValue({
+      profile: {
+        id: '1',
+        user_id: '1',
+        username: 'testuser',
+        full_name: 'Test User',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      settings: {},
+    }),
   };
   return {
     userProfileService: mockService,
