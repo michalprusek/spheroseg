@@ -10,6 +10,7 @@ import { constructUrl } from '@/lib/urlUtils';
 import { storeImageBlob } from '@/utils/indexedDBService';
 import apiClient from '@/lib/apiClient';
 import cacheService, { CacheLayer } from '@/services/unifiedCacheService';
+import logger from '@/utils/logger';
 
 /**
  * Default illustration images to use when no real images are available
@@ -98,7 +99,7 @@ export const mapApiImageToProjectImage = (apiImage: Image): ProjectImage => {
   const thumbnailUrl = apiImage.thumbnail_path ? ensurePath(apiImage.thumbnail_path) : null;
 
   if (!imageUrl) {
-    console.warn(`Could not construct URL for image: ${apiImage.id}`, apiImage);
+    logger.warn(`Could not construct URL for image: ${apiImage.id}`, apiImage);
   }
 
   let segmentationResultPathValue: string | null = null;
@@ -159,7 +160,7 @@ export const loadImagesFromStorage = (projectId: string): ProjectImage[] => {
         .map((img: unknown) => {
           // Basic validation and transformation
           if (!img || typeof img.id !== 'string') {
-            console.warn('Skipping invalid image data from localStorage:', img);
+            logger.warn('Skipping invalid image data from localStorage:', img);
             return null;
           }
 
@@ -206,7 +207,7 @@ export const loadImagesFromStorage = (projectId: string): ProjectImage[] => {
 
       // Asynchronně načteme data z IndexedDB pro obrázky, které to potřebují
       if (images.some((img) => img._needsIndexedDBLoad || img._needsIndexedDBThumbLoad)) {
-        console.log(`Some images need to load data from IndexedDB for project ${projectId}`);
+        logger.debug(`Some images need to load data from IndexedDB for project ${projectId}`);
 
         // Asynchronně načteme data z IndexedDB
         import('../utils/indexedDBService')
@@ -218,7 +219,7 @@ export const loadImagesFromStorage = (projectId: string): ProjectImage[] => {
                   const blob = await getImageBlob(img.id);
                   if (blob) {
                     img.url = URL.createObjectURL(blob);
-                    console.log(`Loaded image ${img.id} from IndexedDB`);
+                    logger.debug(`Loaded image ${img.id} from IndexedDB`);
                     delete img._needsIndexedDBLoad;
                   }
                 }
@@ -228,24 +229,24 @@ export const loadImagesFromStorage = (projectId: string): ProjectImage[] => {
                   const blob = await getImageBlob(`thumb-${img.id}`);
                   if (blob) {
                     img.thumbnail_url = URL.createObjectURL(blob);
-                    console.log(`Loaded thumbnail for image ${img.id} from IndexedDB`);
+                    logger.debug(`Loaded thumbnail for image ${img.id} from IndexedDB`);
                     delete img._needsIndexedDBThumbLoad;
                   }
                 }
               } catch (blobError) {
-                console.error(`Failed to load image ${img.id} from IndexedDB:`, blobError);
+                logger.error(`Failed to load image ${img.id} from IndexedDB:`, blobError);
               }
             });
           })
           .catch((err) => {
-            console.error('Failed to import indexedDBService:', err);
+            logger.error('Failed to import indexedDBService:', err);
           });
       }
 
       return images;
     }
   } catch (error) {
-    console.error('Error loading images from localStorage:', error);
+    logger.error('Error loading images from localStorage:', error);
   }
   return [];
 };
@@ -283,7 +284,7 @@ export const saveImagesToStorage = (projectId: string, images: ProjectImage[]): 
 
     // Pokud máme velké obrázky, uložíme je do IndexedDB
     if (largeImages.length > 0) {
-      console.log(`Storing ${largeImages.length} large images in IndexedDB for project ${projectId}`);
+      logger.debug(`Storing ${largeImages.length} large images in IndexedDB for project ${projectId}`);
 
       // Asynchronně uložíme velké obrázky do IndexedDB
       import('../utils/indexedDBService')
