@@ -155,7 +155,7 @@ export const triggerBatchSegmentation = async (projectId: string, imageIds: stri
  * @param projectId The project ID
  * @returns An empty queue status
  */
-export const createEmptyQueueStatus = (projectId: string): QueueStatusUpdate => {
+export const createEmptyQueueStatus = (_projectId: string): QueueStatusUpdate => {
   // Return empty data with current timestamp
   return {
     pendingTasks: [],

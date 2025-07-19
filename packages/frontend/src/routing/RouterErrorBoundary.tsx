@@ -1,6 +1,6 @@
 import { useRouteError, isRouteErrorResponse } from 'react-router-dom';
 import { useEffect } from 'react';
-import { handleError, ErrorType, ErrorSeverity } from '@/utils/error/unifiedErrorHandler';
+import { handleError, ErrorType } from '@/utils/error/unifiedErrorHandler';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 

@@ -2,7 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import logger from '@/utils/logger';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { handleError, ErrorType, ErrorSeverity } from '@/utils/error/unifiedErrorHandler';
+import { handleError } from '@/utils/error/unifiedErrorHandler';
 import { markErrorAsHandled } from '@/utils/error/globalErrorHandler';
 
 interface ErrorBoundaryProps {

@@ -8,7 +8,7 @@ import getAssetUrl from '@/utils/getAssetUrl';
 const Hero = () => {
   const { t } = useTranslations();
   const heroRef = useRef<HTMLDivElement>(null);
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [_forceUpdate, _setForceUpdate] = useState(0);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

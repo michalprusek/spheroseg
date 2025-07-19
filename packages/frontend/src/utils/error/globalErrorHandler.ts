@@ -5,7 +5,7 @@
  * to ensure all errors are caught and processed through our centralized system
  */
 
-import { handleError, ErrorType, ErrorSeverity } from './unifiedErrorHandler';
+import { handleError } from './unifiedErrorHandler';
 
 /**
  * Initialize global error handlers

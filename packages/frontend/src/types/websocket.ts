@@ -2,7 +2,6 @@
  * WebSocket types for the SpherosegV4 application
  */
 
-import type { SegmentationStatus } from '@spheroseg/types';
 
 export interface BatchMessage<T = unknown> {
   id: string;

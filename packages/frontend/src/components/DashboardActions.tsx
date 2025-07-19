@@ -12,7 +12,7 @@ interface DashboardActionsProps {
 }
 
 const DashboardActions = ({ viewMode, setViewMode, onSort: _onSort, sortOptions: _sortOptions = [] }: DashboardActionsProps) => {
-  const { t } = useLanguage();
+  const { t: _t } = useLanguage();
 
   return (
     <div className="flex items-center space-x-2">

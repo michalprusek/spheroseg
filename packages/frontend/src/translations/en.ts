@@ -477,7 +477,7 @@ export default {
     currentPasswordIncorrect: 'Current password is incorrect',
     registerTitle: 'Create Account',
     registerDescription: 'Sign up for a new account',
-    registerSuccess: 'Registration successful\! You can now sign in.',
+    registerSuccess: 'Registration successful! You can now sign in.',
     emailPlaceholder: 'Enter your email',
     passwordPlaceholder: 'Enter your password',
     firstNamePlaceholder: 'e.g. John',

@@ -1,11 +1,70 @@
 import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
-import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import apiClient from '../apiClient';
-import { handleError, ErrorType, ErrorSeverity } from '@/utils/errorHandling';
-import logger from '@/utils/logger';
+import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-// Mock dependencies
-vi.mock('axios', () => {
+// Mock all dependencies before imports
+vi.mock('@/utils/error/unifiedErrorHandler', () => ({
+  handleError: vi.fn(),
+  ErrorType: {
+    NETWORK: 'NETWORK',
+    AUTH: 'AUTH',
+    VALIDATION: 'VALIDATION',
+    SERVER: 'SERVER',
+    UNKNOWN: 'UNKNOWN',
+  },
+  ErrorSeverity: {
+    LOW: 'LOW',
+    MEDIUM: 'MEDIUM',
+    HIGH: 'HIGH',
+    CRITICAL: 'CRITICAL',
+  },
+}));
+
+vi.mock('@/utils/error/permissionErrorHandler', () => ({
+  handlePermissionError: vi.fn(),
+}));
+
+vi.mock('@/utils/logger', () => ({
+  default: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/authService', () => ({
+  getAccessToken: vi.fn(),
+  removeTokens: vi.fn(),
+  isValidToken: vi.fn(),
+}));
+
+vi.mock('@/config', () => ({
+  default: {
+    apiUrl: 'http://localhost:5001',
+    apiBaseUrl: '/api',
+  },
+}));
+
+// Mock axios
+const mockAxiosInstance = {
+  interceptors: {
+    request: {
+      use: vi.fn(),
+      eject: vi.fn(),
+    },
+    response: {
+      use: vi.fn(),
+      eject: vi.fn(),
+    },
+  },
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+  patch: vi.fn(),
+};
+
+vi.mock('axios', () => ({
   const mockAxios = {
     create: vi.fn(() => mockAxiosInstance),
     defaults: {
