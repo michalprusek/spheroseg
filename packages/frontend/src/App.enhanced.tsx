@@ -42,6 +42,7 @@ import { toast, Toaster } from 'sonner';
 
 // Import IndexedDB service for cleanup
 import { cleanupOldData, getDBStats, clearEntireDatabase } from './utils/indexedDBService';
+import logger from '@/utils/logger';
 
 // Import accessibility CSS
 import './components/a11y/SkipLink.css';
@@ -241,13 +242,13 @@ const AppLayout = () => {
     const cleanupStorage = async () => {
       try {
         const statsBefore = await getDBStats();
-        console.log('IndexedDB stats before cleanup:', statsBefore);
+        logger.debug('IndexedDB stats before cleanup:', statsBefore);
 
         const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
         await cleanupOldData(THREE_DAYS_MS);
 
         const statsAfter = await getDBStats();
-        console.log('IndexedDB stats after cleanup:', statsAfter);
+        logger.debug('IndexedDB stats after cleanup:', statsAfter);
 
         const freedSpace = statsBefore.totalSize - statsAfter.totalSize;
         if (freedSpace > 10 * 1024 * 1024) {

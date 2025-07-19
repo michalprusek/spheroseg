@@ -6,7 +6,7 @@
 
 import type { CachedItem, CacheStats } from '@/utils/types/cache.types';
 
-export function createMockCacheEntry<T = any>(overrides: Partial<CachedItem<T>> = {}): CachedItem<T> {
+export function createMockCacheEntry<T = unknown>(overrides: Partial<CachedItem<T>> = {}): CachedItem<T> {
   return {
     data: {} as T,
     timestamp: Date.now(),
@@ -26,7 +26,7 @@ export function createMockCacheStats(overrides: Partial<CacheStats> = {}): Cache
   };
 }
 
-export function createExpiredCacheEntry<T = any>(data: T, expiredMs: number = 1000): CachedItem<T> {
+export function createExpiredCacheEntry<T = unknown>(data: T, expiredMs: number = 1000): CachedItem<T> {
   return {
     data,
     timestamp: Date.now() - expiredMs - 1000,
@@ -39,7 +39,7 @@ export function createProjectCacheKeys(projectId: string, count: number = 5): st
   return Array.from({ length: count }, (_, i) => `spheroseg_images_${projectId}_${i}`);
 }
 
-export function setupMockLocalStorage(entries: Record<string, any>): void {
+export function setupMockLocalStorage(entries: Record<string, unknown>): void {
   localStorage.clear();
   Object.entries(entries).forEach(([key, value]) => {
     localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));

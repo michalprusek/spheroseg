@@ -24,7 +24,7 @@ export class MockWorker {
       const { id, operation, params } = message;
 
       // Mock responses for different operations
-      let result: any;
+      let result: unknown;
       let error: string | undefined;
 
       try {
