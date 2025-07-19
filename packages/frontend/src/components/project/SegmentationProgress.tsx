@@ -60,12 +60,12 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
   const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null);
   const { token } = useAuth();
   const { t } = useLanguage();
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [_socket, setSocket] = useState<Socket | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const isMounted = useIsMounted();
-  const timer = useTimer();
+  const _isMounted = useIsMounted();
+  const _timer = useTimer();
 
   // Zavře menu při kliknutí mimo
   useOnClickOutside(menuRef, () => setIsOpen(false));
