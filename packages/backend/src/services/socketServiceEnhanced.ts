@@ -15,10 +15,10 @@ let io: SocketIOServer | null = null;
 
 // Enhanced configuration
 const ENHANCED_CONFIG: Partial<BatchConfig> = {
-  maxBatchSize: parseInt(process.env.WEBSOCKET_BATCH_SIZE || '50'),
-  maxBatchDelay: parseInt(process.env.WEBSOCKET_BATCH_DELAY || '100'),
-  compressionThreshold: parseInt(process.env.WEBSOCKET_COMPRESSION_THRESHOLD || '1024'),
-  enableCompression: process.env.WEBSOCKET_COMPRESSION !== 'false',
+  maxBatchSize: parseInt(process.env["WEBSOCKET_BATCH_SIZE"] || '50'),
+  maxBatchDelay: parseInt(process.env["WEBSOCKET_BATCH_DELAY"] || '100'),
+  compressionThreshold: parseInt(process.env["WEBSOCKET_COMPRESSION_THRESHOLD"] || '1024'),
+  enableCompression: process.env["WEBSOCKET_COMPRESSION"] !== 'false',
   priorityEvents: [
     'error',
     'auth-required',

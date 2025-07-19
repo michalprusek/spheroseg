@@ -27,7 +27,7 @@ const authMiddleware = (req: any, res: any, next: any) => {
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'test-secret') as any;
+    const decoded = jwt.verify(token, process.env["JWT_SECRET"] || 'test-secret') as any;
     req.user = { userId: decoded.userId };
     next();
   } catch (error) {
@@ -95,7 +95,7 @@ describe('Status API', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   const mockToken = jwt.sign(
     { userId: mockUserId, email: 'test@example.com' },
-    process.env.JWT_SECRET || 'test-secret'
+    process.env["JWT_SECRET"] || 'test-secret'
   );
 
   beforeEach(() => {

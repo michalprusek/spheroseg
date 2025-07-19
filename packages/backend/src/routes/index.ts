@@ -91,7 +91,7 @@ router.use('/monitoring', monitoringRoutes);
 router.use('/errors', errorsRoutes);
 
 // Debug routes (only in development)
-if (process.env.NODE_ENV !== 'production') {
+if (process.env["NODE_ENV"] !== 'production') {
   router.use('/debug', debugRoutes);
 }
 
@@ -99,7 +99,7 @@ if (process.env.NODE_ENV !== 'production') {
 router.get('/', (req, res) => {
   res.status(200).json({
     name: 'SpheroSeg API',
-    version: process.env.npm_package_version || '1.0.0',
+    version: process.env["npm_package_version"] || '1.0.0',
     status: 'operational',
   });
 });

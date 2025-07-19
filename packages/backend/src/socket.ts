@@ -18,7 +18,7 @@ export function initializeSocketIO(server: HttpServer): SocketIOServer {
 
   io = new SocketIOServer(server, {
     cors: {
-      origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+      origin: process.env["ALLOWED_ORIGINS"]?.split(',') || '*',
       methods: ['GET', 'POST'],
       credentials: true,
     },

@@ -25,7 +25,7 @@ describe('Performance Optimizations Integration Tests', () => {
     // Setup test database connection
     pool = new Pool({
       connectionString:
-        process.env.TEST_DATABASE_URL ||
+        process.env["TEST_DATABASE_URL"] ||
         'postgresql://postgres:postgres@localhost:5432/spheroseg_test',
     });
 
@@ -41,7 +41,7 @@ describe('Performance Optimizations Integration Tests', () => {
     app.get('/api/user/:id/stats', async (req, res) => {
       try {
         const service = createUserStatsService(monitoredPool);
-        const stats = await service.getUserStats(req.params.id);
+        const stats = await service.getUserStats(req.params["id"]);
         res.json(stats);
       } catch (error) {
         res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });

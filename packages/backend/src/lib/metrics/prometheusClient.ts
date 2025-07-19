@@ -194,7 +194,7 @@ class PrometheusClient {
 export const client = new PrometheusClient();
 
 // Initialize the client if metrics are enabled
-if (process.env.ENABLE_METRICS === 'true') {
+if (process.env["ENABLE_METRICS"] === 'true') {
   client.initialize();
 }
 

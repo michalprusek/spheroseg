@@ -23,7 +23,7 @@ jest.mock('fs', () => ({
 }));
 
 // Mock environment variables
-process.env.JWT_SECRET = 'test-secret';
+process.env["JWT_SECRET"] = 'test-secret';
 
 describe('Image Routes', () => {
   let app: express.Application;
@@ -33,7 +33,7 @@ describe('Image Routes', () => {
   const testImageId = '123e4567-e89b-12d3-a456-426614174002';
 
   // Create a valid JWT token for testing
-  const token = jwt.sign({ userId: testUserId }, process.env.JWT_SECRET as string);
+  const token = jwt.sign({ userId: testUserId }, process.env["JWT_SECRET"] as string);
 
   beforeAll(() => {
     // Create Express app for testing

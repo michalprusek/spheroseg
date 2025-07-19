@@ -142,12 +142,12 @@ async function setupDatabase(): Promise<boolean> {
     // Note: In a real worker thread environment, we'd need to load the config from a file
     // or receive it through workerData. This is a simplified version.
     const dbConfig = {
-      user: process.env.DB_USER || 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      database: process.env.DB_NAME || 'spheroseg',
-      password: process.env.DB_PASSWORD || 'postgres',
-      port: parseInt(process.env.DB_PORT || '5432', 10),
-      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+      user: process.env["DB_USER"] || 'postgres',
+      host: process.env["DB_HOST"] || 'localhost',
+      database: process.env["DB_NAME"] || 'spheroseg',
+      password: process.env["DB_PASSWORD"] || 'postgres',
+      port: parseInt(process.env["DB_PORT"] || '5432', 10),
+      ssl: process.env["DB_SSL"] === 'true' ? { rejectUnauthorized: false } : false,
     };
 
     pool = new Pool(dbConfig);

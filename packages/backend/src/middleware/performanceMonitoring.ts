@@ -158,7 +158,7 @@ class PerformanceMonitor extends EventEmitter {
     });
 
     // Optionally trigger garbage collection if enabled
-    if (global.gc && process.env.ENABLE_MANUAL_GC === 'true') {
+    if (global.gc && process.env["ENABLE_MANUAL_GC"] === 'true') {
       global.gc();
       logger.info('Manual garbage collection triggered due to memory pressure');
     }

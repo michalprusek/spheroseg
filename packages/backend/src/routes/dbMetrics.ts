@@ -20,7 +20,7 @@ const router = express.Router();
 router.get('/top-slow', authMiddleware, requireAdmin, (req, res) => {
   try {
     // Get query parameter for limit (optional)
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+    const limit = req.query["limit"] ? parseInt(req.query["limit"] as string, 10) : 10;
 
     // Get top slow queries
     const slowQueries = dbMonitoring.getTopSlowQueries(limit);
@@ -61,7 +61,7 @@ router.get('/by-table/:table', authMiddleware, requireAdmin, (req, res) => {
   } catch (error) {
     logger.error('Error retrieving table query patterns', {
       error,
-      table: req.params.table,
+      table: req.params["table"],
     });
     res.status(500).json({
       success: false,

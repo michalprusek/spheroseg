@@ -35,7 +35,7 @@ interface HealthCheckResponse {
 // GET /api/health - Basic health check endpoint
 router.get('/', async (req: Request, res: Response) => {
   const startTime = Date.now();
-  const includeDetails = req.query.details === 'true';
+  const includeDetails = req.query["details"] === 'true';
 
   try {
     // Run all checks in parallel
@@ -69,9 +69,9 @@ router.get('/', async (req: Request, res: Response) => {
     const response: HealthCheckResponse = {
       status: overallStatus,
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || 'unknown',
+      version: process.env["npm_package_version"] || 'unknown',
       uptime: process.uptime(),
-      environment: config.env || process.env.NODE_ENV || 'development',
+      environment: config.env || process.env["NODE_ENV"] || 'development',
       components,
     };
 
@@ -97,9 +97,9 @@ router.get('/', async (req: Request, res: Response) => {
     res.status(503).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || 'unknown',
+      version: process.env["npm_package_version"] || 'unknown',
       uptime: process.uptime(),
-      environment: config.env || process.env.NODE_ENV || 'development',
+      environment: config.env || process.env["NODE_ENV"] || 'development',
       components: {
         api: { status: 'unhealthy', message: 'Health check error' },
         database: { status: 'unknown' },
@@ -187,7 +187,7 @@ async function checkDatabase(): Promise<HealthCheckComponent> {
 async function checkMLService(): Promise<HealthCheckComponent> {
   const start = Date.now();
   try {
-    const mlServiceUrl = config.ml?.serviceUrl || process.env.ML_SERVICE_URL || 'http://ml:5002';
+    const mlServiceUrl = config.ml?.serviceUrl || process.env["ML_SERVICE_URL"] || 'http://ml:5002';
 
     // First check if checkpoint exists
     if (!config.segmentation?.checkpointExists) {

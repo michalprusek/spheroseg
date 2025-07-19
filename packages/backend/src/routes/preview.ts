@@ -8,8 +8,8 @@ import logger from '../utils/logger';
 const router = express.Router();
 
 // Preview configuration
-const PREVIEW_MAX_SIZE = parseInt(process.env.PREVIEW_MAX_SIZE || '800', 10);
-const PREVIEW_QUALITY = parseInt(process.env.PREVIEW_QUALITY || '6', 10);
+const PREVIEW_MAX_SIZE = parseInt(process.env["PREVIEW_MAX_SIZE"] || '800', 10);
+const PREVIEW_QUALITY = parseInt(process.env["PREVIEW_QUALITY"] || '6', 10);
 
 // Configure multer for temporary file uploads
 const upload = multer({

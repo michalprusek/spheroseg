@@ -20,15 +20,15 @@ function createPoolConfig(connectionString: string): PoolConfig {
     ssl: url.searchParams.get('sslmode') !== 'disable' ? { rejectUnauthorized: false } : false,
 
     // Connection pool settings
-    max: parseInt(process.env.DB_POOL_SIZE || '20'),
-    idleTimeoutMillis: parseInt(process.env.DB_POOL_IDLE_TIMEOUT || '10000'),
-    connectionTimeoutMillis: parseInt(process.env.DB_POOL_CONNECTION_TIMEOUT || '2000'),
+    max: parseInt(process.env["DB_POOL_SIZE"] || '20'),
+    idleTimeoutMillis: parseInt(process.env["DB_POOL_IDLE_TIMEOUT"] || '10000'),
+    connectionTimeoutMillis: parseInt(process.env["DB_POOL_CONNECTION_TIMEOUT"] || '2000'),
 
     // Statement timeout
-    statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT || '30000'),
+    statement_timeout: parseInt(process.env["DB_STATEMENT_TIMEOUT"] || '30000'),
 
     // Application name for monitoring
-    application_name: `spheroseg-backend-${process.env.NODE_ENV || 'development'}`,
+    application_name: `spheroseg-backend-${process.env["NODE_ENV"] || 'development'}`,
   };
 }
 
@@ -36,7 +36,7 @@ function createPoolConfig(connectionString: string): PoolConfig {
 export function initializeReadReplicas(): void {
   try {
     // Check if read replicas are enabled
-    replicasEnabled = process.env.ENABLE_READ_REPLICAS === 'true';
+    replicasEnabled = process.env["ENABLE_READ_REPLICAS"] === 'true';
 
     if (!replicasEnabled) {
       logger.info('Read replicas disabled, using single connection pool');
@@ -44,7 +44,7 @@ export function initializeReadReplicas(): void {
     }
 
     // Create write pool (master database)
-    const writeUrl = process.env.DATABASE_WRITE_URL || process.env.DATABASE_URL;
+    const writeUrl = process.env["DATABASE_WRITE_URL"] || process.env["DATABASE_URL"];
     if (!writeUrl) {
       throw new Error('DATABASE_WRITE_URL or DATABASE_URL not configured');
     }
@@ -52,7 +52,7 @@ export function initializeReadReplicas(): void {
     writePool = new Pool(createPoolConfig(writeUrl));
 
     // Create read pool (replicas)
-    const readUrl = process.env.DATABASE_READ_URL || process.env.DATABASE_URL;
+    const readUrl = process.env["DATABASE_READ_URL"] || process.env["DATABASE_URL"];
     if (!readUrl) {
       throw new Error('DATABASE_READ_URL or DATABASE_URL not configured');
     }
@@ -116,7 +116,7 @@ export async function query(
   const pool = getPool(isReadQuery);
 
   // Log which pool is being used (in development)
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env["NODE_ENV"] === 'development') {
     logger.debug(
       `Using ${isReadQuery ? 'read' : 'write'} pool for query: ${text.substring(0, 50)}...`
     );

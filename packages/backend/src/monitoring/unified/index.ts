@@ -328,7 +328,7 @@ class UnifiedMonitoring {
       consoleLogging: false,
       globalLabels: {
         app: 'backend',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env["NODE_ENV"] || 'development',
       },
       ...options,
     };

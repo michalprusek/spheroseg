@@ -74,7 +74,7 @@ router.get('/stats', authMiddleware, async (req: AuthenticatedRequest, res: Resp
 
     res.status(500).json({
       message: 'Failed to fetch user statistics',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      error: process.env["NODE_ENV"] === 'development' ? error.message : undefined,
     });
   }
 });
@@ -307,15 +307,15 @@ router.get(
       }
 
       // Extract query parameters
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // Max 100 items
+      const page = parseInt(req.query["page"] as string) || 1;
+      const limit = Math.min(parseInt(req.query["limit"] as string) || 20, 100); // Max 100 items
 
       // Build filters from query parameters
       const filters: any = {};
-      if (req.query.search) filters.search = req.query.search;
-      if (req.query.status) filters.status = req.query.status;
-      if (req.query.dateFrom) filters.dateFrom = req.query.dateFrom;
-      if (req.query.dateTo) filters.dateTo = req.query.dateTo;
+      if (req.query["search"]) filters.search = req.query["search"];
+      if (req.query["status"]) filters.status = req.query["status"];
+      if (req.query["dateFrom"]) filters.dateFrom = req.query["dateFrom"];
+      if (req.query["dateTo"]) filters.dateTo = req.query["dateTo"];
 
       logger.debug('Fetching optimized project list', {
         userId,

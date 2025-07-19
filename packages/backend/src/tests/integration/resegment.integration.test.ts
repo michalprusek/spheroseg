@@ -118,7 +118,7 @@ beforeAll(async () => {
   );
 
   // Setup WebSocket client
-  const port = process.env.PORT || 5001;
+  const port = process.env["PORT"] || 5001;
   socketClient = io(`http://localhost:${port}`, {
     auth: { token: authToken },
     transports: ['websocket'],

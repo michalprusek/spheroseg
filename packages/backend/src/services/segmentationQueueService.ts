@@ -23,8 +23,8 @@ import { ApiError } from '../utils/errors';
 import { getIO } from '../socket';
 
 // RabbitMQ Configuration
-const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://rabbitmq:rabbitmq@rabbitmq:5672';
-const RABBITMQ_QUEUE = process.env.RABBITMQ_QUEUE || 'segmentation_tasks';
+const RABBITMQ_URL = process.env["RABBITMQ_URL"] || 'amqp://rabbitmq:rabbitmq@rabbitmq:5672';
+const RABBITMQ_QUEUE = process.env["RABBITMQ_QUEUE"] || 'segmentation_tasks';
 
 // Konfigurace
 const ML_SERVICE_URL = config.ml.serviceUrl || 'http://ml:5002';
@@ -489,7 +489,7 @@ class SegmentationQueueService extends EventEmitter {
 
     // Use internal Docker service name for ML service callback
     const internalBackendUrl =
-      process.env.NODE_ENV === 'production' ? 'http://backend:5001' : config.appUrl;
+      process.env["NODE_ENV"] === 'production' ? 'http://backend:5001' : config.appUrl;
 
     // Validate and normalize the image path to prevent path traversal
     const normalizedPath = path.normalize(imagePath);

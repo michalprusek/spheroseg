@@ -181,7 +181,7 @@ router.post('/performance', async (req: Request, res: Response) => {
     res.status(500).json({
       status: 'error',
       message: 'Failed to process metrics',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+      error: process.env["NODE_ENV"] === 'development' ? error.message : 'Internal server error',
     });
   }
 });

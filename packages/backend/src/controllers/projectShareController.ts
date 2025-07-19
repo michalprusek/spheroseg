@@ -52,7 +52,7 @@ export async function shareProject(req: AuthenticatedRequest, res: Response, nex
 
     // Sdílení projektu
     const result = await projectShareService.shareProject({
-      projectId,
+      projectId: projectId as string,
       ownerId: userId,
       email,
       permission,
@@ -89,7 +89,7 @@ export async function removeProjectShare(
       throw new ApiError('You must be logged in to manage shared projects', 401);
     }
 
-    const result = await projectShareService.removeProjectShare(projectId, shareId, userId);
+    const result = await projectShareService.removeProjectShare(projectId as string, shareId as string, userId);
 
     if (!result) {
       throw new ApiError('Share not found or already removed', 404);
@@ -119,7 +119,7 @@ export async function acceptProjectInvitation(
       throw new ApiError('You must be logged in to accept project invitations', 401);
     }
 
-    const project = await projectShareService.acceptProjectInvitation(token, userId);
+    const project = await projectShareService.acceptProjectInvitation(token as string, userId);
 
     res.json({
       message: 'Project invitation accepted successfully',
@@ -171,7 +171,7 @@ export async function getProjectShares(
       throw new ApiError('You must be logged in to view project shares', 401);
     }
 
-    const shares = await projectShareService.getProjectShares(projectId, userId);
+    const shares = await projectShareService.getProjectShares(projectId as string, userId);
 
     res.json({
       data: shares,
@@ -186,7 +186,7 @@ export async function getProjectShares(
  */
 export async function checkProjectAccess(
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) {
   try {
@@ -197,7 +197,7 @@ export async function checkProjectAccess(
       throw new ApiError('You must be logged in to access projects', 401);
     }
 
-    const hasAccess = await projectShareService.hasUserAccessToProject(projectId, userId);
+    const hasAccess = await projectShareService.hasUserAccessToProject(projectId as string, userId);
 
     if (!hasAccess) {
       throw new ApiError('You do not have access to this project', 403);
@@ -236,13 +236,13 @@ export async function generateInvitationLink(
 
     // Generování invitation linku
     const result = await projectShareService.generateInvitationLink({
-      projectId,
+      projectId: projectId as string,
       ownerId: userId,
       permission,
     });
 
     // Vytvoření plné URL pro frontend
-    const frontendUrl = process.env.FRONTEND_URL || 'https://spherosegapp.utia.cas.cz';
+    const frontendUrl = process.env['FRONTEND_URL'] || 'https://spherosegapp.utia.cas.cz';
     const invitationUrl = `${frontendUrl}/invitation/${result.token}`;
 
     res.status(201).json({

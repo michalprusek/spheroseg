@@ -36,9 +36,9 @@ describe('Read Replica Failover', () => {
     jest.clearAllMocks();
 
     // Reset environment variables
-    process.env.ENABLE_READ_REPLICAS = 'true';
-    process.env.DATABASE_WRITE_URL = 'postgresql://postgres:pass@master:5432/test';
-    process.env.DATABASE_READ_URL = 'postgresql://postgres:pass@replica:5432/test';
+    process.env["ENABLE_READ_REPLICAS"] = 'true';
+    process.env["DATABASE_WRITE_URL"] = 'postgresql://postgres:pass@master:5432/test';
+    process.env["DATABASE_READ_URL"] = 'postgresql://postgres:pass@replica:5432/test';
 
     // Create mock pools
     mockWritePool = {
@@ -215,7 +215,7 @@ describe('Read Replica Failover', () => {
     });
 
     it('should return null lag when replicas are disabled', async () => {
-      process.env.ENABLE_READ_REPLICAS = 'false';
+      process.env["ENABLE_READ_REPLICAS"] = 'false';
       initializeReadReplicas();
 
       const lag = await getReplicationLag();

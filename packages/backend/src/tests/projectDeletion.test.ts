@@ -28,7 +28,7 @@ const mockAuthMiddleware = (req: Request, res: Response, next: NextFunction) => 
 // Validation middleware mock
 const mockValidate = () => (req: Request, res: Response, next: NextFunction) => {
   // Simple validation for testing
-  if (req.method === 'DELETE' && !req.params.id) {
+  if (req.method === 'DELETE' && !req.params["id"]) {
     return res.status(400).json({
       message: 'Validation failed',
       errors: [{ path: 'params.id', message: 'Project ID is required' }],
@@ -36,7 +36,7 @@ const mockValidate = () => (req: Request, res: Response, next: NextFunction) => 
   }
 
   // UUID format validation - only validate for INVALID_FORMAT_ID
-  if (req.method === 'DELETE' && req.params.id === INVALID_FORMAT_ID) {
+  if (req.method === 'DELETE' && req.params["id"] === INVALID_FORMAT_ID) {
     return res.status(400).json({
       message: 'Validation failed',
       errors: [{ path: 'params.id', message: 'Invalid project ID format' }],
@@ -102,7 +102,7 @@ jest.mock('../utils/logger', () => ({
 // Project deletion route
 router.delete('/:id', mockAuthMiddleware, mockValidate(), async (req: Request, res: Response) => {
   const userId = (req as unknown).user?.userId;
-  const projectId = req.params.id;
+  const projectId = req.params["id"];
 
   try {
     // Verify table exists (simplified check for testing)

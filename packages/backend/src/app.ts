@@ -28,9 +28,9 @@ export const createApp = (): Application => {
   app.use(
     express.json({
       limit: '10mb',
-      verify: (req: express.Request, res: express.Response, buf: Buffer) => {
+      verify: (req: express.Request, _res: express.Response, buf: Buffer) => {
         // Store raw body for debugging
-        (req as unknown).rawBody = buf;
+        (req as any).rawBody = buf;
       },
     })
   );
@@ -45,7 +45,7 @@ export const createApp = (): Application => {
   configureMiddleware(app);
 
   // Health check endpoint (before API routes)
-  app.get('/health', async (req, res) => {
+  app.get('/health', async (_req, res) => {
     try {
       const health = await performHealthCheck();
       const statusCode =

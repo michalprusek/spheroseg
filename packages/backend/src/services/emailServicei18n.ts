@@ -86,7 +86,7 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
   const t = getTranslator(recipientLanguage);
 
   try {
-    const invitationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invitation/${invitationToken}`;
+    const invitationUrl = `${process.env["FRONTEND_URL"] || 'http://localhost:3000'}/invitation/${invitationToken}`;
 
     const { html, text } = generateEmailTemplate({
       title: t('email.invitationSubject', { projectName: projectTitle }),
@@ -117,7 +117,7 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
     });
 
     // In development, log to console
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env["NODE_ENV"] === 'development') {
       console.log('📧 Email Service (Development Mode)');
       console.log('================================');
       console.log('To:', emailContent.to);
@@ -170,7 +170,7 @@ export async function sendInvitationAcceptedNotification(
     });
 
     // In development, log to console
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env["NODE_ENV"] === 'development') {
       console.log('📧 Email Service (Development Mode)');
       console.log('================================');
       console.log('To:', emailContent.to);
@@ -198,7 +198,7 @@ export async function sendPasswordResetEmail(params: {
   const t = getTranslator(language);
 
   try {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env["FRONTEND_URL"] || 'http://localhost:3000'}/reset-password/${resetToken}`;
 
     const { html, text } = generateEmailTemplate({
       title: t('email.passwordResetSubject'),

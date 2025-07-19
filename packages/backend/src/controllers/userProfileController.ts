@@ -147,7 +147,7 @@ export const uploadAvatarHandler = async (req: AuthenticatedRequest, res: Respon
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const uploadsDir = process.env.UPLOADS_DIR || '/app/uploads';
+    const uploadsDir = process.env['UPLOADS_DIR'] || '/app/uploads';
     const avatarFile = await userProfileService.saveAvatarFile(
       dbPool,
       userId,

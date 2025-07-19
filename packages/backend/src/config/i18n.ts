@@ -27,7 +27,6 @@ i18next
       preload: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
       saveMissing: true,
       saveMissingTo: 'current',
-      saveMissingPath: path.join(__dirname, '../translations/{{lng}}-missing.json'),
       interpolation: {
         escapeValue: false, // Not needed for API responses
       },
@@ -50,13 +49,13 @@ export function createI18nMiddleware() {
 export async function getUserTranslation(
   userId: string | null,
   key: string,
-  options?: unknown
+  options?: any
 ): Promise<string> {
   if (!userId) {
-    return i18next.t(key, options);
+    return i18next.t(key, options as any) as string;
   }
 
   // TODO: Fetch user's preferred language from database
   // For now, use default behavior
-  return i18next.t(key, options);
+  return i18next.t(key, options as any) as string;
 }

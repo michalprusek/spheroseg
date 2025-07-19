@@ -33,8 +33,8 @@ describe('Image Upload Flow', () => {
 
   beforeAll(() => {
     // Setup test environment
-    process.env.NODE_ENV = 'test';
-    process.env.JWT_SECRET = 'test-secret';
+    process.env["NODE_ENV"] = 'test';
+    process.env["JWT_SECRET"] = 'test-secret';
 
     // Create Express app
     app = express();

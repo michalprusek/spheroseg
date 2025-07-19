@@ -29,8 +29,8 @@ import { validateAndExit } from './utils/startupValidation';
 // Memory optimization settings
 // Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized
 // Only enable in specific scenarios where memory usage patterns are well understood
-const isProduction = process.env.NODE_ENV === 'production';
-const manualGcEnabled = process.env.ENABLE_MANUAL_GC === 'true';
+const isProduction = process.env["NODE_ENV"] === 'production';
+const manualGcEnabled = process.env["ENABLE_MANUAL_GC"] === 'true';
 
 if (isProduction && manualGcEnabled) {
   logger.warn(
@@ -136,7 +136,7 @@ const initializeServices = async (): Promise<void> => {
     try {
       // Create a simple pool without wrapper for testing
       const testPool = new Pool({
-        connectionString: process.env.DATABASE_URL,
+        connectionString: process.env["DATABASE_URL"],
         max: 1,
       });
 

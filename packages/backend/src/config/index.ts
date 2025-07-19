@@ -68,7 +68,7 @@ const config = {
     ssl: validatedEnv.DB_SSL === 'true' || isProduction,
     maxConnections: parseInt(validatedEnv.DB_MAX_CONNECTIONS || '10', 10),
     // Construct full database URL with secrets
-    connectionString: process.env.DATABASE_URL || constructDatabaseUrl(secrets, {
+    connectionString: process.env['DATABASE_URL'] || constructDatabaseUrl(secrets, {
       user: validatedEnv.DB_USER || 'postgres',
       host: validatedEnv.DB_HOST || 'localhost',
       port: typeof validatedEnv.DB_PORT === 'number' 
@@ -164,7 +164,7 @@ const config = {
   },
 
   redis: {
-    url: process.env.REDIS_URL || constructRedisUrl(secrets, {
+    url: process.env['REDIS_URL'] || constructRedisUrl(secrets, {
       host: validatedEnv.REDIS_HOST || 'localhost',
       port: parseInt(validatedEnv.REDIS_PORT || '6379', 10),
       db: parseInt(validatedEnv.REDIS_DB || '0', 10),
@@ -185,7 +185,7 @@ const config = {
   },
 
   rabbitmq: {
-    url: process.env.RABBITMQ_URL || constructRabbitmqUrl(secrets, {
+    url: process.env['RABBITMQ_URL'] || constructRabbitmqUrl(secrets, {
       user: validatedEnv.RABBITMQ_USER || 'guest',
       host: validatedEnv.RABBITMQ_HOST || 'rabbitmq',
       port: parseInt(validatedEnv.RABBITMQ_PORT || '5672', 10),

@@ -68,7 +68,7 @@ describe('ML Integration Tests', () => {
     }
 
     // Set up environment variables and mocks for configuration
-    process.env.TEST_MODE = 'true';
+    process.env["TEST_MODE"] = 'true';
 
     // Mock configuration for testing
     // Use Object.defineProperty instead of jest.spyOn for configurating storage.uploadDir
@@ -100,7 +100,7 @@ describe('ML Integration Tests', () => {
 
   afterAll(() => {
     // Clean up test environment
-    delete process.env.TEST_MODE;
+    delete process.env["TEST_MODE"];
 
     // Kill Python process if running
     if (pythonProcess && !pythonProcess.killed) {
@@ -124,7 +124,7 @@ describe('ML Integration Tests', () => {
   // Skip this test if not running in an environment with Python and ML dependencies
   it('should verify ML script can be executed', async () => {
     // Check Python executable existence
-    const pythonExecutable = process.env.PYTHON_EXECUTABLE || 'python3';
+    const pythonExecutable = process.env["PYTHON_EXECUTABLE"] || 'python3';
 
     // Check if python is available by running a simple version check
     try {

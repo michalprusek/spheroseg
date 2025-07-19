@@ -220,7 +220,7 @@ export function queryOptimizationHints(req: Request, res: Response, next: NextFu
     cacheStrategy: determineCacheStrategy(req),
 
     // Enable pagination for list endpoints
-    enablePagination: req.path.includes('/list') || req.query.page !== undefined,
+    enablePagination: req.path.includes('/list') || req.query["page"] !== undefined,
   };
 
   next();

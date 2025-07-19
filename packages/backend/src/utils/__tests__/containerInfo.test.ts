@@ -23,7 +23,7 @@ describe('Container Info Utilities', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    delete process.env.CONTAINER_MEMORY_LIMIT_MB;
+    delete process.env["CONTAINER_MEMORY_LIMIT_MB"];
 
     // Clear logger mock calls
     mockLogger.debug.mockClear();
@@ -143,7 +143,7 @@ describe('Container Info Utilities', () => {
 
     it('should use environment variable as fallback', () => {
       mockExistsSync.mockReturnValue(false);
-      process.env.CONTAINER_MEMORY_LIMIT_MB = '256';
+      process.env["CONTAINER_MEMORY_LIMIT_MB"] = '256';
 
       const result = getContainerLimits();
       expect(result.memoryLimitMB).toBe(256);

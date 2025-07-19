@@ -36,7 +36,7 @@ const clearExistingMetrics = () => {
 };
 
 // Clear metrics during development to prevent duplicate registration errors
-if (process.env.NODE_ENV !== 'production') {
+if (process.env["NODE_ENV"] !== 'production') {
   clearExistingMetrics();
 }
 

@@ -180,7 +180,7 @@ export const sendConflict = (
  * Send internal server error
  */
 export const sendServerError = (req: Request, res: Response, error?: any): Response => {
-  const details = error && process.env.NODE_ENV !== 'production' ? [error.message] : undefined;
+  const details = error && process.env["NODE_ENV"] !== 'production' ? [error.message] : undefined;
   return sendError(req, res, 'error.internalServer', undefined, 500, details);
 };
 

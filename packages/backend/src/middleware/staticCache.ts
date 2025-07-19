@@ -31,10 +31,10 @@ export const staticCacheMiddleware = async (req: Request, res: Response, next: N
   // Add proper ETag support based on file content
   // Note: In production, this would be handled by the static file middleware
   // This is a fallback for development
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env["NODE_ENV"] === 'development') {
     try {
       // Construct the file path (configurable static root)
-      const staticRoot = process.env.STATIC_ROOT || path.join(process.cwd(), 'public');
+      const staticRoot = process.env["STATIC_ROOT"] || path.join(process.cwd(), 'public');
       const filePath = path.join(staticRoot, req.path);
 
       // Check cache first

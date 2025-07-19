@@ -172,7 +172,7 @@ describe('Auth Routes - /api/auth', () => {
       expect(mockBcryptCompare).toHaveBeenCalledWith(testPassword, userDbRecord.password_hash);
       expect(mockJwtSign).toHaveBeenCalledWith(
         { userId: userId, email: testEmail },
-        process.env.JWT_SECRET,
+        process.env["JWT_SECRET"],
         {
           expiresIn: '1h',
         }

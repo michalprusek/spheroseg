@@ -30,7 +30,7 @@ router.get('/health', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: config.env,
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env["npm_package_version"] || '1.0.0',
       node: process.version,
       memory: process.memoryUsage(),
       cpu: process.cpuUsage(),
@@ -151,7 +151,7 @@ router.get('/dashboard', requireAdmin, async (req: Request, res: Response) => {
       system: {
         uptime: process.uptime(),
         environment: config.env,
-        version: process.env.npm_package_version || '1.0.0',
+        version: process.env["npm_package_version"] || '1.0.0',
         memory: process.memoryUsage(),
         cpu: process.cpuUsage(),
       },
@@ -259,7 +259,7 @@ router.get('/system', requireAdmin, (req: Request, res: Response) => {
       memory: process.memoryUsage(),
       cpu: process.cpuUsage(),
       environment: {
-        NODE_ENV: process.env.NODE_ENV,
+        NODE_ENV: process.env["NODE_ENV"],
         isDevelopment: config.isDevelopment,
         isProduction: config.isProduction,
       },

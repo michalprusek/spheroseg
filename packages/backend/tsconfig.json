@@ -6,7 +6,6 @@
     "lib": ["es2020"],
     "types": ["node", "jest"],
     "outDir": "dist",
-    "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -15,8 +14,20 @@
     },
     "moduleResolution": "node",
     "noEmit": false,
-    "allowImportingTsExtensions": false
+    "allowImportingTsExtensions": false,
+    "isolatedModules": false,
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__/**",
+    "**/testing/**",
+    "**/examples/**"
+  ]
 }

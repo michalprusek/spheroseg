@@ -19,21 +19,21 @@ export interface CDNConfig {
   // Security
   signedUrls: boolean;
   signedUrlExpiry: number; // seconds
-  secretKey?: string;
+  secretKey?: string | undefined;
 
   // CloudFront specific
   cloudfront?: {
     distributionId: string;
     keypairId: string;
-    privateKey?: string;
-  };
+    privateKey?: string | undefined;
+  } | undefined;
 
   // Cloudflare specific
   cloudflare?: {
     zoneId: string;
     apiToken: string;
     accountId: string;
-  };
+  } | undefined;
 
   // Custom headers
   customHeaders: Record<string, string>;
@@ -48,51 +48,51 @@ export interface CDNConfig {
 
 // Default CDN configuration
 export const cdnConfig: CDNConfig = {
-  enabled: process.env.CDN_ENABLED === 'true',
-  provider: (process.env.CDN_PROVIDER as CDNConfig['provider']) || 'none',
-  baseUrl: process.env.CDN_BASE_URL || '',
-  assetPrefix: process.env.CDN_ASSET_PREFIX || '/assets',
-  imagePrefix: process.env.CDN_IMAGE_PREFIX || '/uploads',
+  enabled: process.env['CDN_ENABLED'] === 'true',
+  provider: (process.env['CDN_PROVIDER'] as CDNConfig['provider']) || 'none',
+  baseUrl: process.env['CDN_BASE_URL'] || '',
+  assetPrefix: process.env['CDN_ASSET_PREFIX'] || '/assets',
+  imagePrefix: process.env['CDN_IMAGE_PREFIX'] || '/uploads',
 
   cacheControl: {
-    images: process.env.CDN_CACHE_IMAGES || 'public, max-age=31536000, immutable',
-    css: process.env.CDN_CACHE_CSS || 'public, max-age=31536000, immutable',
-    js: process.env.CDN_CACHE_JS || 'public, max-age=31536000, immutable',
-    fonts: process.env.CDN_CACHE_FONTS || 'public, max-age=31536000, immutable',
-    default: process.env.CDN_CACHE_DEFAULT || 'public, max-age=3600',
+    images: process.env['CDN_CACHE_IMAGES'] || 'public, max-age=31536000, immutable',
+    css: process.env['CDN_CACHE_CSS'] || 'public, max-age=31536000, immutable',
+    js: process.env['CDN_CACHE_JS'] || 'public, max-age=31536000, immutable',
+    fonts: process.env['CDN_CACHE_FONTS'] || 'public, max-age=31536000, immutable',
+    default: process.env['CDN_CACHE_DEFAULT'] || 'public, max-age=3600',
   },
 
-  signedUrls: process.env.CDN_SIGNED_URLS === 'true',
-  signedUrlExpiry: parseInt(process.env.CDN_SIGNED_URL_EXPIRY || '3600', 10),
-  secretKey: process.env.CDN_SECRET_KEY,
+  signedUrls: process.env['CDN_SIGNED_URLS'] === 'true',
+  signedUrlExpiry: parseInt(process.env['CDN_SIGNED_URL_EXPIRY'] || '3600', 10),
+  secretKey: process.env['CDN_SECRET_KEY'],
 
   cloudfront:
-    process.env.CDN_PROVIDER === 'cloudfront'
+    process.env['CDN_PROVIDER'] === 'cloudfront'
       ? {
-          distributionId: process.env.CDN_CF_DISTRIBUTION_ID || '',
-          keypairId: process.env.CDN_CF_KEYPAIR_ID || '',
-          privateKey: process.env.CDN_CF_PRIVATE_KEY,
+          distributionId: process.env['CDN_CF_DISTRIBUTION_ID'] || '',
+          keypairId: process.env['CDN_CF_KEYPAIR_ID'] || '',
+          privateKey: process.env['CDN_CF_PRIVATE_KEY'] || undefined,
         }
       : undefined,
 
   cloudflare:
-    process.env.CDN_PROVIDER === 'cloudflare'
+    process.env['CDN_PROVIDER'] === 'cloudflare'
       ? {
-          zoneId: process.env.CDN_CLOUDFLARE_ZONE_ID || '',
-          apiToken: process.env.CDN_CLOUDFLARE_API_TOKEN || '',
-          accountId: process.env.CDN_CLOUDFLARE_ACCOUNT_ID || '',
+          zoneId: process.env['CDN_CLOUDFLARE_ZONE_ID'] || '',
+          apiToken: process.env['CDN_CLOUDFLARE_API_TOKEN'] || '',
+          accountId: process.env['CDN_CLOUDFLARE_ACCOUNT_ID'] || '',
         }
       : undefined,
 
   customHeaders: {
-    'X-CDN-Provider': process.env.CDN_PROVIDER || 'none',
+    'X-CDN-Provider': process.env['CDN_PROVIDER'] || 'none',
     'X-Content-Type-Options': 'nosniff',
   },
 
   invalidation: {
-    enabled: process.env.CDN_INVALIDATION_ENABLED === 'true',
-    patterns: (process.env.CDN_INVALIDATION_PATTERNS || '').split(',').filter(Boolean),
-    maxRetries: parseInt(process.env.CDN_INVALIDATION_MAX_RETRIES || '3', 10),
+    enabled: process.env['CDN_INVALIDATION_ENABLED'] === 'true',
+    patterns: (process.env['CDN_INVALIDATION_PATTERNS'] || '').split(',').filter(Boolean),
+    maxRetries: parseInt(process.env['CDN_INVALIDATION_MAX_RETRIES'] || '3', 10),
   },
 };
 

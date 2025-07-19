@@ -449,7 +449,7 @@ export const devAuthenticate = (
   res: Response,
   next: NextFunction
 ): void => {
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env["NODE_ENV"] !== 'development') {
     res.status(403).json({
       success: false,
       message: 'Development middleware not available in production',

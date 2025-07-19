@@ -659,7 +659,7 @@ describe('segmentationQueueService', () => {
 
     it('should check ML service health if URL is provided', async () => {
       // Arrange
-      process.env.ML_SERVICE_URL = 'http://ml-service:5000';
+      process.env["ML_SERVICE_URL"] = 'http://ml-service:5000';
 
       // Act
       await setupSegmentationQueue();
@@ -668,12 +668,12 @@ describe('segmentationQueueService', () => {
       expect(fetch).toHaveBeenCalledWith('http://ml-service:5000/health');
 
       // Cleanup
-      delete process.env.ML_SERVICE_URL;
+      delete process.env["ML_SERVICE_URL"];
     });
 
     it('should fail if ML service health check fails', async () => {
       // Arrange
-      process.env.ML_SERVICE_URL = 'http://ml-service:5000';
+      process.env["ML_SERVICE_URL"] = 'http://ml-service:5000';
       (fetch as unknown as jest.Mock).mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -690,7 +690,7 @@ describe('segmentationQueueService', () => {
       );
 
       // Cleanup
-      delete process.env.ML_SERVICE_URL;
+      delete process.env["ML_SERVICE_URL"];
     });
 
     it('should handle errors during setup', async () => {

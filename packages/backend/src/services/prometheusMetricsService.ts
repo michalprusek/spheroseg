@@ -241,7 +241,7 @@ gaugeMetrics.forEach(({ name, help, labelNames }) => {
 import mlMetricsAdapter from './mlMetricsAdapter';
 
 // Initialize ML metrics adapter if enabled
-if (process.env.ENABLE_ML_METRICS === 'true') {
+if (process.env["ENABLE_ML_METRICS"] === 'true') {
   mlMetricsAdapter.initMlMetricsAdapter(register);
 }
 

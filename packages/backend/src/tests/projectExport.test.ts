@@ -169,10 +169,10 @@ router.get(
   mockValidate(),
   async (req: Request, res: Response) => {
     const userId = (req as unknown).user?.userId;
-    const projectId = req.params.id;
-    const includeMetadata = req.query.includeMetadata === 'true';
-    const includeSegmentation = req.query.includeSegmentation === 'true';
-    const includeMetrics = req.query.includeMetrics === 'true';
+    const projectId = req.params["id"];
+    const includeMetadata = req.query["includeMetadata"] === 'true';
+    const includeSegmentation = req.query["includeSegmentation"] === 'true';
+    const includeMetrics = req.query["includeMetrics"] === 'true';
 
     try {
       // Fetch project
@@ -244,7 +244,7 @@ router.get(
   mockValidate(),
   async (req: Request, res: Response) => {
     const userId = (req as unknown).user?.userId;
-    const projectId = req.params.id;
+    const projectId = req.params["id"];
 
     try {
       // Fetch project

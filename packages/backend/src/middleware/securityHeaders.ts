@@ -15,21 +15,21 @@ function getCSPConfig() {
   const directives = securityConfig.headers.contentSecurityPolicy.directives;
 
   // Add WebSocket support if needed
-  if (process.env.ENABLE_WEBSOCKETS === 'true') {
+  if (process.env["ENABLE_WEBSOCKETS"] === 'true') {
     directives.connectSrc.push('ws:', 'wss:');
   }
 
   // Add CDN support if configured
-  if (process.env.CDN_URL) {
-    directives.scriptSrc.push(process.env.CDN_URL);
-    directives.styleSrc.push(process.env.CDN_URL);
-    directives.imgSrc.push(process.env.CDN_URL);
-    directives.fontSrc.push(process.env.CDN_URL);
+  if (process.env["CDN_URL"]) {
+    directives.scriptSrc.push(process.env["CDN_URL"]);
+    directives.styleSrc.push(process.env["CDN_URL"]);
+    directives.imgSrc.push(process.env["CDN_URL"]);
+    directives.fontSrc.push(process.env["CDN_URL"]);
   }
 
   return {
     directives,
-    reportOnly: process.env.CSP_REPORT_ONLY === 'true',
+    reportOnly: process.env["CSP_REPORT_ONLY"] === 'true',
   };
 }
 
@@ -92,7 +92,7 @@ export function additionalSecurityHeaders(req: Request, res: Response, next: Nex
  */
 export function httpsEnforcement(req: Request, res: Response, next: NextFunction): void {
   // Skip in development
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env["NODE_ENV"] !== 'production') {
     return next();
   }
 

@@ -76,16 +76,16 @@ export function loadSecret(
  * @throws Error if the secret is too weak
  */
 export function validateJwtSecret(secret: string): void {
-  const minLength = process.env.NODE_ENV === 'production' ? 32 : 16;
+  const minLength = process.env["NODE_ENV"] === 'production' ? 32 : 16;
   
   if (!secret || secret.length < minLength) {
     throw new Error(
-      `JWT secret must be at least ${minLength} characters long in ${process.env.NODE_ENV} mode`
+      `JWT secret must be at least ${minLength} characters long in ${process.env["NODE_ENV"]} mode`
     );
   }
 
   // Check for default or weak secrets in production
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env["NODE_ENV"] === 'production') {
     const weakSecrets = [
       'your-secret-key',
       'change-me',
@@ -125,7 +125,7 @@ export function generateSecret(length: number = 64): string {
  * @returns Object containing all loaded secrets
  */
 export function loadSecrets() {
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env["NODE_ENV"] === 'production';
 
   // Load JWT secret with validation
   const jwtSecret = loadSecret('jwt_secret', 'JWT_SECRET', isProduction);
@@ -135,12 +135,12 @@ export function loadSecrets() {
     // Generate a secure secret for development
     console.warn('No JWT secret provided, generating a secure random secret for development');
     const devSecret = generateSecret(32);
-    process.env.JWT_SECRET = devSecret;
+    process.env["JWT_SECRET"] = devSecret;
   }
 
   // Load other secrets
   const secrets = {
-    jwtSecret: jwtSecret || process.env.JWT_SECRET,
+    jwtSecret: jwtSecret || process.env["JWT_SECRET"],
     sessionSecret: loadSecret('session_secret', 'SESSION_SECRET'),
     dbPassword: loadSecret('db_password', 'DB_PASSWORD', isProduction),
     dbRootPassword: loadSecret('db_root_password', 'DB_ROOT_PASSWORD'),

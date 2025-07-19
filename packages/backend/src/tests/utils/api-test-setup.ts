@@ -63,7 +63,7 @@ export const createTestUser = async (): Promise<TestUser> => {
   );
 
   // Create token
-  const token = jwt.sign({ userId }, process.env.JWT_SECRET || 'test-secret', {
+  const token = jwt.sign({ userId }, process.env["JWT_SECRET"] || 'test-secret', {
     expiresIn: '1h',
   });
 

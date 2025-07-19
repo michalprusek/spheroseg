@@ -235,7 +235,7 @@ export const uncaughtExceptionHandler = (error: Error): void => {
 };
 
 // Register global error handlers
-if (process.env.NODE_ENV !== 'test') {
+if (process.env["NODE_ENV"] !== 'test') {
   process.on('unhandledRejection', unhandledRejectionHandler);
   process.on('uncaughtException', uncaughtExceptionHandler);
 }

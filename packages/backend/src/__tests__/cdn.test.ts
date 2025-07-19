@@ -18,44 +18,44 @@ afterEach(() => {
 describe('CDN Configuration', () => {
   describe('shouldUseCDN', () => {
     it('should return false when CDN is disabled', () => {
-      process.env.CDN_ENABLED = 'false';
+      process.env["CDN_ENABLED"] = 'false';
       expect(shouldUseCDN()).toBe(false);
     });
 
     it('should return false when provider is none', () => {
-      process.env.CDN_ENABLED = 'true';
-      process.env.CDN_PROVIDER = 'none';
+      process.env["CDN_ENABLED"] = 'true';
+      process.env["CDN_PROVIDER"] = 'none';
       expect(shouldUseCDN()).toBe(false);
     });
 
     it('should return false when base URL is missing', () => {
-      process.env.CDN_ENABLED = 'true';
-      process.env.CDN_PROVIDER = 'cloudfront';
-      process.env.CDN_BASE_URL = '';
+      process.env["CDN_ENABLED"] = 'true';
+      process.env["CDN_PROVIDER"] = 'cloudfront';
+      process.env["CDN_BASE_URL"] = '';
       expect(shouldUseCDN()).toBe(false);
     });
 
     it('should return true when properly configured', () => {
-      process.env.CDN_ENABLED = 'true';
-      process.env.CDN_PROVIDER = 'cloudfront';
-      process.env.CDN_BASE_URL = 'https://cdn.example.com';
-      process.env.NODE_ENV = 'production';
+      process.env["CDN_ENABLED"] = 'true';
+      process.env["CDN_PROVIDER"] = 'cloudfront';
+      process.env["CDN_BASE_URL"] = 'https://cdn.example.com';
+      process.env["NODE_ENV"] = 'production';
       expect(shouldUseCDN()).toBe(true);
     });
   });
 
   describe('getCDNUrl', () => {
     beforeEach(() => {
-      process.env.CDN_ENABLED = 'true';
-      process.env.CDN_PROVIDER = 'cloudfront';
-      process.env.CDN_BASE_URL = 'https://cdn.example.com';
-      process.env.CDN_ASSET_PREFIX = '/assets';
-      process.env.CDN_IMAGE_PREFIX = '/uploads';
-      process.env.NODE_ENV = 'production';
+      process.env["CDN_ENABLED"] = 'true';
+      process.env["CDN_PROVIDER"] = 'cloudfront';
+      process.env["CDN_BASE_URL"] = 'https://cdn.example.com';
+      process.env["CDN_ASSET_PREFIX"] = '/assets';
+      process.env["CDN_IMAGE_PREFIX"] = '/uploads';
+      process.env["NODE_ENV"] = 'production';
     });
 
     it('should return original path when CDN is disabled', () => {
-      process.env.CDN_ENABLED = 'false';
+      process.env["CDN_ENABLED"] = 'false';
       expect(getCDNUrl('/assets/logo.png')).toBe('/assets/logo.png');
     });
 
@@ -74,7 +74,7 @@ describe('CDN Configuration', () => {
     });
 
     it('should handle trailing slashes in base URL', () => {
-      process.env.CDN_BASE_URL = 'https://cdn.example.com/';
+      process.env["CDN_BASE_URL"] = 'https://cdn.example.com/';
       expect(getCDNUrl('/assets/logo.png')).toBe('https://cdn.example.com/assets/assets/logo.png');
     });
   });
@@ -110,28 +110,28 @@ describe('CDN Configuration', () => {
 describe('CDN Service', () => {
   describe('createCDNService', () => {
     it('should create CloudFront service', () => {
-      process.env.CDN_PROVIDER = 'cloudfront';
+      process.env["CDN_PROVIDER"] = 'cloudfront';
       const service = createCDNService();
       expect(service).toBeDefined();
       expect(service.getUrl).toBeDefined();
     });
 
     it('should create Cloudflare service', () => {
-      process.env.CDN_PROVIDER = 'cloudflare';
+      process.env["CDN_PROVIDER"] = 'cloudflare';
       const service = createCDNService();
       expect(service).toBeDefined();
       expect(service.getUrl).toBeDefined();
     });
 
     it('should create NoOp service for none provider', () => {
-      process.env.CDN_PROVIDER = 'none';
+      process.env["CDN_PROVIDER"] = 'none';
       const service = createCDNService();
       expect(service).toBeDefined();
       expect(service.getUrl('/test.jpg')).toBe('/test.jpg');
     });
 
     it('should throw error for unimplemented providers', () => {
-      process.env.CDN_PROVIDER = 'fastly';
+      process.env["CDN_PROVIDER"] = 'fastly';
       expect(() => createCDNService()).toThrow('Fastly CDN not implemented yet');
     });
   });
@@ -140,7 +140,7 @@ describe('CDN Service', () => {
     let service: any;
 
     beforeEach(() => {
-      process.env.CDN_PROVIDER = 'none';
+      process.env["CDN_PROVIDER"] = 'none';
       service = createCDNService();
     });
 
@@ -213,10 +213,10 @@ describe('CDN Middleware', () => {
     });
 
     it('should return correct CDN URLs from helper', () => {
-      process.env.CDN_ENABLED = 'true';
-      process.env.CDN_PROVIDER = 'cloudfront';
-      process.env.CDN_BASE_URL = 'https://cdn.example.com';
-      process.env.NODE_ENV = 'production';
+      process.env["CDN_ENABLED"] = 'true';
+      process.env["CDN_PROVIDER"] = 'cloudfront';
+      process.env["CDN_BASE_URL"] = 'https://cdn.example.com';
+      process.env["NODE_ENV"] = 'production';
 
       cdnMiddleware.url(req as Request, res as Response, next);
 
@@ -227,10 +227,10 @@ describe('CDN Middleware', () => {
 
   describe('cdnCacheHeaders', () => {
     it('should add CDN headers when sending response', () => {
-      process.env.CDN_ENABLED = 'true';
-      process.env.CDN_PROVIDER = 'cloudfront';
-      process.env.CDN_BASE_URL = 'https://cdn.example.com';
-      process.env.NODE_ENV = 'production';
+      process.env["CDN_ENABLED"] = 'true';
+      process.env["CDN_PROVIDER"] = 'cloudfront';
+      process.env["CDN_BASE_URL"] = 'https://cdn.example.com';
+      process.env["NODE_ENV"] = 'production';
 
       cdnMiddleware.cache(req as Request, res as Response, next);
 
@@ -244,7 +244,7 @@ describe('CDN Middleware', () => {
     });
 
     it('should not add headers when CDN is disabled', () => {
-      process.env.CDN_ENABLED = 'false';
+      process.env["CDN_ENABLED"] = 'false';
 
       cdnMiddleware.cache(req as Request, res as Response, next);
 
@@ -316,10 +316,10 @@ describe('CDN Middleware', () => {
 
   describe('cdnRewriteMiddleware', () => {
     beforeEach(() => {
-      process.env.CDN_ENABLED = 'true';
-      process.env.CDN_PROVIDER = 'cloudfront';
-      process.env.CDN_BASE_URL = 'https://cdn.example.com';
-      process.env.NODE_ENV = 'production';
+      process.env["CDN_ENABLED"] = 'true';
+      process.env["CDN_PROVIDER"] = 'cloudfront';
+      process.env["CDN_BASE_URL"] = 'https://cdn.example.com';
+      process.env["NODE_ENV"] = 'production';
     });
 
     it('should rewrite URLs in JSON responses', () => {
@@ -374,7 +374,7 @@ describe('CDN Middleware', () => {
     });
 
     it('should not rewrite when CDN is disabled', () => {
-      process.env.CDN_ENABLED = 'false';
+      process.env["CDN_ENABLED"] = 'false';
 
       cdnMiddleware.rewrite(req as Request, res as Response, next);
 

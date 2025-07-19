@@ -21,7 +21,7 @@ describe('Security Headers', () => {
     expect(response.headers['permissions-policy']).toBeDefined();
 
     // In non-prod environments, HSTS might be disabled
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env["NODE_ENV"] === 'production') {
       const hsts = response.headers['strict-transport-security'];
       expect(hsts).toBeDefined();
       expect(hsts).toContain('max-age=31536000');
@@ -37,7 +37,7 @@ describe('Security Headers', () => {
       expect(csp).toContain("frame-ancestors 'none'");
 
       // In production, we should have upgrade-insecure-requests and block-all-mixed-content
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env["NODE_ENV"] === 'production') {
         expect(csp).toContain('upgrade-insecure-requests');
         expect(csp).toContain('block-all-mixed-content');
       }
@@ -53,11 +53,11 @@ describe('Security Headers', () => {
       Array.isArray(cookies) && cookies.some((cookie: string) => cookie.includes('XSRF-TOKEN'));
 
     // In development, CSRF might be disabled
-    if (process.env.NODE_ENV !== 'development') {
+    if (process.env["NODE_ENV"] !== 'development') {
       expect(hasCsrfCookie).toBe(true);
 
       // In production, CSRF cookie should have secure and strict SameSite
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env["NODE_ENV"] === 'production') {
         const csrfCookie = Array.isArray(cookies)
           ? cookies.find((cookie: string) => cookie.includes('XSRF-TOKEN'))
           : undefined;
@@ -69,7 +69,7 @@ describe('Security Headers', () => {
 
   it('should reject API requests without CSRF token', async () => {
     // Skip in development where CSRF might be disabled
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env["NODE_ENV"] === 'development') {
       return;
     }
 
@@ -89,7 +89,7 @@ describe('Security Headers', () => {
 
   it('should accept API requests with valid CSRF token', async () => {
     // Skip in development where CSRF might be disabled
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env["NODE_ENV"] === 'development') {
       return;
     }
 

@@ -67,10 +67,10 @@ class CloudFrontService extends BaseCDNService {
     super();
     if (AWS) {
       this.cloudfront = new AWS.CloudFront({
-        region: process.env.AWS_REGION || 'us-east-1',
+        region: process.env["AWS_REGION"] || 'us-east-1',
       });
       this.s3 = new AWS.S3({
-        region: process.env.AWS_REGION || 'us-east-1',
+        region: process.env["AWS_REGION"] || 'us-east-1',
       });
     }
   }
@@ -158,7 +158,7 @@ class CloudFrontService extends BaseCDNService {
     }
 
     // Upload to S3 bucket that CloudFront uses as origin
-    const bucketName = process.env.CDN_S3_BUCKET;
+    const bucketName = process.env["CDN_S3_BUCKET"];
     if (!bucketName) {
       throw new Error('CDN S3 bucket not configured');
     }
@@ -184,7 +184,7 @@ class CloudFrontService extends BaseCDNService {
   }
 
   async deleteFile(cdnPath: string): Promise<boolean> {
-    const bucketName = process.env.CDN_S3_BUCKET;
+    const bucketName = process.env["CDN_S3_BUCKET"];
     if (!bucketName) {
       throw new Error('CDN S3 bucket not configured');
     }

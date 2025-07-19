@@ -43,7 +43,7 @@ let pool: Pool | null = null;
  */
 export function getPool(): Pool {
   if (!pool) {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = process.env["DATABASE_URL"];
 
     const poolConfig = databaseUrl
       ? {

@@ -8,11 +8,11 @@ import Redis from 'ioredis';
 import logger from '../utils/logger';
 
 // Redis connection options
-const redisConfig = {
-  host: process.env.REDIS_HOST || 'redis',
-  port: parseInt(process.env.REDIS_PORT || '6379', 10),
-  password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_DB || '0', 10),
+const redisConfig: any = {
+  host: process.env['REDIS_HOST'] || 'redis',
+  port: parseInt(process.env['REDIS_PORT'] || '6379', 10),
+  password: process.env['REDIS_PASSWORD'],
+  db: parseInt(process.env['REDIS_DB'] || '0', 10),
   
   // Connection options
   connectTimeout: 10000,
@@ -49,7 +49,7 @@ export function initializeRedis(): Redis {
     return redis;
   }
   
-  const isEnabled = process.env.ENABLE_REDIS_CACHE !== 'false';
+  const isEnabled = process.env['ENABLE_REDIS_CACHE'] !== 'false';
   
   if (!isEnabled) {
     logger.info('Redis caching is disabled');

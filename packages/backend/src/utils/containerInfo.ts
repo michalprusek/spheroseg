@@ -80,8 +80,8 @@ export function getContainerLimits(): ContainerLimits {
 
   // Docker Desktop on macOS/Windows may not expose cgroup limits
   // Check for Docker-specific environment variables
-  if (process.env.CONTAINER_MEMORY_LIMIT_MB) {
-    result.memoryLimitMB = parseInt(process.env.CONTAINER_MEMORY_LIMIT_MB, 10);
+  if (process.env["CONTAINER_MEMORY_LIMIT_MB"]) {
+    result.memoryLimitMB = parseInt(process.env["CONTAINER_MEMORY_LIMIT_MB"], 10);
     result.memoryLimitBytes = result.memoryLimitMB * 1024 * 1024;
     logger.debug(`Using environment variable memory limit: ${result.memoryLimitMB}MB`);
     return result;

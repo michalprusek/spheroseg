@@ -46,7 +46,7 @@ export const getSecurityIssueById = async (
       throw new ApiError('Only admin users can access security issue details', 403);
     }
 
-    const issue = await securityService.getSecurityIssueById(req.params.id);
+    const issue = await securityService.getSecurityIssueById(req.params['id'] as string);
     res.status(200).json(issue);
   } catch (error) {
     next(error);
@@ -70,7 +70,7 @@ export const updateSecurityIssue = async (
     }
 
     const updatedIssue = await securityService.updateSecurityIssue(
-      req.params.id,
+      req.params['id'] as string,
       req.body,
       req.user.userId
     );
@@ -97,11 +97,13 @@ export const getVulnerabilityScans = async (
       throw new ApiError('Only admin users can access vulnerability scans', 403);
     }
 
-    const options = {
-      page: req.query.page ? parseInt(req.query.page as string, 10) : 1,
-      limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 10,
-      scanType: req.query.scanType as string | undefined,
+    const options: { page?: number; limit?: number; scanType?: string } = {
+      page: req.query['page'] ? parseInt(req.query['page'] as string, 10) : 1,
+      limit: req.query['limit'] ? parseInt(req.query['limit'] as string, 10) : 10,
     };
+    if (req.query['scanType']) {
+      options.scanType = req.query['scanType'] as string;
+    }
 
     const scans = await securityService.getVulnerabilityScans(options);
     res.status(200).json(scans);
@@ -126,7 +128,7 @@ export const getScanDetails = async (
       throw new ApiError('Only admin users can access scan details', 403);
     }
 
-    const scan = await securityService.getScanById(req.params.id);
+    const scan = await securityService.getScanById(req.params['id'] as string);
     res.status(200).json(scan);
   } catch (error) {
     next(error);

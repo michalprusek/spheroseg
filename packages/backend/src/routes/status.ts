@@ -12,7 +12,7 @@ router.get('/', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0',
+    version: process.env["npm_package_version"] || '1.0.0',
   });
 });
 
@@ -88,7 +88,7 @@ router.get(
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     const userId = req.user?.userId;
-    const projectId = req.params.projectId;
+    const projectId = req.params["projectId"];
 
     if (!userId) {
       res.status(401).json({ message: 'Authentication error' });
@@ -192,7 +192,7 @@ router.get(
           {
             id: mockImageId1,
             name: 'Sample Image 1',
-            projectId: req.query.projectId || 'project-123',
+            projectId: req.query["projectId"] || 'project-123',
           },
           {
             id: mockImageId2,
@@ -215,7 +215,7 @@ router.get(
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
-    const projectId = req.params.projectId;
+    const projectId = req.params["projectId"];
 
     if (!userId) {
       res.status(401).json({ message: 'Authentication error' });

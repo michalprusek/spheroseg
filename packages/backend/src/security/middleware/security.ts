@@ -124,7 +124,7 @@ export const createCSPMiddleware = (options: SecurityOptions = {}) => {
     // Store nonce in request for use in templates
     (req as unknown).nonce = nonce;
 
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    const isDevelopment = process.env["NODE_ENV"] === 'development';
 
     // Build CSP directives
     const directives = {
@@ -325,10 +325,10 @@ export const createCORSMiddleware = (options: SecurityOptions = {}) => {
  * Apply all security middleware to Express application
  */
 export const applySecurityMiddleware = (app: Application, options: SecurityOptions = {}): void => {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env["NODE_ENV"] === 'development';
 
   logger.info('Applying security middleware', {
-    environment: process.env.NODE_ENV,
+    environment: process.env["NODE_ENV"],
     options,
   });
 

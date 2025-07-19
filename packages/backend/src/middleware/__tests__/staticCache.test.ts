@@ -77,8 +77,8 @@ describe('Static Cache Middleware', () => {
   });
 
   it('should add ETag header in development', async () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    const originalEnv = process.env["NODE_ENV"];
+    process.env["NODE_ENV"] = 'development';
 
     const req = { path: '/test.jpg' } as Request;
     await staticCacheMiddleware(req, res as Response, next);
@@ -87,7 +87,7 @@ describe('Static Cache Middleware', () => {
     // Since we're mocking, we don't expect ETag to be set
     expect(next).toHaveBeenCalled();
 
-    process.env.NODE_ENV = originalEnv;
+    process.env["NODE_ENV"] = originalEnv;
   });
 
   it('should call next', async () => {

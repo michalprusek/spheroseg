@@ -246,7 +246,7 @@ router.get('/admin', authMiddleware, async (req: AuthenticatedRequest, res: Resp
     } catch (roleError) {
       logger.error('Error checking admin role:', { error: roleError });
       // In development mode, allow access even without admin role check
-      if (process.env.NODE_ENV !== 'development') {
+      if (process.env["NODE_ENV"] !== 'development') {
         return res.status(500).json({ success: false, message: 'Error checking admin access' });
       }
     }
@@ -333,7 +333,7 @@ router.delete('/admin', authMiddleware, async (req: AuthenticatedRequest, res: R
     } catch (roleError) {
       logger.error('Error checking admin role:', { error: roleError });
       // In development mode, allow access even without admin role check
-      if (process.env.NODE_ENV !== 'development') {
+      if (process.env["NODE_ENV"] !== 'development') {
         return res.status(500).json({ success: false, message: 'Error checking admin access' });
       }
     }
@@ -400,7 +400,7 @@ router.get('/stats', authMiddleware, async (req: AuthenticatedRequest, res: Resp
     }
 
     // Check if user has admin role (except in development)
-    if (process.env.NODE_ENV !== 'development') {
+    if (process.env["NODE_ENV"] !== 'development') {
       try {
         const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
 

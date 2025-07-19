@@ -4,12 +4,12 @@
  * This file provides type definitions for mocks used in tests
  */
 
-import { QueryResult } from 'pg';
+import { QueryResult, QueryResultRow } from 'pg';
 
 /**
  * Create a mock QueryResult object for testing
  */
-export function createMockQueryResult<T = any>(rows: T[]): QueryResult<T> {
+export function createMockQueryResult<T extends QueryResultRow = any>(rows: T[]): QueryResult<T> {
   return {
     rows,
     command: 'SELECT',

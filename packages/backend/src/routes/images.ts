@@ -115,7 +115,7 @@ const storage = multer.diskStorage({
     cb: (error: Error | null, destination: string) => void
   ) {
     // Store files in a subdirectory based on project ID
-    const projectId = req.params.projectId;
+    const projectId = req.params["projectId"];
     if (!projectId) {
       return cb(new Error('Project ID missing for upload destination'), '');
     }
@@ -432,7 +432,7 @@ router.post(
   validate(uploadImagesSchema),
   (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     logger.info('Upload endpoint hit - before multer', {
-      projectId: req.params.projectId,
+      projectId: req.params["projectId"],
       contentType: req.headers['content-type'],
       contentLength: req.headers['content-length'],
     });
@@ -790,7 +790,7 @@ router.delete(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
-    const imageId = req.params.imageId;
+    const imageId = req.params["imageId"];
 
     // No need to handle project- prefix anymore as it's been removed from the frontend
     const originalProjectId = projectId;
@@ -958,7 +958,7 @@ router.post(
   upload.array('images', 50),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Forward to the main image upload endpoint
-    req.url = `/projects/${req.params.projectId}/images`;
+    req.url = `/projects/${req.params["projectId"]}/images`;
     return router(req, res, next);
   }
 );
@@ -973,7 +973,7 @@ router.delete(
   validate(imageIdSchema),
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
-    const imageId = req.params.id;
+    const imageId = req.params["id"];
 
     logger.warn('Using deprecated route', {
       route: '/:id',
@@ -1144,7 +1144,7 @@ router.get(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     let { projectId } = req.params;
-    const imageId = req.params.imageId;
+    const imageId = req.params["imageId"];
 
     // Handle project IDs with "project-" prefix
     const originalProjectId = projectId;
@@ -1234,7 +1234,7 @@ router.get(
     const { projectId } = req.params;
     const { name, limit = 50, page } = req.query;
     // Calculate offset from page if provided, otherwise use offset
-    const offset = page ? (Number(page) - 1) * Number(limit) : Number(req.query.offset || 0);
+    const offset = page ? (Number(page) - 1) * Number(limit) : Number(req.query["offset"] || 0);
 
     // No need to handle project- prefix anymore as it's been removed from the frontend
     const originalProjectId = projectId;
@@ -1250,7 +1250,7 @@ router.get(
 
     try {
       // Try to get from cache first (only if no filters)
-      if (!name && !req.query.verifyFiles) {
+      if (!name && !req.query["verifyFiles"]) {
         const cached = await cacheService.getCachedImageList(
           projectId,
           Number(page || 1),
@@ -1325,7 +1325,7 @@ router.get(
         });
       }
 
-      const verifyFiles = req.query.verifyFiles === 'true';
+      const verifyFiles = req.query["verifyFiles"] === 'true';
 
       const origin = req.get('origin') || '';
       let processedImages = imageResult.rows.map((image: ImageData) =>
@@ -1340,7 +1340,7 @@ router.get(
           imageUtils.verifyImageFilesForApi(image, UPLOAD_DIR)
         );
 
-        const filterMissing = req.query.filterMissing === 'true';
+        const filterMissing = req.query["filterMissing"] === 'true';
         if (filterMissing) {
           logger.debug('Filtering out images with missing files');
           processedImages = processedImages.filter((image) => image.file_exists);
@@ -1364,7 +1364,7 @@ router.get(
       };
 
       // Cache the response (only if no filters)
-      if (!name && !req.query.verifyFiles) {
+      if (!name && !req.query["verifyFiles"]) {
         await cacheService.cacheImageList(
           projectId,
           Number(page || 1),
@@ -1416,7 +1416,7 @@ router.get(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
-    const imageId = req.params.imageId;
+    const imageId = req.params["imageId"];
 
     // No need to handle project- prefix anymore as it's been removed from the frontend
     const originalProjectId = projectId;
@@ -1485,7 +1485,7 @@ router.get(
   cacheControl.noCache,
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
-    const imageId = req.params.id;
+    const imageId = req.params["id"];
 
     logger.warn('Using deprecated route', {
       route: '/verify/:id',
@@ -1527,7 +1527,7 @@ router.get(
   combineCacheStrategies(cacheControl.short, cacheControl.etag),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
-    const imageId = req.params.imageId;
+    const imageId = req.params["imageId"];
 
     if (!userId) {
       return res.status(401).json({ message: 'Authentication required' });
@@ -1599,7 +1599,7 @@ router.get(
   combineCacheStrategies(cacheControl.medium, cacheControl.etag),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
-    const imageId = req.params.imageId;
+    const imageId = req.params["imageId"];
 
     if (!userId) {
       return res.status(401).json({ message: 'Authentication required' });

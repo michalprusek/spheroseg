@@ -49,7 +49,7 @@ export async function validateStartup(): Promise<ValidationResult> {
   }
 
   // 4. Validate Redis Connection (if enabled)
-  if (config.security.useRedis || process.env.ENABLE_REDIS_CACHE === 'true') {
+  if (config.security.useRedis || process.env["ENABLE_REDIS_CACHE"] === 'true') {
     try {
       await validateRedisConnection(errors, warnings);
     } catch (error) {
@@ -303,7 +303,7 @@ function validateProductionConfig(errors: string[], warnings: string[]): void {
   }
 
   // Memory limits
-  const memoryLimit = parseInt(process.env.CONTAINER_MEMORY_LIMIT_MB || '1024');
+  const memoryLimit = parseInt(process.env["CONTAINER_MEMORY_LIMIT_MB"] || '1024');
   if (memoryLimit < 1024) {
     warnings.push(`Low memory limit for production: ${memoryLimit}MB`);
   }

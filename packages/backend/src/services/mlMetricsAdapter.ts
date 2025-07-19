@@ -10,10 +10,10 @@ import axios from 'axios';
 import logger from '../utils/logger';
 
 // ML service metrics endpoint
-const ML_METRICS_URL = process.env.ML_METRICS_URL || 'http://ml-service:9090/metrics';
+const ML_METRICS_URL = process.env["ML_METRICS_URL"] || 'http://ml-service:9090/metrics';
 
 // Polling interval in milliseconds
-const POLLING_INTERVAL = parseInt(process.env.ML_METRICS_POLLING_INTERVAL || '30000', 10);
+const POLLING_INTERVAL = parseInt(process.env["ML_METRICS_POLLING_INTERVAL"] || '30000', 10);
 
 // Create metrics objects
 const ML_TASK_COUNT = new Counter({

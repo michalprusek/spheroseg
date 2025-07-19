@@ -18,7 +18,7 @@ export const getSegmentation = async (
   next: NextFunction
 ) => {
   try {
-    const imageId = req.params.imageId;
+    const imageId = req.params['imageId'];
 
     if (!imageId) {
       throw new ApiError('Image ID is required', 400);
@@ -41,7 +41,7 @@ export const saveSegmentation = async (
   next: NextFunction
 ) => {
   try {
-    const imageId = req.params.imageId;
+    const imageId = req.params['imageId'];
     const { polygons } = req.body;
 
     if (!imageId) {
@@ -70,7 +70,7 @@ export const runAutoSegmentation = async (
   next: NextFunction
 ) => {
   try {
-    const imageId = req.params.imageId;
+    const imageId = req.params['imageId'];
     const { options } = req.body;
 
     if (!imageId) {
@@ -94,7 +94,7 @@ export const getSegmentationStatus = async (
   next: NextFunction
 ) => {
   try {
-    const jobId = req.params.jobId;
+    const jobId = req.params['jobId'];
 
     if (!jobId) {
       throw new ApiError('Job ID is required', 400);
@@ -117,7 +117,7 @@ export const cancelSegmentation = async (
   next: NextFunction
 ) => {
   try {
-    const jobId = req.params.jobId;
+    const jobId = req.params['jobId'];
 
     if (!jobId) {
       throw new ApiError('Job ID is required', 400);
@@ -140,7 +140,7 @@ export const getSegmentationHistory = async (
   next: NextFunction
 ) => {
   try {
-    const imageId = req.params.imageId;
+    const imageId = req.params['imageId'];
 
     if (!imageId) {
       throw new ApiError('Image ID is required', 400);
@@ -163,8 +163,8 @@ export const getSegmentationVersion = async (
   next: NextFunction
 ) => {
   try {
-    const imageId = req.params.imageId;
-    const versionStr = req.params.version;
+    const imageId = req.params['imageId'];
+    const versionStr = req.params['version'];
 
     if (!imageId) {
       throw new ApiError('Image ID is required', 400);
@@ -196,8 +196,8 @@ export const restoreSegmentationVersion = async (
   next: NextFunction
 ) => {
   try {
-    const imageId = req.params.imageId;
-    const versionStr = req.params.version;
+    const imageId = req.params['imageId'];
+    const versionStr = req.params['version'];
 
     if (!imageId) {
       throw new ApiError('Image ID is required', 400);

@@ -20,7 +20,7 @@ describe('Log Rotation Configuration', () => {
     );
 
     // When logToFile is enabled, we should have 3 rotate transports
-    if (process.env.LOG_TO_FILE === 'true') {
+    if (process.env["LOG_TO_FILE"] === 'true') {
       expect(rotateTransports.length).toBe(3); // error, combined, access
     }
   });
@@ -89,7 +89,7 @@ describe('Log Rotation Configuration', () => {
   });
 
   it('should handle log directory configuration', () => {
-    const logDir = process.env.LOG_DIR || path.join(process.cwd(), 'logs');
+    const logDir = process.env["LOG_DIR"] || path.join(process.cwd(), 'logs');
     const transports = logger.transports;
     const rotateTransports = transports.filter(
       (transport: any) => transport.constructor.name === 'DailyRotateFile'

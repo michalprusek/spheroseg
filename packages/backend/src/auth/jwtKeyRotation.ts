@@ -24,7 +24,7 @@ interface JWKSConfig {
   cacheMaxAge: number;
   rateLimit: boolean;
   jwksRequestsPerMinute: number;
-  jwksUri?: string;
+  jwksUri?: string | undefined;
   localKeys?: boolean;
 }
 
@@ -97,7 +97,7 @@ export class JWTKeyManager {
 
       logger.info('JWT Key Manager initialized successfully');
     } catch (error) {
-      logger.error('Failed to initialize JWT Key Manager', error);
+      logger.error('Failed to initialize JWT Key Manager', { error });
       throw error;
     }
   }
@@ -129,7 +129,7 @@ export class JWTKeyManager {
         }
       }
     } catch (error) {
-      logger.error('Failed to load local keys', error);
+      logger.error('Failed to load local keys', { error });
     }
   }
 
@@ -183,7 +183,7 @@ export class JWTKeyManager {
       try {
         await this.rotateKeys();
       } catch (error) {
-        logger.error('Key rotation failed', error);
+        logger.error('Key rotation failed', { error });
       }
     }, rotationPeriod);
   }
@@ -236,7 +236,7 @@ export class JWTKeyManager {
         const key = await this.jwksClient.getSigningKey(kid);
         return key.getPublicKey();
       } catch (error) {
-        logger.error(`Failed to get public key for kid: ${kid}`, error);
+        logger.error(`Failed to get public key for kid: ${kid}`, { error });
         return null;
       }
     } else {
@@ -256,10 +256,11 @@ export class JWTKeyManager {
 
       return {
         ...jwk,
+        kty: jwk.kty || 'RSA',
         kid: keyPair.kid,
         alg: keyPair.algorithm,
         use: 'sig',
-      };
+      } as JWK;
     });
 
     return { keys };
@@ -290,7 +291,7 @@ export function getKeyManager(): JWTKeyManager {
       rateLimit: true,
       jwksRequestsPerMinute: 10,
       localKeys: !config.auth.jwksUri,
-      jwksUri: config.auth.jwksUri,
+      jwksUri: config.auth.jwksUri || undefined,
     });
   }
 
@@ -300,7 +301,7 @@ export function getKeyManager(): JWTKeyManager {
 /**
  * Middleware pro validaci JWT s rotovanými klíči
  */
-export function validateJWTWithRotation(req: Request, res: Response, next: NextFunction): void {
+export function validateJWTWithRotation(req: Request, _res: Response, next: NextFunction): void {
   const token = req.headers.authorization?.replace('Bearer ', '');
 
   if (!token) {
@@ -362,7 +363,7 @@ export function signJWTWithRotation(payload: JWTPayload, options?: jwt.SignOptio
 /**
  * Express route pro JWKS endpoint
  */
-export function jwksEndpoint(req: Request, res: Response): void {
+export function jwksEndpoint(_req: Request, res: Response): void {
   const manager = getKeyManager();
   const jwks = manager.getJWKS();
 
@@ -372,7 +373,7 @@ export function jwksEndpoint(req: Request, res: Response): void {
 /**
  * Express route pro manuální rotaci klíčů (admin only)
  */
-export async function rotateKeysEndpoint(req: Request, res: Response): Promise<void> {
+export async function rotateKeysEndpoint(_req: Request, res: Response): Promise<void> {
   try {
     const manager = getKeyManager();
     await manager.rotateKeys();
@@ -382,7 +383,7 @@ export async function rotateKeysEndpoint(req: Request, res: Response): Promise<v
       currentKeyId: manager.getCurrentKeyId(),
     });
   } catch (error) {
-    logger.error('Manual key rotation failed', error);
+    logger.error('Manual key rotation failed', { error });
     res.status(500).json({ error: 'Key rotation failed' });
   }
 }

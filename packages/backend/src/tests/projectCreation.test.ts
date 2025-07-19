@@ -168,7 +168,7 @@ router.post(
   mockValidate(),
   async (req: Request, res: Response) => {
     const userId = (req as unknown).user?.userId;
-    const projectId = req.params.id;
+    const projectId = req.params["id"];
     const { newTitle: _newTitle } = req.body;
 
     try {

@@ -93,7 +93,7 @@ router.get(
   validate(getSegmentationSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
-    const imageId = req.params.id;
+    const imageId = req.params["id"];
 
     if (!userId) {
       res.status(401).json({ message: 'Authentication error' });
@@ -256,7 +256,7 @@ router.post(
   validate(triggerSingleWithPrioritySchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
-    const imageId = req.params.id;
+    const imageId = req.params["id"];
     // Get parameters and priority from request body
     const segmentationParams = req.body.parameters || {};
     const priority = req.body.priority || 1;
@@ -565,7 +565,7 @@ router.put(
       });
       return;
     }
-    const imageId = req.params.id;
+    const imageId = req.params["id"];
     const { result_data, status, parameters } = req.body; // Expecting segmentation result and status
 
     // Check if request is from ML service (internal) or user (needs auth)
@@ -1161,7 +1161,7 @@ router.post(
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
-    const imageId = req.params.imageId;
+    const imageId = req.params["imageId"];
     const { project_id } = req.body;
 
     if (!userId) {
@@ -1474,7 +1474,7 @@ router.get(
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     const userId = req.user?.userId;
-    const projectId = req.params.projectId;
+    const projectId = req.params["projectId"];
 
     if (!userId) {
       res.status(401).json({ message: 'Authentication error' });

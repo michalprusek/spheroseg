@@ -79,7 +79,7 @@ class AdvancedCacheService {
    */
   private initializeRedis(): void {
     try {
-      const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+      const redisUrl = process.env["REDIS_URL"] || 'redis://localhost:6379';
 
       this.redis = new Redis(redisUrl, {
         maxRetriesPerRequest: 3,

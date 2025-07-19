@@ -156,21 +156,21 @@ mockApp.post('/api/projects', authMiddleware, (req, res) => {
 
 // Image routes
 mockApp.get('/api/projects/:projectId/images', authMiddleware, (req, res) => {
-  if (req.params.projectId === 'invalid-id') {
+  if (req.params["projectId"] === 'invalid-id') {
     return res.status(400).json({ errors: ['Invalid project ID'] });
   }
   res.status(200).json([]);
 });
 
 mockApp.get('/api/projects/:projectId/images/:imageId', authMiddleware, (req, res) => {
-  if (req.params.projectId === 'invalid-id' || req.params.imageId === 'invalid-id') {
+  if (req.params["projectId"] === 'invalid-id' || req.params["imageId"] === 'invalid-id') {
     return res.status(400).json({ errors: ['Invalid ID'] });
   }
-  res.status(200).json({ id: req.params.imageId, name: 'Test Image' });
+  res.status(200).json({ id: req.params["imageId"], name: 'Test Image' });
 });
 
 mockApp.delete('/api/projects/:projectId/images/:imageId', authMiddleware, (req, res) => {
-  if (req.params.projectId === 'invalid-id' || req.params.imageId === 'invalid-id') {
+  if (req.params["projectId"] === 'invalid-id' || req.params["imageId"] === 'invalid-id') {
     return res.status(400).json({ errors: ['Invalid ID'] });
   }
   res.status(204).send();
@@ -196,7 +196,7 @@ mockApp.get('/api/segmentation/status', authMiddleware, (req, res) => {
 });
 
 mockApp.post('/api/segmentation/:imageId/resegment', authMiddleware, (req, res) => {
-  if (req.params.imageId === 'invalid-id') {
+  if (req.params["imageId"] === 'invalid-id') {
     return res.status(400).json({ errors: ['Invalid image ID'] });
   }
   res.status(202).json({ message: 'Resegmentation queued' });

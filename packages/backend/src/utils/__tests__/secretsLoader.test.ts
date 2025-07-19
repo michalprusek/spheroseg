@@ -39,7 +39,7 @@ describe('secretsLoader', () => {
 
     it('should load secret from environment variable file path', () => {
       const mockSecret = 'env-file-secret';
-      process.env.TEST_SECRET_FILE = '/custom/path/secret';
+      process.env["TEST_SECRET_FILE"] = '/custom/path/secret';
       (fs.existsSync as jest.Mock).mockReturnValue(false);
       (fs.readFileSync as jest.Mock).mockReturnValue(mockSecret);
 
@@ -51,7 +51,7 @@ describe('secretsLoader', () => {
 
     it('should fall back to environment variable', () => {
       const mockSecret = 'env-var-secret';
-      process.env.TEST_SECRET = mockSecret;
+      process.env["TEST_SECRET"] = mockSecret;
       (fs.existsSync as jest.Mock).mockReturnValue(false);
 
       const result = loadSecret('test_secret', 'TEST_SECRET');
@@ -77,14 +77,14 @@ describe('secretsLoader', () => {
   });
 
   describe('validateJwtSecret', () => {
-    const originalNodeEnv = process.env.NODE_ENV;
+    const originalNodeEnv = process.env["NODE_ENV"];
 
     beforeEach(() => {
-      process.env.NODE_ENV = 'production';
+      process.env["NODE_ENV"] = 'production';
     });
 
     afterEach(() => {
-      process.env.NODE_ENV = originalNodeEnv;
+      process.env["NODE_ENV"] = originalNodeEnv;
     });
 
     it('should accept valid JWT secret in production', () => {
@@ -118,7 +118,7 @@ describe('secretsLoader', () => {
     });
 
     it('should accept shorter secrets in development', () => {
-      process.env.NODE_ENV = 'development';
+      process.env["NODE_ENV"] = 'development';
       const devSecret = '1234567890123456'; // 16 chars
       
       expect(() => validateJwtSecret(devSecret)).not.toThrow();

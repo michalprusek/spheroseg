@@ -20,7 +20,7 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
 
   try {
     // In production, replace this with actual email service integration
-    const invitationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/accept-invitation/${invitationToken}`;
+    const invitationUrl = `${process.env["FRONTEND_URL"] || 'http://localhost:3000'}/accept-invitation/${invitationToken}`;
 
     const emailContent = {
       to,
@@ -63,7 +63,7 @@ export async function sendProjectInvitation(params: SendProjectInvitationParams)
     });
 
     // In development, you can log the email content to console
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env["NODE_ENV"] === 'development') {
       console.log('📧 Email Service (Development Mode)');
       console.log('================================');
       console.log('To:', emailContent.to);

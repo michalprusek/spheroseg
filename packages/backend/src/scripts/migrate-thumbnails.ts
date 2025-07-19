@@ -10,8 +10,8 @@ import { Pool } from 'pg';
 import logger from '../utils/logger';
 
 const DATABASE_URL =
-  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/spheroseg';
-const UPLOADS_DIR = process.env.UPLOADS_DIR || '/app/uploads';
+  process.env["DATABASE_URL"] || 'postgresql://postgres:postgres@localhost:5432/spheroseg';
+const UPLOADS_DIR = process.env["UPLOADS_DIR"] || '/app/uploads';
 
 async function migrateJpgThumbnailsToPng() {
   const pool = new Pool({ connectionString: DATABASE_URL });
