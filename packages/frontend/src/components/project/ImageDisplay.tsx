@@ -330,14 +330,16 @@ const ImageDisplayComponent = ({
     };
 
     loadImageFromIndexedDB();
+  }, [image.id, image.thumbnail_url, image.url, createObjectURL]);
 
-    // Clean up blob URL when component unmounts
+  // Clean up blob URL when component unmounts or imageSrc changes
+  useEffect(() => {
     return () => {
       if (imageSrc && imageSrc.startsWith('blob:')) {
-        URL.revokeObjectURL(imageSrc);
+        revokeObjectURL(imageSrc);
       }
     };
-  }, [image.id, image.thumbnail_url, image.url]);
+  }, [imageSrc, revokeObjectURL]);
 
   // Determine if image is originally a TIFF based on filename
   const isOriginallyTiff = image.name?.toLowerCase().endsWith('.tiff') || image.name?.toLowerCase().endsWith('.tif');
