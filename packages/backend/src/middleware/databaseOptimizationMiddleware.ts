@@ -47,7 +47,7 @@ export function getOptimizationService(): DatabaseOptimizationService | null {
 export function addOptimizationService(req: Request, _res: Response, next: NextFunction): void {
   const service = getOptimizationService();
   if (service) {
-    (req as unknown).optimizationService = service;
+    (req as any).optimizationService = service;
   }
   next();
 }
@@ -99,7 +99,7 @@ async function invalidateCacheBasedOnPath(
     if (path.includes('/projects')) {
       if (req.method === 'POST' && statusCode === 201) {
         // New project created - invalidate user's project list
-        const userId = (req as unknown).user?.userId;
+        const userId = (req as any).user?.userId;
         if (userId) {
           await service.invalidateRelatedCaches('user', userId);
           logger.debug('Cache invalidated for new project', { userId, path });
@@ -107,12 +107,12 @@ async function invalidateCacheBasedOnPath(
       } else if (req.method === 'DELETE' && pathSegments.length >= 3) {
         // Project deleted
         const projectId = pathSegments[2];
-        await service.invalidateRelatedCaches('project', projectId);
+        await service.invalidateRelatedCaches('project', projectId!);
         logger.debug('Cache invalidated for deleted project', { projectId, path });
       } else if (['PUT', 'PATCH'].includes(req.method) && pathSegments.length >= 3) {
         // Project updated
         const projectId = pathSegments[2];
-        await service.invalidateRelatedCaches('project', projectId);
+        await service.invalidateRelatedCaches('project', projectId!);
         logger.debug('Cache invalidated for updated project', { projectId, path });
       }
     }
@@ -122,18 +122,18 @@ async function invalidateCacheBasedOnPath(
         // New image uploaded
         const projectId = req.body?.project_id || req.params?.['projectId'];
         if (projectId) {
-          await service.invalidateRelatedCaches('project', projectId);
+          await service.invalidateRelatedCaches('project', projectId!);
           logger.debug('Cache invalidated for new image', { projectId, path });
         }
       } else if (req.method === 'DELETE' && pathSegments.length >= 3) {
         // Image deleted
         const imageId = pathSegments[2];
-        await service.invalidateRelatedCaches('image', imageId);
+        await service.invalidateRelatedCaches('image', imageId!);
         logger.debug('Cache invalidated for deleted image', { imageId, path });
       } else if (['PUT', 'PATCH'].includes(req.method) && pathSegments.length >= 3) {
         // Image updated (e.g., segmentation status changed)
         const imageId = pathSegments[2];
-        await service.invalidateRelatedCaches('image', imageId);
+        await service.invalidateRelatedCaches('image', imageId!);
         logger.debug('Cache invalidated for updated image', { imageId, path });
       }
     }
@@ -142,14 +142,14 @@ async function invalidateCacheBasedOnPath(
       // Segmentation results changed
       const imageId = req.body?.image_id || req.params?.['imageId'];
       if (imageId) {
-        await service.invalidateRelatedCaches('image', imageId);
+        await service.invalidateRelatedCaches('image', imageId!);
         logger.debug('Cache invalidated for segmentation update', { imageId, path });
       }
     }
 
     if (path.includes('/users') || path.includes('/profile')) {
       // User data changed
-      const userId = (req as unknown).user?.['userId'] || req.params?.['userId'];
+      const userId = (req as any).user?.['userId'] || req.params?.['userId'];
       if (userId) {
         await service.invalidateRelatedCaches('user', userId);
         logger.debug('Cache invalidated for user update', { userId, path });
@@ -186,7 +186,7 @@ export function performanceMonitoringMiddleware(
         duration,
         statusCode,
         userAgent: req.get('User-Agent'),
-        userId: (req as unknown).user?.userId,
+        userId: (req as any).user?.userId,
       });
     }
 
@@ -209,7 +209,7 @@ export function performanceMonitoringMiddleware(
  */
 export function queryOptimizationHints(req: Request, _res: Response, next: NextFunction): void {
   // Add optimization hints to request for use by route handlers
-  (req as unknown).optimizationHints = {
+  (req as any).optimizationHints = {
     // Suggest caching for GET requests
     shouldCache: req.method === 'GET',
 
@@ -265,7 +265,7 @@ export function optimizationErrorHandler(
       error: error.message,
       path: req.path,
       method: req.method,
-      userId: (req as unknown).user?.userId,
+      userId: (req as any).user?.userId,
     });
 
     // Don't fail the request due to optimization errors
@@ -281,7 +281,7 @@ export function optimizationErrorHandler(
  */
 export function optimizedCacheHeaders(req: Request, res: Response, next: NextFunction): void {
   if (req.method === 'GET') {
-    const hints = (req as unknown).optimizationHints;
+    const hints = (req as any).optimizationHints;
     const strategy = hints?.cacheStrategy || 'WARM';
 
     // Set appropriate cache headers based on strategy

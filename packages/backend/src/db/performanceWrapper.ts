@@ -102,7 +102,7 @@ export function wrapPool(pool: Pool): Pool {
       }
 
       // Call original query method with all arguments
-      const result = await originalQuery.apply(pool, args);
+      const result = await originalQuery.apply(pool, args as any);
 
       // Calculate duration
       const duration = Date.now() - startTime;

@@ -72,11 +72,10 @@ describe('UnifiedResponseHandler', () => {
 
       expect(result.success).toBe(false);
       expect(result.data).toBeNull();
-      // Current implementation is treating ZodError as regular Error
-      // so it returns the JSON string in the message
-      expect(result.message).toMatch(/\[.*code.*invalid_type.*\]/s);
-      // Since it's not handled as ZodError, errors property may not exist
-      // This test passes with current implementation behavior
+      expect(result.message).toBe('Validation failed');
+      expect(result.errors).toBeDefined();
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors![0].code).toBe('invalid_type');
     });
 
     it('should handle standard Error', () => {

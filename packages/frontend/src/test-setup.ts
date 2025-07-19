@@ -52,9 +52,24 @@ vi.mock('@/i18n', () => ({
 // Mock lucide-react icons
 vi.mock('lucide-react', () => {
   const createIcon = (name: string) => {
-    const Icon = React.forwardRef((props: any, ref: any) =>
-      React.createElement('svg', { ...props, ref, 'data-testid': `${name}-icon` }),
-    );
+    const Icon = React.forwardRef((props: any, ref: any) => {
+      // Convert camelCase to kebab-case for CSS class names  
+      // Handle specific mappings for common patterns
+      let kebabName = name
+        .replace(/([A-Z][a-z])/g, '-$1')  // Insert dash before capital letters followed by lowercase
+        .replace(/([a-z])([A-Z])/g, '$1-$2')  // Insert dash between lowercase and uppercase
+        .toLowerCase()
+        .replace(/^-/, '');  // Remove leading dash
+      
+      const className = `lucide lucide-${kebabName} ${props.className || ''}`.trim();
+      
+      return React.createElement('svg', { 
+        ...props, 
+        ref, 
+        'data-testid': `${name}-icon`,
+        className
+      });
+    });
     Icon.displayName = name;
     return Icon;
   };
@@ -292,6 +307,10 @@ vi.mock('lucide-react', () => {
     ImagePlus: createIcon('ImagePlus'),
     LayoutGrid: createIcon('LayoutGrid'),
     LayoutList: createIcon('LayoutList'),
+    // Icons needed by ProjectImageProcessor tests
+    LoaderCircle: createIcon('LoaderCircle'),
+    CircleCheckBig: createIcon('CircleCheckBig'),
+    TriangleAlert: createIcon('TriangleAlert'),
     // Add any other icons that are used in the codebase
   };
 });
@@ -910,85 +929,353 @@ if (typeof window !== 'undefined' && !window.indexedDB) {
 }
 
 // Mock app.config.validated
-vi.mock('@/config/app.config.validated', () => ({
-  appConfig: {
-    organization: {
-      name: 'SpherosegV4',
-      tagline: 'Cell Segmentation Made Easy',
-      supportEmail: 'support@spheroseg.com',
-      supportPhone: '+1 (555) 123-4567',
-      githubUrl: 'https://github.com/spheroseg/spheroseg',
-      documentationUrl: 'https://docs.spheroseg.com',
+vi.mock('@/config/app.config.validated', () => {
+  const { z } = require('zod');
+  
+  // Create a proper mock config that can be mutated during tests
+  let mockAppConfig = {
+    app: {
+      name: 'SpheroSeg',
+      fullName: 'Spheroid Segmentation Platform',
+      description: 'Advanced platform for spheroid segmentation and analysis',
+      version: '1.0.0',
     },
-    legal: {
-      privacyPolicyUrl: '/privacy',
-      termsOfServiceUrl: '/terms',
-      copyrightYear: 2024,
-      copyrightHolder: 'SpherosegV4 Team',
+    contact: {
+      email: 'spheroseg@utia.cas.cz',
+      supportEmail: 'support@spheroseg.com',
+      privacyEmail: 'spheroseg@utia.cas.cz',
+      developer: {
+        name: 'Michal Průšek',
+        title: 'Bc. Michal Průšek',
+        email: 'prusemic@cvut.cz',
+      },
+    },
+    organization: {
+      primary: {
+        name: 'FNSPE CTU in Prague',
+        nameShort: 'FNSPE CTU',
+        url: 'https://www.fjfi.cvut.cz/',
+      },
+      supervisor: {
+        name: 'UTIA CAS',
+        fullName: 'Institute of Information Theory and Automation',
+        url: 'https://www.utia.cas.cz/',
+      },
+      collaborator: {
+        name: 'UCT Prague',
+        department: 'Department of Biochemistry and Microbiology',
+        url: 'https://www.uct.cz/',
+      },
+    },
+    social: {
+      github: {
+        url: 'https://github.com/michalprusek/spheroseg',
+        username: 'michalprusek',
+      },
+      twitter: {
+        url: 'https://twitter.com/spheroseg',
+        username: '@spheroseg',
+      },
+    },
+    api: {
+      baseUrl: '/api',
+      timeout: 30000,
+      retryAttempts: 3,
     },
     features: {
-      enableDemoMode: false,
-      enableAnalytics: false,
-      enableErrorReporting: false,
+      enableRegistration: true,
+      enableGoogleAuth: false,
+      enableGithubAuth: false,
+      enableExperimentalFeatures: false,
       maintenanceMode: false,
     },
     ui: {
-      defaultTheme: 'light' as const,
-      enableThemeToggle: true,
+      defaultTheme: 'system' as const,
       defaultLanguage: 'en',
       supportedLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
+      animationsEnabled: true,
+      maxFileUploadSize: 10 * 1024 * 1024, // 10MB
+      acceptedImageFormats: ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
     },
-    api: {
-      timeout: 30000,
-      retryAttempts: 3,
-      retryDelay: 1000,
+    legal: {
+      privacyPolicyUrl: '/privacy-policy',
+      termsOfServiceUrl: '/terms-of-service',
+      cookiePolicyUrl: '/cookie-policy',
+      lastUpdated: '2025-01-07',
     },
-    storage: {
-      maxFileSize: 50 * 1024 * 1024, // 50MB
-      allowedImageTypes: ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
-      allowedImageExtensions: ['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp'],
+    analytics: {
+      enabled: false,
+      googleAnalyticsId: undefined,
+      sentryDsn: undefined,
     },
-    segmentation: {
-      maxPolygonsPerImage: 1000,
-      minPolygonArea: 10,
-      defaultPolygonColor: '#00ff00',
-      vertexSize: 8,
-      edgeWidth: 2,
+    development: {
+      enableDevTools: true,
+      enableLogging: true,
+      logLevel: 'info' as const,
     },
-    export: {
-      formats: {
-        annotation: ['COCO', 'YOLO', 'JSON'] as const,
-        metrics: ['EXCEL', 'CSV', 'JSON'] as const,
-      },
-      maxBatchSize: 100,
+  };
+
+  // Create a mock schema with proper validation simulation
+  const MockAppConfigSchema = {
+    parse: vi.fn((data: any) => {
+      // Simulate validation by checking for obvious invalid data
+      if (data.contact?.email && !data.contact.email.includes('@')) {
+        throw new z.ZodError([]);
+      }
+      if (data.organization?.primary?.url && !data.organization.primary.url.startsWith('http')) {
+        throw new z.ZodError([]);
+      }
+      if (data.app?.version && !/^\d+\.\d+\.\d+$/.test(data.app.version)) {
+        throw new z.ZodError([]);
+      }
+      if (data.social?.twitter?.username && !data.social.twitter.username.startsWith('@')) {
+        throw new z.ZodError([]);
+      }
+      if (data.legal?.lastUpdated && !/^\d{4}-\d{2}-\d{2}$/.test(data.legal.lastUpdated)) {
+        throw new z.ZodError([]);
+      }
+      if (data.api?.timeout && data.api.timeout <= 0) {
+        throw new z.ZodError([]);
+      }
+      if (data.api?.retryAttempts && (data.api.retryAttempts < 0 || data.api.retryAttempts > 5)) {
+        throw new z.ZodError([]);
+      }
+      if (data.ui?.defaultLanguage && data.ui.defaultLanguage.length !== 2) {
+        throw new z.ZodError([]);
+      }
+      if (data.ui?.supportedLanguages && data.ui.supportedLanguages.length === 0) {
+        throw new z.ZodError([]);
+      }
+      return data;
+    }),
+    shape: {
+      app: { parse: vi.fn((data: any) => data) },
+      contact: { parse: vi.fn((data: any) => data) },
+      organization: { parse: vi.fn((data: any) => data) },
+      social: { parse: vi.fn((data: any) => data) },
+      api: { parse: vi.fn((data: any) => data) },
+      features: { parse: vi.fn((data: any) => data) },
+      ui: { parse: vi.fn((data: any) => data) },
+      legal: { parse: vi.fn((data: any) => data) },
+      analytics: { parse: vi.fn((data: any) => data) },
+      development: { parse: vi.fn((data: any) => data) },
     },
-  },
-  getOrganizationName: () => 'SpherosegV4',
-  getSupportEmail: () => 'support@spheroseg.com',
-  getCopyrightText: () => '© 2024 SpherosegV4 Team. All rights reserved.',
-  isFeatureEnabled: (feature: string) => false,
-  getDefaultTheme: () => 'light' as const,
-  getSupportedLanguages: () => ['en', 'cs', 'de', 'es', 'fr', 'zh'],
-  getAllowedImageTypes: () => ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
-  getMaxFileSize: () => 50 * 1024 * 1024,
-}));
+  };
+
+  return {
+    appConfig: mockAppConfig,
+    // Mock getConfig that returns actual sections from mock config
+    getConfig: vi.fn((section: string) => {
+      return mockAppConfig[section as keyof typeof mockAppConfig] || {};
+    }),
+    // Mock updateConfig that actually updates the mock
+    updateConfig: vi.fn((section: string, updates: any) => {
+      if (mockAppConfig[section as keyof typeof mockAppConfig]) {
+        Object.assign(mockAppConfig[section as keyof typeof mockAppConfig], updates);
+      }
+    }),
+    // Helper functions
+    getContactEmail: vi.fn(() => mockAppConfig.contact.email),
+    getSupportEmail: vi.fn(() => mockAppConfig.contact.supportEmail),
+    getAppName: vi.fn(() => mockAppConfig.app.name),
+    getAppFullName: vi.fn(() => mockAppConfig.app.fullName),
+    getOrganizationName: vi.fn(() => mockAppConfig.organization.primary.name),
+    getGithubUrl: vi.fn(() => mockAppConfig.social.github.url),
+    // Mock schema export
+    AppConfigSchema: MockAppConfigSchema,
+    // Keep backward-compatible exports for existing tests
+    getCopyrightText: vi.fn(() => '© 2025 SpheroSeg Team. All rights reserved.'),
+    isFeatureEnabled: vi.fn((feature: string) => false),
+    getDefaultTheme: vi.fn(() => 'system' as const),
+    getSupportedLanguages: vi.fn(() => ['en', 'cs', 'de', 'es', 'fr', 'zh']),
+    getAllowedImageTypes: vi.fn(() => ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp']),
+    getMaxFileSize: vi.fn(() => 10 * 1024 * 1024),
+  };
+});
 
 
-// Mock @radix-ui components
+// Mock @radix-ui components - comprehensive mock for all radix-optimized exports
 vi.mock('@/lib/radix-optimized', () => ({
-  SelectContent: ({ children }: any) => React.createElement('div', { 'data-testid': 'select-content' }, children),
-  SelectItem: ({ children, value }: any) =>
-    React.createElement('option', { value, 'data-testid': `select-item-${value}` }, children),
-  SelectTrigger: ({ children }: any) => React.createElement('button', { 'data-testid': 'select-trigger' }, children),
-  SelectValue: ({ placeholder }: any) => React.createElement('span', { 'data-testid': 'select-value' }, placeholder),
-  SelectRoot: ({ children }: any) => React.createElement('div', { 'data-testid': 'select-root' }, children),
-  DialogRoot: ({ children, open }: any) =>
+  // Checkbox components
+  CheckboxRoot: ({ children, ...props }: any) => 
+    React.createElement('input', { type: 'checkbox', 'data-testid': 'checkbox-root', ...props }, children),
+  CheckboxIndicator: ({ children }: any) => 
+    React.createElement('span', { 'data-testid': 'checkbox-indicator' }, children),
+
+  // Dialog components - fixed structure
+  DialogRoot: ({ children, open }: any) => 
     open !== false ? React.createElement('div', { 'data-testid': 'dialog-root' }, children) : null,
-  DialogTrigger: ({ children }: any) => React.createElement('button', { 'data-testid': 'dialog-trigger' }, children),
-  DialogPortal: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-portal' }, children),
-  DialogOverlay: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-overlay' }, children),
-  DialogContent: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-content' }, children),
-  DialogTitle: ({ children }: any) => React.createElement('h2', { 'data-testid': 'dialog-title' }, children),
-  DialogDescription: ({ children }: any) => React.createElement('p', { 'data-testid': 'dialog-description' }, children),
-  DialogClose: ({ children }: any) => React.createElement('button', { 'data-testid': 'dialog-close' }, children),
+  DialogTrigger: ({ children, asChild, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'dialog-trigger', ...props }, children),
+  DialogPortal: ({ children }: any) => 
+    React.createElement('div', { 'data-testid': 'dialog-portal' }, children),
+  DialogOverlay: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dialog-overlay', ...props }, children),
+  DialogContent: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dialog-content', role: 'dialog', ...props }, children),
+  DialogTitle: ({ children, ...props }: any) => 
+    React.createElement('h2', { 'data-testid': 'dialog-title', ...props }, children),
+  DialogDescription: ({ children, ...props }: any) => 
+    React.createElement('p', { 'data-testid': 'dialog-description', ...props }, children),
+  DialogClose: ({ children, asChild, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'dialog-close', ...props }, children),
+
+  // Select components - proper hierarchy that avoids DOM nesting issues
+  SelectRoot: ({ children, value, onValueChange, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'select-root', 'data-value': value, ...props }, children),
+  SelectGroup: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'select-group', ...props }, children),
+  SelectValue: ({ placeholder, ...props }: any) => 
+    React.createElement('span', { 'data-testid': 'select-value', ...props }, placeholder),
+  SelectTrigger: ({ children, asChild, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'select-trigger', ...props }, children),
+  SelectContent: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'select-content', role: 'listbox', ...props }, children),
+  SelectLabel: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'select-label', ...props }, children),
+  SelectItem: ({ children, value, ...props }: any) => 
+    React.createElement('div', { 'data-testid': `select-item-${value}`, 'data-value': value, role: 'option', ...props }, children),
+  SelectSeparator: (props: any) => 
+    React.createElement('div', { 'data-testid': 'select-separator', ...props }),
+  SelectScrollUpButton: ({ children, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'select-scroll-up', ...props }, children),
+  SelectScrollDownButton: ({ children, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'select-scroll-down', ...props }, children),
+  SelectViewport: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'select-viewport', ...props }, children),
+  SelectIcon: ({ children, ...props }: any) => 
+    React.createElement('span', { 'data-testid': 'select-icon', ...props }, children),
+  SelectPortal: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'select-portal', ...props }, children),
+  SelectItemText: ({ children, ...props }: any) => 
+    React.createElement('span', { 'data-testid': 'select-item-text', ...props }, children),
+  SelectItemIndicator: ({ children, ...props }: any) => 
+    React.createElement('span', { 'data-testid': 'select-item-indicator', ...props }, children),
+
+  // Dropdown Menu components
+  DropdownMenuRoot: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-root', ...props }, children),
+  DropdownMenuTrigger: ({ children, asChild, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'dropdown-menu-trigger', ...props }, children),
+  DropdownMenuContent: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-content', role: 'menu', ...props }, children),
+  DropdownMenuItem: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-item', role: 'menuitem', ...props }, children),
+  DropdownMenuCheckboxItem: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-checkbox-item', role: 'menuitemcheckbox', ...props }, children),
+  DropdownMenuRadioItem: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-radio-item', role: 'menuitemradio', ...props }, children),
+  DropdownMenuLabel: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-label', ...props }, children),
+  DropdownMenuSeparator: (props: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-separator', ...props }),
+  DropdownMenuGroup: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-group', role: 'group', ...props }, children),
+  DropdownMenuPortal: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-portal', ...props }, children),
+  DropdownMenuSub: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-sub', ...props }, children),
+  DropdownMenuSubContent: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-sub-content', ...props }, children),
+  DropdownMenuSubTrigger: ({ children, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'dropdown-menu-sub-trigger', ...props }, children),
+  DropdownMenuRadioGroup: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'dropdown-menu-radio-group', role: 'radiogroup', ...props }, children),
+  DropdownMenuItemIndicator: ({ children, ...props }: any) => 
+    React.createElement('span', { 'data-testid': 'dropdown-menu-item-indicator', ...props }, children),
+
+  // Toast components
+  ToastProvider: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'toast-provider', ...props }, children),
+  ToastRoot: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'toast-root', role: 'status', ...props }, children),
+  ToastAction: ({ children, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'toast-action', ...props }, children),
+  ToastClose: ({ children, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'toast-close', ...props }, children),
+  ToastViewport: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'toast-viewport', ...props }, children),
+  ToastTitle: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'toast-title', ...props }, children),
+  ToastDescription: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'toast-description', ...props }, children),
+
+  // Tooltip components
+  TooltipProvider: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'tooltip-provider', ...props }, children),
+  TooltipRoot: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'tooltip-root', ...props }, children),
+  TooltipTrigger: ({ children, asChild, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'tooltip-trigger', ...props }, children),
+  TooltipContent: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'tooltip-content', role: 'tooltip', ...props }, children),
+  TooltipArrow: (props: any) => 
+    React.createElement('div', { 'data-testid': 'tooltip-arrow', ...props }),
+  TooltipPortal: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'tooltip-portal', ...props }, children),
+
+  // Other components (Tabs, Progress, RadioGroup, Switch, ScrollArea, AlertDialog, Label, Slot)
+  TabsRoot: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'tabs-root', ...props }, children),
+  TabsList: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'tabs-list', role: 'tablist', ...props }, children),
+  TabsTrigger: ({ children, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'tabs-trigger', role: 'tab', ...props }, children),
+  TabsContent: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'tabs-content', role: 'tabpanel', ...props }, children),
+
+  ProgressRoot: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'progress-root', role: 'progressbar', ...props }, children),
+  ProgressIndicator: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'progress-indicator', ...props }, children),
+
+  RadioGroupRoot: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'radio-group-root', role: 'radiogroup', ...props }, children),
+  RadioGroupItem: ({ children, ...props }: any) => 
+    React.createElement('input', { type: 'radio', 'data-testid': 'radio-group-item', ...props }, children),
+  RadioGroupIndicator: ({ children, ...props }: any) => 
+    React.createElement('span', { 'data-testid': 'radio-group-indicator', ...props }, children),
+
+  SwitchRoot: ({ children, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'switch-root', role: 'switch', ...props }, children),
+  SwitchThumb: ({ children, ...props }: any) => 
+    React.createElement('span', { 'data-testid': 'switch-thumb', ...props }, children),
+
+  ScrollAreaRoot: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'scroll-area-root', ...props }, children),
+  ScrollAreaViewport: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'scroll-area-viewport', ...props }, children),
+  ScrollAreaScrollbar: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'scroll-area-scrollbar', ...props }, children),
+  ScrollAreaThumb: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'scroll-area-thumb', ...props }, children),
+  ScrollAreaCorner: (props: any) => 
+    React.createElement('div', { 'data-testid': 'scroll-area-corner', ...props }),
+
+  AlertDialogRoot: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'alert-dialog-root', ...props }, children),
+  AlertDialogTrigger: ({ children, asChild, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'alert-dialog-trigger', ...props }, children),
+  AlertDialogPortal: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'alert-dialog-portal', ...props }, children),
+  AlertDialogOverlay: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'alert-dialog-overlay', ...props }, children),
+  AlertDialogContent: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'alert-dialog-content', role: 'alertdialog', ...props }, children),
+  AlertDialogTitle: ({ children, ...props }: any) => 
+    React.createElement('h2', { 'data-testid': 'alert-dialog-title', ...props }, children),
+  AlertDialogDescription: ({ children, ...props }: any) => 
+    React.createElement('p', { 'data-testid': 'alert-dialog-description', ...props }, children),
+  AlertDialogAction: ({ children, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'alert-dialog-action', ...props }, children),
+  AlertDialogCancel: ({ children, ...props }: any) => 
+    React.createElement('button', { 'data-testid': 'alert-dialog-cancel', ...props }, children),
+
+  Label: ({ children, ...props }: any) => 
+    React.createElement('label', { 'data-testid': 'label', ...props }, children),
+  LabelRoot: ({ children, ...props }: any) => 
+    React.createElement('label', { 'data-testid': 'label-root', ...props }, children),
+
+  Slot: ({ children, ...props }: any) => 
+    React.createElement('div', { 'data-testid': 'slot', ...props }, children),
 }));

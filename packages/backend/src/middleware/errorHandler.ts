@@ -58,19 +58,22 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Convert non-ApiError instances to ApiError
   if (!(err instanceof ApiError)) {
+    // Type guard for error-like objects
+    const errorObj = err as any;
+    
     // Handle specific error types
-    if (err.name === 'ValidationError') {
-      error = ApiError.validation(err.message, err.details);
-    } else if (err.name === 'CastError') {
-      error = ApiError.validation(`Invalid ${err.path}: ${err.value}`);
-    } else if (err.code === 11000) {
+    if (errorObj.name === 'ValidationError') {
+      error = ApiError.validation(errorObj.message || 'Validation error', errorObj.details);
+    } else if (errorObj.name === 'CastError') {
+      error = ApiError.validation(`Invalid ${errorObj.path}: ${errorObj.value}`);
+    } else if (errorObj.code === 11000) {
       // MongoDB duplicate key error
-      const field = Object.keys(err.keyValue)[0];
+      const field = errorObj.keyValue ? Object.keys(errorObj.keyValue)[0] : 'field';
       error = ApiError.conflict(`${field} already exists`);
-    } else if (err.code === '23505') {
+    } else if (errorObj.code === '23505') {
       // PostgreSQL unique violation
       error = ApiError.conflict('Resource already exists');
-    } else if (err.code === '23503') {
+    } else if (errorObj.code === '23503') {
       // PostgreSQL foreign key violation
       error = ApiError.validation('Invalid reference');
     } else if (err instanceof jwt.JsonWebTokenError) {
@@ -90,7 +93,7 @@ export const errorHandler: ErrorRequestHandler = (
     } else {
       // Generic server error
       error = new ApiError(
-        sanitizeErrorMessage(err.message || 'Internal server error'),
+        sanitizeErrorMessage(errorObj.message || 'Internal server error'),
         500,
         ErrorCode.INTERNAL_SERVER_ERROR,
         undefined,
@@ -103,11 +106,11 @@ export const errorHandler: ErrorRequestHandler = (
   const logContext = {
     errorId,
     error: {
-      message: error.message,
-      code: error.code,
-      statusCode: error.statusCode,
-      stack: config.isDevelopment ? error.stack : undefined,
-      isOperational: error.isOperational,
+      message: (error as ApiError).message,
+      code: (error as ApiError).code,
+      statusCode: (error as ApiError).statusCode,
+      stack: config.isDevelopment ? (error as ApiError).stack : undefined,
+      isOperational: (error as ApiError).isOperational,
       originalError: config.isDevelopment ? err : undefined,
     },
     request: {
@@ -125,9 +128,9 @@ export const errorHandler: ErrorRequestHandler = (
   };
 
   // Log level based on error type
-  if (error.statusCode >= 500) {
+  if ((error as ApiError).statusCode >= 500) {
     logger.error('Server error occurred', logContext);
-  } else if (error.statusCode >= 400) {
+  } else if ((error as ApiError).statusCode >= 400) {
     logger.warn('Client error occurred', logContext);
   } else {
     logger.info('Request error occurred', logContext);
@@ -136,15 +139,15 @@ export const errorHandler: ErrorRequestHandler = (
   // Send standardized error response
   const response = {
     success: false,
-    error: error.code,
-    message: sanitizeErrorMessage(error.message),
-    statusCode: error.statusCode,
-    details: error.details,
-    timestamp: error.timestamp || new Date().toISOString(),
+    error: (error as ApiError).code,
+    message: sanitizeErrorMessage((error as ApiError).message),
+    statusCode: (error as ApiError).statusCode,
+    details: (error as ApiError).details,
+    timestamp: (error as ApiError).timestamp || new Date().toISOString(),
     errorId,
     // Include additional debug info in development
     ...(config.isDevelopment && {
-      stack: error.stack,
+      stack: (error as ApiError).stack,
       request: {
         method: req.method,
         url: req.url,
@@ -153,7 +156,7 @@ export const errorHandler: ErrorRequestHandler = (
     }),
   };
 
-  res.status(error.statusCode).json(response);
+  res.status((error as ApiError).statusCode).json(response);
 };
 
 /**

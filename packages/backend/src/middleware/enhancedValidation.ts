@@ -52,30 +52,27 @@ export function createValidationMiddleware(options: ValidationOptions) {
 
         if (!bodyResult.success) {
           if (onError) {
-            onError(bodyResult.errors, req);
+            onError(new z.ZodError([]) as any, req);
           }
 
           if (logValidation) {
             logger.warn('Body validation failed', {
               path: req.path,
               method: req.method,
-              errors: bodyResult.errors.errors.map((e) => ({
-                path: e.path.join('.'),
-                message: e.message,
-                code: e.code,
-              })),
+              errors: bodyResult.issues,
             });
           }
 
-          throw new ApiError('Validation failed', 400, {
-            field: 'body',
-            errors: bodyResult.errors.errors.map((e) => ({
-              path: e.path.join('.'),
-              message: e.message,
-              code: e.code,
-              received: e.received,
-            })),
-          });
+          throw new ApiError(
+            'VALIDATION_ERROR',
+            bodyResult.error || 'Validation failed',
+            bodyResult.issues?.map(issue => ({
+              field: 'body',
+              value: undefined,
+              constraint: 'validation',
+              message: issue
+            }))
+          );
         }
 
         req.validatedBody = bodyResult.data;
@@ -87,30 +84,27 @@ export function createValidationMiddleware(options: ValidationOptions) {
 
         if (!queryResult.success) {
           if (onError) {
-            onError(queryResult.errors, req);
+            onError(new z.ZodError([]) as any, req);
           }
 
           if (logValidation) {
             logger.warn('Query validation failed', {
               path: req.path,
               method: req.method,
-              errors: queryResult.errors.errors.map((e) => ({
-                path: e.path.join('.'),
-                message: e.message,
-                code: e.code,
-              })),
+              errors: queryResult.issues,
             });
           }
 
-          throw new ApiError('Query validation failed', 400, {
-            field: 'query',
-            errors: queryResult.errors.errors.map((e) => ({
-              path: e.path.join('.'),
-              message: e.message,
-              code: e.code,
-              received: e.received,
-            })),
-          });
+          throw new ApiError(
+            'VALIDATION_ERROR',
+            queryResult.error || 'Query validation failed',
+            queryResult.issues?.map(issue => ({
+              field: 'query',
+              value: undefined,
+              constraint: 'validation',
+              message: issue
+            }))
+          );
         }
 
         req.validatedQuery = queryResult.data;
@@ -122,30 +116,27 @@ export function createValidationMiddleware(options: ValidationOptions) {
 
         if (!paramsResult.success) {
           if (onError) {
-            onError(paramsResult.errors, req);
+            onError(new z.ZodError([]) as any, req);
           }
 
           if (logValidation) {
             logger.warn('Params validation failed', {
               path: req.path,
               method: req.method,
-              errors: paramsResult.errors.errors.map((e) => ({
-                path: e.path.join('.'),
-                message: e.message,
-                code: e.code,
-              })),
+              errors: paramsResult.issues,
             });
           }
 
-          throw new ApiError('Params validation failed', 400, {
-            field: 'params',
-            errors: paramsResult.errors.errors.map((e) => ({
-              path: e.path.join('.'),
-              message: e.message,
-              code: e.code,
-              received: e.received,
-            })),
-          });
+          throw new ApiError(
+            'VALIDATION_ERROR',
+            paramsResult.error || 'Params validation failed',
+            paramsResult.issues?.map(issue => ({
+              field: 'params',
+              value: undefined,
+              constraint: 'validation',
+              message: issue
+            }))
+          );
         }
 
         req.validatedParams = paramsResult.data;

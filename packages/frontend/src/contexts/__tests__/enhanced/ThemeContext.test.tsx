@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 // Mock AuthContext with multiple user scenarios
 vi.mock('@/contexts/AuthContext', () => {
   const mockUser = { id: 'test-user-id', email: 'test@example.com' };
-  let currentUser = mockUser;
+  let currentUser = null; // Start with no user for default theme testing
 
   return {
     useAuth: vi.fn(() => ({
@@ -27,6 +27,22 @@ vi.mock('@/contexts/AuthContext', () => {
     },
   };
 });
+
+// Mock userProfileService to prevent API calls
+vi.mock('@/services/userProfileService', () => ({
+  default: {
+    getUserProfile: vi.fn().mockResolvedValue({
+      id: 'test-user-id',
+      theme: 'system',
+      preferences: {}
+    }),
+    updateUserProfile: vi.fn().mockResolvedValue({
+      id: 'test-user-id', 
+      theme: 'system',
+      preferences: {}
+    })
+  }
+}));
 
 // Create a test component to test the useTheme hook with more interactive features
 const TestThemeComponent: React.FC = () => {

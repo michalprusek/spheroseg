@@ -36,9 +36,8 @@ function getRequestId(req: ExtendedRequest): string {
  * Build error context from request
  */
 function buildErrorContext(req: ExtendedRequest): ErrorContext {
-  return {
+  const context: ErrorContext = {
     requestId: getRequestId(req),
-    userId: req.user?.id,
     action: req.method,
     resource: req.route?.path || req.path,
     metadata: {
@@ -48,6 +47,12 @@ function buildErrorContext(req: ExtendedRequest): ErrorContext {
       host: req.get('Host'),
     },
   };
+  
+  if (req.user?.id) {
+    context.userId = req.user.id;
+  }
+  
+  return context;
 }
 
 
@@ -88,10 +93,17 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Convert to ApiError if needed
   if (err instanceof ApiError) {
-    apiError = err;
-    // Add request context if not present
-    if (!apiError.context) {
-      apiError.context = context;
+    // If error already has context, use it; otherwise create new error with context
+    if (err.context) {
+      apiError = err;
+    } else {
+      apiError = new ApiError(
+        err.code,
+        err.message,
+        err.details,
+        context,
+        err.originalError
+      );
     }
   } else {
     apiError = ApiError.from(err, context);

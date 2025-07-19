@@ -18,7 +18,10 @@ describe('ABTestingService', () => {
   let mockUser: User;
 
   beforeEach(() => {
-    service = new ABTestingService();
+    service = new ABTestingService({
+      analyticsEndpoint: 'https://analytics.test.com',
+      apiKey: 'test-api-key'
+    });
     mockUser = {
       id: 'test-user-123',
       email: 'test@example.com',
