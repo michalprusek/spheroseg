@@ -2,34 +2,56 @@ import { Application } from 'express';
 import { applySecurityMiddleware } from './middleware/security';
 import { SecurityManager } from './SecurityManager';
 import config from '../config';
+import { securityConfig, validateSecurityConfig } from '../config/security';
 import logger from '../utils/logger';
+import { applySecurity as applySecurityHeaders } from '../middleware/securityHeaders';
+import { csrfProtection, csrfCookie } from '../middleware/csrf';
+import { dynamicRateLimiter } from '../middleware/rateLimiter';
 
 /**
  * Configures all security-related middleware for the Express application.
  * This centralizes security configurations for better maintainability.
  */
 export const configureSecurity = (app: Application): void => {
+  // Validate security configuration in production
+  validateSecurityConfig();
+  
+  // Apply security headers (helmet and custom headers)
+  applySecurityHeaders(app);
+  logger.info('Security headers configured');
+  
+  // Apply CSRF protection
+  if (securityConfig.csrf.enabled) {
+    app.use(csrfCookie);
+    app.use(csrfProtection);
+    logger.info('CSRF protection enabled');
+  }
+  
+  // Apply dynamic rate limiting
+  app.use(dynamicRateLimiter);
+  logger.info('Dynamic rate limiting configured');
+  
   // Apply base security middleware using the consolidated security module
   applySecurityMiddleware(app, {
     hsts: !config.isDevelopment,
-    hstsMaxAge: 31536000, // 1 year
-    hstsIncludeSubdomains: true,
+    hstsMaxAge: securityConfig.headers.strictTransportSecurity.maxAge,
+    hstsIncludeSubdomains: securityConfig.headers.strictTransportSecurity.includeSubDomains,
     cspReportOnly: config.isDevelopment,
-    csrfProtection: !config.isDevelopment,
-    corsOrigins: config.server.corsOrigins,
-    enableRateLimit: config.security?.enableRateLimit !== false,
+    csrfProtection: securityConfig.csrf.enabled,
+    corsOrigins: securityConfig.cors.origin as string[],
+    enableRateLimit: securityConfig.rateLimit.standardHeaders,
   });
 
   // Apply advanced security features via SecurityManager
   const securityManager = SecurityManager.getInstance({
-    enableRateLimit: config.security?.enableRateLimit !== false,
-    enableCSRF: !config.isDevelopment,
+    enableRateLimit: true,
+    enableCSRF: securityConfig.csrf.enabled,
     enableCORS: true,
     enableHSTS: !config.isDevelopment,
     enableCSP: true,
-    corsOrigins: config.server.corsOrigins,
-    rateLimitWindow: config.security?.rateLimitWindow,
-    rateLimitRequests: config.security?.rateLimitRequests,
+    corsOrigins: securityConfig.cors.origin as string[],
+    rateLimitWindow: securityConfig.rateLimit.windowMs,
+    rateLimitRequests: securityConfig.rateLimit.max,
     useRedisForRateLimit: config.security?.useRedis || false,
     redisUrl: config.redis?.url,
   });
@@ -37,7 +59,7 @@ export const configureSecurity = (app: Application): void => {
   // Apply security manager middleware
   securityManager.applyToApp(app);
 
-  logger.info('Security middleware configured successfully with SecurityManager');
+  logger.info('Security middleware configured successfully with enhanced security');
 };
 
 // Export authentication middleware for use in routes

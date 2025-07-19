@@ -64,6 +64,8 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
   const [isOpen, setIsOpen] = useState(false);
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const isMounted = useIsMounted();
+  const timer = useTimer();
 
   // Zavře menu při kliknutí mimo
   useOnClickOutside(menuRef, () => setIsOpen(false));

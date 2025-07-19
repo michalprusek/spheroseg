@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import ms, { StringValue } from 'ms';
 import pool from '../db';
 import config from '../config';
+import { securityConfig } from '../config/security';
 import logger from '../utils/logger';
 import { getKeyManager, signJWTWithRotation } from '../auth/jwtKeyRotation';
 
@@ -79,7 +80,7 @@ export const generateAccessToken = (
   } = {}
 ): string => {
   const {
-    expiry = config.auth.accessTokenExpiry || '15m',
+    expiry = config.auth.accessTokenExpiry || securityConfig.jwt.expiresIn,
     jti = generateTokenId(),
     tokenVersion = 1,
   } = options;
@@ -97,8 +98,9 @@ export const generateAccessToken = (
 
   const signOpts: SignOptions = {
     expiresIn: ms(expiry as StringValue) / 1000,
-    audience: 'spheroseg-api',
-    issuer: 'spheroseg-auth',
+    audience: securityConfig.jwt.audience,
+    issuer: securityConfig.jwt.issuer,
+    algorithm: securityConfig.jwt.algorithm,
   };
 
   // Use JWT key rotation system if available, fallback to regular signing
@@ -110,7 +112,7 @@ export const generateAccessToken = (
   }
 
   // Fallback to regular JWT signing
-  const jwtSecret = config.auth.jwtSecret;
+  const jwtSecret = config.auth.jwtSecret || securityConfig.jwt.secret;
   if (!jwtSecret) {
     logger.error(
       'JWT secret is not defined and key rotation is not available. Cannot generate access token.'
@@ -140,14 +142,14 @@ export const generateRefreshToken = async (
     ipAddress?: string;
   } = {}
 ): Promise<string> => {
-  const jwtSecret = config.auth.jwtSecret;
+  const jwtSecret = config.auth.jwtSecret || securityConfig.jwt.refreshSecret;
   if (!jwtSecret) {
     logger.error('JWT secret is not defined. Cannot generate refresh token.');
     throw new Error('JWT secret is not defined');
   }
 
   const {
-    expiry = config.auth.refreshTokenExpiry || '7d',
+    expiry = config.auth.refreshTokenExpiry || securityConfig.jwt.refreshExpiresIn,
     familyId = generateTokenId(),
     userAgent = '',
     ipAddress = '',
@@ -173,8 +175,9 @@ export const generateRefreshToken = async (
   const secret: Secret = jwtSecret;
   const signOpts: SignOptions = {
     expiresIn: ms(expiry as StringValue) / 1000,
-    audience: 'spheroseg-api',
-    issuer: 'spheroseg-auth',
+    audience: securityConfig.jwt.audience,
+    issuer: securityConfig.jwt.issuer,
+    algorithm: securityConfig.jwt.algorithm,
   };
 
   const token = jwt.sign(payload, secret, signOpts);
@@ -223,8 +226,8 @@ export const verifyToken = async (
 ): Promise<TokenPayload> => {
   const {
     validateFingerprint = false,
-    requiredAudience = 'spheroseg-api',
-    requiredIssuer = 'spheroseg-auth',
+    requiredAudience = securityConfig.jwt.audience,
+    requiredIssuer = securityConfig.jwt.issuer,
   } = options;
 
   try {

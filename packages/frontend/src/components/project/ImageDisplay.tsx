@@ -16,6 +16,7 @@ import { SEGMENTATION_STATUS, isProcessingStatus } from '@/constants/segmentatio
 import { debouncedCacheUpdate } from '@/utils/debounce';
 import { pollingManager } from '@/utils/pollingManager';
 import logger from '@/utils/logger';
+import { useIsMounted, useTimer, useBlobUrl, useEventListener } from '@/utils/memoryLeakFixes';
 
 interface ImageDisplayProps {
   image: ProjectImage;
@@ -45,6 +46,9 @@ const ImageDisplayComponent = ({
   const [currentStatus, setCurrentStatus] = useState<string>(
     image.segmentationStatus || SEGMENTATION_STATUS.WITHOUT_SEGMENTATION,
   );
+  const isMounted = useIsMounted();
+  const timer = useTimer();
+  const { createObjectURL, revokeObjectURL } = useBlobUrl();
 
   // Track segmentation status changes and force check on mount
   useEffect(() => {
@@ -92,9 +96,7 @@ const ImageDisplayComponent = ({
 
       // Check status after a random delay between 2-5 seconds to avoid burst
       const delay = 2000 + Math.random() * 3000;
-      const timeoutId = setTimeout(checkInitialStatus, delay);
-
-      return () => clearTimeout(timeoutId);
+      timer.setTimeout(checkInitialStatus, delay);
     }
   }, [image.segmentationStatus, image.id, image.project_id]); // currentStatus removed to avoid infinite loop
 
@@ -310,7 +312,7 @@ const ImageDisplayComponent = ({
 
           if (blob) {
             // Create a new blob URL from the stored blob
-            const url = URL.createObjectURL(blob);
+            const url = createObjectURL(blob);
             setImageSrc(url);
             logger.debug(`Loaded image ${image.id} from IndexedDB`);
           } else {
