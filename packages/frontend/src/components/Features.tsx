@@ -108,8 +108,9 @@ const Features = () => {
     }
 
     return () => {
-      if (featuresRef.current) {
-        observer.unobserve(featuresRef.current);
+      const currentRef = featuresRef.current;
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, []);
