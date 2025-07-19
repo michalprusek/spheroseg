@@ -4,7 +4,6 @@ import ImageUploader from '../ImageUploader';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import apiClient from '@/lib/apiClient';
-import { useDropzone } from 'react-dropzone';
 
 // Mock dependencies
 vi.mock('@/lib/apiClient', () => ({
@@ -91,7 +90,7 @@ describe('ImageUploader Component', () => {
     });
 
     // Create a mock file
-    const file = new File(['test'], 'test-image.jpg', { type: 'image/jpeg' });
+    const _file = new File(['test'], 'test-image.jpg', { type: 'image/jpeg' });
 
     // Simulate file drop (since we can't directly test the dropzone)
     // Note: This is a simplified test - proper testing would mock useDropzone
@@ -112,7 +111,7 @@ describe('ImageUploader Component', () => {
     });
 
     // Create a mock file
-    const file = new File(['test'], 'test-image.jpg', { type: 'image/jpeg' });
+    const _file = new File(['test'], 'test-image.jpg', { type: 'image/jpeg' });
 
     // Simulate file drop
     // Note: This is a simplified test - proper testing would mock useDropzone

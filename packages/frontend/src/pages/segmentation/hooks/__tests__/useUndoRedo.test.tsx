@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useUndoRedo } from '../useSegmentationHistory';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { describe, it, expect } from 'vitest';
 
 describe('useUndoRedo hook', () => {

@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import logger from '../utils/logger';
+import { cacheService, CACHE_TTL } from './cacheService';
 
 /**
  * Interface for database operations
@@ -11,6 +12,7 @@ export interface IDatabase {
 /**
  * Optimized Service for handling user statistics
  * Reduces database queries from 15+ to just 2-3
+ * Integrates Redis caching for improved performance
  */
 export class UserStatsServiceOptimized {
   constructor(private readonly pool: Pool | IDatabase) {}
@@ -23,7 +25,16 @@ export class UserStatsServiceOptimized {
     const startTime = Date.now();
 
     try {
-      logger.debug('Fetching optimized user stats', { userId });
+      // Try to get from cache first
+      const cacheKey = cacheService.generateKey('user:stats:', userId);
+      const cached = await cacheService.get(cacheKey);
+      
+      if (cached) {
+        logger.debug('User stats retrieved from cache', { userId });
+        return cached;
+      }
+
+      logger.debug('Fetching optimized user stats from database', { userId });
 
       // Single query to get all user stats at once
       const statsQuery = `
@@ -138,6 +149,9 @@ export class UserStatsServiceOptimized {
         images: finalStats.totalImages,
       });
 
+      // Cache the result
+      await cacheService.set(cacheKey, finalStats, CACHE_TTL.MEDIUM);
+
       return finalStats;
     } catch (error) {
       logger.error('Error fetching optimized user stats', { userId, error });
@@ -164,25 +178,37 @@ export class UserStatsServiceOptimized {
    * Get basic user stats with a single query (for frequent polling)
    */
   async getBasicStats(userId: string) {
-    const query = `
-      SELECT 
-        COUNT(DISTINCT p.id) AS total_projects,
-        COUNT(DISTINCT i.id) AS total_images,
-        COUNT(DISTINCT CASE WHEN i.segmentation_status = 'completed' THEN i.id END) AS completed_segmentations,
-        COALESCE(SUM(i.file_size), 0) AS storage_used_bytes
-      FROM projects p
-      LEFT JOIN images i ON p.id = i.project_id
-      WHERE p.user_id = $1
-    `;
+    // Use cache wrapper for basic stats
+    const cacheKey = cacheService.generateKey('user:stats:basic:', userId);
+    
+    return cacheService.cached(cacheKey, async () => {
+      const query = `
+        SELECT 
+          COUNT(DISTINCT p.id) AS total_projects,
+          COUNT(DISTINCT i.id) AS total_images,
+          COUNT(DISTINCT CASE WHEN i.segmentation_status = 'completed' THEN i.id END) AS completed_segmentations,
+          COALESCE(SUM(i.file_size), 0) AS storage_used_bytes
+        FROM projects p
+        LEFT JOIN images i ON p.id = i.project_id
+        WHERE p.user_id = $1
+      `;
 
-    const result = await this.pool.query(query, [userId]);
+      const result = await this.pool.query(query, [userId]);
 
-    return {
-      totalProjects: parseInt(result.rows[0].total_projects || 0, 10),
-      totalImages: parseInt(result.rows[0].total_images || 0, 10),
-      completedSegmentations: parseInt(result.rows[0].completed_segmentations || 0, 10),
-      storageUsedBytes: BigInt(result.rows[0].storage_used_bytes || 0),
-    };
+      return {
+        totalProjects: parseInt(result.rows[0].total_projects || 0, 10),
+        totalImages: parseInt(result.rows[0].total_images || 0, 10),
+        completedSegmentations: parseInt(result.rows[0].completed_segmentations || 0, 10),
+        storageUsedBytes: BigInt(result.rows[0].storage_used_bytes || 0),
+      };
+    }, CACHE_TTL.SHORT); // 5 minutes for basic stats
+  }
+
+  /**
+   * Invalidate user stats cache
+   */
+  async invalidateUserStatsCache(userId: string) {
+    await cacheService.invalidateRelated('user', userId);
   }
 
   /**

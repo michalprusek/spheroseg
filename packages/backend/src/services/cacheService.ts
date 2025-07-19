@@ -451,7 +451,55 @@ class CacheService {
     return result;
   }
 
-  // Specific cache methods for different data types
+  /**
+   * Invalidate related cache entries
+   */
+  async invalidateRelated(entityType: string, entityId: string | number): Promise<void> {
+    const patterns: string[] = [];
+
+    switch (entityType) {
+      case 'user':
+        patterns.push(
+          `${CACHE_PREFIXES.USER_STATS}${entityId}`,
+          `${CACHE_PREFIXES.USER_PROFILE}${entityId}`,
+          `${CACHE_PREFIXES.PROJECT_LIST}${entityId}:*`
+        );
+        break;
+      
+      case 'project':
+        patterns.push(
+          `${CACHE_PREFIXES.PROJECT}${entityId}`,
+          `${CACHE_PREFIXES.PROJECT_LIST}*:*`,
+          `${CACHE_PREFIXES.IMAGE_LIST}${entityId}:*`,
+          `${CACHE_PREFIXES.PROJECT_STATS}${entityId}`
+        );
+        break;
+      
+      case 'image':
+        patterns.push(
+          `${CACHE_PREFIXES.IMAGE}${entityId}`,
+          `${CACHE_PREFIXES.IMAGE_LIST}*:*`,
+          `${CACHE_PREFIXES.SEGMENTATION_RESULT}${entityId}`
+        );
+        break;
+      
+      case 'segmentation':
+        patterns.push(
+          `${CACHE_PREFIXES.SEGMENTATION_RESULT}${entityId}`,
+          `${CACHE_PREFIXES.CELL_DATA}${entityId}:*`
+        );
+        break;
+    }
+
+    // Delete all matching patterns
+    for (const pattern of patterns) {
+      await this.deletePattern(pattern);
+    }
+
+    logger.info(`Invalidated cache for ${entityType}:${entityId}`);
+  }
+
+  // Specific cache methods for different data types (backward compatibility)
 
   /**
    * Cache project data
@@ -473,13 +521,7 @@ class CacheService {
    * Invalidate project cache
    */
   async invalidateProject(projectId: string): Promise<void> {
-    const keys = [
-      `${CACHE_PREFIXES.PROJECT}${projectId}`,
-      `${CACHE_PREFIXES.PROJECT_STATS}${projectId}`,
-    ];
-    await this.del(keys);
-    // Also invalidate user's project list
-    await this.delPattern(`${CACHE_PREFIXES.PROJECT_LIST}*`);
+    await this.invalidateRelated('project', projectId);
   }
 
   /**
@@ -511,7 +553,7 @@ class CacheService {
    * Invalidate image list cache for a project
    */
   async invalidateImageList(projectId: string): Promise<void> {
-    await this.delPattern(`${CACHE_PREFIXES.IMAGE_LIST}${projectId}:*`);
+    await this.deletePattern(`${CACHE_PREFIXES.IMAGE_LIST}${projectId}:*`);
   }
 
   /**
@@ -579,42 +621,95 @@ class CacheService {
   }
 
   /**
-   * Check if cache is available
+   * Cache user stats
    */
-  isAvailable(): boolean {
-    return this.isConnected && this.redis !== null;
+  async cacheUserStats(userId: string, stats: any): Promise<void> {
+    const key = `${CACHE_PREFIXES.USER_STATS}${userId}`;
+    await this.set(key, stats, CACHE_TTL.MEDIUM);
   }
 
   /**
-   * Get cache statistics
+   * Get cached user stats
    */
-  async getStats(): Promise<any> {
-    if (!this.isConnected || !this.redis) {
-      return { available: false };
+  async getCachedUserStats(userId: string): Promise<any | null> {
+    const key = `${CACHE_PREFIXES.USER_STATS}${userId}`;
+    return await this.get(key);
+  }
+
+  /**
+   * Cache image metadata
+   */
+  async cacheImageMetadata(imageId: string, metadata: any): Promise<void> {
+    const key = `${CACHE_PREFIXES.IMAGE}${imageId}`;
+    await this.set(key, metadata, CACHE_TTL.IMAGE);
+  }
+
+  /**
+   * Get cached image metadata
+   */
+  async getCachedImageMetadata(imageId: string): Promise<any | null> {
+    const key = `${CACHE_PREFIXES.IMAGE}${imageId}`;
+    return await this.get(key);
+  }
+
+  /**
+   * Check if cache is available
+   */
+  async isAvailable(): Promise<boolean> {
+    return await isRedisAvailable();
+  }
+
+  /**
+   * Check if Redis is available and healthy
+   */
+  async isHealthy(): Promise<boolean> {
+    return await isRedisAvailable();
+  }
+
+  /**
+   * Get extended cache statistics
+   */
+  async getExtendedStats(): Promise<any> {
+    const redis = getRedis();
+    if (!redis) {
+      return { 
+        available: false,
+        local: this.getStats()
+      };
     }
 
     try {
-      const info = await this.redis.info('stats');
-      const dbSize = await this.redis.dbsize();
-
-      // Parse cache hit/miss statistics from Redis info
-      const stats = this.parseRedisStats(info);
+      const info = await redis.info('stats');
+      const dbSize = await redis.dbsize();
+      
+      // Parse Redis stats
+      const redisStats = this.parseRedisStats(info);
+      
+      // Calculate hit rate
+      const hitRate = redisStats.keyspace_hits && redisStats.keyspace_misses
+        ? (redisStats.keyspace_hits / (redisStats.keyspace_hits + redisStats.keyspace_misses)) * 100
+        : 0;
 
       return {
         available: true,
-        connected: this.isConnected,
         dbSize,
-        hits: stats.keyspace_hits || 0,
-        misses: stats.keyspace_misses || 0,
-        hitRate:
-          stats.keyspace_hits && stats.keyspace_misses
-            ? (stats.keyspace_hits / (stats.keyspace_hits + stats.keyspace_misses)) * 100
-            : 0,
-        info,
+        redis: {
+          hits: redisStats.keyspace_hits || 0,
+          misses: redisStats.keyspace_misses || 0,
+          hitRate,
+          evictedKeys: redisStats.evicted_keys || 0,
+          expiredKeys: redisStats.expired_keys || 0,
+        },
+        local: this.getStats(),
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      logger.error('Failed to get cache stats', { error });
-      return { available: false, error: error.message };
+      logger.error('Failed to get extended cache stats', { error });
+      return { 
+        available: false, 
+        error: error.message,
+        local: this.getStats()
+      };
     }
   }
 
@@ -641,12 +736,19 @@ class CacheService {
   /**
    * Ping Redis to check connection
    */
-  async ping(): Promise<void> {
-    if (!this.redis) {
-      throw new Error('Redis not connected');
+  async ping(): Promise<boolean> {
+    const redis = getRedis();
+    if (!redis) {
+      return false;
     }
 
-    await this.redis.ping();
+    try {
+      const result = await redis.ping();
+      return result === 'PONG';
+    } catch (error) {
+      logger.error('Redis ping failed', { error });
+      return false;
+    }
   }
 }
 

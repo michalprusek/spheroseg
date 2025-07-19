@@ -23,6 +23,7 @@ import db, { getPool } from './db';
 import { startPerformanceMonitoring } from './utils/performance';
 import performanceConfig from './config/performance';
 import performanceMonitor from './services/performanceMonitor';
+import { initializeRedis, closeRedis } from './config/redis';
 
 // Memory optimization settings
 // Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized

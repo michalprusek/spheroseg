@@ -784,19 +784,6 @@ vi.mock('@/config/app.config.validated', () => ({
   getMaxFileSize: () => 50 * 1024 * 1024,
 }));
 
-// Mock useUndoRedo hook
-vi.mock('@/hooks/useUndoRedo', () => ({
-  useUndoRedo: vi.fn((initialState) => ({
-    state: initialState,
-    setState: vi.fn(),
-    undo: vi.fn(),
-    redo: vi.fn(),
-    canUndo: false,
-    canRedo: false,
-    clearHistory: vi.fn(),
-    setCurrentStateOnly: vi.fn(),
-  })),
-}));
 
 // Mock @radix-ui components
 vi.mock('@/lib/radix-optimized', () => ({
