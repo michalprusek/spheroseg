@@ -86,10 +86,12 @@
       "rules": {}
     },
     {
-      "files": ["**/__mocks__/**/*", "**/scripts/**/*", "**/performance/**/*", "**/serviceWorkerRegistration.ts"],
+      "files": ["**/__mocks__/**/*", "**/scripts/**/*", "**/performance/**/*", "**/serviceWorkerRegistration.ts", "**/*visual-regression*/**/*", "**/*setupVisualRegression*"],
       "rules": {
         "no-console": "off",
-        "@typescript-eslint/no-explicit-any": "warn"
+        "@typescript-eslint/no-explicit-any": "warn",
+        "react-hooks/rules-of-hooks": "off",
+        "@typescript-eslint/no-namespace": "off"
       }
     }
   ]
