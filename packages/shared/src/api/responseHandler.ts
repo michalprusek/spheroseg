@@ -65,9 +65,15 @@ export class UnifiedResponseHandler {
     error: unknown,
     context?: { path?: string; operation?: string }
   ): ApiErrorResponse {
-    // Handle Zod validation errors
-    if (error instanceof ZodError) {
-      return this.createValidationError(error, context);
+    // Handle Zod validation errors - check both instanceof and name for compatibility
+    if (error instanceof ZodError || (error && typeof error === 'object' && error.constructor?.name === 'ZodError')) {
+      return this.createValidationError(error as ZodError, context);
+    }
+    
+    // Debug: Check if this might be a ZodError we missed
+    if (error && typeof error === 'object' && 'issues' in error && Array.isArray((error as any).issues)) {
+      // This looks like a ZodError but wasn't caught above
+      return this.createValidationError(error as ZodError, context);
     }
 
     // Handle API errors with status codes

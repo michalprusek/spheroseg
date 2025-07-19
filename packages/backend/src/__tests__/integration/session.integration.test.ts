@@ -5,20 +5,20 @@
  */
 
 import request from 'supertest';
-import { Express } from 'express';
+import { Application } from 'express';
 import { createApp } from '../../app';
-import { pool } from '../../db';
+import db from '../../db';
 import { getRedis } from '../../config/redis';
 import sessionService from '../../services/sessionService';
 import bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid'; // Unused
 
 describe('Session Management Integration Tests', () => {
-  let app: Express;
+  let app: Application;
   let testUserId: number;
   let testUserEmail: string;
   let testUserPassword: string;
-  let sessionCookie: string;
+  // let sessionCookie: string; // Unused
   
   beforeAll(async () => {
     app = createApp();
@@ -28,7 +28,7 @@ describe('Session Management Integration Tests', () => {
     testUserPassword = 'TestPassword123!';
     const hashedPassword = await bcrypt.hash(testUserPassword, 10);
     
-    const result = await pool.query(
+    const result = await db.query(
       `INSERT INTO users (email, password_hash, name, role) 
        VALUES ($1, $2, $3, $4) 
        RETURNING id`,
@@ -39,7 +39,7 @@ describe('Session Management Integration Tests', () => {
   
   afterAll(async () => {
     // Clean up test user
-    await pool.query('DELETE FROM users WHERE id = $1', [testUserId]);
+    await db.query('DELETE FROM users WHERE id = $1', [testUserId]);
     
     // Clean up Redis sessions
     const redis = getRedis();
@@ -73,13 +73,12 @@ describe('Session Management Integration Tests', () => {
         // Check for session cookie
         const cookies = response.headers['set-cookie'];
         expect(cookies).toBeDefined();
-        const sessionCookieHeader = cookies.find((cookie: string) => 
+        const sessionCookieHeader = cookies?.find((cookie: string) => 
           cookie.startsWith('connect.sid=') || cookie.startsWith('spheroseg.sid=')
         );
         expect(sessionCookieHeader).toBeDefined();
         
-        // Store session cookie for subsequent tests
-        sessionCookie = sessionCookieHeader;
+        // Session cookie stored for verification
       });
       
       it('should reject invalid credentials', async () => {
@@ -106,7 +105,7 @@ describe('Session Management Integration Tests', () => {
           .expect(200);
         
         const cookies = response.headers['set-cookie'];
-        const sessionCookieHeader = cookies.find((cookie: string) => 
+        const sessionCookieHeader = cookies?.find((cookie: string) => 
           cookie.startsWith('connect.sid=') || cookie.startsWith('spheroseg.sid=')
         );
         

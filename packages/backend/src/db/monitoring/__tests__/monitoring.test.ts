@@ -86,7 +86,7 @@ jest.mock('../../../utils/logger', () => ({
 jest.mock('../../../monitoring/unified', () => ({
   __esModule: true,
   default: {
-    monitorQuery: jest.fn().mockImplementation(async (text, params, queryFn) => {
+    monitorQuery: jest.fn().mockImplementation(async (_text, _params, queryFn) => {
       // Execute the query function and return result
       return queryFn();
     }),
@@ -225,8 +225,8 @@ describe('Database Monitoring Module', () => {
     it('should generate a Grafana dashboard', () => {
       const dashboard = generateGrafanaDashboard();
       expect(dashboard).toBeDefined();
-      expect(dashboard.panels).toBeDefined();
-      expect(Array.isArray(dashboard.panels)).toBe(true);
+      expect(dashboard['panels']).toBeDefined();
+      expect(Array.isArray(dashboard['panels'])).toBe(true);
     });
   });
 

@@ -84,19 +84,22 @@ export const createUrlSchema = (options?: {
 // Email validation schema
 export const emailSchema = z.string()
   .transform(val => {
-    // First trim and normalize
-    const trimmed = val.trim().toLowerCase();
-    return trimmed;
+    // Normalize email - trim and lowercase first
+    return val.trim().toLowerCase();
   })
   .pipe(z.string().email('Invalid email address'));
 
-// Filename validation schema - mixed approach: reject dangerous patterns, sanitize others
+// Filename validation schema - sanitize first, then validate path traversal
 export const filenameSchema = z.string()
   .min(1, 'Filename is required')
   .max(255, 'Filename too long')
   .refine(val => {
-    // Reject path traversal patterns completely
+    // Reject path traversal patterns completely first
     if (val.includes('../') || val.includes('..\\') || val.startsWith('/') || /^[A-Z]:\\/.test(val)) {
+      return false;
+    }
+    // Reject if it's all dots (more than just '.')
+    if (/^\.\.+$/.test(val)) {
       return false;
     }
     return true;
@@ -115,8 +118,8 @@ export const filenameSchema = z.string()
       sanitized = 'file';
     }
     
-    // Handle all dots
-    if (/^\.*$/.test(sanitized)) {
+    // Handle all dots (3 or more)
+    if (/^\.{3,}$/.test(sanitized)) {
       sanitized = 'file';
     }
     
@@ -220,8 +223,18 @@ export const validateQuery = async <T>(
   context?: string
 ): Promise<ValidationResult<T>> => {
   try {
-    // Pre-process query parameters (convert strings to appropriate types)
-    const processedData = preprocessQueryParams(data);
+    // Handle different input types
+    let processedData: unknown;
+    
+    if (typeof data === 'string') {
+      // Try to convert string to number if schema expects a number
+      const numValue = Number(data);
+      processedData = !isNaN(numValue) && isFinite(numValue) ? numValue : data;
+    } else {
+      // Pre-process query parameters (convert strings to appropriate types)
+      processedData = preprocessQueryParams(data);
+    }
+    
     const result = await schema.parseAsync(processedData);
     return {
       success: true,

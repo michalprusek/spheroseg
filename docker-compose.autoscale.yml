@@ -1,0 +1,260 @@
+# Docker Compose Auto-Scaling Configuration
+# 
+# This file provides scaling configurations and resource limits
+# for auto-scaling functionality. Use with main docker-compose.yml.
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.autoscale.yml up -d
+
+version: '3.8'
+
+services:
+  # Backend service with scaling configuration
+  backend:
+    # Resource limits for proper scaling decisions
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    
+    # Environment variables for auto-scaling
+    environment:
+      # Enable auto-scaling metrics collection
+      ENABLE_AUTOSCALING: "true"
+      AUTOSCALING_METRICS_INTERVAL: "60" # seconds
+      
+      # CPU and memory thresholds
+      AUTOSCALING_CPU_SCALE_UP: "70"
+      AUTOSCALING_CPU_SCALE_DOWN: "20"
+      AUTOSCALING_MEMORY_SCALE_UP: "80"
+      AUTOSCALING_MEMORY_SCALE_DOWN: "30"
+      
+      # Request rate thresholds (requests per minute per replica)
+      AUTOSCALING_REQUEST_RATE_SCALE_UP: "100"
+      AUTOSCALING_REQUEST_RATE_SCALE_DOWN: "20"
+      
+      # Scaling configuration
+      AUTOSCALING_MIN_REPLICAS: "1"
+      AUTOSCALING_MAX_REPLICAS: "5"
+      AUTOSCALING_COOLDOWN_PERIOD: "300" # 5 minutes in seconds
+      AUTOSCALING_EVALUATION_INTERVAL: "120" # 2 minutes in seconds
+    
+    # Health check for scaling decisions
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Logging for scaling analysis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=backend,scaling=enabled"
+
+  # ML service with conservative scaling
+  ml:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 2
+    
+    environment:
+      # ML-specific scaling settings
+      ENABLE_AUTOSCALING: "true"
+      AUTOSCALING_QUEUE_SCALE_UP: "10"
+      AUTOSCALING_QUEUE_SCALE_DOWN: "2"
+      AUTOSCALING_FAILURE_RATE_SCALE_UP: "5"
+      AUTOSCALING_MIN_REPLICAS: "1"
+      AUTOSCALING_MAX_REPLICAS: "3"
+      AUTOSCALING_COOLDOWN_PERIOD: "600" # 10 minutes
+      AUTOSCALING_EVALUATION_INTERVAL: "300" # 5 minutes
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 60s
+      timeout: 15s
+      retries: 2
+      start_period: 120s
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=ml,scaling=enabled"
+
+  # Nginx with load balancing for scaled services
+  nginx-dev:
+    profiles: ["dev"]
+    environment:
+      # Load balancing configuration
+      NGINX_UPSTREAM_BACKEND: "backend"
+      NGINX_UPSTREAM_ML: "ml"
+      NGINX_LOAD_BALANCE_METHOD: "least_conn"
+    
+    # Dependency on scaled services
+    depends_on:
+      backend:
+        condition: service_healthy
+      ml:
+        condition: service_healthy
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+        labels: "service=nginx,role=load-balancer"
+
+  nginx-prod:
+    profiles: ["prod"]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    
+    environment:
+      NGINX_UPSTREAM_BACKEND: "backend"
+      NGINX_UPSTREAM_ML: "ml"
+      NGINX_LOAD_BALANCE_METHOD: "least_conn"
+    
+    depends_on:
+      backend:
+        condition: service_healthy
+      ml:
+        condition: service_healthy
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+        labels: "service=nginx,role=load-balancer,env=production"
+
+  # Redis with persistence for scaling metrics
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    
+    # Configuration for scaling metrics storage
+    command: >
+      redis-server 
+      --appendonly yes 
+      --appendfsync everysec
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --maxmemory 200mb
+      --maxmemory-policy allkeys-lru
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+        labels: "service=redis,role=cache"
+
+  # Database with connection limits for scaling
+  db:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    
+    environment:
+      # Connection pool settings for scaled services
+      POSTGRES_MAX_CONNECTIONS: "200"
+      POSTGRES_SHARED_BUFFERS: "128MB"
+      POSTGRES_EFFECTIVE_CACHE_SIZE: "512MB"
+    
+    # Configuration for scaled backend connections
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=128MB
+      -c effective_cache_size=512MB
+      -c work_mem=4MB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d spheroseg"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=postgres,role=database"
+
+# Networks with scaling support
+networks:
+  spheroseg-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.driver.mtu: "1500"
+
+# Volumes for persistent scaling data
+volumes:
+  scaling_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/scaling
+  
+  redis_scaling_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/redis-scaling

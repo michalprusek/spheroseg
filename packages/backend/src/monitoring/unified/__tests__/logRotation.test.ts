@@ -3,7 +3,6 @@
  */
 
 import path from 'path';
-import winston from 'winston';
 import 'winston-daily-rotate-file';
 import { logger } from '../index';
 

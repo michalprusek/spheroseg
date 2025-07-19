@@ -24,8 +24,10 @@ export class IntegrationTestEnvironment {
       await this.setupTestDatabase();
     }
 
-    // Start test server
-    this.testServer = this.app.listen(0); // Random port
+    // Start test server (skip for mock apps in tests)
+    if (typeof this.app.listen === 'function') {
+      this.testServer = this.app.listen(0); // Random port
+    }
     this.initialized = true;
   }
 
@@ -33,7 +35,7 @@ export class IntegrationTestEnvironment {
     if (!this.initialized) return;
 
     // Close test server
-    if (this.testServer) {
+    if (this.testServer && typeof this.testServer.close === 'function') {
       await new Promise<void>((resolve) => {
         this.testServer.close(() => resolve());
       });

@@ -84,9 +84,15 @@ export function sanitizeHtml(input: string, options?: {
   const allowedTags = options?.allowedTags || SANITIZATION_CONFIG.HTML_ALLOWED_TAGS;
   const allowedAttributes = options?.allowedAttributes || SANITIZATION_CONFIG.HTML_ALLOWED_ATTRIBUTES;
   
+  // Extract all allowed attributes into a flat array
+  const flattenedAttributes: string[] = [];
+  Object.entries(allowedAttributes).forEach(([, attrs]) => {
+    flattenedAttributes.push(...attrs);
+  });
+
   const config: DOMPurify.Config = {
     ALLOWED_TAGS: allowedTags as string[],
-    ALLOWED_ATTR: allowedAttributes,
+    ALLOWED_ATTR: flattenedAttributes,
     KEEP_CONTENT: true,
     ALLOW_DATA_ATTR: false,
     SANITIZE_DOM: true,
