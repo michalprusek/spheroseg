@@ -3,7 +3,7 @@ import { Socket } from 'socket.io-client';
 interface BatchMessage {
   id: string;
   event: string;
-  data: any;
+  data: unknown;
   timestamp: number;
 }
 
@@ -26,8 +26,8 @@ export class WebSocketBatchHandler {
   private messageIdCounter = 0;
   private config: BatchConfig;
   private capabilities: BatchCapabilities | null = null;
-  private pendingAcks: Map<string, { resolve: (value: any) => void; reject: (reason?: any) => void; timeout: NodeJS.Timeout }> = new Map();
-  private eventHandlers: Map<string, Set<(...args: any[]) => void>> = new Map();
+  private pendingAcks: Map<string, { resolve: (value: unknown) => void; reject: (reason?: unknown) => void; timeout: NodeJS.Timeout }> = new Map();
+  private eventHandlers: Map<string, Set<(...args: unknown[]) => void>> = new Map();
 
   constructor(config?: Partial<BatchConfig>) {
     this.config = {
@@ -58,7 +58,7 @@ export class WebSocketBatchHandler {
     });
 
     // Handle batch acknowledgments
-    this.socket.on('batch_ack', (data: { batchId: string; results: any[] }) => {
+    this.socket.on('batch_ack', (data: { batchId: string; results: unknown[] }) => {
       this.handleBatchAck(data);
     });
 
@@ -93,7 +93,7 @@ export class WebSocketBatchHandler {
   /**
    * Send a message through the batch handler
    */
-  send(event: string, data: any): Promise<any> {
+  send(event: string, data: unknown): Promise<unknown> {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
         reject(new Error('WebSocket not connected'));
@@ -135,7 +135,7 @@ export class WebSocketBatchHandler {
   /**
    * Send a message without batching (for priority messages)
    */
-  sendImmediate(event: string, data: any): void {
+  sendImmediate(event: string, data: unknown): void {
     if (!this.socket?.connected) {
       console.error('Cannot send immediate message: WebSocket not connected');
       return;
@@ -211,7 +211,7 @@ export class WebSocketBatchHandler {
   /**
    * Handle batch acknowledgment from server
    */
-  private handleBatchAck(data: { batchId: string; results: any[] }): void {
+  private handleBatchAck(data: { batchId: string; results: unknown[] }): void {
     // Process acknowledgments for each message in the batch
     data.results.forEach((result) => {
       const pending = this.pendingAcks.get(result.messageId);
@@ -239,7 +239,7 @@ export class WebSocketBatchHandler {
   /**
    * Register an event handler
    */
-  on(event: string, handler: (...args: any[]) => void): void {
+  on(event: string, handler: (...args: unknown[]) => void): void {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, new Set());
     }
@@ -249,7 +249,7 @@ export class WebSocketBatchHandler {
   /**
    * Unregister an event handler
    */
-  off(event: string, handler?: (...args: any[]) => void): void {
+  off(event: string, handler?: (...args: unknown[]) => void): void {
     if (!this.eventHandlers.has(event)) return;
 
     if (handler) {
@@ -262,7 +262,7 @@ export class WebSocketBatchHandler {
   /**
    * Emit a local event
    */
-  private emitLocalEvent(event: string, data: any): void {
+  private emitLocalEvent(event: string, data: unknown): void {
     if (!this.eventHandlers.has(event)) return;
 
     this.eventHandlers.get(event)!.forEach((handler) => {

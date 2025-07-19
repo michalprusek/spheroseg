@@ -74,7 +74,7 @@ describe('Polygon Operations Performance Tests', () => {
 
     const result = await measurePerformance(
       'Point-in-polygon check (1000 points, simple polygon)',
-      (_, iteration) => {
+      (_, _iteration) => {
         // Run the check on all points
         for (const point of points) {
           isPointInPolygon(point, simplePolygon.points);
@@ -95,7 +95,7 @@ describe('Polygon Operations Performance Tests', () => {
 
     const complexResult = await measurePerformance(
       'Point-in-polygon check (1000 points, complex polygon)',
-      (_, iteration) => {
+      (_, _iteration) => {
         for (const point of points) {
           isPointInPolygon(point, complexPolygon.points);
         }
@@ -120,7 +120,7 @@ describe('Polygon Operations Performance Tests', () => {
 
     const result = await measurePerformance(
       'Polygon slicing (simple)',
-      (_, iteration) => {
+      (_, _iteration) => {
         slicePolygon(polygon, sliceStart, sliceEnd);
       },
       { iterations: 10, warmupIterations: 2 },
@@ -137,7 +137,7 @@ describe('Polygon Operations Performance Tests', () => {
 
     const complexResult = await measurePerformance(
       'Polygon slicing (complex)',
-      (_, iteration) => {
+      (_, _iteration) => {
         slicePolygon(complexPolygon, sliceStart, sliceEnd);
       },
       { iterations: 5, warmupIterations: 2 },
@@ -156,7 +156,7 @@ describe('Polygon Operations Performance Tests', () => {
 
     const result = await measurePerformance(
       'Metrics calculation (10 simple polygons)',
-      (_, iteration) => {
+      (_, _iteration) => {
         for (const polygon of simplePolygons) {
           calculateMetrics(polygon);
         }
@@ -175,7 +175,7 @@ describe('Polygon Operations Performance Tests', () => {
 
     const complexResult = await measurePerformance(
       'Metrics calculation (10 complex polygons)',
-      (_, iteration) => {
+      (_, _iteration) => {
         for (const polygon of complexPolygons) {
           calculateMetrics(polygon);
         }
@@ -198,7 +198,7 @@ describe('Polygon Operations Performance Tests', () => {
 
     const result = await measurePerformance(
       'Polygon simplification (1000-point polygon)',
-      (_, iteration) => {
+      (_, _iteration) => {
         simplifyPolygon(largePolygon.points, 0.5);
       },
       { iterations: 5, warmupIterations: 1 },

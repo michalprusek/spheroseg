@@ -51,7 +51,7 @@ export function generateMockProject(overrides: Partial<MockProject> = {}): MockP
 /**
  * Generate mock images with default values
  */
-export function generateMockImages(count: number = 5, projectId?: string): MockImage[] {
+export function generateMockImages(count: number = 5, _projectId?: string): MockImage[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `image-${index + 1}`,
     name: `test-image-${index + 1}.jpg`,

@@ -96,7 +96,7 @@ export const markPerformance = (name: string) => {
 /**
  * Measure time between two performance marks OR measure function execution time
  */
-export function measurePerformance<T extends (...args: any[]) => any>(
+export function measurePerformance<T extends (...args: unknown[]) => unknown>(
   nameOrFunction: string | T,
   startMark?: string,
   endMark?: string
@@ -217,7 +217,7 @@ export const usePerformance = () => {
   });
 
   // Helper to send metrics to analytics
-  const sendToAnalytics = useCallback((metric: any) => {
+  const sendToAnalytics = useCallback((metric: unknown) => {
     // You can implement any analytics service here
     logger.debug(`Web Vitals: ${metric.name}`, { 
       value: metric.value,
@@ -377,7 +377,7 @@ export class PerformanceMonitor {
     return duration;
   }
 
-  trackOperation<T extends (...args: any[]) => any>(operationName: string, fn: T): T {
+  trackOperation<T extends (...args: unknown[]) => unknown>(operationName: string, fn: T): T {
     return ((...args: Parameters<T>) => {
       this.startOperation(operationName);
       try {
@@ -466,7 +466,7 @@ export class PerformanceMonitor {
 /**
  * Simple debounce implementation
  */
-export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: unknown[]) => unknown>(fn: T, delay: number): (...args: Parameters<T>) => void {
   let timeoutId: number;
 
   return function (...args: Parameters<T>) {
@@ -478,7 +478,7 @@ export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number
 /**
  * Simple throttle implementation
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   fn: T, 
   limit: number, 
   options: { leading?: boolean; trailing?: boolean } = {}
@@ -486,11 +486,11 @@ export function throttle<T extends (...args: any[]) => any>(
   const { leading = true, trailing = false } = options;
   let inThrottle = false;
   let lastArgs: Parameters<T> | null = null;
-  let lastThis: any;
+  let lastThis: unknown;
   let timeoutId: number;
   let hasInvoked = false;
 
-  return function (this: any, ...args: Parameters<T>) {
+  return function (this: unknown, ...args: Parameters<T>) {
     lastArgs = args;
     lastThis = this;
 
@@ -522,7 +522,7 @@ export function throttle<T extends (...args: any[]) => any>(
 /**
  * Simple memoize implementation
  */
-export function memoize<T extends (...args: any[]) => any>(
+export function memoize<T extends (...args: unknown[]) => unknown>(
   fn: T, 
   resolver?: (...args: Parameters<T>) => string
 ): T {
@@ -543,7 +543,7 @@ export function memoize<T extends (...args: any[]) => any>(
 /**
  * Track operation time with callbacks
  */
-export function trackOperationTime<T extends (...args: any[]) => any>(
+export function trackOperationTime<T extends (...args: unknown[]) => unknown>(
   operation: T,
   operationName: string,
   onComplete?: (name: string, duration: number) => void,

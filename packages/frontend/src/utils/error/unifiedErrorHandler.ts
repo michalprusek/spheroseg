@@ -46,7 +46,7 @@ export interface ErrorInfo {
   statusCode?: number;
   originalError?: Error;
   timestamp: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 export interface ApiErrorResponse {
@@ -319,13 +319,13 @@ export function getErrorMessage(
 /**
  * Create structured error information
  */
-export function createErrorInfo(error: unknown, context?: Record<string, any>): ErrorInfo {
+export function createErrorInfo(error: unknown, context?: Record<string, unknown>): ErrorInfo {
   const type = getErrorType(error);
   const severity = getErrorSeverity(error);
   const message = getErrorMessage(error);
 
   let code: string | undefined;
-  let details: any;
+  let details: unknown;
   let statusCode: number | undefined;
 
   if (error instanceof AppError) {
@@ -557,7 +557,7 @@ export function handleError(
   options: {
     showToast?: boolean;
     logError?: boolean;
-    context?: Record<string, any>;
+    context?: Record<string, unknown>;
     customMessage?: string;
   } = {},
 ): ErrorInfo {
