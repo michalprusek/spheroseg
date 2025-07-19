@@ -5,9 +5,10 @@
  * that should be loaded on-demand to improve initial bundle size.
  */
 
-import { lazy, Suspense, ComponentType } from 'react';
+import { lazy, Suspense, ComponentType, useState, useRef, useEffect } from 'react';
 import LoadingFallback from './LoadingFallback';
 import { createCodeSplitComponent } from '@/utils/codeSplitting';
+import logger from '@/utils/logger';
 
 // Heavy visualization components
 export const LazySegmentationCanvas = lazy(() =>
@@ -163,7 +164,7 @@ export async function loadDynamicComponent(componentPath: string): Promise<Compo
     componentCache.set(componentPath, Component);
     return Component;
   } catch (error) {
-    console.error(`Failed to load component: ${componentPath}`, error);
+    logger.error(`Failed to load component: ${componentPath}`, error);
     throw error;
   }
 }

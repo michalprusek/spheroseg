@@ -15,6 +15,7 @@ import { useTranslations } from '@/hooks/useTranslations';
 import { SEGMENTATION_STATUS, isProcessingStatus } from '@/constants/segmentationStatus';
 import { debouncedCacheUpdate } from '@/utils/debounce';
 import { pollingManager } from '@/utils/pollingManager';
+import logger from '@/utils/logger';
 
 interface ImageDisplayProps {
   image: ProjectImage;
@@ -84,7 +85,7 @@ const ImageDisplayComponent = ({
             error.response.status !== 404 &&
             error.response.status !== 429
           ) {
-            console.debug(`ImageDisplay: Error checking initial segmentation status for image ${image.id}`);
+            logger.debug(`ImageDisplay: Error checking initial segmentation status for image ${image.id}`);
           }
         }
       };
@@ -111,7 +112,7 @@ const ImageDisplayComponent = ({
         data.imageId === image.id &&
         data.status
       ) {
-        console.log(`ImageDisplay: Received WebSocket segmentation update for image ${data.imageId}: ${data.status}`);
+        logger.info(`ImageDisplay: Received WebSocket segmentation update for image ${data.imageId}: ${data.status}`);
 
         // Update image status
         setCurrentStatus(data.status);
@@ -128,7 +129,7 @@ const ImageDisplayComponent = ({
           data.status === SEGMENTATION_STATUS.FAILED ||
           data.status === SEGMENTATION_STATUS.QUEUED
         ) {
-          console.log(`ImageDisplay: Dispatching queue-status-update for image ${data.imageId}`);
+          logger.debug(`ImageDisplay: Dispatching queue-status-update for image ${data.imageId}`);
 
           // Use setTimeout to ensure the status update is processed first
           setTimeout(() => {
@@ -162,14 +163,14 @@ const ImageDisplayComponent = ({
   // Listen for WebSocket segmentation updates
   useEffect(() => {
     if (socket && isConnected) {
-      console.log(`ImageDisplay: Setting up WebSocket listeners for image ${image.id}`);
+      logger.debug(`ImageDisplay: Setting up WebSocket listeners for image ${image.id}`);
 
       // Listen for segmentation updates
       socket.on('segmentation_update', handleSegmentationUpdate);
 
       // Join project room if needed
       if (image.project_id) {
-        console.log(`ImageDisplay: Joining project room for project ${image.project_id}`);
+        logger.debug(`ImageDisplay: Joining project room for project ${image.project_id}`);
         // Try all possible room joining methods for compatibility
         socket.emit('join_project', { projectId: image.project_id });
         socket.emit('join-project', image.project_id);
@@ -187,11 +188,11 @@ const ImageDisplayComponent = ({
       };
     } else if (!isConnected && socket) {
       // If socket exists but is not connected, try to reconnect
-      console.log(`ImageDisplay: Socket not connected, attempting to reconnect for image ${image.id}`);
+      logger.debug(`ImageDisplay: Socket not connected, attempting to reconnect for image ${image.id}`);
       try {
         socket.connect();
       } catch (err) {
-        console.error('Error reconnecting socket:', err);
+        logger.error('Error reconnecting socket:', err);
       }
     }
   }, [socket, isConnected, handleSegmentationUpdate, image.id, image.project_id]);
@@ -259,7 +260,7 @@ const ImageDisplayComponent = ({
       const { imageId, status, forceQueueUpdate } = customEvent.detail;
 
       if (imageId === image.id) {
-        console.log(`ImageDisplay: Received custom event status update for image ${imageId}: ${status}`);
+        logger.debug(`ImageDisplay: Received custom event status update for image ${imageId}: ${status}`);
 
         // Update image status
         setCurrentStatus(status);
@@ -271,7 +272,7 @@ const ImageDisplayComponent = ({
 
         // If forceQueueUpdate is true or status is 'processing' or 'queued', update the queue indicator
         if (forceQueueUpdate || status === SEGMENTATION_STATUS.PROCESSING || status === SEGMENTATION_STATUS.QUEUED) {
-          console.log(`ImageDisplay: Dispatching queue-status-update for image ${imageId}`);
+          logger.debug(`ImageDisplay: Dispatching queue-status-update for image ${imageId}`);
 
           // Use setTimeout to ensure the status update is processed first
           setTimeout(() => {
@@ -311,7 +312,7 @@ const ImageDisplayComponent = ({
             // Create a new blob URL from the stored blob
             const url = URL.createObjectURL(blob);
             setImageSrc(url);
-            console.debug(`Loaded image ${image.id} from IndexedDB`);
+            logger.debug(`Loaded image ${image.id} from IndexedDB`);
           } else {
             // Use the provided URL if available
             setImageSrc(image.thumbnail_url || image.url || null);
@@ -321,7 +322,7 @@ const ImageDisplayComponent = ({
           setImageSrc(image.thumbnail_url || image.url || null);
         }
       } catch (error) {
-        console.error('Error loading image from IndexedDB:', error);
+        logger.error('Error loading image from IndexedDB:', error);
         setImageSrc(image.thumbnail_url || image.url || null);
       }
     };
@@ -341,7 +342,7 @@ const ImageDisplayComponent = ({
 
   // Handle image errors
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.error(`Failed to load image: ${imageSrc}`);
+    logger.error(`Failed to load image: ${imageSrc}`);
 
     // If the image is already using a placeholder, don't try to replace it again
     if (e.currentTarget.src.includes('placeholder.svg')) {
@@ -349,14 +350,14 @@ const ImageDisplayComponent = ({
     }
 
     try {
-      console.log(`Image load failed for image ${image.id} (${image.name})`);
+      logger.debug(`Image load failed for image ${image.id} (${image.name})`);
 
       // Try to load from IndexedDB first
       getImageBlob(image.id)
         .then((blob) => {
           // Check if element still exists before setting src
           if (!e.currentTarget) {
-            console.warn(`Image element no longer exists for ${image.id}`);
+            logger.warn(`Image element no longer exists for ${image.id}`);
             return;
           }
 
@@ -364,7 +365,7 @@ const ImageDisplayComponent = ({
             // Create a new blob URL from the stored blob
             const url = URL.createObjectURL(blob);
             e.currentTarget.src = url;
-            console.debug(`Loaded image ${image.id} from IndexedDB after error`);
+            logger.debug(`Loaded image ${image.id} from IndexedDB after error`);
             return;
           }
 
@@ -400,13 +401,13 @@ const ImageDisplayComponent = ({
           e.currentTarget.src = isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg';
         })
         .catch((err) => {
-          console.error('Error getting image from IndexedDB:', err);
+          logger.error('Error getting image from IndexedDB:', err);
           if (e.currentTarget) {
             e.currentTarget.src = isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg';
           }
         });
     } catch (err) {
-      console.error('Error handling image fallback:', err);
+      logger.error('Error handling image fallback:', err);
       if (e.currentTarget) {
         e.currentTarget.src = isOriginallyTiff ? '/placeholder-tiff.svg' : '/placeholder.svg';
       }

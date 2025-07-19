@@ -77,7 +77,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ open, onClose
       onClose();
       form.reset();
     } catch (error) {
-      console.error('Error creating project:', error);
+      logger.error('Error creating project:', error);
 
       // Show error message to user
       if (error.response?.data?.message) {
