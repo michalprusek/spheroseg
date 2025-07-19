@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Globe, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import logger from '@/utils/logger';
 
 // Define language names for display in the menu
 const languageNames: Record<string, string> = {
@@ -38,7 +39,7 @@ const LanguageSwitcher: React.FC = () => {
 
   // Language change handler without page reload
   const handleLanguageChange = (lang: Language) => {
-    console.log(`[LanguageSwitcher] Changing language to: ${lang}`);
+    logger.debug(`[LanguageSwitcher] Changing language to: ${lang}`);
     setLanguage(lang);
     setOpen(false);
   };
