@@ -72,9 +72,11 @@ const ImageDisplayComponent = ({
               }
             }
           }
-        } catch (error: any) {
+        } catch (error) {
           // Silently ignore 404 and 429 errors
-          if (error?.response?.status !== 404 && error?.response?.status !== 429) {
+          if (error && typeof error === 'object' && 'response' in error && 
+              error.response && typeof error.response === 'object' && 'status' in error.response &&
+              error.response.status !== 404 && error.response.status !== 429) {
             console.debug(`ImageDisplay: Error checking initial segmentation status for image ${image.id}`);
           }
         }
@@ -93,8 +95,9 @@ const ImageDisplayComponent = ({
 
   // Handle segmentation updates from WebSocket
   const handleSegmentationUpdate = useCallback(
-    (data: any) => {
-      if (data && data.imageId === image.id && data.status) {
+    (data: unknown) => {
+      if (data && typeof data === 'object' && 'imageId' in data && 'status' in data &&
+          data.imageId === image.id && data.status) {
         console.log(`ImageDisplay: Received WebSocket segmentation update for image ${data.imageId}: ${data.status}`);
 
         // Update image status
@@ -188,8 +191,8 @@ const ImageDisplayComponent = ({
       const endpoint = `/api/images/${image.id}/segmentation`;
 
       // Callback when poll receives data
-      const handlePollData = (data: any) => {
-        if (data && data.status) {
+      const handlePollData = (data: unknown) => {
+        if (data && typeof data === 'object' && 'status' in data && data.status) {
           const apiStatus = data.status;
           if (apiStatus !== currentStatus) {
             setCurrentStatus(apiStatus);
