@@ -10,6 +10,7 @@ import ProjectDialogForm from '@/components/project/ProjectDialogForm';
 import NewProjectCardUI from '@/components/project/NewProjectCardUI';
 import { formatDistanceToNow } from 'date-fns';
 import { cs, enUS } from 'date-fns/locale';
+import logger from '@/utils/logger';
 
 export interface ProjectsListProps {
   projects: Array<
@@ -100,7 +101,7 @@ const ProjectsList = ({
           project.is_owner !== false && project.id ? () => onDeleteProject(project.id, project.title) : undefined
         }
         onDuplicate={(newProject) => {
-          console.log(`ProjectsList: Project duplicated:`, newProject);
+          logger.debug(`ProjectsList: Project duplicated:`, newProject);
           window.dispatchEvent(new CustomEvent('project-created'));
         }}
         isOwner={project.is_owner}

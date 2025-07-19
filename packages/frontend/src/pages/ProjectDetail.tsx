@@ -132,14 +132,44 @@ const ProjectDetail = () => {
 
         logger.debug('Received segmentation update:', data);
         if (data.imageId && data.status) {
+          // Map backend status to frontend ImageStatus type
+          let mappedStatus = data.status;
+          if (data.status === 'queued') {
+            mappedStatus = 'pending';
+          } else if (data.status === 'without_segmentation') {
+            mappedStatus = 'pending';
+          }
+          
           // Aktualizujeme stav obrázku včetně chybové zprávy, pokud existuje
-          updateImageStatus(data.imageId, data.status, data.resultPath, data.error);
+          updateImageStatus(data.imageId, mappedStatus, data.resultPath, data.error);
 
           if (data.status === 'completed') {
+            // Dispatch a custom event to ensure UI updates
+            const statusUpdateEvent = new CustomEvent('image-status-update', {
+              detail: {
+                imageId: data.imageId,
+                status: 'completed',
+                resultPath: data.resultPath,
+                error: data.error
+              }
+            });
+            window.dispatchEvent(statusUpdateEvent);
+            
             // Odstraníme toast odsud, protože se zobrazí v handleImageStatusUpdate
             // Namísto refreshData použijeme cílenější aktualizaci
             updateProjectStatistics();
           } else if (data.status === 'failed') {
+            // Dispatch a custom event to ensure UI updates
+            const statusUpdateEvent = new CustomEvent('image-status-update', {
+              detail: {
+                imageId: data.imageId,
+                status: 'failed',
+                resultPath: data.resultPath,
+                error: data.error
+              }
+            });
+            window.dispatchEvent(statusUpdateEvent);
+            
             // Odstraníme toast odsud, protože se zobrazí v handleImageStatusUpdate
 
             // Aktualizujeme také stav fronty

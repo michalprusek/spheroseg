@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import apiClient from '@/lib/apiClient';
 import { scalePolygons, createSvgPath } from '@/lib/svgUtils';
+import logger from '@/utils/logger';
 
 // Simple in-memory cache for segmentation data
 const segmentationCache = new Map<string, { data: unknown; timestamp: number }>();
@@ -103,6 +104,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
           // Don't show error for rate limiting, just hide the component
           setError(null);
         } else {
+          logger.error('Failed to load segmentation:', err);
           setError('Failed to load segmentation');
         }
         setIsLoading(false);
