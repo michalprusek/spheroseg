@@ -387,11 +387,10 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     };
 
     // Setup socket with error handling
-    let socketConnectionTimeout: NodeJS.Timeout;
     let newSocket: Socket | null = null;
 
     // Set a timeout to use mock data if WebSocket connection fails
-    socketConnectionTimeout = setTimeout(() => {
+    const socketConnectionTimeout = setTimeout(() => {
       if (isComponentMounted) {
         console.log('WebSocket connection timed out, using mock data');
         // Use mock data for offline mode

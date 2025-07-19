@@ -42,7 +42,7 @@ const Hero = () => {
     console.log('subtitle:', t('hero.subtitle'));
     console.log('getStartedButton:', t('hero.getStartedButton'));
     console.log('learnMoreButton:', t('hero.learnMoreButton'));
-  }, [t, forceUpdate]);
+  }, [t, _forceUpdate]);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">

@@ -13,9 +13,20 @@ vi.mock('lucide-react', () => ({
   Check: () => <div data-testid="icon-check">Check</div>,
 }));
 
-// Mock radix-optimized library
-vi.mock('@/lib/radix-optimized', () => ({
-  CheckboxRoot: ({ children, onCheckedChange, checked, id, ...props }: any) => (
+// Mock UI components
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  CardTitle: ({ children, ...props }: any) => <h3 {...props}>{children}</h3>,
+  CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+}));
+
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}));
+
+vi.mock('@/components/ui/checkbox', () => ({
+  Checkbox: ({ onCheckedChange, checked, id, ...props }: any) => (
     <input
       type="checkbox"
       id={id}
@@ -24,19 +35,61 @@ vi.mock('@/lib/radix-optimized', () => ({
       {...props}
     />
   ),
-  CheckboxIndicator: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  SelectRoot: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  SelectTrigger: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  SelectValue: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  SelectContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  SelectItem: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  SelectSeparator: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-  CardRoot: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  CardTitle: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+}));
+
+vi.mock('@/components/ui/label', () => ({
   Label: ({ children, ...props }: any) => <label {...props}>{children}</label>,
+}));
+
+vi.mock('@/components/ui/select', () => ({
+  Select: ({ children, value, onValueChange, ...props }: any) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    return (
+      <div {...props} data-testid="select-root">
+        {React.Children.map(children, child => {
+          if (child?.type?.name === 'SelectTrigger' || child?.props?.['data-testid'] === 'select-trigger') {
+            return React.cloneElement(child, {
+              onClick: () => setIsOpen(!isOpen),
+              'aria-expanded': isOpen,
+              'data-value': value,
+            });
+          }
+          if (child?.type?.name === 'SelectContent' || child?.props?.['data-testid'] === 'select-content') {
+            return isOpen ? React.cloneElement(child, { onValueChange, currentValue: value }) : null;
+          }
+          return child;
+        })}
+      </div>
+    );
+  },
+  SelectTrigger: ({ children, ...props }: any) => (
+    <button {...props} data-testid="select-trigger">{children}</button>
+  ),
+  SelectValue: ({ placeholder, ...props }: any) => {
+    const value = props['data-value'] || placeholder;
+    return <span {...props}>{value}</span>;
+  },
+  SelectContent: ({ children, onValueChange, currentValue, ...props }: any) => (
+    <div {...props} data-testid="select-content">
+      {React.Children.map(children, child => {
+        if (child?.type?.name === 'SelectItem' || child?.props?.value) {
+          return React.cloneElement(child, { onValueChange, isSelected: child.props.value === currentValue });
+        }
+        return child;
+      })}
+    </div>
+  ),
+  SelectItem: ({ children, value, onValueChange, isSelected, ...props }: any) => (
+    <div
+      {...props}
+      data-testid={`select-item-${value}`}
+      onClick={() => onValueChange && onValueChange(value)}
+      aria-selected={isSelected}
+      role="option"
+    >
+      {children}
+    </div>
+  ),
 }));
 
 // Detailed language context mock with translations
