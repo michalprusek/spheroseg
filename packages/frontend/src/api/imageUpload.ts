@@ -307,11 +307,11 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
           height = img.height;
         } else {
           // For unsupported types like TIFF/BMP, dimensions will remain 0
-          console.log(`Skipping dimension extraction for unsupported type: ${fileType}`);
+          logger.debug(`Skipping dimension extraction for unsupported type: ${fileType}`);
         }
       } catch (dimensionError) {
         // This is expected for certain file types, so use debug level logging
-        console.debug(`Could not get image dimensions for ${file.name}:`, dimensionError);
+        logger.debug(`Could not get image dimensions for ${file.name}:`, dimensionError);
       }
 
       // Create a thumbnail from the base64 string
@@ -328,7 +328,7 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
           const ctx = canvas.getContext('2d');
 
           if (!ctx) {
-            console.warn('Could not get 2D context for thumbnail generation');
+            logger.warn('Could not get 2D context for thumbnail generation');
             thumbnailBase64 = base64String; // Use original if context fails
           } else {
             // Create an image element to get dimensions
@@ -338,7 +338,7 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
             await new Promise<void>((resolveLoad, rejectLoad) => {
               tempImg.onload = () => resolveLoad();
               tempImg.onerror = (e) => {
-                console.warn(`Image failed to load for thumbnail: ${file.name}`);
+                logger.warn(`Image failed to load for thumbnail: ${file.name}`);
                 rejectLoad(new Error(`Temp image for thumbnail failed to load: ${e}`));
               };
             });
@@ -364,7 +364,7 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
           }
         }
       } catch (thumbError) {
-        console.warn('Could not create thumbnail:', thumbError);
+        logger.warn('Could not create thumbnail:', thumbError);
         // thumbnailBase64 remains original base64String in case of error
       }
 
@@ -385,14 +385,14 @@ async function createLocalImages(projectId: string, files: File[]): Promise<Proj
     }),
   );
 
-  console.log(`Created ${localImages.length} local images`);
+  logger.info(`Created ${localImages.length} local images`);
 
   // Store the images in localStorage
   try {
     const { storeUploadedImages } = await import('./projectImages');
     storeUploadedImages(projectId, localImages);
   } catch (storageError) {
-    console.error('Failed to store images in localStorage:', storageError);
+    logger.error('Failed to store images in localStorage:', storageError);
   }
 
   return localImages;
