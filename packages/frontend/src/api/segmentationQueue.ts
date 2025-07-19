@@ -5,6 +5,7 @@
  */
 import apiClient from '@/lib/apiClient';
 import { QueueStatusUpdate } from '@/hooks/useSegmentationUpdates';
+import logger from '@/utils/logger';
 
 // Cache for queue status to avoid repeated API calls
 const queueStatusCache: Record<string, { data: QueueStatusUpdate; timestamp: number }> = {};
@@ -46,9 +47,9 @@ export const fetchQueueStatus = async (projectId: string): Promise<QueueStatusUp
       if (success) break;
 
       try {
-        console.log(`Trying ${endpoint.name}: ${endpoint.url}`);
+        logger.debug(`Trying ${endpoint.name}: ${endpoint.url}`);
         const response = await apiClient.get(endpoint.url);
-        console.log(`${endpoint.name} response:`, response.data);
+        logger.debug(`${endpoint.name} response:`, response.data);
 
         if (response.data) {
           // Normalize the response data to ensure it has all required fields
@@ -68,11 +69,11 @@ export const fetchQueueStatus = async (projectId: string): Promise<QueueStatusUp
           };
 
           success = true;
-          console.log(`Successfully fetched queue status from ${endpoint.name}`);
+          logger.info(`Successfully fetched queue status from ${endpoint.name}`);
           return normalizedData;
         }
       } catch (error) {
-        console.warn(`Error fetching queue status from ${endpoint.name}:`, error);
+        logger.warn(`Error fetching queue status from ${endpoint.name}:`, error);
         lastError = error;
       }
     }
@@ -83,7 +84,7 @@ export const fetchQueueStatus = async (projectId: string): Promise<QueueStatusUp
     }
   } catch (error) {
     // Log the error
-    console.error('Failed to fetch queue status:', error);
+    logger.error('Failed to fetch queue status:', error);
 
     // Use cached response if available, even if expired
     if (cachedResponse) {
@@ -109,7 +110,7 @@ export const triggerSegmentation = async (projectId: string, imageId: string) =>
     });
     return response.data;
   } catch (error) {
-    console.error('Error triggering segmentation:', error);
+    logger.error('Error triggering segmentation:', error);
     throw error; // Let the caller handle the error
   }
 };
@@ -144,7 +145,7 @@ export const triggerBatchSegmentation = async (projectId: string, imageIds: stri
       }
     }
   } catch (error) {
-    console.error('Error triggering batch segmentation:', error);
+    logger.error('Error triggering batch segmentation:', error);
     throw error; // Let the caller handle the error
   }
 };
@@ -182,7 +183,7 @@ export const createMockQueueStatus = (projectId: string): QueueStatusUpdate => {
  * @param clearAll Whether to clear all project caches (default: false)
  */
 export const clearQueueStatusCache = (projectId: string, clearAll: boolean = false): void => {
-  console.log(`Clearing queue status cache for project ${projectId}${clearAll ? ' and all other projects' : ''}`);
+  logger.info(`Clearing queue status cache for project ${projectId}${clearAll ? ' and all other projects' : ''}`);
 
   if (clearAll) {
     // Clear all cache entries
@@ -205,6 +206,6 @@ export const clearQueueStatusCache = (projectId: string, clearAll: boolean = fal
     });
     window.dispatchEvent(cacheUpdateEvent);
   } catch (error) {
-    console.error('Error dispatching cache cleared event:', error);
+    logger.error('Error dispatching cache cleared event:', error);
   }
 };
