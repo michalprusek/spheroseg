@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  // Frontend uses its own TypeScript config due to Docker container path differences
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,

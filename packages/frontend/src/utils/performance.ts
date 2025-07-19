@@ -514,6 +514,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
       }, limit) as unknown as number;
     } else if (trailing) {
       lastArgs = args;
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       lastThis = this;
     }
   };
