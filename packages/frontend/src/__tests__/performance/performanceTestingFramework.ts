@@ -17,7 +17,7 @@ export interface PerformanceResult {
   memoryUsage?: number;
   iterationCount?: number;
   averageDuration?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -29,7 +29,7 @@ export interface PerformanceTestOptions {
   dataSize?: number;
   timeout?: number;
   logMemory?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**

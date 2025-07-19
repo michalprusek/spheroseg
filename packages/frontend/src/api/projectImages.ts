@@ -305,18 +305,18 @@ export const saveImagesToStorage = (projectId: string, images: ProjectImage[]): 
                 await storeImageBlob(`thumb-${img.id}`, projectId, blob);
               }
             } catch (blobError) {
-              console.error(`Failed to store image ${img.id} in IndexedDB:`, blobError);
+              logger.error(`Failed to store image ${img.id} in IndexedDB:`, blobError);
             }
           });
         })
         .catch((err) => {
-          console.error('Failed to import indexedDBService:', err);
+          logger.error('Failed to import indexedDBService:', err);
         });
     }
   } catch (error) {
-    console.error('Error saving images to localStorage:', error);
+    logger.error('Error saving images to localStorage:', error);
     if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-      console.warn('LocalStorage quota exceeded. Consider clearing some data or using a different storage solution.');
+      logger.warn('LocalStorage quota exceeded. Consider clearing some data or using a different storage solution.');
     }
   }
 };
@@ -333,7 +333,7 @@ export const cleanLocalStorageFromBlobUrls = (projectId: string): void => {
       let updated = false;
       const cleanedImages = images.map((image) => {
         if (image.url && image.url.startsWith('blob:')) {
-          console.log(`Removing blob URL for image ${image.id}: ${image.url}`);
+          logger.debug(`Removing blob URL for image ${image.id}: ${image.url}`);
           updated = true;
           return { ...image, url: '', _tempUrl: undefined };
         }
@@ -346,11 +346,11 @@ export const cleanLocalStorageFromBlobUrls = (projectId: string): void => {
 
       if (updated) {
         localStorage.setItem(key, JSON.stringify(cleanedImages));
-        console.log('Cleaned blob URLs from localStorage for project:', projectId);
+        logger.debug('Cleaned blob URLs from localStorage for project:', projectId);
       }
     }
   } catch (error) {
-    console.error('Error cleaning blob URLs from localStorage:', error);
+    logger.error('Error cleaning blob URLs from localStorage:', error);
   }
 };
 
@@ -425,9 +425,9 @@ export const updateImageStatusInCache = async (
       localStorage.setItem(storageKey, JSON.stringify(updatedImages));
     }
 
-    console.log(`Updated image ${imageId} status to ${status} in all caches`);
+    logger.debug(`Updated image ${imageId} status to ${status} in all caches`);
   } catch (error) {
-    console.error(`Failed to update image ${imageId} status in caches:`, error);
+    logger.error(`Failed to update image ${imageId} status in caches:`, error);
   }
 };
 
@@ -456,7 +456,7 @@ export const cleanImageFromAllStorages = async (projectId: string, imageId: stri
 
     // 2. Clean legacy project images cache
     if (projectImagesCache && projectImagesCache[cleanProjectId]) {
-      console.log(`Cleaning image ${imageId} from project images cache`);
+      logger.debug(`Cleaning image ${imageId} from project images cache`);
       if (projectImagesCache[cleanProjectId].data) {
         projectImagesCache[cleanProjectId].data = projectImagesCache[cleanProjectId].data.filter(
           (img) => img.id !== imageId,
@@ -476,10 +476,10 @@ export const cleanImageFromAllStorages = async (projectId: string, imageId: stri
             // Filter out the image
             const updatedData = parsedData.filter((item) => item.id !== imageId);
             localStorage.setItem(key, JSON.stringify(updatedData));
-            console.log(`Removed image ${imageId} from localStorage key ${key}`);
+            logger.debug(`Removed image ${imageId} from localStorage key ${key}`);
           }
         } catch (parseError) {
-          console.error(`Error parsing localStorage data for key ${key}:`, parseError);
+          logger.error(`Error parsing localStorage data for key ${key}:`, parseError);
         }
       }
     }
@@ -488,9 +488,9 @@ export const cleanImageFromAllStorages = async (projectId: string, imageId: stri
     try {
       const { deleteImageFromDB } = await import('@/utils/indexedDBService');
       await deleteImageFromDB(imageId);
-      console.log(`Deleted image ${imageId} from IndexedDB`);
+      logger.debug(`Deleted image ${imageId} from IndexedDB`);
     } catch (dbError) {
-      console.error(`Error deleting image ${imageId} from IndexedDB:`, dbError);
+      logger.error(`Error deleting image ${imageId} from IndexedDB:`, dbError);
     }
 
     // 4. If there are any blob URLs, revoke them
@@ -504,28 +504,28 @@ export const cleanImageFromAllStorages = async (projectId: string, imageId: stri
         if (image) {
           if (image.url && image.url.startsWith('blob:')) {
             URL.revokeObjectURL(image.url);
-            console.log(`Revoked blob URL for image ${imageId}: ${image.url}`);
+            logger.debug(`Revoked blob URL for image ${imageId}: ${image.url}`);
           }
 
           if (image._tempUrl && typeof image._tempUrl === 'string' && image._tempUrl.startsWith('blob:')) {
             URL.revokeObjectURL(image._tempUrl);
-            console.log(`Revoked temporary blob URL for image ${imageId}: ${image._tempUrl}`);
+            logger.debug(`Revoked temporary blob URL for image ${imageId}: ${image._tempUrl}`);
           }
         }
       }
     } catch (blobError) {
-      console.error(`Error revoking blob URLs for image ${imageId}:`, blobError);
+      logger.error(`Error revoking blob URLs for image ${imageId}:`, blobError);
     }
 
-    console.log(`Completed cleaning image ${imageId} from all storages for project ${cleanProjectId}`);
+    logger.debug(`Completed cleaning image ${imageId} from all storages for project ${cleanProjectId}`);
   } catch (error) {
-    console.error(`Failed to clean image ${imageId} from all storages:`, error);
+    logger.error(`Failed to clean image ${imageId} from all storages:`, error);
   }
 };
 
 export const storeUploadedImages = async (projectId: string, imagesToStore: ProjectImage[]): Promise<void> => {
   if (!projectId) {
-    console.error('Project ID is required to store uploaded images.');
+    logger.error('Project ID is required to store uploaded images.');
     return;
   }
 
@@ -542,9 +542,9 @@ export const storeUploadedImages = async (projectId: string, imagesToStore: Proj
         tempUrlToRevoke = image.url;
         await storeImageBlob(image.id, projectId, blob);
         imageUrl = image.url;
-        console.log(`Stored blob in IndexedDB for image ${image.id}`);
+        logger.debug(`Stored blob in IndexedDB for image ${image.id}`);
       } catch (error) {
-        console.error(`Failed to process and store blob for image ${image.id}:`, error);
+        logger.error(`Failed to process and store blob for image ${image.id}:`, error);
       }
     }
 
@@ -556,7 +556,7 @@ export const storeUploadedImages = async (projectId: string, imagesToStore: Proj
 
     if (tempUrlToRevoke) {
       URL.revokeObjectURL(tempUrlToRevoke);
-      console.log(`Revoked object URL: ${tempUrlToRevoke}`);
+      logger.debug(`Revoked object URL: ${tempUrlToRevoke}`);
     }
   }
 
@@ -566,7 +566,7 @@ export const storeUploadedImages = async (projectId: string, imagesToStore: Proj
     ...processedImages,
   ];
   saveImagesToStorage(projectId, updatedImages);
-  console.log(
+  logger.debug(
     `Stored/updated ${processedImages.length} images with blob URLs in localStorage for project ${projectId}.`,
   );
 };
@@ -593,9 +593,9 @@ export const clearProjectImageCache = async (projectId: string): Promise<void> =
     const storageKey = getLocalStorageKey(cleanProjectId);
     localStorage.removeItem(storageKey);
 
-    console.log(`Cleared all caches for project ${cleanProjectId}`);
+    logger.debug(`Cleared all caches for project ${cleanProjectId}`);
   } catch (error) {
-    console.error(`Failed to clear cache for project ${cleanProjectId}:`, error);
+    logger.error(`Failed to clear cache for project ${cleanProjectId}:`, error);
   }
 };
 
@@ -613,13 +613,13 @@ export const getProjectImages = async (projectId: string, skipCache: boolean = f
     // Only return cached data if it's not an empty array
     // This ensures we always try to fetch from API when there are no images in cache
     if (cachedImages && cachedImages.length > 0) {
-      console.log(`Retrieved ${cachedImages.length} images from unified cache for project ${cleanProjectId}`);
+      logger.debug(`Retrieved ${cachedImages.length} images from unified cache for project ${cleanProjectId}`);
       return cachedImages;
     }
   }
 
   try {
-    console.log(`Fetching images from API for project: ${cleanProjectId}`);
+    logger.debug(`Fetching images from API for project: ${cleanProjectId}`);
     const response = await apiClient.get(`/api/projects/${cleanProjectId}/images`);
     const responseData = response.data;
 
@@ -629,13 +629,13 @@ export const getProjectImages = async (projectId: string, skipCache: boolean = f
       !('images' in responseData) ||
       !Array.isArray(responseData.images)
     ) {
-      console.warn(`API returned unexpected data for project ${cleanProjectId}:`, responseData);
+      logger.warn(`API returned unexpected data for project ${cleanProjectId}:`, responseData);
       throw new Error('Invalid data from API');
     }
 
     const apiImages = responseData.images;
 
-    console.log(`Retrieved ${apiImages.length} images from API for project ${cleanProjectId}`);
+    logger.debug(`Retrieved ${apiImages.length} images from API for project ${cleanProjectId}`);
     const mappedImages = apiImages.map((image: Image) => {
       const projectImage = mapApiImageToProjectImage(image);
       // Removed explicit placeholder assignment for TIFFs as backend now handles conversion
@@ -655,15 +655,15 @@ export const getProjectImages = async (projectId: string, skipCache: boolean = f
     saveImagesToStorage(cleanProjectId, mappedImages); // Save to local storage
     return mappedImages;
   } catch (apiError) {
-    console.warn(`Failed to fetch images from API for project ${cleanProjectId}:`, apiError);
+    logger.warn(`Failed to fetch images from API for project ${cleanProjectId}:`, apiError);
 
     const localImages = loadImagesFromStorage(cleanProjectId);
     if (localImages.length > 0) {
-      console.log(`Loaded ${localImages.length} images from local storage for project ${cleanProjectId}`);
+      logger.debug(`Loaded ${localImages.length} images from local storage for project ${cleanProjectId}`);
       return localImages;
     }
 
-    console.error(`No images available for project ${cleanProjectId}`);
+    logger.error(`No images available for project ${cleanProjectId}`);
     return [];
   }
 };
