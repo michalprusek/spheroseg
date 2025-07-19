@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from '@/hooks/useTranslations';
 import getAssetUrl from '@/utils/getAssetUrl';
+import logger from '@/utils/logger';
 
 const Hero = () => {
   const { t } = useTranslations();
@@ -36,12 +37,12 @@ const Hero = () => {
   }, []);
 
   useEffect(() => {
-    console.log('Current hero translations:');
-    console.log('platformTag:', t('hero.platformTag'));
-    console.log('title:', t('hero.title'));
-    console.log('subtitle:', t('hero.subtitle'));
-    console.log('getStartedButton:', t('hero.getStartedButton'));
-    console.log('learnMoreButton:', t('hero.learnMoreButton'));
+    logger.debug('Current hero translations:');
+    logger.debug('platformTag:', t('hero.platformTag'));
+    logger.debug('title:', t('hero.title'));
+    logger.debug('subtitle:', t('hero.subtitle'));
+    logger.debug('getStartedButton:', t('hero.getStartedButton'));
+    logger.debug('learnMoreButton:', t('hero.learnMoreButton'));
   }, [t, _forceUpdate]);
 
   return (

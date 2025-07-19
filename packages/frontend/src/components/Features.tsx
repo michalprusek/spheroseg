@@ -118,10 +118,10 @@ const Features = () => {
 
   // Log the current translations for debugging
   useEffect(() => {
-    console.log('Current features translations:');
-    console.log('tag:', getTranslation('features.tag'));
-    console.log('title:', getTranslation('features.title'));
-    console.log('subtitle:', getTranslation('features.subtitle'));
+    logger.debug('Current features translations:');
+    logger.debug('tag:', getTranslation('features.tag'));
+    logger.debug('title:', getTranslation('features.title'));
+    logger.debug('subtitle:', getTranslation('features.subtitle'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, forceUpdate]);
 
