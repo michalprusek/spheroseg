@@ -31,7 +31,7 @@ const ProjectsList = ({
   projects,
   viewMode,
   onDeleteProject,
-  onOpenProject,
+  _onOpenProject,
   loading,
   showCreateCard = false,
 }: ProjectsListProps) => {

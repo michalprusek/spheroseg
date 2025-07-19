@@ -26,8 +26,8 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
 }) => {
   const [queueData, setQueueData] = useState<QueueStatusData | null>(null);
   const [hasActiveJobs, setHasActiveJobs] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
+  const [_error, _setError] = useState<string | null>(null);
+  const [_lastUpdateTime, _setLastUpdateTime] = useState<number>(Date.now());
   const [isCancelling, setIsCancelling] = useState<Record<string, boolean>>({});
 
   // Function to cancel a segmentation task

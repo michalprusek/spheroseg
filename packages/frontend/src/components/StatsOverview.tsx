@@ -60,7 +60,7 @@ const StatCard = React.memo(({ titleKey, value, descriptionKey, descriptionOptio
   );
 });
 
-interface StatsData {
+interface _StatsData {
   totalProjects: number;
   totalImages: number;
   completedSegmentations: number;

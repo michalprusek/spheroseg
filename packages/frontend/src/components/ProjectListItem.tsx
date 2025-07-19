@@ -40,7 +40,7 @@ const ProjectListItemComponent = ({
   isOwner = true,
   permission,
   ownerName,
-  ownerEmail,
+  _ownerEmail,
 }: ProjectListItemProps) => {
   const { t } = useLanguage();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
