@@ -93,7 +93,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid date format', () => {
-      const { AppConfigSchema } = require('../app.config.validated');
 
       const invalidConfig = {
         legal: {
@@ -108,7 +107,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid timeout', () => {
-      const { AppConfigSchema } = require('../app.config.validated');
 
       const invalidConfig = {
         api: {
@@ -122,7 +120,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid retry attempts', () => {
-      const { AppConfigSchema } = require('../app.config.validated');
 
       const invalidConfig = {
         api: {
@@ -136,7 +133,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid language code', () => {
-      const { AppConfigSchema } = require('../app.config.validated');
 
       const invalidConfig = {
         ui: {
@@ -153,7 +149,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for empty supported languages', () => {
-      const { AppConfigSchema } = require('../app.config.validated');
 
       const invalidConfig = {
         ui: {
