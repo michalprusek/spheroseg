@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
 import { ProfileProvider, useProfile, UserProfile } from '../../ProfileContext';
 import '@testing-library/jest-dom';
+import * as AuthContextMock from '@/contexts/AuthContext';
 
 // Configure AuthContext mock with ability to change user state
 let currentUser = { id: 'test-user-id', email: 'test@example.com' };
@@ -303,7 +304,7 @@ describe('ProfileContext (Enhanced)', () => {
     // Simulate user sign-out
     act(() => {
       // Use the exported helper to update the mock user
-      require('@/contexts/AuthContext').__setMockUser(null);
+      (AuthContextMock as any).__setMockUser(null);
 
       // Manually trigger a re-render since we're changing the mock outside React
       render(
@@ -337,7 +338,7 @@ describe('ProfileContext (Enhanced)', () => {
     // Simulate user sign-in
     act(() => {
       // Use the exported helper to update the mock user
-      require('@/contexts/AuthContext').__setMockUser({
+      (AuthContextMock as any).__setMockUser({
         id: 'new-user-id',
         email: 'newuser@example.com',
       });
