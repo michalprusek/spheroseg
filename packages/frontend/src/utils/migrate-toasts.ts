@@ -39,7 +39,7 @@ const _MIGRATION_RULES: MigrationRule[] = [
   // Usage migrations - need to handle in components vs services differently
 ];
 
-const COMPONENT_PATTERNS = {
+const _COMPONENT_PATTERNS = {
   // In React components, convert to hook usage
   toastSuccess: /toast\.success\(/g,
   toastError: /toast\.error\(/g,
@@ -56,7 +56,7 @@ const COMPONENT_PATTERNS = {
   showWarning: /showWarning\(/g,
 };
 
-const SERVICE_PATTERNS = {
+const _SERVICE_PATTERNS = {
   // In service files, convert to toastService
   toastSuccess: /toast\.success\(/g,
   toastError: /toast\.error\(/g,

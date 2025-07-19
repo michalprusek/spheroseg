@@ -487,11 +487,11 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
   let inThrottle = false;
   let lastArgs: Parameters<T> | null = null;
   let lastThis: unknown;
-  let timeoutId: number;
   let hasInvoked = false;
 
   return function (this: unknown, ...args: Parameters<T>) {
     lastArgs = args;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     lastThis = this;
 
     if (!inThrottle) {
@@ -501,7 +501,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
       }
       inThrottle = true;
       
-      timeoutId = setTimeout(() => {
+      setTimeout(() => {
         inThrottle = false;
         if (trailing && lastArgs && (!leading || hasInvoked)) {
           fn.apply(lastThis, lastArgs);
