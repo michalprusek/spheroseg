@@ -1,7 +1,12 @@
 import React from 'react';
 
 interface ImageDebugProps {
-  image: any;
+  image: {
+    id: string;
+    url?: string;
+    name?: string;
+    [key: string]: unknown;
+  };
 }
 
 export const ImageDebug: React.FC<ImageDebugProps> = ({ image }) => {

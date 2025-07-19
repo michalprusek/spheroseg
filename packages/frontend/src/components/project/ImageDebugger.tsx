@@ -2,7 +2,12 @@ import React from 'react';
 import { constructUrl } from '@/lib/urlUtils';
 
 interface ImageDebuggerProps {
-  image: any;
+  image: {
+    id: string;
+    url?: string;
+    name?: string;
+    [key: string]: unknown;
+  };
 }
 
 const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {

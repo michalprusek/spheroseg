@@ -3,7 +3,7 @@ import apiClient from '@/lib/apiClient';
 import { scalePolygons, createSvgPath } from '@/lib/svgUtils';
 
 // Simple in-memory cache for segmentation data
-const segmentationCache = new Map<string, { data: any; timestamp: number }>();
+const segmentationCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 interface Point {

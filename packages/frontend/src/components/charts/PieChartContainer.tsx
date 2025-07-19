@@ -1,8 +1,14 @@
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
+interface ChartDataItem {
+  name: string;
+  value: number;
+  [key: string]: string | number;
+}
+
 interface PieChartContainerProps {
-  data: any[];
+  data: ChartDataItem[];
   colors?: string[];
   dataKey?: string;
   nameKey?: string;
