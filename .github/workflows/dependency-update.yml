@@ -1,0 +1,110 @@
+name: Dependency Update and Security Check
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Update npm dependencies
+        run: |
+          # Update root dependencies
+          npm update
+          npm audit fix
+          
+          # Update frontend dependencies
+          cd packages/frontend
+          npm update
+          npm audit fix
+          cd ../..
+          
+          # Update backend dependencies
+          cd packages/backend
+          npm update
+          npm audit fix
+          cd ../..
+
+      - name: Update Python dependencies
+        run: |
+          cd packages/ml
+          pip install --upgrade pip
+          pip install pip-audit
+          
+          # Create updated requirements
+          pip list --format=freeze > requirements.new.txt
+          
+          # Audit for vulnerabilities
+          pip-audit
+
+      - name: Run security audit
+        run: |
+          npm audit --audit-level=moderate
+          cd packages/frontend && npm audit --audit-level=moderate
+          cd ../backend && npm audit --audit-level=moderate
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update dependencies and fix vulnerabilities'
+          title: 'Automated dependency updates'
+          body: |
+            ## Automated Dependency Update
+            
+            This PR contains:
+            - Updated npm dependencies
+            - Security vulnerability fixes
+            - Python dependency updates
+            
+            ### Security Audit Results
+            Please review the changes and ensure all tests pass before merging.
+            
+            <details>
+            <summary>Audit Report</summary>
+            
+            ```
+            ${{ steps.audit.outputs.report }}
+            ```
+            </details>
+          branch: deps/automated-update
+          delete-branch: true
+          labels: |
+            dependencies
+            security
+            automated
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: moderate
+          deny-licenses: GPL-3.0, AGPL-3.0
+          
+      - name: Check for known vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium
