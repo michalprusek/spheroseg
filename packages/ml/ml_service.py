@@ -43,13 +43,155 @@ os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 @app.route('/health', methods=['GET'])
 def health():
-    """Health check endpoint"""
+    """Comprehensive health check endpoint"""
+    health_status = check_health_status()
+    status_code = 200 if health_status['status'] == 'healthy' else 503
+    return jsonify(health_status), status_code
+
+@app.route('/health/live', methods=['GET'])
+def liveness():
+    """Kubernetes liveness probe - checks if service is alive"""
     return jsonify({
-        'status': 'healthy',
+        'status': 'alive',
         'timestamp': datetime.now().isoformat(),
-        'model_path': MODEL_PATH,
-        'model_exists': os.path.exists(MODEL_PATH)
+        'pid': os.getpid()
     })
+
+@app.route('/health/ready', methods=['GET'])
+def readiness():
+    """Kubernetes readiness probe - checks if service is ready to accept requests"""
+    # Check if model is loaded and RabbitMQ is connected
+    is_ready = os.path.exists(MODEL_PATH) and check_rabbitmq_connection()
+    
+    if is_ready:
+        return jsonify({
+            'status': 'ready',
+            'timestamp': datetime.now().isoformat()
+        })
+    else:
+        return jsonify({
+            'status': 'not_ready',
+            'timestamp': datetime.now().isoformat(),
+            'reason': 'Model not loaded or RabbitMQ not connected'
+        }), 503
+
+def check_health_status():
+    """Perform comprehensive health checks"""
+    components = {}
+    issues = []
+    
+    # Check model availability
+    model_exists = os.path.exists(MODEL_PATH)
+    components['model'] = {
+        'status': 'healthy' if model_exists else 'unhealthy',
+        'path': MODEL_PATH,
+        'exists': model_exists
+    }
+    if not model_exists:
+        issues.append('Model file not found')
+    
+    # Check RabbitMQ connection
+    rabbitmq_connected = check_rabbitmq_connection()
+    components['rabbitmq'] = {
+        'status': 'healthy' if rabbitmq_connected else 'degraded',
+        'host': RABBITMQ_HOST,
+        'port': RABBITMQ_PORT,
+        'queue': RABBITMQ_QUEUE
+    }
+    if not rabbitmq_connected:
+        issues.append('RabbitMQ connection failed')
+    
+    # Check system resources
+    memory_info = get_memory_info()
+    components['memory'] = {
+        'status': 'healthy' if memory_info['percentage'] < 90 else 'degraded',
+        'used_mb': memory_info['used_mb'],
+        'total_mb': memory_info['total_mb'],
+        'percentage': memory_info['percentage']
+    }
+    if memory_info['percentage'] > 90:
+        issues.append('High memory usage')
+    
+    # Check disk space
+    disk_info = get_disk_info()
+    components['disk'] = {
+        'status': 'healthy' if disk_info['percentage'] < 90 else 'degraded',
+        'free_gb': disk_info['free_gb'],
+        'percentage': disk_info['percentage']
+    }
+    if disk_info['percentage'] > 90:
+        issues.append('Low disk space')
+    
+    # Determine overall status
+    overall_status = 'healthy'
+    if any(c['status'] == 'unhealthy' for c in components.values()):
+        overall_status = 'unhealthy'
+    elif any(c['status'] == 'degraded' for c in components.values()):
+        overall_status = 'degraded'
+    
+    return {
+        'status': overall_status,
+        'timestamp': datetime.now().isoformat(),
+        'version': '1.0.0',
+        'uptime': time.time() - app.config.get('start_time', time.time()),
+        'components': components,
+        'issues': issues,
+        'environment': {
+            'debug': DEBUG,
+            'prefetch_count': RABBITMQ_PREFETCH_COUNT
+        }
+    }
+
+def check_rabbitmq_connection():
+    """Check if RabbitMQ is accessible"""
+    try:
+        credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
+        parameters = pika.ConnectionParameters(
+            host=RABBITMQ_HOST,
+            port=RABBITMQ_PORT,
+            credentials=credentials,
+            connection_attempts=1,
+            retry_delay=0
+        )
+        connection = pika.BlockingConnection(parameters)
+        connection.close()
+        return True
+    except Exception as e:
+        logger.warning(f"RabbitMQ connection check failed: {e}")
+        return False
+
+def get_memory_info():
+    """Get memory usage information"""
+    try:
+        import psutil
+        memory = psutil.virtual_memory()
+        return {
+            'used_mb': round(memory.used / 1024 / 1024, 2),
+            'total_mb': round(memory.total / 1024 / 1024, 2),
+            'percentage': memory.percent
+        }
+    except:
+        # Fallback if psutil not available
+        return {
+            'used_mb': 0,
+            'total_mb': 0,
+            'percentage': 0
+        }
+
+def get_disk_info():
+    """Get disk usage information for ML directory"""
+    try:
+        import shutil
+        stat = shutil.disk_usage('/ML')
+        return {
+            'free_gb': round(stat.free / 1024 / 1024 / 1024, 2),
+            'percentage': round((stat.used / stat.total) * 100, 2)
+        }
+    except:
+        return {
+            'free_gb': 0,
+            'percentage': 0
+        }
 
 # Removed /segment endpoint - it will be replaced by RabbitMQ consumer
 
@@ -233,6 +375,9 @@ def start_rabbitmq_consumer():
             time.sleep(5)
 
 if __name__ == '__main__':
+    # Track startup time
+    app.config['start_time'] = time.time()
+    
     # Start RabbitMQ consumer in a separate thread
     consumer_thread = threading.Thread(target=start_rabbitmq_consumer)
     consumer_thread.daemon = True

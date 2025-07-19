@@ -43,8 +43,15 @@ COPY packages/backend/. .
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Set Node.js memory optimization flags
 ENV NODE_OPTIONS="--max-old-space-size=384 --expose-gc"
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:5001/api/health || exit 1
 
 # Start command will be provided by docker-compose
 CMD ["npm", "run", "dev"]
