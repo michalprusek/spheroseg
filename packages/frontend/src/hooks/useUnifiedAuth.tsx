@@ -530,7 +530,7 @@ export function useSession() {
     try {
       await refreshTokens();
       toast.success('Session extended');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to extend session');
     }
   }, [refreshTokens]);

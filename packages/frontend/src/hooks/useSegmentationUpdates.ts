@@ -86,7 +86,7 @@ export const useSegmentationUpdates = (options: UseSegmentationUpdatesOptions = 
         // First try the new endpoint
         const response = await apiClient.get('/api/segmentation/queue-status');
         responseData = response.data;
-      } catch (error) {
+      } catch (_error) {
         // If that fails, try the legacy endpoint
         const legacyResponse = await apiClient.get('/api/segmentation/queue');
         responseData = legacyResponse.data;
@@ -180,7 +180,7 @@ export const useSegmentationUpdates = (options: UseSegmentationUpdatesOptions = 
               // First try the new endpoint
               const response = await apiClient.get('/api/segmentation/queue-status');
               responseData = response.data;
-            } catch (error) {
+            } catch (_error) {
               // If that fails, try the legacy endpoint
               const legacyResponse = await apiClient.get('/api/segmentation/queue');
               responseData = legacyResponse.data;

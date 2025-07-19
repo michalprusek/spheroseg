@@ -47,7 +47,7 @@ const MockSignUp = ({ isLoggedIn = false }) => {
     try {
       await mockSignUp(email, password);
       mockToastSuccess('Account created successfully');
-    } catch (error) {
+    } catch (_error) {
       mockToastError('Email already in use');
     } finally {
       setIsLoading(false);

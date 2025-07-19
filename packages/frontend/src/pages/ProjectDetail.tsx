@@ -246,7 +246,7 @@ const ProjectDetail = () => {
 
       try {
         localStorage.setItem('spheroseg_current_project', cleanedId);
-      } catch (e) {
+      } catch (_e) {
         // Ignore storage errors
       }
 

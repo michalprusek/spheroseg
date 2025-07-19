@@ -160,7 +160,7 @@ export const useSocketConnection = (options: SocketOptions = {}) => {
 
       try {
         disconnect();
-      } catch (err) {
+      } catch (_err) {
         // Ignore errors when disconnecting on unmount
       }
     };

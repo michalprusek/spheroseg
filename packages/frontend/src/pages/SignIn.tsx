@@ -51,7 +51,7 @@ const SignIn = () => {
           setShowRetryButton(true);
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // Increment retry count on error
       const newRetryCount = retryCount + 1;
       setRetryCount(newRetryCount);

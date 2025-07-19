@@ -34,7 +34,7 @@ const MockSignIn = ({ isLoggedIn = false }) => {
     setIsLoading(true);
     try {
       await mockSignIn(email, password);
-    } catch (error) {
+    } catch (_error) {
       mockToastError('Invalid credentials');
     } finally {
       setIsLoading(false);

@@ -43,7 +43,7 @@ const MockRequestAccess = ({ isLoggedIn = false }) => {
     try {
       await mockRequestAccess({ email, name, organization, reason });
       mockToastSuccess('Access request submitted successfully');
-    } catch (error) {
+    } catch (_error) {
       mockToastError('Failed to submit access request');
     } finally {
       setIsLoading(false);
