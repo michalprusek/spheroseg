@@ -24,7 +24,7 @@ export const fetchImageData = async (projectId: string, imageId: string, signal?
 
       if (storedImagesJson) {
         const storedImages = JSON.parse(storedImagesJson);
-        const localImage = storedImages.find((img: any) => img.id === imageId);
+        const localImage = storedImages.find((img: unknown) => typeof img === 'object' && img !== null && 'id' in img && img.id === imageId);
 
         if (localImage) {
           logger.info(`Found local image ${imageId} in localStorage`);
@@ -335,7 +335,7 @@ export const fetchSegmentationData = async (
             ...polygon,
             id: polygon.id || `poly-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             type: polygon.type || 'external',
-            points: polygon.points.map((p: any) => {
+            points: polygon.points.map((p: unknown) => {
               // Handle both {x,y} and [x,y] formats
               if (Array.isArray(p)) {
                 return { x: p[0], y: p[1] };
@@ -359,7 +359,7 @@ export const fetchSegmentationData = async (
             ...polygon,
             id: polygon.id || `poly-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             type: polygon.type || 'external',
-            points: polygon.points.map((p: any) => {
+            points: polygon.points.map((p: unknown) => {
               // Handle both {x,y} and [x,y] formats
               if (Array.isArray(p)) {
                 return { x: p[0], y: p[1] };
@@ -519,7 +519,16 @@ export const deleteSegmentationData = async (projectId: string, imageId: string)
 /**
  * Fetch project data
  */
-export const fetchProjectData = async (projectId: string): Promise<any> => {
+interface ProjectData {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  [key: string]: unknown;
+}
+
+export const fetchProjectData = async (projectId: string): Promise<ProjectData> => {
   logger.info(`Fetching project data for projectId=${projectId}`);
 
   try {
@@ -537,7 +546,7 @@ export const fetchProjectData = async (projectId: string): Promise<any> => {
 /**
  * Fetch project images
  */
-export const fetchProjectImages = async (projectId: string): Promise<any[]> => {
+export const fetchProjectImages = async (projectId: string): Promise<ImageData[]> => {
   logger.info(`Fetching images for projectId=${projectId}`);
 
   try {
@@ -573,7 +582,14 @@ export const fetchImageSegmentationStatus = async (imageId: string): Promise<str
 /**
  * Trigger segmentation for an image
  */
-export const triggerSegmentation = async (imageId: string, parameters?: Record<string, any>): Promise<any> => {
+interface SegmentationResponse {
+  status: string;
+  message?: string;
+  task_id?: string;
+  [key: string]: unknown;
+}
+
+export const triggerSegmentation = async (imageId: string, parameters?: Record<string, unknown>): Promise<SegmentationResponse> => {
   logger.info(`Triggering segmentation for imageId=${imageId}`);
 
   try {
@@ -600,7 +616,15 @@ export const triggerSegmentation = async (imageId: string, parameters?: Record<s
 /**
  * Fetch segmentation queue status
  */
-export const fetchSegmentationQueueStatus = async (): Promise<any> => {
+interface SegmentationQueueStatus {
+  queueLength: number;
+  runningTasks: string[];
+  queuedTasks?: string[];
+  processingImages?: Array<{ id: string; name: string; projectId?: string }>;
+  [key: string]: unknown;
+}
+
+export const fetchSegmentationQueueStatus = async (): Promise<SegmentationQueueStatus> => {
   logger.info('Fetching segmentation queue status');
 
   try {
@@ -620,7 +644,7 @@ export const fetchSegmentationQueueStatus = async (): Promise<any> => {
 /**
  * Get polygons for an image
  */
-export const getPolygonsForImage = async (imageId: string, projectId: string): Promise<any[]> => {
+export const getPolygonsForImage = async (imageId: string, projectId: string): Promise<Polygon[]> => {
   try {
     logger.info(`Fetching polygons for image ${imageId} in project ${projectId}`);
 
@@ -633,7 +657,7 @@ export const getPolygonsForImage = async (imageId: string, projectId: string): P
     }
 
     // Extract polygons from segmentation data
-    let polygons: any[] = [];
+    let polygons: Polygon[] = [];
 
     if (segmentationData.result_data && segmentationData.result_data.polygons) {
       logger.info(`Found ${segmentationData.result_data.polygons.length} polygons in result_data for image ${imageId}`);

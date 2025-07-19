@@ -18,6 +18,7 @@ import {
 } from '../errorHandling';
 import logger from '../logger';
 import { AxiosError } from 'axios';
+import { toast } from 'sonner';
 
 // Mock dependencies
 vi.mock('../logger', () => ({
@@ -243,7 +244,7 @@ describe('errorHandling', () => {
         }),
       );
 
-      expect(require('sonner').toast.error).toHaveBeenCalledWith('Critical server error');
+      expect(toast.error).toHaveBeenCalledWith('Critical server error');
     });
 
     it('should log errors', () => {
@@ -259,7 +260,7 @@ describe('errorHandling', () => {
 
       expect(logger.error).toHaveBeenCalledWith('Error: Client error', expect.any(Object));
 
-      expect(require('sonner').toast.error).toHaveBeenCalledWith('Client error');
+      expect(toast.error).toHaveBeenCalledWith('Client error');
     });
 
     it('should log warnings', () => {
@@ -275,7 +276,7 @@ describe('errorHandling', () => {
 
       expect(logger.warn).toHaveBeenCalledWith('Warning: Validation warning', expect.any(Object));
 
-      expect(require('sonner').toast.warning).toHaveBeenCalledWith('Validation warning');
+      expect(toast.warning).toHaveBeenCalledWith('Validation warning');
     });
 
     it('should log info messages', () => {
@@ -291,7 +292,7 @@ describe('errorHandling', () => {
 
       expect(logger.info).toHaveBeenCalledWith('Info: Authentication info', expect.any(Object));
 
-      expect(require('sonner').toast.info).toHaveBeenCalledWith('Authentication info');
+      expect(toast.info).toHaveBeenCalledWith('Authentication info');
     });
 
     it('should not show toast when showToast is false', () => {

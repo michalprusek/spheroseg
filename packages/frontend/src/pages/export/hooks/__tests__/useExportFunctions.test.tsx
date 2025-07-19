@@ -398,7 +398,6 @@ describe('useExportFunctions', () => {
   });
 
   it('should attempt to fetch segmentation data if missing', async () => {
-    const apiClient = require('@/lib/apiClient').default;
     const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
 
     // Export all data
