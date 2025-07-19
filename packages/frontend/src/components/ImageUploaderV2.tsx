@@ -55,10 +55,10 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
     files,
     isUploading,
     uploadProgress,
-    activeUploads,
+    _activeUploads,
     selectFiles,
     uploadFiles,
-    cancelUpload,
+    _cancelUpload,
     cancelAllUploads,
     removeFile,
     clearFiles,
@@ -79,7 +79,7 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
     onFilesSelected: (selectedFiles) => {
       toast.info(t('uploader.filesSelected', { count: selectedFiles.length }, `${selectedFiles.length} files selected`));
     },
-    onUploadProgress: (progress, fileId) => {
+    onUploadProgress: (_progress, _fileId) => {
       // Individual file progress is handled by the hook
       // This is for any additional progress tracking needs
     },
@@ -101,7 +101,7 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
         );
       }
     },
-    onError: (error, file) => {
+    onError: (error, _file) => {
       toast.error(
         t('uploader.uploadError', { error: error.message }, `Upload error: ${error.message}`)
       );
