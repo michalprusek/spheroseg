@@ -33,8 +33,7 @@ export const initPerformanceMonitoring = () => {
 
       try {
         // Check if performance metrics endpoint is available
-        // Disable performance metrics if the endpoint doesn't exist
-        const performanceMetricsEnabled = false; // Disabled until backend endpoint is available
+        const performanceMetricsEnabled = import.meta.env.VITE_ENABLE_PERFORMANCE_METRICS === 'true'
         
         if (performanceMetricsEnabled) {
           // Use fetch instead of sendBeacon for better error handling
@@ -161,8 +160,8 @@ export const usePerformance = () => {
     if (initialRenderTime.current === null) {
       initialRenderTime.current = performance.now();
 
-      // Report initial load time to backend (disabled until backend endpoint is available)
-      const frontendMetricsEnabled = false; // Disabled until backend endpoint is available
+      // Report initial load time to backend
+      const frontendMetricsEnabled = import.meta.env.VITE_ENABLE_FRONTEND_METRICS === 'true'
       
       if (frontendMetricsEnabled && navigator.sendBeacon) {
         const metrics = {
@@ -225,8 +224,8 @@ export const usePerformance = () => {
       rating: metric.rating,
     });
 
-    // Optionally send to backend (disabled until backend endpoint is available)
-    const webVitalsMetricsEnabled = false; // Disabled until backend endpoint is available
+    // Optionally send to backend
+    const webVitalsMetricsEnabled = import.meta.env.VITE_ENABLE_WEB_VITALS_METRICS === 'true'
     
     if (webVitalsMetricsEnabled && navigator.sendBeacon) {
       navigator.sendBeacon(
@@ -278,8 +277,8 @@ export const useImageLoadPerformance = () => {
         timestamp: new Date().toISOString(),
       };
 
-      // Disable image load metrics until backend endpoint is available
-      const imageLoadMetricsEnabled = false; // Disabled until backend endpoint is available
+      // Send image load metrics if enabled
+      const imageLoadMetricsEnabled = import.meta.env.VITE_ENABLE_IMAGE_METRICS === 'true'
       
       if (imageLoadMetricsEnabled && navigator.sendBeacon) {
         navigator.sendBeacon('/api/metrics/image-load', JSON.stringify(metrics));
