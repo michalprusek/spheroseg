@@ -84,6 +84,45 @@ router.get('/errors', requireAdmin, (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/monitoring/errors
+ * Report errors from frontend
+ */
+router.post('/errors', async (req: Request, res: Response) => {
+  try {
+    const { errors } = req.body;
+    
+    if (!errors || !Array.isArray(errors)) {
+      return res.status(400).json({ error: 'Invalid error report format' });
+    }
+    
+    // Log each error
+    for (const errorReport of errors) {
+      logger.error('Frontend error reported', {
+        timestamp: errorReport.timestamp,
+        error: errorReport.error,
+        userAgent: errorReport.userAgent,
+        url: errorReport.url,
+        userId: errorReport.userId,
+        sessionId: errorReport.sessionId,
+        environment: errorReport.environment,
+        release: errorReport.release,
+        browserInfo: errorReport.browserInfo,
+      });
+    }
+    
+    // TODO: Store errors in database or send to error tracking service
+    
+    res.json({ 
+      success: true, 
+      message: `Received ${errors.length} error reports` 
+    });
+  } catch (error) {
+    logger.error('Error processing error reports', error);
+    res.status(500).json({ error: 'Failed to process error reports' });
+  }
+});
+
+/**
  * GET /api/monitoring/performance
  * Performance tracking and analysis
  */
