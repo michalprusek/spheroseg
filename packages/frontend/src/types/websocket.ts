@@ -2,10 +2,12 @@
  * WebSocket types for the SpherosegV4 application
  */
 
-export interface BatchMessage {
+import type { SegmentationStatus } from '@spheroseg/types';
+
+export interface BatchMessage<T = unknown> {
   id: string;
   event: string;
-  data: any;
+  data: T;
   timestamp: number;
 }
 
@@ -41,7 +43,7 @@ export interface BatchAcknowledgment {
   batchId: string;
   results: Array<{
     messageId: string;
-    data?: any;
+    data?: unknown;
     error?: string;
   }>;
 }
@@ -74,7 +76,7 @@ export type WebSocketEventMap = {
   };
   'image:updated': {
     imageId: string;
-    changes: Record<string, any>;
+    changes: Record<string, unknown>;
   };
   'image:deleted': {
     imageId: string;
@@ -88,7 +90,7 @@ export type WebSocketEventMap = {
   };
   'cell:updated': {
     cellId: string;
-    changes: Record<string, any>;
+    changes: Record<string, unknown>;
   };
   'cell:deleted': {
     cellId: string;
@@ -105,7 +107,7 @@ export type WebSocketEventMap = {
 };
 
 // Type-safe event emitter interface
-export interface TypedEventEmitter<T extends Record<string, any>> {
+export interface TypedEventEmitter<T extends Record<string, unknown>> {
   on<K extends keyof T>(event: K, handler: (data: T[K]) => void): void;
   off<K extends keyof T>(event: K, handler?: (data: T[K]) => void): void;
   emit<K extends keyof T>(event: K, data: T[K]): void;

@@ -11,6 +11,7 @@ import { storeUploadedImages } from '@/api/projectImages';
 import { toast } from 'sonner';
 import { generateTiffPreview } from '@/utils/tiffPreview';
 import { generateClientSidePreview, generateFallbackPreview } from '@/utils/clientSidePreview';
+import type { Image } from '@spheroseg/types';
 
 interface UploadedFile {
   id: string;
@@ -20,7 +21,7 @@ interface UploadedFile {
 
 interface ImageUploaderProps {
   projectId: string;
-  onUploadComplete: (projectId: string, uploadedImages: any[]) => void;
+  onUploadComplete: (projectId: string, uploadedImages: Image[]) => void;
   maxSize?: number;
   accept?: string[];
   dropzoneText?: string;
