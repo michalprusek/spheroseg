@@ -4,6 +4,17 @@ import { getLogger } from '@/utils/logging/unifiedLogger';
 // Get logger for performance monitoring
 const logger = getLogger('performance');
 
+// Web Vitals metric type
+interface WebVitalsMetric {
+  name: string;
+  value: number;
+  id: string;
+  rating?: 'good' | 'needs-improvement' | 'poor';
+  delta?: number;
+  entries?: PerformanceEntry[];
+  navigationType?: 'navigate' | 'reload' | 'back-forward' | 'back-forward-cache' | 'prerender' | 'restore';
+}
+
 /**
  * Initialize performance monitoring
  */
@@ -216,7 +227,7 @@ export const usePerformance = () => {
   });
 
   // Helper to send metrics to analytics
-  const sendToAnalytics = useCallback((metric: unknown) => {
+  const sendToAnalytics = useCallback((metric: WebVitalsMetric) => {
     // You can implement any analytics service here
     logger.debug(`Web Vitals: ${metric.name}`, { 
       value: metric.value,
@@ -225,7 +236,7 @@ export const usePerformance = () => {
     });
 
     // Optionally send to backend
-    const webVitalsMetricsEnabled = import.meta.env.VITE_ENABLE_WEB_VITALS_METRICS === 'true'
+    const webVitalsMetricsEnabled = import.meta.env.VITE_ENABLE_WEB_VITALS_METRICS === 'true';
     
     if (webVitalsMetricsEnabled && navigator.sendBeacon) {
       navigator.sendBeacon(
