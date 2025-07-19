@@ -127,7 +127,7 @@ const ProjectDetail = () => {
       // Okamžitě načteme data projektu při otevření stránky
       refreshData();
 
-      const handleSegmentationUpdate = (data: unknown) => {
+      const handleSegmentationUpdate = (data: any) => {
         if (!isComponentMounted) return;
 
         logger.debug('Received segmentation update:', data);
