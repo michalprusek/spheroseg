@@ -177,8 +177,10 @@ class UserProfileService {
             const data = localStorage.getItem(key);
             if (data) {
               const images = JSON.parse(data);
-              const filteredImages = images.filter((img: any) => {
-                const createdAt = img.createdAt || img.uploadedAt;
+              const filteredImages = images.filter((img: unknown) => {
+                if (typeof img !== 'object' || img === null) return true;
+                const imgObj = img as { createdAt?: string | Date; uploadedAt?: string | Date };
+                const createdAt = imgObj.createdAt || imgObj.uploadedAt;
                 if (!createdAt) return true; // Keep if no timestamp
                 return now - new Date(createdAt).getTime() < 7 * 24 * 60 * 60 * 1000;
               });
@@ -269,8 +271,10 @@ class UserProfileService {
             const data = localStorage.getItem(key);
             if (data) {
               const images = JSON.parse(data);
-              const filteredImages = images.filter((img: any) => {
-                const createdAt = img.createdAt || img.uploadedAt;
+              const filteredImages = images.filter((img: unknown) => {
+                if (typeof img !== 'object' || img === null) return false;
+                const imgObj = img as { createdAt?: string | Date; uploadedAt?: string | Date };
+                const createdAt = imgObj.createdAt || imgObj.uploadedAt;
                 if (!createdAt) return false; // Remove if no timestamp
                 return now - new Date(createdAt).getTime() < 24 * 60 * 60 * 1000; // 1 day
               });
@@ -657,7 +661,7 @@ class UserProfileService {
         { localKey: 'language', dbKey: 'language', category: 'ui' },
       ];
 
-      const settingsToUpdate: Record<string, { value: any; category: string }> = {};
+      const settingsToUpdate: Record<string, { value: unknown; category: string }> = {};
 
       for (const migration of migrationsMap) {
         const localValue = localStorage.getItem(migration.localKey);

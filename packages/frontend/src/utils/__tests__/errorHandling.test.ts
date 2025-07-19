@@ -302,9 +302,9 @@ describe('errorHandling', () => {
         showToast: false,
       });
 
-      expect(require('sonner').toast.error).not.toHaveBeenCalled();
-      expect(require('sonner').toast.warning).not.toHaveBeenCalled();
-      expect(require('sonner').toast.info).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalled();
+      expect(toast.warning).not.toHaveBeenCalled();
+      expect(toast.info).not.toHaveBeenCalled();
     });
 
     it('should not log error when logError is false', () => {

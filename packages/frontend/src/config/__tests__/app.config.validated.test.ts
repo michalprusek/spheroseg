@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { z } from 'zod';
+import { AppConfigSchema } from '../app.config.validated';
 
 // Mock import.meta.env
 vi.mock('import.meta.env', () => ({
@@ -34,8 +35,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid email', () => {
-      const { AppConfigSchema } = require('../app.config.validated');
-
       const invalidConfig = {
         app: { name: 'Test', fullName: 'Test App', description: 'Test', version: '1.0.0' },
         contact: {
@@ -51,8 +50,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid version format', () => {
-      const { AppConfigSchema } = require('../app.config.validated');
-
       const invalidConfig = {
         app: {
           name: 'Test',
@@ -67,8 +64,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid URL', () => {
-      const { AppConfigSchema } = require('../app.config.validated');
-
       const invalidConfig = {
         organization: {
           primary: {
@@ -85,8 +80,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid Twitter username', () => {
-      const { AppConfigSchema } = require('../app.config.validated');
-
       const invalidConfig = {
         social: {
           twitter: {
