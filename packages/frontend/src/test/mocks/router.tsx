@@ -10,15 +10,46 @@ export const mockLocation = {
   state: undefined,
   key: 'default',
 };
+export const mockParams: Record<string, string> = {};
+export const mockSearchParams = new URLSearchParams();
+export const mockSetSearchParams = vi.fn();
+
+// Helper functions to update mocks
+export const updateMockLocation = (updates: Partial<typeof mockLocation>) => {
+  Object.assign(mockLocation, updates);
+};
+
+export const updateMockParams = (params: Record<string, string>) => {
+  Object.keys(mockParams).forEach(key => delete mockParams[key]);
+  Object.assign(mockParams, params);
+};
+
+export const updateMockSearchParams = (params: Record<string, string>) => {
+  mockSearchParams.forEach((_, key) => mockSearchParams.delete(key));
+  Object.entries(params).forEach(([key, value]) => mockSearchParams.set(key, value));
+};
 
 // Mock hooks
 export const mockUseNavigate = () => mockNavigate;
 export const mockUseLocation = () => mockLocation;
-export const mockUseParams = () => ({});
+export const mockUseParams = () => mockParams;
 export const mockUseSearchParams = () => {
-  const searchParams = new URLSearchParams();
-  const setSearchParams = vi.fn();
-  return [searchParams, setSearchParams] as const;
+  return [mockSearchParams, mockSetSearchParams] as const;
+};
+
+// Reset function for tests
+export const resetRouterMocks = () => {
+  mockNavigate.mockClear();
+  updateMockLocation({
+    pathname: '/',
+    search: '',
+    hash: '',
+    state: undefined,
+    key: 'default',
+  });
+  updateMockParams({});
+  updateMockSearchParams({});
+  mockSetSearchParams.mockClear();
 };
 
 // Mock Link component

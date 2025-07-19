@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { vi, afterEach } from 'vitest';
+import { vi, afterEach, beforeEach } from 'vitest';
 import ResizeObserver from 'resize-observer-polyfill';
 import './mocks/i18next';
 import './mocks/router';
@@ -8,6 +8,10 @@ import './mocks/logger';
 import './mocks/config';
 import './mocks/radix';
 import './mocks/apiClient';
+
+// Import new mocks
+import { setupLocalStorageMock } from './mocks/localStorage';
+import { setupWebSocketMocks } from './mocks/websocket';
 
 // Fix missing globals - use direct assignment
 // Store references first to avoid any timing issues
@@ -20,6 +24,12 @@ global.clearInterval = nodeClearInterval;
 global.setInterval = nodeSetInterval;
 global.clearTimeout = nodeClearTimeout;
 global.setTimeout = nodeSetTimeout;
+
+// Setup localStorage mock
+setupLocalStorageMock();
+
+// Setup WebSocket mocks
+setupWebSocketMocks();
 
 // Improve test performance by reducing console noise
 global.console.error = vi.fn();
@@ -76,9 +86,18 @@ afterAll(() => server.close());
 afterEach(() => server.resetHandlers());
 */
 
+// Import router reset
+import { resetRouterMocks } from './mocks/router';
+
 // Reset all mocks after each test
 afterEach(() => {
   vi.clearAllMocks();
+  resetRouterMocks();
+  
+  // Clear localStorage
+  if (global.localStorage) {
+    global.localStorage.clear();
+  }
 });
 
 // Handle test failures better
