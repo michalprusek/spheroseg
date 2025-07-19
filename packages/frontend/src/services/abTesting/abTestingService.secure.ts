@@ -68,7 +68,7 @@ class ProductionLogger implements Logger {
     }
   }
 
-  private sendToMonitoring(message: string, error?: unknown): void {
+  private sendToMonitoring(message: string, _error?: unknown): void {
     // Implement error monitoring integration
     // e.g., Sentry.captureException(error, { extra: { message } });
   }

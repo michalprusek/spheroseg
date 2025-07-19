@@ -258,7 +258,7 @@ class PerformanceMetricsService {
         });
         longTaskObserver.observe({ entryTypes: ['longtask'] });
         this.observers.set('longtask', longTaskObserver);
-      } catch (e) {
+      } catch (_e) {
         // Long task observer not supported
       }
 
@@ -286,7 +286,7 @@ class PerformanceMetricsService {
         });
         resourceObserver.observe({ entryTypes: ['resource'] });
         this.observers.set('resource', resourceObserver);
-      } catch (e) {
+      } catch (_e) {
         // Resource observer not supported
       }
     }
@@ -333,7 +333,7 @@ class PerformanceMetricsService {
           webVitals: this.getWebVitals(),
         });
       }
-    } catch (error) {
+    } catch (_error) {
       // Re-add metrics on error
       this.metrics.unshift(...metricsToSend);
     }

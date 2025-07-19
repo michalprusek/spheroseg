@@ -12,28 +12,28 @@ export function RouterErrorBoundary() {
   useEffect(() => {
     if (error) {
       let _errorType = ErrorType.UNKNOWN;
-      let errorMessage = 'An unexpected error occurred';
+      let _errorMessage = 'An unexpected error occurred';
       
       if (isRouteErrorResponse(error)) {
         switch (error.status) {
           case 404:
             _errorType = ErrorType.NOT_FOUND;
-            errorMessage = error.data?.message || 'Page not found';
+            _errorMessage = error.data?.message || 'Page not found';
             break;
           case 401:
             _errorType = ErrorType.AUTHENTICATION;
-            errorMessage = 'Authentication required';
+            _errorMessage = 'Authentication required';
             break;
           case 403:
             _errorType = ErrorType.AUTHORIZATION;
-            errorMessage = 'Access denied';
+            _errorMessage = 'Access denied';
             break;
           default:
             _errorType = error.status >= 500 ? ErrorType.SERVER : ErrorType.CLIENT;
-            errorMessage = error.data?.message || error.statusText || 'An error occurred';
+            _errorMessage = error.data?.message || error.statusText || 'An error occurred';
         }
       } else if (error instanceof Error) {
-        errorMessage = error.message;
+        _errorMessage = error.message;
       }
       
       handleError(error, {

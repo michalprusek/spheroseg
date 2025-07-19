@@ -115,7 +115,7 @@ export const getAccessToken = (validate = false, removeIfInvalid = false): strin
       if (tokenMatch && tokenMatch[1]) {
         return tokenMatch[1];
       }
-    } catch (e) {
+    } catch (_e) {
       // Pokud selže i záložní plán, vrátíme null
     }
 
@@ -354,7 +354,7 @@ export const isValidToken = (token: string | null, logErrors = true): boolean =>
 
       // V development módu a pro účely debugu budeme méně přísní
       return true;
-    } catch (error) {
+    } catch (_error) {
       if (logErrors) logger.warn('[authService] Invalid token: cannot decode payload');
       return false;
     }

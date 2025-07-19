@@ -115,7 +115,7 @@ class ApiClient {
           await this.refreshToken();
           // Retry the original request
           return this.request(error.config!);
-        } catch (refreshError) {
+        } catch (_refreshError) {
           // Refresh failed, logout user
           removeTokens();
           // Redirect to login page
@@ -245,7 +245,7 @@ class ApiClient {
         if (onRejected) {
           try {
             return await onRejected(apiError);
-          } catch (interceptorError) {
+          } catch (_interceptorError) {
             // Continue with original error if interceptor fails
           }
         }
