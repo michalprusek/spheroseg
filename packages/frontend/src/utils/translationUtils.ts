@@ -17,6 +17,23 @@ export interface TranslationKey {
 }
 
 /**
+ * Type representing a nested translation object with string values at leaf nodes
+ */
+export type TranslationObject = {
+  [key: string]: string | TranslationObject;
+};
+
+/**
+ * Type for a record containing only translation objects
+ */
+export type TranslationRecord = Record<string, TranslationObject | string>;
+
+/**
+ * Type for the function parameter used to evaluate translation content
+ */
+export type TranslationEvaluator = () => TranslationRecord;
+
+/**
  * Check if all keys in the reference object exist in the target object
  *
  * @param reference Reference object (usually English translations)
@@ -24,7 +41,7 @@ export interface TranslationKey {
  * @param path Current path in the object hierarchy
  * @returns Array of missing key paths
  */
-export function checkKeysExist(reference: Record<string, any>, target: Record<string, any>, path = ''): string[] {
+export function checkKeysExist(reference: TranslationRecord, target: TranslationRecord, path = ''): string[] {
   const missingKeys: string[] = [];
 
   for (const key in reference) {
@@ -55,10 +72,10 @@ export function checkKeysExist(reference: Record<string, any>, target: Record<st
  * @param target Target object to check against
  * @returns Array of missing keys with their paths and values
  */
-export function findMissingKeys(reference: Record<string, any>, target: Record<string, any>): TranslationKey[] {
+export function findMissingKeys(reference: TranslationRecord, target: TranslationRecord): TranslationKey[] {
   const missingKeys: TranslationKey[] = [];
 
-  function findMissingKeysRecursive(refObj: Record<string, any>, targetObj: Record<string, any>, path = '') {
+  function findMissingKeysRecursive(refObj: TranslationRecord, targetObj: TranslationRecord, path = '') {
     for (const key in refObj) {
       const currentPath = path ? `${path}.${key}` : key;
 
@@ -81,7 +98,7 @@ export function findMissingKeys(reference: Record<string, any>, target: Record<s
     }
   }
 
-  function collectAllNestedKeys(obj: Record<string, any>, basePath: string) {
+  function collectAllNestedKeys(obj: TranslationRecord, basePath: string) {
     for (const key in obj) {
       const currentPath = `${basePath}.${key}`;
 
@@ -108,8 +125,8 @@ export function findMissingKeys(reference: Record<string, any>, target: Record<s
  * @param langCode Language code for the target language
  * @returns Object with missing translations
  */
-export function generateMissingTranslations(missingKeys: TranslationKey[], langCode: string): Record<string, any> {
-  const result: Record<string, any> = {};
+export function generateMissingTranslations(missingKeys: TranslationKey[], langCode: string): TranslationRecord {
+  const result: TranslationRecord = {};
 
   missingKeys.forEach((key) => {
     const pathParts = key.path.split('.');
@@ -138,13 +155,13 @@ export function generateMissingTranslations(missingKeys: TranslationKey[], langC
  * @param content File content as string
  * @returns Parsed translations object
  */
-export function parseTranslations(content: string): Record<string, any> {
+export function parseTranslations(content: string): TranslationRecord {
   try {
     const objMatch = content.match(/export default (\{[\s\S]*\})/);
     if (objMatch && objMatch[1]) {
       // Convert the string to a JavaScript object
       // Note: This is not safe for production, but works for our script
-      return Function(`return ${objMatch[1]}`)();
+      return (Function(`return ${objMatch[1]}`)() as TranslationRecord);
     }
   } catch (error) {
     logger.error('Error parsing translation file:', { error });
@@ -159,7 +176,7 @@ export function parseTranslations(content: string): Record<string, any> {
  * @param path Current path in the object hierarchy
  * @returns Array of key paths
  */
-export function extractAllKeys(obj: Record<string, any>, path = ''): string[] {
+export function extractAllKeys(obj: TranslationRecord, path = ''): string[] {
   const keys: string[] = [];
 
   for (const key in obj) {
@@ -185,7 +202,7 @@ export function extractAllKeys(obj: Record<string, any>, path = ''): string[] {
  * @param path Current path in the object hierarchy
  * @returns Array of placeholder translations
  */
-export function findPlaceholderTranslations(translations: Record<string, any>, langCode: string, path = ''): string[] {
+export function findPlaceholderTranslations(translations: TranslationRecord, langCode: string, path = ''): string[] {
   const placeholders: string[] = [];
 
   for (const key in translations) {
@@ -214,8 +231,8 @@ export function findPlaceholderTranslations(translations: Record<string, any>, l
  * @returns Generated code as string
  */
 export function generateMissingCode(
-  missingTranslations: Record<string, any>,
-  existingTranslations: Record<string, any>,
+  missingTranslations: TranslationRecord,
+  existingTranslations: TranslationRecord,
 ): string {
   let code = '';
 
@@ -251,8 +268,8 @@ export function generateMissingCode(
  * @returns Generated code as string
  */
 export function generateNestedCode(
-  missing: Record<string, any>,
-  existing: Record<string, any>,
+  missing: TranslationRecord,
+  existing: TranslationRecord,
   parentPath: string,
 ): string {
   let code = '';

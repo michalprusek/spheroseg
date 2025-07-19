@@ -1,5 +1,5 @@
 import { configService } from '@/config';
-import { useStore } from '@/store';
+import { getAccessToken, clearAuthTokens } from '@/services/authService';
 import toastService from '@/services/toastService';
 import logger from '@/utils/logger';
 import type { 
@@ -94,7 +94,7 @@ class ApiClient {
     // Request interceptor for authentication
     this.addRequestInterceptor((config) => {
       if (!config.skipAuth) {
-        const token = useStore.getState().tokens?.accessToken;
+        const token = getAccessToken();
         if (token) {
           config.headers = {
             ...config.headers,
@@ -116,7 +116,9 @@ class ApiClient {
           return this.request(error.config!);
         } catch (refreshError) {
           // Refresh failed, logout user
-          useStore.getState().logout();
+          clearAuthTokens();
+          // Redirect to login page
+          window.location.href = '/login';
           if (error.config?.showErrorToast) {
             toastService.error('Session expired. Please login again.');
           }
@@ -510,6 +512,15 @@ class ApiClient {
       data: error,
       config,
     };
+  }
+
+  /**
+   * Refresh authentication token
+   */
+  private async refreshToken(): Promise<void> {
+    // This is a placeholder - in a real implementation, this would call the refresh endpoint
+    // For now, we'll just throw an error to trigger logout
+    throw new Error('Token refresh not implemented');
   }
 
   /**

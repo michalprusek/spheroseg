@@ -6,7 +6,7 @@
 interface PollTask {
   id: string;
   endpoint: string;
-  callback: (data: any) => void;
+  callback: (data: unknown) => void;
   interval: number;
   lastPoll: number;
   retryCount: number;
@@ -28,7 +28,7 @@ class PollingManager {
   register(
     id: string,
     endpoint: string,
-    callback: (data: any) => void,
+    callback: (data: unknown) => void,
     interval: number = 30000,
     maxRetries: number = 30,
   ): void {
@@ -132,8 +132,10 @@ class PollingManager {
         // Increase interval exponentially to reduce load
         task.interval = Math.min(task.interval * 1.2, 60000); // Max 1 minute
       }
-    } catch (error: any) {
-      if (error?.response?.status === 429) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      
+      if (axiosError.response?.status === 429) {
         // Rate limited - apply global backoff
         console.warn('Rate limit hit, applying global backoff');
         this.rateLimitBackoff = Date.now() + this.RATE_LIMIT_COOLDOWN;
@@ -142,11 +144,11 @@ class PollingManager {
         for (const t of this.tasks.values()) {
           t.interval = Math.min(t.interval * 2, this.MAX_BACKOFF);
         }
-      } else if (error?.response?.status === 401) {
+      } else if (axiosError.response?.status === 401) {
         // Authentication error - stop all polling
         console.error('Authentication error, stopping all polling');
         this.stopAll();
-      } else if (error?.response?.status === 404) {
+      } else if (axiosError.response?.status === 404) {
         // Not found - might be normal for new images
         // Continue polling but with increased interval
         task.interval = Math.min(task.interval * 1.5, 120000); // Max 2 minutes

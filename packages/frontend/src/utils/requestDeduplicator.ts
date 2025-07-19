@@ -3,19 +3,19 @@
  * Especially useful for preventing rate limiting issues
  */
 
-interface PendingRequest {
-  promise: Promise<any>;
+interface PendingRequest<T = unknown> {
+  promise: Promise<T>;
   timestamp: number;
 }
 
 class RequestDeduplicator {
-  private pendingRequests: Map<string, PendingRequest> = new Map();
+  private pendingRequests: Map<string, PendingRequest<unknown>> = new Map();
   private readonly CACHE_DURATION = 5000; // 5 seconds
 
   /**
    * Get a unique key for the request
    */
-  private getKey(url: string, method: string = 'GET', body?: any): string {
+  private getKey(url: string, method: string = 'GET', body?: unknown): string {
     const bodyStr = body ? JSON.stringify(body) : '';
     return `${method}:${url}:${bodyStr}`;
   }
@@ -40,7 +40,7 @@ class RequestDeduplicator {
     requestFn: () => Promise<T>,
     options?: {
       method?: string;
-      body?: any;
+      body?: unknown;
       skipDedup?: boolean;
     },
   ): Promise<T> {

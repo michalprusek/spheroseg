@@ -6,6 +6,37 @@ import { createLogger } from '@/utils/logging/unifiedLogger';
 
 const logger = createLogger('statsMapper');
 
+/**
+ * Basic activity item type
+ */
+export interface ActivityItem {
+  id: string | number;
+  type?: string;
+  timestamp?: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Project item type
+ */
+export interface ProjectItem {
+  id: string | number;
+  name?: string;
+  timestamp?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Image item type
+ */
+export interface ImageItem {
+  id: string | number;
+  name?: string;
+  timestamp?: string;
+  [key: string]: unknown;
+}
+
 // API response format from backend
 export interface ApiUserStatistics {
   // New format property names
@@ -18,9 +49,9 @@ export interface ApiUserStatistics {
   storageUsedBytes: string;
   storageLimitBytes: string;
   storageUsedMB: number;
-  recentActivity: any[];
-  recentProjects: any[];
-  recentImages: any[];
+  recentActivity: ActivityItem[];
+  recentProjects: ProjectItem[];
+  recentImages: ImageItem[];
   comparisons: {
     projectsThisMonth: number;
     projectsLastMonth: number;
@@ -41,9 +72,9 @@ export interface ApiUserStatistics {
   storage_used_bytes?: string;
   storage_limit_bytes?: string;
   last_login?: string;
-  recent_activity?: any[];
-  recent_projects?: any[];
-  recent_images?: any[];
+  recent_activity?: ActivityItem[];
+  recent_projects?: ProjectItem[];
+  recent_images?: ImageItem[];
   projects_this_month?: number;
   projects_last_month?: number;
   projects_change?: number;
@@ -65,7 +96,7 @@ export interface UserStatistics {
 
 // Extended format for StatsOverview component
 export interface ExtendedUserStatistics extends UserStatistics {
-  recentActivity: any[];
+  recentActivity: ActivityItem[];
   comparisons: {
     projectsThisMonth: number;
     projectsLastMonth: number;

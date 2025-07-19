@@ -62,7 +62,7 @@ const minimalEnFallback = {
 };
 
 export async function initializeTranslations() {
-  let en, cs, de, es, fr, zh;
+  let en;
 
   try {
     en = await loadSingleTranslation(() => import('../translations/en'), minimalEnFallback);

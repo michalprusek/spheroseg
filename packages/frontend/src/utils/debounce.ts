@@ -10,7 +10,7 @@
  * @param options.maxWait The maximum time func is allowed to be delayed before it's invoked
  * @returns The debounced function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number,
   options: {
@@ -20,7 +20,7 @@ export function debounce<T extends (...args: any[]) => any>(
   } = {},
 ): T & { cancel: () => void; flush: () => void } {
   let timeout: NodeJS.Timeout | null = null;
-  let result: any;
+  let result: ReturnType<T>;
   let lastCallTime: number | null = null;
   let lastInvokeTime = 0;
   const { leading = false, trailing = true, maxWait } = options;
@@ -101,13 +101,13 @@ export function debounce<T extends (...args: any[]) => any>(
   }
 
   let lastArgs: IArguments | undefined;
-  let lastThis: any;
+  let lastThis: ThisParameterType<T>;
 
-  const debounced = function (this: any, ...args: any[]) {
+  const debounced = function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     const time = Date.now();
     const isInvoking = shouldInvoke(time);
 
-    lastArgs = arguments as any;
+    lastArgs = arguments as IArguments;
     lastThis = this;
     lastCallTime = time;
 
@@ -136,7 +136,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Simple debounce function for basic use cases
  */
-export function simpleDebounce<T extends (...args: any[]) => void>(
+export function simpleDebounce<T extends (...args: unknown[]) => void>(
   func: T,
   delay: number,
 ): (...args: Parameters<T>) => void {

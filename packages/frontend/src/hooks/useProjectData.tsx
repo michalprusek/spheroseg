@@ -442,20 +442,20 @@ export const useProjectData = (projectId: string | undefined) => {
           }
       };
 
-      const handleConnectError = (err: any) => {
+      const handleConnectError = (err: unknown) => {
           if (!isComponentMounted) return;
           // Log the full error object for more details
           console.error('WebSocket: Connection Error:', err);
           // Only show toast for persistent errors, not during initial connection attempts
           if (socket.io.attempts > 2) {
-              toast.error(`WebSocket connection failed: ${err.message}`, {
+              toast.error(`WebSocket connection failed: ${err instanceof Error ? err.message : String(err)}`, {
                   id: 'ws-connect-error',
                   duration: 3000
               });
           }
       };
 
-      const handleDisconnect = (reason: string, description?: any) => {
+      const handleDisconnect = (reason: string, description?: unknown) => {
           if (!isComponentMounted) return;
           // Log description if available (added in newer socket.io versions)
           console.log('WebSocket: Disconnected. Reason:', reason, 'Description:', description);

@@ -410,8 +410,7 @@ export const useSegmentationV2 = (
       setTimeout(() => {
         hasFetchedRef.current.delete(fetchKey);
       }, 5000); // Keep it for 5 seconds to prevent rapid re-fetches
-    } catch (error: any) {
-      // Explicitly type error as any for now
+    } catch (error) {
       // Check if component is still mounted before updating state
       if (!isMounted) return;
 

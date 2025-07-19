@@ -24,9 +24,9 @@ export interface LogEntry {
   level: LogLevel;
   namespace: string;
   message: string;
-  data?: any;
+  data?: unknown;
   error?: Error;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 export interface LoggerConfig {
@@ -101,20 +101,20 @@ class UnifiedLogger {
 
   // Core logging methods
 
-  debug(message: string, data?: any, context?: Record<string, any>): void {
+  debug(message: string, data?: unknown, context?: Record<string, unknown>): void {
     this.log(LogLevel.DEBUG, message, data, context);
   }
 
-  info(message: string, data?: any, context?: Record<string, any>): void {
+  info(message: string, data?: unknown, context?: Record<string, unknown>): void {
     this.log(LogLevel.INFO, message, data, context);
   }
 
-  warn(message: string, data?: any, context?: Record<string, any>): void {
+  warn(message: string, data?: unknown, context?: Record<string, unknown>): void {
     this.log(LogLevel.WARN, message, data, context);
   }
 
   error(message: string, error?: Error | any, context?: Record<string, any>): void {
-    let errorData: any = {};
+    let errorData: Record<string, unknown> = {};
     
     if (error instanceof Error) {
       errorData = { error: error.message, stack: error.stack };
@@ -136,7 +136,7 @@ class UnifiedLogger {
 
   // Main logging function
 
-  private log(level: LogLevel, message: string, data?: any, context?: Record<string, any>): void {
+  private log(level: LogLevel, message: string, data?: unknown, context?: Record<string, unknown>): void {
     // Check if logging is enabled for this level
     if (level < this.config.level) {
       return;
@@ -374,23 +374,23 @@ export function overrideConsole(): void {
     error: console.error,
   };
 
-  console.log = (...args: any[]) => {
+  console.log = (...args: unknown[]) => {
     globalLogger.info(args.map((arg) => String(arg)).join(' '));
   };
 
-  console.debug = (...args: any[]) => {
+  console.debug = (...args: unknown[]) => {
     globalLogger.debug(args.map((arg) => String(arg)).join(' '));
   };
 
-  console.info = (...args: any[]) => {
+  console.info = (...args: unknown[]) => {
     globalLogger.info(args.map((arg) => String(arg)).join(' '));
   };
 
-  console.warn = (...args: any[]) => {
+  console.warn = (...args: unknown[]) => {
     globalLogger.warn(args.map((arg) => String(arg)).join(' '));
   };
 
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     const message = args[0];
     const error = args[1];
     if (args.length > 1 && (error instanceof Error || (error && typeof error === 'object'))) {
