@@ -1,16 +1,9 @@
-import { useEffect, useState } from 'react';
 import { useTranslations } from '@/hooks/useTranslations';
 import getAssetUrl from '@/utils/getAssetUrl';
 import { appConfig } from '@/config/app.config';
 
 const About = () => {
   const { t } = useTranslations();
-  const [forceUpdate, setForceUpdate] = useState(0);
-
-  useEffect(() => {
-    console.log(`Language in About component changed`);
-    setForceUpdate((prev) => prev + 1);
-  }, []);
 
   return (
     <>

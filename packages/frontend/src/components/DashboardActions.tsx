@@ -11,7 +11,7 @@ interface DashboardActionsProps {
   sortOptions?: Array<{ field: string; label: string }>;
 }
 
-const DashboardActions = ({ viewMode, setViewMode, onSort, sortOptions = [] }: DashboardActionsProps) => {
+const DashboardActions = ({ viewMode, setViewMode, onSort: _onSort, sortOptions: _sortOptions = [] }: DashboardActionsProps) => {
   const { t } = useLanguage();
 
   return (

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Microscope, Github, Mail, Heart } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -16,12 +16,6 @@ import zhTranslations from '@/translations/zh';
 const ThemedFooterComponent = () => {
   const { language } = useLanguage();
   const { theme } = useTheme();
-  const [forceUpdate, setForceUpdate] = useState(0);
-
-  // Force component to re-render when language or theme changes
-  useEffect(() => {
-    setForceUpdate((prev) => prev + 1);
-  }, [language, theme]);
 
   // Listen for system theme changes
   useEffect(() => {

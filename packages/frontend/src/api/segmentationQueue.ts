@@ -139,7 +139,7 @@ export const triggerBatchSegmentation = async (projectId: string, imageIds: stri
           model_type: 'resunet',
         });
         return legacyResponse.data;
-      } catch (legacyError) {
+      } catch (_legacyError) {
         // If both fail, throw the original error to be handled below
         throw error;
       }
