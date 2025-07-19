@@ -52,7 +52,7 @@ export const VirtualImageGrid = memo(
 
     // Calculate row height based on view mode
     const getRowHeight = useCallback(
-      (index: number) => {
+      (_index: number) => {
         if (viewMode === 'list') {
           return 80; // Fixed height for list items
         }

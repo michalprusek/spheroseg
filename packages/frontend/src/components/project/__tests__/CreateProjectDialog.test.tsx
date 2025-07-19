@@ -54,7 +54,7 @@ describe('CreateProjectDialog Component', () => {
     vi.clearAllMocks();
   });
 
-  const renderComponent = (props = {}) => {
+  const _renderComponent = (props = {}) => {
     return render(
       <BrowserRouter>
         <AuthProvider>
