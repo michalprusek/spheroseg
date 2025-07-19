@@ -31,7 +31,7 @@ export interface WebSocketConfig {
   reconnectionDelay?: number;
   timeout?: number;
   autoConnect?: boolean;
-  auth?: any;
+  auth?: unknown;
   transports?: string[];
 }
 
@@ -46,7 +46,7 @@ export interface ConnectionState {
 
 export interface EventSubscription {
   event: string;
-  handler: (...args: any[]) => void;
+  handler: (...args: unknown[]) => void;
   id: string;
 }
 
@@ -255,7 +255,7 @@ class UnifiedWebSocketService {
   /**
    * Register event handler
    */
-  public on(event: string, handler: (...args: any[]) => void): string {
+  public on(event: string, handler: (...args: unknown[]) => void): string {
     if (!this.socket) {
       logger.warn(`Cannot register handler for ${event}: Socket not initialized`);
       return '';
@@ -286,7 +286,7 @@ class UnifiedWebSocketService {
   /**
    * Remove event handler
    */
-  public off(event: string, handlerOrId?: ((...args: any[]) => void) | string): void {
+  public off(event: string, handlerOrId?: ((...args: unknown[]) => void) | string): void {
     if (!this.socket) return;
 
     const subscriptions = this.eventSubscriptions.get(event);
@@ -321,7 +321,7 @@ class UnifiedWebSocketService {
   /**
    * Emit event
    */
-  public emit(event: string, ...args: any[]): void {
+  public emit(event: string, ...args: unknown[]): void {
     if (!this.socket) {
       logger.warn(`Cannot emit ${event}: Socket not initialized`);
       return;
@@ -339,7 +339,7 @@ class UnifiedWebSocketService {
   /**
    * Emit event and wait for acknowledgment
    */
-  public async emitWithAck(event: string, ...args: any[]): Promise<any> {
+  public async emitWithAck(event: string, ...args: unknown[]): Promise<unknown> {
     if (!this.socket) {
       throw new Error('Socket not initialized');
     }
@@ -353,7 +353,7 @@ class UnifiedWebSocketService {
         reject(new Error(`Timeout waiting for acknowledgment: ${event}`));
       }, this.config.timeout || 10000);
 
-      this.socket!.emit(event, ...args, (response: any) => {
+      this.socket!.emit(event, ...args, (response: unknown) => {
         clearTimeout(timeout);
         if (response.error) {
           reject(new Error(response.error));
@@ -634,7 +634,7 @@ class UnifiedWebSocketService {
   /**
    * Send a message using batching
    */
-  public async sendBatched(event: string, data: any): Promise<any> {
+  public async sendBatched(event: string, data: unknown): Promise<unknown> {
     if (!this.batchingEnabled) {
       // Fallback to regular emit
       return new Promise((resolve) => {
@@ -650,7 +650,7 @@ class UnifiedWebSocketService {
   /**
    * Send a message immediately without batching
    */
-  public sendImmediate(event: string, data: any): void {
+  public sendImmediate(event: string, data: unknown): void {
     if (this.batchingEnabled) {
       websocketBatchHandler.sendImmediate(event, data);
     } else if (this.socket?.connected) {
@@ -702,7 +702,7 @@ class UnifiedWebSocketService {
   /**
    * Add batch event listener
    */
-  public onBatchEvent(event: string, handler: (...args: any[]) => void): void {
+  public onBatchEvent(event: string, handler: (...args: unknown[]) => void): void {
     if (this.batchingEnabled) {
       websocketBatchHandler.on(event, handler);
     } else {
@@ -713,7 +713,7 @@ class UnifiedWebSocketService {
   /**
    * Remove batch event listener
    */
-  public offBatchEvent(event: string, handler?: (...args: any[]) => void): void {
+  public offBatchEvent(event: string, handler?: (...args: unknown[]) => void): void {
     if (this.batchingEnabled) {
       websocketBatchHandler.off(event, handler);
     } else {
