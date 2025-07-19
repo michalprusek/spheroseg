@@ -89,11 +89,15 @@ export const useProjectApi = () => {
   }, []);
 
   return {
+    // Original method names
     getProjects,
     getProject,
     createProject,
     updateProject,
     deleteProject,
+    // Aliases for test compatibility
+    fetchProjects: getProjects,
+    fetchProjectDetails: getProject,
     loading,
     error,
   };

@@ -5,3 +5,5 @@ export * from './user';
 export * from './image';
 export * from './export';
 export * from './api';
+export * from './queue';
+export * from './auth';

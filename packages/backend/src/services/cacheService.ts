@@ -7,7 +7,7 @@
 
 import Redis from 'ioredis';
 import logger from '../utils/logger';
-import type { User, SegmentationResult, Project, Image } from '@spheroseg/types';
+import type { User, SegmentationResult, Project, Image, QueueStatus, ProjectStats } from '@spheroseg/types';
 
 // Cache key prefixes for different data types
 const CACHE_PREFIXES = {
@@ -183,7 +183,7 @@ class CacheService {
   /**
    * Cache project data
    */
-  async cacheProject(projectId: string, projectData: any): Promise<void> {
+  async cacheProject(projectId: string, projectData: Project): Promise<void> {
     const key = `${CACHE_PREFIXES.PROJECT}${projectId}`;
     await this.set(key, projectData, CACHE_TTL.PROJECT);
   }
@@ -216,7 +216,7 @@ class CacheService {
     projectId: string,
     page: number,
     limit: number,
-    images: any[]
+    images: Image[]
   ): Promise<void> {
     const key = `${CACHE_PREFIXES.IMAGE_LIST}${projectId}:${page}:${limit}`;
     await this.set(key, images, CACHE_TTL.IMAGE_LIST);
@@ -225,7 +225,7 @@ class CacheService {
   /**
    * Get cached image list
    */
-  async getCachedImageList(projectId: string, page: number, limit: number): Promise<any[] | null> {
+  async getCachedImageList(projectId: string, page: number, limit: number): Promise<Image[] | null> {
     const key = `${CACHE_PREFIXES.IMAGE_LIST}${projectId}:${page}:${limit}`;
     return await this.get(key);
   }
@@ -240,7 +240,7 @@ class CacheService {
   /**
    * Cache user data
    */
-  async cacheUser(userId: string, userData: any): Promise<void> {
+  async cacheUser(userId: string, userData: User): Promise<void> {
     const key = `${CACHE_PREFIXES.USER}${userId}`;
     await this.set(key, userData, CACHE_TTL.USER);
   }
@@ -272,7 +272,7 @@ class CacheService {
   /**
    * Cache queue status
    */
-  async cacheQueueStatus(projectId: string, status: any): Promise<void> {
+  async cacheQueueStatus(projectId: string, status: QueueStatus): Promise<void> {
     const key = `${CACHE_PREFIXES.QUEUE_STATUS}${projectId}`;
     await this.set(key, status, CACHE_TTL.QUEUE_STATUS);
   }
@@ -280,7 +280,7 @@ class CacheService {
   /**
    * Get cached queue status
    */
-  async getCachedQueueStatus(projectId: string): Promise<any | null> {
+  async getCachedQueueStatus(projectId: string): Promise<QueueStatus | null> {
     const key = `${CACHE_PREFIXES.QUEUE_STATUS}${projectId}`;
     return await this.get(key);
   }
@@ -288,7 +288,7 @@ class CacheService {
   /**
    * Cache project statistics
    */
-  async cacheProjectStats(projectId: string, stats: any): Promise<void> {
+  async cacheProjectStats(projectId: string, stats: ProjectStats): Promise<void> {
     const key = `${CACHE_PREFIXES.PROJECT_STATS}${projectId}`;
     await this.set(key, stats, CACHE_TTL.PROJECT_STATS);
   }
@@ -296,7 +296,7 @@ class CacheService {
   /**
    * Get cached project statistics
    */
-  async getCachedProjectStats(projectId: string): Promise<any | null> {
+  async getCachedProjectStats(projectId: string): Promise<ProjectStats | null> {
     const key = `${CACHE_PREFIXES.PROJECT_STATS}${projectId}`;
     return await this.get(key);
   }

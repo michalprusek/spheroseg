@@ -13,6 +13,7 @@ import path from 'path';
 import config from '../config';
 import logger from '../utils/logger';
 import { ApiError } from '../utils/ApiError';
+import type { JWKS, JWK, JWTPayload } from '@spheroseg/types';
 
 /**
  * Konfigurace pro JWKS
@@ -248,7 +249,7 @@ export class JWTKeyManager {
   /**
    * Získání JWKS pro veřejný endpoint
    */
-  public getJWKS(): any {
+  public getJWKS(): JWKS {
     const keys = Array.from(this.localKeys.values()).map((keyPair) => {
       const keyObject = crypto.createPublicKey(keyPair.publicKey);
       const jwk = keyObject.export({ format: 'jwk' });
@@ -330,7 +331,8 @@ export function validateJWTWithRotation(req: Request, res: Response, next: NextF
           throw new ApiError('Invalid token', 401);
         }
 
-        (req as any).user = payload;
+        // Cast payload to our JWTPayload type
+        (req as Request & { user?: JWTPayload }).user = payload as JWTPayload;
         next();
       });
     })
@@ -340,7 +342,7 @@ export function validateJWTWithRotation(req: Request, res: Response, next: NextF
 /**
  * Funkce pro podepsání JWT s rotovanými klíči
  */
-export function signJWTWithRotation(payload: any, options?: jwt.SignOptions): string | null {
+export function signJWTWithRotation(payload: JWTPayload, options?: jwt.SignOptions): string | null {
   const manager = getKeyManager();
   const privateKey = manager.getCurrentPrivateKey();
   const kid = manager.getCurrentKeyId();
