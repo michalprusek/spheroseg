@@ -69,7 +69,7 @@ class ApiClient {
   private requestInterceptors: Array<(config: ApiRequestConfig) => ApiRequestConfig | Promise<ApiRequestConfig>> = [];
   private responseInterceptors: Array<{
     onFulfilled?: (response: ApiResponse) => ApiResponse | Promise<ApiResponse>;
-    onRejected?: (error: ApiError) => any;
+    onRejected?: (error: ApiError) => unknown;
   }> = [];
   private activeRequests = new Map<string, AbortController>();
 
@@ -146,7 +146,7 @@ class ApiClient {
    */
   addResponseInterceptor(
     onFulfilled?: (response: ApiResponse) => ApiResponse | Promise<ApiResponse>,
-    onRejected?: (error: ApiError) => any,
+    onRejected?: (error: ApiError) => unknown,
   ) {
     this.responseInterceptors.push({ onFulfilled, onRejected });
   }

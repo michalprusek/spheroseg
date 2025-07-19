@@ -236,7 +236,7 @@ export const requestAccessSchema = z.object({
 /**
  * Create a dynamic schema with translations
  */
-export function createTranslatedSchema<T extends z.ZodType>(schema: T, translations: Record<string, string>): T {
+export function createTranslatedSchema<T extends z.ZodType>(schema: T, _translations: Record<string, string>): T {
   // This is a placeholder for translation logic
   // In practice, you'd integrate with your i18n system
   return schema;

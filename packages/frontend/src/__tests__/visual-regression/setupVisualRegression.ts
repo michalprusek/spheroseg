@@ -94,8 +94,8 @@ export const test = base.extend({
 declare global {
   namespace PlaywrightTest {
     interface Page {
-      compareScreenshot(name: string, options?: any): Promise<void>;
-      compareElement(selector: string, name: string, options?: any): Promise<void>;
+      compareScreenshot(name: string, options?: unknown): Promise<void>;
+      compareElement(selector: string, name: string, options?: unknown): Promise<void>;
     }
   }
 }

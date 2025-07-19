@@ -24,14 +24,14 @@ global.document.createElement = vi.fn().mockImplementation((tagName) => {
 // Mock Image
 class MockImage {
   public onload: () => void = () => {};
-  public onerror: (error: any) => void = () => {};
+  public onerror: (error: unknown) => void = () => {};
   public src: string = '';
   public width: number = 100;
   public height: number = 100;
   public crossOrigin: string = '';
 }
 
-global.Image = MockImage as any;
+global.Image = MockImage as unknown as typeof Image;
 
 describe('Image Processing Utilities', () => {
   describe('calculatePolygonArea', () => {

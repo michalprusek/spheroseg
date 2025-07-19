@@ -72,11 +72,11 @@ export async function initializeTranslations() {
   }
 
   // Load other translations, defaulting to empty objects if they fail (i18next will use fallbackLng)
-  cs = await loadSingleTranslation(() => import('../translations/cs'));
-  de = await loadSingleTranslation(() => import('../translations/de'));
-  es = await loadSingleTranslation(() => import('../translations/es'));
-  fr = await loadSingleTranslation(() => import('../translations/fr'));
-  zh = await loadSingleTranslation(() => import('../translations/zh'));
+  const cs = await loadSingleTranslation(() => import('../translations/cs'));
+  const de = await loadSingleTranslation(() => import('../translations/de'));
+  const es = await loadSingleTranslation(() => import('../translations/es'));
+  const fr = await loadSingleTranslation(() => import('../translations/fr'));
+  const zh = await loadSingleTranslation(() => import('../translations/zh'));
 
   const resources = {
     en: { translation: en }, // i18next expects resources in { lang: { namespace: { key: value } } }

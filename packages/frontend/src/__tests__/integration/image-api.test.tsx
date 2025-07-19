@@ -46,14 +46,14 @@ describe('Image API Integration Tests', () => {
     // Mock FormData since it's not available in the test environment
     global.FormData = class FormData {
       private data = new Map();
-      append(key: string, value: any) {
+      append(key: string, value: unknown) {
         this.data.set(key, value);
       }
       get(key: string) {
         return this.data.get(key);
       }
       // Add other methods as needed
-    } as any;
+    } as unknown as typeof FormData;
   });
 
   afterEach(() => {
