@@ -11,6 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import apiClient from '@/lib/apiClient';
 import axios from 'axios';
 import { toast } from 'sonner';
+import logger from '@/utils/logger';
 
 interface StatCardProps {
   titleKey: string;
@@ -89,11 +90,11 @@ const StatsOverview = () => {
       if (!user?.id) return;
       setLoading(true);
       try {
-        console.log(`Fetching overview stats for user: ${user.id}`);
+        logger.debug(`Fetching overview stats for user: ${user.id}`);
         const response = await apiClient.get<OverviewStats>('/api/users/me/stats');
         setStats(response.data);
       } catch (error: unknown) {
-        console.error('Error fetching overview stats:', error);
+        logger.error('Error fetching overview stats:', error);
         let message = t('statsOverview.fetchError') || 'Failed to load statistics.';
         if (axios.isAxiosError(error) && error.response) {
           message = error.response.data?.message || message;
