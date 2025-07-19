@@ -119,11 +119,11 @@ describe('imageUpload', () => {
         .map((_, i) => new File(['test content'], `test${i}.jpg`, { type: 'image/jpeg' }));
 
       // Mock the createLocalImages functionality
-      const mockLocalImage = { id: 'local-id', name: 'local.jpg' };
+      const _mockLocalImage = { id: 'local-id', name: 'local.jpg' };
       vi.spyOn(global, 'FileReader').mockImplementation(function () {
         this.readAsDataURL = vi.fn(() => {
           setTimeout(() => {
-            this.onload && this.onload({ target: { result: 'data:image/jpeg;base64,test' } });
+            this.onload?.(({ target: { result: 'data:image/jpeg;base64,test' } }) as any);
           }, 0);
         });
         return this;

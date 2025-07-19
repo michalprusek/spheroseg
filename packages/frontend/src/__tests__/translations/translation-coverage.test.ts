@@ -185,12 +185,12 @@ describe('Translation Coverage Tests', () => {
     for (const lang of languages) {
       const issues: string[] = [];
 
-      function checkInterpolations(obj: TranslationObject, prefix = '') {
+      const checkInterpolations = (obj: TranslationObject, prefix = '') => {
         for (const [key, value] of Object.entries(obj)) {
           const fullKey = prefix ? `${prefix}.${key}` : key;
 
           if (typeof value === 'string') {
-            const matches = [...value.matchAll(interpolationPattern)];
+            const _matches = [...value.matchAll(interpolationPattern)];
 
             // Check for unbalanced braces
             const openCount = (value.match(/\{\{/g) || []).length;
@@ -210,7 +210,7 @@ describe('Translation Coverage Tests', () => {
             checkInterpolations(value, fullKey);
           }
         }
-      }
+      };
 
       checkInterpolations(translations[lang]);
 
