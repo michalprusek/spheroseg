@@ -122,12 +122,19 @@ export const AnalyticsDashboard = memo(() => {
   }, [timeRange, dateRange]);
 
   // Debounced date range change handler
-  const handleDateRangeChange = useCallback(
-    debounce((newRange: { from: Date; to: Date }) => {
+  const debouncedDateRangeChange = useMemo(
+    () => debounce((newRange: { from: Date; to: Date }) => {
       setDateRange(newRange);
       setTimeRange('custom');
     }, 500),
     [setDateRange, setTimeRange],
+  );
+
+  const handleDateRangeChange = useCallback(
+    (newRange: { from: Date; to: Date }) => {
+      debouncedDateRangeChange(newRange);
+    },
+    [debouncedDateRangeChange],
   );
 
   // Optimized data fetching with React Query
