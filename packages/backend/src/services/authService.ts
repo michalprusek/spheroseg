@@ -161,6 +161,74 @@ class AuthService {
   }
 
   /**
+   * Authenticates a user and returns user data without tokens.
+   * Used for session-based authentication.
+   * @param email User's email
+   * @param password User's password
+   * @returns User object or null if authentication fails
+   */
+  public async authenticateUser(
+    email: string,
+    password: string
+  ): Promise<UserResponse | null> {
+    logger.info('Authenticating user', { email });
+
+    const client = await db.getPool().connect();
+    try {
+      // Find user by email
+      const result = await client.query(
+        'SELECT id, email, password_hash, name, created_at, updated_at FROM users WHERE email = $1',
+        [email]
+      );
+
+      if (result.rows.length === 0) {
+        logger.warn('Login attempt with non-existent email', { email });
+        return null;
+      }
+
+      const user = result.rows[0];
+
+      // Verify password
+      const isPasswordValid = await bcryptjs.compare(password, user.password_hash);
+      if (!isPasswordValid) {
+        logger.warn('Invalid password attempt', { email });
+        return null;
+      }
+
+      // Get user profile
+      const profileResult = await client.query(
+        'SELECT * FROM user_profiles WHERE user_id = $1',
+        [user.id]
+      );
+
+      const userResponse: UserResponse = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        role: 'user', // Default role, can be enhanced
+      };
+
+      // Add profile data if exists
+      if (profileResult.rows.length > 0) {
+        const profile = profileResult.rows[0];
+        userResponse.preferred_language = profile.preferred_language;
+        userResponse.notification_preferences = profile.notification_preferences;
+      }
+
+      logger.info('User authenticated successfully', { userId: user.id, email });
+
+      return userResponse;
+    } catch (error) {
+      logger.error('Authentication error', { error, email });
+      throw new ApiError('Authentication failed', 500);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
    * Logs in a user.
    * @param email User's email
    * @param password User's password

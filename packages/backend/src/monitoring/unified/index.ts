@@ -12,6 +12,7 @@
 import { Request as ExpressRequest, Response, NextFunction } from 'express';
 import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
 import winston from 'winston';
+import 'winston-daily-rotate-file';
 import { v4 as uuidv4 } from 'uuid';
 import os from 'os';
 import { EventEmitter } from 'events';
@@ -88,15 +89,54 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Add file transports only if file logging is enabled
+// Add file transports with rotation if file logging is enabled
 if (config.logging.logToFile) {
+  // Error log rotation
   transports.push(
-    new winston.transports.File({
-      filename: `${config.logging.logDir}/error.log`,
+    new winston.transports.DailyRotateFile({
+      filename: `${config.logging.logDir}/error-%DATE%.log`,
+      datePattern: 'YYYY-MM-DD',
       level: 'error',
-    }),
-    new winston.transports.File({
-      filename: `${config.logging.logDir}/combined.log`,
+      maxSize: '20m',
+      maxFiles: '14d',
+      zippedArchive: true,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
+      ),
+    })
+  );
+
+  // Combined log rotation
+  transports.push(
+    new winston.transports.DailyRotateFile({
+      filename: `${config.logging.logDir}/combined-%DATE%.log`,
+      datePattern: 'YYYY-MM-DD',
+      maxSize: '50m',
+      maxFiles: '7d',
+      zippedArchive: true,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
+      ),
+    })
+  );
+
+  // Separate HTTP access logs
+  transports.push(
+    new winston.transports.DailyRotateFile({
+      filename: `${config.logging.logDir}/access-%DATE%.log`,
+      datePattern: 'YYYY-MM-DD',
+      level: 'http',
+      maxSize: '100m',
+      maxFiles: '3d',
+      zippedArchive: true,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
     })
   );
 }

@@ -10,6 +10,7 @@ import v1Routes from './v1';
 
 // Import legacy routes for backward compatibility
 import authRoutes from './auth';
+import authSessionRoutes from './auth.session';
 import userRoutes from './users';
 import projectRoutes from './projects';
 import imageRoutes from './images';
@@ -40,6 +41,7 @@ router.use('/v1', v1Routes);
 // Legacy routes (for backward compatibility)
 // TODO: Deprecate these in favor of versioned routes
 router.use('/auth', authRoutes);
+router.use('/auth', authSessionRoutes); // Session-based auth endpoints
 
 // User-related routes
 router.use('/users', userRoutes);

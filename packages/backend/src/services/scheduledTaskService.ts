@@ -11,6 +11,7 @@ import path from 'path';
 import logger from '../utils/logger';
 import config from '../config';
 import fileCleanupService from './fileCleanupService';
+import { startSessionCleanupJob, startSessionStatsJob } from '../jobs/sessionCleanup';
 
 interface ScheduledTask {
   name: string;
@@ -50,6 +51,16 @@ class ScheduledTaskService {
 
     // Database maintenance task
     this.addTask('databaseMaintenance', '0 2 * * 0', this.createDatabaseMaintenanceTask()); // Weekly at 2 AM
+
+    // Session cleanup task
+    const sessionCleanupTask = startSessionCleanupJob();
+    sessionCleanupTask.start();
+    logger.info('Session cleanup task started (runs every hour)');
+
+    // Session statistics task
+    const sessionStatsTask = startSessionStatsJob();
+    sessionStatsTask.start();
+    logger.info('Session statistics task started (runs daily)');
   }
 
   /**

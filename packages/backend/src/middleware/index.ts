@@ -18,6 +18,7 @@ import { errorHandler } from './errorHandler';
 import { configureSecurity } from '../security';
 import { requestLoggerMiddleware } from '../monitoring/unified';
 import { trackAPIPerformance, addResponseTimeHeader } from './performanceTracking';
+import createSessionMiddleware, { sessionSecurityMiddleware } from '../config/session';
 // TODO: Fix i18n imports - temporarily disabled
 // import { createI18nMiddleware } from '../config/i18n';
 // import { setUserLanguage } from './i18n';
@@ -116,6 +117,25 @@ export const configureI18nMiddleware = (_app: Application): void => {
 };
 
 /**
+ * Session middleware configuration
+ */
+export const configureSessionMiddleware = (app: Application): void => {
+  try {
+    // Initialize session middleware
+    const sessionMiddleware = createSessionMiddleware();
+    app.use(sessionMiddleware);
+    
+    // Add session security checks
+    app.use(sessionSecurityMiddleware);
+    
+    logger.info('Session middleware configured with Redis store');
+  } catch (error) {
+    logger.error('Failed to configure session middleware', { error });
+    // Sessions will fall back to memory store
+  }
+};
+
+/**
  * Static files middleware configuration
  */
 export const configureStaticFilesMiddleware = (app: Application): void => {
@@ -184,21 +204,24 @@ export const configureMiddleware = (app: Application): void => {
   // 3. Body parsing middleware (MUST be before security checks that need body)
   configureBodyParsingMiddleware(app);
 
-  // 4. Security middleware (needs parsed body for suspicious pattern detection)
+  // 4. Session middleware (needs to be before auth checks)
+  configureSessionMiddleware(app);
+
+  // 5. Security middleware (needs parsed body for suspicious pattern detection)
   configureSecurityMiddleware(app);
 
-  // 5. i18n middleware (needs to be early in the chain)
+  // 6. i18n middleware (needs to be early in the chain)
   // TODO: Fix i18n middleware - temporarily disabled due to module resolution issues
   // configureI18nMiddleware(app);
 
-  // 6. Request monitoring middleware (unified monitoring system)
+  // 7. Request monitoring middleware (unified monitoring system)
   app.use(requestLoggerMiddleware);
 
-  // 7. Performance tracking middleware
+  // 8. Performance tracking middleware
   app.use(addResponseTimeHeader());
   app.use(trackAPIPerformance());
 
-  // 8. Static files middleware
+  // 9. Static files middleware
   configureStaticFilesMiddleware(app);
 
   logger.info('All middleware configured successfully');
