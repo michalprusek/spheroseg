@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import path from 'path';
 
 // Test user credentials
@@ -8,7 +8,7 @@ const TEST_USER = {
 };
 
 // Helper to login
-async function loginAsTestUser(page: any) {
+async function loginAsTestUser(page: Page) {
   await page.goto('/signin');
   await page.fill('input[type="email"]', TEST_USER.email);
   await page.fill('input[type="password"]', TEST_USER.password);
@@ -17,7 +17,7 @@ async function loginAsTestUser(page: any) {
 }
 
 // Helper to navigate to a project
-async function navigateToProject(page: any, projectName: string) {
+async function navigateToProject(page: Page, projectName: string) {
   await page.goto('/dashboard');
   await page.waitForSelector('text=' + projectName);
   await page.click(`text=${projectName}`);

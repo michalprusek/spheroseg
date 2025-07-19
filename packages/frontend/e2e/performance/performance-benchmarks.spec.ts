@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { performance } from 'perf_hooks';
 
 // Performance thresholds (in milliseconds)
@@ -18,7 +18,7 @@ const PERFORMANCE_THRESHOLDS = {
 };
 
 // Helper to measure navigation timing
-async function measureNavigationTiming(page) {
+async function measureNavigationTiming(page: Page) {
   return await page.evaluate(() => {
     const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     return {
@@ -31,7 +31,7 @@ async function measureNavigationTiming(page) {
 }
 
 // Helper to measure web vitals
-async function measureWebVitals(page) {
+async function measureWebVitals(page: Page) {
   return await page.evaluate(() => 
     new Promise((resolve) => {
       const vitals = {
@@ -65,8 +65,8 @@ async function measureWebVitals(page) {
       let clsValue = 0;
       const clsObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          if (!(entry as any).hadRecentInput) {
-            clsValue += (entry as any).value;
+          if (!('hadRecentInput' in entry && entry.hadRecentInput)) {
+            clsValue += ('value' in entry && typeof entry.value === 'number') ? entry.value : 0;
           }
         }
         vitals.CLS = clsValue;
@@ -206,7 +206,7 @@ test.describe('Performance Benchmarks', () => {
     // Get initial memory usage
     const initialMemory = await page.evaluate(() => {
       if ('memory' in performance) {
-        return (performance as any).memory.usedJSHeapSize;
+        return (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || null;
       }
       return null;
     });
@@ -223,7 +223,7 @@ test.describe('Performance Benchmarks', () => {
       // Get final memory usage
       const finalMemory = await page.evaluate(() => {
         if ('memory' in performance) {
-          return (performance as any).memory.usedJSHeapSize;
+          return (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || null;
         }
         return null;
       });
