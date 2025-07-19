@@ -16,6 +16,7 @@ import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { createLogger } from '@/lib/logger';
 import { formatISODate } from '@/utils/dateUtils';
+import { format } from 'date-fns';
 import apiClient from '@/services/api/client';
 import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations';
 import type { ProjectImage, Polygon, SegmentationResult } from '@/pages/segmentation/types';
@@ -420,8 +421,8 @@ ${options.includeMetadata ? '- Metadata for all images\n' : ''}${options.include
 /**
  * Připraví data metrik pro export
  */
-async function prepareMetricsData(images: ProjectImage[]): Promise<unknown[]> {
-  const worksheetRows: unknown[] = [];
+async function prepareMetricsData(images: ProjectImage[]): Promise<Record<string, unknown>[]> {
+  const worksheetRows: Record<string, unknown>[] = [];
 
   for (const image of images) {
     try {
@@ -498,14 +499,55 @@ async function getSegmentationData(image: ProjectImage): Promise<SegmentationRes
 /**
  * Konvertuje segmentace do COCO formátu
  */
-function convertToCOCO(images: ProjectImage[], projectTitle: string = 'project'): unknown {
+function convertToCOCO(images: ProjectImage[], projectTitle: string = 'project'): {
+  info: {
+    description: string;
+    url: string;
+    version: string;
+    year: number;
+    contributor: string;
+    date_created: string;
+  };
+  licenses: Array<{ id: number; name: string; url: string }>;
+  images: Array<{
+    id: number;
+    file_name: string;
+    width: number;
+    height: number;
+    date_captured: string;
+  }>;
+  annotations: Array<{
+    id: number;
+    image_id: number;
+    category_id: number;
+    segmentation: number[][];
+    area: number;
+    bbox: [number, number, number, number];
+    iscrowd: number;
+  }>;
+  categories: Array<{ id: number; name: string; supercategory: string }>;
+} {
   // Používáme dvě kategorie: "cell" pro externí polygony a "hole" pro interní polygony (díry)
   const categories = [
     { id: 1, name: 'cell', supercategory: 'cell' },
     { id: 2, name: 'hole', supercategory: 'cell' },
   ];
-  const annotations: unknown[] = [];
-  const cocoImages: unknown[] = [];
+  const annotations: Array<{
+    id: number;
+    image_id: number;
+    category_id: number;
+    segmentation: number[][];
+    area: number;
+    bbox: [number, number, number, number];
+    iscrowd: number;
+  }> = [];
+  const cocoImages: Array<{
+    id: number;
+    file_name: string;
+    width: number;
+    height: number;
+    date_captured: string;
+  }> = [];
 
   let annotationId = 1;
 

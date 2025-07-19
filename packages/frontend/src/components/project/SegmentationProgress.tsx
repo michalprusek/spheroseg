@@ -138,7 +138,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     };
 
     // Pomocná funkce pro normalizaci dat fronty
-    const normalizeQueueStatusData = (data: any) => {
+    const normalizeQueueStatusData = (data: unknown) => {
       // Získáme vlastní data z odpovědi (může být v data.data nebo přímo v data)
       const responseData = data.data || data;
 
@@ -230,7 +230,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
 
       try {
         // Pomocná funkce pro normalizaci dat
-        const normalizeQueueStatusData = (rawData: any) => {
+        const normalizeQueueStatusData = (rawData: unknown) => {
           // Získáme vlastní data z odpovědi (může být v data.data nebo přímo v data)
           const responseData = rawData.data || rawData;
 
@@ -329,10 +329,10 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
               if (projectId) {
                 // Filtrování podle projectId
                 const filteredImages = normalizedData.processingImages.filter(
-                  (img: any) => img.projectId === projectId || img.project_id === projectId,
+                  (img: unknown) => typeof img === 'object' && img !== null && ('projectId' in img || 'project_id' in img) && (img.projectId === projectId || img.project_id === projectId),
                 );
 
-                const filteredRunning = filteredImages.map((img: any) => img.id);
+                const filteredRunning = filteredImages.map((img: unknown) => typeof img === 'object' && img !== null && 'id' in img ? img.id : null).filter(Boolean);
 
                 // Odhadujeme queueLength pro projekt
                 const newQueueLength =
@@ -464,13 +464,13 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       });
 
       // Queue update handler - upraveno pro podporu různých formátů ze socketu
-      newSocket.on('segmentation_queue_update', (data: any) => {
+      newSocket.on('segmentation_queue_update', (data: unknown) => {
         if (!isComponentMounted) return;
 
         console.log('Received segmentation_queue_update:', data);
         if (data) {
           // Pomocná funkce pro normalizaci dat z WebSocketu
-          const normalizeQueueStatusData = (rawData: any) => {
+          const normalizeQueueStatusData = (rawData: unknown) => {
             // Získáme vlastní data z odpovědi (může být v data.data nebo přímo v data)
             const responseData = rawData.data || rawData;
 

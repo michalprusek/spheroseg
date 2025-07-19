@@ -3,6 +3,9 @@ import { vi } from 'vitest';
 import ProjectExport from '../ProjectExport';
 import { setupAllContextMocks } from '@/test-utils/contextMocks';
 import { MemoryRouterWrapper } from '@/test-utils/test-wrapper';
+import { useExportFunctions } from '../hooks/useExportFunctions';
+import { useProjectData } from '@/hooks/useProjectData';
+import { useNavigate } from 'react-router-dom';
 
 // Mock useParams hook from react-router-dom
 vi.mock('react-router-dom', async () => {
@@ -128,7 +131,7 @@ describe('ProjectExport Component', () => {
     renderComponent();
 
     // Get the handleExport mock function
-    const { handleExport } = require('../hooks/useExportFunctions').useExportFunctions();
+    const { handleExport } = (useExportFunctions as any)();
 
     // Click the export button
     fireEvent.click(screen.getByText(/Exportovat 2 obrázků/i));
@@ -154,7 +157,7 @@ describe('ProjectExport Component', () => {
     renderComponent();
 
     // Get the navigate mock function
-    const navigate = require('react-router-dom').useNavigate();
+    const navigate = useNavigate();
 
     // Click the back button
     fireEvent.click(screen.getByText(/Zpět na projekt/i));
