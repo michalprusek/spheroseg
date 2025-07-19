@@ -8,6 +8,7 @@ import ShareDialog from '@/components/project/ShareDialog';
 import { formatRelativeTime } from '@/utils/dateUtils';
 import { constructUrl } from '@/lib/urlUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import logger from '@/utils/logger';
 
 interface Project {
   id: string;
@@ -37,12 +38,12 @@ const ProjectCard: React.FC<ProjectCardProps> = memo(
 
     // Memoized handlers
     const handleDelete = useCallback(
-      (deletedProjectId: string) => {
+      (_deletedProjectId: string) => {
         if (!project.id) {
-          console.error('ProjectCard: Cannot delete project with undefined ID');
+          logger.error('ProjectCard: Cannot delete project with undefined ID');
           return;
         }
-        console.log(`ProjectCard: Deleting project ${project.id}`);
+        logger.debug(`ProjectCard: Deleting project ${project.id}`);
         onProjectDeleted?.(project.id);
       },
       [project.id, onProjectDeleted],

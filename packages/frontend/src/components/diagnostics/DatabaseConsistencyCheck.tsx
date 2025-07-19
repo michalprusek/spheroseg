@@ -34,7 +34,7 @@ interface DatabaseConsistencyCheckProps {
 }
 
 export const DatabaseConsistencyCheck: React.FC<DatabaseConsistencyCheckProps> = ({ projectId, onRefreshNeeded }) => {
-  const { t } = useLanguage();
+  const { t: _t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [diagnosticsData, setDiagnosticsData] = useState<DiagnosticsData | null>(null);
   const [showDetails, setShowDetails] = useState(false);

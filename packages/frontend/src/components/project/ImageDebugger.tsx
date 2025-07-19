@@ -39,7 +39,7 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
                 src={image.url}
                 alt="Original"
                 className="w-20 h-20 object-cover border border-gray-300"
-                onError={(e) => logger.error(`Failed to load original: ${image.url}`)}
+                onError={(_e) => logger.error(`Failed to load original: ${image.url}`)}
               />
             )}
           </div>
@@ -50,7 +50,7 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
                 src={constructUrl(image.url)}
                 alt="With constructUrl"
                 className="w-20 h-20 object-cover border border-gray-300"
-                onError={(e) => logger.error(`Failed to load with constructUrl: ${constructUrl(image.url)}`)}
+                onError={(_e) => logger.error(`Failed to load with constructUrl: ${constructUrl(image.url)}`)}
               />
             )}
           </div>
@@ -61,7 +61,7 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
                 src={image.thumbnail_url}
                 alt="Thumbnail"
                 className="w-20 h-20 object-cover border border-gray-300"
-                onError={(e) => logger.error(`Failed to load thumbnail: ${image.thumbnail_url}`)}
+                onError={(_e) => logger.error(`Failed to load thumbnail: ${image.thumbnail_url}`)}
               />
             )}
           </div>
@@ -72,7 +72,7 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
                 src={constructUrl(image.thumbnail_url)}
                 alt="Thumbnail with constructUrl"
                 className="w-20 h-20 object-cover border border-gray-300"
-                onError={(e) =>
+                onError={(_e) =>
                   logger.error(`Failed to load thumbnail with constructUrl: ${constructUrl(image.thumbnail_url)}`)
                 }
               />

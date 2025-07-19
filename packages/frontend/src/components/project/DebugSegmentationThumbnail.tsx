@@ -67,7 +67,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
             originalWidth = imageResponse.data.width;
             originalHeight = imageResponse.data.height;
           }
-        } catch (imageErr) {
+        } catch (_imageErr) {
           // Silently ignore - will try to get dimensions from segmentation data
         }
 

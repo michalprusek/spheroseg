@@ -88,7 +88,7 @@ export const ImageDisplay = memo(
           setImageSrc(objectUrl);
           return;
         }
-      } catch (error) {
+      } catch (_error) {
         console.debug('Cache miss for image:', imageUrl);
       }
 
