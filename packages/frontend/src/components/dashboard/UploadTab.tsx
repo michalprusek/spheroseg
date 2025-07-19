@@ -5,6 +5,7 @@ import { useDashboardProjects } from '@/hooks/useDashboardProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import logger from '@/utils/logger';
 
 const UploadTab = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -18,7 +19,7 @@ const UploadTab = () => {
   }, [projects, selectedProjectId]);
 
   const handleUploadComplete = () => {
-    console.log('Upload complete in UploadTab');
+    logger.debug('Upload complete in UploadTab');
   };
 
   return (
