@@ -1,12 +1,12 @@
 {
   "summary": {
-    "total": 722,
+    "total": 327,
     "byRisk": {
-      "high": 317,
-      "medium": 405,
+      "high": 117,
+      "medium": 210,
       "low": 0
     },
-    "priorityFiles": 248
+    "priorityFiles": 82
   },
   "findings": [
     {
@@ -31,70 +31,6 @@
       "category": "array-any",
       "risk": "HIGH",
       "code": "private async query<T = any>(text: string, params?: any[]): Promise<import('pg').QueryResult<T>> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/securityService.ts",
-      "line": 96,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export async function updateSecurityIssue(id: string, updateData: any, _userId: string) {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationQueueService.ts",
-      "line": 195,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "this.connection.on('error', (err: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationQueueService.ts",
-      "line": 852,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const queueSegmentationJob = async (imageId: string, options: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationService.ts",
-      "line": 72,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const saveSegmentation = async (imageId: string, userId: string, segmentationData: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/socketServiceEnhanced.ts",
-      "line": 357,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "data: any,",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/taskQueueService.ts",
-      "line": 61,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "onComplete?: (result: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/taskQueueService.ts",
-      "line": 443,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "function handleTaskCompleted(task: Task<T>, result: any): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/taskQueueService.ts",
-      "line": 61,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "onComplete?: (result: any) => void;",
       "isPriority": true
     },
     {
@@ -146,14 +82,6 @@
       "isPriority": true
     },
     {
-      "file": "packages/backend/src/services/userStatsServiceOptimized.ts",
-      "line": 8,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "query(text: string, params?: any[]): Promise<any>;",
-      "isPriority": true
-    },
-    {
       "file": "packages/backend/src/services/websocketBatcher.ts",
       "line": 6,
       "category": "api-response",
@@ -162,315 +90,11 @@
       "isPriority": true
     },
     {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 97,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "private addToBatch(key: string, event: string, data: any, room?: string, userId?: string): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 196,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "private compressPayload(data: any): any {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 238,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "public sendImmediate(event: string, data: any, target?: string | string[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 306,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "private handlers: Map<string, ((data: any) => void)[]> = new Map();",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 309,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "public on(event: string, handler: (data: any) => void): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 306,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "private handlers: Map<string, ((data: any) => void)[]> = new Map();",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 309,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "public on(event: string, handler: (data: any) => void): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 53,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "this.io.emit = (event: string, ...args: any[]): boolean => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 66,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "chainableObj.emit = (event: string, ...args: any[]): boolean => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/api/projectImages.ts",
-      "line": 159,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": ".map((img: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useDuplicationProgress.ts",
-      "line": 358,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "function normalizeTaskData(data: any): DuplicationTask {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useEmailValidation.ts",
-      "line": 13,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const useDebounce = <T extends (...args: any[]) => any>(callback: T, delay: number): T => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useEmailValidation.ts",
-      "line": 13,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "const useDebounce = <T extends (...args: any[]) => any>(callback: T, delay: number): T => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useProjectDelete.ts",
-      "line": 27,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "onError: (error: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useSegmentationUpdates.ts",
-      "line": 120,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "queueData.processingImages?.some((img: any) => img.id === imageId)) // Added any for processingImages",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useToast.ts",
-      "line": 112,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "error: string | ((error: any) => string);",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 23,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "events?: Record<string, (...args: any[]) => void>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 39,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "emit: (event: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 40,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "emitWithAck: (event: string, ...args: any[]) => Promise<any>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 47,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "on: (event: string, handler: (...args: any[]) => void) => () => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 48,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "off: (event: string, handler?: (...args: any[]) => void) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 100,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const emit = useCallback((event: string, ...args: any[]) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 105,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const emitWithAck = useCallback(async (event: string, ...args: any[]) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 131,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const on = useCallback((event: string, handler: (...args: any[]) => void) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 141,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const off = useCallback((event: string, handler?: (...args: any[]) => void) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 258,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const handleUpdate = useCallback((update: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 333,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const handleNotification = useCallback((notification: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 23,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "events?: Record<string, (...args: any[]) => void>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 39,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "emit: (event: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 40,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "emitWithAck: (event: string, ...args: any[]) => Promise<any>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 47,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "on: (event: string, handler: (...args: any[]) => void) => () => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 48,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "off: (event: string, handler?: (...args: any[]) => void) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 100,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "const emit = useCallback((event: string, ...args: any[]) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 105,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "const emitWithAck = useCallback(async (event: string, ...args: any[]) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 131,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "const on = useCallback((event: string, handler: (...args: any[]) => void) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 141,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "const off = useCallback((event: string, handler?: (...args: any[]) => void) => {",
-      "isPriority": true
-    },
-    {
       "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
       "line": 1247,
       "category": "type-assertion",
       "risk": "HIGH",
       "code": "annotations: [] as any[],",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
-      "line": 215,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "normalizedPolygon.points = polygon.points.map((point: any, pointIndex: number) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
-      "line": 246,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "normalizedPolygon.points = polygon.vertices.map((vertex: any, pointIndex: number) => {",
       "isPriority": true
     },
     {
@@ -514,118 +138,6 @@
       "isPriority": true
     },
     {
-      "file": "packages/frontend/src/pages/segmentation/hooks/usePolygonWorker.ts",
-      "line": 110,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "const sendRequest = useCallback(<T>(operation: WorkerOperation, data: any): Promise<T> => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/hooks/usePolygonWorker.ts",
-      "line": 29,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "resolve: (value: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/hooks/usePolygonWorker.ts",
-      "line": 30,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "reject: (reason?: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/hooks/useSlicing.ts",
-      "line": 15,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "setInteractionState: (state: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 33,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "debug: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 34,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "info: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 35,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "warn: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 36,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "error: (message: string, error?: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 33,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "debug: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 34,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "info: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 35,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "warn: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 43,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "debug(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 49,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "info(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 55,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "warn(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
       "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
       "line": 81,
       "category": "array-any",
@@ -639,94 +151,6 @@
       "category": "array-any",
       "risk": "HIGH",
       "code": "private metricsBuffer: any[] = [];",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 7,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "debug: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 8,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "info: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 9,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "warn: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 10,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "error: (message: string, error?: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 7,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "debug: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 8,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "info: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 9,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "warn: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 17,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "debug(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 23,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "info(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 29,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "warn(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/performanceMetrics.ts",
-      "line": 345,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "private logSlowOperation(type: string, data: any): void {",
       "isPriority": true
     },
     {
@@ -762,62 +186,6 @@
       "isPriority": true
     },
     {
-      "file": "packages/frontend/src/services/unifiedCacheService.ts",
-      "line": 319,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "set: async (key: string, value: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedModalService.tsx",
-      "line": 28,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "onConfirm?: (data?: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedModalService.tsx",
-      "line": 82,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "onSubmit: (values: any) => void | Promise<void>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/websocketBatchingExample.ts",
-      "line": 111,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "const sendBatchedMessage = async (event: string, data: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/websocketBatchingExample.ts",
-      "line": 119,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "const sendImmediateMessage = (event: string, data: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/websocketBatchingExample.ts",
-      "line": 111,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const sendBatchedMessage = async (event: string, data: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/websocketBatchingExample.ts",
-      "line": 119,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const sendImmediateMessage = (event: string, data: any) => {",
-      "isPriority": true
-    },
-    {
       "file": "packages/backend/src/__tests__/types/mocks.ts",
       "line": 26,
       "category": "generic-any",
@@ -839,14 +207,6 @@
       "category": "generic-any",
       "risk": "MEDIUM",
       "code": "async getStats(): Promise<any> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/cacheService.ts",
-      "line": 109,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "async set(key: string, value: any, ttl?: number): Promise<boolean> {",
       "isPriority": true
     },
     {
@@ -915,14 +275,6 @@
     },
     {
       "file": "packages/backend/src/services/databaseOptimizationService.ts",
-      "line": 220,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "filters: any = {}",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/databaseOptimizationService.ts",
       "line": 544,
       "category": "variable-type",
       "risk": "MEDIUM",
@@ -986,27 +338,11 @@
       "isPriority": true
     },
     {
-      "file": "packages/backend/src/services/securityService.ts",
-      "line": 96,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export async function updateSecurityIssue(id: string, updateData: any, _userId: string) {",
-      "isPriority": true
-    },
-    {
       "file": "packages/backend/src/services/segmentationQueue.ts",
       "line": 14,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "parameters: any;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationQueue.ts",
-      "line": 38,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "parameters: any = {},",
       "isPriority": true
     },
     {
@@ -1026,91 +362,11 @@
       "isPriority": true
     },
     {
-      "file": "packages/backend/src/services/segmentationQueueService.ts",
-      "line": 195,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "this.connection.on('error', (err: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationQueueService.ts",
-      "line": 425,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "parameters: any,",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationQueueService.ts",
-      "line": 483,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "parameters: any,",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationQueueService.ts",
-      "line": 638,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "resultData: any",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationQueueService.ts",
-      "line": 664,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "parameters: any = {},",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationQueueService.ts",
-      "line": 852,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const queueSegmentationJob = async (imageId: string, options: any) => {",
-      "isPriority": true
-    },
-    {
       "file": "packages/backend/src/services/segmentationService.ts",
       "line": 38,
       "category": "generic-any",
       "risk": "MEDIUM",
       "code": "export const getSegmentationQueueStatus = async (): Promise<any> => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationService.ts",
-      "line": 17,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "parameters: any,",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/segmentationService.ts",
-      "line": 72,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const saveSegmentation = async (imageId: string, userId: string, segmentationData: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/socketServiceEnhanced.ts",
-      "line": 357,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "data: any,",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/stuckImageCleanup.ts",
-      "line": 119,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private async fixStuckImage(client: any, image: StuckImage): Promise<void> {",
       "isPriority": true
     },
     {
@@ -1127,22 +383,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "result?: any;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/taskQueueService.ts",
-      "line": 61,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "onComplete?: (result: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/taskQueueService.ts",
-      "line": 443,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function handleTaskCompleted(task: Task<T>, result: any): void {",
       "isPriority": true
     },
     {
@@ -1178,14 +418,6 @@
       "isPriority": true
     },
     {
-      "file": "packages/backend/src/services/userProfileService.ts",
-      "line": 473,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "settingValue: any,",
-      "isPriority": true
-    },
-    {
       "file": "packages/backend/src/services/userStatsService.ts",
       "line": 24,
       "category": "variable-type",
@@ -1214,15 +446,7 @@
       "line": 8,
       "category": "generic-any",
       "risk": "MEDIUM",
-      "code": "query(text: string, params?: any[]): Promise<any>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/userStatsServiceOptimized.ts",
-      "line": 8,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "query(text: string, params?: any[]): Promise<any>;",
+      "code": "query(text: string, params?: unknown[]): Promise<any>;",
       "isPriority": true
     },
     {
@@ -1235,74 +459,10 @@
     },
     {
       "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 53,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "this.io.emit = (event: string, ...args: any[]): boolean => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 66,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "chainableObj.emit = (event: string, ...args: any[]): boolean => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 97,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private addToBatch(key: string, event: string, data: any, room?: string, userId?: string): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
       "line": 196,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "private compressPayload(data: any): any {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 196,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private compressPayload(data: any): any {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 238,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "public sendImmediate(event: string, data: any, target?: string | string[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 306,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private handlers: Map<string, ((data: any) => void)[]> = new Map();",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 309,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "public on(event: string, handler: (data: any) => void): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 317,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "public processBatch(batch: any): void {",
+      "code": "private compressPayload(data: unknown): any {",
       "isPriority": true
     },
     {
@@ -1311,54 +471,6 @@
       "category": "generic-any",
       "risk": "MEDIUM",
       "code": "const parsedImages = JSON.parse(storedImages) as Array<any>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/api/projectImages.ts",
-      "line": 159,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": ".map((img: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useDuplicationProgress.ts",
-      "line": 358,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function normalizeTaskData(data: any): DuplicationTask {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useEmailValidation.ts",
-      "line": 13,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const useDebounce = <T extends (...args: any[]) => any>(callback: T, delay: number): T => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useImageProcessing.ts",
-      "line": 409,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "options: any;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useProjectDelete.ts",
-      "line": 27,
-      "category": "event-handler",
-      "risk": "MEDIUM",
-      "code": "onError: (error: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useProjectDelete.ts",
-      "line": 27,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "onError: (error: any) => {",
       "isPriority": true
     },
     {
@@ -1371,14 +483,6 @@
     },
     {
       "file": "packages/frontend/src/hooks/useSegmentationUpdates.ts",
-      "line": 120,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "queueData.processingImages?.some((img: any) => img.id === imageId)) // Added any for processingImages",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useSegmentationUpdates.ts",
       "line": 178,
       "category": "variable-type",
       "risk": "MEDIUM",
@@ -1386,19 +490,11 @@
       "isPriority": true
     },
     {
-      "file": "packages/frontend/src/hooks/useToast.ts",
-      "line": 112,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "error: string | ((error: any) => string);",
-      "isPriority": true
-    },
-    {
       "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
       "line": 40,
       "category": "generic-any",
       "risk": "MEDIUM",
-      "code": "emitWithAck: (event: string, ...args: any[]) => Promise<any>;",
+      "code": "emitWithAck: (event: string, ...args: unknown[]) => Promise<any>;",
       "isPriority": true
     },
     {
@@ -1407,102 +503,6 @@
       "category": "generic-any",
       "risk": "MEDIUM",
       "code": "const [queueStatus, setQueueStatus] = useState<any>(null);",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 23,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "events?: Record<string, (...args: any[]) => void>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 39,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "emit: (event: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 40,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "emitWithAck: (event: string, ...args: any[]) => Promise<any>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 47,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "on: (event: string, handler: (...args: any[]) => void) => () => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 48,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "off: (event: string, handler?: (...args: any[]) => void) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 100,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const emit = useCallback((event: string, ...args: any[]) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 105,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const emitWithAck = useCallback(async (event: string, ...args: any[]) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 131,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const on = useCallback((event: string, handler: (...args: any[]) => void) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 141,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const off = useCallback((event: string, handler?: (...args: any[]) => void) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 258,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const handleUpdate = useCallback((update: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useUnifiedWebSocket.ts",
-      "line": 333,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const handleNotification = useCallback((notification: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
-      "line": 24,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function generateXlsxBinary(workbook: any): string {",
       "isPriority": true
     },
     {
@@ -1531,22 +531,6 @@
     },
     {
       "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
-      "line": 215,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "normalizedPolygon.points = polygon.points.map((point: any, pointIndex: number) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
-      "line": 246,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "normalizedPolygon.points = polygon.vertices.map((vertex: any, pointIndex: number) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
       "line": 680,
       "category": "variable-type",
       "risk": "MEDIUM",
@@ -1570,110 +554,6 @@
       "isPriority": true
     },
     {
-      "file": "packages/frontend/src/pages/segmentation/hooks/usePolygonWorker.ts",
-      "line": 29,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "resolve: (value: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/hooks/usePolygonWorker.ts",
-      "line": 30,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "reject: (reason?: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/hooks/usePolygonWorker.ts",
-      "line": 110,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const sendRequest = useCallback(<T>(operation: WorkerOperation, data: any): Promise<T> => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/hooks/useSlicing.ts",
-      "line": 15,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "setInteractionState: (state: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 33,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "debug: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 34,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "info: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 35,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "warn: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 36,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "error: (message: string, error?: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 43,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "debug(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 49,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "info(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 55,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "warn(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 61,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "error(message: string, error?: any): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 71,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private sendToMonitoring(message: string, error?: any): void {",
-      "isPriority": true
-    },
-    {
       "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
       "line": 81,
       "category": "variable-type",
@@ -1686,31 +566,7 @@
       "line": 202,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "public getFeatureFlag(key: string, defaultValue: any = false): any {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 202,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "public getFeatureFlag(key: string, defaultValue: any = false): any {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 367,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private evaluateGeoTargeting(geoTargeting: any, geo: GeoInfo): boolean {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.secure.ts",
-      "line": 383,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private evaluateDeviceTargeting(deviceTargeting: any, device: DeviceInfo): boolean {",
+      "code": "public getFeatureFlag(key: string, defaultValue: unknown = false): any {",
       "isPriority": true
     },
     {
@@ -1742,95 +598,7 @@
       "line": 223,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "public getFeatureFlag(key: string, defaultValue: any = false): any {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/abTestingService.ts",
-      "line": 223,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "public getFeatureFlag(key: string, defaultValue: any = false): any {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 7,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "debug: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 8,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "info: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 9,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "warn: (message: string, ...args: any[]) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 10,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "error: (message: string, error?: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 17,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "debug(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 23,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "info(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 29,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "warn(message: string, ...args: any[]): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 38,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "error(message: string, error?: any): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/logger.ts",
-      "line": 48,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private sendToMonitoring(level: 'warning' | 'error', message: string, data?: any): void {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/abTesting/secureStorage.ts",
-      "line": 99,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "async setItem(key: string, value: any): Promise<void> {",
+      "code": "public getFeatureFlag(key: string, defaultValue: unknown = false): any {",
       "isPriority": true
     },
     {
@@ -1850,19 +618,11 @@
       "isPriority": true
     },
     {
-      "file": "packages/frontend/src/services/performanceMetrics.ts",
-      "line": 345,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private logSlowOperation(type: string, data: any): void {",
-      "isPriority": true
-    },
-    {
       "file": "packages/frontend/src/services/unifiedCacheService.ts",
       "line": 612,
       "category": "generic-any",
       "risk": "MEDIUM",
-      "code": "private async compress(value: any): Promise<any> {",
+      "code": "private async compress(value: unknown): Promise<any> {",
       "isPriority": true
     },
     {
@@ -1870,47 +630,7 @@
       "line": 618,
       "category": "generic-any",
       "risk": "MEDIUM",
-      "code": "private async encrypt(value: any): Promise<any> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedCacheService.ts",
-      "line": 299,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "public async warmUp(data: Array<{ key: string; value: any; options?: CacheOptions }>): Promise<void> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedCacheService.ts",
-      "line": 319,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "set: async (key: string, value: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedCacheService.ts",
-      "line": 529,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private estimateSize(value: any): number {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedCacheService.ts",
-      "line": 612,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private async compress(value: any): Promise<any> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedCacheService.ts",
-      "line": 618,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private async encrypt(value: any): Promise<any> {",
+      "code": "private async encrypt(value: unknown): Promise<any> {",
       "isPriority": true
     },
     {
@@ -1919,22 +639,6 @@
       "category": "generic-any",
       "risk": "MEDIUM",
       "code": "private processingQueue: Map<string, Promise<any>> = new Map();",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedImageProcessingService.ts",
-      "line": 473,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "options: any;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedModalService.tsx",
-      "line": 82,
-      "category": "event-handler",
-      "risk": "MEDIUM",
-      "code": "onSubmit: (values: any) => void | Promise<void>;",
       "isPriority": true
     },
     {
@@ -1947,42 +651,10 @@
     },
     {
       "file": "packages/frontend/src/services/unifiedModalService.tsx",
-      "line": 28,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "onConfirm?: (data?: any) => void;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedModalService.tsx",
       "line": 81,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "validationSchema?: any;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/unifiedModalService.tsx",
-      "line": 82,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "onSubmit: (values: any) => void | Promise<void>;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/websocketBatchingExample.ts",
-      "line": 111,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const sendBatchedMessage = async (event: string, data: any) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/websocketBatchingExample.ts",
-      "line": 119,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const sendImmediateMessage = (event: string, data: any) => {",
       "isPriority": true
     },
     {
@@ -2015,46 +687,6 @@
       "category": "function-param",
       "risk": "HIGH",
       "code": "app.use((req: any, _res, next) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/monitoring/index.ts",
-      "line": 15,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "query: async function (text: string, params?: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/performanceWrapper.ts",
-      "line": 19,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "const wrappedQuery = async function (...args: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/performanceWrapper.ts",
-      "line": 90,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "pool.query = async function (...args: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/readReplica.ts",
-      "line": 152,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export async function transaction<T>(callback: (client: any) => Promise<T>): Promise<T> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/readReplica.ts",
-      "line": 104,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "params?: any[],",
       "isPriority": false
     },
     {
@@ -2163,22 +795,6 @@
     },
     {
       "file": "packages/backend/src/middleware/cdn.ts",
-      "line": 144,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "function rewriteUrls(data: any): any {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/cdn.ts",
-      "line": 9,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "res.locals.getCDNUrl = (path: string, options?: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/cdn.ts",
       "line": 33,
       "category": "function-param",
       "risk": "HIGH",
@@ -2242,51 +858,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/middleware/errorHandler.ts",
-      "line": 10,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const errorHandler: ErrorRequestHandler = (",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/errorHandleri18n.ts",
-      "line": 9,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const errorHandleri18n: ErrorRequestHandler = (",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/i18n.ts",
-      "line": 9,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "t: (key: string, options?: any) => string;",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/middleware/i18n.ts",
       "line": 43,
       "category": "array-any",
       "risk": "HIGH",
-      "code": "export function getValidationErrors(errors: any[], req: Request): any[] {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/i18n.ts",
-      "line": 43,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "export function getValidationErrors(errors: any[], req: Request): any[] {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceMiddleware.ts",
-      "line": 155,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const applyPerformanceMonitoring = (app: any) => {",
+      "code": "export function getValidationErrors(errors: unknown[], req: Request): any[] {",
       "isPriority": false
     },
     {
@@ -2306,78 +882,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/middleware/performanceMonitoring.ts",
-      "line": 520,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "pool.query = async function (...args: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceMonitoringMiddleware.ts",
-      "line": 26,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "res.end = function (this: Response, ...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceMonitoringMiddleware.ts",
-      "line": 26,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "res.end = function (this: Response, ...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceTracking.ts",
-      "line": 33,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "res.end = function (...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceTracking.ts",
-      "line": 77,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "res.end = function (...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceTracking.ts",
-      "line": 110,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "res.end = function (...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceTracking.ts",
-      "line": 33,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "res.end = function (...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceTracking.ts",
-      "line": 77,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "res.end = function (...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceTracking.ts",
-      "line": 110,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "res.end = function (...args: any[]) {",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/middleware/requestLogger.ts",
       "line": 42,
       "category": "function-param",
@@ -2391,14 +895,6 @@
       "category": "function-param",
       "risk": "HIGH",
       "code": "res.json = function (obj?: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/validation.ts",
-      "line": 115,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "items.forEach((item: any, index: number) => {",
       "isPriority": false
     },
     {
@@ -2419,98 +915,10 @@
     },
     {
       "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 818,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export async function monitorQuery<T extends Record<string, any> = any>(",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1098,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "on: (event: string, listener: (...args: any[]) => void) => metricsEmitter.on(event, listener),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1099,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "off: (event: string, listener: (...args: any[]) => void) => metricsEmitter.off(event, listener),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1100,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "once: (event: string, listener: (...args: any[]) => void) => metricsEmitter.once(event, listener),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 755,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export function errorHandlerMiddleware(err: any, req: Request, res: Response, next: NextFunction) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 969,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export function updatePoolMetrics(pool: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
       "line": 279,
       "category": "array-any",
       "risk": "HIGH",
       "code": "private metricsQueue: any[] = [];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 820,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "params: any[],",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1098,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "on: (event: string, listener: (...args: any[]) => void) => metricsEmitter.on(event, listener),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1099,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "off: (event: string, listener: (...args: any[]) => void) => metricsEmitter.off(event, listener),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1100,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "once: (event: string, listener: (...args: any[]) => void) => metricsEmitter.once(event, listener),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/routes/index.ts",
-      "line": 108,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const setupRoutes = (app: express.Application, _io: any) => {",
       "isPriority": false
     },
     {
@@ -2538,14 +946,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/security/middleware/rateLimitMiddleware.ts",
-      "line": 53,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "return (req: Request, res: Response, _next: NextFunction, options: any) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/security/utils/securityHelpers.ts",
       "line": 206,
       "category": "api-response",
@@ -2559,38 +959,6 @@
       "category": "type-assertion",
       "risk": "HIGH",
       "code": "} as any,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockAuth.ts",
-      "line": 506,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "return jest.fn((payload: any, secret: string, options: any = {}) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockAuth.ts",
-      "line": 541,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "return jest.fn((token: string, secret: string, _options: any = {}, callback?: (err: Error | null, decoded?: any) => void) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockDatabase.ts",
-      "line": 51,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "on(event: string, listener: (...args: any[]) => void): this;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockDatabase.ts",
-      "line": 175,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "on: (_event: string, _listener: (...args: any[]) => void): Pool => {",
       "isPriority": false
     },
     {
@@ -2619,14 +987,6 @@
     },
     {
       "file": "packages/backend/src/test-utils/mockDatabase.ts",
-      "line": 51,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "on(event: string, listener: (...args: any[]) => void): this;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockDatabase.ts",
       "line": 158,
       "category": "array-any",
       "risk": "HIGH",
@@ -2643,90 +1003,10 @@
     },
     {
       "file": "packages/backend/src/test-utils/mockDatabase.ts",
-      "line": 175,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "on: (_event: string, _listener: (...args: any[]) => void): Pool => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockDatabase.ts",
       "line": 192,
       "category": "array-any",
       "risk": "HIGH",
       "code": "values: any[];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockDatabase.ts",
-      "line": 357,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "public async query(text: QueryParams, values: any[] = []): Promise<QueryResult> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1355,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "writeFile: (path: string, data: any, options?: any) =>",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1354,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "readFile: (path: string, options?: any) => fileSystem.readFile(path, options),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1355,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "writeFile: (path: string, data: any, options?: any) =>",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1357,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "mkdir: (path: string, options?: any) => fileSystem.mkdir(path, options),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1358,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "readdir: (path: string, options?: any) => fileSystem.readdir(path, options),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1359,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "stat: (path: string, options?: any) => fileSystem.stat(path, options),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1361,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "rmdir: (path: string, options?: any) => fileSystem.rmdir(path, options),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/utils/apiResponse.ts",
-      "line": 187,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const extractPagination = (query: any) => {",
       "isPriority": false
     },
     {
@@ -2786,43 +1066,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/utils/errorHandling/index.ts",
-      "line": 107,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const errorHelpers = (req: any, res: any, next: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/utils/errorHandling/index.ts",
-      "line": 108,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "req.throwValidationError = (message: string, details?: any) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/__mocks__/polygonWorker.ts",
       "line": 27,
       "category": "api-response",
       "risk": "HIGH",
       "code": "let result: any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/analytics/AnalyticsDashboardOptimized.tsx",
-      "line": 155,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "return analyticsData.activity.map((item: any) => ({",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/analytics/AnalyticsDashboardOptimized.tsx",
-      "line": 173,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "return analyticsData.performance.map((item: any) => ({",
       "isPriority": false
     },
     {
@@ -2847,22 +1095,6 @@
       "category": "api-response",
       "risk": "HIGH",
       "code": "data: any[];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/charts/PieChartContainer.tsx",
-      "line": 9,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "tooltipFormatter?: (value: any, name: string) => [string, string];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/charts/PieChartContainer.tsx",
-      "line": 10,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "labelFormatter?: (props: any) => string;",
       "isPriority": false
     },
     {
@@ -2882,123 +1114,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/components/project/ImageDisplayOptimized.tsx",
-      "line": 141,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "const handleSegmentationUpdate = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/project/ImageDisplayOptimized.tsx",
-      "line": 141,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const handleSegmentationUpdate = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/project/ShareDialog.tsx",
-      "line": 34,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const createShareFormSchema = (t: any) =>",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/project/ShareDialog.tsx",
-      "line": 96,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const users = response.data.data.map((user: any) => ({",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/SegmentationQueueIndicator.tsx",
-      "line": 326,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "(data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/SegmentationQueueIndicator.tsx",
-      "line": 325,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const handleSegmentationUpdate = useCallback(",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/settings/AvatarUploader.tsx",
-      "line": 91,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const handleCropComplete = async (cropData: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/upload/UnifiedFileUploader.tsx",
-      "line": 50,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "renderFileItem?: (file: any, actions: any) => React.ReactNode;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/upload/UnifiedFileUploader.tsx",
-      "line": 145,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const defaultFileItemRenderer = (file: any) => (",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/components/upload/UnifiedFileUploader.tsx",
       "line": 47,
       "category": "array-any",
       "risk": "HIGH",
       "code": "files: any[];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 276,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "function PricingCard({ plan, price, highlighted, onSelect }: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 288,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "function ComparisonTable({ onSelect }: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 292,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "function StandardPricingTable({ onSelect }: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 308,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "function VirtualizedImageGallery({ lazyLoad }: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 312,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "function StandardImageGallery({ lazyLoad }: any) {",
       "isPriority": false
     },
     {
@@ -3015,30 +1135,6 @@
       "category": "api-response",
       "risk": "HIGH",
       "code": "const createMockResponse = (data: any, status = 200): AxiosResponse => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 127,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "mockPost.mockImplementation((url: string, data: any) => handleRequest(url, 'post', data));",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 128,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "mockPut.mockImplementation((url: string, data: any) => handleRequest(url, 'put', data));",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 129,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "mockPatch.mockImplementation((url: string, data: any) => handleRequest(url, 'patch', data));",
       "isPriority": false
     },
     {
@@ -3063,190 +1159,6 @@
       "category": "type-assertion",
       "risk": "HIGH",
       "code": "config: {} as any,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 16,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "fallbackHandler?: (url: string, method: HttpMethod, data?: any) => Promise<any>;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 127,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "mockPost.mockImplementation((url: string, data: any) => handleRequest(url, 'post', data));",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 128,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "mockPut.mockImplementation((url: string, data: any) => handleRequest(url, 'put', data));",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 129,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "mockPatch.mockImplementation((url: string, data: any) => handleRequest(url, 'patch', data));",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 49,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "post: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 62,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "put: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 124,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "post: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 137,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "put: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 49,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "post: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 62,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "put: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 124,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "post: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 137,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "put: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 37,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const handleResponse = async (url: string, method: string, options?: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 75,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "post: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'post', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 76,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "put: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'put', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 77,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "patch: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'patch', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 78,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "delete: vi.fn((url: string, options?: any) => handleResponse(url, 'delete', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 130,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "const handleSegmentationUpdate = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 178,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "const handleImageCreated = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 192,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "const handleImageDeleted = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 130,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const handleSegmentationUpdate = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 178,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const handleImageCreated = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 192,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "const handleImageDeleted = (data: any) => {",
       "isPriority": false
     },
     {
@@ -3351,54 +1263,6 @@
       "category": "function-param",
       "risk": "HIGH",
       "code": "export function testAllToolbarButtons(screen: any, props = defaultToolbarV2Props) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/utils/databaseImageLoader.ts",
-      "line": 29,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "process: (data: any[]) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/utils/databaseImageLoader.ts",
-      "line": 53,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "process: (data: any[]) => (Array.isArray(data) && data.length > 0 ? data[0] : null),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/utils/databaseImageLoader.ts",
-      "line": 29,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "process: (data: any[]) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/utils/databaseImageLoader.ts",
-      "line": 53,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "process: (data: any[]) => (Array.isArray(data) && data.length > 0 ? data[0] : null),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/utils/databaseImageLoader.ts",
-      "line": 29,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "process: (data: any[]) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/utils/databaseImageLoader.ts",
-      "line": 53,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "process: (data: any[]) => (Array.isArray(data) && data.length > 0 ? data[0] : null),",
       "isPriority": false
     },
     {
@@ -3539,90 +1403,10 @@
     },
     {
       "file": "packages/frontend/src/test-utils/apiClientMock.ts",
-      "line": 246,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "export const mockFileUpload = (api: any, response: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/apiClientMock.ts",
       "line": 128,
       "category": "function-param",
       "risk": "HIGH",
       "code": "const mockSuccess = (method: keyof typeof mockApi, path: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/apiClientMock.ts",
-      "line": 246,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const mockFileUpload = (api: any, response: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/index.tsx",
-      "line": 24,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const renderWithProviders = (",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/polygonActionTestUtils.ts",
-      "line": 7,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "[key: string]: (...args: any[]) => any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/polygonActionTestUtils.ts",
-      "line": 24,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const testPolygonAction = <T extends PolygonActions>(",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/polygonActionTestUtils.ts",
-      "line": 7,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "[key: string]: (...args: any[]) => any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/polygonActionTestUtils.ts",
-      "line": 33,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "...actionArgs: any[]",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/react-router-wrapper.tsx",
-      "line": 33,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const createTestRouter = (routes: any[], initialEntries = ['/', '/about']) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/react-router-wrapper.tsx",
-      "line": 33,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "export const createTestRouter = (routes: any[], initialEntries = ['/', '/about']) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/test-data.ts",
-      "line": 91,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "export const createMockApiResponse = (data: any, status = 200) => ({",
       "isPriority": false
     },
     {
@@ -3634,91 +1418,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/test-utils/test-data.ts",
-      "line": 91,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const createMockApiResponse = (data: any, status = 200) => ({",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/translations/migrate-translations.ts",
-      "line": 399,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "function setNestedValue(obj: any, path: string, value: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/consoleErrorDetector.ts",
-      "line": 33,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "console.error = (...args: any[]) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/consoleErrorDetector.ts",
-      "line": 56,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "console.warn = (...args: any[]) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/consoleErrorDetector.ts",
-      "line": 33,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "console.error = (...args: any[]) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/consoleErrorDetector.ts",
-      "line": 56,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "console.warn = (...args: any[]) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/utils/fix-chinese-formatting.ts",
       "line": 925,
       "category": "api-response",
       "risk": "HIGH",
       "code": "const result: any = {};",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/timers.ts",
-      "line": 9,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const setTimeoutSafe = (callback: (...args: any[]) => void, delay?: number): NodeJS.Timeout => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/timers.ts",
-      "line": 32,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "export const setIntervalSafe = (callback: (...args: any[]) => void, delay?: number): NodeJS.Timeout => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/timers.ts",
-      "line": 9,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "export const setTimeoutSafe = (callback: (...args: any[]) => void, delay?: number): NodeJS.Timeout => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/timers.ts",
-      "line": 32,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "export const setIntervalSafe = (callback: (...args: any[]) => void, delay?: number): NodeJS.Timeout => {",
       "isPriority": false
     },
     {
@@ -3738,27 +1442,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/config/i18n.ts",
-      "line": 53,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "options?: any",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/db/monitoring/index.ts",
       "line": 15,
       "category": "generic-any",
       "risk": "MEDIUM",
-      "code": "query: async function (text: string, params?: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/monitoring/index.ts",
-      "line": 15,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "query: async function (text: string, params?: any[]): Promise<any> {",
+      "code": "query: async function(text: string, params?: unknown[]): Promise<any> {",
       "isPriority": false
     },
     {
@@ -3766,7 +1454,7 @@
       "line": 19,
       "category": "generic-any",
       "risk": "MEDIUM",
-      "code": "const wrappedQuery = async function (...args: any[]): Promise<any> {",
+      "code": "const wrappedQuery = async function (...args: unknown[]): Promise<any> {",
       "isPriority": false
     },
     {
@@ -3774,47 +1462,7 @@
       "line": 90,
       "category": "generic-any",
       "risk": "MEDIUM",
-      "code": "pool.query = async function (...args: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/performanceWrapper.ts",
-      "line": 19,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const wrappedQuery = async function (...args: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/performanceWrapper.ts",
-      "line": 90,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "pool.query = async function (...args: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/performanceWrapper.ts",
-      "line": 131,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export function createTrackedPool(poolConfig: any): Pool {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/readReplica.ts",
-      "line": 104,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "params?: any[],",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/readReplica.ts",
-      "line": 152,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export async function transaction<T>(callback: (client: any) => Promise<T>): Promise<T> {",
+      "code": "pool.query = async function (...args: unknown[]): Promise<any> {",
       "isPriority": false
     },
     {
@@ -3838,15 +1486,7 @@
       "line": 14,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "export function createPerformanceMonitoring(_options?: any): any {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/lib/monitoring/index.ts",
-      "line": 14,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export function createPerformanceMonitoring(_options?: any): any {",
+      "code": "export function createPerformanceMonitoring(_options?: unknown): any {",
       "isPriority": false
     },
     {
@@ -3906,35 +1546,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/lib/monitoring/performanceMonitoring.ts",
-      "line": 14,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "public static getInstance(_options?: any): typeof performanceMonitoring {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/lib/monitoring/performanceMonitoring.ts",
-      "line": 26,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export function createPerformanceMonitoring(_options?: any): typeof performanceMonitoring {",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/middleware/cache.ts",
       "line": 76,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "res.send = function (data: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/cdn.ts",
-      "line": 9,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "res.locals.getCDNUrl = (path: string, options?: any) => {",
       "isPriority": false
     },
     {
@@ -3982,15 +1598,7 @@
       "line": 144,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "function rewriteUrls(data: any): any {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/cdn.ts",
-      "line": 144,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function rewriteUrls(data: any): any {",
+      "code": "function rewriteUrls(data: unknown): any {",
       "isPriority": false
     },
     {
@@ -4030,15 +1638,7 @@
       "line": 354,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "function sanitizeObject(obj: any): any {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/enhancedValidation.ts",
-      "line": 354,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function sanitizeObject(obj: any): any {",
+      "code": "function sanitizeObject(obj: unknown): any {",
       "isPriority": false
     },
     {
@@ -4058,30 +1658,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/middleware/errorHandler.ts",
-      "line": 11,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "err: any,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/errorHandleri18n.ts",
-      "line": 10,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "err: any,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/i18n.ts",
-      "line": 9,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "t: (key: string, options?: any) => string;",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/middleware/i18n.ts",
       "line": 11,
       "category": "variable-type",
@@ -4094,15 +1670,7 @@
       "line": 43,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "export function getValidationErrors(errors: any[], req: Request): any[] {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/i18n.ts",
-      "line": 43,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export function getValidationErrors(errors: any[], req: Request): any[] {",
+      "code": "export function getValidationErrors(errors: unknown[], req: Request): any[] {",
       "isPriority": false
     },
     {
@@ -4114,19 +1682,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/middleware/performanceMiddleware.ts",
-      "line": 155,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const applyPerformanceMonitoring = (app: any) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/middleware/performanceMonitoring.ts",
       "line": 520,
       "category": "generic-any",
       "risk": "MEDIUM",
-      "code": "pool.query = async function (...args: any[]): Promise<any> {",
+      "code": "pool.query = async function (...args: unknown[]): Promise<any> {",
       "isPriority": false
     },
     {
@@ -4135,46 +1695,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "res.send = function (data: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceMonitoring.ts",
-      "line": 520,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "pool.query = async function (...args: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceMonitoringMiddleware.ts",
-      "line": 26,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "res.end = function (this: Response, ...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceTracking.ts",
-      "line": 33,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "res.end = function (...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceTracking.ts",
-      "line": 77,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "res.end = function (...args: any[]) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performanceTracking.ts",
-      "line": 110,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "res.end = function (...args: any[]) {",
       "isPriority": false
     },
     {
@@ -4207,14 +1727,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "res.json = function (obj?: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/validation.ts",
-      "line": 115,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "items.forEach((item: any, index: number) => {",
       "isPriority": false
     },
     {
@@ -4251,50 +1763,10 @@
     },
     {
       "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1100,
-      "category": "event-handler",
-      "risk": "MEDIUM",
-      "code": "once: (event: string, listener: (...args: any[]) => void) => metricsEmitter.once(event, listener),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
       "line": 279,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "private metricsQueue: any[] = [];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 340,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "private recordMetric(metric: any): void {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 755,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export function errorHandlerMiddleware(err: any, req: Request, res: Response, next: NextFunction) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 820,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "params: any[],",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 969,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export function updatePoolMetrics(pool: any) {",
       "isPriority": false
     },
     {
@@ -4306,43 +1778,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1098,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "on: (event: string, listener: (...args: any[]) => void) => metricsEmitter.on(event, listener),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1099,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "off: (event: string, listener: (...args: any[]) => void) => metricsEmitter.off(event, listener),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/unified/index.ts",
-      "line": 1100,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "once: (event: string, listener: (...args: any[]) => void) => metricsEmitter.once(event, listener),",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/routes/imagesAsync.ts",
       "line": 85,
       "category": "generic-any",
       "risk": "MEDIUM",
       "code": "processor: (file: T) => Promise<any>,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/routes/index.ts",
-      "line": 108,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const setupRoutes = (app: express.Application, _io: any) => {",
       "isPriority": false
     },
     {
@@ -4386,14 +1826,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/security/middleware/rateLimitMiddleware.ts",
-      "line": 53,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "return (req: Request, res: Response, _next: NextFunction, options: any) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/security/middleware/security.ts",
       "line": 25,
       "category": "variable-type",
@@ -4434,38 +1866,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/test-utils/mockAuth.ts",
-      "line": 506,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "return jest.fn((payload: any, secret: string, options: any = {}) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockAuth.ts",
-      "line": 506,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "return jest.fn((payload: any, secret: string, options: any = {}) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockAuth.ts",
-      "line": 541,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "return jest.fn((token: string, secret: string, _options: any = {}, callback?: (err: Error | null, decoded?: any) => void) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockAuth.ts",
-      "line": 541,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "return jest.fn((token: string, secret: string, _options: any = {}, callback?: (err: Error | null, decoded?: any) => void) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/test-utils/mockDatabase.ts",
       "line": 32,
       "category": "variable-type",
@@ -4491,14 +1891,6 @@
     },
     {
       "file": "packages/backend/src/test-utils/mockDatabase.ts",
-      "line": 51,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "on(event: string, listener: (...args: any[]) => void): this;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockDatabase.ts",
       "line": 158,
       "category": "variable-type",
       "risk": "MEDIUM",
@@ -4515,26 +1907,10 @@
     },
     {
       "file": "packages/backend/src/test-utils/mockDatabase.ts",
-      "line": 175,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "on: (_event: string, _listener: (...args: any[]) => void): Pool => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockDatabase.ts",
       "line": 192,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "values: any[];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockDatabase.ts",
-      "line": 357,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "public async query(text: QueryParams, values: any[] = []): Promise<QueryResult> {",
       "isPriority": false
     },
     {
@@ -4551,62 +1927,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "const dirent: any = {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1354,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "readFile: (path: string, options?: any) => fileSystem.readFile(path, options),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1355,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "writeFile: (path: string, data: any, options?: any) =>",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1355,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "writeFile: (path: string, data: any, options?: any) =>",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1357,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "mkdir: (path: string, options?: any) => fileSystem.mkdir(path, options),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1358,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "readdir: (path: string, options?: any) => fileSystem.readdir(path, options),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1359,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "stat: (path: string, options?: any) => fileSystem.stat(path, options),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1361,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "rmdir: (path: string, options?: any) => fileSystem.rmdir(path, options),",
       "isPriority": false
     },
     {
@@ -4639,14 +1959,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "details?: any[]",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/utils/apiResponse.ts",
-      "line": 187,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const extractPagination = (query: any) => {",
       "isPriority": false
     },
     {
@@ -4746,38 +2058,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/utils/errorHandling/index.ts",
-      "line": 107,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const errorHelpers = (req: any, res: any, next: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/utils/errorHandling/index.ts",
-      "line": 107,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const errorHelpers = (req: any, res: any, next: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/utils/errorHandling/index.ts",
-      "line": 107,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const errorHelpers = (req: any, res: any, next: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/utils/errorHandling/index.ts",
-      "line": 108,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "req.throwValidationError = (message: string, details?: any) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/workers/projectDuplicationWorker.ts",
       "line": 55,
       "category": "variable-type",
@@ -4787,34 +2067,10 @@
     },
     {
       "file": "packages/frontend/src/__mocks__/polygonWorker.ts",
-      "line": 15,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "postMessage(message: any, _transfer?: Transferable[]): void {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/__mocks__/polygonWorker.ts",
       "line": 27,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "let result: any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/analytics/AnalyticsDashboardOptimized.tsx",
-      "line": 155,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "return analyticsData.activity.map((item: any) => ({",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/analytics/AnalyticsDashboardOptimized.tsx",
-      "line": 173,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "return analyticsData.performance.map((item: any) => ({",
       "isPriority": false
     },
     {
@@ -4831,22 +2087,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "data: any[];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/charts/PieChartContainer.tsx",
-      "line": 9,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "tooltipFormatter?: (value: any, name: string) => [string, string];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/charts/PieChartContainer.tsx",
-      "line": 10,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "labelFormatter?: (props: any) => string;",
       "isPriority": false
     },
     {
@@ -4906,46 +2146,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/components/project/ImageDisplayOptimized.tsx",
-      "line": 141,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const handleSegmentationUpdate = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/project/ShareDialog.tsx",
-      "line": 34,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const createShareFormSchema = (t: any) =>",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/project/ShareDialog.tsx",
-      "line": 96,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const users = response.data.data.map((user: any) => ({",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/SegmentationQueueIndicator.tsx",
-      "line": 326,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "(data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/settings/AvatarUploader.tsx",
-      "line": 91,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const handleCropComplete = async (cropData: any) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/components/upload/UnifiedFileUploader.tsx",
       "line": 47,
       "category": "variable-type",
@@ -4954,75 +2154,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/components/upload/UnifiedFileUploader.tsx",
-      "line": 50,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "renderFileItem?: (file: any, actions: any) => React.ReactNode;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/upload/UnifiedFileUploader.tsx",
-      "line": 50,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "renderFileItem?: (file: any, actions: any) => React.ReactNode;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/upload/UnifiedFileUploader.tsx",
-      "line": 145,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const defaultFileItemRenderer = (file: any) => (",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 276,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function PricingCard({ plan, price, highlighted, onSelect }: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 288,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function ComparisonTable({ onSelect }: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 292,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function StandardPricingTable({ onSelect }: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 308,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function VirtualizedImageGallery({ lazyLoad }: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/examples/ABTestingExample.tsx",
-      "line": 312,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function StandardImageGallery({ lazyLoad }: any) {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
       "line": 16,
       "category": "generic-any",
       "risk": "MEDIUM",
-      "code": "fallbackHandler?: (url: string, method: HttpMethod, data?: any) => Promise<any>;",
+      "code": "fallbackHandler?: (url: string, method: HttpMethod, data?: unknown) => Promise<any>;",
       "isPriority": false
     },
     {
@@ -5035,50 +2171,10 @@
     },
     {
       "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 16,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "fallbackHandler?: (url: string, method: HttpMethod, data?: any) => Promise<any>;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
       "line": 49,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "const createMockResponse = (data: any, status = 200): AxiosResponse => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 90,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const handleRequest = async (url: string, method: HttpMethod, data?: any): Promise<AxiosResponse> => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 127,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "mockPost.mockImplementation((url: string, data: any) => handleRequest(url, 'post', data));",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 128,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "mockPut.mockImplementation((url: string, data: any) => handleRequest(url, 'put', data));",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.ts",
-      "line": 129,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "mockPatch.mockImplementation((url: string, data: any) => handleRequest(url, 'patch', data));",
       "isPriority": false
     },
     {
@@ -5098,131 +2194,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 49,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "post: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 62,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "put: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 124,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "post: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/enhanced/apiClient.tsx",
-      "line": 137,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "put: vi.fn((url: string, data: any) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
       "line": 5,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "data?: any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 37,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const handleResponse = async (url: string, method: string, options?: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 75,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "post: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'post', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 75,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "post: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'post', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 76,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "put: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'put', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 76,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "put: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'put', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 77,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "patch: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'patch', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 77,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "patch: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'patch', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
-      "line": 78,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "delete: vi.fn((url: string, options?: any) => handleResponse(url, 'delete', options)),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 130,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const handleSegmentationUpdate = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 178,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const handleImageCreated = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 192,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "const handleImageDeleted = (data: any) => {",
       "isPriority": false
     },
     {
@@ -5327,22 +2303,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "export function testAllToolbarButtons(screen: any, props = defaultToolbarV2Props) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/utils/databaseImageLoader.ts",
-      "line": 29,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "process: (data: any[]) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/utils/databaseImageLoader.ts",
-      "line": 53,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "process: (data: any[]) => (Array.isArray(data) && data.length > 0 ? data[0] : null),",
       "isPriority": false
     },
     {
@@ -5530,62 +2490,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/test-utils/apiClientMock.ts",
-      "line": 246,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const mockFileUpload = (api: any, response: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/apiClientMock.ts",
-      "line": 246,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const mockFileUpload = (api: any, response: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/index.tsx",
-      "line": 34,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "preloadedState?: any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/polygonActionTestUtils.ts",
-      "line": 7,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "[key: string]: (...args: any[]) => any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/polygonActionTestUtils.ts",
-      "line": 31,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "renderHookFn: (params: any) => RenderHookResult<any, T>,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/polygonActionTestUtils.ts",
-      "line": 33,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "...actionArgs: any[]",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-utils/react-router-wrapper.tsx",
-      "line": 33,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const createTestRouter = (routes: any[], initialEntries = ['/', '/about']) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/test-utils/render-with-providers.tsx",
       "line": 18,
       "category": "generic-any",
@@ -5594,35 +2498,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/test-utils/test-data.ts",
-      "line": 91,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const createMockApiResponse = (data: any, status = 200) => ({",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/translations/migrate-translations.ts",
       "line": 372,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "const nestedTranslations: any = {};",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/translations/migrate-translations.ts",
-      "line": 399,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function setNestedValue(obj: any, path: string, value: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/translations/migrate-translations.ts",
-      "line": 399,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function setNestedValue(obj: any, path: string, value: any) {",
       "isPriority": false
     },
     {
@@ -5706,22 +2586,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/utils/consoleErrorDetector.ts",
-      "line": 33,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "console.error = (...args: any[]) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/consoleErrorDetector.ts",
-      "line": 56,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "console.warn = (...args: any[]) => {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/utils/error/permissionErrorHandler.ts",
       "line": 166,
       "category": "generic-any",
@@ -5750,15 +2614,7 @@
       "line": 918,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "function translateSection(section: any): any {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/fix-chinese-formatting.ts",
-      "line": 918,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "function translateSection(section: any): any {",
+      "code": "function translateSection(section: unknown): any {",
       "isPriority": false
     },
     {
@@ -5767,22 +2623,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "const result: any = {};",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/timers.ts",
-      "line": 9,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const setTimeoutSafe = (callback: (...args: any[]) => void, delay?: number): NodeJS.Timeout => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/timers.ts",
-      "line": 32,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export const setIntervalSafe = (callback: (...args: any[]) => void, delay?: number): NodeJS.Timeout => {",
       "isPriority": false
     }
   ]
