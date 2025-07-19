@@ -27,7 +27,7 @@ interface FeatureFlagProps {
 
 interface ExperimentProps {
   experimentId: string;
-  children: (variant: string | null, features: Record<string, any>) => ReactNode;
+  children: (variant: string | null, features: Record<string, unknown>) => ReactNode;
   fallback?: ReactNode;
 }
 
@@ -43,7 +43,7 @@ interface ABTestDebugPanelProps {
 
 interface TrackEventProps {
   event: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   children: ReactNode;
   trigger?: 'mount' | 'click' | 'hover' | 'focus';
 }
@@ -144,7 +144,7 @@ export function TrackEvent({ event, properties, children, trigger = 'mount' }: T
 
   if (React.isValidElement(children)) {
     // Properly type the cloneElement call
-    const element = children as ReactElement<Record<string, any>>;
+    const element = children as ReactElement<Record<string, unknown>>;
     return React.cloneElement(element, interactionProps);
   }
 

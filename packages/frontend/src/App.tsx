@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import { routes } from './routing/routes';
 import { queryClient } from './config/queryClient';
+import { initializeRoutePrefetching } from './routing/routePrefetching';
 
 // i18n
 import './i18n';
@@ -13,6 +14,11 @@ import '@/utils/debugI18next';
 
 // Import accessibility CSS
 import './components/a11y/SkipLink.css';
+
+// Initialize route prefetching on app start
+if (typeof window !== 'undefined') {
+  initializeRoutePrefetching();
+}
 
 // Prefetch critical routes on app initialization
 const prefetchRoute = (path: string) => {

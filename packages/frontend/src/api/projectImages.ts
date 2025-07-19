@@ -152,7 +152,7 @@ export const loadImagesFromStorage = (projectId: string): ProjectImage[] => {
   try {
     const storedImages = localStorage.getItem(key);
     if (storedImages) {
-      const parsedImages = JSON.parse(storedImages) as Array<any>;
+      const parsedImages = JSON.parse(storedImages) as Array<unknown>;
 
       // Načteme obrázky z localStorage
       const images = parsedImages

@@ -16,7 +16,7 @@ interface ChartConfig {
 }
 
 interface BarChartContainerProps {
-  data: any[];
+  data: Record<string, unknown>[];
   config: ChartConfig;
   bars: {
     dataKey: string;
