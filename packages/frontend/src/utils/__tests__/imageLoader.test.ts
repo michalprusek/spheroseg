@@ -62,7 +62,7 @@ describe('Image Loader Utilities', () => {
     vi.clearAllMocks();
 
     // Reset global Image constructor
-    // @ts-expect-error
+    // @ts-expect-error: Override global Image constructor with mock for testing
     global.Image = MockImage;
 
     // Reset mocks

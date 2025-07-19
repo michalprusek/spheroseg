@@ -382,7 +382,7 @@ describe('ABTesting Components', () => {
 
     it('should render in development by default', () => {
       const originalEnv = import.meta.env.DEV;
-      // @ts-expect-error
+      // @ts-expect-error: Temporarily override import.meta.env.DEV for testing
       import.meta.env.DEV = true;
 
       (useActiveExperiments as Mock).mockReturnValue([{ key: 'test', experiment: 'exp', variant: 'v1', value: true }]);
@@ -391,7 +391,7 @@ describe('ABTesting Components', () => {
 
       expect(screen.getByText('A/B Testing Debug')).toBeInTheDocument();
 
-      // @ts-expect-error
+      // @ts-expect-error: Restore original import.meta.env.DEV value after test
       import.meta.env.DEV = originalEnv;
     });
   });

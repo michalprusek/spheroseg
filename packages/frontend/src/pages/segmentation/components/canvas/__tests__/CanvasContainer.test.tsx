@@ -19,7 +19,7 @@ vi.mock('../CanvasUIElements', () => ({
 
 // Mock resize observer
 beforeEach(() => {
-  // @ts-expect-error
+  // @ts-expect-error: Mock ResizeObserver for testing environment
   global.ResizeObserver = class MockResizeObserver {
     constructor(callback: ResizeObserverCallback) {
       // Immediately call the callback to simulate element being observed
