@@ -11,6 +11,7 @@ import apiRouter from './routes';
 import config from './config';
 import logger from './utils/logger';
 import { performHealthCheck } from './utils/healthCheck';
+import { metricsHandler, prometheusMiddleware } from './monitoring/prometheus';
 // TODO: Fix i18n import - temporarily disabled
 // import i18next from './config/i18n';
 
@@ -44,6 +45,9 @@ export const createApp = (): Application => {
   // Configure all middleware in the correct order
   configureMiddleware(app);
 
+  // Add Prometheus metrics middleware
+  app.use(prometheusMiddleware);
+
   // Health check endpoint (before API routes)
   app.get('/health', async (_req, res) => {
     try {
@@ -67,6 +71,9 @@ export const createApp = (): Application => {
       });
     }
   });
+
+  // Metrics endpoint for Prometheus
+  app.get('/api/metrics', metricsHandler);
 
   // API routes
   app.use('/api', apiRouter);

@@ -1,0 +1,91 @@
+groups:
+  - name: spheroseg_infrastructure
+    interval: 30s
+    rules:
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% on {{ $labels.instance }} (current value: {{ $value }}%)"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% on {{ $labels.instance }} (current value: {{ $value }}%)"
+
+      # Disk Space Low
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_free_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Less than 15% disk space remaining on {{ $labels.instance }} ({{ $value }}% free)"
+
+      # Service Down
+      - alert: ServiceDown
+        expr: |
+          up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.job }} on {{ $labels.instance }} has been down for more than 2 minutes"
+
+      # Container Restart
+      - alert: ContainerRestarting
+        expr: |
+          rate(container_last_seen{name!~".*prometheus.*|.*grafana.*"}[5m]) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container is restarting frequently"
+          description: "Container {{ $labels.name }} is restarting frequently"
+
+      # PostgreSQL Down
+      - alert: PostgreSQLDown
+        expr: |
+          pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database is not responding"
+
+      # PostgreSQL Slow Queries
+      - alert: PostgreSQLSlowQueries
+        expr: |
+          rate(pg_stat_statements_mean_time_seconds[5m]) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL slow queries detected"
+          description: "Average query time is above 1 second"
+
+      # PostgreSQL Connection Saturation
+      - alert: PostgreSQLConnectionSaturation
+        expr: |
+          sum(pg_stat_database_numbackends) / sum(pg_settings_max_connections) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL connection saturation"
+          description: "PostgreSQL is using {{ $value }}% of max connections"

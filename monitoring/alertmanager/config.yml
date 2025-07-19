@@ -1,0 +1,55 @@
+global:
+  resolve_timeout: 5m
+  # Slack webhook URL (replace with your actual webhook)
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+  routes:
+    # Critical alerts go to PagerDuty
+    - match:
+        severity: critical
+      receiver: 'critical'
+      continue: true
+    
+    # Warning alerts go to Slack
+    - match:
+        severity: warning
+      receiver: 'warning'
+
+receivers:
+  - name: 'default'
+    slack_configs:
+      - channel: '#spheroseg-alerts'
+        title: 'SpherosegV4 Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+
+  - name: 'critical'
+    slack_configs:
+      - channel: '#spheroseg-critical'
+        title: '🚨 CRITICAL: SpherosegV4 Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+    # Add PagerDuty integration here if needed
+    # pagerduty_configs:
+    #   - service_key: '${PAGERDUTY_SERVICE_KEY}'
+
+  - name: 'warning'
+    slack_configs:
+      - channel: '#spheroseg-warnings'
+        title: '⚠️ Warning: SpherosegV4 Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+
+inhibit_rules:
+  # Don't send warnings when there are critical alerts for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']

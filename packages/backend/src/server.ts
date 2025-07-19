@@ -25,6 +25,7 @@ import performanceConfig from './config/performance';
 import performanceMonitor from './services/performanceMonitor';
 import { initializeRedis, closeRedis } from './config/redis';
 import { validateAndExit } from './utils/startupValidation';
+import { initializeMetrics } from './monitoring/prometheus';
 
 // Memory optimization settings
 // Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized
@@ -176,6 +177,9 @@ const startServer = async (): Promise<void> => {
     
     // Initialize services first
     await initializeServices();
+    
+    // Initialize Prometheus metrics collection
+    initializeMetrics();
 
     // Start HTTP server
     const { port, host } = config.server;

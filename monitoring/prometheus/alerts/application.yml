@@ -1,0 +1,104 @@
+groups:
+  - name: spheroseg_application
+    interval: 30s
+    rules:
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: |
+          (sum(rate(http_request_duration_seconds_count{status_code=~"5.."}[5m])) by (job)
+          /
+          sum(rate(http_request_duration_seconds_count[5m])) by (job)) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for {{ $labels.job }} (current value: {{ $value }})"
+
+      # High Response Time
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is above 2 seconds for {{ $labels.job }}"
+
+      # Memory Pressure Events
+      - alert: MemoryPressureHigh
+        expr: |
+          rate(memory_pressure_events_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory pressure detected"
+          description: "Memory pressure events are occurring frequently ({{ $value }} per second)"
+
+      # Database Connection Pool Exhaustion
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          (db_pool_connections{state="waiting"} / (db_pool_connections{state="active"} + db_pool_connections{state="idle"} + db_pool_connections{state="waiting"})) > 0.8
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "{{ $labels.pool }} pool has {{ $value }}% connections waiting"
+
+      # ML Processing Queue Buildup
+      - alert: MLProcessingQueueHigh
+        expr: |
+          ml_tasks_queued > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ML processing queue is building up"
+          description: "{{ $value }} tasks in queue for priority {{ $labels.priority }}"
+
+      # WebSocket Connection Spike
+      - alert: WebSocketConnectionSpike
+        expr: |
+          rate(websocket_active_connections[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Rapid increase in WebSocket connections"
+          description: "WebSocket connections increasing at {{ $value }} per second"
+
+      # API Rate Limiting Active
+      - alert: APIRateLimitingActive
+        expr: |
+          rate(api_throttling_events_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API rate limiting is actively throttling requests"
+          description: "{{ $value }} requests per second being throttled on {{ $labels.endpoint }}"
+
+      # Cache Hit Rate Low
+      - alert: CacheHitRateLow
+        expr: |
+          cache_hit_rate < 60
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache hit rate is low"
+          description: "{{ $labels.cache_type }} cache hit rate is {{ $value }}%"
+
+      # Database Replication Lag
+      - alert: DatabaseReplicationLagHigh
+        expr: |
+          db_replication_lag_seconds > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database replication lag is high"
+          description: "Replica {{ $labels.replica }} is {{ $value }} seconds behind master"
