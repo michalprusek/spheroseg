@@ -7,6 +7,7 @@
 
 import Redis from 'ioredis';
 import logger from '../utils/logger';
+import type { User, SegmentationResult, Project, Image } from '@spheroseg/types';
 
 // Cache key prefixes for different data types
 const CACHE_PREFIXES = {
@@ -247,7 +248,7 @@ class CacheService {
   /**
    * Get cached user data
    */
-  async getCachedUser(userId: string): Promise<any | null> {
+  async getCachedUser(userId: string): Promise<User | null> {
     const key = `${CACHE_PREFIXES.USER}${userId}`;
     return await this.get(key);
   }
@@ -255,7 +256,7 @@ class CacheService {
   /**
    * Cache segmentation result
    */
-  async cacheSegmentationResult(imageId: string, result: any): Promise<void> {
+  async cacheSegmentationResult(imageId: string, result: SegmentationResult): Promise<void> {
     const key = `${CACHE_PREFIXES.SEGMENTATION_RESULT}${imageId}`;
     await this.set(key, result, CACHE_TTL.SEGMENTATION_RESULT);
   }
@@ -263,7 +264,7 @@ class CacheService {
   /**
    * Get cached segmentation result
    */
-  async getCachedSegmentationResult(imageId: string): Promise<any | null> {
+  async getCachedSegmentationResult(imageId: string): Promise<SegmentationResult | null> {
     const key = `${CACHE_PREFIXES.SEGMENTATION_RESULT}${imageId}`;
     return await this.get(key);
   }

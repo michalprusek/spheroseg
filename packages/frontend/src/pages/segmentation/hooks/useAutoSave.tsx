@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CanvasSegmentationData } from '@/types';
+import { setTimeoutSafe, clearTimeoutSafe } from '@/utils/timers';
 
 /**
  * Hook for auto-saving segmentation data
@@ -33,7 +34,7 @@ export const useAutoSave = (
   useEffect(() => {
     return () => {
       if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
+        clearTimeoutSafe(autoSaveTimeoutRef.current);
       }
     };
   }, []);
@@ -52,14 +53,14 @@ export const useAutoSave = (
 
     // Clear any existing timeout
     if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
+      clearTimeoutSafe(autoSaveTimeoutRef.current);
     }
 
     // Set auto-save status to pending
     setAutoSaveStatus('pending');
 
     // Set a new timeout for auto-save
-    autoSaveTimeoutRef.current = setTimeout(async () => {
+    autoSaveTimeoutRef.current = setTimeoutSafe(async () => {
       try {
         setAutoSaveStatus('saving');
         await handleSave();

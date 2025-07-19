@@ -120,7 +120,8 @@ const Features = () => {
     console.log('tag:', getTranslation('features.tag'));
     console.log('title:', getTranslation('features.title'));
     console.log('subtitle:', getTranslation('features.subtitle'));
-  }, [language, forceUpdate, getTranslation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, forceUpdate]);
 
   const features = [
     {

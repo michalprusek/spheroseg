@@ -670,17 +670,21 @@ vi.mock('@/contexts/ThemeContext', () => {
   };
 });
 
-// Ensure global timer functions are available
+// Ensure global timer functions are available for both global and window
 if (typeof global !== 'undefined') {
-  global.setTimeout =
-    global.setTimeout ||
-    vi.fn((fn, delay) => {
-      fn();
-      return 1;
-    });
-  global.clearTimeout = global.clearTimeout || vi.fn();
-  global.setInterval = global.setInterval || vi.fn(() => 1);
-  global.clearInterval = global.clearInterval || vi.fn();
+  // Use the actual timer functions from Node.js
+  global.setTimeout = global.setTimeout || setTimeout;
+  global.clearTimeout = global.clearTimeout || clearTimeout;
+  global.setInterval = global.setInterval || setInterval;
+  global.clearInterval = global.clearInterval || clearInterval;
+}
+
+// Also ensure they're available on window for jsdom
+if (typeof window !== 'undefined') {
+  window.setTimeout = window.setTimeout || setTimeout;
+  window.clearTimeout = window.clearTimeout || clearTimeout;
+  window.setInterval = window.setInterval || setInterval;
+  window.clearInterval = window.clearInterval || clearInterval;
 }
 
 // Mock window.indexedDB
