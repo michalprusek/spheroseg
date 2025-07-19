@@ -5,7 +5,7 @@ import { isPointInPolygonSync } from './geometry.worker';
 import { getCanvasCoordinates } from './coordinates';
 import { CLOSE_POLYGON_DISTANCE, VERTEX_HIT_RADIUS } from './constants';
 import { createLogger } from '@/lib/logger';
-import { calculatePolygonPerimeter } from '@spheroseg/shared/utils/polygonUtils.unified';
+import { calculatePolygonPerimeter } from '@spheroseg/shared';
 
 const logger = createLogger('segmentation:interactions');
 

@@ -28,4 +28,4 @@ export {
   calculatePolygonPerimeterAsync,
   calculateBoundingBoxAsync,
   executePolygonWorkerOperation,
-} from '@spheroseg/shared/utils/polygonUtils';
+} from '@spheroseg/shared';

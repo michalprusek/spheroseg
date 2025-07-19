@@ -1,5 +1,5 @@
 import { Point, Polygon } from '@/lib/segmentation';
-import { slicePolygonObject } from '@spheroseg/shared/utils/polygonUtils';
+import { slicePolygonObject } from '@spheroseg/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 /**

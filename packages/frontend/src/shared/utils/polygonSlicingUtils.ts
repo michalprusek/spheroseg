@@ -22,7 +22,7 @@ export {
   perpendicularDistance as distanceToLineSegment,
   getPointSideOfLine,
   createPolygon,
-} from '@spheroseg/shared/utils/polygonUtils';
+} from '@spheroseg/shared';
 
 // Legacy type for compatibility
 export interface SliceResult {

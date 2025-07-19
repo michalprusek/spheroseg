@@ -4,7 +4,7 @@
  * Provides common setup for all test environments
  */
 
-import { beforeAll, afterAll, afterEach } from 'vitest';
+import { beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
@@ -56,9 +56,12 @@ beforeAll(() => {
   if (!global.crypto) {
     global.crypto = {} as Crypto;
   }
-  global.crypto.subtle = {
-    digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
-  } as any;
+  Object.defineProperty(global.crypto, 'subtle', {
+    writable: true,
+    value: {
+      digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
+    }
+  });
 
   // Mock URL.createObjectURL
   global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');

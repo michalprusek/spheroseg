@@ -15,12 +15,14 @@ export * from './strategies';
 export * from './hooks';
 
 // Export preset configurations
-export const UPLOAD_PRESETS = {
+import { FileUploadConfig } from './types';
+
+export const UPLOAD_PRESETS: Record<string, Partial<FileUploadConfig>> = {
   IMAGE: {
     maxFileSize: 10 * 1024 * 1024, // 10MB
     maxFiles: 50,
-    acceptedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/tif', 'image/bmp', 'image/webp'],
-    acceptedExtensions: ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp', '.webp'],
+    acceptedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/tif', 'image/bmp', 'image/webp'] as string[],
+    acceptedExtensions: ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp', '.webp'] as string[],
     batchSize: 20,
     generatePreviews: true,
     autoSegment: false,
@@ -31,8 +33,8 @@ export const UPLOAD_PRESETS = {
   AVATAR: {
     maxFileSize: 5 * 1024 * 1024, // 5MB
     maxFiles: 1,
-    acceptedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
-    acceptedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
+    acceptedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'] as string[],
+    acceptedExtensions: ['.jpg', '.jpeg', '.png', '.webp'] as string[],
     batchSize: 1,
     generatePreviews: true,
     autoSegment: false,
@@ -42,8 +44,8 @@ export const UPLOAD_PRESETS = {
   DOCUMENT: {
     maxFileSize: 50 * 1024 * 1024, // 50MB
     maxFiles: 10,
-    acceptedTypes: ['application/pdf', 'text/plain', 'application/json'],
-    acceptedExtensions: ['.pdf', '.txt', '.json'],
+    acceptedTypes: ['application/pdf', 'text/plain', 'application/json'] as string[],
+    acceptedExtensions: ['.pdf', '.txt', '.json'] as string[],
     batchSize: 5,
     generatePreviews: false,
     autoSegment: false,
@@ -54,8 +56,8 @@ export const UPLOAD_PRESETS = {
   VIDEO: {
     maxFileSize: 500 * 1024 * 1024, // 500MB
     maxFiles: 5,
-    acceptedTypes: ['video/mp4', 'video/webm', 'video/ogg'],
-    acceptedExtensions: ['.mp4', '.webm', '.ogg'],
+    acceptedTypes: ['video/mp4', 'video/webm', 'video/ogg'] as string[],
+    acceptedExtensions: ['.mp4', '.webm', '.ogg'] as string[],
     batchSize: 1,
     generatePreviews: true,
     autoSegment: false,
@@ -63,4 +65,4 @@ export const UPLOAD_PRESETS = {
     enableChunking: true,
     enableResume: true,
   },
-} as const;
+};

@@ -4,7 +4,7 @@
 
 import { Point, Polygon } from './segmentation/index';
 import { createNamespacedLogger } from '@/utils/logger';
-import { isPointInPolygon as isPointInPolygonUtil } from '@spheroseg/shared/utils/polygonUtils';
+import { isPointInPolygon as isPointInPolygonUtil } from '@spheroseg/shared';
 
 const CLogger = createNamespacedLogger('svgUtils');
 

@@ -8,32 +8,30 @@ import { vi } from 'vitest';
 import type { MockedFunction } from 'vitest';
 
 // Mock response builders
-export const createSuccessResponse = <T>(data: T, metadata?: any) => ({
-  ok: true,
-  status: 200,
-  statusText: 'OK',
-  headers: new Headers({ 'content-type': 'application/json' }),
-  json: async () => ({ success: true, data, metadata }),
-  text: async () => JSON.stringify({ success: true, data, metadata }),
-  clone: function() { return this; },
-});
+export const createSuccessResponse = <T>(data: T, metadata?: any): Response => {
+  const body = JSON.stringify({ success: true, data, metadata });
+  return new Response(body, {
+    status: 200,
+    statusText: 'OK',
+    headers: { 'content-type': 'application/json' }
+  });
+};
 
-export const createErrorResponse = (status: number, message: string) => ({
-  ok: false,
-  status,
-  statusText: message,
-  headers: new Headers({ 'content-type': 'application/json' }),
-  json: async () => ({ success: false, error: message }),
-  text: async () => JSON.stringify({ success: false, error: message }),
-  clone: function() { return this; },
-});
+export const createErrorResponse = (status: number, message: string): Response => {
+  const body = JSON.stringify({ success: false, error: message });
+  return new Response(body, {
+    status,
+    statusText: message,
+    headers: { 'content-type': 'application/json' }
+  });
+};
 
 // Mock fetch implementation
 export const mockFetch = vi.fn() as MockedFunction<typeof fetch>;
 
 // Common API mocks
 export const mockUploadEndpoints = () => {
-  mockFetch.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+  mockFetch.mockImplementation(async (input: RequestInfo | URL, _init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input.toString();
 
     // Standard upload
@@ -75,7 +73,7 @@ export const mockUploadEndpoints = () => {
 };
 
 export const mockAuthEndpoints = () => {
-  mockFetch.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+  mockFetch.mockImplementation(async (input: RequestInfo | URL, _init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input.toString();
 
     // Login
@@ -111,7 +109,7 @@ export const mockAuthEndpoints = () => {
 };
 
 export const mockProjectEndpoints = () => {
-  mockFetch.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+  mockFetch.mockImplementation(async (input: RequestInfo | URL, _init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input.toString();
 
     // Get projects
@@ -133,8 +131,8 @@ export const mockProjectEndpoints = () => {
     }
 
     // Create project
-    if (url.includes('/api/projects') && init?.method === 'POST') {
-      const body = JSON.parse(init.body as string);
+    if (url.includes('/api/projects') && _init?.method === 'POST') {
+      const body = JSON.parse(_init.body as string);
       return createSuccessResponse({
         id: 'project_new',
         ...body,
@@ -165,7 +163,7 @@ export class MockWebSocket {
     }, 0);
   }
 
-  send(data: string | ArrayBuffer | Blob) {
+  send(_data: string | ArrayBuffer | Blob) {
     // Mock send implementation
   }
 

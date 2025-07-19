@@ -6,7 +6,7 @@
  */
 
 import { Polygon, Point } from '@/types';
-import { simplifyPolygon as simplifyPolygonUtil } from '@spheroseg/shared/utils/polygonUtils';
+import { simplifyPolygon as simplifyPolygonUtil } from '@spheroseg/shared';
 
 /**
  * Zjednodušuje polygon na základě úrovně přiblížení

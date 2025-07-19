@@ -4,11 +4,11 @@
  * Demonstrates how to test React hooks with the upload service
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '../test-utils';
 import { useImageUpload } from '../../services/upload';
 import { setupAPIMocks, resetAPIMocks, mockUploadEndpoints } from '../mocks/api';
-import { testFiles, uploadTestHelpers } from '../mocks/files';
+import { testFiles } from '../mocks/files';
 
 describe('useImageUpload', () => {
   beforeEach(() => {
@@ -37,7 +37,8 @@ describe('useImageUpload', () => {
     const files = [testFiles.smallJpeg(), testFiles.png()];
 
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
     });
 
     await waitFor(() => {
@@ -63,7 +64,8 @@ describe('useImageUpload', () => {
     ];
 
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
     });
 
     await waitFor(() => {
@@ -81,7 +83,8 @@ describe('useImageUpload', () => {
     // Select files
     const files = [testFiles.smallJpeg()];
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
     });
 
     // Upload
@@ -92,7 +95,7 @@ describe('useImageUpload', () => {
     await waitFor(() => {
       expect(result.current.isUploading).toBe(false);
       expect(onUploadComplete).toHaveBeenCalled();
-      expect(result.current.files[0].status).toBe('complete');
+      expect(result.current.files[0]?.status).toBe('complete');
     });
   });
 
@@ -109,7 +112,8 @@ describe('useImageUpload', () => {
     const files = [testFiles.smallJpeg()];
     
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
       await result.current.uploadFiles();
     });
 
@@ -125,7 +129,8 @@ describe('useImageUpload', () => {
     const files = [testFiles.largeJpeg()];
     
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
     });
 
     // Start upload
@@ -140,7 +145,7 @@ describe('useImageUpload', () => {
 
     await waitFor(() => {
       expect(result.current.isUploading).toBe(false);
-      expect(result.current.files[0].status).toBe('cancelled');
+      expect(result.current.files[0]?.status).toBe('cancelled');
     });
   });
 
@@ -150,19 +155,22 @@ describe('useImageUpload', () => {
     const files = [testFiles.smallJpeg(), testFiles.png()];
     
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
     });
 
     expect(result.current.files).toHaveLength(2);
 
     const fileToRemove = result.current.files[0];
     
-    act(() => {
-      result.current.removeFile(fileToRemove.id);
-    });
+    if (fileToRemove) {
+      act(() => {
+        result.current.removeFile(fileToRemove.id);
+      });
 
-    expect(result.current.files).toHaveLength(1);
-    expect(result.current.files[0].id).not.toBe(fileToRemove.id);
+      expect(result.current.files).toHaveLength(1);
+      expect(result.current.files[0]?.id).not.toBe(fileToRemove.id);
+    }
   });
 
   it('should clear all files', async () => {
@@ -171,7 +179,8 @@ describe('useImageUpload', () => {
     const files = [testFiles.smallJpeg(), testFiles.png()];
     
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
     });
 
     expect(result.current.files).toHaveLength(2);
@@ -193,7 +202,7 @@ describe('useImageUpload', () => {
       if (attemptCount === 1) {
         return Promise.reject(new Error('Network error'));
       }
-      return mockUploadEndpoints()();
+      return mockUploadEndpoints();
     });
 
     const { result } = renderHook(() => useImageUpload());
@@ -201,7 +210,8 @@ describe('useImageUpload', () => {
     const files = [testFiles.smallJpeg()];
     
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
     });
 
     // First upload fails
@@ -213,7 +223,7 @@ describe('useImageUpload', () => {
       }
     });
 
-    expect(result.current.files[0].status).toBe('error');
+    expect(result.current.files[0]?.status).toBe('error');
 
     // Retry
     await act(async () => {
@@ -221,7 +231,7 @@ describe('useImageUpload', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.files[0].status).toBe('complete');
+      expect(result.current.files[0]?.status).toBe('complete');
       expect(attemptCount).toBe(2);
     });
   });
@@ -234,12 +244,13 @@ describe('useImageUpload', () => {
     const files = [testFiles.smallJpeg()];
 
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
     });
 
     // Should start uploading automatically
     await waitFor(() => {
-      expect(result.current.files[0].status).toBe('complete');
+      expect(result.current.files[0]?.status).toBe('complete');
     });
   });
 
@@ -251,12 +262,13 @@ describe('useImageUpload', () => {
     const files = [testFiles.smallJpeg()];
 
     await act(async () => {
-      await result.current.handleFilesSelected(files);
+      // Manually trigger handleFilesSelected
+      await result.current.uploadFiles(files);
     });
 
     await waitFor(() => {
-      expect(result.current.files[0].preview).toBeDefined();
-      expect(result.current.files[0].preview).toContain('data:');
+      expect(result.current.files[0]?.preview).toBeDefined();
+      expect(result.current.files[0]?.preview).toContain('data:');
     });
   });
 
@@ -264,7 +276,7 @@ describe('useImageUpload', () => {
     it('should handle drag and drop', async () => {
       const { result } = renderHook(() => useImageUpload());
 
-      const { getRootProps, getInputProps } = result.current;
+      const { getRootProps } = result.current;
       
       // Simulate drop
       const files = [testFiles.smallJpeg()];

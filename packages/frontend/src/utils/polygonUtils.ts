@@ -9,5 +9,5 @@
  */
 
 // Re-export everything from shared polygon utilities
-export * from '@spheroseg/shared/utils/polygonUtils';
-export { default } from '@spheroseg/shared/utils/polygonUtils';
+export * from '@spheroseg/shared';
+export { default } from '@spheroseg/shared';

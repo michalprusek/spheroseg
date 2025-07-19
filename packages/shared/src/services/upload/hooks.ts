@@ -83,7 +83,7 @@ export function useUpload(options: UseUploadOptions = {}): UseUploadReturn {
     onFilesSelected,
     onUploadStart,
     onUploadProgress,
-    onFileComplete,
+    onFileComplete: _onFileComplete,
     onUploadComplete,
     onError,
     dropzoneOptions = {},
@@ -183,7 +183,8 @@ export function useUpload(options: UseUploadOptions = {}): UseUploadReturn {
         const uploadOptions: Partial<UploadOptions> = {
           projectId,
           metadata: { type: uploadType },
-          onProgress: (progress, fileId) => {
+          onProgress: (progress: any) => {
+            const fileId = progress.fileId;
             // Update individual file progress
             setFiles(prev =>
               prev.map(f =>

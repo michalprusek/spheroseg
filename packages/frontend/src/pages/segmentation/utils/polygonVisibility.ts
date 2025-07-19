@@ -7,7 +7,7 @@ import {
   PolygonBoundingBoxCache,
   polygonBoundingBoxCache,
   BoundingBox,
-} from '@spheroseg/shared/utils/polygonUtils';
+} from '@spheroseg/shared';
 
 const logger = createLogger('segmentation:polygonVisibility');
 

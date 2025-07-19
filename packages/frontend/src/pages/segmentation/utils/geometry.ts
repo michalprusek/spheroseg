@@ -8,7 +8,7 @@ export {
   calculatePolygonArea,
   isClockwise,
   ensureClockwise,
-} from '@spheroseg/shared/utils/polygonUtils';
+} from '@spheroseg/shared';
 
 /**
  * Calculates the distance from a point to a line segment

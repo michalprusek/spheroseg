@@ -35,7 +35,7 @@ export function renderHookWithProviders<TProps, TResult>(
 
   const { rerender, unmount } = render(
     <Wrapper>
-      <TestComponent {...(options?.initialProps || {} as TProps)} />
+      <TestComponent {...((options?.initialProps || {}) as any)} />
     </Wrapper>
   );
 
@@ -44,7 +44,7 @@ export function renderHookWithProviders<TProps, TResult>(
     rerender: (newProps?: TProps) =>
       rerender(
         <Wrapper>
-          <TestComponent {...(newProps || options?.initialProps || {} as TProps)} />
+          <TestComponent {...((newProps || options?.initialProps || {}) as any)} />
         </Wrapper>
       ),
     unmount,
@@ -98,17 +98,17 @@ export class TestErrorBoundary extends React.Component<
   { children: React.ReactNode; onError?: (error: Error, errorInfo: React.ErrorInfo) => void },
   { hasError: boolean; error: Error | null }
 > {
-  state = { hasError: false, error: null };
+  override state: { hasError: boolean; error: Error | null } = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.props.onError?.(error, errorInfo);
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return (
         <div data-testid="error-boundary-fallback">
@@ -196,11 +196,11 @@ export const createStableSnapshot = (component: React.ReactElement) => {
   const originalDate = Date;
   const originalMath = Math.random;
   
-  global.Date = class extends Date {
+  global.Date = class MockDate extends Date {
     constructor() {
       super('2024-01-01T00:00:00.000Z');
     }
-    static now() {
+    static override now() {
       return 1704067200000; // 2024-01-01
     }
   } as any;

@@ -27,7 +27,7 @@ export const MockDialog = ({ open, children }: any) =>
 
 // Mock context providers
 export const MockLanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const mockT = (key: string, params?: any, defaultValue?: string) => 
+  const mockT = (key: string, _params?: any, defaultValue?: string) => 
     defaultValue || key;
 
   const value = {
@@ -85,7 +85,7 @@ export const MockAuthProvider = ({ children, isAuthenticated = true }: any) => {
 
 // Mock hooks
 export const useMockLanguage = () => ({
-  t: (key: string, params?: any, defaultValue?: string) => defaultValue || key,
+  t: (key: string, _params?: any, defaultValue?: string) => defaultValue || key,
   language: 'en',
   setLanguage: vi.fn(),
 });

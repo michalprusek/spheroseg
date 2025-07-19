@@ -1,5 +1,5 @@
 import { Point, Polygon, SegmentationData } from './types';
-import polygonUtils from '@spheroseg/shared/utils/polygonUtils';
+import { polygonUtils } from '@spheroseg/shared';
 
 /**
  * Check if a point is inside a polygon

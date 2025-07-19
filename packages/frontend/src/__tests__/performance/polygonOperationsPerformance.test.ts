@@ -25,7 +25,7 @@ import {
   isPointInPolygon,
   slicePolygonObject as slicePolygon,
   simplifyPolygon,
-} from '@spheroseg/shared/utils/polygonUtils';
+} from '@spheroseg/shared';
 
 // Define performance test thresholds
 const PERFORMANCE_THRESHOLDS = {

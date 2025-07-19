@@ -24,15 +24,15 @@ async function uploadSingleFile(file: File) {
 async function uploadBatch(files: File[]) {
   // Configure for large files with chunking
   uploadService.setConfig({
-    ...UPLOAD_PRESETS.IMAGE,
+    ...UPLOAD_PRESETS['IMAGE'],
     maxFileSize: 100 * 1024 * 1024, // 100MB
     enableChunking: true,
     chunkSize: 10 * 1024 * 1024, // 10MB chunks
   });
 
   const result = await uploadService.uploadFiles(files, {
-    onProgress: (progress, fileId) => {
-      console.log(`File ${fileId}: ${progress.loaded}/${progress.total} bytes`);
+    onProgress: (progress: any) => {
+      console.log(`File ${progress.fileId}: ${progress.loaded}/${progress.total} bytes`);
     },
   });
 
@@ -48,13 +48,13 @@ async function uploadAvatar(croppedImageData: string) {
   const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
 
   // Use avatar configuration
-  uploadService.setConfig(UPLOAD_PRESETS.AVATAR);
+  uploadService.setConfig(UPLOAD_PRESETS['AVATAR'] || {});
 
   const result = await uploadService.uploadFile(file, {
     metadata: { type: 'avatar' },
   });
 
-  return result.result?.url;
+  return (result.result as any)?.url;
 }
 
 // Example 4: Resume interrupted upload
@@ -115,7 +115,7 @@ class CustomUploadStrategy extends BaseUploadStrategy {
 }
 
 // Example 8: Validate files before upload
-async function validateAndUpload(files: File[]) {
+async function validateAndUpload(files: File[]): Promise<void> {
   const validFiles: File[] = [];
   
   for (const file of files) {
@@ -134,7 +134,7 @@ async function validateAndUpload(files: File[]) {
   }
 
   if (validFiles.length > 0) {
-    return uploadService.uploadFiles(validFiles);
+    await uploadService.uploadFiles(validFiles);
   }
 }
 
@@ -152,7 +152,7 @@ async function uploadWithProgressUI(file: File, progressElement: HTMLElement) {
 }
 
 // Example 10: Error handling and retry
-async function uploadWithRetry(file: File, maxRetries = 3) {
+async function uploadWithRetry(file: File, maxRetries = 3): Promise<any> {
   let attempts = 0;
   
   while (attempts < maxRetries) {

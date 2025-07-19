@@ -15,35 +15,35 @@ config({ path: path.resolve(process.cwd(), '.env.test') });
 export const integrationTestConfig = {
   // Database
   database: {
-    host: process.env.TEST_DB_HOST || 'localhost',
-    port: parseInt(process.env.TEST_DB_PORT || '5432'),
-    database: process.env.TEST_DB_NAME || 'spheroseg_test',
-    user: process.env.TEST_DB_USER || 'postgres',
-    password: process.env.TEST_DB_PASSWORD || 'postgres',
+    host: process.env['TEST_DB_HOST'] || 'localhost',
+    port: parseInt(process.env['TEST_DB_PORT'] || '5432'),
+    database: process.env['TEST_DB_NAME'] || 'spheroseg_test',
+    user: process.env['TEST_DB_USER'] || 'postgres',
+    password: process.env['TEST_DB_PASSWORD'] || 'postgres',
   },
   
   // API endpoints
   api: {
-    baseUrl: process.env.TEST_API_URL || 'http://localhost:5001',
-    timeout: parseInt(process.env.TEST_API_TIMEOUT || '5000'),
+    baseUrl: process.env['TEST_API_URL'] || 'http://localhost:5001',
+    timeout: parseInt(process.env['TEST_API_TIMEOUT'] || '5000'),
   },
   
   // ML service
   ml: {
-    baseUrl: process.env.TEST_ML_URL || 'http://localhost:5002',
-    timeout: parseInt(process.env.TEST_ML_TIMEOUT || '30000'),
+    baseUrl: process.env['TEST_ML_URL'] || 'http://localhost:5002',
+    timeout: parseInt(process.env['TEST_ML_TIMEOUT'] || '30000'),
   },
   
   // WebSocket
   websocket: {
-    url: process.env.TEST_WS_URL || 'ws://localhost:5001',
-    timeout: parseInt(process.env.TEST_WS_TIMEOUT || '5000'),
+    url: process.env['TEST_WS_URL'] || 'ws://localhost:5001',
+    timeout: parseInt(process.env['TEST_WS_TIMEOUT'] || '5000'),
   },
   
   // File uploads
   upload: {
-    maxSize: parseInt(process.env.TEST_UPLOAD_MAX_SIZE || '10485760'), // 10MB
-    chunkSize: parseInt(process.env.TEST_UPLOAD_CHUNK_SIZE || '5242880'), // 5MB
+    maxSize: parseInt(process.env['TEST_UPLOAD_MAX_SIZE'] || '10485760'), // 10MB
+    chunkSize: parseInt(process.env['TEST_UPLOAD_CHUNK_SIZE'] || '5242880'), // 5MB
   },
   
   // Test timeouts
@@ -140,7 +140,7 @@ export const testFactories = {
 
 // API client for tests
 export const testApi = {
-  async post(endpoint: string, data: any, options = {}) {
+  async post(endpoint: string, data: any, options: any = {}) {
     const response = await fetch(`${integrationTestConfig.api.baseUrl}${endpoint}`, {
       method: 'POST',
       headers: {
@@ -158,7 +158,7 @@ export const testApi = {
     return response.json();
   },
   
-  async get(endpoint: string, options = {}) {
+  async get(endpoint: string, options: any = {}) {
     const response = await fetch(`${integrationTestConfig.api.baseUrl}${endpoint}`, {
       method: 'GET',
       headers: {

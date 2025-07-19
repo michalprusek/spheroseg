@@ -11,22 +11,20 @@
  * - Concurrent upload limiting
  */
 
-import { createLogger } from '@/utils/logging/unifiedLogger';
+import { SharedLogger } from '@/utils/logger';
 import { 
   UploadFile, 
   UploadStatus, 
   UploadOptions, 
-  UploadResult,
   FileUploadConfig,
   UploadQueueItem,
   ValidationResult,
   UploadBatchResult,
-  ResumableUploadState,
-  UploadProgress
+  ResumableUploadState
 } from './types';
 import { createUploadStrategy, UploadStrategy } from './strategies';
 
-const logger = createLogger('UnifiedUploadService');
+const logger = new SharedLogger('UnifiedUploadService');
 
 export class UnifiedUploadService {
   private uploadQueue: Map<string, UploadQueueItem> = new Map();
@@ -127,7 +125,7 @@ export class UnifiedUploadService {
       }
 
       // Select strategy
-      const strategy = createUploadStrategy(file, options.metadata?.type as string);
+      const strategy = createUploadStrategy(file, options.metadata?.['type'] as string);
       
       // Add to queue
       const queueItem: UploadQueueItem = {
@@ -351,7 +349,7 @@ export class UnifiedUploadService {
     const sorted = Array.from(this.uploadQueue.values())
       .sort((a, b) => b.priority - a.priority);
 
-    return sorted[0];
+    return sorted[0] || null;
   }
 
   private calculatePriority(file: File): number {

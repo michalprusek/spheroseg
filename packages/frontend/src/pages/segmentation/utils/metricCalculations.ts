@@ -1,4 +1,4 @@
-import polygonUtils from '@spheroseg/shared/utils/polygonUtils';
+import { polygonUtils } from '@spheroseg/shared';
 import logger from '@/utils/logger';
 
 /**

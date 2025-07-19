@@ -1,5 +1,5 @@
 import { Point, Polygon } from '../types';
-import { slicePolygonObject as sharedSlicePolygon } from '@spheroseg/shared/utils/polygonUtils';
+import { slicePolygonObject as sharedSlicePolygon } from '@spheroseg/shared';
 
 interface LineSegment {
   start: Point;

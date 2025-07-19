@@ -4,6 +4,8 @@
  * Provides mock file objects and upload utilities
  */
 
+import { vi } from 'vitest';
+
 // Create mock File object
 export function createMockFile(
   name: string,
@@ -69,8 +71,8 @@ export function createMockDragEvent(
       getAsFile: () => file,
     })),
     types: ['Files'],
-    dropEffect: 'copy' as DataTransferEffectAllowed,
-    effectAllowed: 'all' as DataTransferEffectAllowed,
+    dropEffect: 'copy' as any,
+    effectAllowed: 'all' as any,
     clearData: vi.fn(),
     getData: vi.fn(),
     setData: vi.fn(),
@@ -99,7 +101,7 @@ export class MockFileReader implements FileReader {
   LOADING = FileReader.LOADING;
   
   error: DOMException | null = null;
-  readyState: number = FileReader.EMPTY;
+  readyState: 0 | 1 | 2 = FileReader.EMPTY as 0;
   result: string | ArrayBuffer | null = null;
 
   onabort: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null = null;
@@ -111,7 +113,7 @@ export class MockFileReader implements FileReader {
 
   abort(): void {
     this.readyState = FileReader.DONE;
-    this.onabort?.(new ProgressEvent('abort'));
+    this.onabort?.(new ProgressEvent('abort') as ProgressEvent<FileReader>);
   }
 
   readAsArrayBuffer(file: File): void {
@@ -126,13 +128,13 @@ export class MockFileReader implements FileReader {
     this._read(file, 'dataurl');
   }
 
-  readAsText(file: File, encoding?: string): void {
+  readAsText(file: File, _encoding?: string): void {
     this._read(file, 'text');
   }
 
   private _read(file: File, type: string): void {
     this.readyState = FileReader.LOADING;
-    this.onloadstart?.(new ProgressEvent('loadstart'));
+    this.onloadstart?.(new ProgressEvent('loadstart') as ProgressEvent<FileReader>);
 
     setTimeout(() => {
       if (type === 'dataurl') {
@@ -144,8 +146,8 @@ export class MockFileReader implements FileReader {
       }
 
       this.readyState = FileReader.DONE;
-      this.onload?.(new ProgressEvent('load'));
-      this.onloadend?.(new ProgressEvent('loadend'));
+      this.onload?.(new ProgressEvent('load') as ProgressEvent<FileReader>);
+      this.onloadend?.(new ProgressEvent('loadend') as ProgressEvent<FileReader>);
     }, 0);
   }
 
@@ -155,7 +157,7 @@ export class MockFileReader implements FileReader {
 }
 
 // Mock image loading
-export function mockImageLoad(success = true, width = 800, height = 600): void {
+export function mockImageLoad(success = true, width = 800, height = 600): () => void {
   const originalImage = global.Image;
   
   global.Image = class MockImage {
@@ -195,7 +197,7 @@ export function createMockCanvasContext(): CanvasRenderingContext2D {
     putImageData: vi.fn(),
     createImageData: vi.fn(),
     canvas: {
-      toBlob: vi.fn((callback) => {
+      toBlob: vi.fn((callback: any) => {
         callback(new Blob(['mock'], { type: 'image/png' }));
       }),
       toDataURL: vi.fn(() => 'data:image/png;base64,mock'),

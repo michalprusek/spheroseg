@@ -40,12 +40,12 @@ export const itIf = (condition: boolean) =>
   condition ? it : it.skip;
 
 // Environment checks
-export const isCI = process.env.CI === 'true';
-export const isDebug = process.env.DEBUG === 'true';
+export const isCI = process.env['CI'] === 'true';
+export const isDebug = process.env['DEBUG'] === 'true';
 
 // Performance benchmarks
 export const benchmark = async (
-  name: string,
+  _name: string,
   fn: () => void | Promise<void>,
   iterations = 100
 ): Promise<{ mean: number; min: number; max: number; median: number }> => {
@@ -62,9 +62,9 @@ export const benchmark = async (
   
   return {
     mean: times.reduce((a, b) => a + b, 0) / times.length,
-    min: times[0],
-    max: times[times.length - 1],
-    median: times[Math.floor(times.length / 2)],
+    min: times[0] || 0,
+    max: times[times.length - 1] || 0,
+    median: times[Math.floor(times.length / 2)] || 0,
   };
 };
 

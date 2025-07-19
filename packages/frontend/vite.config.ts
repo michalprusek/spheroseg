@@ -86,8 +86,8 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, './src'),
         '@shared': path.resolve(__dirname, './src/shared'),
-        '@spheroseg/shared': path.resolve(__dirname, '../shared/src'),
-        '@spheroseg/types': path.resolve(__dirname, '../types/src'),
+        '@spheroseg/shared': path.resolve(__dirname, '../shared'),
+        '@spheroseg/types': path.resolve(__dirname, '../types'),
       },
     },
     server: {

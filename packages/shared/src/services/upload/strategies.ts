@@ -132,8 +132,8 @@ export class StandardUploadStrategy extends BaseUploadStrategy {
  */
 export class ChunkedUploadStrategy extends BaseUploadStrategy {
   name = 'chunked';
-  supportsChunking = true;
-  supportsResume = true;
+  override supportsChunking = true;
+  override supportsResume = true;
   chunkSize = 5 * 1024 * 1024; // 5MB chunks
 
   canHandle(file: File): boolean {
@@ -401,10 +401,10 @@ export class ImageUploadStrategy extends BaseUploadStrategy {
  * Special handling for TIFF/BMP images
  */
 export class SpecialImageUploadStrategy extends StandardUploadStrategy {
-  name = 'special-image';
+  override name = 'special-image';
   supportedTypes = ['image/tiff', 'image/tif', 'image/bmp'];
 
-  canHandle(file: File): boolean {
+  override canHandle(file: File): boolean {
     const ext = file.name.toLowerCase();
     return (
       this.supportedTypes.includes(file.type.toLowerCase()) ||
@@ -414,7 +414,7 @@ export class SpecialImageUploadStrategy extends StandardUploadStrategy {
     );
   }
 
-  async upload(file: File, options: UploadOptions): Promise<UploadResult> {
+  override async upload(file: File, options: UploadOptions): Promise<UploadResult> {
     // Use special endpoint for TIFF/BMP conversion
     const endpoint = options.endpoint || '/api/upload/special-image';
     return super.upload(file, { ...options, endpoint });
@@ -425,15 +425,15 @@ export class SpecialImageUploadStrategy extends StandardUploadStrategy {
  * Avatar upload strategy with cropping support
  */
 export class AvatarUploadStrategy extends ImageUploadStrategy {
-  name = 'avatar';
+  override name = 'avatar';
   maxFileSize = 5 * 1024 * 1024; // 5MB
-  maxDimension = 512; // Smaller dimension for avatars
+  override maxDimension = 512; // Smaller dimension for avatars
 
-  canHandle(file: File): boolean {
+  override canHandle(file: File): boolean {
     return file.type.startsWith('image/') && file.size <= this.maxFileSize;
   }
 
-  async upload(file: File, options: UploadOptions): Promise<UploadResult> {
+  override async upload(file: File, options: UploadOptions): Promise<UploadResult> {
     // Avatar uploads go to a specific endpoint
     const endpoint = options.endpoint || '/api/upload/avatar';
     return super.upload(file, { ...options, endpoint });
