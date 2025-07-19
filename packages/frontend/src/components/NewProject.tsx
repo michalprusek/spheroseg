@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { PlusCircle } from 'lucide-react';
+import logger from '@/utils/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { v4 as uuidv4 } from 'uuid';
@@ -53,7 +54,7 @@ const NewProject = ({ onProjectCreated }: NewProjectProps) => {
 
     try {
       // Replace with API call to your backend
-      console.log('Creating new project:', projectData);
+      logger.debug('Creating new project:', projectData);
       await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
 
       // Mock created project ID for potential callback use
@@ -67,7 +68,7 @@ const NewProject = ({ onProjectCreated }: NewProjectProps) => {
         onProjectCreated(mockProjectId); // Pass mock ID
       }
     } catch (error: unknown) {
-      console.error('Error creating project:', error);
+      logger.error('Error creating project:', error);
       toast.error(t('newProject.createError'));
     } finally {
       setIsCreating(false);
