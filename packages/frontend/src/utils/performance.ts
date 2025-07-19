@@ -75,8 +75,8 @@ export const initPerformanceMonitoring = () => {
       });
 
       observer.observe({ entryTypes: ['resource', 'paint', 'navigation'] });
-    } catch (e) {
-      logger.error('Performance observer initialization failed', e);
+    } catch (_e) {
+      logger.error('Performance observer initialization failed', _e);
     }
   }
 };
@@ -139,8 +139,8 @@ export function measurePerformance<T extends (...args: any[]) => any>(
           logger.debug(`Performance measure: ${nameOrFunction}`, { duration: duration.toFixed(2) });
           return duration;
         }
-      } catch (e) {
-        logger.error(`Performance measurement failed for ${nameOrFunction}`, e);
+      } catch (_e) {
+        logger.error(`Performance measurement failed for ${nameOrFunction}`, _e);
       }
     }
   }

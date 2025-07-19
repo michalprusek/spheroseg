@@ -246,8 +246,8 @@ function processDirectory(dir: string) {
         updatedCount++;
         console.log(`✓ Updated: ${path.relative(dir, file)}`);
       }
-    } catch (error) {
-      errors.push(`✗ Error processing ${file}: ${error}`);
+    } catch (_error) {
+      errors.push(`✗ Error processing ${file}: ${_error}`);
     }
   }
 

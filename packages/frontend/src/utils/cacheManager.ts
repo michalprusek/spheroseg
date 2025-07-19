@@ -141,7 +141,7 @@ export function getCacheStats(): CacheStats {
  * Add cache management to window for debugging
  */
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  (window as any).cacheManager = {
+  (window as Window & { cacheManager?: typeof cacheManager }).cacheManager = {
     clearProjectImageCache,
     clearAllCaches,
     getCacheStats,

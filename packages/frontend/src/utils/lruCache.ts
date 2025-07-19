@@ -107,7 +107,7 @@ export class LRUCache<K, V> {
 
 // Specialized cache for promises with automatic cleanup
 export class PromiseCache<K> {
-  private cache: LRUCache<K, Promise<any>>;
+  private cache: LRUCache<K, Promise<unknown>>;
   private pendingCleanup: Set<K>;
 
   constructor(maxSize: number = 30) {
@@ -116,7 +116,7 @@ export class PromiseCache<K> {
   }
 
   async get<T>(key: K, factory: () => Promise<T>): Promise<T> {
-    const existing = this.cache.get(key);
+    const existing = this.cache.get(key) as Promise<T> | undefined;
     if (existing) {
       return existing;
     }

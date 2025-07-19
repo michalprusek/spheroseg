@@ -42,7 +42,7 @@ export interface ErrorInfo {
   severity: ErrorSeverity;
   message: string;
   code?: string;
-  details?: any;
+  details?: unknown;
   statusCode?: number;
   originalError?: Error;
   timestamp: string;
@@ -53,7 +53,7 @@ export interface ApiErrorResponse {
   message?: string;
   error?: string;
   code?: string;
-  details?: any;
+  details?: unknown;
   statusCode?: number;
 }
 
@@ -65,7 +65,7 @@ export class AppError extends Error {
   public readonly type: ErrorType;
   public readonly severity: ErrorSeverity;
   public readonly code?: string;
-  public readonly details?: any;
+  public readonly details?: unknown;
   public readonly statusCode?: number;
   public readonly timestamp: string;
 
@@ -74,7 +74,7 @@ export class AppError extends Error {
     type: ErrorType = ErrorType.UNKNOWN,
     severity: ErrorSeverity = ErrorSeverity.ERROR,
     code?: string,
-    details?: any,
+    details?: unknown,
     statusCode?: number,
   ) {
     super(message);
@@ -91,19 +91,19 @@ export class AppError extends Error {
 
 // Specific error classes
 export class NetworkError extends AppError {
-  constructor(message = 'Network error. Please check your connection.', code?: string, details?: any) {
+  constructor(message = 'Network error. Please check your connection.', code?: string, details?: unknown) {
     super(message, ErrorType.NETWORK, ErrorSeverity.ERROR, code, details);
   }
 }
 
 export class ApiError extends AppError {
-  constructor(message = 'API error. Please try again later.', statusCode?: number, code?: string, details?: any) {
+  constructor(message = 'API error. Please try again later.', statusCode?: number, code?: string, details?: unknown) {
     super(message, ErrorType.API, ErrorSeverity.ERROR, code, details, statusCode);
   }
 }
 
 export class ValidationError extends AppError {
-  constructor(message = 'Validation error. Please check your input.', details?: any) {
+  constructor(message = 'Validation error. Please check your input.', details?: unknown) {
     super(message, ErrorType.VALIDATION, ErrorSeverity.ERROR, 'VALIDATION_ERROR', details);
   }
 }
@@ -127,7 +127,7 @@ export class NotFoundError extends AppError {
 }
 
 export class ServerError extends AppError {
-  constructor(message?: string | { severity?: ErrorSeverity; code?: string }, code?: string, details?: any) {
+  constructor(message?: string | { severity?: ErrorSeverity; code?: string }, code?: string, details?: unknown) {
     // Handle both old and new constructor patterns
     if (typeof message === 'object' && message !== null) {
       const options = message;

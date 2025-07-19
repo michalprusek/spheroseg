@@ -61,8 +61,8 @@ function loadCache(): TestCache {
       
       return { version: CACHE_VERSION, entries: validEntries };
     }
-  } catch (error) {
-    console.error('Error loading cache:', error);
+  } catch (_error) {
+    console.error('Error loading cache:', _error);
   }
   
   return { version: CACHE_VERSION, entries: {} };
@@ -72,8 +72,8 @@ function loadCache(): TestCache {
 function saveCache(cache: TestCache) {
   try {
     fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
-  } catch (error) {
-    console.error('Error saving cache:', error);
+  } catch (_error) {
+    console.error('Error saving cache:', _error);
   }
 }
 
@@ -82,8 +82,8 @@ function calculateFileHash(filePath: string): string {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     return crypto.createHash('md5').update(content).digest('hex');
-  } catch (error) {
-    console.error(`Error hashing file ${filePath}:`, error);
+  } catch (_error) {
+    console.error(`Error hashing file ${filePath}:`, _error);
     return '';
   }
 }
@@ -119,8 +119,8 @@ function getTestDependencies(testFile: string): string[] {
         }
       }
     }
-  } catch (error) {
-    console.error(`Error getting dependencies for ${testFile}:`, error);
+  } catch (_error) {
+    console.error(`Error getting dependencies for ${testFile}:`, _error);
   }
   
   return dependencies;

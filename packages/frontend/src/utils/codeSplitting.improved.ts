@@ -276,7 +276,7 @@ export function prefetchRoutes(currentPath: string): void {
  * Prefetch related routes based on navigation patterns
  */
 function prefetchRelatedRoutes(route: string): void {
-  const relatedRoutes: Record<string, (() => Promise<any>)[]> = {
+  const relatedRoutes: Record<string, (() => Promise<{ default: ComponentType<unknown> }>)[]> = {
     '/dashboard': [
       () => import('../pages/projects/ProjectList'),
       () => import('../pages/settings/Settings'),
@@ -304,7 +304,7 @@ function prefetchRelatedRoutes(route: string): void {
 /**
  * Create a code-split component with advanced features
  */
-export function createCodeSplitComponent<T extends ComponentType<any>>(
+export function createCodeSplitComponent<T extends ComponentType<unknown>>(
   importFn: () => Promise<{ default: T }>,
   options: CodeSplitOptions = {}
 ): {
@@ -386,7 +386,7 @@ export const bundleOptimization = {
         cacheGroups: {
           vendor: {
             test: /[\\/]node_modules[\\/]/,
-            name(module: any) {
+            name(module: { context: string }) {
               const packageName = module.context.match(
                 /[\\/]node_modules[\\/](.*?)([\\/]|$)/
               )[1];
@@ -410,7 +410,7 @@ export const bundleOptimization = {
 /**
  * Component-level code splitting helper with type safety
  */
-export function splitComponent<T extends ComponentType<any>>(
+export function splitComponent<T extends ComponentType<unknown>>(
   componentPath: string,
   options?: CodeSplitOptions
 ): LazyExoticComponent<T> {
