@@ -36,7 +36,7 @@ import {
   // sendError,
   // sendServerError,
   sendUnauthorized,
-  asyncHandler
+  asyncHandler,
 } from '../utils/responseHelpers';
 
 const router: Router = express.Router();
@@ -135,13 +135,17 @@ router.get('/test', (req: express.Request, res: Response) => {
  *       500:
  *         description: Internal server error
  */
-router.post('/register', validate(registerSchema), asyncHandler(async (req: express.Request, res: Response) => {
-  logger.info('Register endpoint hit', { body: req.body });
-  const { email, password, name, preferred_language } = req.body as RegisterRequest;
+router.post(
+  '/register',
+  validate(registerSchema),
+  asyncHandler(async (req: express.Request, res: Response) => {
+    logger.info('Register endpoint hit', { body: req.body });
+    const { email, password, name, preferred_language } = req.body as RegisterRequest;
 
-  const result = await authService.registerUser(email, password, name, preferred_language);
-  return sendCreated(res, result, 'Registration successful');
-}));
+    const result = await authService.registerUser(email, password, name, preferred_language);
+    return sendCreated(res, result, 'Registration successful');
+  })
+);
 
 /**
  * @openapi
@@ -215,12 +219,16 @@ router.post('/register', validate(registerSchema), asyncHandler(async (req: expr
  *       500:
  *         description: Internal server error
  */
-router.post('/login', validate(loginSchema), asyncHandler(async (req: express.Request, res: Response) => {
-  const { email, password, remember_me } = req.body as LoginRequest;
+router.post(
+  '/login',
+  validate(loginSchema),
+  asyncHandler(async (req: express.Request, res: Response) => {
+    const { email, password, remember_me } = req.body as LoginRequest;
 
-  const result = await authService.loginUser(email, password, remember_me);
-  return sendSuccess(res, result, 'Login successful');
-}));
+    const result = await authService.loginUser(email, password, remember_me);
+    return sendSuccess(res, result, 'Login successful');
+  })
+);
 
 /**
  * @openapi
@@ -459,20 +467,24 @@ router.post(
  *       500:
  *         description: Internal server error (logout still considered successful)
  */
-router.post('/logout', optionalAuthMiddleware, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { refreshToken } = req.body;
-  const userId = req.user?.userId;
+router.post(
+  '/logout',
+  optionalAuthMiddleware,
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { refreshToken } = req.body;
+    const userId = req.user?.userId;
 
-  try {
-    await authService.logoutUser(refreshToken, userId);
-  } catch (error) {
-    logger.error('Logout error', { error, userId });
-    // Continue with logout even if DB operation failed
-  }
-  
-  // Always return success - client will discard tokens
-  return sendSuccess(res, { message: 'Logged out successfully' });
-}));
+    try {
+      await authService.logoutUser(refreshToken, userId);
+    } catch (error) {
+      logger.error('Logout error', { error, userId });
+      // Continue with logout even if DB operation failed
+    }
+
+    // Always return success - client will discard tokens
+    return sendSuccess(res, { message: 'Logged out successfully' });
+  })
+);
 
 /**
  * @openapi
@@ -640,16 +652,20 @@ router.get('/check-email', async (req: express.Request, res: Response) => {
  *       500:
  *         description: Internal server error
  */
-router.get('/me', authMiddleware, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user?.userId;
+router.get(
+  '/me',
+  authMiddleware,
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?.userId;
 
-  if (!userId) {
-    return sendUnauthorized(res, 'User not authenticated');
-  }
+    if (!userId) {
+      return sendUnauthorized(res, 'User not authenticated');
+    }
 
-  const user = await authService.getCurrentUser(userId);
-  return sendSuccess(res, user);
-}));
+    const user = await authService.getCurrentUser(userId);
+    return sendSuccess(res, user);
+  })
+);
 
 /**
  * @openapi

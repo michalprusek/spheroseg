@@ -67,7 +67,7 @@ export interface User {
 export enum UserRole {
   ADMIN = 'admin',
   USER = 'user',
-  VIEWER = 'viewer'
+  VIEWER = 'viewer',
 }
 
 // Auth types
@@ -106,7 +106,7 @@ export interface Project {
 export enum ProjectStatus {
   ACTIVE = 'active',
   ARCHIVED = 'archived',
-  DELETED = 'deleted'
+  DELETED = 'deleted',
 }
 
 // Image types
@@ -130,7 +130,7 @@ export enum SegmentationStatus {
   QUEUED = 'queued',
   PROCESSING = 'processing',
   COMPLETED = 'completed',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 export interface ImageMetadata {
@@ -221,18 +221,18 @@ export enum WebSocketEventType {
   IMAGE_PROCESSING_COMPLETED = 'image-processing-completed',
   IMAGE_PROCESSING_FAILED = 'image-processing-failed',
   IMAGE_DELETED = 'image-deleted',
-  
+
   // Project events
   PROJECT_UPDATED = 'project-updated',
   PROJECT_DELETED = 'project-deleted',
-  
+
   // User events
   USER_JOINED_PROJECT = 'user-joined-project',
   USER_LEFT_PROJECT = 'user-left-project',
-  
+
   // System events
   SYSTEM_NOTIFICATION = 'system-notification',
-  CONNECTION_STATUS = 'connection-status'
+  CONNECTION_STATUS = 'connection-status',
 }
 
 // Query result type for database operations

@@ -20,11 +20,15 @@ export const useToastErrorHandler = () => {
     logger.error('Error handled by toast handler', { error });
 
     // Determine the error message
-    const errorMessage = 
-      (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : null) ||
-      (error && typeof error === 'object' && 'toString' in error && typeof error.toString === 'function' ? error.toString() : null) ||
+    const errorMessage =
+      (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+        ? error.message
+        : null) ||
+      (error && typeof error === 'object' && 'toString' in error && typeof error.toString === 'function'
+        ? error.toString()
+        : null) ||
       (typeof error === 'string' ? error : null) ||
-      defaultMessage || 
+      defaultMessage ||
       t('error.handler.defaultMessage');
 
     // Show toast notification

@@ -6,16 +6,7 @@ import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Activity,
-  BarChart3,
-  Download,
-  RefreshCw,
-  TrendingUp,
-  Users,
-  Zap,
-  AlertCircle,
-} from 'lucide-react';
+import { Activity, BarChart3, Download, RefreshCw, TrendingUp, Users, Zap, AlertCircle } from 'lucide-react';
 import {
   Area,
   AreaChart,
@@ -124,10 +115,11 @@ export const AnalyticsDashboard = memo(() => {
 
   // Debounced date range change handler
   const debouncedDateRangeChange = useMemo(
-    () => debounce((newRange: { from: Date; to: Date }) => {
-      setDateRange(newRange);
-      setTimeRange('custom');
-    }, 500),
+    () =>
+      debounce((newRange: { from: Date; to: Date }) => {
+        setDateRange(newRange);
+        setTimeRange('custom');
+      }, 500),
     [setDateRange, setTimeRange],
   );
 

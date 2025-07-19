@@ -11,7 +11,7 @@ import segmentationQueueService from './segmentationQueueService';
  * @param priority Priority of the task
  * @returns Task ID
  */
-export const triggerSegmentationTask = async(
+export const triggerSegmentationTask = async (
   imageId: string,
   imagePath: string,
   parameters: unknown,
@@ -69,7 +69,11 @@ export const getSegmentation = async (imageId: string) => {
 /**
  * Save segmentation data
  */
-export const saveSegmentation = async (imageId: string, userId: string, segmentationData: unknown) => {
+export const saveSegmentation = async (
+  imageId: string,
+  userId: string,
+  segmentationData: unknown
+) => {
   const result = await pool.query(
     `INSERT INTO segmentation_results (image_id, user_id, result_data, status) 
      VALUES ($1, $2, $3, 'completed') 

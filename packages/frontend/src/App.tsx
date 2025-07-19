@@ -32,7 +32,7 @@ const prefetchRoute = (path: string) => {
 if (typeof window !== 'undefined') {
   // Prefetch sign-in page for faster navigation
   setTimeout(() => prefetchRoute('/sign-in'), 1000);
-  
+
   // If user is logged in, prefetch dashboard
   const token = localStorage.getItem('access_token');
   if (token) {

@@ -93,7 +93,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid date format', () => {
-
       const invalidConfig = {
         legal: {
           privacyPolicyUrl: '/privacy',
@@ -107,7 +106,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid timeout', () => {
-
       const invalidConfig = {
         api: {
           baseUrl: '/api',
@@ -120,7 +118,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid retry attempts', () => {
-
       const invalidConfig = {
         api: {
           baseUrl: '/api',
@@ -133,7 +130,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for invalid language code', () => {
-
       const invalidConfig = {
         ui: {
           defaultTheme: 'system',
@@ -149,7 +145,6 @@ describe('Validated App Configuration', () => {
     });
 
     it('should fail validation for empty supported languages', () => {
-
       const invalidConfig = {
         ui: {
           defaultTheme: 'system',

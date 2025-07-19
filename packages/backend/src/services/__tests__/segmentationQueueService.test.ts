@@ -715,7 +715,9 @@ describe('segmentationQueueService', () => {
 
   describe('updateSegmentationStatus', () => {
     // Get a reference to the updateSegmentationStatus function
-    let updateSegmentationStatus: ((imageId: string, status: string, taskData?: any) => Promise<void>) | undefined;
+    let updateSegmentationStatus:
+      | ((imageId: string, status: string, taskData?: any) => Promise<void>)
+      | undefined;
 
     beforeEach(() => {
       // Extract updateSegmentationStatus using a workaround

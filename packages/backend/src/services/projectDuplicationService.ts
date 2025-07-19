@@ -30,22 +30,19 @@ export async function duplicateProject(
   options: DuplicationOptions = {}
 ): Promise<string> {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
-    
+
     // Get original project
-    const projectResult = await client.query(
-      'SELECT * FROM projects WHERE id = $1',
-      [projectId]
-    );
-    
+    const projectResult = await client.query('SELECT * FROM projects WHERE id = $1', [projectId]);
+
     if (projectResult.rows.length === 0) {
       throw new Error('Project not found');
     }
-    
+
     const originalProject = projectResult.rows[0];
-    
+
     // Create new project
     const newProjectName = options.newName || `${originalProject.name} (Copy)`;
     const newProjectResult = await client.query(
@@ -54,32 +51,32 @@ export async function duplicateProject(
        RETURNING id`,
       [newProjectName, originalProject.description, userId]
     );
-    
+
     const newProjectId = newProjectResult.rows[0].id;
-    
+
     // Duplicate images if requested
     if (options.includeImages) {
       await duplicateImages(client, projectId, newProjectId);
     }
-    
+
     // Duplicate segmentations if requested
     if (options.includeSegmentations && options.includeImages) {
       await duplicateSegmentations(client, projectId, newProjectId);
     }
-    
+
     // Copy shared users if requested
     if (options.includeSharedUsers) {
       await duplicateSharedUsers(client, projectId, newProjectId);
     }
-    
+
     await client.query('COMMIT');
-    
+
     logger.info('Project duplicated successfully', {
       originalProjectId: projectId,
       newProjectId,
-      options
+      options,
     });
-    
+
     return newProjectId;
   } catch (error) {
     await client.query('ROLLBACK');
@@ -101,7 +98,7 @@ export async function duplicateProjectViaApi(
   // For now, returning a stub response
   return {
     projectId: 'new-project-id',
-    message: 'Project duplicated successfully'
+    message: 'Project duplicated successfully',
   };
 }
 
@@ -109,16 +106,16 @@ export async function duplicateProjectViaApi(
  * Generate new file paths for duplicated files
  */
 export function generateNewFilePaths(originalPaths: string[]): FilePath[] {
-  return originalPaths.map(originalPath => {
+  return originalPaths.map((originalPath) => {
     const dir = path.dirname(originalPath);
     const ext = path.extname(originalPath);
     const basename = path.basename(originalPath, ext);
     const timestamp = Date.now();
     const newPath = path.join(dir, `${basename}_copy_${timestamp}${ext}`);
-    
+
     return {
       originalPath,
-      newPath
+      newPath,
     };
   });
 }
@@ -146,21 +143,17 @@ async function duplicateImages(
   originalProjectId: string,
   newProjectId: string
 ): Promise<void> {
-  const imagesResult = await client.query(
-    'SELECT * FROM images WHERE project_id = $1',
-    [originalProjectId]
-  );
-  
+  const imagesResult = await client.query('SELECT * FROM images WHERE project_id = $1', [
+    originalProjectId,
+  ]);
+
   for (const image of imagesResult.rows) {
     // Generate new file paths
-    const filePaths = generateNewFilePaths([
-      image.image_path,
-      image.thumbnail_path
-    ]);
-    
+    const filePaths = generateNewFilePaths([image.image_path, image.thumbnail_path]);
+
     // Copy files
     await copyImageFiles(filePaths);
-    
+
     // Insert new image record
     await client.query(
       `INSERT INTO images (
@@ -175,7 +168,7 @@ async function duplicateImages(
         image.width,
         image.height,
         image.size,
-        image.format
+        image.format,
       ]
     );
   }
@@ -199,42 +192,33 @@ async function duplicateSegmentations(
      WHERE o.project_id = $1 AND n.project_id = $2`,
     [originalProjectId, newProjectId]
   );
-  
-  const imageIdMap = new Map(
-    imageMappingResult.rows.map(row => [row.original_id, row.new_id])
-  );
-  
+
+  const imageIdMap = new Map(imageMappingResult.rows.map((row) => [row.original_id, row.new_id]));
+
   // Duplicate segmentation results
   for (const [originalImageId, newImageId] of imageIdMap) {
     const segmentationResult = await client.query(
       'SELECT * FROM segmentation_results WHERE image_id = $1',
       [originalImageId]
     );
-    
+
     if (segmentationResult.rows.length > 0) {
       const seg = segmentationResult.rows[0];
-      
+
       const newSegResult = await client.query(
         `INSERT INTO segmentation_results (
           image_id, polygons, created_at, processing_time,
           ml_model_version, parameters
         ) VALUES ($1, $2, NOW(), $3, $4, $5)
         RETURNING id`,
-        [
-          newImageId,
-          seg.polygons,
-          seg.processing_time,
-          seg.ml_model_version,
-          seg.parameters
-        ]
+        [newImageId, seg.polygons, seg.processing_time, seg.ml_model_version, seg.parameters]
       );
-      
+
       // Duplicate cells
-      const cellsResult = await client.query(
-        'SELECT * FROM cells WHERE segmentation_id = $1',
-        [seg.id]
-      );
-      
+      const cellsResult = await client.query('SELECT * FROM cells WHERE segmentation_id = $1', [
+        seg.id,
+      ]);
+
       for (const cell of cellsResult.rows) {
         await client.query(
           `INSERT INTO cells (
@@ -251,7 +235,7 @@ async function duplicateSegmentations(
             cell.centroid,
             cell.convexity,
             cell.solidity,
-            cell.eccentricity
+            cell.eccentricity,
           ]
         );
       }
@@ -281,5 +265,5 @@ export default {
   duplicateProject,
   duplicateProjectViaApi,
   generateNewFilePaths,
-  copyImageFiles
+  copyImageFiles,
 };

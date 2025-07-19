@@ -1,6 +1,6 @@
 /**
  * Integration tests for ProjectService
- * 
+ *
  * Tests project management with real database operations
  */
 
@@ -22,30 +22,46 @@ describe('ProjectService Integration Tests', () => {
     // Create test users
     testUserId = uuidv4();
     testUserId2 = uuidv4();
-    
-    await pool.query(
-      'INSERT INTO users (id, email, password, name) VALUES ($1, $2, $3, $4)',
-      [testUserId, 'projtest1@test.integration.com', 'hashed', 'Test User 1']
-    );
-    
-    await pool.query(
-      'INSERT INTO users (id, email, password, name) VALUES ($1, $2, $3, $4)',
-      [testUserId2, 'projtest2@test.integration.com', 'hashed', 'Test User 2']
-    );
+
+    await pool.query('INSERT INTO users (id, email, password, name) VALUES ($1, $2, $3, $4)', [
+      testUserId,
+      'projtest1@test.integration.com',
+      'hashed',
+      'Test User 1',
+    ]);
+
+    await pool.query('INSERT INTO users (id, email, password, name) VALUES ($1, $2, $3, $4)', [
+      testUserId2,
+      'projtest2@test.integration.com',
+      'hashed',
+      'Test User 2',
+    ]);
   });
 
   afterAll(async () => {
     // Clean up test data
-    await pool.query('DELETE FROM project_shares WHERE project_id IN (SELECT id FROM projects WHERE user_id IN ($1, $2))', [testUserId, testUserId2]);
-    await pool.query('DELETE FROM images WHERE project_id IN (SELECT id FROM projects WHERE user_id IN ($1, $2))', [testUserId, testUserId2]);
+    await pool.query(
+      'DELETE FROM project_shares WHERE project_id IN (SELECT id FROM projects WHERE user_id IN ($1, $2))',
+      [testUserId, testUserId2]
+    );
+    await pool.query(
+      'DELETE FROM images WHERE project_id IN (SELECT id FROM projects WHERE user_id IN ($1, $2))',
+      [testUserId, testUserId2]
+    );
     await pool.query('DELETE FROM projects WHERE user_id IN ($1, $2)', [testUserId, testUserId2]);
     await pool.query('DELETE FROM users WHERE id IN ($1, $2)', [testUserId, testUserId2]);
   });
 
   beforeEach(async () => {
     // Clean up any existing test projects
-    await pool.query('DELETE FROM project_shares WHERE project_id IN (SELECT id FROM projects WHERE user_id IN ($1, $2))', [testUserId, testUserId2]);
-    await pool.query('DELETE FROM images WHERE project_id IN (SELECT id FROM projects WHERE user_id IN ($1, $2))', [testUserId, testUserId2]);
+    await pool.query(
+      'DELETE FROM project_shares WHERE project_id IN (SELECT id FROM projects WHERE user_id IN ($1, $2))',
+      [testUserId, testUserId2]
+    );
+    await pool.query(
+      'DELETE FROM images WHERE project_id IN (SELECT id FROM projects WHERE user_id IN ($1, $2))',
+      [testUserId, testUserId2]
+    );
     await pool.query('DELETE FROM projects WHERE user_id IN ($1, $2)', [testUserId, testUserId2]);
   });
 
@@ -57,9 +73,9 @@ describe('ProjectService Integration Tests', () => {
         settings: {
           defaultSegmentationParams: {
             threshold: 0.5,
-            minCellSize: 100
-          }
-        }
+            minCellSize: 100,
+          },
+        },
       };
 
       const project = await projectService.createProject(testUserId, projectData);
@@ -72,10 +88,7 @@ describe('ProjectService Integration Tests', () => {
       expect(project.settings).toMatchObject(projectData.settings);
 
       // Verify in database
-      const result = await pool.query(
-        'SELECT * FROM projects WHERE id = $1',
-        [project.id]
-      );
+      const result = await pool.query('SELECT * FROM projects WHERE id = $1', [project.id]);
       expect(result.rows).toHaveLength(1);
       expect(result.rows[0].name).toBe(projectData.name);
 
@@ -84,7 +97,7 @@ describe('ProjectService Integration Tests', () => {
 
     it('should create project with minimal data', async () => {
       const project = await projectService.createProject(testUserId, {
-        name: 'Minimal Project'
+        name: 'Minimal Project',
       });
 
       expect(project).toHaveProperty('id');
@@ -95,12 +108,12 @@ describe('ProjectService Integration Tests', () => {
 
     it('should enforce unique project names per user', async () => {
       await projectService.createProject(testUserId, {
-        name: 'Duplicate Name'
+        name: 'Duplicate Name',
       });
 
       await expect(
         projectService.createProject(testUserId, {
-          name: 'Duplicate Name'
+          name: 'Duplicate Name',
         })
       ).rejects.toThrow();
     });
@@ -112,13 +125,13 @@ describe('ProjectService Integration Tests', () => {
       for (let i = 0; i < 3; i++) {
         await projectService.createProject(testUserId, {
           name: `Project ${i}`,
-          description: `Description ${i}`
+          description: `Description ${i}`,
         });
       }
 
       // Create a shared project
       const sharedProject = await projectService.createProject(testUserId2, {
-        name: 'Shared Project'
+        name: 'Shared Project',
       });
 
       // Share it with testUserId
@@ -132,11 +145,11 @@ describe('ProjectService Integration Tests', () => {
       const projects = await projectService.getProjects(testUserId);
 
       expect(projects).toHaveLength(4); // 3 owned + 1 shared
-      
-      const ownedProjects = projects.filter(p => p.userId === testUserId);
+
+      const ownedProjects = projects.filter((p) => p.userId === testUserId);
       expect(ownedProjects).toHaveLength(3);
-      
-      const sharedProjects = projects.filter(p => p.userId !== testUserId);
+
+      const sharedProjects = projects.filter((p) => p.userId !== testUserId);
       expect(sharedProjects).toHaveLength(1);
       expect(sharedProjects[0].name).toBe('Shared Project');
     });
@@ -144,7 +157,7 @@ describe('ProjectService Integration Tests', () => {
     it('should include project statistics', async () => {
       // Add images to a project
       const project = await projectService.createProject(testUserId, {
-        name: 'Project with Images'
+        name: 'Project with Images',
       });
 
       // Add test images
@@ -152,14 +165,22 @@ describe('ProjectService Integration Tests', () => {
         await pool.query(
           `INSERT INTO images (id, project_id, name, url, thumbnail_url, size, width, height, segmentation_status) 
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [uuidv4(), project.id, `image${i}.jpg`, `http://test.com/image${i}.jpg`, 
-           `http://test.com/thumb${i}.jpg`, 1024000, 1920, 1080, 
-           i < 3 ? 'completed' : 'without_segmentation']
+          [
+            uuidv4(),
+            project.id,
+            `image${i}.jpg`,
+            `http://test.com/image${i}.jpg`,
+            `http://test.com/thumb${i}.jpg`,
+            1024000,
+            1920,
+            1080,
+            i < 3 ? 'completed' : 'without_segmentation',
+          ]
         );
       }
 
       const projects = await projectService.getProjects(testUserId);
-      const projectWithImages = projects.find(p => p.id === project.id);
+      const projectWithImages = projects.find((p) => p.id === project.id);
 
       expect(projectWithImages).toHaveProperty('imageCount', 5);
       expect(projectWithImages).toHaveProperty('segmentedCount', 3);
@@ -170,7 +191,7 @@ describe('ProjectService Integration Tests', () => {
     beforeEach(async () => {
       const project = await projectService.createProject(testUserId, {
         name: 'Test Project',
-        description: 'Test description'
+        description: 'Test description',
       });
       testProjectId = project.id;
     });
@@ -184,15 +205,15 @@ describe('ProjectService Integration Tests', () => {
     });
 
     it('should throw error for non-existent project', async () => {
-      await expect(
-        projectService.getProject(uuidv4(), testUserId)
-      ).rejects.toThrow('Project not found');
+      await expect(projectService.getProject(uuidv4(), testUserId)).rejects.toThrow(
+        'Project not found'
+      );
     });
 
     it('should throw error for unauthorized access', async () => {
-      await expect(
-        projectService.getProject(testProjectId, testUserId2)
-      ).rejects.toThrow('not authorized');
+      await expect(projectService.getProject(testProjectId, testUserId2)).rejects.toThrow(
+        'not authorized'
+      );
     });
 
     it('should allow access to shared project', async () => {
@@ -211,7 +232,7 @@ describe('ProjectService Integration Tests', () => {
     beforeEach(async () => {
       const project = await projectService.createProject(testUserId, {
         name: 'Original Name',
-        description: 'Original description'
+        description: 'Original description',
       });
       testProjectId = project.id;
     });
@@ -222,25 +243,18 @@ describe('ProjectService Integration Tests', () => {
         description: 'Updated description',
         settings: {
           theme: 'dark',
-          defaultView: 'grid'
-        }
+          defaultView: 'grid',
+        },
       };
 
-      const updatedProject = await projectService.updateProject(
-        testProjectId,
-        testUserId,
-        updates
-      );
+      const updatedProject = await projectService.updateProject(testProjectId, testUserId, updates);
 
       expect(updatedProject).toHaveProperty('name', updates.name);
       expect(updatedProject).toHaveProperty('description', updates.description);
       expect(updatedProject.settings).toMatchObject(updates.settings);
 
       // Verify in database
-      const result = await pool.query(
-        'SELECT * FROM projects WHERE id = $1',
-        [testProjectId]
-      );
+      const result = await pool.query('SELECT * FROM projects WHERE id = $1', [testProjectId]);
       expect(result.rows[0].name).toBe(updates.name);
       expect(result.rows[0].updated_at).not.toBe(result.rows[0].created_at);
     });
@@ -248,7 +262,7 @@ describe('ProjectService Integration Tests', () => {
     it('should not allow updating by non-owner', async () => {
       await expect(
         projectService.updateProject(testProjectId, testUserId2, {
-          name: 'Hacked Name'
+          name: 'Hacked Name',
         })
       ).rejects.toThrow('not authorized');
     });
@@ -260,11 +274,9 @@ describe('ProjectService Integration Tests', () => {
         [uuidv4(), testProjectId, testUserId2, 'edit']
       );
 
-      const updatedProject = await projectService.updateProject(
-        testProjectId,
-        testUserId2,
-        { description: 'Updated by collaborator' }
-      );
+      const updatedProject = await projectService.updateProject(testProjectId, testUserId2, {
+        description: 'Updated by collaborator',
+      });
 
       expect(updatedProject).toHaveProperty('description', 'Updated by collaborator');
     });
@@ -275,7 +287,7 @@ describe('ProjectService Integration Tests', () => {
 
     beforeEach(async () => {
       const project = await projectService.createProject(testUserId, {
-        name: 'Project to Delete'
+        name: 'Project to Delete',
       });
       testProjectId = project.id;
 
@@ -286,8 +298,17 @@ describe('ProjectService Integration Tests', () => {
         await pool.query(
           `INSERT INTO images (id, project_id, name, url, thumbnail_url, size, width, height, segmentation_status) 
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [imageId, testProjectId, `image${i}.jpg`, `http://test.com/image${i}.jpg`, 
-           `http://test.com/thumb${i}.jpg`, 1024000, 1920, 1080, 'completed']
+          [
+            imageId,
+            testProjectId,
+            `image${i}.jpg`,
+            `http://test.com/image${i}.jpg`,
+            `http://test.com/thumb${i}.jpg`,
+            1024000,
+            1920,
+            1080,
+            'completed',
+          ]
         );
         imageIds.push(imageId);
       }
@@ -305,17 +326,15 @@ describe('ProjectService Integration Tests', () => {
       await projectService.deleteProject(testProjectId, testUserId);
 
       // Verify project deleted
-      const projectResult = await pool.query(
-        'SELECT * FROM projects WHERE id = $1',
-        [testProjectId]
-      );
+      const projectResult = await pool.query('SELECT * FROM projects WHERE id = $1', [
+        testProjectId,
+      ]);
       expect(projectResult.rows).toHaveLength(0);
 
       // Verify images deleted
-      const imageResult = await pool.query(
-        'SELECT * FROM images WHERE project_id = $1',
-        [testProjectId]
-      );
+      const imageResult = await pool.query('SELECT * FROM images WHERE project_id = $1', [
+        testProjectId,
+      ]);
       expect(imageResult.rows).toHaveLength(0);
 
       // Verify segmentation results deleted
@@ -327,16 +346,16 @@ describe('ProjectService Integration Tests', () => {
     });
 
     it('should not allow deletion by non-owner', async () => {
-      await expect(
-        projectService.deleteProject(testProjectId, testUserId2)
-      ).rejects.toThrow('not authorized');
+      await expect(projectService.deleteProject(testProjectId, testUserId2)).rejects.toThrow(
+        'not authorized'
+      );
     });
   });
 
   describe('shareProject', () => {
     beforeEach(async () => {
       const project = await projectService.createProject(testUserId, {
-        name: 'Project to Share'
+        name: 'Project to Share',
       });
       testProjectId = project.id;
     });
@@ -376,10 +395,9 @@ describe('ProjectService Integration Tests', () => {
       expect(updatedShare).toHaveProperty('permission', 'edit');
 
       // Verify only one share exists
-      const result = await pool.query(
-        'SELECT * FROM project_shares WHERE project_id = $1',
-        [testProjectId]
-      );
+      const result = await pool.query('SELECT * FROM project_shares WHERE project_id = $1', [
+        testProjectId,
+      ]);
       expect(result.rows).toHaveLength(1);
       expect(result.rows[0].permission).toBe('edit');
     });
@@ -394,7 +412,7 @@ describe('ProjectService Integration Tests', () => {
   describe('getProjectStats', () => {
     beforeEach(async () => {
       const project = await projectService.createProject(testUserId, {
-        name: 'Stats Project'
+        name: 'Stats Project',
       });
       testProjectId = project.id;
 
@@ -405,8 +423,17 @@ describe('ProjectService Integration Tests', () => {
         await pool.query(
           `INSERT INTO images (id, project_id, name, url, thumbnail_url, size, width, height, segmentation_status) 
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [imageId, testProjectId, `image${i}.jpg`, `http://test.com/image${i}.jpg`, 
-           `http://test.com/thumb${i}.jpg`, 1024000 * (i + 1), 1920, 1080, statuses[i]]
+          [
+            imageId,
+            testProjectId,
+            `image${i}.jpg`,
+            `http://test.com/image${i}.jpg`,
+            `http://test.com/thumb${i}.jpg`,
+            1024000 * (i + 1),
+            1920,
+            1080,
+            statuses[i],
+          ]
         );
 
         // Add cells for completed images

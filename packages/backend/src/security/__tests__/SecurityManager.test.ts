@@ -115,9 +115,7 @@ describe('SecurityManager', () => {
     });
 
     it('should detect XSS attempts', async () => {
-      await request(app)
-        .post('/test')
-        .send({ data: '<script>alert("xss")</script>' });
+      await request(app).post('/test').send({ data: '<script>alert("xss")</script>' });
 
       const metrics = securityManager.getMetrics();
       expect(metrics.suspiciousActivities).toBeGreaterThan(0);

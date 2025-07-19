@@ -10,14 +10,14 @@ import pool from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import tokenService from '../services/tokenService';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
-import { 
-  sendSuccess, 
-  sendError, 
-  sendNotFound, 
+import {
+  sendSuccess,
+  sendError,
+  sendNotFound,
   sendUnauthorized,
   sendBadRequest,
   sendServerError,
-  asyncHandler
+  asyncHandler,
 } from '../utils/responseHelpers';
 
 const router: Router = express.Router();
@@ -136,8 +136,8 @@ router.get(
     if (!userId) {
       return sendUnauthorized(res, 'Authentication required');
     }
-      // Check if users table exists
-      const tableCheck = await pool.query(`
+    // Check if users table exists
+    const tableCheck = await pool.query(`
       SELECT EXISTS (
         SELECT 1
         FROM information_schema.tables
@@ -146,23 +146,23 @@ router.get(
       )
     `);
 
-      if (!tableCheck.rows[0].exists) {
-        logger.warn('Users table does not exist, returning error');
-        return sendServerError(res, 'Database schema not initialized');
-      }
+    if (!tableCheck.rows[0].exists) {
+      logger.warn('Users table does not exist, returning error');
+      return sendServerError(res, 'Database schema not initialized');
+    }
 
-      // Get user from database
-      const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+    // Get user from database
+    const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
 
-      if (userResult.rows.length === 0) {
-        logger.warn('User not found', { userId });
-        return sendNotFound(res, 'User not found');
-      }
+    if (userResult.rows.length === 0) {
+      logger.warn('User not found', { userId });
+      return sendNotFound(res, 'User not found');
+    }
 
-      const user = userResult.rows[0];
+    const user = userResult.rows[0];
 
-      // Check if user_profiles table exists
-      const profileTableCheck = await pool.query(`
+    // Check if user_profiles table exists
+    const profileTableCheck = await pool.query(`
       SELECT EXISTS (
         SELECT 1
         FROM information_schema.tables
@@ -171,45 +171,45 @@ router.get(
       )
     `);
 
-      let profile = null;
-      if (profileTableCheck.rows[0].exists) {
-        // Get profile from database
-        const profileResult = await pool.query('SELECT * FROM user_profiles WHERE user_id = $1', [
-          userId,
-        ]);
-        if (profileResult.rows.length > 0) {
-          profile = profileResult.rows[0];
-        }
+    let profile = null;
+    if (profileTableCheck.rows[0].exists) {
+      // Get profile from database
+      const profileResult = await pool.query('SELECT * FROM user_profiles WHERE user_id = $1', [
+        userId,
+      ]);
+      if (profileResult.rows.length > 0) {
+        profile = profileResult.rows[0];
       }
+    }
 
-      // Format user data
-      const userData = {
-        id: user.id,
-        email: user.email,
-        created_at: user.created_at,
-        profile: profile
-          ? {
-              username: profile.username,
-              full_name: profile.full_name,
-              title: profile.title,
-              organization: profile.organization,
-              bio: profile.bio,
-              location: profile.location,
-              avatar_url: profile.avatar_url,
-            }
-          : {
-              username: user.name || user.email.split('@')[0],
-              full_name: user.name || 'User',
-              title: null,
-              organization: null,
-              bio: null,
-              location: null,
-              avatar_url: null,
-            },
-      };
+    // Format user data
+    const userData = {
+      id: user.id,
+      email: user.email,
+      created_at: user.created_at,
+      profile: profile
+        ? {
+            username: profile.username,
+            full_name: profile.full_name,
+            title: profile.title,
+            organization: profile.organization,
+            bio: profile.bio,
+            location: profile.location,
+            avatar_url: profile.avatar_url,
+          }
+        : {
+            username: user.name || user.email.split('@')[0],
+            full_name: user.name || 'User',
+            title: null,
+            organization: null,
+            bio: null,
+            location: null,
+            avatar_url: null,
+          },
+    };
 
-      logger.info('User profile returned', { userId });
-      return sendSuccess(res, userData);
+    logger.info('User profile returned', { userId });
+    return sendSuccess(res, userData);
   })
 );
 

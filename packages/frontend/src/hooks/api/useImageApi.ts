@@ -36,37 +36,40 @@ export const useImageApi = () => {
     }
   }, []);
 
-  const uploadImages = useCallback(async (projectId: string, files: File[], onProgress?: (event: { progress: number }) => void) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('images', file);
-      });
+  const uploadImages = useCallback(
+    async (projectId: string, files: File[], onProgress?: (event: { progress: number }) => void) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const formData = new FormData();
+        files.forEach((file) => {
+          formData.append('images', file);
+        });
 
-      const response = await apiClient.post(`/projects/${projectId}/images`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploadProgress(progress);
-            if (onProgress) {
-              onProgress({ progress });
+        const response = await apiClient.post(`/projects/${projectId}/images`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(progress);
+              if (onProgress) {
+                onProgress({ progress });
+              }
             }
-          }
-        },
-      });
-      return response.data;
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+          },
+        });
+        return response.data;
+      } catch (err) {
+        setError(err as Error);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   const deleteImage = useCallback(async (projectId: string, imageId: string) => {
     setLoading(true);
@@ -99,9 +102,12 @@ export const useImageApi = () => {
   }, []);
 
   // Method to upload a single image (for test compatibility)
-  const uploadImage = useCallback(async (projectId: string, file: File, onProgress?: (event: { progress: number }) => void) => {
-    return uploadImages(projectId, [file], onProgress);
-  }, [uploadImages]);
+  const uploadImage = useCallback(
+    async (projectId: string, file: File, onProgress?: (event: { progress: number }) => void) => {
+      return uploadImages(projectId, [file], onProgress);
+    },
+    [uploadImages],
+  );
 
   // Method to get image details
   const getImageDetails = useCallback(async (projectId: string, imageId: string) => {

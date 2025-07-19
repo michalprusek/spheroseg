@@ -24,26 +24,26 @@ describe('Container Info Utilities', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     delete process.env.CONTAINER_MEMORY_LIMIT_MB;
-    
+
     // Clear logger mock calls
     mockLogger.debug.mockClear();
     mockLogger.info.mockClear();
     mockLogger.warn.mockClear();
     mockLogger.error.mockClear();
-    
+
     // Clear the module cache
     jest.resetModules();
-    
+
     // Create fresh mocks for each test
     mockExistsSync = jest.fn();
     mockReadFileSync = jest.fn();
-    
+
     // Mock fs module
     jest.doMock('fs', () => ({
       existsSync: mockExistsSync,
       readFileSync: mockReadFileSync,
     }));
-    
+
     // Import functions after mocking
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const containerInfo = require('../containerInfo');

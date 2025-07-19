@@ -108,7 +108,9 @@ export const errorHandler: ErrorRequestHandler = (
  * Middleware to handle async route handlers
  * Wraps async functions to catch promise rejections
  */
-export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {
+export const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

@@ -48,9 +48,8 @@ import { useExperiment, useFeatureFlag, useABTestingEvents } from '../useABTesti
 import { getABTestingInstance, initializeABTesting } from '@/services/abTesting/abTestingService';
 
 // Get the mock service from the module
-const mockService = (vi.mocked(getABTestingInstance) as any).__mockService || 
-  (getABTestingInstance as any)().__mockService ||
-  {
+const mockService = (vi.mocked(getABTestingInstance) as any).__mockService ||
+  (getABTestingInstance as any)().__mockService || {
     getVariant: vi.fn(),
     isFeatureEnabled: vi.fn(),
     getFeatureFlag: vi.fn(),
@@ -65,7 +64,7 @@ const mockService = (vi.mocked(getABTestingInstance) as any).__mockService ||
 describe('useABTesting hooks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
     mockService.getVariant.mockReturnValue({ variantId: 'control', isInExperiment: true });
     mockService.isFeatureEnabled.mockReturnValue(false);
@@ -76,16 +75,16 @@ describe('useABTesting hooks', () => {
     mockService.getActiveExperiments.mockReturnValue({});
     mockService.getAllFeatureFlags.mockReturnValue([]);
     mockService.initialize.mockResolvedValue(undefined);
-    
+
     vi.mocked(getABTestingInstance).mockReturnValue(mockService);
     vi.mocked(initializeABTesting).mockReturnValue(mockService);
   });
 
   describe('useExperiment', () => {
     it('should return variant for experiment', async () => {
-      const mockResult = { 
-        variantId: 'variant-a', 
-        isInExperiment: true 
+      const mockResult = {
+        variantId: 'variant-a',
+        isInExperiment: true,
       };
       mockService.getVariant.mockReturnValue(mockResult);
 
@@ -100,9 +99,9 @@ describe('useABTesting hooks', () => {
     });
 
     it('should identify control variant', async () => {
-      const mockResult = { 
-        variantId: 'control', 
-        isInExperiment: true 
+      const mockResult = {
+        variantId: 'control',
+        isInExperiment: true,
       };
       mockService.getVariant.mockReturnValue(mockResult);
 
@@ -115,9 +114,9 @@ describe('useABTesting hooks', () => {
     });
 
     it('should track events with experiment context', async () => {
-      const mockResult = { 
-        variantId: 'variant-a', 
-        isInExperiment: true 
+      const mockResult = {
+        variantId: 'variant-a',
+        isInExperiment: true,
       };
       mockService.getVariant.mockReturnValue(mockResult);
 
@@ -129,9 +128,9 @@ describe('useABTesting hooks', () => {
     });
 
     it('should memoize variant result', async () => {
-      const mockResult = { 
-        variantId: 'variant-a', 
-        isInExperiment: true 
+      const mockResult = {
+        variantId: 'variant-a',
+        isInExperiment: true,
       };
       mockService.getVariant.mockReturnValue(mockResult);
 
@@ -142,9 +141,9 @@ describe('useABTesting hooks', () => {
       });
 
       const callCount = mockService.getVariant.mock.calls.length;
-      
+
       rerender();
-      
+
       // Should not call getVariant again on rerender
       expect(mockService.getVariant.mock.calls.length).toBe(callCount);
     });
@@ -170,7 +169,7 @@ describe('useABTesting hooks', () => {
       await waitFor(() => {
         expect(result.current).toBe(true);
       });
-      
+
       expect(mockService.getFeatureFlag).toHaveBeenCalledWith('new-feature', undefined);
     });
 
@@ -182,7 +181,7 @@ describe('useABTesting hooks', () => {
       await waitFor(() => {
         expect(result.current).toBe('blue');
       });
-      
+
       expect(mockService.getFeatureFlag).toHaveBeenCalledWith('button-color', 'red');
     });
 
@@ -207,14 +206,11 @@ describe('useABTesting hooks', () => {
     });
 
     it('should update when feature flag changes', async () => {
-      mockService.getFeatureFlag
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(true);
+      mockService.getFeatureFlag.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
-      const { result, rerender } = renderHook(
-        ({ flag }) => useFeatureFlag(flag),
-        { initialProps: { flag: 'toggle-feature' } }
-      );
+      const { result, rerender } = renderHook(({ flag }) => useFeatureFlag(flag), {
+        initialProps: { flag: 'toggle-feature' },
+      });
 
       await waitFor(() => {
         expect(result.current).toBe(false);
@@ -251,8 +247,8 @@ describe('useABTesting hooks', () => {
         result.current.trackEvent('button_click', { buttonId: 'cta' });
       });
 
-      expect(mockService.trackEvent).toHaveBeenCalledWith('button_click', { 
-        buttonId: 'cta'
+      expect(mockService.trackEvent).toHaveBeenCalledWith('button_click', {
+        buttonId: 'cta',
       });
     });
 
@@ -282,8 +278,8 @@ describe('useABTesting hooks', () => {
         result.current.trackTiming('page_load', 1500, { page: 'dashboard' });
       });
 
-      expect(mockService.trackTiming).toHaveBeenCalledWith('page_load', 1500, { 
-        page: 'dashboard'
+      expect(mockService.trackTiming).toHaveBeenCalledWith('page_load', 1500, {
+        page: 'dashboard',
       });
     });
 
@@ -323,16 +319,16 @@ describe('useABTesting hooks', () => {
 
       // The hook just passes through the properties without adding activeExperiments
       expect(mockService.trackEvent).toHaveBeenCalledWith('test_event', {
-        custom: 'data'
+        custom: 'data',
       });
     });
   });
 
   describe('integration scenarios', () => {
     it('should work with multiple hooks together', async () => {
-      const mockExperimentResult = { 
-        variantId: 'variant-a', 
-        isInExperiment: true 
+      const mockExperimentResult = {
+        variantId: 'variant-a',
+        isInExperiment: true,
       };
       mockService.getVariant.mockReturnValue(mockExperimentResult);
       mockService.getFeatureFlag.mockReturnValue(true);
@@ -356,7 +352,7 @@ describe('useABTesting hooks', () => {
       await waitFor(() => {
         expect(result.current).toBe(true);
       });
-      
+
       // This demonstrates how the hook would be used in a component
       // to conditionally render features based on the flag value
       expect(mockService.getFeatureFlag).toHaveBeenCalledWith('new-ui-feature', false);

@@ -30,7 +30,7 @@ export enum QueueTaskStatus {
   QUEUED = 'queued',
   PROCESSING = 'processing',
   COMPLETED = 'completed',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 export interface ProjectStats {

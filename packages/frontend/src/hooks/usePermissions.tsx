@@ -6,11 +6,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import permissionService, {
-  Permission,
-  Role,
-  PermissionCheck,
-} from '@/services/unifiedPermissionService';
+import permissionService, { Permission, Role, PermissionCheck } from '@/services/unifiedPermissionService';
 import { useAuth } from '@/hooks/useUnifiedAuth';
 import { createLogger } from '@/utils/logging/unifiedLogger';
 

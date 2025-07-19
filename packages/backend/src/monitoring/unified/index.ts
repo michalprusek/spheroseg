@@ -752,7 +752,12 @@ export function requestLoggerMiddleware(req: Request, res: Response, next: NextF
 /**
  * Error handling middleware integrated with unified monitoring
  */
-export function errorHandlerMiddleware(err: unknown, req: Request, res: Response, next: NextFunction) {
+export function errorHandlerMiddleware(
+  err: unknown,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   // Don't respond if response was already sent
   if (res.headersSent) {
     return next(err);
@@ -1096,8 +1101,10 @@ export default {
 
   // Events
   on: (event: string, listener: (...args: unknown[]) => void) => metricsEmitter.on(event, listener),
-  off: (event: string, listener: (...args: unknown[]) => void) => metricsEmitter.off(event, listener),
-  once: (event: string, listener: (...args: unknown[]) => void) => metricsEmitter.once(event, listener),
+  off: (event: string, listener: (...args: unknown[]) => void) =>
+    metricsEmitter.off(event, listener),
+  once: (event: string, listener: (...args: unknown[]) => void) =>
+    metricsEmitter.once(event, listener),
 
   // Performance monitoring instance
   performanceMonitoring: monitoring,

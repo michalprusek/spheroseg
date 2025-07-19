@@ -214,7 +214,7 @@ export async function getProjectById(
   userId: string
 ): Promise<ProjectResponse | null> {
   logger.info('getProjectById called', { projectId, userId });
-  
+
   // Try to get from cache first
   const cacheKey = `project:${projectId}:${userId}`;
   try {
@@ -250,7 +250,7 @@ export async function getProjectById(
 
     return project;
   }
-  
+
   logger.info('User does not own project, checking shared access', { projectId, userId });
 
   // Check if project is shared with the user
@@ -267,7 +267,11 @@ export async function getProjectById(
       [projectId, userId]
     );
 
-    logger.info('Shared project query result', { projectId, userId, rowCount: sharedProject.rows.length });
+    logger.info('Shared project query result', {
+      projectId,
+      userId,
+      rowCount: sharedProject.rows.length,
+    });
 
     if (sharedProject.rows.length > 0) {
       logger.info('User has shared access to project', { projectId, userId });
@@ -589,7 +593,7 @@ export async function deleteProject(
           userId,
           actualOwnerId: projectExists.rows[0].user_id,
         });
-        throw new ApiError("You need to be the project owner to delete this project", 403);
+        throw new ApiError('You need to be the project owner to delete this project', 403);
       }
     } catch (err) {
       if (err instanceof ApiError) {

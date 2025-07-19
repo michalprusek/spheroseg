@@ -170,10 +170,12 @@ describe('Translation Coverage Tests', () => {
       // Note: Keys like 'title', 'name', etc. naturally appear in different nested contexts
       // and are not actually duplicates (e.g., auth.title vs dashboard.title)
       // Only fail if there are truly problematic duplicates (same key at same nesting level)
-      
+
       // For now, log duplicates but don't fail the test since nested contexts are expected
       if (duplicates.length > 0) {
-        console.warn(`Found ${duplicates.length} duplicate key names in ${lang}.ts - this is expected for nested translation structures`);
+        console.warn(
+          `Found ${duplicates.length} duplicate key names in ${lang}.ts - this is expected for nested translation structures`,
+        );
       }
     }
   });

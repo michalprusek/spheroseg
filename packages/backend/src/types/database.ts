@@ -3,13 +3,13 @@
  */
 
 // PostgreSQL supported parameter types
-export type QueryParameter = 
-  | string 
-  | number 
-  | boolean 
-  | Date 
-  | Buffer 
-  | null 
+export type QueryParameter =
+  | string
+  | number
+  | boolean
+  | Date
+  | Buffer
+  | null
   | undefined
   | QueryParameter[]; // Arrays of any of the above
 
@@ -34,10 +34,7 @@ export interface QueryExecutionOptions {
 
 // Database transaction interface
 export interface DatabaseTransaction {
-  query<T extends QueryRow = QueryRow>(
-    text: string,
-    params?: QueryParameters
-  ): Promise<T[]>;
+  query<T extends QueryRow = QueryRow>(text: string, params?: QueryParameters): Promise<T[]>;
   commit(): Promise<void>;
   rollback(): Promise<void>;
 }

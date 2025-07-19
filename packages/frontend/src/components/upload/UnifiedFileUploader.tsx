@@ -6,17 +6,7 @@
  */
 
 import React, { useMemo } from 'react';
-import {
-  Upload,
-  X,
-  Check,
-  AlertCircle,
-  FileIcon,
-  Image as ImageIcon,
-  Loader2,
-  RefreshCw,
-  Trash2,
-} from 'lucide-react';
+import { Upload, X, Check, AlertCircle, FileIcon, Image as ImageIcon, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';

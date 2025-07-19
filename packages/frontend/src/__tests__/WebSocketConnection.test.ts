@@ -7,13 +7,13 @@ vi.mock('@/config/app.config', () => ({
   getConfig: vi.fn(() => ({
     api: {
       baseUrl: 'http://localhost:5001',
-      prefix: '/api'
+      prefix: '/api',
     },
     websocket: {
       url: 'http://localhost:5001',
-      path: '/socket.io/'
-    }
-  }))
+      path: '/socket.io/',
+    },
+  })),
 }));
 
 // Mock window.location

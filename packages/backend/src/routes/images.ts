@@ -547,13 +547,13 @@ router.post(
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(getPool(), projectId, requestingUserId);
-      
+
       if (!project) {
         if (files) files.forEach((file) => allUploadedFilePaths.push(file.path));
         next(new ApiError('Project not found or access denied', 404));
         return;
       }
-      
+
       // Check if user has edit permission (owner or shared with 'edit' permission)
       const hasEditPermission = project.is_owner || project.permission === 'edit';
       if (!hasEditPermission) {
@@ -1165,11 +1165,11 @@ router.get(
 
     try {
       const pool = getPool();
-      
+
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(pool, projectId, userId);
-      
+
       if (!project) {
         logger.warn('Project access denied', {
           projectId,
@@ -1263,11 +1263,11 @@ router.get(
       }
 
       const pool = getPool();
-      
+
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(pool, projectId, userId);
-      
+
       if (!project) {
         logger.warn('Project access denied', {
           projectId,
@@ -1373,11 +1373,16 @@ router.get(
         );
       }
 
-      return sendPaginated(res, response.images, {
-        page: Number(page || 1),
-        pageSize: Number(limit),
-        totalItems: totalCount
-      }, 'Images retrieved successfully');
+      return sendPaginated(
+        res,
+        response.images,
+        {
+          page: Number(page || 1),
+          pageSize: Number(limit),
+          totalItems: totalCount,
+        },
+        'Images retrieved successfully'
+      );
     } catch (error) {
       logger.error('Error fetching images', {
         projectId,
@@ -1425,11 +1430,11 @@ router.get(
 
     try {
       const pool = getPool();
-      
+
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(pool, projectId, userId);
-      
+
       if (!project) {
         logger.warn('Project access denied', {
           projectId,

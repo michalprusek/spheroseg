@@ -285,16 +285,16 @@ router.post(
       }
 
       // Update image status to 'queued' in the database
-      await pool.query(
-        `UPDATE images SET status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`,
-        [imageId]
-      );
+      await pool.query(`UPDATE images SET status = $1, updated_at = NOW() WHERE id = $2`, [
+        SEGMENTATION_STATUS.QUEUED,
+        imageId,
+      ]);
       // Also update or create segmentation_results entry
       await pool.query(
         `INSERT INTO segmentation_results (image_id, status, parameters)
-              VALUES ($1, '${SEGMENTATION_STATUS.QUEUED}', $2)
-              ON CONFLICT (image_id) DO UPDATE SET status = '${SEGMENTATION_STATUS.QUEUED}', parameters = $2, updated_at = NOW()`,
-        [imageId, { ...segmentationParams, priority }]
+              VALUES ($1, $2, $3)
+              ON CONFLICT (image_id) DO UPDATE SET status = $2, parameters = $3, updated_at = NOW()`,
+        [imageId, SEGMENTATION_STATUS.QUEUED, { ...segmentationParams, priority }]
       );
 
       // Trigger the actual segmentation task asynchronously with priority
@@ -316,13 +316,13 @@ router.post(
       console.error('Error triggering segmentation:', error);
       // Attempt to revert status if triggering failed
       try {
+        await pool.query(`UPDATE images SET status = $1, updated_at = NOW() WHERE id = $2`, [
+          SEGMENTATION_STATUS.FAILED,
+          imageId,
+        ]);
         await pool.query(
-          `UPDATE images SET status = '${SEGMENTATION_STATUS.FAILED}', updated_at = NOW() WHERE id = $1`,
-          [imageId]
-        );
-        await pool.query(
-          `UPDATE segmentation_results SET status = '${SEGMENTATION_STATUS.FAILED}', updated_at = NOW() WHERE image_id = $1`,
-          [imageId]
+          `UPDATE segmentation_results SET status = $1, updated_at = NOW() WHERE image_id = $2`,
+          [SEGMENTATION_STATUS.FAILED, imageId]
         );
 
         // Broadcast the failure
@@ -855,7 +855,7 @@ router.post(
       // Verify user has access to the project (including shared projects)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(pool, projectId, userId);
-      
+
       if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;
@@ -969,7 +969,7 @@ router.get(
       // Verify user has access to the project (including shared projects)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(pool, projectId, userId);
-      
+
       if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;
@@ -978,16 +978,22 @@ router.get(
       // Get queue status for this project
       const queueQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE st.status = '${SEGMENTATION_STATUS.QUEUED}') AS pending_count,
-                COUNT(*) FILTER (WHERE st.status = '${SEGMENTATION_STATUS.PROCESSING}') AS processing_count,
-                COUNT(*) FILTER (WHERE st.status = '${SEGMENTATION_STATUS.COMPLETED}') AS completed_count,
-                COUNT(*) FILTER (WHERE st.status = '${SEGMENTATION_STATUS.FAILED}') AS failed_count,
+                COUNT(*) FILTER (WHERE st.status = $2) AS pending_count,
+                COUNT(*) FILTER (WHERE st.status = $3) AS processing_count,
+                COUNT(*) FILTER (WHERE st.status = $4) AS completed_count,
+                COUNT(*) FILTER (WHERE st.status = $5) AS failed_count,
                 COUNT(*) AS total_count
             FROM segmentation_tasks st
             JOIN images i ON st.image_id = i.id
             WHERE i.project_id = $1
         `;
-      const queueResult = await pool.query(queueQuery, [projectId]);
+      const queueResult = await pool.query(queueQuery, [
+        projectId,
+        SEGMENTATION_STATUS.QUEUED,
+        SEGMENTATION_STATUS.PROCESSING,
+        SEGMENTATION_STATUS.COMPLETED,
+        SEGMENTATION_STATUS.FAILED,
+      ]);
       const queueStats = queueResult.rows[0] || {
         pending_count: 0,
         processing_count: 0,
@@ -999,15 +1005,21 @@ router.get(
       // Get image segmentation status for this project
       const imageStatsQuery = `
             SELECT
-                COUNT(*) FILTER (WHERE segmentation_status = '${SEGMENTATION_STATUS.QUEUED}') AS pending_count,
-                COUNT(*) FILTER (WHERE segmentation_status = '${SEGMENTATION_STATUS.PROCESSING}') AS processing_count,
-                COUNT(*) FILTER (WHERE segmentation_status = '${SEGMENTATION_STATUS.COMPLETED}') AS completed_count,
-                COUNT(*) FILTER (WHERE segmentation_status = '${SEGMENTATION_STATUS.FAILED}') AS failed_count,
+                COUNT(*) FILTER (WHERE segmentation_status = $2) AS pending_count,
+                COUNT(*) FILTER (WHERE segmentation_status = $3) AS processing_count,
+                COUNT(*) FILTER (WHERE segmentation_status = $4) AS completed_count,
+                COUNT(*) FILTER (WHERE segmentation_status = $5) AS failed_count,
                 COUNT(*) AS total_count
             FROM images
             WHERE project_id = $1
         `;
-      const imageStatsResult = await pool.query(imageStatsQuery, [projectId]);
+      const imageStatsResult = await pool.query(imageStatsQuery, [
+        projectId,
+        SEGMENTATION_STATUS.QUEUED,
+        SEGMENTATION_STATUS.PROCESSING,
+        SEGMENTATION_STATUS.COMPLETED,
+        SEGMENTATION_STATUS.FAILED,
+      ]);
       const imageStats = imageStatsResult.rows[0] || {
         pending_count: 0,
         processing_count: 0,
@@ -1175,16 +1187,18 @@ router.post(
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(pool, projectId, userId);
-      
+
       if (!project) {
         res.status(404).json({ message: 'Image not found or access denied' });
         return;
       }
-      
+
       // Check if user has edit permission (owner or shared with 'edit' permission)
       const hasEditPermission = project.is_owner || project.permission === 'edit';
       if (!hasEditPermission) {
-        res.status(403).json({ message: "You need 'edit' or 'owner' permission to resegment images" });
+        res
+          .status(403)
+          .json({ message: "You need 'edit' or 'owner' permission to resegment images" });
         return;
       }
 
@@ -1210,15 +1224,15 @@ router.post(
 
         // Update image status to queued
         await pool.query(
-          `UPDATE images SET segmentation_status = '${SEGMENTATION_STATUS.QUEUED}', updated_at = NOW() WHERE id = $1`,
-          [imageId]
+          `UPDATE images SET segmentation_status = $1, updated_at = NOW() WHERE id = $2`,
+          [SEGMENTATION_STATUS.QUEUED, imageId]
         );
 
         // Create new segmentation result entry with queued status
         await pool.query(
           `INSERT INTO segmentation_results (image_id, status, parameters)
-           VALUES ($1, '${SEGMENTATION_STATUS.QUEUED}', $2)`,
-          [imageId, { model_type: 'resunet', force_resegment: true }]
+           VALUES ($1, $2, $3)`,
+          [imageId, SEGMENTATION_STATUS.QUEUED, { model_type: 'resunet', force_resegment: true }]
         );
 
         await pool.query('COMMIT');
@@ -1325,7 +1339,7 @@ router.post(
       // Verify user has access to the project (including shared projects)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(pool, projectId, userId);
-      
+
       if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;
@@ -1471,7 +1485,7 @@ router.get(
       // Verify project access (including shared projects)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(pool, projectId, userId);
-      
+
       if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;
@@ -1619,8 +1633,8 @@ router.delete(
       if (cancelled) {
         // Update image status to without_segmentation
         await pool.query(
-          `UPDATE images SET segmentation_status = '${SEGMENTATION_STATUS.WITHOUT_SEGMENTATION}', updated_at = NOW() WHERE id = $1`,
-          [imageId]
+          `UPDATE images SET segmentation_status = $1, updated_at = NOW() WHERE id = $2`,
+          [SEGMENTATION_STATUS.WITHOUT_SEGMENTATION, imageId]
         );
 
         // Delete any queued/processing segmentation results

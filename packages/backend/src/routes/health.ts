@@ -35,14 +35,14 @@ interface HealthCheckResponse {
 router.get('/', async (req: Request, res: Response) => {
   const startTime = Date.now();
   const includeDetails = req.query.details === 'true';
-  
+
   try {
     // Run all checks in parallel
     const [dbCheck, mlCheck, memoryCheck, fsCheck] = await Promise.all([
       checkDatabase(),
       checkMLService(),
       checkMemory(),
-      checkFileSystem()
+      checkFileSystem(),
     ]);
 
     // Determine overall health status
@@ -51,12 +51,12 @@ router.get('/', async (req: Request, res: Response) => {
       database: dbCheck,
       mlService: mlCheck,
       memory: memoryCheck,
-      fileSystem: fsCheck
+      fileSystem: fsCheck,
     };
 
-    const statuses = Object.values(components).map(c => c.status);
+    const statuses = Object.values(components).map((c) => c.status);
     let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    
+
     if (statuses.includes('unhealthy')) {
       overallStatus = 'unhealthy';
     } else if (statuses.includes('degraded')) {
@@ -69,19 +69,18 @@ router.get('/', async (req: Request, res: Response) => {
       version: process.env.npm_package_version || 'unknown',
       uptime: process.uptime(),
       environment: config.env || process.env.NODE_ENV || 'development',
-      components
+      components,
     };
 
     // Remove details if not requested
     if (!includeDetails) {
-      Object.values(response.components).forEach(component => {
+      Object.values(response.components).forEach((component) => {
         delete component.details;
       });
     }
 
     // Set appropriate status code
-    const statusCode = overallStatus === 'healthy' ? 200 : 
-                      overallStatus === 'degraded' ? 200 : 503;
+    const statusCode = overallStatus === 'healthy' ? 200 : overallStatus === 'degraded' ? 200 : 503;
 
     res.status(statusCode).json(response);
 
@@ -91,7 +90,7 @@ router.get('/', async (req: Request, res: Response) => {
     }
   } catch (error) {
     logger.error('Health check failed', { error });
-    
+
     res.status(503).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
@@ -103,19 +102,19 @@ router.get('/', async (req: Request, res: Response) => {
         database: { status: 'unknown' },
         mlService: { status: 'unknown' },
         memory: { status: 'unknown' },
-        fileSystem: { status: 'unknown' }
+        fileSystem: { status: 'unknown' },
       },
-      error: error.message
+      error: error.message,
     });
   }
 });
 
 // GET /api/health/live - Kubernetes liveness probe
 router.get('/live', async (req: Request, res: Response) => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'alive',
     timestamp: new Date().toISOString(),
-    pid: process.pid
+    pid: process.pid,
   });
 });
 
@@ -124,25 +123,25 @@ router.get('/ready', async (req: Request, res: Response) => {
   try {
     // Check only critical dependencies for readiness
     const dbCheck = await checkDatabase();
-    
+
     if (dbCheck.status === 'unhealthy') {
-      res.status(503).json({ 
+      res.status(503).json({
         status: 'not_ready',
         reason: 'Database not available',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return;
     }
-    
-    res.status(200).json({ 
+
+    res.status(200).json({
       status: 'ready',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    res.status(503).json({ 
+    res.status(503).json({
       status: 'not_ready',
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -154,21 +153,21 @@ async function checkDatabase(): Promise<HealthCheckComponent> {
   try {
     const result = await pool.query('SELECT 1 as health_check');
     const responseTime = Date.now() - start;
-    
+
     // Check response time
     if (responseTime > performanceConfig.healthCheck.dbTimeoutMs) {
       return {
         status: 'degraded',
         message: 'Database response slow',
         responseTime,
-        details: { threshold: performanceConfig.healthCheck.dbTimeoutMs }
+        details: { threshold: performanceConfig.healthCheck.dbTimeoutMs },
       };
     }
-    
+
     return {
       status: 'healthy',
       message: 'Database connected',
-      responseTime
+      responseTime,
     };
   } catch (error) {
     logger.error('Database health check failed', { error });
@@ -176,7 +175,7 @@ async function checkDatabase(): Promise<HealthCheckComponent> {
       status: 'unhealthy',
       message: 'Database connection failed',
       responseTime: Date.now() - start,
-      details: { error: error.message }
+      details: { error: error.message },
     };
   }
 }
@@ -185,37 +184,37 @@ async function checkMLService(): Promise<HealthCheckComponent> {
   const start = Date.now();
   try {
     const mlServiceUrl = config.ml?.serviceUrl || process.env.ML_SERVICE_URL || 'http://ml:5002';
-    
+
     // First check if checkpoint exists
     if (!config.segmentation?.checkpointExists) {
       return {
         status: 'degraded',
         message: 'ML checkpoint missing',
         responseTime: 0,
-        details: { checkpointPath: config.segmentation?.checkpointPath }
+        details: { checkpointPath: config.segmentation?.checkpointPath },
       };
     }
-    
+
     // Try to reach ML service
     const response = await axios.get(`${mlServiceUrl}/health`, {
-      timeout: 5000
+      timeout: 5000,
     });
-    
+
     const responseTime = Date.now() - start;
-    
+
     if (response.status !== 200) {
       return {
         status: 'degraded',
         message: 'ML service not healthy',
         responseTime,
-        details: { statusCode: response.status }
+        details: { statusCode: response.status },
       };
     }
-    
+
     return {
       status: 'healthy',
       message: 'ML service available',
-      responseTime
+      responseTime,
     };
   } catch (error) {
     // ML service being down is degraded, not unhealthy
@@ -223,7 +222,7 @@ async function checkMLService(): Promise<HealthCheckComponent> {
       status: 'degraded',
       message: 'ML service unreachable',
       responseTime: Date.now() - start,
-      details: { error: error.message }
+      details: { error: error.message },
     };
   }
 }
@@ -234,50 +233,54 @@ async function checkMemory(): Promise<HealthCheckComponent> {
     const heapUsed = process.memoryUsage().heapUsed;
     const heapTotal = process.memoryUsage().heapTotal;
     const heapPercentage = (heapUsed / heapTotal) * 100;
-    
+
     const details = {
       container: {
         used: memInfo.used,
         limit: memInfo.limit,
-        percentage: memInfo.percentage
+        percentage: memInfo.percentage,
       },
       heap: {
         used: heapUsed,
         total: heapTotal,
-        percentage: heapPercentage
-      }
+        percentage: heapPercentage,
+      },
     };
-    
+
     // Check thresholds
-    if (memInfo.percentage > performanceConfig.memory.thresholds.unhealthy ||
-        heapPercentage > performanceConfig.memory.thresholds.heapUnhealthy) {
+    if (
+      memInfo.percentage > performanceConfig.memory.thresholds.unhealthy ||
+      heapPercentage > performanceConfig.memory.thresholds.heapUnhealthy
+    ) {
       return {
         status: 'unhealthy',
         message: 'Memory usage critical',
-        details
+        details,
       };
     }
-    
-    if (memInfo.percentage > performanceConfig.memory.thresholds.degraded ||
-        heapPercentage > performanceConfig.memory.thresholds.heapDegraded) {
+
+    if (
+      memInfo.percentage > performanceConfig.memory.thresholds.degraded ||
+      heapPercentage > performanceConfig.memory.thresholds.heapDegraded
+    ) {
       return {
         status: 'degraded',
         message: 'Memory usage high',
-        details
+        details,
       };
     }
-    
+
     return {
       status: 'healthy',
       message: 'Memory usage normal',
-      details
+      details,
     };
   } catch (error) {
     // If we can't check memory, that's degraded not unhealthy
     return {
       status: 'degraded',
       message: 'Unable to check memory',
-      details: { error: error.message }
+      details: { error: error.message },
     };
   }
 }
@@ -288,26 +291,26 @@ async function checkFileSystem(): Promise<HealthCheckComponent> {
     // Check if uploads directory exists and is writable
     const fs = require('fs').promises;
     const uploadDir = '/uploads';
-    
+
     // Check if directory exists
     await fs.access(uploadDir, fs.constants.F_OK);
-    
+
     // Check if we can write
     const testFile = `${uploadDir}/.health-check-${Date.now()}.tmp`;
     await fs.writeFile(testFile, 'health check');
     await fs.unlink(testFile);
-    
+
     return {
       status: 'healthy',
       message: 'File system writable',
-      responseTime: Date.now() - start
+      responseTime: Date.now() - start,
     };
   } catch (error) {
     return {
       status: 'unhealthy',
       message: 'File system not writable',
       responseTime: Date.now() - start,
-      details: { error: error.message }
+      details: { error: error.message },
     };
   }
 }

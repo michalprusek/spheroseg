@@ -30,11 +30,7 @@ vi.mock('@/components/ui/dialog', () => ({
 vi.mock('@/components/ui/image-cropper', () => ({
   default: ({ onComplete }: any) => (
     <div>
-      <button
-        onClick={() => onComplete({ croppedImageData: 'data:image/jpeg;base64,cropped' })}
-      >
-        Complete Crop
-      </button>
+      <button onClick={() => onComplete({ croppedImageData: 'data:image/jpeg;base64,cropped' })}>Complete Crop</button>
     </div>
   ),
 }));

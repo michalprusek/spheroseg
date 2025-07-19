@@ -320,7 +320,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Enhanced timeout handling for auth verification
           const timeoutPromise = new Promise<null>((resolve) => {
             setTimeout(() => {
-              logger.warn('Auth API verification timed out after 8 seconds, continuing with stored token and user data');
+              logger.warn(
+                'Auth API verification timed out after 8 seconds, continuing with stored token and user data',
+              );
               resolve(null);
             }, 8000); // Increased to 8 seconds to give auth API more time
           });
@@ -360,9 +362,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 retries--;
                 if (retries === 0) {
-                  logger.warn('User data fetch failed after all retries', { 
+                  logger.warn('User data fetch failed after all retries', {
                     error: error instanceof Error ? error.message : String(error),
-                    isTimeout: error instanceof Error && (error.message.includes('timeout') || error.message.includes('ECONNABORTED')),
+                    isTimeout:
+                      error instanceof Error &&
+                      (error.message.includes('timeout') || error.message.includes('ECONNABORTED')),
                     isNetworkError: axios.isAxiosError(error) && !error.response,
                   });
                   throw error;
@@ -371,12 +375,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Exponential backoff with jitter
                 const jitter = Math.random() * 500; // Add up to 500ms random jitter
                 const retryDelay = baseRetryDelay * (4 - retries) + jitter; // Exponential increase
-                
-                logger.warn(`Auth verification failed, will retry in ${Math.round(retryDelay)}ms. Retries left: ${retries}`, { 
-                  error: error instanceof Error ? error.message : String(error),
-                  retryDelay: Math.round(retryDelay),
-                });
-                
+
+                logger.warn(
+                  `Auth verification failed, will retry in ${Math.round(retryDelay)}ms. Retries left: ${retries}`,
+                  {
+                    error: error instanceof Error ? error.message : String(error),
+                    retryDelay: Math.round(retryDelay),
+                  },
+                );
+
                 await new Promise((resolve) => setTimeout(resolve, retryDelay));
               }
             }
@@ -575,7 +582,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const loginTimeoutPromise = new Promise<boolean>((_, reject) => {
           setTimeout(() => {
             logger.debug('[authContext] Sign-in operation timed out after 12 seconds');
-            reject(new Error('Authentication is taking longer than expected. Please check your connection and try again.'));
+            reject(
+              new Error('Authentication is taking longer than expected. Please check your connection and try again.'),
+            );
           }, 12000); // 12 second timeout for the entire process (slightly longer than request timeout)
         });
 
@@ -685,15 +694,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           // Non-axios errors (including timeouts)
-          const isTimeout = error.message?.includes('timed out') || 
-                           error.message?.includes('timeout') || 
-                           error.message?.includes('longer than expected') ||
-                           error.name === 'AbortError';
+          const isTimeout =
+            error.message?.includes('timed out') ||
+            error.message?.includes('timeout') ||
+            error.message?.includes('longer than expected') ||
+            error.name === 'AbortError';
 
           if (isTimeout) {
             toast.error('Authentication timeout', {
               duration: 7000,
-              description: 'The authentication server is taking too long to respond. Please check your connection and try again.',
+              description:
+                'The authentication server is taking too long to respond. Please check your connection and try again.',
             });
           } else {
             toast.error('Connection error', {

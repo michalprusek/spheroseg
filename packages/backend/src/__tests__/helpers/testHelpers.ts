@@ -66,9 +66,13 @@ export function createTestApp(): express.Application {
 
 // JWT token generation
 export function generateTestToken(userId: string = 'test-user-123'): string {
-  return jwt.sign({ userId, email: 'test@example.com' }, process.env['JWT_SECRET'] || 'test-secret', {
-    expiresIn: '1h',
-  });
+  return jwt.sign(
+    { userId, email: 'test@example.com' },
+    process.env['JWT_SECRET'] || 'test-secret',
+    {
+      expiresIn: '1h',
+    }
+  );
 }
 
 // Type-safe Socket.IO mock
@@ -138,7 +142,10 @@ export function expectErrorWithCode(error: Error & { code?: string }, code: stri
   expect(error.code).toBe(code);
 }
 
-export function expectValidationError(error: Error & { name?: string; field?: string }, field?: string): void {
+export function expectValidationError(
+  error: Error & { name?: string; field?: string },
+  field?: string
+): void {
   expect(error).toBeInstanceOf(Error);
   expect(error.name).toBe('ValidationError');
   if (field) {

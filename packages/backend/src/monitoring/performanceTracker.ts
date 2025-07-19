@@ -16,14 +16,14 @@ const clearExistingMetrics = () => {
     // Clear only our specific metrics to prevent conflicts
     const metricNames = [
       'spheroseg_performance_duration_seconds',
-      'spheroseg_memory_usage_bytes', 
+      'spheroseg_memory_usage_bytes',
       'spheroseg_performance_cpu_usage_percent',
       'spheroseg_operations_total',
       'spheroseg_operation_duration_seconds',
-      'spheroseg_response_time_seconds'
+      'spheroseg_response_time_seconds',
     ];
-    
-    metricNames.forEach(name => {
+
+    metricNames.forEach((name) => {
       try {
         unifiedRegistry.removeSingleMetric(name);
       } catch (e) {

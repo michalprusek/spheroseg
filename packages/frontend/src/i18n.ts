@@ -32,7 +32,7 @@ export const i18nInitializedPromise = (async () => {
       // Disable language detection to prevent unexpected switching
       detection: {
         order: [], // Empty array disables all detection
-        caches: [] // Don't cache detected language
+        caches: [], // Don't cache detected language
       },
     });
     logger.info(

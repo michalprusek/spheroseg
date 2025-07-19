@@ -102,7 +102,7 @@ const translationData = {
 const mockT = vi.fn().mockImplementation((key, options, fallback) => {
   // Handle null/undefined keys
   if (!key) return key;
-  
+
   const langs = translationData[currentLanguage] || translationData.en;
 
   // Handle parameters in translation strings
@@ -174,7 +174,7 @@ vi.mock('@/i18n', () => {
     t: mockT,
     isInitialized: true,
   };
-  
+
   return {
     i18nInitializedPromise: Promise.resolve(mockI18n),
     default: mockI18n,

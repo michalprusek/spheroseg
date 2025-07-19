@@ -219,12 +219,21 @@ export function useApiCache<T = unknown>(endpoint: string, options?: Partial<Use
         return response.data;
       } catch (error: unknown) {
         logger.error(`API error for ${endpoint}:`, error);
-        const errorMessage = error && typeof error === 'object' && 'response' in error && 
-          error.response && typeof error.response === 'object' && 'data' in error.response &&
-          error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data &&
-          typeof error.response.data.message === 'string' ? error.response.data.message :
-          error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message :
-          'API request failed';
+        const errorMessage =
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
+          error.response &&
+          typeof error.response === 'object' &&
+          'data' in error.response &&
+          error.response.data &&
+          typeof error.response.data === 'object' &&
+          'message' in error.response.data &&
+          typeof error.response.data.message === 'string'
+            ? error.response.data.message
+            : error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+              ? error.message
+              : 'API request failed';
         throw new Error(errorMessage);
       }
     },

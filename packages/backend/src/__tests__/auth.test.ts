@@ -9,7 +9,12 @@ import app from '../app';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import db from '../db';
-import { createMockQueryResult, MockedQuery, MockedBcryptCompare, MockedBcryptHash } from './types/mocks';
+import {
+  createMockQueryResult,
+  MockedQuery,
+  MockedBcryptCompare,
+  MockedBcryptHash,
+} from './types/mocks';
 
 // Mock database queries
 jest.mock('../db', () => {
@@ -73,13 +78,15 @@ describe('Authentication Endpoints', () => {
 
     it('should return 401 if password is incorrect', async () => {
       // Mock user found but password check fails
-      mockQuery.mockResolvedValueOnce(createMockQueryResult([
-        {
-          id: '123',
-          email: 'test@example.com',
-          password_hash: 'hashedPasswordInvalid',
-        },
-      ]));
+      mockQuery.mockResolvedValueOnce(
+        createMockQueryResult([
+          {
+            id: '123',
+            email: 'test@example.com',
+            password_hash: 'hashedPasswordInvalid',
+          },
+        ])
+      );
 
       // Mock bcrypt.compare to return false (password doesn't match)
       mockCompare.mockResolvedValueOnce(false);

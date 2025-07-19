@@ -156,7 +156,7 @@ class CloudFrontService extends BaseCDNService {
     if (!AWS) {
       throw new Error('AWS SDK not installed, S3 upload is not available');
     }
-    
+
     // Upload to S3 bucket that CloudFront uses as origin
     const bucketName = process.env.CDN_S3_BUCKET;
     if (!bucketName) {

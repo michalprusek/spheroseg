@@ -129,7 +129,9 @@ router.get(
 
       // Try to get from cache first
       const cacheKey = `project_list:${userId}:${limit}:${offset}:${includeShared}`;
-      const cached = await cacheService.get<{ projects: ProjectResponse[]; total: number }>(cacheKey);
+      const cached = await cacheService.get<{ projects: ProjectResponse[]; total: number }>(
+        cacheKey
+      );
 
       if (cached) {
         logger.debug('Returning cached project list', { userId, limit, offset });
@@ -546,15 +548,17 @@ router.put(
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(getPool(), projectId, userId);
-      
+
       if (!project) {
         return res.status(404).json({ message: 'Project not found or access denied' });
       }
-      
+
       // Check if user has edit permission (owner or shared with 'edit' permission)
       const hasEditPermission = project.is_owner || project.permission === 'edit';
       if (!hasEditPermission) {
-        return res.status(403).json({ message: "You need 'edit' or 'owner' permission to update this project" });
+        return res
+          .status(403)
+          .json({ message: "You need 'edit' or 'owner' permission to update this project" });
       }
 
       // Update the project
@@ -606,7 +610,7 @@ router.put(
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
-      
+
       logger.error('Error updating project', {
         error: errorMessage,
         stack: errorStack,

@@ -11,9 +11,7 @@ import { requireAdmin } from '../security/middleware/auth';
 import { unifiedRegistry } from '../monitoring/unified';
 import { getErrorMetrics } from '../monitoring/errorTracker';
 import { getPerformanceMetrics } from '../monitoring/performanceTracker';
-import {
-  checkSystemHealth,
-} from '../utils/healthChecks';
+import { checkSystemHealth } from '../utils/healthChecks';
 import logger from '../utils/logger';
 import config from '../config';
 
@@ -90,11 +88,11 @@ router.get('/errors', requireAdmin, (req: Request, res: Response) => {
 router.post('/errors', async (req: Request, res: Response) => {
   try {
     const { errors } = req.body;
-    
+
     if (!errors || !Array.isArray(errors)) {
       return res.status(400).json({ error: 'Invalid error report format' });
     }
-    
+
     // Log each error
     for (const errorReport of errors) {
       logger.error('Frontend error reported', {
@@ -109,12 +107,12 @@ router.post('/errors', async (req: Request, res: Response) => {
         browserInfo: errorReport.browserInfo,
       });
     }
-    
+
     // TODO: Store errors in database or send to error tracking service
-    
-    res.json({ 
-      success: true, 
-      message: `Received ${errors.length} error reports` 
+
+    res.json({
+      success: true,
+      message: `Received ${errors.length} error reports`,
     });
   } catch (error) {
     logger.error('Error processing error reports', error);

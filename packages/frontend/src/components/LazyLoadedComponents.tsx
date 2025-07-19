@@ -169,7 +169,10 @@ export async function loadDynamicComponent(componentPath: string): Promise<Compo
 }
 
 // Intersection Observer for lazy loading
-export function useLazyComponent(importFn: () => Promise<{ default: ComponentType<Record<string, unknown>> }>, rootMargin: string = '100px') {
+export function useLazyComponent(
+  importFn: () => Promise<{ default: ComponentType<Record<string, unknown>> }>,
+  rootMargin: string = '100px',
+) {
   const [Component, setComponent] = useState<ComponentType<Record<string, unknown>> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);

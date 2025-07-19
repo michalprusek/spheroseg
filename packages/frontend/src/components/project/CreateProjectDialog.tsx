@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import logger from '@/utils/logger';
 
 // Define the form schema
 const formSchema = z.object({
@@ -64,14 +65,14 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ open, onClose
     }
 
     try {
-      console.log('Creating project with title:', trimmedTitle);
+      logger.debug('Creating project with title:', trimmedTitle);
 
       const response = await apiClient.post('/api/projects', {
         title: trimmedTitle,
         description: data.description,
       });
 
-      console.log('Project created successfully:', response.data);
+      logger.debug('Project created successfully:', response.data);
       onProjectCreated(response.data);
       onClose();
       form.reset();

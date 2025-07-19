@@ -87,7 +87,7 @@ const maybeThrowNetworkError = (): void => {
 };
 
 // Handler function for all HTTP methods
-const handleRequest = async(url: string, method: HttpMethod, data?: unknown): Promise<AxiosResponse> => {
+const handleRequest = async (url: string, method: HttpMethod, data?: unknown): Promise<AxiosResponse> => {
   console.log(`[MockApiClient] ${method.toUpperCase()} ${url}`, data);
 
   // Maybe throw random network error
@@ -379,7 +379,7 @@ export const MockApiClientProvider: React.FC<{
         response: any;
         status?: number;
       }> = [];
-      
+
       // Convert mockResponses to endpoints
       Object.entries(mockResponses).forEach(([key, response]) => {
         if (key === 'login') {
@@ -406,18 +406,18 @@ export const MockApiClientProvider: React.FC<{
         }
         // Add more endpoint mappings as needed
       });
-      
+
       if (endpoints.length > 0) {
         addMockEndpoints(endpoints);
       }
     }
-    
+
     return () => {
       resetMocks();
       setupStandardMocks();
     };
   }, [mockResponses]);
-  
+
   return children;
 };
 

@@ -94,7 +94,13 @@ export class WebSocketBatcher {
   }
 
   // Add message to batch
-  private addToBatch(key: string, event: string, data: unknown, room?: string, userId?: string): void {
+  private addToBatch(
+    key: string,
+    event: string,
+    data: unknown,
+    room?: string,
+    userId?: string
+  ): void {
     const message: BatchedMessage = {
       event,
       data,

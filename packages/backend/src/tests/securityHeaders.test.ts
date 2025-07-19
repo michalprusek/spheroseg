@@ -49,7 +49,8 @@ describe('Security Headers', () => {
 
     // Check for CSRF cookie
     const cookies = response.headers['set-cookie'] || [];
-    const hasCsrfCookie = Array.isArray(cookies) && cookies.some((cookie: string) => cookie.includes('XSRF-TOKEN'));
+    const hasCsrfCookie =
+      Array.isArray(cookies) && cookies.some((cookie: string) => cookie.includes('XSRF-TOKEN'));
 
     // In development, CSRF might be disabled
     if (process.env.NODE_ENV !== 'development') {
@@ -57,7 +58,9 @@ describe('Security Headers', () => {
 
       // In production, CSRF cookie should have secure and strict SameSite
       if (process.env.NODE_ENV === 'production') {
-        const csrfCookie = Array.isArray(cookies) ? cookies.find((cookie: string) => cookie.includes('XSRF-TOKEN')) : undefined;
+        const csrfCookie = Array.isArray(cookies)
+          ? cookies.find((cookie: string) => cookie.includes('XSRF-TOKEN'))
+          : undefined;
         expect(csrfCookie).toContain('Secure');
         expect(csrfCookie).toContain('SameSite=Strict');
       }

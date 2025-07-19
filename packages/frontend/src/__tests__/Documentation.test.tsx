@@ -25,14 +25,14 @@ vi.mock('@/config/app.config', () => ({
     contact: {
       developer: {
         email: 'test@example.com',
-        name: 'Test Developer'
-      }
+        name: 'Test Developer',
+      },
     },
     urls: {
       privacy: '/privacy',
-      terms: '/terms'
-    }
-  }
+      terms: '/terms',
+    },
+  },
 }));
 
 // Mock the components that are not relevant for this test
@@ -91,7 +91,7 @@ describe('Documentation Page', () => {
     // Check if the src changed (fallback mechanism triggered)
     // The exact fallback behavior may vary, so we just check that it changed
     expect(image.src).toBeDefined();
-    
+
     // If it's using the same src, it might not have fallback logic
     // or the fallback might be the same image. Let's just verify the image exists
     expect(image).toBeInTheDocument();

@@ -42,7 +42,7 @@ router.get(
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(getPool(), projectId, userId);
-      
+
       if (!project) {
         throw new ApiError('Image not found or access denied', 404);
       }
@@ -144,7 +144,7 @@ router.get(
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(getPool(), projectId, userId);
-      
+
       if (!project) {
         throw new ApiError('Project not found or access denied', 404);
       }

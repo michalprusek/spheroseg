@@ -1,6 +1,6 @@
 /**
  * Mock Types for Testing
- * 
+ *
  * This file provides type definitions for mocks used in tests
  */
 
@@ -15,7 +15,7 @@ export function createMockQueryResult<T = any>(rows: T[]): QueryResult<T> {
     command: 'SELECT',
     rowCount: rows.length,
     oid: 0,
-    fields: []
+    fields: [],
   };
 }
 

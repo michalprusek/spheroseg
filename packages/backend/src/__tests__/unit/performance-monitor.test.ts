@@ -42,7 +42,10 @@ describe('PerformanceMonitor Unit Tests', () => {
       };
 
       // Trigger high memory pressure by calling internal method
-      (performanceMonitor as unknown).handleHighMemoryPressure(90, mockMemUsage as NodeJS.MemoryUsage);
+      (performanceMonitor as unknown).handleHighMemoryPressure(
+        90,
+        mockMemUsage as NodeJS.MemoryUsage
+      );
     });
 
     it('should trigger emergency cleanup at 95% memory', () => {

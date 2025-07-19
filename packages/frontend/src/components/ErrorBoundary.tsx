@@ -46,7 +46,7 @@ class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryStat
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Mark error as handled to prevent double-handling by global error handler
     markErrorAsHandled(error);
-    
+
     // Log the error to our logging service
     logger.error('Error caught by ErrorBoundary', {
       error: error.toString(),

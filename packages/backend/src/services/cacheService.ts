@@ -7,7 +7,14 @@
 
 import Redis from 'ioredis';
 import logger from '../utils/logger';
-import type { User, SegmentationResult, Project, Image, QueueStatus, ProjectStats } from '@spheroseg/types';
+import type {
+  User,
+  SegmentationResult,
+  Project,
+  Image,
+  QueueStatus,
+  ProjectStats,
+} from '@spheroseg/types';
 
 // Cache key prefixes for different data types
 const CACHE_PREFIXES = {
@@ -225,7 +232,11 @@ class CacheService {
   /**
    * Get cached image list
    */
-  async getCachedImageList(projectId: string, page: number, limit: number): Promise<Image[] | null> {
+  async getCachedImageList(
+    projectId: string,
+    page: number,
+    limit: number
+  ): Promise<Image[] | null> {
     const key = `${CACHE_PREFIXES.IMAGE_LIST}${projectId}:${page}:${limit}`;
     return await this.get(key);
   }

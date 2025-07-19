@@ -81,10 +81,7 @@ describe('Enhanced Auth Routes', () => {
         terms: true,
       };
 
-      await request(app)
-        .post('/api/auth/register')
-        .send(maliciousData)
-        .expect(201);
+      await request(app).post('/api/auth/register').send(maliciousData).expect(201);
 
       // Verify that the script tag was removed
       expect(mockAuthService.registerUser).toHaveBeenCalledWith(

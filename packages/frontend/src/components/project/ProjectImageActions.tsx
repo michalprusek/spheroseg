@@ -66,10 +66,15 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                   // Ensure storedImages is an array
                   if (Array.isArray(storedImages)) {
                     // Check if the image exists in localStorage before claiming success
-                    const imageExists = storedImages.some((img: unknown) => typeof img === 'object' && img !== null && 'id' in img && img.id === imageId);
+                    const imageExists = storedImages.some(
+                      (img: unknown) => typeof img === 'object' && img !== null && 'id' in img && img.id === imageId,
+                    );
 
                     if (imageExists) {
-                      const filteredImages = storedImages.filter((img: unknown) => !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId));
+                      const filteredImages = storedImages.filter(
+                        (img: unknown) =>
+                          !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
+                      );
                       localStorage.setItem(storageKey, JSON.stringify(filteredImages));
                       console.log(`Removed image ${imageId} from localStorage (key: ${storageKey})`);
                       deletionSuccessful = true;
@@ -83,7 +88,8 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                         [cleanProjectId, cleanProjectId].forEach((cacheKey) => {
                           if (projectImagesCache && projectImagesCache[cacheKey]) {
                             projectImagesCache[cacheKey].data = projectImagesCache[cacheKey].data.filter(
-                              (img: unknown) => !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
+                              (img: unknown) =>
+                                !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
                             );
                             console.log(`Updated cache for project ${cacheKey}`);
                           }
@@ -158,7 +164,10 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
 
                     if (Array.isArray(storedImages)) {
                       // Filter out the image regardless of whether it exists
-                      const filteredImages = storedImages.filter((img: unknown) => !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId));
+                      const filteredImages = storedImages.filter(
+                        (img: unknown) =>
+                          !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
+                      );
                       localStorage.setItem(storageKey, JSON.stringify(filteredImages));
                       console.log(`Removed image ${imageId} from localStorage as last resort`);
                       deletionSuccessful = true;
@@ -171,7 +180,8 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                         [cleanProjectId, cleanProjectId].forEach((cacheKey) => {
                           if (projectImagesCache && projectImagesCache[cacheKey]) {
                             projectImagesCache[cacheKey].data = projectImagesCache[cacheKey].data.filter(
-                              (img: unknown) => !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
+                              (img: unknown) =>
+                                !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
                             );
                             console.log(`Updated cache for project ${cacheKey}`);
                           }
@@ -245,7 +255,10 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                       const parsedData = JSON.parse(storedData);
                       if (Array.isArray(parsedData)) {
                         // Filtrujeme smazaný obrázek
-                        const updatedData = parsedData.filter((item: unknown) => !(typeof item === 'object' && item !== null && 'id' in item && item.id === imageId));
+                        const updatedData = parsedData.filter(
+                          (item: unknown) =>
+                            !(typeof item === 'object' && item !== null && 'id' in item && item.id === imageId),
+                        );
                         localStorage.setItem(key, JSON.stringify(updatedData));
                         console.log(`Removed image ${imageId} from localStorage key ${key}`);
                       }
@@ -332,7 +345,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         // Permission errors are already handled by the API client interceptor
         // We just need to log the error for debugging
         logger.error('Error deleting image:', err);
-        
+
         // Only show a generic error if it's not a permission error
         if (axios.isAxiosError(err)) {
           const status = err.response?.status;
@@ -413,7 +426,12 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
 
             // Aktualizujeme také lokální stav
             handleUpdateImageStatus(imageId, 'processing');
-          } else if (pendingTasks.some((task: unknown) => typeof task === 'object' && task !== null && 'imageId' in task && task.imageId === imageId)) {
+          } else if (
+            pendingTasks.some(
+              (task: unknown) =>
+                typeof task === 'object' && task !== null && 'imageId' in task && task.imageId === imageId,
+            )
+          ) {
             console.log(`Image ${imageId} is pending in queue`);
             // Aktualizujeme stav obrázku v UI
             const updateEvent = new CustomEvent('image-status-update', {
@@ -534,7 +552,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
             toast.success('Resegmentation task has been queued successfully.');
           } catch (apiErr) {
             console.error('Resegmentation API call failed:', apiErr);
-            
+
             // Permission errors are already handled by the API client interceptor
             // Only show generic error for non-permission errors
             if (axios.isAxiosError(apiErr)) {

@@ -99,7 +99,7 @@ router.get(
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
       const project = await projectService.getProjectById(pool, projectId, userId);
-      
+
       if (!project) {
         res.status(404).json({ message: 'Project not found or access denied' });
         return;

@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Microscope,
-  Image,
-  FolderKanban,
-  CheckCircle2,
-} from 'lucide-react';
+import { Microscope, Image, FolderKanban, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import apiClient from '@/lib/apiClient';

@@ -241,7 +241,11 @@ export function useVariants(experimentId: string): {
 /**
  * Performance-optimized feature flag hook with memoization
  */
-export function useOptimizedFeatureFlag<T = boolean>(flagKey: string, defaultValue?: T, dependencies: unknown[] = []): T {
+export function useOptimizedFeatureFlag<T = boolean>(
+  flagKey: string,
+  defaultValue?: T,
+  dependencies: unknown[] = [],
+): T {
   const value = useFeatureFlag(flagKey, defaultValue);
 
   return useMemo(() => value, [value, ...dependencies]);

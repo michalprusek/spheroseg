@@ -74,9 +74,16 @@ const ImageDisplayComponent = ({
           }
         } catch (error) {
           // Silently ignore 404 and 429 errors
-          if (error && typeof error === 'object' && 'response' in error && 
-              error.response && typeof error.response === 'object' && 'status' in error.response &&
-              error.response.status !== 404 && error.response.status !== 429) {
+          if (
+            error &&
+            typeof error === 'object' &&
+            'response' in error &&
+            error.response &&
+            typeof error.response === 'object' &&
+            'status' in error.response &&
+            error.response.status !== 404 &&
+            error.response.status !== 429
+          ) {
             console.debug(`ImageDisplay: Error checking initial segmentation status for image ${image.id}`);
           }
         }
@@ -96,8 +103,14 @@ const ImageDisplayComponent = ({
   // Handle segmentation updates from WebSocket
   const handleSegmentationUpdate = useCallback(
     (data: unknown) => {
-      if (data && typeof data === 'object' && 'imageId' in data && 'status' in data &&
-          data.imageId === image.id && data.status) {
+      if (
+        data &&
+        typeof data === 'object' &&
+        'imageId' in data &&
+        'status' in data &&
+        data.imageId === image.id &&
+        data.status
+      ) {
         console.log(`ImageDisplay: Received WebSocket segmentation update for image ${data.imageId}: ${data.status}`);
 
         // Update image status

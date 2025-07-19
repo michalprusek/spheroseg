@@ -64,7 +64,6 @@ vi.mock('@/lib/apiClient', () => ({
   },
 }));
 
-
 vi.mock('@/utils/enhancedErrorHandling', () => ({
   safeAsync: vi.fn((fn, options) =>
     fn().catch((e) => {

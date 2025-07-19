@@ -164,22 +164,22 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     };
 
     fetchQueueStatus();
-    
+
     // Intelligent polling with exponential backoff
     let pollInterval = 10000; // Start with 10 seconds
     let consecutiveEmptyResponses = 0;
     const maxInterval = 60000; // Max 60 seconds
-    
+
     const intelligentPoll = async () => {
       // Skip polling if WebSocket is connected and working
       if (isWebSocketConnected) {
         console.log('WebSocket connected, skipping polling');
         return;
       }
-      
+
       try {
         await fetchQueueStatus();
-        
+
         // If queue is empty, increase polling interval
         if (queueStatus && queueStatus.queueLength === 0 && queueStatus.runningTasks.length === 0) {
           consecutiveEmptyResponses++;
@@ -197,14 +197,14 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         console.warn('Queue status polling failed, increasing interval:', pollInterval);
       }
     };
-    
+
     // Only poll as fallback if WebSocket is not connected
     const setupPolling = () => {
       return setInterval(intelligentPoll, pollInterval);
     };
-    
+
     let interval = setupPolling();
-    
+
     // Update interval when pollInterval changes or WebSocket status changes
     const intervalUpdater = setInterval(() => {
       clearInterval(interval);
@@ -329,10 +329,16 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
               if (projectId) {
                 // Filtrování podle projectId
                 const filteredImages = normalizedData.processingImages.filter(
-                  (img: unknown) => typeof img === 'object' && img !== null && ('projectId' in img || 'project_id' in img) && (img.projectId === projectId || img.project_id === projectId),
+                  (img: unknown) =>
+                    typeof img === 'object' &&
+                    img !== null &&
+                    ('projectId' in img || 'project_id' in img) &&
+                    (img.projectId === projectId || img.project_id === projectId),
                 );
 
-                const filteredRunning = filteredImages.map((img: unknown) => typeof img === 'object' && img !== null && 'id' in img ? img.id : null).filter(Boolean);
+                const filteredRunning = filteredImages
+                  .map((img: unknown) => (typeof img === 'object' && img !== null && 'id' in img ? img.id : null))
+                  .filter(Boolean);
 
                 // Odhadujeme queueLength pro projekt
                 const newQueueLength =

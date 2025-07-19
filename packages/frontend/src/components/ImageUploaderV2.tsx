@@ -1,6 +1,6 @@
 /**
  * ImageUploader Component - Using Unified Upload Service
- * 
+ *
  * This is the migrated version using the new unified upload service.
  * It provides the same functionality with better performance and reliability.
  */
@@ -12,16 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Trash2, 
-  Upload, 
-  ImagePlus, 
-  AlertCircle, 
-  CheckCircle, 
-  Loader2,
-  RotateCcw,
-  X
-} from 'lucide-react';
+import { Trash2, Upload, ImagePlus, AlertCircle, CheckCircle, Loader2, RotateCcw, X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Image } from '@spheroseg/types';
 import { cn } from '@/lib/utils';
@@ -77,7 +68,9 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
       autoSegment: internalSegmentAfterUpload,
     },
     onFilesSelected: (selectedFiles) => {
-      toast.info(t('uploader.filesSelected', { count: selectedFiles.length }, `${selectedFiles.length} files selected`));
+      toast.info(
+        t('uploader.filesSelected', { count: selectedFiles.length }, `${selectedFiles.length} files selected`),
+      );
     },
     onUploadProgress: (_progress, _fileId) => {
       // Individual file progress is handled by the hook
@@ -85,26 +78,30 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
     },
     onUploadComplete: (result) => {
       if (result.successful.length > 0) {
-        const uploadedImages = result.successful.map(file => file.result as Image);
+        const uploadedImages = result.successful.map((file) => file.result as Image);
         onUploadComplete(projectId, uploadedImages);
-        
+
         toast.success(
-          t('uploader.uploadSuccess', { count: result.successful.length }, 
-          `Successfully uploaded ${result.successful.length} files`)
+          t(
+            'uploader.uploadSuccess',
+            { count: result.successful.length },
+            `Successfully uploaded ${result.successful.length} files`,
+          ),
         );
       }
 
       if (result.failed.length > 0) {
         toast.error(
-          t('uploader.uploadPartialError', { failed: result.failed.length, total: result.totalFiles },
-          `Failed to upload ${result.failed.length} of ${result.totalFiles} files`)
+          t(
+            'uploader.uploadPartialError',
+            { failed: result.failed.length, total: result.totalFiles },
+            `Failed to upload ${result.failed.length} of ${result.totalFiles} files`,
+          ),
         );
       }
     },
     onError: (error, _file) => {
-      toast.error(
-        t('uploader.uploadError', { error: error.message }, `Upload error: ${error.message}`)
-      );
+      toast.error(t('uploader.uploadError', { error: error.message }, `Upload error: ${error.message}`));
     },
   });
 
@@ -120,10 +117,10 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
   };
 
   // Calculate stats
-  const pendingFiles = files.filter(f => f.status === 'pending');
-  const uploadingFiles = files.filter(f => f.status === 'uploading');
-  const completedFiles = files.filter(f => f.status === 'complete');
-  const failedFiles = files.filter(f => f.status === 'error');
+  const pendingFiles = files.filter((f) => f.status === 'pending');
+  const uploadingFiles = files.filter((f) => f.status === 'uploading');
+  const completedFiles = files.filter((f) => f.status === 'complete');
+  const failedFiles = files.filter((f) => f.status === 'error');
 
   // Translated dropzone text
   const translatedDropzoneText = dropzoneText || t('uploader.dragDrop');
@@ -138,35 +135,31 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
           isDragActive
             ? 'border-primary bg-primary/5 scale-[1.02]'
             : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/5',
-          'cursor-pointer'
+          'cursor-pointer',
         )}
       >
         <input {...getInputProps()} />
-        
+
         <div className="flex flex-col items-center justify-center space-y-3">
-          <div className={cn(
-            'rounded-full p-3 transition-colors',
-            isDragActive ? 'bg-primary/10' : 'bg-muted'
-          )}>
-            <ImagePlus className={cn(
-              'h-8 w-8 transition-colors',
-              isDragActive ? 'text-primary' : 'text-muted-foreground'
-            )} />
+          <div className={cn('rounded-full p-3 transition-colors', isDragActive ? 'bg-primary/10' : 'bg-muted')}>
+            <ImagePlus
+              className={cn('h-8 w-8 transition-colors', isDragActive ? 'text-primary' : 'text-muted-foreground')}
+            />
           </div>
-          
+
           <div className="space-y-1">
             <p className="text-lg font-medium">
-              {isDragActive 
-                ? t('uploader.dropFiles', {}, 'Drop files here')
-                : translatedDropzoneText
-              }
+              {isDragActive ? t('uploader.dropFiles', {}, 'Drop files here') : translatedDropzoneText}
             </p>
             <p className="text-sm text-muted-foreground">
               {t('uploader.supportedFormats', {}, 'Supported: JPG, PNG, TIFF, BMP')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {t('uploader.maxSize', { size: Math.round(maxSize / (1024 * 1024)) }, 
-                `Max size: ${Math.round(maxSize / (1024 * 1024))}MB per file`)}
+              {t(
+                'uploader.maxSize',
+                { size: Math.round(maxSize / (1024 * 1024)) },
+                `Max size: ${Math.round(maxSize / (1024 * 1024))}MB per file`,
+              )}
             </p>
           </div>
 
@@ -203,24 +196,12 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
 
             <div className="flex items-center space-x-2">
               {failedFiles.length > 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={retryFailed}
-                  disabled={isUploading}
-                >
+                <Button type="button" variant="outline" size="sm" onClick={retryFailed} disabled={isUploading}>
                   <RotateCcw className="mr-2 h-4 w-4" />
                   {t('common.retry')}
                 </Button>
               )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={clearFiles}
-                disabled={isUploading}
-              >
+              <Button type="button" variant="outline" size="sm" onClick={clearFiles} disabled={isUploading}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 {t('common.clearAll')}
               </Button>
@@ -247,17 +228,13 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
                   'group relative overflow-hidden rounded-lg border bg-card',
                   file.status === 'error' && 'border-destructive',
                   file.status === 'complete' && 'border-green-600',
-                  file.status === 'uploading' && 'border-blue-600'
+                  file.status === 'uploading' && 'border-blue-600',
                 )}
               >
                 {/* Preview */}
                 <div className="relative aspect-square">
                   {file.preview ? (
-                    <img
-                      src={file.preview}
-                      alt={file.name}
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={file.preview} alt={file.name} className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-muted">
                       <ImagePlus className="h-8 w-8 text-muted-foreground" />
@@ -293,7 +270,7 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
                       'absolute right-1 top-1 rounded-full bg-black/50 p-1 opacity-0 transition-opacity',
                       'group-hover:opacity-100',
                       'hover:bg-black/70',
-                      (file.status === 'complete' || file.status === 'error') && 'hidden'
+                      (file.status === 'complete' || file.status === 'error') && 'hidden',
                     )}
                     disabled={file.status === 'uploading'}
                   >
@@ -306,9 +283,7 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
                   <p className="truncate text-xs font-medium" title={file.name}>
                     {file.name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatFileSize(file.size)}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                   {file.error && (
                     <p className="mt-1 truncate text-xs text-destructive" title={file.error}>
                       {file.error}
@@ -317,9 +292,7 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
                 </div>
 
                 {/* Progress bar for uploading files */}
-                {file.status === 'uploading' && (
-                  <Progress value={file.progress} className="absolute bottom-0 h-1" />
-                )}
+                {file.status === 'uploading' && <Progress value={file.progress} className="absolute bottom-0 h-1" />}
               </div>
             ))}
           </div>
@@ -342,23 +315,14 @@ const ImageUploaderV2: React.FC<ImageUploaderProps> = ({
 
         <div className="flex items-center space-x-2">
           {isUploading ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={cancelAllUploads}
-            >
+            <Button type="button" variant="outline" onClick={cancelAllUploads}>
               <X className="mr-2 h-4 w-4" />
               {t('common.cancel')}
             </Button>
           ) : (
-            <Button
-              type="button"
-              onClick={() => uploadFiles()}
-              disabled={pendingFiles.length === 0}
-            >
+            <Button type="button" onClick={() => uploadFiles()} disabled={pendingFiles.length === 0}>
               <Upload className="mr-2 h-4 w-4" />
-              {t('uploader.uploadImages', { count: pendingFiles.length }, 
-                `Upload ${pendingFiles.length} images`)}
+              {t('uploader.uploadImages', { count: pendingFiles.length }, `Upload ${pendingFiles.length} images`)}
             </Button>
           )}
         </div>

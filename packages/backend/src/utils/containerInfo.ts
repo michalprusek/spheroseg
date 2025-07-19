@@ -117,18 +117,18 @@ export async function getContainerInfo(): Promise<{
   memoryUsagePercentage: number;
 }> {
   const containerLimits = getContainerLimits();
-  
+
   // Get current memory usage
   const memUsage = process.memoryUsage();
   const currentUsage = memUsage.rss; // Resident Set Size
-  
+
   // Default to OS total memory if not in container
   const memoryLimit = containerLimits.memoryLimitBytes || totalmem();
-  
+
   return {
     isContainer: containerLimits.isContainerized,
     memoryLimit,
     memoryUsage: currentUsage,
-    memoryUsagePercentage: (currentUsage / memoryLimit) * 100
+    memoryUsagePercentage: (currentUsage / memoryLimit) * 100,
   };
 }

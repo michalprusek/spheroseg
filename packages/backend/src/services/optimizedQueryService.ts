@@ -131,8 +131,8 @@ class OptimizedQueryService {
 
     const client = await this.pool.connect();
     try {
-      // Set query timeout
-      await client.query(`SET statement_timeout = ${timeout}`);
+      // Set query timeout (parameterized to prevent SQL injection)
+      await client.query('SET statement_timeout = $1', [`${timeout}ms`]);
 
       // Check if prepared statement exists
       const stmt = this.preparedStatements.get(preparedName);
@@ -162,7 +162,7 @@ class OptimizedQueryService {
       try {
         const client = await this.pool.connect();
         try {
-          await client.query(`SET statement_timeout = ${timeout}`);
+          await client.query('SET statement_timeout = $1', [`${timeout}ms`]);
           return await client.query<T>(text, params);
         } finally {
           client.release();
@@ -233,8 +233,9 @@ class OptimizedQueryService {
           let hasMore = true;
 
           while (hasMore) {
-            const paginatedQuery = `${text} LIMIT ${batchSize} OFFSET ${offset}`;
-            const result = await client.query<T>(paginatedQuery, params);
+            // Use parameterized query to prevent SQL injection
+            const paginatedQuery = `${text} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+            const result = await client.query<T>(paginatedQuery, [...params, batchSize, offset]);
 
             if (result.rows.length === 0) {
               hasMore = false;
@@ -282,6 +283,11 @@ class OptimizedQueryService {
   private async createPreparedStatement(name: string, text: string): Promise<void> {
     const client = await this.pool.connect();
     try {
+      // Validate prepared statement name to prevent SQL injection
+      if (!/^prep_[a-z0-9]+$/.test(name)) {
+        throw new Error('Invalid prepared statement name');
+      }
+      // Use parameterized format for PREPARE statement
       await client.query(`PREPARE ${name} AS ${text}`);
       this.metrics.preparedStatements.set(name, Date.now());
       logger.debug('Prepared statement created', { name });
@@ -439,6 +445,10 @@ class OptimizedQueryService {
   private async deallocatePreparedStatement(name: string): Promise<void> {
     const client = await this.pool.connect();
     try {
+      // Validate prepared statement name to prevent SQL injection
+      if (!/^prep_[a-z0-9]+$/.test(name)) {
+        throw new Error('Invalid prepared statement name');
+      }
       await client.query(`DEALLOCATE ${name}`);
       this.metrics.preparedStatements.delete(name);
       logger.debug('Prepared statement deallocated', { name });
@@ -479,10 +489,7 @@ class OptimizedQueryService {
   /**
    * Analyze query performance
    */
-  async analyzeQuery(
-    text: string,
-    params: QueryParameters = []
-  ): Promise<Record<string, unknown>> {
+  async analyzeQuery(text: string, params: QueryParameters = []): Promise<Record<string, unknown>> {
     const client = await this.pool.connect();
     try {
       const explainQuery = `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${text}`;

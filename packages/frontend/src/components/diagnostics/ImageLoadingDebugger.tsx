@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import logger from '@/utils/logger';
 
 interface ImageLoadingDebuggerProps {
   imageUrl: string;
@@ -53,10 +54,10 @@ const ImageLoadingDebugger: React.FC<ImageLoadingDebuggerProps> = ({ imageUrl, p
         try {
           const success = await testImage(url);
           results[name] = success;
-          console.log(`Image loading test for ${name} (${url}): ${success ? 'SUCCESS' : 'FAILED'}`);
+          logger.debug(`Image loading test for ${name} (${url}): ${success ? 'SUCCESS' : 'FAILED'}`);
         } catch (error) {
           results[name] = false;
-          console.error(`Error testing ${name} (${url}):`, error);
+          logger.error(`Error testing ${name} (${url}):`, error);
         }
       }
 

@@ -109,7 +109,7 @@ export const sendError = (
   details?: any[]
 ): Response => {
   const errorMessage = req.t(errorKey, errorParams);
-  
+
   const response: ApiErrorResponse = {
     success: false,
     error: errorKey,
@@ -125,11 +125,7 @@ export const sendError = (
 /**
  * Send validation error response
  */
-export const sendValidationError = (
-  req: Request,
-  res: Response,
-  errors: any[]
-): Response => {
+export const sendValidationError = (req: Request, res: Response, errors: any[]): Response => {
   return sendError(req, res, 'error.validationFailed', undefined, 400, errors);
 };
 
@@ -183,11 +179,7 @@ export const sendConflict = (
 /**
  * Send internal server error
  */
-export const sendServerError = (
-  req: Request,
-  res: Response,
-  error?: any
-): Response => {
+export const sendServerError = (req: Request, res: Response, error?: any): Response => {
   const details = error && process.env.NODE_ENV !== 'production' ? [error.message] : undefined;
   return sendError(req, res, 'error.internalServer', undefined, 500, details);
 };

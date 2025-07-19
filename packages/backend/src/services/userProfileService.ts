@@ -208,13 +208,26 @@ export const updateUserProfile = async (
   try {
     await client.query('BEGIN');
 
-    // Build dynamic update query
+    // Build dynamic update query with safe column names
     const updateFields: string[] = [];
     const updateValues: any[] = [];
     let paramCount = 1;
 
+    // Define allowed columns to prevent SQL injection
+    const allowedColumns = [
+      'username',
+      'full_name',
+      'title',
+      'organization',
+      'bio',
+      'location',
+      'preferred_language',
+      'theme_preference',
+      'avatar_url',
+    ];
+
     Object.entries(profileData).forEach(([key, value]) => {
-      if (value !== undefined) {
+      if (value !== undefined && allowedColumns.includes(key)) {
         updateFields.push(`${key} = $${paramCount}`);
         updateValues.push(value);
         paramCount++;
@@ -466,7 +479,7 @@ export const getUserSettings = async (pool: Pool, userId: string): Promise<UserS
 /**
  * Set user setting
  */
-export const setUserSetting = async(
+export const setUserSetting = async (
   pool: Pool,
   userId: string,
   settingKey: string,

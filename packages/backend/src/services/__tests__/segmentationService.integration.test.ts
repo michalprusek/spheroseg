@@ -1,6 +1,6 @@
 /**
  * Integration tests for SegmentationService
- * 
+ *
  * Tests segmentation workflow with real database and ML service mocking
  */
 
@@ -29,24 +29,36 @@ describe('SegmentationService Integration Tests', () => {
 
     // Create test user
     testUserId = uuidv4();
-    await pool.query(
-      'INSERT INTO users (id, email, password, name) VALUES ($1, $2, $3, $4)',
-      [testUserId, 'segtest@test.integration.com', 'hashed', 'Test User']
-    );
+    await pool.query('INSERT INTO users (id, email, password, name) VALUES ($1, $2, $3, $4)', [
+      testUserId,
+      'segtest@test.integration.com',
+      'hashed',
+      'Test User',
+    ]);
 
     // Create test project
     testProjectId = uuidv4();
-    await pool.query(
-      'INSERT INTO projects (id, user_id, name) VALUES ($1, $2, $3)',
-      [testProjectId, testUserId, 'Test Project']
-    );
+    await pool.query('INSERT INTO projects (id, user_id, name) VALUES ($1, $2, $3)', [
+      testProjectId,
+      testUserId,
+      'Test Project',
+    ]);
   });
 
   afterAll(async () => {
     // Clean up test data
-    await pool.query('DELETE FROM cells WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)', [testProjectId]);
-    await pool.query('DELETE FROM segmentation_results WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)', [testProjectId]);
-    await pool.query('DELETE FROM segmentation_queue WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)', [testProjectId]);
+    await pool.query(
+      'DELETE FROM cells WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)',
+      [testProjectId]
+    );
+    await pool.query(
+      'DELETE FROM segmentation_results WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)',
+      [testProjectId]
+    );
+    await pool.query(
+      'DELETE FROM segmentation_queue WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)',
+      [testProjectId]
+    );
     await pool.query('DELETE FROM images WHERE project_id = $1', [testProjectId]);
     await pool.query('DELETE FROM projects WHERE id = $1', [testProjectId]);
     await pool.query('DELETE FROM users WHERE id = $1', [testUserId]);
@@ -54,9 +66,18 @@ describe('SegmentationService Integration Tests', () => {
 
   beforeEach(async () => {
     // Clean up any existing test images
-    await pool.query('DELETE FROM cells WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)', [testProjectId]);
-    await pool.query('DELETE FROM segmentation_results WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)', [testProjectId]);
-    await pool.query('DELETE FROM segmentation_queue WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)', [testProjectId]);
+    await pool.query(
+      'DELETE FROM cells WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)',
+      [testProjectId]
+    );
+    await pool.query(
+      'DELETE FROM segmentation_results WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)',
+      [testProjectId]
+    );
+    await pool.query(
+      'DELETE FROM segmentation_queue WHERE image_id IN (SELECT id FROM images WHERE project_id = $1)',
+      [testProjectId]
+    );
     await pool.query('DELETE FROM images WHERE project_id = $1', [testProjectId]);
 
     // Create test image
@@ -64,8 +85,17 @@ describe('SegmentationService Integration Tests', () => {
     await pool.query(
       `INSERT INTO images (id, project_id, name, url, thumbnail_url, size, width, height, segmentation_status) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [testImageId, testProjectId, 'test.jpg', 'http://test.com/test.jpg', 'http://test.com/thumb.jpg', 
-       1024000, 1920, 1080, 'without_segmentation']
+      [
+        testImageId,
+        testProjectId,
+        'test.jpg',
+        'http://test.com/test.jpg',
+        'http://test.com/thumb.jpg',
+        1024000,
+        1920,
+        1080,
+        'without_segmentation',
+      ]
     );
 
     // Reset mocks
@@ -80,29 +110,28 @@ describe('SegmentationService Integration Tests', () => {
       expect(result).toHaveProperty('status', 'queued');
 
       // Verify in database
-      const queueResult = await pool.query(
-        'SELECT * FROM segmentation_queue WHERE image_id = $1',
-        [testImageId]
-      );
+      const queueResult = await pool.query('SELECT * FROM segmentation_queue WHERE image_id = $1', [
+        testImageId,
+      ]);
       expect(queueResult.rows).toHaveLength(1);
       expect(queueResult.rows[0].status).toBe('queued');
 
-      const imageResult = await pool.query(
-        'SELECT segmentation_status FROM images WHERE id = $1',
-        [testImageId]
-      );
+      const imageResult = await pool.query('SELECT segmentation_status FROM images WHERE id = $1', [
+        testImageId,
+      ]);
       expect(imageResult.rows[0].segmentation_status).toBe('queued');
     });
 
     it('should not queue already segmented image', async () => {
       // Update image status to completed
-      await pool.query(
-        'UPDATE images SET segmentation_status = $1 WHERE id = $2',
-        ['completed', testImageId]
-      );
+      await pool.query('UPDATE images SET segmentation_status = $1 WHERE id = $2', [
+        'completed',
+        testImageId,
+      ]);
 
-      await expect(segmentationService.queueSegmentation(testImageId, testUserId))
-        .rejects.toThrow('already been segmented');
+      await expect(segmentationService.queueSegmentation(testImageId, testUserId)).rejects.toThrow(
+        'already been segmented'
+      );
     });
 
     it('should not queue image already in queue', async () => {
@@ -110,8 +139,9 @@ describe('SegmentationService Integration Tests', () => {
       await segmentationService.queueSegmentation(testImageId, testUserId);
 
       // Try to queue again
-      await expect(segmentationService.queueSegmentation(testImageId, testUserId))
-        .rejects.toThrow('already in queue');
+      await expect(segmentationService.queueSegmentation(testImageId, testUserId)).rejects.toThrow(
+        'already in queue'
+      );
     });
   });
 
@@ -126,8 +156,17 @@ describe('SegmentationService Integration Tests', () => {
         await pool.query(
           `INSERT INTO images (id, project_id, name, url, thumbnail_url, size, width, height, segmentation_status) 
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [imageId, testProjectId, `test${i}.jpg`, `http://test.com/test${i}.jpg`, 
-           `http://test.com/thumb${i}.jpg`, 1024000, 1920, 1080, 'without_segmentation']
+          [
+            imageId,
+            testProjectId,
+            `test${i}.jpg`,
+            `http://test.com/test${i}.jpg`,
+            `http://test.com/thumb${i}.jpg`,
+            1024000,
+            1920,
+            1080,
+            'without_segmentation',
+          ]
         );
         testImageIds.push(imageId);
       }
@@ -154,10 +193,10 @@ describe('SegmentationService Integration Tests', () => {
 
     it('should skip already segmented images', async () => {
       // Mark one image as completed
-      await pool.query(
-        'UPDATE images SET segmentation_status = $1 WHERE id = $2',
-        ['completed', testImageIds[0]]
-      );
+      await pool.query('UPDATE images SET segmentation_status = $1 WHERE id = $2', [
+        'completed',
+        testImageIds[0],
+      ]);
 
       const result = await segmentationService.queueBatchSegmentation(
         testImageIds,
@@ -185,7 +224,12 @@ describe('SegmentationService Integration Tests', () => {
             cells: [
               {
                 id: 'cell_1',
-                polygon: [[10, 10], [20, 10], [20, 20], [10, 20]],
+                polygon: [
+                  [10, 10],
+                  [20, 10],
+                  [20, 20],
+                  [10, 20],
+                ],
                 centroid: [15, 15],
                 area: 100,
                 perimeter: 40,
@@ -195,17 +239,17 @@ describe('SegmentationService Integration Tests', () => {
                 mean_intensity: 128,
                 features: {
                   texture_contrast: 0.5,
-                  texture_homogeneity: 0.8
-                }
-              }
+                  texture_homogeneity: 0.8,
+                },
+              },
             ],
             metadata: {
               processing_time: 2.5,
               model_version: '1.0',
-              confidence: 0.95
-            }
-          }
-        }
+              confidence: 0.95,
+            },
+          },
+        },
       });
     });
 
@@ -217,26 +261,21 @@ describe('SegmentationService Integration Tests', () => {
       expect(result).toHaveProperty('cellCount', 1);
 
       // Verify segmentation result in database
-      const segResult = await pool.query(
-        'SELECT * FROM segmentation_results WHERE image_id = $1',
-        [testImageId]
-      );
+      const segResult = await pool.query('SELECT * FROM segmentation_results WHERE image_id = $1', [
+        testImageId,
+      ]);
       expect(segResult.rows).toHaveLength(1);
       expect(segResult.rows[0].status).toBe('completed');
 
       // Verify cells in database
-      const cellResult = await pool.query(
-        'SELECT * FROM cells WHERE image_id = $1',
-        [testImageId]
-      );
+      const cellResult = await pool.query('SELECT * FROM cells WHERE image_id = $1', [testImageId]);
       expect(cellResult.rows).toHaveLength(1);
       expect(cellResult.rows[0].area).toBe(100);
 
       // Verify image status updated
-      const imageResult = await pool.query(
-        'SELECT segmentation_status FROM images WHERE id = $1',
-        [testImageId]
-      );
+      const imageResult = await pool.query('SELECT segmentation_status FROM images WHERE id = $1', [
+        testImageId,
+      ]);
       expect(imageResult.rows[0].segmentation_status).toBe('completed');
 
       // Verify queue entry updated
@@ -251,8 +290,9 @@ describe('SegmentationService Integration Tests', () => {
       // Mock ML service error
       mockedAxios.post.mockRejectedValue(new Error('ML service unavailable'));
 
-      await expect(segmentationService.processSegmentation(testImageId))
-        .rejects.toThrow('ML service unavailable');
+      await expect(segmentationService.processSegmentation(testImageId)).rejects.toThrow(
+        'ML service unavailable'
+      );
 
       // Verify status is failed
       const queueResult = await pool.query(
@@ -261,10 +301,9 @@ describe('SegmentationService Integration Tests', () => {
       );
       expect(queueResult.rows[0].status).toBe('failed');
 
-      const imageResult = await pool.query(
-        'SELECT segmentation_status FROM images WHERE id = $1',
-        [testImageId]
-      );
+      const imageResult = await pool.query('SELECT segmentation_status FROM images WHERE id = $1', [
+        testImageId,
+      ]);
       expect(imageResult.rows[0].segmentation_status).toBe('failed');
     });
 
@@ -279,10 +318,10 @@ describe('SegmentationService Integration Tests', () => {
             metadata: {
               processing_time: 1.5,
               model_version: '1.0',
-              confidence: 0.95
-            }
-          }
-        }
+              confidence: 0.95,
+            },
+          },
+        },
       });
 
       const result = await segmentationService.processSegmentation(testImageId);
@@ -291,10 +330,7 @@ describe('SegmentationService Integration Tests', () => {
       expect(result).toHaveProperty('cellCount', 0);
 
       // Verify no cells in database
-      const cellResult = await pool.query(
-        'SELECT * FROM cells WHERE image_id = $1',
-        [testImageId]
-      );
+      const cellResult = await pool.query('SELECT * FROM cells WHERE image_id = $1', [testImageId]);
       expect(cellResult.rows).toHaveLength(0);
     });
   });
@@ -312,10 +348,10 @@ describe('SegmentationService Integration Tests', () => {
 
     it('should get status of completed segmentation', async () => {
       // Create completed segmentation
-      await pool.query(
-        'UPDATE images SET segmentation_status = $1 WHERE id = $2',
-        ['completed', testImageId]
-      );
+      await pool.query('UPDATE images SET segmentation_status = $1 WHERE id = $2', [
+        'completed',
+        testImageId,
+      ]);
 
       const segmentationId = uuidv4();
       await pool.query(
@@ -335,10 +371,10 @@ describe('SegmentationService Integration Tests', () => {
   describe('retryFailedSegmentation', () => {
     beforeEach(async () => {
       // Create failed segmentation
-      await pool.query(
-        'UPDATE images SET segmentation_status = $1 WHERE id = $2',
-        ['failed', testImageId]
-      );
+      await pool.query('UPDATE images SET segmentation_status = $1 WHERE id = $2', [
+        'failed',
+        testImageId,
+      ]);
 
       await pool.query(
         `INSERT INTO segmentation_queue (id, image_id, status, error_message) 
@@ -364,13 +400,14 @@ describe('SegmentationService Integration Tests', () => {
 
     it('should not retry if max retries exceeded', async () => {
       // Update retry count to max
-      await pool.query(
-        'UPDATE segmentation_queue SET retry_count = $1 WHERE image_id = $2',
-        [3, testImageId]
-      );
+      await pool.query('UPDATE segmentation_queue SET retry_count = $1 WHERE image_id = $2', [
+        3,
+        testImageId,
+      ]);
 
-      await expect(segmentationService.retryFailedSegmentation(testImageId, testUserId))
-        .rejects.toThrow('Maximum retry attempts');
+      await expect(
+        segmentationService.retryFailedSegmentation(testImageId, testUserId)
+      ).rejects.toThrow('Maximum retry attempts');
     });
   });
 
@@ -393,34 +430,29 @@ describe('SegmentationService Integration Tests', () => {
         );
       }
 
-      await pool.query(
-        'UPDATE images SET segmentation_status = $1 WHERE id = $2',
-        ['completed', testImageId]
-      );
+      await pool.query('UPDATE images SET segmentation_status = $1 WHERE id = $2', [
+        'completed',
+        testImageId,
+      ]);
     });
 
     it('should delete segmentation results and cells', async () => {
       await segmentationService.deleteSegmentationResults(testImageId);
 
       // Verify results deleted
-      const segResult = await pool.query(
-        'SELECT * FROM segmentation_results WHERE image_id = $1',
-        [testImageId]
-      );
+      const segResult = await pool.query('SELECT * FROM segmentation_results WHERE image_id = $1', [
+        testImageId,
+      ]);
       expect(segResult.rows).toHaveLength(0);
 
       // Verify cells deleted
-      const cellResult = await pool.query(
-        'SELECT * FROM cells WHERE image_id = $1',
-        [testImageId]
-      );
+      const cellResult = await pool.query('SELECT * FROM cells WHERE image_id = $1', [testImageId]);
       expect(cellResult.rows).toHaveLength(0);
 
       // Verify image status reset
-      const imageResult = await pool.query(
-        'SELECT segmentation_status FROM images WHERE id = $1',
-        [testImageId]
-      );
+      const imageResult = await pool.query('SELECT segmentation_status FROM images WHERE id = $1', [
+        testImageId,
+      ]);
       expect(imageResult.rows[0].segmentation_status).toBe('without_segmentation');
     });
   });

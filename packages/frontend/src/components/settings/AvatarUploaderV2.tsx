@@ -1,6 +1,6 @@
 /**
  * AvatarUploader Component - Using Unified Upload Service
- * 
+ *
  * This is the migrated version using the new unified upload service.
  * It provides the same functionality with better performance and reliability.
  */
@@ -43,21 +43,14 @@ const AvatarUploaderV2: React.FC<AvatarUploaderProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Use the unified avatar upload hook
-  const {
-    files,
-    isUploading,
-    selectFiles,
-    uploadFiles,
-    clearFiles,
-    removeFile,
-  } = useAvatarUpload({
+  const { files, isUploading, selectFiles, uploadFiles, clearFiles, removeFile } = useAvatarUpload({
     generatePreviews: true,
     autoUpload: false, // We'll handle upload manually after cropping
     onFilesSelected: async (selectedFiles) => {
       if (selectedFiles.length > 0) {
         const file = selectedFiles[0];
         setSelectedFile(file);
-        
+
         // Generate preview for cropper
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -71,17 +64,17 @@ const AvatarUploaderV2: React.FC<AvatarUploaderProps> = ({
       if (result.successful.length > 0) {
         const uploadedFile = result.successful[0];
         const avatarUrl = uploadedFile.result?.url || uploadedFile.preview || '';
-        
+
         // Update profile with new avatar
         try {
           await updateProfile({ avatar: avatarUrl });
-          
+
           // Store in localStorage for immediate display
           localStorage.setItem('userAvatar', avatarUrl);
-          
+
           // Notify parent component
           onAvatarChange(avatarUrl, false);
-          
+
           showSuccess(t('profile.avatarUpdated') || 'Profile picture updated');
         } catch (error) {
           showError(t('profile.avatarUpdateError') || 'Failed to update profile picture');
@@ -89,9 +82,7 @@ const AvatarUploaderV2: React.FC<AvatarUploaderProps> = ({
       }
     },
     onError: (error) => {
-      showError(
-        error.message || t('profile.avatarUploadError') || 'Failed to upload profile picture'
-      );
+      showError(error.message || t('profile.avatarUploadError') || 'Failed to upload profile picture');
     },
   });
 
@@ -122,12 +113,12 @@ const AvatarUploaderV2: React.FC<AvatarUploaderProps> = ({
 
       // Clear any existing files and add the cropped file
       clearFiles();
-      
+
       // Manually add the cropped file to our upload queue
       // Since we disabled autoUpload, we need to trigger upload manually
       const formData = new FormData();
       formData.append('file', croppedFile);
-      
+
       // Upload the cropped avatar
       await uploadFiles([croppedFile]);
     } catch (error) {
@@ -140,17 +131,17 @@ const AvatarUploaderV2: React.FC<AvatarUploaderProps> = ({
     try {
       // Remove avatar from profile
       await updateProfile({ avatar: '' });
-      
+
       // Clear from localStorage
       localStorage.removeItem('userAvatar');
       localStorage.removeItem('userAvatarUrl');
-      
+
       // Clear any pending uploads
       clearFiles();
-      
+
       // Notify parent component
       onAvatarChange('', false);
-      
+
       showSuccess(t('profile.avatarRemoved') || 'Profile picture removed');
     } catch (error) {
       showError(t('profile.avatarRemoveError') || 'Failed to remove profile picture');
@@ -249,8 +240,8 @@ const AvatarUploaderV2: React.FC<AvatarUploaderProps> = ({
           </div>
 
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setIsCropperOpen(false);
                 clearFiles();

@@ -151,17 +151,17 @@ router.get('/health', async (req: Request, res: Response) => {
  */
 /**
  * POST /api/metrics/performance
- * 
+ *
  * Accepts performance metrics from frontend and stores them
  */
 router.post('/performance', async (req: Request, res: Response) => {
   try {
     const metrics = req.body;
-    
+
     // Log frontend performance metrics
     logger.info('Frontend performance metrics received', {
       dnsLookup: metrics.dnsLookup,
-      tcpConnection: metrics.tcpConnection, 
+      tcpConnection: metrics.tcpConnection,
       requestTime: metrics.requestTime,
       domProcessing: metrics.domProcessing,
       totalPageLoad: metrics.totalPageLoad,
@@ -171,17 +171,17 @@ router.post('/performance', async (req: Request, res: Response) => {
 
     // You could store these in database or forward to monitoring system
     // For now, we just acknowledge receipt
-    res.json({ 
-      status: 'success', 
+    res.json({
+      status: 'success',
       message: 'Performance metrics received',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error processing frontend performance metrics', { error });
-    res.status(500).json({ 
-      status: 'error', 
+    res.status(500).json({
+      status: 'error',
       message: 'Failed to process metrics',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
     });
   }
 });

@@ -7,9 +7,7 @@ const logger = getLogger('queryClient');
 // Network error detection
 const isNetworkError = (error: unknown): boolean => {
   if (error instanceof Error) {
-    return error.message.includes('network') || 
-           error.message.includes('Network') ||
-           error.message.includes('fetch');
+    return error.message.includes('network') || error.message.includes('Network') || error.message.includes('fetch');
   }
   return false;
 };
@@ -23,12 +21,12 @@ const getRetryCount = (failureCount: number, error: unknown): number => {
       return 0; // Don't retry client errors
     }
   }
-  
+
   // Retry network errors more aggressively
   if (isNetworkError(error)) {
     return Math.min(failureCount * 2, 5);
   }
-  
+
   // Default retry strategy
   return Math.min(failureCount, 3);
 };
@@ -45,23 +43,23 @@ export const queryClient = new QueryClient({
       // Stale time configuration
       staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for this duration
       gcTime: 15 * 60 * 1000, // 15 minutes - keep inactive data in cache
-      
+
       // Refetch configuration
       refetchOnWindowFocus: false, // Don't refetch on window focus
       refetchOnMount: true, // Refetch if data is stale when component mounts
       refetchOnReconnect: 'always', // Always refetch on reconnect
       refetchInterval: false, // No automatic refetching
-      
+
       // Retry configuration
       retry: getRetryCount,
       retryDelay: getRetryDelay,
-      
+
       // Network mode
       networkMode: 'offlineFirst', // Try cache first, then network
-      
+
       // Structural sharing for better performance
       structuralSharing: true,
-      
+
       // Placeholder data while loading
       placeholderData: (previousData) => previousData,
     },
@@ -69,14 +67,14 @@ export const queryClient = new QueryClient({
       // Retry configuration for mutations
       retry: 2,
       retryDelay: getRetryDelay,
-      
+
       // Network mode for mutations
       networkMode: 'online', // Only run mutations when online
-      
+
       // Global error handler
       onError: (error) => {
         logger.error('Mutation error:', error);
-        
+
         // Show user-friendly error messages
         if (isNetworkError(error)) {
           toast.error('Network error. Please check your connection.');
@@ -88,7 +86,7 @@ export const queryClient = new QueryClient({
       },
     },
   },
-  
+
   // Query client configuration
   queryCache: {
     onError: (error, query) => {
@@ -97,7 +95,7 @@ export const queryClient = new QueryClient({
         queryKey: query.queryKey,
         error,
       });
-      
+
       // Only show toast for user-initiated queries (not background refetches)
       if (query.state.dataUpdateCount === 0) {
         if (isNetworkError(error)) {
@@ -115,7 +113,7 @@ export const queryClient = new QueryClient({
       }
     },
   },
-  
+
   mutationCache: {
     onSuccess: (data, variables, context, mutation) => {
       // Log successful mutations
@@ -129,20 +127,16 @@ export const queryClient = new QueryClient({
 // Prefetch helper with deduplication
 const prefetchedQueries = new Set<string>();
 
-export const prefetchQuery = async (
-  key: unknown[],
-  fn: () => Promise<unknown>,
-  staleTime?: number
-) => {
+export const prefetchQuery = async (key: unknown[], fn: () => Promise<unknown>, staleTime?: number) => {
   const keyString = JSON.stringify(key);
-  
+
   // Skip if already prefetched
   if (prefetchedQueries.has(keyString)) {
     return;
   }
-  
+
   prefetchedQueries.add(keyString);
-  
+
   try {
     await queryClient.prefetchQuery({
       queryKey: key,
@@ -162,7 +156,7 @@ export const invalidateQueries = async (
   options?: {
     exact?: boolean;
     refetchType?: 'active' | 'inactive' | 'all' | 'none';
-  }
+  },
 ) => {
   await queryClient.invalidateQueries({
     queryKey: key,
@@ -172,10 +166,7 @@ export const invalidateQueries = async (
 };
 
 // Set query data with optimistic updates
-export const setQueryData = <T>(
-  key: unknown[],
-  updater: T | ((old: T | undefined) => T)
-) => {
+export const setQueryData = <T>(key: unknown[], updater: T | ((old: T | undefined) => T)) => {
   queryClient.setQueryData(key, updater);
 };
 
@@ -205,11 +196,7 @@ export const getQueryData = <T>(key: unknown[]) => {
 };
 
 // Ensure query data exists
-export const ensureQueryData = async <T>(
-  key: unknown[],
-  fn: () => Promise<T>,
-  staleTime?: number
-) => {
+export const ensureQueryData = async <T>(key: unknown[], fn: () => Promise<T>, staleTime?: number) => {
   return queryClient.ensureQueryData({
     queryKey: key,
     queryFn: fn,

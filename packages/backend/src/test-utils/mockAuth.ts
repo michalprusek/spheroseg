@@ -538,33 +538,40 @@ export function createMockJwtSign(options: MockAuthOptions = {}): jest.Mock {
 export function createMockJwtVerify(options: MockAuthOptions = {}): jest.Mock {
   const mockAuth = new MockAuth(options);
 
-  return jest.fn((token: string, secret: string, _options: unknown = {}, callback?: (err: Error | null, decoded?: unknown) => void) => {
-    try {
-      const payload = mockAuth.verifyToken(token);
+  return jest.fn(
+    (
+      token: string,
+      secret: string,
+      _options: unknown = {},
+      callback?: (err: Error | null, decoded?: unknown) => void
+    ) => {
+      try {
+        const payload = mockAuth.verifyToken(token);
 
-      if (!payload) {
-        const error = new Error('Invalid token');
+        if (!payload) {
+          const error = new Error('Invalid token');
+          if (callback) {
+            callback(error, null);
+            return;
+          }
+          throw error;
+        }
+
+        if (callback) {
+          callback(null, payload);
+          return;
+        }
+
+        return payload;
+      } catch (error) {
         if (callback) {
           callback(error, null);
           return;
         }
         throw error;
       }
-
-      if (callback) {
-        callback(null, payload);
-        return;
-      }
-
-      return payload;
-    } catch (error) {
-      if (callback) {
-        callback(error, null);
-        return;
-      }
-      throw error;
     }
-  });
+  );
 }
 
 /**

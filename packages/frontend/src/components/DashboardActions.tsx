@@ -2,8 +2,6 @@ import { Grid2X2, List as ListIcon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from './ui/button';
 
-
-
 interface DashboardActionsProps {
   viewMode: 'grid' | 'list';
   setViewMode: (mode: 'grid' | 'list') => void;
@@ -11,7 +9,12 @@ interface DashboardActionsProps {
   sortOptions?: Array<{ field: string; label: string }>;
 }
 
-const DashboardActions = ({ viewMode, setViewMode, onSort: _onSort, sortOptions: _sortOptions = [] }: DashboardActionsProps) => {
+const DashboardActions = ({
+  viewMode,
+  setViewMode,
+  onSort: _onSort,
+  sortOptions: _sortOptions = [],
+}: DashboardActionsProps) => {
   const { t: _t } = useLanguage();
 
   return (

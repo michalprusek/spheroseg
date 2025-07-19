@@ -1,6 +1,6 @@
 /**
  * Error Reporting Routes
- * 
+ *
  * Handles client-side error reporting from the frontend application
  */
 
@@ -37,7 +37,7 @@ const validateErrorReport = [
   body('url').isURL({ require_protocol: false }).withMessage('Valid URL is required'),
   body('severity').optional().isIn(['error', 'warning', 'info']),
   body('errorType').optional().isString(),
-  body('metadata').optional().isObject()
+  body('metadata').optional().isObject(),
 ];
 
 /**
@@ -53,24 +53,24 @@ router.post('/', validateErrorReport, async (req: Request, res: Response) => {
         success: false,
         error: 'Invalid error report data',
         code: 'VALIDATION_ERROR',
-        validationErrors: errors.array().map(e => ({
+        validationErrors: errors.array().map((e) => ({
           field: e.path as string,
           message: e.msg,
-          code: e.type
-        }))
+          code: e.type,
+        })),
       };
       return res.status(400).json(response);
     }
 
     const errorReport: ErrorReport = req.body;
-    
+
     // Add server-side metadata
     const enrichedReport = {
       ...errorReport,
       serverTimestamp: new Date().toISOString(),
       ipAddress: req.ip,
       // Extract user ID from JWT if authenticated
-      userId: (req as any).userId || errorReport.userId || null
+      userId: (req as any).userId || errorReport.userId || null,
     };
 
     // Log the error for immediate visibility
@@ -80,7 +80,7 @@ router.post('/', validateErrorReport, async (req: Request, res: Response) => {
       url: errorReport.url,
       userAgent: errorReport.userAgent,
       stack: errorReport.stack,
-      metadata: errorReport.metadata
+      metadata: errorReport.metadata,
     });
 
     // Store in database if enabled
@@ -97,19 +97,19 @@ router.post('/', validateErrorReport, async (req: Request, res: Response) => {
     const response: ApiResponse<{ reported: boolean }> = {
       success: true,
       data: { reported: true },
-      message: 'Error report received'
+      message: 'Error report received',
     };
 
     res.status(200).json(response);
   } catch (error) {
     logger.error('Failed to process error report', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
 
     const response: ApiErrorResponse = {
       success: false,
       error: 'Failed to process error report',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     };
 
     res.status(500).json(response);
@@ -124,33 +124,33 @@ router.get('/stats', async (_req: Request, res: Response) => {
   try {
     // This would typically require admin authentication
     // For now, we'll return basic stats if error storage is enabled
-    
+
     if (process.env['STORE_ERROR_REPORTS'] !== 'true') {
       const response: ApiErrorResponse = {
         success: false,
         error: 'Error report storage is not enabled',
-        code: 'NOT_ENABLED'
+        code: 'NOT_ENABLED',
       };
       return res.status(404).json(response);
     }
 
     const stats = await getErrorStats();
-    
+
     const response: ApiResponse<typeof stats> = {
       success: true,
-      data: stats
+      data: stats,
     };
 
     res.status(200).json(response);
   } catch (error) {
     logger.error('Failed to get error stats', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
 
     const response: ApiErrorResponse = {
       success: false,
       error: 'Failed to get error statistics',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     };
 
     res.status(500).json(response);
@@ -160,7 +160,9 @@ router.get('/stats', async (_req: Request, res: Response) => {
 /**
  * Store error report in database
  */
-async function storeErrorReport(report: ErrorReport & { serverTimestamp: string; ipAddress?: string }): Promise<void> {
+async function storeErrorReport(
+  report: ErrorReport & { serverTimestamp: string; ipAddress?: string }
+): Promise<void> {
   const query = `
     INSERT INTO error_reports (
       message, stack, source, lineno, colno,
@@ -185,7 +187,7 @@ async function storeErrorReport(report: ErrorReport & { serverTimestamp: string;
     report.errorType || null,
     report.severity || 'error',
     JSON.stringify(report.metadata || {}),
-    report.ipAddress || null
+    report.ipAddress || null,
   ];
 
   try {
@@ -193,7 +195,7 @@ async function storeErrorReport(report: ErrorReport & { serverTimestamp: string;
   } catch (error) {
     // Log but don't throw - we don't want to fail the request if storage fails
     logger.error('Failed to store error report in database', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 }
@@ -204,7 +206,7 @@ async function storeErrorReport(report: ErrorReport & { serverTimestamp: string;
 async function forwardToMonitoringService(_report: ErrorReport): Promise<void> {
   // This is a placeholder for integration with external services
   // In a real implementation, this would send to Sentry, Rollbar, etc.
-  
+
   const serviceUrl = process.env['ERROR_MONITORING_SERVICE_URL'];
   const serviceApiKey = process.env['ERROR_MONITORING_API_KEY'];
 
@@ -222,13 +224,13 @@ async function forwardToMonitoringService(_report: ErrorReport): Promise<void> {
     //   },
     //   body: JSON.stringify(report)
     // });
-    
+
     logger.debug('Error report forwarded to monitoring service', {
-      service: serviceUrl
+      service: serviceUrl,
     });
   } catch (error) {
     logger.error('Failed to forward error to monitoring service', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 }
@@ -267,13 +269,13 @@ async function getErrorStats() {
   `;
 
   const result = await db.query(query);
-  
+
   return {
     counts: result.rows[0]?.counts || [],
     recent: result.rows[0]?.recent || [],
     total24h: parseInt(result.rows[0]?.total_24h || '0'),
     total1h: parseInt(result.rows[0]?.total_1h || '0'),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }
 

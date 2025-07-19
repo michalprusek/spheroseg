@@ -62,17 +62,17 @@ export async function deleteImage(
     // Step 1: Verify user has access to the project (owner or shared with edit permission)
     const projectService = await import('./projectService');
     const project = await projectService.getProjectById(pool, projectId, userId);
-    
+
     if (!project) {
       throw new ApiError('Project not found or access denied', 404);
     }
-    
+
     // Check if user has edit permission (owner or shared with 'edit' permission)
     const hasEditPermission = project.is_owner || project.permission === 'edit';
     if (!hasEditPermission) {
       throw new ApiError("You need 'edit' or 'owner' permission to delete images", 403);
     }
-    
+
     // Get image data
     const imageCheck = await client.query(
       `SELECT i.id, i.storage_path, i.thumbnail_path, i.file_size

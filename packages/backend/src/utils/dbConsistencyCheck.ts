@@ -1,6 +1,6 @@
 /**
  * Database Consistency Check Utility
- * 
+ *
  * Provides utilities for checking and fixing database consistency issues
  * related to images and their statuses
  */
@@ -45,7 +45,7 @@ export async function checkProjectConsistency(projectId: string): Promise<Consis
   if (!projectId || !isValidUUID(projectId)) {
     throw new ValidationError('Invalid project ID format');
   }
-  
+
   const pool = getPool();
   const report: ConsistencyReport = {
     totalImages: 0,
@@ -54,15 +54,14 @@ export async function checkProjectConsistency(projectId: string): Promise<Consis
     orphanedImages: 0,
     missingFiles: 0,
     fixedIssues: 0,
-    errors: []
+    errors: [],
   };
 
   try {
     // Get total image count
-    const totalResult = await pool.query(
-      'SELECT COUNT(*) FROM images WHERE project_id = $1',
-      [projectId]
-    );
+    const totalResult = await pool.query('SELECT COUNT(*) FROM images WHERE project_id = $1', [
+      projectId,
+    ]);
     report.totalImages = parseInt(totalResult.rows[0].count, 10);
 
     // Check for images without segmentation_status
@@ -93,9 +92,8 @@ export async function checkProjectConsistency(projectId: string): Promise<Consis
 
     logger.info('Database consistency check completed', {
       projectId,
-      report
+      report,
     });
-
   } catch (error) {
     logger.error('Error during consistency check', { projectId, error });
     report.errors.push(`Check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -107,22 +105,25 @@ export async function checkProjectConsistency(projectId: string): Promise<Consis
 /**
  * Fix common database consistency issues
  */
-export async function fixProjectConsistency(projectId: string, dryRun: boolean = true): Promise<ConsistencyReport> {
+export async function fixProjectConsistency(
+  projectId: string,
+  dryRun: boolean = true
+): Promise<ConsistencyReport> {
   // Validate input
   if (!projectId || !isValidUUID(projectId)) {
     throw new ValidationError('Invalid project ID format');
   }
-  
+
   const pool = getPool();
   const report = await checkProjectConsistency(projectId);
-  
+
   if (dryRun) {
     logger.info('Running in dry-run mode - no changes will be made');
     return report;
   }
 
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
@@ -157,9 +158,8 @@ export async function fixProjectConsistency(projectId: string, dryRun: boolean =
     await client.query('COMMIT');
     logger.info('Database consistency fixes applied', {
       projectId,
-      fixedIssues: report.fixedIssues
+      fixedIssues: report.fixedIssues,
     });
-
   } catch (error) {
     await client.query('ROLLBACK');
     logger.error('Error fixing consistency issues', { projectId, error });
@@ -174,9 +174,11 @@ export async function fixProjectConsistency(projectId: string, dryRun: boolean =
 /**
  * Get detailed status breakdown for a project
  */
-export async function getProjectStatusBreakdown(projectId: string): Promise<Record<string, number>> {
+export async function getProjectStatusBreakdown(
+  projectId: string
+): Promise<Record<string, number>> {
   const pool = getPool();
-  
+
   try {
     const result = await pool.query(
       `SELECT segmentation_status, COUNT(*) as count 
@@ -188,13 +190,12 @@ export async function getProjectStatusBreakdown(projectId: string): Promise<Reco
     );
 
     const breakdown: Record<string, number> = {};
-    result.rows.forEach(row => {
+    result.rows.forEach((row) => {
       breakdown[row.segmentation_status || 'null'] = parseInt(row.count, 10);
     });
 
     logger.info('Status breakdown retrieved', { projectId, breakdown });
     return breakdown;
-
   } catch (error) {
     logger.error('Error getting status breakdown', { projectId, error });
     throw error;
@@ -204,7 +205,10 @@ export async function getProjectStatusBreakdown(projectId: string): Promise<Reco
 /**
  * Verify all images have proper status after upload
  */
-export async function verifyRecentUploads(projectId: string, minutes: number = 5): Promise<{
+export async function verifyRecentUploads(
+  projectId: string,
+  minutes: number = 5
+): Promise<{
   total: number;
   withoutStatus: number;
   imageIds: string[];
@@ -213,13 +217,13 @@ export async function verifyRecentUploads(projectId: string, minutes: number = 5
   if (!projectId || !isValidUUID(projectId)) {
     throw new ValidationError('Invalid project ID format');
   }
-  
+
   if (!validateMinutes(minutes)) {
     throw new ValidationError('Minutes must be between 1 and 1440');
   }
-  
+
   const pool = getPool();
-  
+
   try {
     // Using parameterized query to prevent SQL injection
     const result = await pool.query(
@@ -242,9 +246,8 @@ export async function verifyRecentUploads(projectId: string, minutes: number = 5
     return {
       total: parseInt(totalResult.rows[0].count, 10),
       withoutStatus: result.rows.length,
-      imageIds: result.rows.map(row => row.id)
+      imageIds: result.rows.map((row) => row.id),
     };
-
   } catch (error) {
     logger.error('Error verifying recent uploads', { projectId, error });
     throw error;
@@ -255,5 +258,5 @@ export default {
   checkProjectConsistency,
   fixProjectConsistency,
   getProjectStatusBreakdown,
-  verifyRecentUploads
+  verifyRecentUploads,
 };

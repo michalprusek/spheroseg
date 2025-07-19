@@ -123,7 +123,7 @@ describe('imageUpload', () => {
       vi.spyOn(global, 'FileReader').mockImplementation(function () {
         this.readAsDataURL = vi.fn(() => {
           setTimeout(() => {
-            this.onload?.(({ target: { result: 'data:image/jpeg;base64,test' } }) as any);
+            this.onload?.({ target: { result: 'data:image/jpeg;base64,test' } } as any);
           }, 0);
         });
         return this;

@@ -1,6 +1,6 @@
 /**
  * Integration tests for AuthService
- * 
+ *
  * Tests authentication flow with real database and token generation
  */
 
@@ -53,10 +53,7 @@ describe('AuthService Integration Tests', () => {
       expect(result).toHaveProperty('refreshToken');
 
       // Verify user exists in database
-      const userResult = await pool.query(
-        'SELECT * FROM users WHERE email = $1',
-        [email]
-      );
+      const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
       expect(userResult.rows).toHaveLength(1);
       expect(userResult.rows[0].email).toBe(email);
 
@@ -72,8 +69,7 @@ describe('AuthService Integration Tests', () => {
       await authService.register(email, password, name);
 
       // Try to register duplicate
-      await expect(authService.register(email, password, name))
-        .rejects.toThrow();
+      await expect(authService.register(email, password, name)).rejects.toThrow();
     });
 
     it('should hash password correctly', async () => {
@@ -84,10 +80,7 @@ describe('AuthService Integration Tests', () => {
       await authService.register(email, password, name);
 
       // Check password is hashed
-      const result = await pool.query(
-        'SELECT password FROM users WHERE email = $1',
-        [email]
-      );
+      const result = await pool.query('SELECT password FROM users WHERE email = $1', [email]);
       expect(result.rows[0].password).not.toBe(password);
       expect(await bcrypt.compare(password, result.rows[0].password)).toBe(true);
     });
@@ -105,10 +98,7 @@ describe('AuthService Integration Tests', () => {
     });
 
     it('should login with correct credentials', async () => {
-      const result = await authService.login(
-        'login@test.integration.com',
-        'TestPassword123!'
-      );
+      const result = await authService.login('login@test.integration.com', 'TestPassword123!');
 
       expect(result).toHaveProperty('id', testUserId);
       expect(result).toHaveProperty('email', 'login@test.integration.com');
@@ -154,25 +144,23 @@ describe('AuthService Integration Tests', () => {
     });
 
     it('should reject invalid token', async () => {
-      await expect(authService.verifyToken('invalid-token'))
-        .rejects.toThrow();
+      await expect(authService.verifyToken('invalid-token')).rejects.toThrow();
     });
 
     it('should reject expired token', async () => {
       // Create an expired token
       const expiredToken = tokenService.generateAccessToken({
         userId: testUserId,
-        email: 'test@test.integration.com'
+        email: 'test@test.integration.com',
       });
-      
+
       // Mock time to make token expired
       const originalVerify = tokenService.verifyAccessToken;
       tokenService.verifyAccessToken = () => {
         throw new Error('Token expired');
       };
 
-      await expect(authService.verifyToken(expiredToken))
-        .rejects.toThrow();
+      await expect(authService.verifyToken(expiredToken)).rejects.toThrow();
 
       // Restore original method
       tokenService.verifyAccessToken = originalVerify;
@@ -200,7 +188,7 @@ describe('AuthService Integration Tests', () => {
 
     it('should refresh tokens with valid refresh token', async () => {
       const result = await authService.refreshAccessToken(refreshToken);
-      
+
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
       expect(result.accessToken).toBeTruthy();
@@ -208,8 +196,7 @@ describe('AuthService Integration Tests', () => {
     });
 
     it('should reject invalid refresh token', async () => {
-      await expect(authService.refreshAccessToken('invalid-token'))
-        .rejects.toThrow();
+      await expect(authService.refreshAccessToken('invalid-token')).rejects.toThrow();
     });
   });
 
@@ -226,27 +213,25 @@ describe('AuthService Integration Tests', () => {
 
     it('should initiate password reset', async () => {
       const result = await authService.initiatePasswordReset('reset@test.integration.com');
-      
+
       expect(result).toHaveProperty('message');
       expect(result.message).toContain('reset link');
 
       // Verify reset token is stored
-      const tokenResult = await pool.query(
-        'SELECT reset_token FROM users WHERE id = $1',
-        [testUserId]
-      );
+      const tokenResult = await pool.query('SELECT reset_token FROM users WHERE id = $1', [
+        testUserId,
+      ]);
       expect(tokenResult.rows[0].reset_token).toBeTruthy();
     });
 
     it('should reset password with valid token', async () => {
       // Initiate reset first
       await authService.initiatePasswordReset('reset@test.integration.com');
-      
+
       // Get reset token from database
-      const tokenResult = await pool.query(
-        'SELECT reset_token FROM users WHERE id = $1',
-        [testUserId]
-      );
+      const tokenResult = await pool.query('SELECT reset_token FROM users WHERE id = $1', [
+        testUserId,
+      ]);
       const resetToken = tokenResult.rows[0].reset_token;
 
       // Reset password
@@ -254,10 +239,7 @@ describe('AuthService Integration Tests', () => {
       await authService.resetPassword(resetToken, newPassword);
 
       // Verify can login with new password
-      const loginResult = await authService.login(
-        'reset@test.integration.com',
-        newPassword
-      );
+      const loginResult = await authService.login('reset@test.integration.com', newPassword);
       expect(loginResult).toHaveProperty('accessToken');
     });
   });
@@ -277,20 +259,19 @@ describe('AuthService Integration Tests', () => {
       const updates = {
         name: 'Updated Name',
         bio: 'Updated bio',
-        organization: 'Test Org'
+        organization: 'Test Org',
       };
 
       const result = await authService.updateProfile(testUserId, updates);
-      
+
       expect(result).toHaveProperty('name', updates.name);
       expect(result).toHaveProperty('bio', updates.bio);
       expect(result).toHaveProperty('organization', updates.organization);
 
       // Verify in database
-      const dbResult = await pool.query(
-        'SELECT name, bio, organization FROM users WHERE id = $1',
-        [testUserId]
-      );
+      const dbResult = await pool.query('SELECT name, bio, organization FROM users WHERE id = $1', [
+        testUserId,
+      ]);
       expect(dbResult.rows[0]).toMatchObject(updates);
     });
   });
@@ -310,10 +291,7 @@ describe('AuthService Integration Tests', () => {
       await authService.deleteAccount(testUserId);
 
       // Verify user is marked as deleted
-      const result = await pool.query(
-        'SELECT deleted_at FROM users WHERE id = $1',
-        [testUserId]
-      );
+      const result = await pool.query('SELECT deleted_at FROM users WHERE id = $1', [testUserId]);
       expect(result.rows[0].deleted_at).toBeTruthy();
 
       // Verify cannot login
