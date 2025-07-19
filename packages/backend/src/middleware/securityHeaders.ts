@@ -1,6 +1,6 @@
 /**
  * Security Headers Middleware
- * 
+ *
  * Implements comprehensive security headers to protect against common attacks
  */
 
@@ -13,12 +13,12 @@ import { securityConfig } from '../config/security';
  */
 function getCSPConfig() {
   const directives = securityConfig.headers.contentSecurityPolicy.directives;
-  
+
   // Add WebSocket support if needed
   if (process.env.ENABLE_WEBSOCKETS === 'true') {
     directives.connectSrc.push('ws:', 'wss:');
   }
-  
+
   // Add CDN support if configured
   if (process.env.CDN_URL) {
     directives.scriptSrc.push(process.env.CDN_URL);
@@ -26,7 +26,7 @@ function getCSPConfig() {
     directives.imgSrc.push(process.env.CDN_URL);
     directives.fontSrc.push(process.env.CDN_URL);
   }
-  
+
   return {
     directives,
     reportOnly: process.env.CSP_REPORT_ONLY === 'true',
@@ -39,22 +39,22 @@ function getCSPConfig() {
 export const securityHeaders = helmet({
   // Content Security Policy
   contentSecurityPolicy: getCSPConfig(),
-  
+
   // Strict Transport Security (HSTS)
   hsts: securityConfig.headers.strictTransportSecurity,
-  
+
   // X-Content-Type-Options
   noSniff: true,
-  
+
   // X-Frame-Options
   frameguard: { action: securityConfig.headers.xFrameOptions.toLowerCase() as 'deny' },
-  
+
   // X-XSS-Protection (legacy but still useful)
   xssFilter: true,
-  
+
   // Referrer Policy
   referrerPolicy: { policy: securityConfig.headers.referrerPolicy },
-  
+
   // Permissions Policy (replacing Feature Policy)
   permittedCrossDomainPolicies: false,
 });
@@ -68,22 +68,22 @@ export function additionalSecurityHeaders(req: Request, res: Response, next: Nex
     .map(([feature, value]) => `${feature}=${value.join(' ')}`)
     .join(', ');
   res.setHeader('Permissions-Policy', permissionsPolicy);
-  
+
   // Cache Control for sensitive endpoints
   if (req.path.includes('/api/auth') || req.path.includes('/api/user')) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
   }
-  
+
   // Remove potentially dangerous headers
   res.removeHeader('X-Powered-By');
   res.removeHeader('Server');
-  
+
   // Add custom security headers
-  res.setHeader('X-Content-Security-Policy', 'default-src \'self\'');
+  res.setHeader('X-Content-Security-Policy', "default-src 'self'");
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
-  
+
   next();
 }
 
@@ -95,21 +95,21 @@ export function httpsEnforcement(req: Request, res: Response, next: NextFunction
   if (process.env.NODE_ENV !== 'production') {
     return next();
   }
-  
+
   // Skip if HTTPS enforcement is disabled
   if (!securityConfig.api.requireHttps) {
     return next();
   }
-  
+
   // Check if request is already HTTPS
   const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
-  
+
   if (!isHttps) {
     // Redirect to HTTPS
     const httpsUrl = `https://${req.headers.host}${req.url}`;
     return res.redirect(301, httpsUrl);
   }
-  
+
   next();
 }
 
@@ -121,34 +121,34 @@ export function apiKeyValidation(req: Request, res: Response, next: NextFunction
   if (!securityConfig.api.enableApiKeys) {
     return next();
   }
-  
+
   // Skip for public endpoints
   const publicPaths = ['/health', '/health/live', '/health/ready'];
-  if (publicPaths.some(path => req.path.includes(path))) {
+  if (publicPaths.some((path) => req.path.includes(path))) {
     return next();
   }
-  
+
   // Check for API key in header
   const apiKey = req.headers[securityConfig.api.apiKeyHeader.toLowerCase()] as string;
-  
+
   if (!apiKey) {
     return res.status(401).json({
       error: 'API key required',
       code: 'API_KEY_MISSING',
     });
   }
-  
+
   // Validate API key (implement your validation logic)
   // This is a placeholder - implement actual API key validation
   const isValidApiKey = validateApiKey(apiKey);
-  
+
   if (!isValidApiKey) {
     return res.status(401).json({
       error: 'Invalid API key',
       code: 'API_KEY_INVALID',
     });
   }
-  
+
   next();
 }
 
@@ -168,13 +168,13 @@ function validateApiKey(apiKey: string): boolean {
 export function applySecurity(app: any): void {
   // HTTPS enforcement (should be first)
   app.use(httpsEnforcement);
-  
+
   // Helmet security headers
   app.use(securityHeaders);
-  
+
   // Additional security headers
   app.use(additionalSecurityHeaders);
-  
+
   // API key validation (if enabled)
   if (securityConfig.api.enableApiKeys) {
     app.use('/api', apiKeyValidation);

@@ -1,6 +1,6 @@
 /**
  * CSRF Protection Middleware
- * 
+ *
  * Implements Cross-Site Request Forgery protection using the double-submit cookie pattern
  */
 
@@ -39,15 +39,15 @@ function generateToken(): string {
 function getOrCreateToken(sessionId: string): string {
   const existing = csrfTokens.get(sessionId);
   const now = Date.now();
-  
+
   if (existing && existing.expires > now) {
     return existing.token;
   }
-  
+
   const token = generateToken();
   const expires = now + 3600000; // 1 hour
   csrfTokens.set(sessionId, { token, expires });
-  
+
   return token;
 }
 
@@ -56,16 +56,13 @@ function getOrCreateToken(sessionId: string): string {
  */
 function validateToken(sessionId: string, providedToken: string): boolean {
   const stored = csrfTokens.get(sessionId);
-  
+
   if (!stored || stored.expires < Date.now()) {
     return false;
   }
-  
+
   // Constant-time comparison
-  return crypto.timingSafeEqual(
-    Buffer.from(stored.token),
-    Buffer.from(providedToken)
-  );
+  return crypto.timingSafeEqual(Buffer.from(stored.token), Buffer.from(providedToken));
 }
 
 /**
@@ -76,7 +73,7 @@ export function csrfProtection(req: CSRFRequest, res: Response, next: NextFuncti
   if (!securityConfig.csrf.enabled) {
     return next();
   }
-  
+
   // Skip for safe methods
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     // Add CSRF token function for GET requests
@@ -86,30 +83,30 @@ export function csrfProtection(req: CSRFRequest, res: Response, next: NextFuncti
     };
     return next();
   }
-  
+
   // Get session ID (use sessionID if available, otherwise use IP)
   const sessionId = req.sessionID || req.ip;
-  
+
   // Get token from request
-  const token = 
-    req.headers[securityConfig.csrf.headerName.toLowerCase()] as string ||
+  const token =
+    (req.headers[securityConfig.csrf.headerName.toLowerCase()] as string) ||
     req.body[securityConfig.csrf.paramName] ||
-    req.query[securityConfig.csrf.paramName] as string;
-  
+    (req.query[securityConfig.csrf.paramName] as string);
+
   if (!token) {
     logger.warn('CSRF token missing', {
       method: req.method,
       path: req.path,
       ip: req.ip,
     });
-    
+
     res.status(403).json({
       error: 'CSRF token missing',
       code: 'CSRF_TOKEN_MISSING',
     });
     return;
   }
-  
+
   // Validate token
   if (!validateToken(sessionId, token)) {
     logger.warn('Invalid CSRF token', {
@@ -117,14 +114,14 @@ export function csrfProtection(req: CSRFRequest, res: Response, next: NextFuncti
       path: req.path,
       ip: req.ip,
     });
-    
+
     res.status(403).json({
       error: 'Invalid CSRF token',
       code: 'CSRF_TOKEN_INVALID',
     });
     return;
   }
-  
+
   // Token is valid, proceed
   next();
 }
@@ -136,16 +133,16 @@ export function csrfCookie(req: CSRFRequest, res: Response, next: NextFunction):
   if (!securityConfig.csrf.enabled) {
     return next();
   }
-  
+
   // Skip if cookie already set
   if (req.cookies && req.cookies[securityConfig.csrf.cookieName]) {
     return next();
   }
-  
+
   // Generate token
   const sessionId = req.sessionID || req.ip;
   const token = getOrCreateToken(sessionId);
-  
+
   // Set cookie
   res.cookie(securityConfig.csrf.cookieName, token, {
     httpOnly: securityConfig.csrf.cookie.httpOnly,
@@ -153,7 +150,7 @@ export function csrfCookie(req: CSRFRequest, res: Response, next: NextFunction):
     sameSite: securityConfig.csrf.cookie.sameSite,
     maxAge: 3600000, // 1 hour
   });
-  
+
   next();
 }
 
@@ -163,7 +160,7 @@ export function csrfCookie(req: CSRFRequest, res: Response, next: NextFunction):
 export function csrfTokenEndpoint(req: CSRFRequest, res: Response): void {
   const sessionId = req.sessionID || req.ip;
   const token = getOrCreateToken(sessionId);
-  
+
   res.json({ csrfToken: token });
 }
 

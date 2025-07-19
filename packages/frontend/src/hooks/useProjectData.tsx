@@ -180,7 +180,7 @@ export const useProjectData = (projectId: string | undefined) => {
           try {
             localStorage.setItem('spheroseg_last_failed_id', projectId || '');
             localStorage.setItem('spheroseg_last_failed_time', new Date().toISOString());
-          } catch (e) {
+          } catch (_e) {
             // Ignore storage errors
           }
 
@@ -529,7 +529,7 @@ export const useProjectData = (projectId: string | undefined) => {
       // Store the project ID in localStorage for future reference/debugging
       try {
         localStorage.setItem('spheroseg_last_project_id', cleanedProjectId);
-      } catch (e) {
+      } catch (_e) {
         // Ignore localStorage errors
       }
 

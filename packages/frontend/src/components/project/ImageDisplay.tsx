@@ -252,44 +252,47 @@ const ImageDisplayComponent = ({
   }, [currentStatus, image.id, image.project_id]);
 
   // Listen for custom events (fallback mechanism)
-  const handleImageStatusUpdate = useCallback((event: Event) => {
-    const customEvent = event as CustomEvent<{
-      imageId: string;
-      status: string;
-      forceQueueUpdate?: boolean;
-      resultPath?: string;
-    }>;
-    const { imageId, status, forceQueueUpdate } = customEvent.detail;
+  const handleImageStatusUpdate = useCallback(
+    (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        imageId: string;
+        status: string;
+        forceQueueUpdate?: boolean;
+        resultPath?: string;
+      }>;
+      const { imageId, status, forceQueueUpdate } = customEvent.detail;
 
-    if (imageId === image.id && isMounted.current) {
-      logger.debug(`ImageDisplay: Received custom event status update for image ${imageId}: ${status}`);
+      if (imageId === image.id && isMounted.current) {
+        logger.debug(`ImageDisplay: Received custom event status update for image ${imageId}: ${status}`);
 
-      // Update image status
-      setCurrentStatus(status);
+        // Update image status
+        setCurrentStatus(status);
 
-      // Update the cache to prevent stale data (debounced)
-      if (image.project_id) {
-        debouncedCacheUpdate(image.project_id, imageId, status, customEvent.detail.resultPath);
+        // Update the cache to prevent stale data (debounced)
+        if (image.project_id) {
+          debouncedCacheUpdate(image.project_id, imageId, status, customEvent.detail.resultPath);
+        }
+
+        // If forceQueueUpdate is true or status is 'processing' or 'queued', update the queue indicator
+        if (forceQueueUpdate || status === SEGMENTATION_STATUS.PROCESSING || status === SEGMENTATION_STATUS.QUEUED) {
+          logger.debug(`ImageDisplay: Dispatching queue-status-update for image ${imageId}`);
+
+          // Use timer to ensure the status update is processed first
+          timer.setTimeout(() => {
+            const queueUpdateEvent = new CustomEvent('queue-status-update', {
+              detail: {
+                refresh: true,
+                forceRefresh: true,
+                immediate: status === 'processing',
+              },
+            });
+            window.dispatchEvent(queueUpdateEvent);
+          }, 100);
+        }
       }
-
-      // If forceQueueUpdate is true or status is 'processing' or 'queued', update the queue indicator
-      if (forceQueueUpdate || status === SEGMENTATION_STATUS.PROCESSING || status === SEGMENTATION_STATUS.QUEUED) {
-        logger.debug(`ImageDisplay: Dispatching queue-status-update for image ${imageId}`);
-
-        // Use timer to ensure the status update is processed first
-        timer.setTimeout(() => {
-          const queueUpdateEvent = new CustomEvent('queue-status-update', {
-            detail: {
-              refresh: true,
-              forceRefresh: true,
-              immediate: status === 'processing',
-            },
-          });
-          window.dispatchEvent(queueUpdateEvent);
-        }, 100);
-      }
-    }
-  }, [image.id, image.project_id, isMounted, timer]);
+    },
+    [image.id, image.project_id, isMounted, timer],
+  );
 
   useEventListener('image-status-update', handleImageStatusUpdate);
 

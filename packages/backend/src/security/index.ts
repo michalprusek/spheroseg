@@ -15,22 +15,22 @@ import { dynamicRateLimiter } from '../middleware/rateLimiter';
 export const configureSecurity = (app: Application): void => {
   // Validate security configuration in production
   validateSecurityConfig();
-  
+
   // Apply security headers (helmet and custom headers)
   applySecurityHeaders(app);
   logger.info('Security headers configured');
-  
+
   // Apply CSRF protection
   if (securityConfig.csrf.enabled) {
     app.use(csrfCookie);
     app.use(csrfProtection);
     logger.info('CSRF protection enabled');
   }
-  
+
   // Apply dynamic rate limiting
   app.use(dynamicRateLimiter);
   logger.info('Dynamic rate limiting configured');
-  
+
   // Apply base security middleware using the consolidated security module
   applySecurityMiddleware(app, {
     hsts: !config.isDevelopment,

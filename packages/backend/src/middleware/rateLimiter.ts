@@ -26,11 +26,13 @@ function createRateLimiter(options: {
     standardHeaders: securityConfig.rateLimit.standardHeaders,
     legacyHeaders: securityConfig.rateLimit.legacyHeaders,
     skipSuccessfulRequests: options.skipSuccessfulRequests || false,
-    keyGenerator: options.keyGenerator || ((req: Request) => {
-      // Use user ID if authenticated, otherwise use IP
-      const userId = (req as any).user?.id || (req as any).user?.userId;
-      return userId || req.ip;
-    }),
+    keyGenerator:
+      options.keyGenerator ||
+      ((req: Request) => {
+        // Use user ID if authenticated, otherwise use IP
+        const userId = (req as any).user?.id || (req as any).user?.userId;
+        return userId || req.ip;
+      }),
     skip: options.skip,
     handler: (req: Request, res: Response) => {
       logger.warn('Rate limit exceeded', {
@@ -39,7 +41,7 @@ function createRateLimiter(options: {
         userId: (req as any).user?.id || (req as any).user?.userId,
         method: req.method,
       });
-      
+
       res.status(429).json({
         error: 'Rate limit exceeded',
         message: options.message || 'Too many requests, please try again later',
@@ -86,7 +88,7 @@ export const apiLimiter = createRateLimiter({
   skip: (req: Request) => {
     // Skip rate limiting for health check paths
     const skipPaths = ['/health', '/health/live', '/health/ready', '/metrics'];
-    return skipPaths.some(path => req.path.includes(path));
+    return skipPaths.some((path) => req.path.includes(path));
   },
 });
 
@@ -156,32 +158,32 @@ export function createDynamicLimiter(options: {
 // Apply different rate limiters based on path
 export function dynamicRateLimiter(req: Request, res: Response, next: Function): void {
   const path = req.path.toLowerCase();
-  
+
   // Apply specific limiters based on path patterns
   if (path.includes('/login') || path.includes('/signin') || path.includes('/auth')) {
     return authLimiter(req, res, next);
   }
-  
+
   if (path.includes('/signup') || path.includes('/register')) {
     return signupLimiter(req, res, next);
   }
-  
+
   if (path.includes('/upload') || path.includes('/images')) {
     return uploadLimiter(req, res, next);
   }
-  
+
   if (path.includes('/segment') || path.includes('/process')) {
     return segmentationLimiter(req, res, next);
   }
-  
+
   if (path.includes('/password') || path.includes('/reset')) {
     return passwordResetLimiter(req, res, next);
   }
-  
+
   if (path.includes('/diagnostic')) {
     return diagnosticsLimiter(req, res, next);
   }
-  
+
   // Default to general API limiter
   return apiLimiter(req, res, next);
 }

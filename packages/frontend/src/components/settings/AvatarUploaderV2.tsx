@@ -76,7 +76,7 @@ const AvatarUploaderV2: React.FC<AvatarUploaderProps> = ({
           onAvatarChange(avatarUrl, false);
 
           showSuccess(t('profile.avatarUpdated') || 'Profile picture updated');
-        } catch (error) {
+        } catch (_error) {
           showError(t('profile.avatarUpdateError') || 'Failed to update profile picture');
         }
       }
@@ -121,7 +121,7 @@ const AvatarUploaderV2: React.FC<AvatarUploaderProps> = ({
 
       // Upload the cropped avatar
       await uploadFiles([croppedFile]);
-    } catch (error) {
+    } catch (_error) {
       showError(t('profile.cropError') || 'Failed to process cropped image');
     }
   };
@@ -143,7 +143,7 @@ const AvatarUploaderV2: React.FC<AvatarUploaderProps> = ({
       onAvatarChange('', false);
 
       showSuccess(t('profile.avatarRemoved') || 'Profile picture removed');
-    } catch (error) {
+    } catch (_error) {
       showError(t('profile.avatarRemoveError') || 'Failed to remove profile picture');
     }
   };

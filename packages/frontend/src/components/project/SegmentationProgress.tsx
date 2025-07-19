@@ -117,7 +117,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
               setQueueStatus(normalizedData);
               return;
             }
-          } catch (altGlobalError) {
+          } catch (_altGlobalError) {
             logger.warn(`All queue status endpoints failed.`);
             // Použijeme prázdný status fronty místo mockovaných dat
             setQueueStatus({
@@ -195,7 +195,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           consecutiveEmptyResponses = 0;
           pollInterval = 10000;
         }
-      } catch (error) {
+      } catch (_error) {
         // Increase interval on errors to reduce API spam
         pollInterval = Math.min(pollInterval * 2, maxInterval);
         logger.warn('Queue status polling failed, increasing interval:', pollInterval);
@@ -582,7 +582,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         if (newSocket) {
           try {
             newSocket.disconnect();
-          } catch (error) {
+          } catch (_error) {
             // Ignore WebSocket disconnection errors
           }
         }

@@ -12,12 +12,18 @@ interface ErrorBoundaryProps {
   resetOnPropsChange?: boolean;
   componentName?: string;
   t?: (key: string) => string;
+  level?: 'page' | 'component' | 'app';
+  resetKeys?: Array<string | number>;
+  isolate?: boolean;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  errorId: string;
+  errorCount: number;
+  lastErrorTime: number;
 }
 
 /**
@@ -31,15 +37,24 @@ class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryStat
       hasError: false,
       error: null,
       errorInfo: null,
+      errorId: '',
+      errorCount: 0,
+      lastErrorTime: 0,
     };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    // Generate unique error ID for tracking
+    const errorId = `ERR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     // Update state so the next render will show the fallback UI
     return {
       hasError: true,
       error,
       errorInfo: null,
+      errorId,
+      errorCount: 0,
+      lastErrorTime: Date.now(),
     };
   }
 

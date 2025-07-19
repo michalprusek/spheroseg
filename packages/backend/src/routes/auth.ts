@@ -62,14 +62,14 @@ const router: Router = express.Router();
 router.get('/csrf-token', (req: express.Request, res: Response) => {
   // The CSRF middleware adds a csrfToken function to the request
   const csrfToken = (req as any).csrfToken ? (req as any).csrfToken() : null;
-  
+
   if (!csrfToken) {
     return res.status(500).json({
       error: 'CSRF token generation failed',
       code: 'CSRF_TOKEN_ERROR',
     });
   }
-  
+
   res.json({ csrfToken });
 });
 
