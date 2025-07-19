@@ -153,7 +153,7 @@ describe('Performance Optimizations Integration Tests', () => {
     });
 
     it('should handle critical memory pressure', () => {
-      const spy = jest.spyOn(performanceMonitor as any, 'emergencyCleanup');
+      const spy = jest.spyOn(performanceMonitor as unknown, 'emergencyCleanup');
 
       // Simulate critical memory pressure
       performanceMonitor['handleCriticalMemoryPressure'](96, process.memoryUsage());

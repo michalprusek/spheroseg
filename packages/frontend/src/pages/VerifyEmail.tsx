@@ -26,7 +26,7 @@ const VerifyEmail = () => {
       try {
         await verifyEmail(token);
         setStatus('success');
-      } catch (error: any) {
+      } catch (error: unknown) {
         setStatus('error');
         setErrorMessage(error.response?.data?.message || t('auth.verificationFailed') || 'Email verification failed');
       }

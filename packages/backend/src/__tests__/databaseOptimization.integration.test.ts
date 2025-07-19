@@ -406,7 +406,7 @@ describe('Database Optimization Integration', () => {
         query: jest.fn().mockRejectedValue(new Error('Connection failed')),
       };
 
-      const queryService = new OptimizedQueryService(failingPool as any);
+      const queryService = new OptimizedQueryService(failingPool as unknown);
 
       await expect(queryService.query('SELECT 1')).rejects.toThrow('Connection failed');
 

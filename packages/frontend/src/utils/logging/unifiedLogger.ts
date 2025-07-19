@@ -405,15 +405,15 @@ export function overrideConsole(): void {
   };
 
   // Store reference to restore later if needed
-  (window as any).__originalConsole = originalConsole;
+  (window as Window & { __originalConsole?: unknown }).__originalConsole = originalConsole;
 }
 
 /**
  * Restore original console methods
  */
 export function restoreConsole(): void {
-  if (typeof window !== 'undefined' && (window as any).__originalConsole) {
-    const original = (window as any).__originalConsole;
+  if (typeof window !== 'undefined' && (window as unknown).__originalConsole) {
+    const original = (window as Window & { __originalConsole?: unknown }).__originalConsole;
     console.log = original.log;
     console.debug = original.debug;
     console.info = original.info;

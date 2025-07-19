@@ -605,7 +605,7 @@ vi.mock('../workers/polygonWorker.ts', () => ({
 
 // Mock Worker constructor globally
 import { MockWorker } from './__mocks__/polygonWorker';
-global.Worker = MockWorker as any;
+global.Worker = MockWorker as unknown;
 
 // Mock LanguageContext with proper provider
 const mockLanguageContext = React.createContext({
@@ -689,7 +689,7 @@ if (typeof window !== 'undefined') {
 
 // Mock window.indexedDB
 if (typeof window !== 'undefined' && !window.indexedDB) {
-  (window as any).indexedDB = {
+  (window as Window & { indexedDB?: unknown }).indexedDB = {
     open: vi.fn().mockReturnValue({
       onsuccess: null,
       onerror: null,

@@ -71,7 +71,7 @@ const ENDPOINT_OPERATION_MAP: Record<string, ProtectedOperation> = {
  */
 function getPermissionMessage(operation: ProtectedOperation): string {
   // Try to get the i18n instance if available
-  const i18n = (window as any).i18n;
+  const i18n = (window as Window & { i18n?: unknown }).i18n;
   
   if (i18n && i18n.t) {
     // Map operations to translation keys

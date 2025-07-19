@@ -293,18 +293,18 @@ export class MockFileSystem {
     // Check if file exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, open '${filePath}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'open';
-      (err as any).path = filePath;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'open';
+      (err as unknown).path = filePath;
       return callback(err, Buffer.from(''));
     }
 
     // Check if path is a directory
     if (this.fs[normalizedPath].type === 'directory') {
       const err = new Error(`EISDIR: illegal operation on a directory, read '${filePath}'`);
-      (err as any).code = 'EISDIR';
-      (err as any).syscall = 'read';
-      (err as any).path = filePath;
+      (err as unknown).code = 'EISDIR';
+      (err as unknown).syscall = 'read';
+      (err as unknown).path = filePath;
       return callback(err, Buffer.from(''));
     }
 
@@ -334,18 +334,18 @@ export class MockFileSystem {
     // Check if file exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, open '${filePath}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'open';
-      (err as any).path = filePath;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'open';
+      (err as unknown).path = filePath;
       throw err;
     }
 
     // Check if path is a directory
     if (this.fs[normalizedPath].type === 'directory') {
       const err = new Error(`EISDIR: illegal operation on a directory, read '${filePath}'`);
-      (err as any).code = 'EISDIR';
-      (err as any).syscall = 'read';
-      (err as any).path = filePath;
+      (err as unknown).code = 'EISDIR';
+      (err as unknown).syscall = 'read';
+      (err as unknown).path = filePath;
       throw err;
     }
 
@@ -478,9 +478,9 @@ export class MockFileSystem {
     // Check if path exists and is not a directory when non-recursive
     if (this.exists(normalizedPath) && !opts.recursive) {
       const err = new Error(`EEXIST: file already exists, mkdir '${dirPath}'`);
-      (err as any).code = 'EEXIST';
-      (err as any).syscall = 'mkdir';
-      (err as any).path = dirPath;
+      (err as unknown).code = 'EEXIST';
+      (err as unknown).syscall = 'mkdir';
+      (err as unknown).path = dirPath;
       return callback(err);
     }
 
@@ -492,9 +492,9 @@ export class MockFileSystem {
         const parentDir = this.dirname(normalizedPath);
         if (!this.exists(parentDir)) {
           const err = new Error(`ENOENT: no such file or directory, mkdir '${dirPath}'`);
-          (err as any).code = 'ENOENT';
-          (err as any).syscall = 'mkdir';
-          (err as any).path = dirPath;
+          (err as unknown).code = 'ENOENT';
+          (err as unknown).syscall = 'mkdir';
+          (err as unknown).path = dirPath;
           return callback(err);
         }
 
@@ -531,9 +531,9 @@ export class MockFileSystem {
     // Check if path exists and is not a directory when non-recursive
     if (this.exists(normalizedPath) && !opts.recursive) {
       const err = new Error(`EEXIST: file already exists, mkdir '${dirPath}'`);
-      (err as any).code = 'EEXIST';
-      (err as any).syscall = 'mkdir';
-      (err as any).path = dirPath;
+      (err as unknown).code = 'EEXIST';
+      (err as unknown).syscall = 'mkdir';
+      (err as unknown).path = dirPath;
       throw err;
     }
 
@@ -544,9 +544,9 @@ export class MockFileSystem {
       const parentDir = this.dirname(normalizedPath);
       if (!this.exists(parentDir)) {
         const err = new Error(`ENOENT: no such file or directory, mkdir '${dirPath}'`);
-        (err as any).code = 'ENOENT';
-        (err as any).syscall = 'mkdir';
-        (err as any).path = dirPath;
+        (err as unknown).code = 'ENOENT';
+        (err as unknown).syscall = 'mkdir';
+        (err as unknown).path = dirPath;
         throw err;
       }
 
@@ -595,18 +595,18 @@ export class MockFileSystem {
     // Check if directory exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, scandir '${dirPath}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'scandir';
-      (err as any).path = dirPath;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'scandir';
+      (err as unknown).path = dirPath;
       return callback(err, []);
     }
 
     // Check if path is a directory
     if (this.fs[normalizedPath].type !== 'directory') {
       const err = new Error(`ENOTDIR: not a directory, scandir '${dirPath}'`);
-      (err as any).code = 'ENOTDIR';
-      (err as any).syscall = 'scandir';
-      (err as any).path = dirPath;
+      (err as unknown).code = 'ENOTDIR';
+      (err as unknown).syscall = 'scandir';
+      (err as unknown).path = dirPath;
       return callback(err, []);
     }
 
@@ -665,18 +665,18 @@ export class MockFileSystem {
     // Check if directory exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, scandir '${dirPath}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'scandir';
-      (err as any).path = dirPath;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'scandir';
+      (err as unknown).path = dirPath;
       throw err;
     }
 
     // Check if path is a directory
     if (this.fs[normalizedPath].type !== 'directory') {
       const err = new Error(`ENOTDIR: not a directory, scandir '${dirPath}'`);
-      (err as any).code = 'ENOTDIR';
-      (err as any).syscall = 'scandir';
-      (err as any).path = dirPath;
+      (err as unknown).code = 'ENOTDIR';
+      (err as unknown).syscall = 'scandir';
+      (err as unknown).path = dirPath;
       throw err;
     }
 
@@ -747,9 +747,9 @@ export class MockFileSystem {
     // Check if path exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, stat '${path}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'stat';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'stat';
+      (err as unknown).path = path;
       return callback(err, {} as fs.Stats);
     }
 
@@ -768,9 +768,9 @@ export class MockFileSystem {
     // Check if path exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, stat '${path}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'stat';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'stat';
+      (err as unknown).path = path;
       throw err;
     }
 
@@ -799,18 +799,18 @@ export class MockFileSystem {
     // Check if path exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, unlink '${path}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'unlink';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'unlink';
+      (err as unknown).path = path;
       return callback(err);
     }
 
     // Check if path is a directory
     if (this.fs[normalizedPath].type === 'directory') {
       const err = new Error(`EISDIR: illegal operation on a directory, unlink '${path}'`);
-      (err as any).code = 'EISDIR';
-      (err as any).syscall = 'unlink';
-      (err as any).path = path;
+      (err as unknown).code = 'EISDIR';
+      (err as unknown).syscall = 'unlink';
+      (err as unknown).path = path;
       return callback(err);
     }
 
@@ -829,18 +829,18 @@ export class MockFileSystem {
     // Check if path exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, unlink '${path}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'unlink';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'unlink';
+      (err as unknown).path = path;
       throw err;
     }
 
     // Check if path is a directory
     if (this.fs[normalizedPath].type === 'directory') {
       const err = new Error(`EISDIR: illegal operation on a directory, unlink '${path}'`);
-      (err as any).code = 'EISDIR';
-      (err as any).syscall = 'unlink';
-      (err as any).path = path;
+      (err as unknown).code = 'EISDIR';
+      (err as unknown).syscall = 'unlink';
+      (err as unknown).path = path;
       throw err;
     }
 
@@ -877,18 +877,18 @@ export class MockFileSystem {
     // Check if path exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, rmdir '${path}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'rmdir';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'rmdir';
+      (err as unknown).path = path;
       return callback(err);
     }
 
     // Check if path is a directory
     if (this.fs[normalizedPath].type !== 'directory') {
       const err = new Error(`ENOTDIR: not a directory, rmdir '${path}'`);
-      (err as any).code = 'ENOTDIR';
-      (err as any).syscall = 'rmdir';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOTDIR';
+      (err as unknown).syscall = 'rmdir';
+      (err as unknown).path = path;
       return callback(err);
     }
 
@@ -901,9 +901,9 @@ export class MockFileSystem {
 
     if (hasChildren && (!options || !options.recursive)) {
       const err = new Error(`ENOTEMPTY: directory not empty, rmdir '${path}'`);
-      (err as any).code = 'ENOTEMPTY';
-      (err as any).syscall = 'rmdir';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOTEMPTY';
+      (err as unknown).syscall = 'rmdir';
+      (err as unknown).path = path;
       return callback(err);
     }
 
@@ -932,18 +932,18 @@ export class MockFileSystem {
     // Check if path exists
     if (!this.exists(normalizedPath)) {
       const err = new Error(`ENOENT: no such file or directory, rmdir '${path}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'rmdir';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'rmdir';
+      (err as unknown).path = path;
       throw err;
     }
 
     // Check if path is a directory
     if (this.fs[normalizedPath].type !== 'directory') {
       const err = new Error(`ENOTDIR: not a directory, rmdir '${path}'`);
-      (err as any).code = 'ENOTDIR';
-      (err as any).syscall = 'rmdir';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOTDIR';
+      (err as unknown).syscall = 'rmdir';
+      (err as unknown).path = path;
       throw err;
     }
 
@@ -956,9 +956,9 @@ export class MockFileSystem {
 
     if (hasChildren && (!options || !options.recursive)) {
       const err = new Error(`ENOTEMPTY: directory not empty, rmdir '${path}'`);
-      (err as any).code = 'ENOTEMPTY';
-      (err as any).syscall = 'rmdir';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOTEMPTY';
+      (err as unknown).syscall = 'rmdir';
+      (err as unknown).path = path;
       throw err;
     }
 
@@ -1002,10 +1002,10 @@ export class MockFileSystem {
       const err = new Error(
         `ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`
       );
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'rename';
-      (err as any).path = oldPath;
-      (err as any).dest = newPath;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'rename';
+      (err as unknown).path = oldPath;
+      (err as unknown).dest = newPath;
       return callback(err);
     }
 
@@ -1015,10 +1015,10 @@ export class MockFileSystem {
       const err = new Error(
         `ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`
       );
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'rename';
-      (err as any).path = oldPath;
-      (err as any).dest = newPath;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'rename';
+      (err as unknown).path = oldPath;
+      (err as unknown).dest = newPath;
       return callback(err);
     }
 
@@ -1033,10 +1033,10 @@ export class MockFileSystem {
         const err = new Error(
           `ENOTEMPTY: directory not empty, rename '${oldPath}' -> '${newPath}'`
         );
-        (err as any).code = 'ENOTEMPTY';
-        (err as any).syscall = 'rename';
-        (err as any).path = oldPath;
-        (err as any).dest = newPath;
+        (err as unknown).code = 'ENOTEMPTY';
+        (err as unknown).syscall = 'rename';
+        (err as unknown).path = oldPath;
+        (err as unknown).dest = newPath;
         return callback(err);
       }
     }
@@ -1073,10 +1073,10 @@ export class MockFileSystem {
       const err = new Error(
         `ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`
       );
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'rename';
-      (err as any).path = oldPath;
-      (err as any).dest = newPath;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'rename';
+      (err as unknown).path = oldPath;
+      (err as unknown).dest = newPath;
       throw err;
     }
 
@@ -1086,10 +1086,10 @@ export class MockFileSystem {
       const err = new Error(
         `ENOENT: no such file or directory, rename '${oldPath}' -> '${newPath}'`
       );
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'rename';
-      (err as any).path = oldPath;
-      (err as any).dest = newPath;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'rename';
+      (err as unknown).path = oldPath;
+      (err as unknown).dest = newPath;
       throw err;
     }
 
@@ -1104,10 +1104,10 @@ export class MockFileSystem {
         const err = new Error(
           `ENOTEMPTY: directory not empty, rename '${oldPath}' -> '${newPath}'`
         );
-        (err as any).code = 'ENOTEMPTY';
-        (err as any).syscall = 'rename';
-        (err as any).path = oldPath;
-        (err as any).dest = newPath;
+        (err as unknown).code = 'ENOTEMPTY';
+        (err as unknown).syscall = 'rename';
+        (err as unknown).path = oldPath;
+        (err as unknown).dest = newPath;
         throw err;
       }
     }
@@ -1178,9 +1178,9 @@ export class MockFileSystem {
     if (!this.exists(normalizedPath)) {
       process.nextTick(() => {
         const err = new Error(`ENOENT: no such file or directory, open '${path}'`);
-        (err as any).code = 'ENOENT';
-        (err as any).syscall = 'open';
-        (err as any).path = path;
+        (err as unknown).code = 'ENOENT';
+        (err as unknown).syscall = 'open';
+        (err as unknown).path = path;
         stream.emit('error', err);
       });
       return stream;
@@ -1190,9 +1190,9 @@ export class MockFileSystem {
     if (this.fs[normalizedPath].type === 'directory') {
       process.nextTick(() => {
         const err = new Error(`EISDIR: illegal operation on a directory, read '${path}'`);
-        (err as any).code = 'EISDIR';
-        (err as any).syscall = 'read';
-        (err as any).path = path;
+        (err as unknown).code = 'EISDIR';
+        (err as unknown).syscall = 'read';
+        (err as unknown).path = path;
         stream.emit('error', err);
       });
       return stream;
@@ -1240,9 +1240,9 @@ export class MockFileSystem {
     // Ensure parent directory exists
     if (!this.exists(parentDir)) {
       const err = new Error(`ENOENT: no such file or directory, open '${path}'`);
-      (err as any).code = 'ENOENT';
-      (err as any).syscall = 'open';
-      (err as any).path = path;
+      (err as unknown).code = 'ENOENT';
+      (err as unknown).syscall = 'open';
+      (err as unknown).path = path;
       throw err;
     }
 
@@ -1251,20 +1251,20 @@ export class MockFileSystem {
     const stream = new EventEmitter() as fs.WriteStream;
 
     // Add required properties
-    (stream as any).path = path;
-    (stream as any).bytesWritten = 0;
+    (stream as unknown).path = path;
+    (stream as unknown).bytesWritten = 0;
 
     // Add required methods
-    (stream as any).write = (chunk: Buffer | string) => {
+    (stream as unknown).write = (chunk: Buffer | string) => {
       const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
       chunks.push(buffer);
-      (stream as any).bytesWritten += buffer.length;
+      (stream as unknown).bytesWritten += buffer.length;
       return true;
     };
 
-    (stream as any).end = (chunk?: Buffer | string) => {
+    (stream as unknown).end = (chunk?: Buffer | string) => {
       if (chunk) {
-        (stream as any).write(chunk);
+        (stream as unknown).write(chunk);
       }
 
       // Combine all chunks and write to file

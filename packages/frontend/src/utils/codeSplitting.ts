@@ -295,7 +295,7 @@ export function monitorChunkLoading(): void {
       list.getEntries().forEach((entry) => {
         if (entry.entryType === 'resource' && entry.name.includes('.chunk.js')) {
           const loadTime = entry.duration;
-          const size = (entry as any).transferSize || 0;
+          const size = (entry as unknown).transferSize || 0;
 
           // Log slow chunk loads
           if (loadTime > 3000) {

@@ -101,7 +101,7 @@ describe('Circuit Breaker Pattern', () => {
       const startTime = Date.now();
       try {
         await mlServiceBreaker.fire({ imageId: 'test-6' });
-      } catch (error: any) {
+      } catch (error: unknown) {
         const duration = Date.now() - startTime;
         expect(duration).toBeLessThan(50); // Should fail fast
         expect(error.message).toContain('Breaker is OPEN');
@@ -192,7 +192,7 @@ describe('Circuit Breaker Pattern', () => {
       const startTime = Date.now();
       try {
         await databaseBreaker.fire('SELECT * FROM large_table');
-      } catch (error: any) {
+      } catch (error: unknown) {
         const duration = Date.now() - startTime;
         expect(duration).toBeLessThan(1100); // Should timeout at 1000ms
         expect(error.message).toContain('timeout');
@@ -253,7 +253,7 @@ describe('Circuit Breaker Pattern', () => {
       for (let i = 0; i < 7; i++) {
         try {
           const result = await cdnBreaker.fire(`https://cdn.example.com/asset${i}.js`);
-          results.push({ success: true, latency: (result as any).latency });
+          results.push({ success: true, latency: (result as unknown).latency });
         } catch (error) {
           results.push({ success: false, error });
         }
@@ -437,7 +437,7 @@ describe('Circuit Breaker Pattern', () => {
 
       // Verify queue positions
       queuedResults.forEach((result, index) => {
-        expect((result as any).queuePosition).toBe(index + 1);
+        expect((result as unknown).queuePosition).toBe(index + 1);
       });
     });
   });

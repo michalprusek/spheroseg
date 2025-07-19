@@ -230,7 +230,7 @@ router.post('/alerts/:alertId/resolve', requireAdmin, (req: Request, res: Respon
     logger.info('Alert resolved', {
       alertId,
       resolution,
-      resolvedBy: (req as any).user?.userId,
+      resolvedBy: (req as unknown).user?.userId,
     });
 
     res.json({

@@ -130,8 +130,8 @@ jest.mock('multer', () => {
   // The main export of 'multer' is a function that returns the instance
   const multerFn = () => multerInstance;
   // Assign static methods to the main function object
-  (multerFn as any).diskStorage = multerInstance.diskStorage;
-  (multerFn as any).memoryStorage = multerInstance.memoryStorage;
+  (multerFn as unknown).diskStorage = multerInstance.diskStorage;
+  (multerFn as unknown).memoryStorage = multerInstance.memoryStorage;
 
   return multerFn;
 });

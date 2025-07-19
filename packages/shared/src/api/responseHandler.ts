@@ -172,7 +172,7 @@ export class UnifiedResponseHandler {
       typeof error === 'object' &&
       error !== null &&
       'status' in error &&
-      typeof (error as any).status === 'number'
+      typeof (error as unknown).status === 'number'
     );
   }
 
@@ -238,7 +238,7 @@ export class UnifiedResponseHandler {
     let validationErrors: ValidationError[] | undefined;
 
     if (error.response?.data && typeof error.response.data === 'object') {
-      const responseData = error.response.data as any;
+      const responseData = error.response.data as unknown;
       if (responseData.errors && Array.isArray(responseData.errors)) {
         validationErrors = responseData.errors;
       }

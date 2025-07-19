@@ -501,7 +501,7 @@ describe('segmentationQueueService', () => {
       try {
         await executeSegmentationTask(task);
         fail('Promise should have been rejected');
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Assert
         expect(error.message).toContain('Image file not found');
         expect(pool.query).toHaveBeenCalledWith(

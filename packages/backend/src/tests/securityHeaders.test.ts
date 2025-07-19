@@ -95,7 +95,7 @@ describe('Security Headers', () => {
     await agent.get('/api/status');
 
     // Extract CSRF token from cookie
-    const cookies = (agent as any).jar.getCookies('http://localhost');
+    const cookies = (agent as unknown).jar.getCookies('http://localhost');
     const csrfCookie = cookies.find((cookie: any) => cookie.key === 'XSRF-TOKEN');
 
     if (!csrfCookie) {

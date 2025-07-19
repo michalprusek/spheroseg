@@ -130,7 +130,7 @@ export const validators = {
         throw new Error('File is required');
       }
 
-      const file = req.file || (req.files as any)[field];
+      const file = req.file || (req.files as unknown)[field];
 
       if (options.mimeTypes && !options.mimeTypes.includes(file.mimetype)) {
         throw new Error(`Invalid file type. Allowed: ${options.mimeTypes.join(', ')}`);

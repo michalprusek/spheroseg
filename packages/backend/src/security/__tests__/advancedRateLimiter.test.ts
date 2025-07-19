@@ -208,7 +208,7 @@ describe('HierarchicalRateLimiter', () => {
       });
 
       app.use((req, res, next) => {
-        (req as any).user = { id: 'user-123' };
+        (req as unknown).user = { id: 'user-123' };
         next();
       });
 

@@ -168,7 +168,7 @@ const ProjectDetail = () => {
           socket.emit('join', `project-${cleanedId}`);
           socket.emit('join', `project:${cleanedId}`);
           logger.info(`Joined WebSocket room for project ${cleanedId} in multiple formats`);
-        } catch (joinErr: any) {
+        } catch (joinErr: unknown) {
           // Cast joinErr to any
           logger.error('Failed to join project room:', joinErr);
         }
@@ -226,7 +226,7 @@ const ProjectDetail = () => {
         try {
           socket.emit('leave_project', { projectId: cleanedId });
           logger.info(`Left WebSocket room for project ${cleanedId}`);
-        } catch (leaveErr: any) {
+        } catch (leaveErr: unknown) {
           // Cast leaveErr to any
           logger.error('Error leaving project room:', leaveErr);
         }
@@ -238,7 +238,7 @@ const ProjectDetail = () => {
 
         logger.info('Cleaned up WebSocket event listeners');
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Cast error to any
       logger.error('Error setting up WebSocket:', error);
       toast.error('Failed to connect to real-time updates. Some features may be limited.');
@@ -516,7 +516,7 @@ const ProjectDetail = () => {
           if (batches.length > 1) {
             toast.success(t('project.segmentation.batchQueued', { current: i + 1, total: batches.length }));
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error(`Batch ${i + 1}: Failed to trigger segmentation:`, error);
           failCount += batch.length;
 
@@ -568,14 +568,14 @@ const ProjectDetail = () => {
             try {
               await apiClient.delete(`/api/projects/${id}/images/${imageId}`);
               return { success: true, imageId };
-            } catch (newEndpointErr: any) {
+            } catch (newEndpointErr: unknown) {
               // Cast error to any
               logger.warn(`Failed to delete with new endpoint: ${imageId}`, newEndpointErr);
 
               try {
                 await apiClient.delete(`/api/images/${imageId}`);
                 return { success: true, imageId };
-              } catch (legacyErr: any) {
+              } catch (legacyErr: unknown) {
                 // Cast error to any
                 logger.error(`Failed to delete with both endpoints: ${imageId}`, legacyErr);
                 return { success: false, imageId, error: legacyErr };
@@ -585,8 +585,8 @@ const ProjectDetail = () => {
         );
 
         const successfulDeletions = results
-          .filter((r) => r.status === 'fulfilled' && (r.value as any).success)
-          .map((r) => (r.value as any).imageId);
+          .filter((r) => r.status === 'fulfilled' && (r.value as unknown).success)
+          .map((r) => (r.value as unknown).imageId);
         const failCount = results.length - successfulDeletions.length;
 
         if (successfulDeletions.length > 0) {
@@ -621,7 +621,7 @@ const ProjectDetail = () => {
           toast.error(t('project.detail.deleteFailed', { count: failCount }));
           logger.error(
             'Failed deletions:',
-            results.filter((r) => r.status !== 'fulfilled' || !(r.value as any).success),
+            results.filter((r) => r.status !== 'fulfilled' || !(r.value as unknown).success),
           );
         }
 
@@ -769,7 +769,7 @@ const ProjectDetail = () => {
             if (batches.length > 1) {
               toast.success(t('project.segmentation.batchQueued', { current: i + 1, total: batches.length }));
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             logger.warn(`Batch ${i + 1}: Failed to trigger segmentation:`, error);
             failCount += batch.length;
 

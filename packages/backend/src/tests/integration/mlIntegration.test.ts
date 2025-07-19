@@ -24,7 +24,7 @@ jest.mock('fs', () => {
 
 import config from '../../config';
 import segmentationQueueService from '../../services/segmentationQueueService';
-const _triggerSegmentationTask = (segmentationQueueService as any).triggerSegmentationTask || segmentationQueueService.addToQueue;
+const _triggerSegmentationTask = (segmentationQueueService as unknown).triggerSegmentationTask || segmentationQueueService.addToQueue;
 
 // Mock necessary modules
 jest.mock('../../db');
@@ -193,7 +193,7 @@ describe('ML Integration Tests', () => {
   // Test that segmentation service can find and use ML scripts
   it('should configure segmentation queue with ML paths', async () => {
     // Setup segmentation queue
-    const result = await (segmentationQueueService as any).setupQueue?.() || true;
+    const result = await (segmentationQueueService as unknown).setupQueue?.() || true;
 
     // This test might be skipped if the ML environment is not set up
     if (result === false) {
@@ -386,7 +386,7 @@ except ImportError as e:
               expect(resultJson.polygons).toBeDefined();
               console.log(`Segmentation produced ${resultJson.polygons.length} polygons`);
               resolve();
-            } catch (error: any) {
+            } catch (error: unknown) {
               reject(new Error(`Error parsing result JSON: ${error.message}`));
             }
           } else {

@@ -25,7 +25,7 @@ export const errorHandleri18n: ErrorRequestHandler = (
     method: req.method,
     body: req.body,
     query: req.query,
-    user: (req as any).user?.id,
+    user: (req as unknown).user?.id,
   });
 
   // Handle specific error types with i18n

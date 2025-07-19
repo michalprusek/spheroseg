@@ -404,7 +404,7 @@ export class SecurityManager {
    * Require admin middleware
    */
   private requireAdmin(req: Request, res: Response, next: NextFunction): void {
-    const user = (req as any).user;
+    const user = (req as unknown).user;
 
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });

@@ -111,7 +111,7 @@ const CDNImage: React.FC<CDNImageProps> = ({
         document.head.removeChild(link);
       };
     }
-  }, [priority, optimizedSrc, srcSet, sizes]);
+  }, [priority, src, optimizedSrc, srcSet, sizes]);
 
   // Update current source when in view
   useEffect(() => {

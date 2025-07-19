@@ -137,7 +137,7 @@ export async function query(
     }
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If read replica fails, fallback to master
     if (isReadQuery && replicasEnabled && error.code === 'ECONNREFUSED') {
       logger.warn('Read replica unavailable, falling back to master');

@@ -217,9 +217,9 @@ class PerformanceMetricsService {
     // Add memory usage if available
     if ('memory' in performance) {
       summary.memoryUsage = {
-        usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
-        totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
-        jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit,
+        usedJSHeapSize: (performance as unknown).memory.usedJSHeapSize,
+        totalJSHeapSize: (performance as unknown).memory.totalJSHeapSize,
+        jsHeapSizeLimit: (performance as unknown).memory.jsHeapSizeLimit,
       };
     }
 

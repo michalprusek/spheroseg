@@ -71,7 +71,7 @@ uploadClient.interceptors.response.use(
 
     // Handle authentication errors
     if (status === 401) {
-      const errorMessage = (error.response?.data as any)?.message?.toLowerCase() || '';
+      const errorMessage = (error.response?.data as unknown)?.message?.toLowerCase() || '';
 
       logger.warn('Upload: Unauthorized access detected', {
         url,

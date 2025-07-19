@@ -211,7 +211,7 @@ describe('useExportFunctions', () => {
     const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
 
     // Mock XLSX utils to throw an error
-    (utils.json_to_sheet as any).mockImplementationOnce(() => {
+    (utils.json_to_sheet as unknown).mockImplementationOnce(() => {
       throw new Error('XLSX export error');
     });
 
@@ -234,7 +234,7 @@ describe('useExportFunctions', () => {
 
     // Check if saveAs was called with a Blob
     expect(saveAs).toHaveBeenCalled();
-    const saveAsArgs = (saveAs as any).mock.calls[0];
+    const saveAsArgs = (saveAs as unknown).mock.calls[0];
     expect(saveAsArgs[0]).toBeInstanceOf(Blob);
     expect(typeof saveAsArgs[1]).toBe('string');
     expect(saveAsArgs[1]).toContain('Test Project');
@@ -245,7 +245,7 @@ describe('useExportFunctions', () => {
     const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
 
     // Mock JSZip to throw an error
-    (JSZip as any).mockImplementationOnce(() => {
+    (JSZip as unknown).mockImplementationOnce(() => {
       throw new Error('ZIP creation error');
     });
 

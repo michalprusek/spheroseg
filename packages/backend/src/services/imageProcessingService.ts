@@ -196,7 +196,7 @@ export async function createThumbnail(
     // Vytvoření náhledu
     await sharp(processedSourcePath)
       .resize(opts.width, opts.height, {
-        fit: opts.fit as any,
+        fit: opts.fit as unknown,
         background: opts.background,
         withoutEnlargement: opts.withoutEnlargement,
       })

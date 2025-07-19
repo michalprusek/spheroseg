@@ -32,7 +32,7 @@ describe('ImageUploader Component', () => {
 
   beforeEach(() => {
     // Mock API responses
-    (apiClient.get as any).mockResolvedValue({
+    (apiClient.get as unknown).mockResolvedValue({
       data: [
         {
           id: 'test-project-id',
@@ -42,7 +42,7 @@ describe('ImageUploader Component', () => {
       ],
     });
 
-    (apiClient.post as any).mockResolvedValue({
+    (apiClient.post as unknown).mockResolvedValue({
       data: [
         {
           id: 'test-image-id',

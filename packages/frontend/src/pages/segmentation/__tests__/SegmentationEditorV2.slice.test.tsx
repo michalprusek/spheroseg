@@ -86,7 +86,7 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock environment variable
-    (import.meta as any).env = {
+    (import.meta as unknown).env = {
       VITE_SLICE_ACTION_DELAY: undefined, // Use default
     };
   });
@@ -125,7 +125,7 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
 
   it('should use custom delay from environment variable', async () => {
     // Set custom delay
-    (import.meta as any).env = {
+    (import.meta as unknown).env = {
       VITE_SLICE_ACTION_DELAY: '100',
     };
 

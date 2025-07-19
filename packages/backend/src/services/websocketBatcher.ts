@@ -328,7 +328,7 @@ export class BatchedMessageHandler {
       if (!handlers) continue;
 
       // Call handlers for each message
-      for (const message of messages as any[]) {
+      for (const message of messages as unknown[]) {
         for (const handler of handlers) {
           try {
             handler(message.data);

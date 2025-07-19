@@ -162,7 +162,7 @@ describe('Toast Error Handling Integration', () => {
 
   it('handles API errors with try/catch pattern', async () => {
     // Mock API to throw error
-    (apiClient.get as any).mockRejectedValueOnce(new Error('Network error'));
+    (apiClient.get as unknown).mockRejectedValueOnce(new Error('Network error'));
 
     render(<ApiComponentWithTryCatch />);
 
@@ -180,7 +180,7 @@ describe('Toast Error Handling Integration', () => {
 
   it('handles API errors with async error handler pattern', async () => {
     // Mock API to throw error
-    (apiClient.post as any).mockRejectedValueOnce(new Error('Validation error'));
+    (apiClient.post as unknown).mockRejectedValueOnce(new Error('Validation error'));
 
     render(<ApiComponentWithAsyncHandler />);
 
@@ -200,7 +200,7 @@ describe('Toast Error Handling Integration', () => {
   it('handles successful responses with async error handler', async () => {
     // Mock API to return success
     const mockData = { id: 1, status: 'success' };
-    (apiClient.post as any).mockResolvedValueOnce({ data: mockData });
+    (apiClient.post as unknown).mockResolvedValueOnce({ data: mockData });
 
     render(<ApiComponentWithAsyncHandler />);
 
@@ -220,7 +220,7 @@ describe('Toast Error Handling Integration', () => {
 
   it('shows promise toast for API calls', async () => {
     // Mock API for promise toast
-    (apiClient.get as any).mockResolvedValueOnce({ data: { success: true } });
+    (apiClient.get as unknown).mockResolvedValueOnce({ data: { success: true } });
 
     render(<PromiseToastComponent />);
 
@@ -232,11 +232,11 @@ describe('Toast Error Handling Integration', () => {
     expect(toast.promise).toHaveBeenCalled();
 
     // Extract the promise from the call
-    const promiseArg = (toast.promise as any).mock.calls[0][0];
+    const promiseArg = (toast.promise as unknown).mock.calls[0][0];
     expect(promiseArg).toBeInstanceOf(Promise);
 
     // Extract the loading/success/error messages
-    const toastConfig = (toast.promise as any).mock.calls[0][1];
+    const toastConfig = (toast.promise as unknown).mock.calls[0][1];
     expect(toastConfig.loading).toBe('Loading data...');
     expect(toastConfig.success).toBe('Data loaded successfully');
     expect(toastConfig.error).toBe('Failed to load data');

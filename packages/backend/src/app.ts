@@ -30,7 +30,7 @@ export const createApp = (): Application => {
       limit: '10mb',
       verify: (req: express.Request, res: express.Response, buf: Buffer) => {
         // Store raw body for debugging
-        (req as any).rawBody = buf;
+        (req as unknown).rawBody = buf;
       },
     })
   );

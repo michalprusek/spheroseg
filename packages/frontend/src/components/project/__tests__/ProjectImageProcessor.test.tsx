@@ -153,7 +153,7 @@ describe('ProjectImageProcessor Component', () => {
 
   it('triggers segmentation when button is clicked', async () => {
     // Mock successful API response
-    (apiClient.post as any).mockResolvedValueOnce({});
+    (apiClient.post as unknown).mockResolvedValueOnce({});
 
     render(
       <ProjectImageProcessor
@@ -180,7 +180,7 @@ describe('ProjectImageProcessor Component', () => {
   it('handles API errors correctly', async () => {
     // Mock API error
     const errorMessage = 'API error occurred';
-    (apiClient.post as any).mockRejectedValueOnce(new Error(errorMessage));
+    (apiClient.post as unknown).mockRejectedValueOnce(new Error(errorMessage));
 
     render(
       <ProjectImageProcessor

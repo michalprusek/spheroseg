@@ -18,7 +18,7 @@ const INVALID_FORMAT_ID = 'invalid-format';
 
 // Simple auth middleware mock that adds a test user to the request
 const mockAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  (req as any).user = {
+  (req as unknown).user = {
     userId: 'test-user-id',
     email: 'test@example.com',
   };
@@ -101,7 +101,7 @@ jest.mock('../utils/logger', () => ({
 
 // Project deletion route
 router.delete('/:id', mockAuthMiddleware, mockValidate(), async (req: Request, res: Response) => {
-  const userId = (req as any).user?.userId;
+  const userId = (req as unknown).user?.userId;
   const projectId = req.params.id;
 
   try {

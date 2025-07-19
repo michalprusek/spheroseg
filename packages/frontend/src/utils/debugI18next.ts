@@ -3,7 +3,7 @@ export function debugI18next() {
   console.log('=== i18next Deep Debug ===');
 
   // Check if i18next exists
-  const i18n = (window as any).i18next;
+  const i18n = (window as unknown).i18next;
   if (!i18n) {
     console.error('i18next not found on window!');
     return;
@@ -68,7 +68,7 @@ export function debugI18next() {
 
 // Auto-run after delay
 if (typeof window !== 'undefined') {
-  (window as any).debugI18next = debugI18next;
+  (window as Window & { debugI18next?: unknown }).debugI18next = debugI18next;
 
   // Run automatically after 2 seconds
   setTimeout(() => {

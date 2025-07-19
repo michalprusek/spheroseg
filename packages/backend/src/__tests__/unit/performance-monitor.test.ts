@@ -42,11 +42,11 @@ describe('PerformanceMonitor Unit Tests', () => {
       };
 
       // Trigger high memory pressure by calling internal method
-      (performanceMonitor as any).handleHighMemoryPressure(90, mockMemUsage as NodeJS.MemoryUsage);
+      (performanceMonitor as unknown).handleHighMemoryPressure(90, mockMemUsage as NodeJS.MemoryUsage);
     });
 
     it('should trigger emergency cleanup at 95% memory', () => {
-      const spy = jest.spyOn(performanceMonitor as any, 'emergencyCleanup');
+      const spy = jest.spyOn(performanceMonitor as unknown, 'emergencyCleanup');
 
       const mockMemUsage = {
         heapUsed: 950 * 1024 * 1024,
@@ -55,7 +55,7 @@ describe('PerformanceMonitor Unit Tests', () => {
         rss: 1200 * 1024 * 1024,
       };
 
-      (performanceMonitor as any).handleCriticalMemoryPressure(
+      (performanceMonitor as unknown).handleCriticalMemoryPressure(
         95,
         mockMemUsage as NodeJS.MemoryUsage
       );
@@ -65,7 +65,7 @@ describe('PerformanceMonitor Unit Tests', () => {
 
     it('should reduce metrics under memory pressure', () => {
       // Add test data
-      const metrics = (performanceMonitor as any).metrics;
+      const metrics = (performanceMonitor as unknown).metrics;
       for (let i = 0; i < 1000; i++) {
         metrics.dbQueries.push({
           query: `SELECT * FROM test_${i}`,
@@ -76,7 +76,7 @@ describe('PerformanceMonitor Unit Tests', () => {
       }
 
       // Trigger cleanup
-      (performanceMonitor as any).cleanupUnderMemoryPressure();
+      (performanceMonitor as unknown).cleanupUnderMemoryPressure();
 
       // Should reduce to 25% (250 queries)
       expect(metrics.dbQueries.length).toBeLessThanOrEqual(250);
@@ -133,7 +133,7 @@ describe('PerformanceMonitor Unit Tests', () => {
       ];
 
       testCases.forEach(({ input, expected }) => {
-        const sanitized = (performanceMonitor as any).sanitizeQuery(input);
+        const sanitized = (performanceMonitor as unknown).sanitizeQuery(input);
         expect(sanitized).toBe(expected);
       });
     });
@@ -151,7 +151,7 @@ describe('PerformanceMonitor Unit Tests', () => {
 
     it('should handle query sanitization errors gracefully', () => {
       // Mock sanitization to throw error
-      jest.spyOn(performanceMonitor as any, 'sanitizeQuery').mockImplementation(() => {
+      jest.spyOn(performanceMonitor as unknown, 'sanitizeQuery').mockImplementation(() => {
         throw new Error('Sanitization error');
       });
 
@@ -212,7 +212,7 @@ describe('PerformanceMonitor Unit Tests', () => {
       performanceMonitor.stop();
 
       expect(clearIntervalSpy).toHaveBeenCalled();
-      expect((performanceMonitor as any).memoryCheckInterval).toBeUndefined();
+      expect((performanceMonitor as unknown).memoryCheckInterval).toBeUndefined();
     });
 
     it('should execute destructor', () => {
@@ -229,7 +229,7 @@ describe('PerformanceMonitor Unit Tests', () => {
   describe('Constants Usage', () => {
     it('should use constants instead of magic numbers', () => {
       // Check that constants are defined on the constructor
-      const PerformanceMonitorClass = (performanceMonitor as any).constructor;
+      const PerformanceMonitorClass = (performanceMonitor as unknown).constructor;
       expect(PerformanceMonitorClass.MAX_QUERY_HISTORY).toBe(1000);
       expect(PerformanceMonitorClass.MAX_MEMORY_HISTORY).toBe(100);
       expect(PerformanceMonitorClass.MEMORY_CHECK_INTERVAL_MS).toBe(30000);

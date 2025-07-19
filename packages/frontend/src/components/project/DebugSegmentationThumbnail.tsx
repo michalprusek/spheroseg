@@ -97,7 +97,7 @@ const DebugSegmentationThumbnail: React.FC<DebugSegmentationThumbnailProps> = ({
 
         setSegmentationData(segData);
         setIsLoading(false);
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Only set error for non-429 errors or show nothing for rate limits
         if (err?.response?.status === 429) {
           // Don't show error for rate limiting, just hide the component

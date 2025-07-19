@@ -419,7 +419,7 @@ export const errorTrackingMiddleware = (
 ): void => {
   const context: Partial<ErrorContext> = {
     requestId: (req.headers['x-request-id'] as string) || req.requestId,
-    userId: (req as any).user?.userId,
+    userId: (req as unknown).user?.userId,
     route: req.route?.path || req.path,
     method: req.method,
     userAgent: req.get('User-Agent'),

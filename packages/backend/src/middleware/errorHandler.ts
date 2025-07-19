@@ -70,7 +70,7 @@ export const errorHandler: ErrorRequestHandler = (
       ip: req.ip,
       userAgent: req.get('User-Agent'),
     },
-    user: (req as any).user?.id || 'anonymous',
+    user: (req as unknown).user?.id || 'anonymous',
   };
 
   // Log level based on error type

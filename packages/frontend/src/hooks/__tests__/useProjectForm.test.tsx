@@ -48,12 +48,12 @@ describe('useProjectForm Hook', () => {
     vi.clearAllMocks();
 
     // Reset auth mock to default (authenticated user)
-    (useAuth as any).mockReturnValue({
+    (useAuth as unknown).mockReturnValue({
       user: { id: 'test-user-id' },
     });
 
     // Reset API mock to successful response
-    (apiClient.post as any).mockResolvedValue({
+    (apiClient.post as unknown).mockResolvedValue({
       data: {
         id: 'test-project-id',
         title: 'Test Project',
@@ -141,7 +141,7 @@ describe('useProjectForm Hook', () => {
 
   it('shows error when user is not authenticated', async () => {
     // Mock user as null (not authenticated)
-    (useAuth as any).mockReturnValue({
+    (useAuth as unknown).mockReturnValue({
       user: null,
     });
 
@@ -188,7 +188,7 @@ describe('useProjectForm Hook', () => {
 
   it('handles API error when creating project', async () => {
     // Mock API to throw error
-    (apiClient.post as any).mockRejectedValue(
+    (apiClient.post as unknown).mockRejectedValue(
       new axios.AxiosError('Error', undefined, undefined, undefined, {
         status: 500,
         data: { message: 'Server error' },
@@ -223,7 +223,7 @@ describe('useProjectForm Hook', () => {
 
   it('handles validation errors from API', async () => {
     // Mock API to throw validation error
-    (apiClient.post as any).mockRejectedValue(
+    (apiClient.post as unknown).mockRejectedValue(
       new axios.AxiosError('Error', undefined, undefined, undefined, {
         status: 400,
         data: {

@@ -48,8 +48,8 @@ function generateXlsxBinary(workbook: any): string {
     };
 
     // Nahradíme globální writeFile naší dočasnou funkcí
-    (window as any).XLSX = {
-      ...(window as any).XLSX,
+    (window as Window & { XLSX?: unknown }).XLSX = {
+      ...(window as unknown).XLSX,
       writeFile: tempWriteFile,
     };
 
@@ -57,8 +57,8 @@ function generateXlsxBinary(workbook: any): string {
     writeFile(workbook, 'temp.xlsx', { bookType: 'xlsx', type: 'binary' });
 
     // Obnovíme původní writeFile
-    (window as any).XLSX = {
-      ...(window as any).XLSX,
+    (window as Window & { XLSX?: unknown }).XLSX = {
+      ...(window as unknown).XLSX,
       writeFile: originalWriteFile,
     };
 

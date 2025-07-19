@@ -61,16 +61,16 @@ describe('Read Replica Failover', () => {
       waitingCount: 0,
     } as any;
 
-    mockMasterPool = config.db as any;
+    mockMasterPool = config.db as unknown;
 
     // Mock Pool constructor
     (Pool as jest.MockedClass<typeof Pool>).mockImplementation((config: any) => {
       if (config.host === 'master') {
-        return mockWritePool as any;
+        return mockWritePool as unknown;
       } else if (config.host === 'replica') {
-        return mockReadPool as any;
+        return mockReadPool as unknown;
       }
-      return mockMasterPool as any;
+      return mockMasterPool as unknown;
     });
   });
 

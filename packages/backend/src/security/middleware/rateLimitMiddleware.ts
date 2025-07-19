@@ -42,7 +42,7 @@ const commonOptions: Partial<Options> = {
   skipFailedRequests: false, // Count failed requests
   keyGenerator: (req: Request) => {
     // Use user ID if available, otherwise use IP
-    return (req as any).user?.userId || req.ip || 'unknown';
+    return (req as unknown).user?.userId || req.ip || 'unknown';
   },
 };
 
@@ -55,7 +55,7 @@ const createErrorHandler = (type: string, retryAfter: number) => {
       ip: req.ip,
       path: req.path,
       method: req.method,
-      userId: (req as any).user?.userId,
+      userId: (req as unknown).user?.userId,
       userAgent: req.get('User-Agent'),
     });
 

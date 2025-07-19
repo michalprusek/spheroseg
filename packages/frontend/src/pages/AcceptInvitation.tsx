@@ -50,7 +50,7 @@ const AcceptInvitation: React.FC = () => {
       setTimeout(() => {
         navigate(`/project/${project.id}`);
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setStatus('error');
 
       if (error.response?.status === 404) {

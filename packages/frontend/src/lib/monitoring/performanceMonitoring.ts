@@ -116,7 +116,7 @@ export class FrontendPerformanceMonitoring extends PerformanceMonitoring {
     }
 
     // Monitor memory usage periodically
-    if (performance && (performance as any).memory) {
+    if (performance && (performance as unknown).memory) {
       setInterval(() => {
         this.recordMemoryUsageMetric();
       }, 30000); // Every 30 seconds
@@ -253,7 +253,7 @@ export class FrontendPerformanceMonitoring extends PerformanceMonitoring {
     if (!this.options.enabled || typeof window === 'undefined') return;
 
     try {
-      const memory = (performance as any).memory;
+      const memory = (performance as unknown).memory;
       if (memory) {
         const metric: MemoryUsageMetric = {
           type: MetricType.MEMORY_USAGE,

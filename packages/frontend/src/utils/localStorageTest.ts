@@ -49,5 +49,5 @@ export const testLocalStoragePersistence = () => {
 
 // Make it available globally for browser console testing
 if (typeof window !== 'undefined') {
-  (window as any).testLocalStoragePersistence = testLocalStoragePersistence;
+  (window as Window & { testLocalStoragePersistence?: unknown }).testLocalStoragePersistence = testLocalStoragePersistence;
 }

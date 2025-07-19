@@ -66,15 +66,15 @@ describe('Access Denied Notification Suppression', () => {
     expect(toast.error).toHaveBeenCalledTimes(1);
     
     // Check the debug logs to see what context key was extracted
-    const accessDeniedLogs = (logger.debug as any).mock.calls.filter((call: any[]) => 
+    const accessDeniedLogs = (logger.debug as unknown).mock.calls.filter((call: any[]) => 
       call[0] === 'Tracked access denied error'
     );
     console.log('Access denied logs:', accessDeniedLogs);
     
     // Clear only toast mocks to see what happens with the second call
-    (toast.error as any).mockClear();
-    (toast.warning as any).mockClear();
-    (toast.info as any).mockClear();
+    (toast.error as unknown).mockClear();
+    (toast.warning as unknown).mockClear();
+    (toast.info as unknown).mockClear();
     
     // Now trigger a 404 error for a related operation
     const notFoundError = new NotFoundError('Image not found or access denied');
@@ -84,7 +84,7 @@ describe('Access Denied Notification Suppression', () => {
     });
     
     // Check the debug logs for suppression check
-    const suppressionLogs = (logger.debug as any).mock.calls.filter((call: any[]) => 
+    const suppressionLogs = (logger.debug as unknown).mock.calls.filter((call: any[]) => 
       call[0] === 'Checking if secondary error should be suppressed'
     );
     console.log('Suppression check logs:', suppressionLogs);
@@ -171,9 +171,9 @@ describe('Access Denied Notification Suppression', () => {
     clearAccessDeniedSuppression();
     
     // Clear only toast mocks to see the effect of the next call
-    (toast.error as any).mockClear();
-    (toast.warning as any).mockClear();
-    (toast.info as any).mockClear();
+    (toast.error as unknown).mockClear();
+    (toast.warning as unknown).mockClear();
+    (toast.info as unknown).mockClear();
 
     // Now a 404 error should be shown
     const notFoundError = new NotFoundError('Not found');

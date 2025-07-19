@@ -299,8 +299,8 @@ const AdvancedLanguageTestComponent: React.FC = () => {
 
         <h3>Empty and Edge Cases</h3>
         <p data-testid="translated-empty-key">{t('')}</p>
-        <p data-testid="translated-null-key">{t(null as any)}</p>
-        <p data-testid="translated-undefined-key">{t(undefined as any)}</p>
+        <p data-testid="translated-null-key">{t(null as unknown)}</p>
+        <p data-testid="translated-undefined-key">{t(undefined as unknown)}</p>
 
         <h3>Translations with Parameters</h3>
         <p data-testid="translated-with-params">{greetingWithParams}</p>
@@ -406,8 +406,8 @@ describe('LanguageContext (Enhanced)', () => {
     mockIsAuthenticated = true;
 
     // Reset API mock responses to defaults
-    if (typeof (apiClient as any).__clearMocks === 'function') {
-      (apiClient as any).__clearMocks();
+    if (typeof (apiClient as unknown).__clearMocks === 'function') {
+      (apiClient as unknown).__clearMocks();
     }
   });
 
@@ -479,8 +479,8 @@ describe('LanguageContext (Enhanced)', () => {
     mockIsAuthenticated = true;
 
     // Set API to return French preference
-    if (typeof (apiClient as any).__setMockResponse === 'function') {
-      (apiClient as any).__setMockResponse('get', '/users/me', {
+    if (typeof (apiClient as unknown).__setMockResponse === 'function') {
+      (apiClient as unknown).__setMockResponse('get', '/users/me', {
         status: 200,
         data: { preferred_language: 'fr' },
       });

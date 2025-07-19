@@ -127,7 +127,7 @@ export const AnalyticsDashboard = memo(() => {
       setDateRange(newRange);
       setTimeRange('custom');
     }, 500),
-    [],
+    [setDateRange, setTimeRange],
   );
 
   // Optimized data fetching with React Query

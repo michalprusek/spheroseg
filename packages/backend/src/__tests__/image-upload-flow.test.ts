@@ -47,7 +47,7 @@ describe('Image Upload Flow', () => {
     } as any;
 
     // Add Socket.IO to app
-    (app as any).io = io;
+    (app as unknown).io = io;
 
     // Mock authentication middleware
     app.use((req: any, res: any, next: () => void) => {

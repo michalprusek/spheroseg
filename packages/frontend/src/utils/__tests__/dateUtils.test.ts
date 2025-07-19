@@ -55,7 +55,7 @@ describe('dateUtils', () => {
       circularObj.circular = circularObj;
 
       // This should return the fallback without throwing
-      const result = safeFormatDate(circularObj as any, 'yyyy-MM-dd', 'Error occurred');
+      const result = safeFormatDate(circularObj as unknown, 'yyyy-MM-dd', 'Error occurred');
       expect(result).toBe('Error occurred');
     });
   });

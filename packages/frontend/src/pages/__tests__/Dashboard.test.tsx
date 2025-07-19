@@ -215,7 +215,7 @@ describe('Dashboard Component', () => {
 
   it('deletes a project when delete button is clicked', async () => {
     // Mock successful delete
-    (apiClient.delete as any).mockResolvedValueOnce({});
+    (apiClient.delete as unknown).mockResolvedValueOnce({});
 
     render(
       <TestWrapper>
@@ -237,7 +237,7 @@ describe('Dashboard Component', () => {
 
   it('handles project deletion error', async () => {
     // Mock delete error
-    (apiClient.delete as any).mockRejectedValueOnce(new Error('Failed to delete project'));
+    (apiClient.delete as unknown).mockRejectedValueOnce(new Error('Failed to delete project'));
 
     render(
       <TestWrapper>

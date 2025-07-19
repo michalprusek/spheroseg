@@ -17,7 +17,7 @@ const NON_EXISTENT_PROJECT_ID = '123e4567-e89b-12d3-a456-426614174999';
 
 // Simple auth middleware mock that adds a test user to the request
 const mockAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  (req as any).user = {
+  (req as unknown).user = {
     userId: 'test-user-id',
     email: 'test@example.com',
   };
@@ -168,7 +168,7 @@ router.get(
   mockAuthMiddleware,
   mockValidate(),
   async (req: Request, res: Response) => {
-    const userId = (req as any).user?.userId;
+    const userId = (req as unknown).user?.userId;
     const projectId = req.params.id;
     const includeMetadata = req.query.includeMetadata === 'true';
     const includeSegmentation = req.query.includeSegmentation === 'true';
@@ -243,7 +243,7 @@ router.get(
   mockAuthMiddleware,
   mockValidate(),
   async (req: Request, res: Response) => {
-    const userId = (req as any).user?.userId;
+    const userId = (req as unknown).user?.userId;
     const projectId = req.params.id;
 
     try {

@@ -39,7 +39,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({ selectedProjectId, on
     };
 
     fetchProjects();
-  }, [user?.id]);
+  }, [user]);
 
   const handleValueChange = (value: string) => {
     onProjectChange(value === 'all' ? null : value);

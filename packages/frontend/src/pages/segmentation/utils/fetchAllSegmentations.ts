@@ -17,7 +17,7 @@ export async function fetchAllSegmentationsForImages(
       try {
         const res = await apiClient.get(`/api/images/${img.id}/segmentation`);
         results[img.id] = res.data as SegmentationResult;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // If not found (404), treat as no segmentation
         if (err.response && err.response.status === 404) {
           results[img.id] = null;

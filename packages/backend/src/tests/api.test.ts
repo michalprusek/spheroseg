@@ -66,7 +66,7 @@ mockApp.use((req, res, next) => {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     if (token === 'mock-valid-token') {
-      (req as any).user = {
+      (req as unknown).user = {
         userId: '00000000-0000-0000-0000-000000000000',
         email: 'test@example.com',
       };
@@ -113,7 +113,7 @@ const authMiddleware = (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  if (!(req as any).user) {
+  if (!(req as unknown).user) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
   next();

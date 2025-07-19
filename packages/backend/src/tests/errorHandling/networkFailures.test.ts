@@ -53,13 +53,13 @@ describe('Network Failure Tests', () => {
         res.end('{"incomplete": "json",,,,}');
       } else if (endpoint === '/retry-success') {
         // Static counter to track retry attempts
-        if (!(global as any)._retryCount) {
-          (global as any)._retryCount = 0;
+        if (!(global as typeof globalThis & { _retryCount?: unknown })._retryCount) {
+          (global as unknown)._retryCount = 0;
         }
 
-        (global as any)._retryCount++;
+        (global as typeof globalThis & { _retryCount?: unknown })._retryCount++;
 
-        if ((global as any)._retryCount <= 2) {
+        if ((global as unknown)._retryCount <= 2) {
           // First two attempts fail
           res.writeHead(503, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Service unavailable, try again' }));
@@ -81,7 +81,7 @@ describe('Network Failure Tests', () => {
     mockServerUrl = `http://localhost:${addressInfo.port}`;
 
     // Update config to use our mock server
-    (config.segmentation as any).mlServiceUrl = mockServerUrl;
+    (config.segmentation as unknown).mlServiceUrl = mockServerUrl;
   });
 
   afterAll(() => {
@@ -91,7 +91,7 @@ describe('Network Failure Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (global as any)._retryCount = 0;
+    (global as typeof globalThis & { _retryCount?: unknown })._retryCount = 0;
   });
 
   // Helper function to test API calls with network failures
@@ -114,7 +114,7 @@ describe('Network Failure Tests', () => {
     const result = await testNetworkFailure('/timeout');
 
     expect(result).toHaveProperty('error');
-    expect((result.error as any).name).toBe('AbortError');
+    expect((result.error as unknown).name).toBe('AbortError');
     expect(logger.error).toHaveBeenCalled();
   });
 
@@ -122,7 +122,7 @@ describe('Network Failure Tests', () => {
     const result = await testNetworkFailure('/connection-reset');
 
     expect(result).toHaveProperty('error');
-    expect((result.error as any).code).toBeDefined();
+    expect((result.error as unknown).code).toBeDefined();
     expect(logger.error).toHaveBeenCalled();
   });
 
@@ -148,13 +148,13 @@ describe('Network Failure Tests', () => {
 
   it('should implement retry logic for failed requests', async () => {
     // Reset retry counter
-    (global as any)._retryCount = 0;
+    (global as unknown)._retryCount = 0;
 
     // Request that will succeed after retries
     const result = await testNetworkFailure('/retry-success');
 
     // Verify retries occurred and we got successful result
-    expect((global as any)._retryCount).toBe(3);
+    expect((global as typeof globalThis & { _retryCount?: unknown })._retryCount).toBe(3);
     expect(result.status).toBe(200);
     expect(result.body).toHaveProperty('success', true);
     expect(result.body).toHaveProperty('message', 'Success after retry');
@@ -183,13 +183,13 @@ describe('Network Failure Tests', () => {
     const segmentationServicePromise = import('../../services/segmentationService');
 
     // Test retry logic
-    (global as any)._retryCount = 0;
+    (global as unknown)._retryCount = 0;
 
     // Use the segmentation service module after it's loaded
     segmentationServicePromise
       .then((segmentationService) => {
         // Ensure we're using our mock service
-        (segmentationService as any)._callMlService = jest
+        (segmentationService as unknown)._callMlService = jest
           .fn()
           .mockImplementation(async (endpoint: string) => {
             // Call our test endpoint
@@ -201,15 +201,15 @@ describe('Network Failure Tests', () => {
           });
 
         // Call segmentation with retries
-        return (segmentationService as any)._callMlService('/retry-success', {});
+        return (segmentationService as unknown)._callMlService('/retry-success', {});
       })
       .then(() => {
         // If it succeeds, verify retry count
-        expect((global as any)._retryCount).toBe(3);
+        expect((global as typeof globalThis & { _retryCount?: unknown })._retryCount).toBe(3);
       })
       .catch((error) => {
         // If it fails, check error and retry count
-        expect((global as any)._retryCount).toBeGreaterThan(0);
+        expect((global as unknown)._retryCount).toBeGreaterThan(0);
         throw error;
       });
   });

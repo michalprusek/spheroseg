@@ -262,7 +262,7 @@ const AppLayout = () => {
 
     // Development helpers
     if (import.meta.env.DEV) {
-      (window as any).clearImageCache = async () => {
+      (window as Window & { clearImageCache?: unknown }).clearImageCache = async () => {
         try {
           await clearEntireDatabase();
           toast.success('Image cache cleared successfully. Please refresh the page.');

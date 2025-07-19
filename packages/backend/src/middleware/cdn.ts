@@ -80,7 +80,7 @@ export async function cdnPurgeMiddleware(req: Request, res: Response, next: Next
     } else {
       res.status(500).json({ success: false, error: 'Failed to purge CDN cache' });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('CDN purge error:', error);
     res.status(500).json({ success: false, error: error.message });
   }

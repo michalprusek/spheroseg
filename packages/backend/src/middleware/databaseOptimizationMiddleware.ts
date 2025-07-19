@@ -47,7 +47,7 @@ export function getOptimizationService(): DatabaseOptimizationService | null {
 export function addOptimizationService(req: Request, res: Response, next: NextFunction): void {
   const service = getOptimizationService();
   if (service) {
-    (req as any).optimizationService = service;
+    (req as unknown).optimizationService = service;
   }
   next();
 }
@@ -99,7 +99,7 @@ async function invalidateCacheBasedOnPath(
     if (path.includes('/projects')) {
       if (req.method === 'POST' && statusCode === 201) {
         // New project created - invalidate user's project list
-        const userId = (req as any).user?.userId;
+        const userId = (req as unknown).user?.userId;
         if (userId) {
           await service.invalidateRelatedCaches('user', userId);
           logger.debug('Cache invalidated for new project', { userId, path });
@@ -149,7 +149,7 @@ async function invalidateCacheBasedOnPath(
 
     if (path.includes('/users') || path.includes('/profile')) {
       // User data changed
-      const userId = (req as any).user?.userId || req.params?.userId;
+      const userId = (req as unknown).user?.userId || req.params?.userId;
       if (userId) {
         await service.invalidateRelatedCaches('user', userId);
         logger.debug('Cache invalidated for user update', { userId, path });
@@ -186,7 +186,7 @@ export function performanceMonitoringMiddleware(
         duration,
         statusCode,
         userAgent: req.get('User-Agent'),
-        userId: (req as any).user?.userId,
+        userId: (req as unknown).user?.userId,
       });
     }
 
@@ -209,7 +209,7 @@ export function performanceMonitoringMiddleware(
  */
 export function queryOptimizationHints(req: Request, res: Response, next: NextFunction): void {
   // Add optimization hints to request for use by route handlers
-  (req as any).optimizationHints = {
+  (req as unknown).optimizationHints = {
     // Suggest caching for GET requests
     shouldCache: req.method === 'GET',
 
@@ -265,7 +265,7 @@ export function optimizationErrorHandler(
       error: error.message,
       path: req.path,
       method: req.method,
-      userId: (req as any).user?.userId,
+      userId: (req as unknown).user?.userId,
     });
 
     // Don't fail the request due to optimization errors
@@ -281,7 +281,7 @@ export function optimizationErrorHandler(
  */
 export function optimizedCacheHeaders(req: Request, res: Response, next: NextFunction): void {
   if (req.method === 'GET') {
-    const hints = (req as any).optimizationHints;
+    const hints = (req as unknown).optimizationHints;
     const strategy = hints?.cacheStrategy || 'WARM';
 
     // Set appropriate cache headers based on strategy

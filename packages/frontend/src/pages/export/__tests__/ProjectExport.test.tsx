@@ -131,7 +131,7 @@ describe('ProjectExport Component', () => {
     renderComponent();
 
     // Get the handleExport mock function
-    const { handleExport } = (useExportFunctions as any)();
+    const { handleExport } = (useExportFunctions as unknown)();
 
     // Click the export button
     fireEvent.click(screen.getByText(/Exportovat 2 obrázků/i));
@@ -168,8 +168,8 @@ describe('ProjectExport Component', () => {
 
   it('disables the export button when no images are selected', () => {
     // Override the getSelectedCount to return 0
-    (useExportFunctions as any).mockReturnValueOnce({
-      ...(useExportFunctions as any)(),
+    (useExportFunctions as unknown).mockReturnValueOnce({
+      ...(useExportFunctions as unknown)(),
       getSelectedCount: vi.fn(() => 0),
     });
 
@@ -181,8 +181,8 @@ describe('ProjectExport Component', () => {
 
   it('shows loading state when exporting', () => {
     // Override the isExporting state to be true
-    (useExportFunctions as any).mockReturnValueOnce({
-      ...(useExportFunctions as any)(),
+    (useExportFunctions as unknown).mockReturnValueOnce({
+      ...(useExportFunctions as unknown)(),
       isExporting: true,
     });
 
@@ -195,8 +195,8 @@ describe('ProjectExport Component', () => {
 
   it('handles loading state of project data', () => {
     // Override the loading state to be true
-    (useProjectData as any).mockReturnValueOnce({
-      ...(useProjectData as any)(),
+    (useProjectData as unknown).mockReturnValueOnce({
+      ...(useProjectData as unknown)(),
       loading: true,
     });
 

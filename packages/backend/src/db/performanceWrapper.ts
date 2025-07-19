@@ -67,7 +67,7 @@ export function wrapPoolClient(client: PoolClient): PoolClient {
   };
 
   // Override the query method
-  client.query = wrappedQuery as any;
+  client.query = wrappedQuery as unknown;
 
   return client;
 }

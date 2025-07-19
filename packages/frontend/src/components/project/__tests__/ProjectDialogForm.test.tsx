@@ -53,7 +53,7 @@ describe('ProjectDialogForm Component', () => {
     vi.clearAllMocks();
 
     // Setup default mock implementation
-    (useProjectForm as any).mockReturnValue({
+    (useProjectForm as unknown).mockReturnValue({
       projectName: 'Test Project',
       setProjectName: mockSetProjectName,
       projectDescription: 'Test Description',
@@ -111,7 +111,7 @@ describe('ProjectDialogForm Component', () => {
 
   it('disables submit button when isCreating is true', () => {
     // Mock isCreating state to be true
-    (useProjectForm as any).mockReturnValue({
+    (useProjectForm as unknown).mockReturnValue({
       projectName: 'Test Project',
       setProjectName: mockSetProjectName,
       projectDescription: 'Test Description',

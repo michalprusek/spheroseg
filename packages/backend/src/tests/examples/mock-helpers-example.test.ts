@@ -84,7 +84,7 @@ describe('Example API with Mock Helpers', () => {
     // Add GET /projects endpoint
     router.get('/projects', authMiddleware, (req, res) => {
       // Query database for projects belonging to the authenticated user
-      db.query('SELECT * FROM projects WHERE user_id = $1', [(req as any).user.userId])
+      db.query('SELECT * FROM projects WHERE user_id = $1', [(req as unknown).user.userId])
         .then((result) => {
           res.status(200).json(result.rows);
           return; // Return void to satisfy TypeScript
@@ -109,7 +109,7 @@ describe('Example API with Mock Helpers', () => {
           const project = result.rows[0];
 
           // Check if user has access to project
-          if (project.user_id !== (req as any).user.userId) {
+          if (project.user_id !== (req as unknown).user.userId) {
             res.status(403).json({ message: 'Access denied' });
             return;
           }
@@ -136,7 +136,7 @@ describe('Example API with Mock Helpers', () => {
           const project = result.rows[0];
 
           // Check if user has access to project
-          if (project.user_id !== (req as any).user.userId) {
+          if (project.user_id !== (req as unknown).user.userId) {
             return res.status(403).json({ message: 'Access denied' });
           }
 
@@ -173,7 +173,7 @@ describe('Example API with Mock Helpers', () => {
           const project = result.rows[0];
 
           // Check if user has access to project
-          if (project.user_id !== (req as any).user.userId) {
+          if (project.user_id !== (req as unknown).user.userId) {
             return res.status(403).json({ message: 'Access denied' });
           }
 
@@ -207,7 +207,7 @@ describe('Example API with Mock Helpers', () => {
             id: imageId,
             name: `${imageId}.jpg`,
             project_id: projectId,
-            user_id: (req as any).user.userId,
+            user_id: (req as unknown).user.userId,
             storage_path: imagePath,
             thumbnail_path: thumbnailPath,
             width: 800,

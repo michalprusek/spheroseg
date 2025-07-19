@@ -54,7 +54,7 @@ const MockSegmentationEditor = ({
   imageId = 'image-123',
 }) => {
   // Mock the useParams hook
-  (useParams as any).mockReturnValue({ projectId, imageId });
+  (useParams as unknown).mockReturnValue({ projectId, imageId });
 
   // Mock segmentation data
   const segmentation = hasSegmentation

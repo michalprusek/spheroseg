@@ -35,7 +35,7 @@ const ForgotPassword = () => {
         console.log('Email test URL:', response.testUrl);
         toast.info(`Development: Check email at ${response.testUrl}`, { duration: 10000 });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password reset request error:', error);
 
       // Handle specific error codes

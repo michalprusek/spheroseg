@@ -170,7 +170,7 @@ jest.mock('multer', () => {
 
   // Return a function that returns the multerInstance
   const multerFn = () => multerInstance;
-  (multerFn as any).diskStorage = multerInstance.diskStorage;
+  (multerFn as unknown).diskStorage = multerInstance.diskStorage;
 
   return multerFn;
 });

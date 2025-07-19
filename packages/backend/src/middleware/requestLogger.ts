@@ -35,7 +35,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
     url: req.originalUrl || req.url,
     userAgent: req.get('User-Agent'),
     ip: req.ip || req.connection.remoteAddress || 'unknown',
-    userId: (req as any).user?.id,
+    userId: (req as unknown).user?.id,
   };
 
   // Override res.end to capture response details

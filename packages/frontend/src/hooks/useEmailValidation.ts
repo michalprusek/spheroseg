@@ -102,7 +102,7 @@ export const useEmailValidation = (debounceDelay: number = 500) => {
         error: null,
         message,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Don't update state if request was aborted
       if (error.name === 'AbortError' || error.name === 'CanceledError') {
         return;

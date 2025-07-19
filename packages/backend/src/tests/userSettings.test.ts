@@ -121,7 +121,7 @@ describe('User Settings API', () => {
 
     it('should return 400 if current password is incorrect', async () => {
       // Mock bcrypt.compare to return false
-      (bcrypt.compare as any).mockResolvedValueOnce(false);
+      (bcrypt.compare as unknown).mockResolvedValueOnce(false);
 
       const response = await request(app).patch('/api/users/me').send({
         currentPassword: 'wrong-password',

@@ -42,7 +42,7 @@ export const i18nInitializedPromise = (async () => {
 
     // Add i18next to window for debugging in development
     if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-      (window as any).i18next = i18nInstance;
+      window.i18next = i18nInstance;
 
       // Quick test to ensure translations work
       const testKey = i18nInstance.t('common.loadingApplication');

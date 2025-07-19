@@ -119,7 +119,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
       );
       form.reset();
       fetchSharedUsers(); // Po úspěšném sdílení znovu načteme seznam sdílených uživatelů
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sharing project:', error);
 
       // Zpracování různých typů chyb

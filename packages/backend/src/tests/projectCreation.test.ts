@@ -13,7 +13,7 @@ const router = express.Router();
 
 // Simple auth middleware mock that adds a test user to the request
 const mockAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  (req as any).user = {
+  (req as unknown).user = {
     userId: 'test-user-id',
     email: 'test@example.com',
   };
@@ -128,7 +128,7 @@ jest.mock('../utils/logger', () => ({
 
 // Project creation route
 router.post('/', mockAuthMiddleware, mockValidate(), async (req: Request, res: Response) => {
-  const userId = (req as any).user?.userId;
+  const userId = (req as unknown).user?.userId;
   const { title, description } = req.body;
 
   try {
@@ -167,7 +167,7 @@ router.post(
   mockAuthMiddleware,
   mockValidate(),
   async (req: Request, res: Response) => {
-    const userId = (req as any).user?.userId;
+    const userId = (req as unknown).user?.userId;
     const projectId = req.params.id;
     const { newTitle: _newTitle } = req.body;
 

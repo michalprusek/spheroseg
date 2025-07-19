@@ -109,7 +109,7 @@ export function initializeGlobalErrorHandlers(): void {
  * This prevents double-handling of errors
  */
 export function markErrorAsHandled(error: Error): void {
-  (error as any)._isHandledByBoundary = true;
+  (error as unknown)._isHandledByBoundary = true;
 }
 
 /**

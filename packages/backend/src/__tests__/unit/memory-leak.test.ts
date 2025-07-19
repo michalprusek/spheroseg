@@ -82,7 +82,7 @@ describe('Memory Leak Detection Tests', () => {
       const initialSize = performanceMonitor.getMetrics().apiCalls.size;
 
       // Trigger cleanup
-      (performanceMonitor as any).cleanupUnderMemoryPressure();
+      (performanceMonitor as unknown).cleanupUnderMemoryPressure();
 
       const finalSize = performanceMonitor.getMetrics().apiCalls.size;
       expect(finalSize).toBeLessThan(initialSize);
@@ -135,7 +135,7 @@ describe('Memory Leak Detection Tests', () => {
       // Simulate memory monitoring over time
       for (let i = 0; i < 200; i++) {
         // Access private method for testing
-        const monitor = performanceMonitor as any;
+        const monitor = performanceMonitor as unknown;
         monitor.metrics.memoryUsage.push({
           timestamp: new Date(),
           heapUsed: Math.random() * 1000000000,
@@ -216,7 +216,7 @@ describe('Memory Leak Detection Tests', () => {
       };
 
       // Trigger emergency cleanup
-      (performanceMonitor as any).emergencyCleanup();
+      (performanceMonitor as unknown).emergencyCleanup();
 
       const afterCleanup = {
         queries: performanceMonitor.getMetrics().dbQueries.length,

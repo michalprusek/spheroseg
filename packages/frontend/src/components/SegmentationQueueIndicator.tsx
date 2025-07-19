@@ -270,7 +270,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
     return () => {
       window.removeEventListener('queue-status-update', handleQueueUpdate);
     };
-  }, [fetchData, propProjectId]);
+  }, [fetchData, propProjectId, queueData]);
 
   // Get socket connection using the hook
   const { socket, isConnected } = useSocket();

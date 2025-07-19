@@ -72,9 +72,9 @@ export class MockWorker {
 
   addEventListener(type: string, listener: EventListener): void {
     if (type === 'message') {
-      this.onmessage = listener as any;
+      this.onmessage = listener as unknown;
     } else if (type === 'error') {
-      this.onerror = listener as any;
+      this.onerror = listener as unknown;
     }
   }
 

@@ -38,7 +38,7 @@ document.createElement = vi.fn((tagName) => {
 });
 
 // Mock global Image constructor
-global.Image = MockImage as any;
+global.Image = MockImage as unknown;
 
 describe('maskToPolygons', () => {
   beforeEach(() => {

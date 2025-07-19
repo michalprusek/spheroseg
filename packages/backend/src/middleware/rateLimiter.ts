@@ -19,7 +19,7 @@ export const diagnosticsLimiter = rateLimit({
     logger.warn('Rate limit exceeded for diagnostics', {
       ip: req.ip,
       path: req.path,
-      userId: (req as any).user?.userId,
+      userId: (req as unknown).user?.userId,
     });
     res.status(429).json({
       error: 'Too many diagnostic requests',
@@ -37,7 +37,7 @@ export const uploadLimiter = rateLimit({
   skipSuccessfulRequests: false,
   keyGenerator: (req: Request) => {
     // Use user ID if authenticated, otherwise fall back to IP
-    const userId = (req as any).user?.userId;
+    const userId = (req as unknown).user?.userId;
     return userId || req.ip;
   },
 });
@@ -71,12 +71,12 @@ export function createDynamicLimiter(options: {
   return rateLimit({
     windowMs: options.windowMs,
     max: (req: Request) => {
-      const user = (req as any).user;
+      const user = (req as unknown).user;
       const isPremium = user?.tier === 'premium';
       return isPremium ? options.premiumMax : options.standardMax;
     },
     keyGenerator: (req: Request) => {
-      const userId = (req as any).user?.userId;
+      const userId = (req as unknown).user?.userId;
       return userId || req.ip;
     },
   });

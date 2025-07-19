@@ -37,7 +37,7 @@ const authMiddleware = (req: any, res: any, next: any) => {
 
 // Create mock routes for testing
 app.get('/api/queue-status', authMiddleware, async (req: any, res) => {
-  const status = await (getSegmentationQueueStatus as any)();
+  const status = await (getSegmentationQueueStatus as unknown)();
 
   if (status && status.runningTasks && status.runningTasks.length > 0) {
     const result = await pool.query(
@@ -71,7 +71,7 @@ app.get('/api/queue-status/:projectId', authMiddleware, async (req: any, res) =>
     return res.status(404).json({ message: 'Project not found or access denied' });
   }
 
-  const status = await (getSegmentationQueueStatus as any)();
+  const status = await (getSegmentationQueueStatus as unknown)();
   const filteredStatus = { ...status, processingImages: [] };
 
   if (status && status.runningTasks && status.runningTasks.length > 0) {

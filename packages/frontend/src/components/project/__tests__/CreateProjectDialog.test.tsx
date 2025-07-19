@@ -41,7 +41,7 @@ describe('CreateProjectDialog Component', () => {
 
   beforeEach(() => {
     // Mock API response
-    (apiClient.post as any).mockResolvedValue({
+    (apiClient.post as unknown).mockResolvedValue({
       data: {
         id: 'test-project-id',
         title: 'Test Project',

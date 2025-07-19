@@ -69,7 +69,7 @@ const AccountSection = () => {
 
       // Clear the form
       reset();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error changing password', { error });
 
       if (error.response?.status === 400) {

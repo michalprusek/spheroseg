@@ -206,7 +206,7 @@ describe('Performance Optimizations', () => {
       unobserve: vi.fn(),
       disconnect: vi.fn(),
     });
-    window.IntersectionObserver = mockIntersectionObserver as any;
+    window.IntersectionObserver = mockIntersectionObserver as unknown;
 
     it('should observe element and report intersection', async () => {
       const ref = React.createRef<HTMLDivElement>();
@@ -218,7 +218,7 @@ describe('Performance Optimizations', () => {
 
       // Create element
       const div = document.createElement('div');
-      (ref as any).current = div;
+      (ref as unknown).current = div;
 
       // Trigger observer callback
       const observerCallback = mockIntersectionObserver.mock.calls[0][0];

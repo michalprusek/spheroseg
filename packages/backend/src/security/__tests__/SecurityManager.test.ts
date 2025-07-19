@@ -12,7 +12,7 @@ describe('SecurityManager', () => {
 
   beforeEach(() => {
     // Reset singleton instance
-    (SecurityManager as any).instance = null;
+    (SecurityManager as unknown).instance = null;
 
     // Create new instance with test config
     securityManager = SecurityManager.getInstance({

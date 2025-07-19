@@ -41,7 +41,7 @@ describe('clientSidePreview', () => {
     vi.clearAllMocks();
     global.document.createElement = vi.fn((tag) => {
       if (tag === 'canvas') {
-        return mockCanvas as any;
+        return mockCanvas as unknown;
       }
       return {} as any;
     });
@@ -108,8 +108,8 @@ describe('clientSidePreview', () => {
       // Mock FileReader to simulate successful read
       const mockFileReader = {
         readAsDataURL: vi.fn(),
-        onload: null as any,
-        onerror: null as any,
+        onload: null as unknown,
+        onerror: null as unknown,
         result: 'data:image/bmp;base64,mockdata',
       };
 
@@ -117,8 +117,8 @@ describe('clientSidePreview', () => {
 
       // Mock successful image load
       const mockImage = {
-        onload: null as any,
-        onerror: null as any,
+        onload: null as unknown,
+        onerror: null as unknown,
         src: '',
         width: 800,
         height: 600,

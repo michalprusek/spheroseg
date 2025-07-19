@@ -24,7 +24,7 @@ describe('ML Service Scaling', () => {
       end: jest.fn(),
     } as any;
 
-    (config as any).db = mockPool;
+    (config as unknown).db = mockPool;
 
     // Mock successful auth for tests
     mockPool.query.mockImplementation((query: string) => {

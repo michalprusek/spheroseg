@@ -54,7 +54,7 @@ const Settings = () => {
 
         console.log('Profile fetch successful:', response.status);
         setProfile(response.data);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Log detailed error information
         console.error('Error fetching profile:', error);
 

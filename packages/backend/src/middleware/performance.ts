@@ -318,7 +318,7 @@ export const createDatabaseMonitoringMiddleware = () => {
   // Update database metrics periodically
   const updateDatabaseMetrics = () => {
     try {
-      const poolStats = (pool as any).totalCount || 0; // Get pool statistics if available
+      const poolStats = (pool as unknown).totalCount || 0; // Get pool statistics if available
       databaseConnectionsActive.set(poolStats);
     } catch (error) {
       logger.warn('Failed to get database pool statistics', { error });

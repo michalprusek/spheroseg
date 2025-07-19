@@ -164,7 +164,7 @@ export class HierarchicalRateLimiter {
     }
 
     // Use user ID if authenticated, otherwise use IP
-    const user = (req as any).user;
+    const user = (req as unknown).user;
     if (user?.id) {
       return `user:${user.id}`;
     }
@@ -221,7 +221,7 @@ export class HierarchicalRateLimiter {
 
         try {
           await limiter.consume(key, 1);
-        } catch (rateLimiterRes: any) {
+        } catch (rateLimiterRes: unknown) {
           errors.push({
             tier: tierName,
             retriesAfter: new Date(Date.now() + rateLimiterRes.msBeforeNext),
@@ -244,7 +244,7 @@ export class HierarchicalRateLimiter {
           ip: getClientIp(req),
           path: req.path,
           method: req.method,
-          userId: (req as any).user?.id,
+          userId: (req as unknown).user?.id,
         });
 
         // Call custom handler if provided

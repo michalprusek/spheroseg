@@ -115,7 +115,7 @@ export const consoleErrorDetector = new ConsoleErrorDetector();
 
 // Export for debugging
 if (import.meta.env.DEV) {
-  (window as any).consoleErrorDetector = consoleErrorDetector;
+  (window as Window & { consoleErrorDetector?: unknown }).consoleErrorDetector = consoleErrorDetector;
 }
 
 export default consoleErrorDetector;

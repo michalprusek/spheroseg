@@ -82,7 +82,7 @@ describe('imageUtils', () => {
       const targetPath = '/test/thumb.png';
 
       // Mock util.promisify
-      (util as any).promisify = jest.fn(() => jest.fn().mockResolvedValue({ stdout: '', stderr: '' }));
+      (util as unknown).promisify = jest.fn(() => jest.fn().mockResolvedValue({ stdout: '', stderr: '' }));
 
       await createThumbnail(sourcePath, targetPath);
 

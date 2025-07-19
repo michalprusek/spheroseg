@@ -102,7 +102,7 @@ global.fetch = vi.fn(() =>
 describe('useExportFunctions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockClear();
+    (global.fetch as unknown).mockClear();
   });
 
   it('should initialize with default values', () => {
@@ -220,7 +220,7 @@ describe('useExportFunctions', () => {
   it('should handle export with API call', async () => {
     // Mock API response
     const mockBlob = new Blob(['test'], { type: 'application/zip' });
-    (apiClient.get as any).mockResolvedValue({
+    (apiClient.get as unknown).mockResolvedValue({
       data: mockBlob,
       headers: { 'content-disposition': 'attachment; filename="export.zip"' },
     });
@@ -244,7 +244,7 @@ describe('useExportFunctions', () => {
 
   it('should handle export error', async () => {
     // Mock API error
-    (apiClient.get as any).mockRejectedValue(new Error('API error'));
+    (apiClient.get as unknown).mockRejectedValue(new Error('API error'));
 
     const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), {
       wrapper: AllProvidersWrapper,

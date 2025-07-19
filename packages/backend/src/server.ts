@@ -144,7 +144,7 @@ const initializeServices = async (): Promise<void> => {
     if (config.monitoring?.metricsEnabled) {
       startPerformanceMonitoring(60000); // Every minute
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Failed to initialize services', { error: error?.message || error });
     throw error;
   }
@@ -182,7 +182,7 @@ const startServer = async (): Promise<void> => {
       console.log(`🔌 Socket.IO server ready`);
       console.log(`💾 Database connected`);
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Failed to start server', { error: error?.message || error });
     process.exit(1);
   }
@@ -226,13 +226,13 @@ const shutdown = async (signal: string): Promise<void> => {
         clearTimeout(shutdownTimeout);
         logger.info('Graceful shutdown completed');
         process.exit(0);
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error('Error during shutdown', { error: error?.message || error });
         clearTimeout(shutdownTimeout);
         process.exit(1);
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Error initiating shutdown', { error: error?.message || error });
     clearTimeout(shutdownTimeout);
     process.exit(1);

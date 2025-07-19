@@ -38,8 +38,8 @@ vi.mock('axios', () => {
     put: vi.fn(),
     delete: vi.fn(),
     patch: vi.fn(),
-    _requestInterceptor: null as any,
-    _responseInterceptor: null as any,
+    _requestInterceptor: null as unknown,
+    _responseInterceptor: null as unknown,
   };
 
   return mockAxios;
@@ -137,7 +137,7 @@ describe('apiClient', () => {
       localStorageMock['authToken'] = 'test-token';
 
       // Get the request interceptor
-      const { onFulfilled } = (apiClient as any)._requestInterceptor;
+      const { onFulfilled } = (apiClient as unknown)._requestInterceptor;
 
       // Execute the interceptor
       const result = onFulfilled(mockConfig);
@@ -157,7 +157,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the request interceptor
-      const { onFulfilled } = (apiClient as any)._requestInterceptor;
+      const { onFulfilled } = (apiClient as unknown)._requestInterceptor;
 
       // Execute the interceptor
       const result = onFulfilled(mockConfig);
@@ -176,7 +176,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the request interceptor
-      const { onFulfilled } = (apiClient as any)._requestInterceptor;
+      const { onFulfilled } = (apiClient as unknown)._requestInterceptor;
 
       // Execute the interceptor
       const result = onFulfilled(mockConfig);
@@ -200,7 +200,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the request interceptor
-      const { onFulfilled } = (apiClient as any)._requestInterceptor;
+      const { onFulfilled } = (apiClient as unknown)._requestInterceptor;
 
       // Execute the interceptor
       onFulfilled(mockConfig);
@@ -225,7 +225,7 @@ describe('apiClient', () => {
       const mockError = new Error('Request setup error');
 
       // Get the request interceptor
-      const { onRejected } = (apiClient as any)._requestInterceptor;
+      const { onRejected } = (apiClient as unknown)._requestInterceptor;
 
       // Execute the interceptor
       let caughtError;
@@ -266,7 +266,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the response interceptor
-      const { onFulfilled } = (apiClient as any)._responseInterceptor;
+      const { onFulfilled } = (apiClient as unknown)._responseInterceptor;
 
       // Execute the interceptor
       const result = onFulfilled(mockResponse);
@@ -293,7 +293,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the response interceptor
-      const { onFulfilled } = (apiClient as any)._responseInterceptor;
+      const { onFulfilled } = (apiClient as unknown)._responseInterceptor;
 
       // Execute the interceptor
       onFulfilled(mockResponse);
@@ -333,7 +333,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the response interceptor
-      const { onRejected } = (apiClient as any)._responseInterceptor;
+      const { onRejected } = (apiClient as unknown)._responseInterceptor;
 
       // Execute the interceptor
       try {
@@ -382,7 +382,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the response interceptor
-      const { onRejected } = (apiClient as any)._responseInterceptor;
+      const { onRejected } = (apiClient as unknown)._responseInterceptor;
 
       // Execute the interceptor
       try {
@@ -424,7 +424,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the response interceptor
-      const { onRejected } = (apiClient as any)._responseInterceptor;
+      const { onRejected } = (apiClient as unknown)._responseInterceptor;
 
       // Execute the interceptor
       try {
@@ -466,7 +466,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the response interceptor
-      const { onRejected } = (apiClient as any)._responseInterceptor;
+      const { onRejected } = (apiClient as unknown)._responseInterceptor;
 
       // Execute the interceptor
       try {
@@ -504,7 +504,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the response interceptor
-      const { onRejected } = (apiClient as any)._responseInterceptor;
+      const { onRejected } = (apiClient as unknown)._responseInterceptor;
 
       // Execute the interceptor
       try {
@@ -546,7 +546,7 @@ describe('apiClient', () => {
       } as any;
 
       // Get the response interceptor
-      const { onRejected } = (apiClient as any)._responseInterceptor;
+      const { onRejected } = (apiClient as unknown)._responseInterceptor;
 
       // Execute the interceptor
       try {

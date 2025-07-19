@@ -66,7 +66,7 @@ vi.mock('react-router-dom', async () => {
 describe('ProjectExportPage Component', () => {
   beforeEach(() => {
     // Mock API responses
-    (apiClient.get as any).mockImplementation((url) => {
+    (apiClient.get as unknown).mockImplementation((url) => {
       if (url.includes('/projects/test-project-id')) {
         return Promise.resolve({
           data: {

@@ -79,7 +79,7 @@ export function DeleteAccountDialog({ open, onClose }: DeleteAccountDialogProps)
       navigate('/');
 
       handleClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error deleting account', { error });
 
       if (error.response?.status === 400) {

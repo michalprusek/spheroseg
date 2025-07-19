@@ -122,7 +122,7 @@ export const createCSPMiddleware = (options: SecurityOptions = {}) => {
     const nonce = generateNonce();
 
     // Store nonce in request for use in templates
-    (req as any).nonce = nonce;
+    (req as unknown).nonce = nonce;
 
     const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -164,7 +164,7 @@ export const createCSPMiddleware = (options: SecurityOptions = {}) => {
 
     // Add report URI if provided
     if (cspReportUri) {
-      (directives as any)['report-uri'] = [cspReportUri];
+      (directives as unknown)['report-uri'] = [cspReportUri];
     }
 
     // Convert directives to CSP string

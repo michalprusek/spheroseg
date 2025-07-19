@@ -379,7 +379,7 @@ export class MockAuth {
       }
 
       // Add user data to request
-      (req as any).user = {
+      (req as unknown).user = {
         userId: payload.id,
         email: payload.email,
         role: payload.role,
@@ -387,7 +387,7 @@ export class MockAuth {
 
       // For device-specific functionality
       if (payload.deviceId) {
-        (req as any).deviceId = payload.deviceId;
+        (req as unknown).deviceId = payload.deviceId;
       }
 
       next();
@@ -420,7 +420,7 @@ export class MockAuth {
 
     // Add device ID if present
     if (tokenData.deviceId) {
-      (req as any).deviceId = tokenData.deviceId;
+      (req as unknown).deviceId = tokenData.deviceId;
     }
 
     return req as Request;

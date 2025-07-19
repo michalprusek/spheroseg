@@ -18,7 +18,7 @@ const isNetworkError = (error: unknown): boolean => {
 const getRetryCount = (failureCount: number, error: unknown): number => {
   // Don't retry on 4xx errors (client errors)
   if (error && typeof error === 'object' && 'status' in error) {
-    const status = (error as any).status;
+    const status = (error as unknown).status;
     if (status >= 400 && status < 500) {
       return 0; // Don't retry client errors
     }

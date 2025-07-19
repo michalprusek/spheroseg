@@ -137,7 +137,7 @@ describe('ExcelExporter Component', () => {
     fireEvent.click(exportButton);
 
     // Check if json_to_sheet was called with correctly formatted data
-    const jsonToSheetCallArg = (utils.json_to_sheet as any).mock.calls[0][0];
+    const jsonToSheetCallArg = (utils.json_to_sheet as unknown).mock.calls[0][0];
 
     // Should contain two items (one for each external polygon)
     expect(jsonToSheetCallArg.length).toBe(2);
@@ -170,7 +170,7 @@ describe('ExcelExporter Component', () => {
     fireEvent.click(exportButton);
 
     // Check if column widths were set
-    const jsonToSheetResult = (utils.json_to_sheet as any).mock.results[0].value;
+    const jsonToSheetResult = (utils.json_to_sheet as unknown).mock.results[0].value;
 
     // Mock the result to simulate setting of column widths
     expect(jsonToSheetResult['!cols']).toBeDefined();

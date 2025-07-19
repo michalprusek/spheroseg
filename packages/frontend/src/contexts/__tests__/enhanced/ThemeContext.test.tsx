@@ -184,12 +184,12 @@ describe('ThemeContext (Enhanced)', () => {
 
     // Restore document styles
     Object.keys(originalDocumentElementStyle).forEach((key) => {
-      document.documentElement.style[key as any] =
+      document.documentElement.style[key as unknown] =
         originalDocumentElementStyle[key as keyof typeof originalDocumentElementStyle];
     });
 
     Object.keys(originalBodyStyle).forEach((key) => {
-      document.body.style[key as any] = originalBodyStyle[key as keyof typeof originalBodyStyle];
+      document.body.style[key as unknown] = originalBodyStyle[key as keyof typeof originalBodyStyle];
     });
   });
 

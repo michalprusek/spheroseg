@@ -58,7 +58,7 @@ vi.mock('@/components/project/CreateProjectDialog', () => ({
 describe('DashboardPage Component', () => {
   beforeEach(() => {
     // Mock API responses
-    (apiClient.get as any).mockImplementation((url) => {
+    (apiClient.get as unknown).mockImplementation((url) => {
       if (url.includes('/users/me/stats')) {
         return Promise.resolve({
           data: {

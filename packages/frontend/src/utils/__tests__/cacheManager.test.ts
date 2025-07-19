@@ -47,7 +47,7 @@ describe('Cache Manager', () => {
       const mockCacheService = {
         invalidate: vi.fn().mockResolvedValue(undefined),
       };
-      vi.spyOn(unifiedCacheService, 'default', 'get').mockReturnValue(mockCacheService as any);
+      vi.spyOn(unifiedCacheService, 'default', 'get').mockReturnValue(mockCacheService as unknown);
 
       // Mock IndexedDB service
       vi.spyOn(indexedDBService, 'deleteProjectImages').mockResolvedValue(undefined);
@@ -84,7 +84,7 @@ describe('Cache Manager', () => {
       const mockCacheService = {
         invalidate: vi.fn().mockRejectedValue(new Error('Cache error')),
       };
-      vi.spyOn(unifiedCacheService, 'default', 'get').mockReturnValue(mockCacheService as any);
+      vi.spyOn(unifiedCacheService, 'default', 'get').mockReturnValue(mockCacheService as unknown);
 
       // Should not throw
       await expect(clearProjectImageCache(projectId)).resolves.not.toThrow();
@@ -181,15 +181,15 @@ describe('Cache Manager', () => {
       // The cacheManager module should have already added utilities to window
 
       // Verify window utilities exist
-      expect((window as any).cacheManager).toBeDefined();
-      expect((window as any).cacheManager.clearProjectImageCache).toBeDefined();
-      expect((window as any).cacheManager.clearAllCaches).toBeDefined();
-      expect((window as any).cacheManager.getCacheStats).toBeDefined();
+      expect((window as Window & { cacheManager?: unknown }).cacheManager).toBeDefined();
+      expect((window as unknown).cacheManager.clearProjectImageCache).toBeDefined();
+      expect((window as Window & { cacheManager?: unknown }).cacheManager.clearAllCaches).toBeDefined();
+      expect((window as unknown).cacheManager.getCacheStats).toBeDefined();
 
       // Verify they are the same functions
-      expect((window as any).cacheManager.clearProjectImageCache).toBe(clearProjectImageCache);
-      expect((window as any).cacheManager.clearAllCaches).toBe(clearAllCaches);
-      expect((window as any).cacheManager.getCacheStats).toBe(getCacheStats);
+      expect((window as Window & { cacheManager?: unknown }).cacheManager.clearProjectImageCache).toBe(clearProjectImageCache);
+      expect((window as unknown).cacheManager.clearAllCaches).toBe(clearAllCaches);
+      expect((window as Window & { cacheManager?: unknown }).cacheManager.getCacheStats).toBe(getCacheStats);
     });
   });
 });
