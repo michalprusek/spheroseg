@@ -1,14 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useExperiment, useFeatureFlag, useABTestingEvents } from '../useABTesting';
-import React from 'react';
-
-// Import the types we need
-import type { 
-  ABTestingService as ABTestingServiceType,
-  ExperimentResult,
-  FeatureFlag,
-} from '@/services/abTesting/abTestingService';
 
 // Mock the session storage
 const mockSessionStorage = {
@@ -22,22 +13,6 @@ Object.defineProperty(window, 'sessionStorage', {
   writable: true,
 });
 
-// Mock modules
-let mockService: Partial<ABTestingServiceType>;
-let mockGetABTestingInstance: any;
-let mockInitializeABTesting: any;
-
-vi.mock('@/services/abTesting/abTestingService', () => {
-  mockGetABTestingInstance = vi.fn();
-  mockInitializeABTesting = vi.fn();
-  
-  return {
-    getABTestingInstance: mockGetABTestingInstance,
-    initializeABTesting: mockInitializeABTesting,
-    ABTestingService: vi.fn(),
-  };
-});
-
 // Mock auth context
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(() => ({
@@ -45,34 +20,74 @@ vi.mock('@/contexts/AuthContext', () => ({
   })),
 }));
 
+// Mock the ABTestingService module with factory function
+vi.mock('@/services/abTesting/abTestingService', () => {
+  const mockService = {
+    getVariant: vi.fn().mockReturnValue({ variantId: 'control', isInExperiment: true }),
+    isFeatureEnabled: vi.fn().mockReturnValue(false),
+    getFeatureFlag: vi.fn().mockReturnValue(undefined),
+    trackEvent: vi.fn(),
+    trackConversion: vi.fn(),
+    trackTiming: vi.fn(),
+    getActiveExperiments: vi.fn().mockReturnValue({}),
+    getAllFeatureFlags: vi.fn().mockReturnValue([]),
+    initialize: vi.fn().mockResolvedValue(undefined),
+  };
+
+  return {
+    getABTestingInstance: vi.fn(() => mockService),
+    initializeABTesting: vi.fn(() => mockService),
+    ABTestingService: vi.fn(),
+    // Export mockService so tests can access it
+    __mockService: mockService,
+  };
+});
+
+// Import the hooks after mocks are set up
+import { useExperiment, useFeatureFlag, useABTestingEvents } from '../useABTesting';
+import { getABTestingInstance, initializeABTesting } from '@/services/abTesting/abTestingService';
+
+// Get the mock service from the module
+const mockService = (vi.mocked(getABTestingInstance) as any).__mockService || 
+  (getABTestingInstance as any)().__mockService ||
+  {
+    getVariant: vi.fn(),
+    isFeatureEnabled: vi.fn(),
+    getFeatureFlag: vi.fn(),
+    trackEvent: vi.fn(),
+    trackConversion: vi.fn(),
+    trackTiming: vi.fn(),
+    getActiveExperiments: vi.fn(),
+    getAllFeatureFlags: vi.fn(),
+    initialize: vi.fn(),
+  };
+
 describe('useABTesting hooks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    mockService = {
-      getVariant: vi.fn().mockReturnValue({ variantId: 'control', isInExperiment: true }),
-      isFeatureEnabled: vi.fn().mockReturnValue(false),
-      getFeatureFlag: vi.fn().mockReturnValue(undefined),
-      trackEvent: vi.fn(),
-      trackConversion: vi.fn(),
-      trackTiming: vi.fn(),
-      getActiveExperiments: vi.fn().mockReturnValue({}),
-      getAllFeatureFlags: vi.fn().mockReturnValue([]),
-      initialize: vi.fn().mockResolvedValue(undefined),
-    };
-
-    // Set up the mocks
-    mockGetABTestingInstance.mockReturnValue(mockService);
-    mockInitializeABTesting.mockReturnValue(mockService);
+    // Reset mock implementations
+    mockService.getVariant.mockReturnValue({ variantId: 'control', isInExperiment: true });
+    mockService.isFeatureEnabled.mockReturnValue(false);
+    mockService.getFeatureFlag.mockReturnValue(undefined);
+    mockService.trackEvent.mockClear();
+    mockService.trackConversion.mockClear();
+    mockService.trackTiming.mockClear();
+    mockService.getActiveExperiments.mockReturnValue({});
+    mockService.getAllFeatureFlags.mockReturnValue([]);
+    mockService.initialize.mockResolvedValue(undefined);
+    
+    vi.mocked(getABTestingInstance).mockReturnValue(mockService);
+    vi.mocked(initializeABTesting).mockReturnValue(mockService);
   });
 
   describe('useExperiment', () => {
     it('should return variant for experiment', async () => {
-      const mockResult: ExperimentResult = { 
+      const mockResult = { 
         variantId: 'variant-a', 
         isInExperiment: true 
       };
-      mockService.getVariant = vi.fn().mockReturnValue(mockResult);
+      mockService.getVariant.mockReturnValue(mockResult);
 
       const { result } = renderHook(() => useExperiment('test-experiment'));
 
@@ -85,11 +100,11 @@ describe('useABTesting hooks', () => {
     });
 
     it('should identify control variant', async () => {
-      const mockResult: ExperimentResult = { 
+      const mockResult = { 
         variantId: 'control', 
         isInExperiment: true 
       };
-      mockService.getVariant = vi.fn().mockReturnValue(mockResult);
+      mockService.getVariant.mockReturnValue(mockResult);
 
       const { result } = renderHook(() => useExperiment('test-experiment'));
 
@@ -100,11 +115,11 @@ describe('useABTesting hooks', () => {
     });
 
     it('should track events with experiment context', async () => {
-      const mockResult: ExperimentResult = { 
+      const mockResult = { 
         variantId: 'variant-a', 
         isInExperiment: true 
       };
-      mockService.getVariant = vi.fn().mockReturnValue(mockResult);
+      mockService.getVariant.mockReturnValue(mockResult);
 
       const { result } = renderHook(() => useExperiment('test-experiment'));
 
@@ -114,11 +129,11 @@ describe('useABTesting hooks', () => {
     });
 
     it('should memoize variant result', async () => {
-      const mockResult: ExperimentResult = { 
+      const mockResult = { 
         variantId: 'variant-a', 
         isInExperiment: true 
       };
-      mockService.getVariant = vi.fn().mockReturnValue(mockResult);
+      mockService.getVariant.mockReturnValue(mockResult);
 
       const { result, rerender } = renderHook(() => useExperiment('test-experiment'));
 
@@ -126,16 +141,16 @@ describe('useABTesting hooks', () => {
         expect(result.current).toEqual(mockResult);
       });
 
-      const callCount = (mockService.getVariant as any).mock.calls.length;
+      const callCount = mockService.getVariant.mock.calls.length;
       
       rerender();
       
       // Should not call getVariant again on rerender
-      expect((mockService.getVariant as any).mock.calls.length).toBe(callCount);
+      expect(mockService.getVariant.mock.calls.length).toBe(callCount);
     });
 
     it('should handle missing service gracefully', async () => {
-      mockGetABTestingInstance.mockReturnValue(null);
+      vi.mocked(getABTestingInstance).mockReturnValue(null);
 
       const { result } = renderHook(() => useExperiment('test-experiment'));
 
@@ -148,7 +163,7 @@ describe('useABTesting hooks', () => {
 
   describe('useFeatureFlag', () => {
     it('should return boolean feature flag value', async () => {
-      mockService.getFeatureFlag = vi.fn().mockReturnValue(true);
+      mockService.getFeatureFlag.mockReturnValue(true);
 
       const { result } = renderHook(() => useFeatureFlag('new-feature'));
 
@@ -160,7 +175,7 @@ describe('useABTesting hooks', () => {
     });
 
     it('should return feature flag with custom value', async () => {
-      mockService.getFeatureFlag = vi.fn().mockReturnValue('blue');
+      mockService.getFeatureFlag.mockReturnValue('blue');
 
       const { result } = renderHook(() => useFeatureFlag('button-color', 'red'));
 
@@ -172,7 +187,7 @@ describe('useABTesting hooks', () => {
     });
 
     it('should return default value when flag is not set', async () => {
-      mockService.getFeatureFlag = vi.fn().mockReturnValue(undefined);
+      mockService.getFeatureFlag.mockReturnValue(undefined);
 
       const { result } = renderHook(() => useFeatureFlag('missing-flag', 'default-value'));
 
@@ -182,7 +197,7 @@ describe('useABTesting hooks', () => {
     });
 
     it('should handle missing service with defaults', async () => {
-      mockGetABTestingInstance.mockReturnValue(null);
+      vi.mocked(getABTestingInstance).mockReturnValue(null);
 
       const { result } = renderHook(() => useFeatureFlag('new-feature', false));
 
@@ -192,7 +207,7 @@ describe('useABTesting hooks', () => {
     });
 
     it('should update when feature flag changes', async () => {
-      mockService.getFeatureFlag = vi.fn()
+      mockService.getFeatureFlag
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
 
@@ -277,7 +292,7 @@ describe('useABTesting hooks', () => {
     });
 
     it('should handle missing service gracefully', async () => {
-      mockGetABTestingInstance.mockReturnValue(null);
+      vi.mocked(getABTestingInstance).mockReturnValue(null);
 
       const { result } = renderHook(() => useABTestingEvents());
 
@@ -298,7 +313,7 @@ describe('useABTesting hooks', () => {
         'experiment-1': 'variant-a',
         'experiment-2': 'control',
       };
-      mockService.getActiveExperiments = vi.fn().mockReturnValue(activeExperiments);
+      mockService.getActiveExperiments.mockReturnValue(activeExperiments);
 
       const { result } = renderHook(() => useABTestingEvents());
 
@@ -319,12 +334,12 @@ describe('useABTesting hooks', () => {
 
   describe('integration scenarios', () => {
     it('should work with multiple hooks together', async () => {
-      const mockExperimentResult: ExperimentResult = { 
+      const mockExperimentResult = { 
         variantId: 'variant-a', 
         isInExperiment: true 
       };
-      mockService.getVariant = vi.fn().mockReturnValue(mockExperimentResult);
-      mockService.getFeatureFlag = vi.fn().mockReturnValue(true);
+      mockService.getVariant.mockReturnValue(mockExperimentResult);
+      mockService.getFeatureFlag.mockReturnValue(true);
 
       const { result: experimentResult } = renderHook(() => useExperiment('test-exp'));
       const { result: flagResult } = renderHook(() => useFeatureFlag('test-flag'));
@@ -338,7 +353,7 @@ describe('useABTesting hooks', () => {
     });
 
     it('should handle conditional feature rendering', async () => {
-      mockService.getFeatureFlag = vi.fn().mockReturnValue(true);
+      mockService.getFeatureFlag.mockReturnValue(true);
 
       const { result } = renderHook(() => useFeatureFlag('new-ui-feature', false));
 

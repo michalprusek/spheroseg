@@ -2,6 +2,7 @@
  * Request deduplicator to prevent duplicate API calls
  * Especially useful for preventing rate limiting issues
  */
+import logger from '@/utils/logger';
 
 interface PendingRequest<T = unknown> {
   promise: Promise<T>;
@@ -58,12 +59,12 @@ class RequestDeduplicator {
     // Check if we have a pending request
     const pending = this.pendingRequests.get(key);
     if (pending) {
-      console.log(`[RequestDeduplicator] Reusing pending request for: ${key}`);
+      logger.debug(`[RequestDeduplicator] Reusing pending request for: ${key}`);
       return pending.promise as Promise<T>;
     }
 
     // Create new request
-    console.log(`[RequestDeduplicator] Creating new request for: ${key}`);
+    logger.debug(`[RequestDeduplicator] Creating new request for: ${key}`);
     const promise = requestFn();
 
     // Store the pending request

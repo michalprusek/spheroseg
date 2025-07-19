@@ -1,4 +1,5 @@
 // Translation loader utility with error handling
+import logger from '@/utils/logger';
 
 // Helper function to load translation with error handling
 async function loadSingleTranslation(importFunc: () => Promise<{ default?: unknown; [key: string]: unknown }>, fallback = {}) {
@@ -21,7 +22,7 @@ async function loadSingleTranslation(importFunc: () => Promise<{ default?: unkno
     }
     return mod || fallback;
   } catch (error) {
-    console.warn('Failed to load a translation module:', error);
+    logger.warn('Failed to load a translation module:', error);
     return fallback;
   }
 }
@@ -67,7 +68,7 @@ export async function initializeTranslations() {
   try {
     en = await loadSingleTranslation(() => import('../translations/en'), minimalEnFallback);
   } catch (error) {
-    console.error('Critical failure loading English translations, using minimal fallback:', error);
+    logger.error('Critical failure loading English translations, using minimal fallback:', error);
     en = minimalEnFallback;
   }
 
@@ -88,17 +89,17 @@ export async function initializeTranslations() {
   };
   // Log only in development mode
   if (process.env.NODE_ENV === 'development') {
-    console.log('[translationLoader] Translations loaded:', Object.keys(resources));
+    logger.debug('[translationLoader] Translations loaded:', Object.keys(resources));
 
     // Verify translations are loaded correctly
     if (en) {
-      console.log('[translationLoader] EN translation loaded successfully');
+      logger.debug('[translationLoader] EN translation loaded successfully');
 
       // Quick validation
       const requiredKeys = ['common', 'projects', 'statsOverview'];
       const missingKeys = requiredKeys.filter((key) => !en[key]);
       if (missingKeys.length > 0) {
-        console.error('[translationLoader] Missing required translation sections:', missingKeys);
+        logger.error('[translationLoader] Missing required translation sections:', missingKeys);
       }
     }
   }

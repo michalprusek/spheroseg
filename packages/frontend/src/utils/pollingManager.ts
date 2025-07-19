@@ -2,6 +2,7 @@
  * Centralized polling manager to prevent excessive API calls
  * Coordinates polling across multiple components to avoid 429 errors
  */
+import logger from '@/utils/logger';
 
 interface PollTask {
   id: string;
@@ -110,7 +111,7 @@ class PollingManager {
   private async executePoll(task: PollTask): Promise<void> {
     // Check if we've exceeded max retries
     if (task.retryCount >= task.maxRetries) {
-      console.debug(`Polling stopped for ${task.id} after ${task.retryCount} attempts`);
+      logger.debug(`Polling stopped for ${task.id} after ${task.retryCount} attempts`);
       this.unregister(task.id);
       return;
     }
@@ -137,7 +138,7 @@ class PollingManager {
       
       if (axiosError.response?.status === 429) {
         // Rate limited - apply global backoff
-        console.warn('Rate limit hit, applying global backoff');
+        logger.warn('Rate limit hit, applying global backoff');
         this.rateLimitBackoff = Date.now() + this.RATE_LIMIT_COOLDOWN;
 
         // Double all task intervals
@@ -146,7 +147,7 @@ class PollingManager {
         }
       } else if (axiosError.response?.status === 401) {
         // Authentication error - stop all polling
-        console.error('Authentication error, stopping all polling');
+        logger.error('Authentication error, stopping all polling');
         this.stopAll();
       } else if (axiosError.response?.status === 404) {
         // Not found - might be normal for new images

@@ -113,7 +113,7 @@ class UnifiedLogger {
     this.log(LogLevel.WARN, message, data, context);
   }
 
-  error(message: string, error?: Error | any, context?: Record<string, any>): void {
+  error(message: string, error?: Error | unknown, context?: Record<string, unknown>): void {
     let errorData: Record<string, unknown> = {};
     
     if (error instanceof Error) {
