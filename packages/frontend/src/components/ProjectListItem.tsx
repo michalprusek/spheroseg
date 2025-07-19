@@ -19,7 +19,7 @@ interface ProjectListItemProps {
   onClick?: () => void;
   projectName: string;
   onDelete?: () => void;
-  onDuplicate?: (newProject: any) => void;
+  onDuplicate?: (newProject: unknown) => void;
   isOwner?: boolean;
   permission?: string;
   ownerName?: string;
