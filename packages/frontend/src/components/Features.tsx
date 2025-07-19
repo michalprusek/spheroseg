@@ -120,7 +120,7 @@ const Features = () => {
     console.log('tag:', getTranslation('features.tag'));
     console.log('title:', getTranslation('features.title'));
     console.log('subtitle:', getTranslation('features.subtitle'));
-  }, [language, forceUpdate]);
+  }, [language, forceUpdate, getTranslation]);
 
   const features = [
     {

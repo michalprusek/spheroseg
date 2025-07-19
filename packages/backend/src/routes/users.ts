@@ -10,6 +10,15 @@ import pool from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import tokenService from '../services/tokenService';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
+import { 
+  sendSuccess, 
+  sendError, 
+  sendNotFound, 
+  sendUnauthorized,
+  sendBadRequest,
+  sendServerError,
+  asyncHandler
+} from '../utils/responseHelpers';
 
 const router: Router = express.Router();
 
@@ -121,14 +130,12 @@ router.get(
   '/me',
   authMiddleware,
   combineCacheStrategies(cacheControl.conditional, cacheControl.etag),
-  async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
 
     if (!userId) {
-      return res.status(401).json({ message: 'Authentication required' });
+      return sendUnauthorized(res, 'Authentication required');
     }
-
-    try {
       // Check if users table exists
       const tableCheck = await pool.query(`
       SELECT EXISTS (
@@ -141,7 +148,7 @@ router.get(
 
       if (!tableCheck.rows[0].exists) {
         logger.warn('Users table does not exist, returning error');
-        return res.status(500).json({ message: 'Database schema not initialized' });
+        return sendServerError(res, 'Database schema not initialized');
       }
 
       // Get user from database
@@ -149,7 +156,7 @@ router.get(
 
       if (userResult.rows.length === 0) {
         logger.warn('User not found', { userId });
-        return res.status(404).json({ message: 'User not found' });
+        return sendNotFound(res, 'User not found');
       }
 
       const user = userResult.rows[0];
@@ -202,12 +209,8 @@ router.get(
       };
 
       logger.info('User profile returned', { userId });
-      return res.json(userData);
-    } catch (error) {
-      logger.error('Error fetching user profile:', { error });
-      return res.status(500).json({ message: 'Failed to fetch user profile' });
-    }
-  }
+      return sendSuccess(res, userData);
+  })
 );
 
 /**

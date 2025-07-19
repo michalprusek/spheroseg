@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { MockApiClientProvider } from '../../lib/__mocks__/enhanced/apiClient';
 import { useProjectApi } from '../../hooks/api/useProjectApi';
-import { ProjectStatus } from '@spheroseg/types';
+// Define ProjectStatus type locally since it's not exported from types
+type ProjectStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
 
 // Mock project data
 const mockProjects = [
@@ -10,7 +11,7 @@ const mockProjects = [
     id: 'project-1',
     name: 'Test Project 1',
     description: 'A test project description',
-    status: ProjectStatus.ACTIVE,
+    status: 'ACTIVE' as ProjectStatus,
     createdAt: '2023-06-01T12:00:00Z',
     updatedAt: '2023-06-02T12:00:00Z',
     imageCount: 3,
@@ -20,7 +21,7 @@ const mockProjects = [
     id: 'project-2',
     name: 'Test Project 2',
     description: 'Another test project',
-    status: ProjectStatus.ACTIVE,
+    status: 'ACTIVE' as ProjectStatus,
     createdAt: '2023-06-03T12:00:00Z',
     updatedAt: '2023-06-04T12:00:00Z',
     imageCount: 5,
@@ -125,7 +126,7 @@ describe('Project API Integration Tests', () => {
       const createdProject = {
         ...mockNewProject,
         id: 'new-project-id',
-        status: ProjectStatus.ACTIVE,
+        status: 'ACTIVE' as ProjectStatus,
         createdAt: '2023-06-10T12:00:00Z',
         updatedAt: '2023-06-10T12:00:00Z',
         imageCount: 0,
@@ -183,7 +184,7 @@ describe('Project API Integration Tests', () => {
     it('should update a project successfully', async () => {
       const updatedProject = {
         ...mockUpdatedProject,
-        status: ProjectStatus.ACTIVE,
+        status: 'ACTIVE' as ProjectStatus,
         createdAt: '2023-06-01T12:00:00Z',
         updatedAt: '2023-06-10T12:00:00Z',
         imageCount: 3,

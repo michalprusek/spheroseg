@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { MockApiClientProvider } from '../../lib/__mocks__/enhanced/apiClient';
 import { useImageApi } from '../../hooks/api/useImageApi';
-import { ImageStatus } from '@spheroseg/types';
+// Import ImageStatus as a type, not enum
+type ImageStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'saving' | 'without_segmentation';
 
 // Mock image data
 const mockImages = [
@@ -11,7 +12,7 @@ const mockImages = [
     projectId: 'project-1',
     filename: 'test1.jpg',
     originalFilename: 'original1.jpg',
-    status: ImageStatus.PROCESSED,
+    status: 'completed' as ImageStatus,
     width: 800,
     height: 600,
     fileSize: 250000,
@@ -24,7 +25,7 @@ const mockImages = [
     projectId: 'project-1',
     filename: 'test2.jpg',
     originalFilename: 'original2.jpg',
-    status: ImageStatus.PENDING,
+    status: 'queued' as ImageStatus,
     width: 1024,
     height: 768,
     fileSize: 400000,
@@ -137,7 +138,7 @@ describe('Image API Integration Tests', () => {
         projectId: 'project-1',
         filename: 'new-image.jpg',
         originalFilename: 'test-upload.jpg',
-        status: ImageStatus.PENDING,
+        status: 'queued' as ImageStatus,
         width: 1280,
         height: 720,
         fileSize: 350000,
@@ -226,7 +227,7 @@ describe('Image API Integration Tests', () => {
         projectId: 'project-1',
         filename: 'new-image.jpg',
         originalFilename: 'test-upload.jpg',
-        status: ImageStatus.PENDING,
+        status: 'queued' as ImageStatus,
         width: 1280,
         height: 720,
         fileSize: 350000,
@@ -401,7 +402,7 @@ describe('Image API Integration Tests', () => {
     it('should update image status successfully', async () => {
       const updatedImage = {
         ...mockImages[1],
-        status: ImageStatus.PROCESSED,
+        status: 'completed' as ImageStatus,
         updatedAt: '2023-06-10T15:30:00Z',
       };
 
@@ -422,7 +423,7 @@ describe('Image API Integration Tests', () => {
 
       let image;
       await act(async () => {
-        image = await result.current.updateImageStatus('project-1', 'image-2', ImageStatus.PROCESSED);
+        image = await result.current.updateImageStatus('project-1', 'image-2', 'completed' as ImageStatus);
       });
 
       expect(image).toEqual(updatedImage);
