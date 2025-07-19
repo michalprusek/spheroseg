@@ -95,7 +95,7 @@ describe('ABTesting Components', () => {
 
       render(
         <Experiment experimentId="test-experiment">
-          {(variant, features) => <div>Current variant: {variant}</div>}
+          {(variant, _features) => <div>Current variant: {variant}</div>}
         </Experiment>,
       );
 
@@ -111,7 +111,7 @@ describe('ABTesting Components', () => {
 
       render(
         <Experiment experimentId="test-experiment" fallback={<div>Not in experiment</div>}>
-          {(variant, features) => <div>Current variant: {variant}</div>}
+          {(variant, _features) => <div>Current variant: {variant}</div>}
         </Experiment>,
       );
 
@@ -191,7 +191,7 @@ describe('ABTesting Components', () => {
       (useVariant as Mock).mockImplementation((expId, varId) => varId === 'variant-a');
 
       // Re-render to apply the mock
-      const { rerender } = render(
+      render(
         <VariantSwitch experimentId="test">
           <Variant experimentId="test" variantId="control">
             <div>Control Content</div>

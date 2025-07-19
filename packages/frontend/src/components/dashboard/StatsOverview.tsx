@@ -45,8 +45,7 @@ const StatCard: React.FC<StatCardProps> = ({
   isLoading = false,
   className = '',
 }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const { theme: _theme } = useTheme();
 
   return (
     <Card
@@ -100,7 +99,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
   timestamp,
   projectId,
   projectName,
-  imageId,
+  imageId: _imageId,
   imageName,
 }) => {
   const { t } = useLanguage();
@@ -249,9 +248,9 @@ const StatsOverview: React.FC = () => {
   const {
     data: rawStats,
     isLoading,
-    error,
+    error: _error,
     refetch: fetchStatistics,
-    invalidate: clearCache,
+    invalidate: _clearCache,
   } = useExtendedUserStatistics();
 
   // Transform the data to match the expected format

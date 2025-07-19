@@ -101,7 +101,7 @@ const ChartContainer = memo(({ title, children }: { title: string; children: Rea
 ChartContainer.displayName = 'ChartContainer';
 
 export const AnalyticsDashboard = memo(() => {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const [timeRange, setTimeRange] = useState<keyof typeof TIME_RANGES>('30d');
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: subDays(new Date(), 30),
