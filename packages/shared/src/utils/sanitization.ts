@@ -81,8 +81,12 @@ export function sanitizeHtml(input: string, options?: {
   const truncated = input.length > maxLength ? input.substring(0, maxLength) : input;
   
   // Configure DOMPurify
+  const allowedTags = options?.allowedTags || SANITIZATION_CONFIG.HTML_ALLOWED_TAGS;
+  const allowedAttributes = options?.allowedAttributes || SANITIZATION_CONFIG.HTML_ALLOWED_ATTRIBUTES;
+  
   const config: DOMPurify.Config = {
-    ALLOWED_TAGS: (options?.allowedTags || SANITIZATION_CONFIG.HTML_ALLOWED_TAGS) as string[],
+    ALLOWED_TAGS: allowedTags as string[],
+    ALLOWED_ATTR: allowedAttributes,
     KEEP_CONTENT: true,
     ALLOW_DATA_ATTR: false,
     SANITIZE_DOM: true,
@@ -92,15 +96,10 @@ export function sanitizeHtml(input: string, options?: {
     WHOLE_DOCUMENT: false,
   };
   
-  // Set ALLOWED_ATTR if it's a string array
-  if (options?.allowedAttributes && Array.isArray(options.allowedAttributes)) {
-    config.ALLOWED_ATTR = options.allowedAttributes;
-  }
-  
   try {
     const sanitized = DOMPurify.sanitize(truncated, config) as unknown as string;
     
-    // Additional pattern-based cleaning
+    // Additional pattern-based cleaning for dangerous patterns
     let cleaned = sanitized;
     SANITIZATION_CONFIG.DANGEROUS_PATTERNS.forEach(pattern => {
       cleaned = cleaned.replace(pattern, '');
@@ -136,7 +135,7 @@ export function sanitizeText(input: string, options?: {
   }
   
   if (!options?.allowHtml) {
-    // Remove all HTML tags
+    // Remove all HTML tags but keep inner content
     sanitized = sanitized.replace(/<[^>]*>/g, '');
     
     // Remove dangerous patterns
@@ -150,7 +149,7 @@ export function sanitizeText(input: string, options?: {
     sanitized = sanitized.replace(/\r?\n/g, ' ');
   }
   
-  // Normalize whitespace
+  // Normalize whitespace but preserve basic structure
   sanitized = sanitized.replace(/\s+/g, ' ').trim();
   
   return sanitized;

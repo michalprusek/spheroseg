@@ -17,6 +17,7 @@
     "usehooks-ts": "^3.1.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.25.1",
     "@playwright/test": "^1.54.1",
@@ -76,6 +77,12 @@
     "playwright:test": "playwright test",
     "e2e": "playwright test",
     "e2e:open": "playwright test --ui",
+    "e2e:monitoring": "bash scripts/run-monitoring-e2e-tests.sh",
+    "e2e:monitoring:endpoints": "bash scripts/run-monitoring-e2e-tests.sh --endpoints",
+    "e2e:monitoring:performance": "bash scripts/run-monitoring-e2e-tests.sh --performance",
+    "e2e:monitoring:accessibility": "bash scripts/run-monitoring-e2e-tests.sh --accessibility",
+    "e2e:monitoring:benchmarks": "bash scripts/run-monitoring-e2e-tests.sh --benchmarks",
+    "e2e:monitoring:report": "bash scripts/run-monitoring-e2e-tests.sh --report",
     "duplicates": "npx jscpd . --config ./.jscpd.json",
     "init:db": "node scripts/init-db.js",
     "init:db:docker": "node scripts/init-db-docker.js",

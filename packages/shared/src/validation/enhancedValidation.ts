@@ -83,15 +83,45 @@ export const createUrlSchema = (options?: {
 
 // Email validation schema
 export const emailSchema = z.string()
-  .email('Invalid email address')
-  .transform(val => sanitizeText(val, { maxLength: 254 }));
+  .transform(val => {
+    // First trim and normalize
+    const trimmed = val.trim().toLowerCase();
+    return trimmed;
+  })
+  .pipe(z.string().email('Invalid email address'));
 
-// Filename validation schema
-export const filenameSchema = createTextSchema({
-  minLength: 1,
-  maxLength: 255,
-  pattern: /^[a-zA-Z0-9._-]+$/
-});
+// Filename validation schema - mixed approach: reject dangerous patterns, sanitize others
+export const filenameSchema = z.string()
+  .min(1, 'Filename is required')
+  .max(255, 'Filename too long')
+  .refine(val => {
+    // Reject path traversal patterns completely
+    if (val.includes('../') || val.includes('..\\') || val.startsWith('/') || /^[A-Z]:\\/.test(val)) {
+      return false;
+    }
+    return true;
+  }, {
+    message: 'Invalid format'
+  })
+  .transform(val => {
+    // Sanitize other dangerous characters
+    let sanitized = val;
+    
+    // Replace dangerous characters with underscores
+    sanitized = sanitized.replace(/[<>:"|?*]/g, '_');
+    
+    // Handle reserved names
+    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(sanitized)) {
+      sanitized = 'file';
+    }
+    
+    // Handle all dots
+    if (/^\.*$/.test(sanitized)) {
+      sanitized = 'file';
+    }
+    
+    return sanitized;
+  });
 
 // Phone validation schema
 export const phoneSchema = createTextSchema({
@@ -142,7 +172,8 @@ export const userRegistrationSchema = z.object({
 // Project creation schema
 export const projectCreationSchema = z.object({
   name: createTextSchema({ minLength: 1, maxLength: 100 }),
-  description: createTextSchema({ minLength: 1, maxLength: 1000, required: false }),
+  description: createHtmlSchema({ maxLength: 1000 }).optional(),
+  isPublic: z.boolean().optional(),
   visibility: z.enum(['public', 'private']).default('private'),
   tags: z.array(createTextSchema({ minLength: 1, maxLength: 50 })).optional()
 });
