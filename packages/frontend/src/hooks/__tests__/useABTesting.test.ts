@@ -3,19 +3,19 @@ import { renderHook, act } from '@testing-library/react';
 import { useExperiment, useFeatureFlag, useABTestingEvents } from '../useABTesting';
 import React from 'react';
 
-// Mock the ABTestingService
-vi.mock('@/services/abTesting/abTestingService', () => ({
-  ABTestingService: vi.fn(),
-}));
+// Mock the session storage
+const mockSessionStorage = {
+  getItem: vi.fn(() => 'test-session-id'),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+Object.defineProperty(window, 'sessionStorage', {
+  value: mockSessionStorage,
+  writable: true,
+});
 
-// Mock the ABTestingContext
-vi.mock('../../services/abTesting/ABTestingContext', () => ({
-  ABTestingContext: {
-    Provider: ({ children, value }: any) => children,
-  },
-}));
-
-// Mock the ABTestingService
+// Mock the ABTestingService module
 vi.mock('@/services/abTesting/abTestingService', () => ({
   getABTestingInstance: vi.fn(),
   initializeABTesting: vi.fn(),

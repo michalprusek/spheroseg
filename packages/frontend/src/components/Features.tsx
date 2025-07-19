@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, Microscope, Share2, LineChart, Upload, Brain } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import logger from '@/utils/logger';
 
 // Import translation files directly
 import enTranslations from '@/translations/en';
@@ -35,7 +36,7 @@ const Features = () => {
 
   // Force component to re-render when language changes
   useEffect(() => {
-    console.log(`Language in Features component changed to: ${language}`);
+    logger.debug(`Language in Features component changed to: ${language}`);
     setForceUpdate((prev) => prev + 1);
   }, [language]);
 

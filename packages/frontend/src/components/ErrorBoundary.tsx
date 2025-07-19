@@ -168,14 +168,14 @@ class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 const ErrorBoundary: React.FC<ErrorBoundaryProps> = (props) => {
   // Try to use the language context, but don't fail if it's not available
   let t: (key: string) => string;
-  let hasLanguageContext = true;
+  let _hasLanguageContext = true;
 
   try {
     const languageContext = useLanguage();
     t = languageContext.t;
-  } catch (error) {
+  } catch (_error) {
     // If useLanguage fails, we're outside of a LanguageProvider
-    hasLanguageContext = false;
+    _hasLanguageContext = false;
     t = (key: string) => {
       // Simple fallback function that returns the key or a default value
       const fallbacks: Record<string, string> = {
