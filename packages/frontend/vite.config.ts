@@ -188,15 +188,48 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           // Manual chunking for better caching
-          manualChunks: {
-            // React ecosystem
-            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            // UI libraries
-            'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-alert-dialog', 
-                         '@radix-ui/react-dropdown-menu'],
-            // Utilities
-            'utils-vendor': ['@tanstack/react-query', 'socket.io-client', 'react-hook-form', 
-                           'zod', '@hookform/resolvers', 'lucide-react', 'sonner'],
+          manualChunks: (id) => {
+            // Vendor chunks
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'react-vendor';
+              }
+              if (id.includes('@radix-ui') || id.includes('lucide-react')) {
+                return 'ui-vendor';
+              }
+              if (id.includes('@tanstack') || id.includes('socket.io') || id.includes('zod')) {
+                return 'utils-vendor';
+              }
+              if (id.includes('recharts') || id.includes('d3')) {
+                return 'charts-vendor';
+              }
+              if (id.includes('i18n')) {
+                return 'i18n-vendor';
+              }
+              return 'vendor'; // all other vendor deps
+            }
+            
+            // Feature-based chunks for our code
+            if (id.includes('/pages/SignIn') || id.includes('/pages/SignUp') || 
+                id.includes('/pages/ForgotPassword') || id.includes('/services/authService')) {
+              return 'auth';
+            }
+            if (id.includes('/pages/ProjectDetail') || id.includes('/services/projectService') ||
+                id.includes('/components/project')) {
+              return 'project';
+            }
+            if (id.includes('/segmentation/')) {
+              return 'segmentation';
+            }
+            if (id.includes('/export/') || id.includes('exportFunctions')) {
+              return 'export';
+            }
+            if (id.includes('/pages/Settings') || id.includes('/pages/Profile')) {
+              return 'settings';
+            }
+            if (id.includes('/pages/Dashboard') || id.includes('/components/analytics')) {
+              return 'dashboard';
+            }
           },
           // Asset naming for better caching
           assetFileNames: (assetInfo) => {
