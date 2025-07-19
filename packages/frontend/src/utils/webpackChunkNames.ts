@@ -42,12 +42,12 @@ export const CHUNK_NAMES = {
 /**
  * Generate import with webpack chunk name
  */
-export function importWithChunkName<T = any>(
+export function importWithChunkName<T = unknown>(
   path: string,
-  chunkName: string
+  _chunkName: string
 ): () => Promise<{ default: T }> {
   // This is a template - actual usage requires literal strings for webpack
-  return () => import(/* webpackChunkName: "${chunkName}" */ `${path}`);
+  return () => import(/* webpackChunkName: "${_chunkName}" */ `${path}`);
 }
 
 /**

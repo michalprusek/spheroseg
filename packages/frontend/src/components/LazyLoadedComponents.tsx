@@ -150,9 +150,9 @@ export function loadFeatureComponent(feature: string) {
 }
 
 // Dynamic component loader with caching
-const componentCache = new Map<string, ComponentType<any>>();
+const componentCache = new Map<string, ComponentType<Record<string, unknown>>>();
 
-export async function loadDynamicComponent(componentPath: string): Promise<ComponentType<any>> {
+export async function loadDynamicComponent(componentPath: string): Promise<ComponentType<Record<string, unknown>>> {
   if (componentCache.has(componentPath)) {
     return componentCache.get(componentPath)!;
   }
@@ -169,8 +169,8 @@ export async function loadDynamicComponent(componentPath: string): Promise<Compo
 }
 
 // Intersection Observer for lazy loading
-export function useLazyComponent(importFn: () => Promise<any>, rootMargin: string = '100px') {
-  const [Component, setComponent] = useState<ComponentType<any> | null>(null);
+export function useLazyComponent(importFn: () => Promise<{ default: ComponentType<Record<string, unknown>> }>, rootMargin: string = '100px') {
+  const [Component, setComponent] = useState<ComponentType<Record<string, unknown>> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const ref = useRef<HTMLDivElement>(null);

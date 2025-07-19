@@ -408,7 +408,13 @@ export class PerformanceMonitor {
     minTime: number;
     maxTime: number;
   }> {
-    const stats: Record<string, any> = {};
+    const stats: Record<string, {
+      count: number;
+      totalTime: number;
+      averageTime: number;
+      minTime: number;
+      maxTime: number;
+    }> = {};
     
     for (const [label, values] of this.metrics.entries()) {
       if (values.length > 0) {

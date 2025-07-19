@@ -252,8 +252,7 @@ describe('useABTesting hooks', () => {
       });
 
       expect(mockService.trackEvent).toHaveBeenCalledWith('button_click', { 
-        buttonId: 'cta',
-        activeExperiments: {} 
+        buttonId: 'cta'
       });
     });
 
