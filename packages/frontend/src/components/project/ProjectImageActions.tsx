@@ -590,7 +590,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           throw new Error('Missing projectId for segmentation');
         }
       } catch (err: unknown) {
-        console.error('Error triggering segmentation:', err);
+        logger.error('Error triggering segmentation:', err);
 
         let errorMessage = 'Error starting segmentation';
         if (err instanceof Error) {
@@ -649,7 +649,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           console.warn('Failed to update images with onImagesChange:', error);
         }
       } catch (error) {
-        console.error('Error clearing segmentation:', error);
+        logger.error('Error clearing segmentation:', error);
         toast.error(t('images.errors.failedToClearSegmentation'));
       }
     },

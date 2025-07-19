@@ -1,5 +1,6 @@
 import React from 'react';
 import { constructUrl } from '@/lib/urlUtils';
+import logger from '@/utils/logger';
 
 interface ImageDebuggerProps {
   image: {
@@ -38,7 +39,7 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
                 src={image.url}
                 alt="Original"
                 className="w-20 h-20 object-cover border border-gray-300"
-                onError={(e) => console.error(`Failed to load original: ${image.url}`)}
+                onError={(e) => logger.error(`Failed to load original: ${image.url}`)}
               />
             )}
           </div>
@@ -49,7 +50,7 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
                 src={constructUrl(image.url)}
                 alt="With constructUrl"
                 className="w-20 h-20 object-cover border border-gray-300"
-                onError={(e) => console.error(`Failed to load with constructUrl: ${constructUrl(image.url)}`)}
+                onError={(e) => logger.error(`Failed to load with constructUrl: ${constructUrl(image.url)}`)}
               />
             )}
           </div>
@@ -60,7 +61,7 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
                 src={image.thumbnail_url}
                 alt="Thumbnail"
                 className="w-20 h-20 object-cover border border-gray-300"
-                onError={(e) => console.error(`Failed to load thumbnail: ${image.thumbnail_url}`)}
+                onError={(e) => logger.error(`Failed to load thumbnail: ${image.thumbnail_url}`)}
               />
             )}
           </div>
@@ -72,7 +73,7 @@ const ImageDebugger: React.FC<ImageDebuggerProps> = ({ image }) => {
                 alt="Thumbnail with constructUrl"
                 className="w-20 h-20 object-cover border border-gray-300"
                 onError={(e) =>
-                  console.error(`Failed to load thumbnail with constructUrl: ${constructUrl(image.thumbnail_url)}`)
+                  logger.error(`Failed to load thumbnail with constructUrl: ${constructUrl(image.thumbnail_url)}`)
                 }
               />
             )}
