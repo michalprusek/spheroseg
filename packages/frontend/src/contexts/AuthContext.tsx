@@ -527,20 +527,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserWithStorage(data.user);
       toast.success(data.message || 'Success!');
 
-      // Migrate localStorage data to database for authenticated user
-      (async () => {
+      // Only migrate if user data is available
+      if (data.user) {
+        // Migrate localStorage data to database for authenticated user
+        (async () => {
         try {
-          logger.info(`Migrating localStorage data to database for user ${data.user.id}`);
+          logger.info(`Migrating localStorage data to database for user ${data.user?.id || 'unknown'}`);
           await userProfileService.migrateLocalStorageToDatabase();
 
           // Also initialize user settings from database
           await userProfileService.initializeUserSettings();
 
-          logger.info(`Data migration completed for user ${data.user.id}`);
+          logger.info(`Data migration completed for user ${data.user?.id || 'unknown'}`);
         } catch (error) {
           logger.error('Error during data migration:', {
             error,
-            userId: data.user.id,
+            userId: data.user?.id || 'unknown',
           });
 
           // Fallback to legacy language update
@@ -558,13 +560,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   },
                 },
               );
-              logger.info(`Language preference updated via fallback for user ${data.user.id}`);
+              logger.info(`Language preference updated via fallback for user ${data.user?.id || 'unknown'}`);
             } catch (fallbackErr) {
               logger.error('Fallback language update also failed:', fallbackErr);
             }
           }
         }
       })();
+      }
     },
     [setUserWithStorage],
   );

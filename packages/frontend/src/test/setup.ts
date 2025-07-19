@@ -1,6 +1,15 @@
 import '@testing-library/jest-dom';
 import { vi, afterEach } from 'vitest';
 import ResizeObserver from 'resize-observer-polyfill';
+import './mocks/i18next';
+import './mocks/router';
+import './mocks/auth';
+
+// Fix missing globals - use direct assignment
+global.clearInterval = clearInterval;
+global.setInterval = setInterval;
+global.clearTimeout = clearTimeout;
+global.setTimeout = setTimeout;
 
 // Improve test performance by reducing console noise
 global.console.error = vi.fn();
