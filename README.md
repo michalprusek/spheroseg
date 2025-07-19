@@ -96,6 +96,68 @@ npm run test:coverage    # Coverage reports
 - Input validation and sanitization
 - Container security and isolation
 
+## ⚙️ Configuration
+
+### Environment Variables
+
+#### Frontend (.env)
+```bash
+# API Configuration
+VITE_API_URL=http://localhost:5001
+VITE_API_BASE_URL=/api
+VITE_ASSETS_URL=http://localhost:8080
+
+# Logging (NEW)
+VITE_LOG_LEVEL=INFO                    # DEBUG, INFO, WARN, ERROR, NONE
+VITE_ENABLE_CONSOLE_LOGS=true          # Enable/disable console logging
+VITE_ENABLE_LOG_SHIPPING=false         # Ship logs to server
+VITE_MAX_MEMORY_LOGS=1000              # Max logs to keep in memory
+VITE_LOG_SERVER_ENDPOINT=/api/logs     # Log shipping endpoint
+VITE_LOG_SHIP_INTERVAL=30000           # Log shipping interval (ms)
+
+# Performance Monitoring (NEW)
+VITE_ENABLE_PERFORMANCE_METRICS=false  # Enable performance metrics collection
+VITE_ENABLE_FRONTEND_METRICS=false     # Enable frontend-specific metrics
+VITE_ENABLE_WEB_VITALS_METRICS=false   # Enable Core Web Vitals reporting
+VITE_ENABLE_IMAGE_METRICS=false        # Enable image loading metrics
+
+# Error Monitoring (NEW)
+VITE_ENABLE_ERROR_MONITORING=false     # Enable error reporting to backend
+
+# Application Info
+VITE_APP_VERSION=1.0.0                 # Application version
+```
+
+#### Backend (.env)
+```bash
+# Core Configuration
+NODE_ENV=development
+PORT=5001
+DATABASE_URL=postgresql://postgres:postgres@db:5432/spheroseg
+JWT_SECRET=your-secret-key
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost
+
+# ML Service
+ML_SERVICE_URL=http://ml:5002
+ML_MAX_CONCURRENT_TASKS=2
+
+# Error Reporting (NEW)
+STORE_ERROR_REPORTS=false              # Store errors in database
+ERROR_MONITORING_SERVICE_URL=          # External monitoring service
+ERROR_MONITORING_API_KEY=              # API key for monitoring service
+
+# Logging
+LOG_LEVEL=info                         # error, warn, info, http, verbose, debug
+LOG_TO_FILE=false                      # Log to file system
+LOG_DIR=./logs                         # Log directory
+
+# Performance
+ENABLE_PERFORMANCE_MONITORING=true     # Enable performance tracking
+PERFORMANCE_LOG_LEVEL=info             # Performance log verbosity
+```
+
+See `.env.example` files in each package for complete configuration options.
+
 ## 🚨 Troubleshooting
 
 ### Quick Fixes
@@ -141,4 +203,4 @@ See [DOCUMENTATION_INDEX.md](./docs/DOCUMENTATION_INDEX.md) for complete project
 
 ---
 
-**Version**: v1.2.0 | **API Version**: v1.0.0 | **Last Updated**: 2025-07-15
+**Version**: v1.2.0 | **API Version**: v1.0.0 | **Last Updated**: 2025-07-19
