@@ -155,7 +155,7 @@ const ProjectsList = ({
           : undefined
       }
       onProjectDuplicated={(newProject) => {
-        console.log(`ProjectsList: Project duplicated:`, newProject);
+        logger.debug(`ProjectsList: Project duplicated:`, newProject);
         // Trigger a project list refresh by dispatching a custom event
         window.dispatchEvent(new CustomEvent('project-created'));
       }}

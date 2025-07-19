@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import apiClient from '@/lib/apiClient';
 import { toast } from '@/hooks/useToast';
 import { FixedSizeList as List } from 'react-window';
+import logger from '@/utils/logger';
 
 interface QueueStatusData {
   pendingTasks: string[];
@@ -56,7 +57,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
       // Refresh queue data
       // Will be refreshed by the interval
     } catch (error) {
-      console.error('Error cancelling task:', error);
+      logger.error('Error cancelling task:', error);
       toast.error('Failed to cancel segmentation task');
     } finally {
       setIsCancelling((prev) => {
@@ -185,7 +186,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
 
       // Fetch queue data directly from the API
       const data = await fetchQueueStatus(projectId);
-      console.log('Fetched queue status data:', data);
+      logger.debug('Fetched queue status data:', data);
       setQueueData(data);
 
       // Check if there are any active jobs
@@ -194,7 +195,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
       setError(null);
       setLastUpdateTime(Date.now());
     } catch (error) {
-      console.error('Error fetching queue data:', error);
+      logger.error('Error fetching queue data:', error);
       setError(error instanceof Error ? error.message : 'Unknown error');
       // Don't clear existing data on error to prevent flashing
     }
@@ -211,7 +212,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
       }>;
       const { refresh, projectId, forceRefresh, immediate } = customEvent.detail;
 
-      console.log('Manual queue update requested', {
+      logger.debug('Manual queue update requested', {
         refresh,
         projectId,
         forceRefresh,
@@ -220,13 +221,13 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
 
       // Pokud je specifikováno projectId, zkontrolujeme, zda odpovídá našemu propProjectId
       if (projectId && propProjectId && projectId !== propProjectId) {
-        console.log(`Ignoring queue update for project ${projectId}, we're showing ${propProjectId}`);
+        logger.debug(`Ignoring queue update for project ${projectId}, we're showing ${propProjectId}`);
         return;
       }
 
       // Pokud je immediate true, okamžitě nastavíme hasActiveJobs na true
       if (immediate) {
-        console.log('Setting hasActiveJobs to true immediately');
+        logger.debug('Setting hasActiveJobs to true immediately');
         setHasActiveJobs(true);
 
         // Také nastavíme queueData, aby se zobrazil indikátor fronty
@@ -244,7 +245,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
 
       // Pokud je forceRefresh true nebo refresh true, aktualizujeme data fronty
       if (forceRefresh || refresh) {
-        console.log('Fetching queue data due to manual update request (force refresh)');
+        logger.debug('Fetching queue data due to manual update request (force refresh)');
 
         // Vynulujeme cache, aby se data načetla znovu
         if (forceRefresh) {
@@ -256,7 +257,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
               }
             });
           } catch (error) {
-            console.error('Error clearing queue status cache:', error);
+            logger.error('Error clearing queue status cache:', error);
           }
         }
 
@@ -278,7 +279,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
   // Handle segmentation queue updates
   const handleQueueUpdate = useCallback(
     (data: QueueStatusData) => {
-      console.log('Received queue status update from WebSocket:', data);
+      logger.debug('Received queue status update from WebSocket:', data);
 
       // Normalize the data to ensure it has all required fields
       const normalizedData: QueueStatusData = {
@@ -315,7 +316,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
         });
         window.dispatchEvent(queueUpdateEvent);
       } catch (error) {
-        console.error('Error handling queue status update:', error);
+        logger.error('Error handling queue status update:', error);
       }
     },
     [propProjectId],
@@ -324,7 +325,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
   // Handle segmentation updates (individual image updates)
   const handleSegmentationUpdate = useCallback(
     (data: unknown) => {
-      console.log('Received segmentation update from WebSocket, refreshing queue status', data);
+      logger.debug('Received segmentation update from WebSocket, refreshing queue status', data);
 
       // Clear cache for next fetch
       try {
@@ -409,7 +410,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
         });
         window.dispatchEvent(imageUpdateEvent);
       } catch (error) {
-        console.error('Error broadcasting image status update:', error);
+        logger.error('Error broadcasting image status update:', error);
       }
     },
     [fetchData, propProjectId],
@@ -418,7 +419,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
   // Setup socket connection for real-time updates
   useEffect(() => {
     if (socket && isConnected) {
-      console.log('Setting up WebSocket listeners for queue updates');
+      logger.debug('Setting up WebSocket listeners for queue updates');
 
       // Register socket event handlers
       socket.on('segmentation_queue_update', handleQueueUpdate);
@@ -450,7 +451,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
     // Also fetch when the component becomes visible
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('Document became visible, refreshing queue status immediately');
+        logger.debug('Document became visible, refreshing queue status immediately');
         fetchData();
       }
     };
@@ -477,7 +478,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
 
       // Refresh data if the cleared cache is for our project or if all caches were cleared
       if (clearAll || projectId === propProjectId || projectId === 'default') {
-        console.log(`Queue cache cleared for ${projectId}, refreshing queue status`);
+        logger.debug(`Queue cache cleared for ${projectId}, refreshing queue status`);
         fetchData();
       }
     };
