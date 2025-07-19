@@ -4,6 +4,10 @@ import ResizeObserver from 'resize-observer-polyfill';
 import './mocks/i18next';
 import './mocks/router';
 import './mocks/auth';
+import './mocks/logger';
+import './mocks/config';
+import './mocks/radix';
+import './mocks/apiClient';
 
 // Fix missing globals - use direct assignment
 global.clearInterval = clearInterval;
