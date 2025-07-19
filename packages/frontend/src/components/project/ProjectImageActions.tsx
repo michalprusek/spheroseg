@@ -65,10 +65,10 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                   // Ensure storedImages is an array
                   if (Array.isArray(storedImages)) {
                     // Check if the image exists in localStorage before claiming success
-                    const imageExists = storedImages.some((img: any) => img.id === imageId);
+                    const imageExists = storedImages.some((img: unknown) => typeof img === 'object' && img !== null && 'id' in img && img.id === imageId);
 
                     if (imageExists) {
-                      const filteredImages = storedImages.filter((img: any) => img.id !== imageId);
+                      const filteredImages = storedImages.filter((img: unknown) => !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId));
                       localStorage.setItem(storageKey, JSON.stringify(filteredImages));
                       console.log(`Removed image ${imageId} from localStorage (key: ${storageKey})`);
                       deletionSuccessful = true;
@@ -82,7 +82,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                         [cleanProjectId, cleanProjectId].forEach((cacheKey) => {
                           if (projectImagesCache && projectImagesCache[cacheKey]) {
                             projectImagesCache[cacheKey].data = projectImagesCache[cacheKey].data.filter(
-                              (img: any) => img.id !== imageId,
+                              (img: unknown) => !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
                             );
                             console.log(`Updated cache for project ${cacheKey}`);
                           }
@@ -157,7 +157,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
 
                     if (Array.isArray(storedImages)) {
                       // Filter out the image regardless of whether it exists
-                      const filteredImages = storedImages.filter((img: any) => img.id !== imageId);
+                      const filteredImages = storedImages.filter((img: unknown) => !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId));
                       localStorage.setItem(storageKey, JSON.stringify(filteredImages));
                       console.log(`Removed image ${imageId} from localStorage as last resort`);
                       deletionSuccessful = true;
@@ -170,7 +170,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                         [cleanProjectId, cleanProjectId].forEach((cacheKey) => {
                           if (projectImagesCache && projectImagesCache[cacheKey]) {
                             projectImagesCache[cacheKey].data = projectImagesCache[cacheKey].data.filter(
-                              (img: any) => img.id !== imageId,
+                              (img: unknown) => !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
                             );
                             console.log(`Updated cache for project ${cacheKey}`);
                           }
@@ -244,7 +244,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                       const parsedData = JSON.parse(storedData);
                       if (Array.isArray(parsedData)) {
                         // Filtrujeme smazaný obrázek
-                        const updatedData = parsedData.filter((item: any) => item.id !== imageId);
+                        const updatedData = parsedData.filter((item: unknown) => !(typeof item === 'object' && item !== null && 'id' in item && item.id === imageId));
                         localStorage.setItem(key, JSON.stringify(updatedData));
                         console.log(`Removed image ${imageId} from localStorage key ${key}`);
                       }
@@ -412,7 +412,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
 
             // Aktualizujeme také lokální stav
             handleUpdateImageStatus(imageId, 'processing');
-          } else if (pendingTasks.some((task: any) => task.imageId === imageId)) {
+          } else if (pendingTasks.some((task: unknown) => typeof task === 'object' && task !== null && 'imageId' in task && task.imageId === imageId)) {
             console.log(`Image ${imageId} is pending in queue`);
             // Aktualizujeme stav obrázku v UI
             const updateEvent = new CustomEvent('image-status-update', {
