@@ -26,6 +26,7 @@ import performanceMonitor from './services/performanceMonitor';
 import { initializeRedis, closeRedis } from './config/redis';
 import { validateAndExit } from './utils/startupValidation';
 import { initializeMetrics } from './monitoring/prometheus';
+import { initializeAllStartupModules } from './startup';
 
 // Memory optimization settings
 // Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized
@@ -103,9 +104,10 @@ const server = http.createServer(app);
 const initializeServices = async (): Promise<void> => {
   try {
     // Initialize Redis before other services that might use caching
+    let redisClient: any = null;
     try {
-      const redis = initializeRedis();
-      if (redis) {
+      redisClient = initializeRedis();
+      if (redisClient) {
         logger.info('Redis initialized successfully');
       } else {
         logger.info('Redis is disabled or not configured');
@@ -114,6 +116,16 @@ const initializeServices = async (): Promise<void> => {
       logger.error('Failed to initialize Redis, continuing without caching', {
         error: redisError instanceof Error ? redisError.message : String(redisError),
       });
+    }
+    
+    // Initialize all startup modules (secret rotation, cache warming, business metrics)
+    try {
+      await initializeAllStartupModules(redisClient);
+    } catch (startupError) {
+      logger.error('Some startup modules failed to initialize', {
+        error: startupError instanceof Error ? startupError.message : String(startupError),
+      });
+      // Continue even if some startup modules fail
     }
 
     // Initialize Socket.IO

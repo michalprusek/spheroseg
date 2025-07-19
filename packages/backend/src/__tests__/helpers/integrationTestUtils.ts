@@ -435,7 +435,7 @@ export class PerformanceIntegrationTester {
     const min = Math.min(...times);
     const max = Math.max(...times);
     const p95Index = Math.floor(times.length * 0.95);
-    const p95 = sortedTimes[p95Index];
+    const p95 = sortedTimes[p95Index] || 0;
 
     return { average, min, max, p95 };
   }
@@ -463,7 +463,7 @@ export class PerformanceIntegrationTester {
           return {
             success: false,
             time: end - start,
-            error: error.message,
+            error: error instanceof Error ? error.message : String(error),
           };
         }
       })();

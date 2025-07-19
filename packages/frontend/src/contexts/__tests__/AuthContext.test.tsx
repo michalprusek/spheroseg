@@ -5,6 +5,16 @@ import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 
+// Import our advanced test utilities
+import {
+  AdvancedTestDataFactory,
+  renderWithProviders,
+  AdvancedMockBuilder,
+  TestTimingUtils,
+  AdvancedAssertions,
+} from '@/test-utils/advancedTestFactories';
+import { benchmarkTest } from '@/test-utils/performanceBenchmarks';
+
 // Unmock AuthContext to test the real implementation
 vi.unmock('@/contexts/AuthContext');
 import { AuthProvider, useAuth } from '../AuthContext';
@@ -127,19 +137,17 @@ const TestAuthConsumer = () => {
 };
 
 const renderWithAuthProvider = () => {
-  return render(
-    <MemoryRouter>
-      <AuthProvider>
-        <TestAuthConsumer />
-      </AuthProvider>
-    </MemoryRouter>,
-  );
+  return renderWithProviders(<TestAuthConsumer />, {
+    routerProps: { initialEntries: ['/'] },
+    withAuth: false, // We're testing the AuthProvider itself
+  });
 };
 
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    AdvancedTestDataFactory.resetSequence(); // Reset test data sequences
 
     // Default mocks for apiClient
     vi.mocked(apiClient.withRetry).mockImplementation(async (fn) => {
@@ -167,29 +175,37 @@ describe('AuthContext', () => {
   });
 
   it('loads and validates existing token from localStorage', async () => {
-    // Setup a valid token in localStorage
-    localStorage.setItem('authToken', 'valid-token');
+    return benchmarkTest('component-render-complex', async () => {
+      // Setup a valid token in localStorage
+      localStorage.setItem('authToken', 'valid-token');
 
-    // Mock the user response
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      data: { id: 'user-123', email: 'user@example.com' },
+      // Create test user using factory
+      const testUser = AdvancedTestDataFactory.createUser({
+        id: 'user-123',
+        email: 'user@example.com',
+      });
+
+      // Mock the user response
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: testUser,
+      });
+
+      renderWithAuthProvider();
+
+      // Wait for the loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('loading')).toHaveTextContent('false');
+      });
+
+      // Should be authenticated
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
+      expect(screen.getByTestId('user-id')).toHaveTextContent('user-123');
+      expect(screen.getByTestId('user-email')).toHaveTextContent('user@example.com');
+      expect(screen.getByTestId('token')).toHaveTextContent('valid-token');
+
+      // Verify the API call to validate the token
+      expect(apiClient.get).toHaveBeenCalledWith('/users/me');
     });
-
-    renderWithAuthProvider();
-
-    // Wait for the loading to complete
-    await waitFor(() => {
-      expect(screen.getByTestId('loading')).toHaveTextContent('false');
-    });
-
-    // Should be authenticated
-    expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
-    expect(screen.getByTestId('user-id')).toHaveTextContent('user-123');
-    expect(screen.getByTestId('user-email')).toHaveTextContent('user@example.com');
-    expect(screen.getByTestId('token')).toHaveTextContent('valid-token');
-
-    // Verify the API call to validate the token
-    expect(apiClient.get).toHaveBeenCalledWith('/users/me');
   });
 
   it('handles sign in in development mode', async () => {
@@ -264,50 +280,58 @@ describe('AuthContext', () => {
   });
 
   it('handles sign out correctly', async () => {
-    // Setup authenticated state
-    localStorage.setItem('authToken', 'valid-token');
+    return benchmarkTest('user-click-response', async () => {
+      // Setup authenticated state
+      localStorage.setItem('authToken', 'valid-token');
 
-    // Mock user response
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      data: { id: 'user-123', email: 'user@example.com' },
+      // Create test user using factory
+      const testUser = AdvancedTestDataFactory.createUser({
+        id: 'user-123',
+        email: 'user@example.com',
+      });
+
+      // Mock user response
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: testUser,
+      });
+
+      // Mock logout response
+      vi.mocked(apiClient.post).mockResolvedValueOnce({
+        data: { success: true },
+      });
+
+      const navigateMock = vi.fn();
+      vi.mocked(useNavigate).mockReturnValue(navigateMock);
+
+      renderWithAuthProvider();
+
+      // Wait for authentication to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
+      });
+
+      // Trigger sign out
+      await act(async () => {
+        screen.getByTestId('sign-out-btn').click();
+      });
+
+      // Should now be unauthenticated
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('unauthenticated');
+      expect(screen.getByTestId('user-id')).toHaveTextContent('no-user');
+      expect(screen.getByTestId('token')).toHaveTextContent('no-token');
+
+      // Should call logout endpoint
+      expect(apiClient.post).toHaveBeenCalledWith('/auth/logout');
+
+      // Should navigate to sign in
+      expect(navigateMock).toHaveBeenCalledWith('/sign-in');
+
+      // Should remove token from localStorage
+      expect(localStorage.removeItem).toHaveBeenCalledWith('authToken');
+
+      // Should show success toast
+      expect(toast.success).toHaveBeenCalledWith('Signed out successfully');
     });
-
-    // Mock logout response
-    vi.mocked(apiClient.post).mockResolvedValueOnce({
-      data: { success: true },
-    });
-
-    const navigateMock = vi.fn();
-    vi.mocked(useNavigate).mockReturnValue(navigateMock);
-
-    renderWithAuthProvider();
-
-    // Wait for authentication to complete
-    await waitFor(() => {
-      expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
-    });
-
-    // Trigger sign out
-    await act(async () => {
-      screen.getByTestId('sign-out-btn').click();
-    });
-
-    // Should now be unauthenticated
-    expect(screen.getByTestId('auth-status')).toHaveTextContent('unauthenticated');
-    expect(screen.getByTestId('user-id')).toHaveTextContent('no-user');
-    expect(screen.getByTestId('token')).toHaveTextContent('no-token');
-
-    // Should call logout endpoint
-    expect(apiClient.post).toHaveBeenCalledWith('/auth/logout');
-
-    // Should navigate to sign in
-    expect(navigateMock).toHaveBeenCalledWith('/sign-in');
-
-    // Should remove token from localStorage
-    expect(localStorage.removeItem).toHaveBeenCalledWith('authToken');
-
-    // Should show success toast
-    expect(toast.success).toHaveBeenCalledWith('Signed out successfully');
   });
 
   it('handles authentication failures correctly', async () => {
@@ -332,24 +356,27 @@ describe('AuthContext', () => {
   });
 
   it('handles network timeouts with fallback user', async () => {
-    // Setup a token
-    localStorage.setItem('authToken', 'test-token');
+    return benchmarkTest('api-integration', async () => {
+      // Setup a token
+      localStorage.setItem('authToken', 'test-token');
 
-    // Mock the API to simulate a timeout
-    vi.mocked(apiClient.get).mockImplementation(() => 
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Network timeout')), 100);
-      })
-    );
+      // Mock the API to simulate a timeout
+      vi.mocked(apiClient.get).mockImplementation(() => 
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Network timeout')), 100);
+        })
+      );
 
-    renderWithAuthProvider();
+      renderWithAuthProvider();
 
-    // Wait for the timeout and fallback handling
-    await waitFor(() => {
-      expect(screen.getByTestId('loading')).toHaveTextContent('false');
-    }, { timeout: 10000 });
+      // Use our timing utility to wait for timeout
+      await TestTimingUtils.waitForCondition(
+        () => screen.queryByTestId('loading')?.textContent === 'false',
+        10000
+      );
 
-    // Should be unauthenticated after timeout
-    expect(screen.getByTestId('auth-status')).toHaveTextContent('unauthenticated');
+      // Should be unauthenticated after timeout
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('unauthenticated');
+    });
   }, 15000);
 });

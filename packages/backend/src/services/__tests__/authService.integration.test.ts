@@ -2,6 +2,7 @@
  * Integration tests for AuthService
  *
  * Tests authentication flow with real database and token generation
+ * Enhanced with advanced test utilities for better performance monitoring
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
@@ -11,6 +12,15 @@ import { EmailService } from '../emailService';
 import pool from '../../config/database';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+
+// Import enhanced test utilities
+import {
+  createTestUser,
+  createMockServiceRegistry,
+  withPerformanceMonitoring,
+  cleanupTestData,
+  TestDataFactory,
+} from '../__tests__/helpers/integrationTestUtils';
 
 describe('AuthService Integration Tests', () => {
   let authService: AuthService;
@@ -24,40 +34,48 @@ describe('AuthService Integration Tests', () => {
     emailService = new EmailService();
     authService = new AuthService(tokenService, emailService);
 
-    // Clean up test data
-    await pool.query('DELETE FROM users WHERE email LIKE $1', ['%@test.integration.com']);
+    // Clean up test data using enhanced utility
+    await cleanupTestData();
   });
 
   afterAll(async () => {
-    // Clean up test data
-    await pool.query('DELETE FROM users WHERE email LIKE $1', ['%@test.integration.com']);
+    // Clean up test data using enhanced utility
+    await cleanupTestData();
   });
 
   beforeEach(async () => {
-    // Clean up any existing test data
-    await pool.query('DELETE FROM users WHERE email LIKE $1', ['%@test.integration.com']);
+    // Clean up any existing test data using enhanced utility
+    await cleanupTestData();
   });
 
   describe('register', () => {
     it('should register a new user successfully', async () => {
-      const email = 'newuser@test.integration.com';
-      const password = 'TestPassword123!';
-      const name = 'Test User';
+      return withPerformanceMonitoring('api-integration', async () => {
+        const userData = TestDataFactory.createUserData({
+          email: 'newuser@test.integration.com',
+          password: 'TestPassword123!',
+          name: 'Test User',
+        });
 
-      const result = await authService.register(email, password, name);
+        const result = await authService.register(
+          userData.email,
+          userData.password,
+          userData.name
+        );
 
-      expect(result).toHaveProperty('id');
-      expect(result).toHaveProperty('email', email);
-      expect(result).toHaveProperty('name', name);
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
+        expect(result).toHaveProperty('id');
+        expect(result).toHaveProperty('email', userData.email);
+        expect(result).toHaveProperty('name', userData.name);
+        expect(result).toHaveProperty('accessToken');
+        expect(result).toHaveProperty('refreshToken');
 
-      // Verify user exists in database
-      const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-      expect(userResult.rows).toHaveLength(1);
-      expect(userResult.rows[0].email).toBe(email);
+        // Verify user exists in database
+        const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [userData.email]);
+        expect(userResult.rows).toHaveLength(1);
+        expect(userResult.rows[0].email).toBe(userData.email);
 
-      testUserId = result.id;
+        testUserId = result.id;
+      });
     });
 
     it('should not register duplicate email', async () => {

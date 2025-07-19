@@ -90,7 +90,7 @@ export class TestDatabasePool {
   private static connections = new Map<string, any>();
   private static maxConnections = 5;
   
-  static async getConnection(dbName = 'test'): Promise<any> {
+  static async getConnection(_dbName = 'test'): Promise<any> {
     const existingConnections = Array.from(this.connections.values()).filter(conn => !conn.busy);
     
     if (existingConnections.length > 0) {
@@ -280,15 +280,15 @@ export const backendPerformanceAssertions = {
 
 // API endpoint testing utilities
 export class ApiEndpointTester {
-  private baseUrl: string;
-  private authToken?: string;
+  private _baseUrl: string;
+  private _authToken: string | undefined;
   
   constructor(baseUrl = 'http://localhost:3001', authToken?: string) {
-    this.baseUrl = baseUrl;
-    this.authToken = authToken;
+    this._baseUrl = baseUrl;
+    this._authToken = authToken;
   }
   
-  async get(endpoint: string, headers: Record<string, string> = {}) {
+  async get(endpoint: string, _headers: Record<string, string> = {}) {
     const { cleanup } = setupBackendPerformanceTest(`GET ${endpoint}`);
     try {
       // Mock fetch for testing
@@ -306,7 +306,7 @@ export class ApiEndpointTester {
     }
   }
   
-  async post(endpoint: string, data: any = {}, headers: Record<string, string> = {}) {
+  async post(endpoint: string, data: any = {}, _headers: Record<string, string> = {}) {
     const { cleanup } = setupBackendPerformanceTest(`POST ${endpoint}`);
     try {
       // Mock fetch for testing
@@ -324,7 +324,7 @@ export class ApiEndpointTester {
     }
   }
   
-  async put(endpoint: string, data: any = {}, headers: Record<string, string> = {}) {
+  async put(endpoint: string, data: any = {}, _headers: Record<string, string> = {}) {
     const { cleanup } = setupBackendPerformanceTest(`PUT ${endpoint}`);
     try {
       // Mock fetch for testing
@@ -342,7 +342,7 @@ export class ApiEndpointTester {
     }
   }
   
-  async delete(endpoint: string, headers: Record<string, string> = {}) {
+  async delete(endpoint: string, _headers: Record<string, string> = {}) {
     const { cleanup } = setupBackendPerformanceTest(`DELETE ${endpoint}`);
     try {
       // Mock fetch for testing

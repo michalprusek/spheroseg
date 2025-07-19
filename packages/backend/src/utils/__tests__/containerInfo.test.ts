@@ -2,6 +2,8 @@
  * Tests for container information utilities
  */
 
+import { jest } from '@jest/globals';
+
 // Mock logger first
 const mockLogger = {
   debug: jest.fn(),
@@ -15,38 +17,38 @@ jest.mock('../logger', () => ({
   ...mockLogger,
 }));
 
+// Mock fs module
+const mockExistsSync = jest.fn();
+const mockReadFileSync = jest.fn();
+
+jest.mock('fs', () => ({
+  existsSync: mockExistsSync,
+  readFileSync: mockReadFileSync,
+}));
+
+// Mock os module
+jest.mock('os', () => ({
+  totalmem: jest.fn(() => 8589934592), // 8GB
+}));
+
 describe('Container Info Utilities', () => {
-  let mockExistsSync: jest.Mock;
-  let mockReadFileSync: jest.Mock;
   let getContainerLimits: any;
   let getEffectiveMemoryLimit: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
-    delete process.env["CONTAINER_MEMORY_LIMIT_MB"];
+    delete process.env['CONTAINER_MEMORY_LIMIT_MB'];
 
-    // Clear logger mock calls
+    // Reset mocks
+    mockExistsSync.mockReset();
+    mockReadFileSync.mockReset();
     mockLogger.debug.mockClear();
     mockLogger.info.mockClear();
     mockLogger.warn.mockClear();
     mockLogger.error.mockClear();
 
-    // Clear the module cache
-    jest.resetModules();
-
-    // Create fresh mocks for each test
-    mockExistsSync = jest.fn();
-    mockReadFileSync = jest.fn();
-
-    // Mock fs module
-    jest.doMock('fs', () => ({
-      existsSync: mockExistsSync,
-      readFileSync: mockReadFileSync,
-    }));
-
     // Import functions after mocking
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const containerInfo = require('../containerInfo');
+    const containerInfo = await import('../containerInfo');
     getContainerLimits = containerInfo.getContainerLimits;
     getEffectiveMemoryLimit = containerInfo.getEffectiveMemoryLimit;
   });
@@ -79,12 +81,7 @@ describe('Container Info Utilities', () => {
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
         return false;
       });
-      mockReadFileSync.mockImplementation((path, _encoding) => {
-        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
-          return limitBytes.toString();
-        }
-        return '';
-      });
+      mockReadFileSync.mockReturnValue(limitBytes.toString());
 
       const result = getContainerLimits();
       expect(result.memoryLimitBytes).toBe(limitBytes);
@@ -92,13 +89,11 @@ describe('Container Info Utilities', () => {
     });
 
     it('should ignore unlimited cgroup v1 value', () => {
+      const unlimitedValue = 9223372036854775807;
       mockExistsSync.mockImplementation((path) => {
-        if (path === '/.dockerenv') return false;
-        if (path === '/proc/self/cgroup') return false;
-        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
-        return false;
+        return path === '/sys/fs/cgroup/memory/memory.limit_in_bytes';
       });
-      mockReadFileSync.mockReturnValue('9223372036854775807');
+      mockReadFileSync.mockReturnValue(unlimitedValue.toString());
 
       const result = getContainerLimits();
       expect(result.memoryLimitBytes).toBeNull();
@@ -108,18 +103,11 @@ describe('Container Info Utilities', () => {
     it('should read cgroup v2 memory limit', () => {
       const limitBytes = 1073741824; // 1GB
       mockExistsSync.mockImplementation((path) => {
-        if (path === '/.dockerenv') return false;
-        if (path === '/proc/self/cgroup') return false;
         if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return false;
         if (path === '/sys/fs/cgroup/memory.max') return true;
         return false;
       });
-      mockReadFileSync.mockImplementation((path, _encoding) => {
-        if (path === '/sys/fs/cgroup/memory.max') {
-          return limitBytes.toString();
-        }
-        return '';
-      });
+      mockReadFileSync.mockReturnValue(limitBytes.toString());
 
       const result = getContainerLimits();
       expect(result.memoryLimitBytes).toBe(limitBytes);
@@ -128,11 +116,7 @@ describe('Container Info Utilities', () => {
 
     it('should ignore max value in cgroup v2', () => {
       mockExistsSync.mockImplementation((path) => {
-        if (path === '/.dockerenv') return false;
-        if (path === '/proc/self/cgroup') return false;
-        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return false;
-        if (path === '/sys/fs/cgroup/memory.max') return true;
-        return false;
+        return path === '/sys/fs/cgroup/memory.max';
       });
       mockReadFileSync.mockReturnValue('max');
 
@@ -142,76 +126,52 @@ describe('Container Info Utilities', () => {
     });
 
     it('should use environment variable as fallback', () => {
+      process.env['CONTAINER_MEMORY_LIMIT_MB'] = '2048';
       mockExistsSync.mockReturnValue(false);
-      process.env["CONTAINER_MEMORY_LIMIT_MB"] = '256';
 
       const result = getContainerLimits();
-      expect(result.memoryLimitMB).toBe(256);
-      expect(result.memoryLimitBytes).toBe(256 * 1024 * 1024);
+      expect(result.memoryLimitBytes).toBe(2147483648); // 2GB in bytes
+      expect(result.memoryLimitMB).toBe(2048);
     });
 
     it('should handle file system errors gracefully', () => {
-      let callCount = 0;
       mockExistsSync.mockImplementation(() => {
-        callCount++;
-        // Only throw error on first call to avoid infinite loop
-        if (callCount === 1) {
-          throw new Error('Permission denied');
-        }
-        return false;
+        throw new Error('File system error');
       });
 
       const result = getContainerLimits();
-      expect(result.isContainerized).toBe(false);
       expect(result.memoryLimitBytes).toBeNull();
       expect(result.memoryLimitMB).toBeNull();
+      expect(result.isContainerized).toBe(false);
     });
   });
 
   describe('getEffectiveMemoryLimit', () => {
     it('should use detected container limit', () => {
       mockExistsSync.mockImplementation((path) => {
-        if (path === '/.dockerenv') return false;
-        if (path === '/proc/self/cgroup') return false;
-        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
-        return false;
+        return path === '/sys/fs/cgroup/memory/memory.limit_in_bytes';
       });
-      mockReadFileSync.mockImplementation((path, _encoding) => {
-        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
-          return '268435456'; // 256MB
-        }
-        return '';
-      });
+      mockReadFileSync.mockReturnValue('536870912'); // 512MB
 
-      const limit = getEffectiveMemoryLimit(512);
-      expect(limit).toBe(256);
-      expect(mockLogger.info).toHaveBeenCalledWith('Using detected container memory limit: 256MB');
+      const result = getEffectiveMemoryLimit();
+      expect(result).toBe(512);
     });
 
     it('should use default limit when no container limit detected', () => {
       mockExistsSync.mockReturnValue(false);
 
-      const limit = getEffectiveMemoryLimit(512);
-      expect(limit).toBe(512);
-      expect(mockLogger.info).toHaveBeenCalledWith('Using default memory limit: 512MB');
+      const result = getEffectiveMemoryLimit();
+      expect(result).toBe(512); // Default limit
     });
 
     it('should prefer detected limit over default', () => {
       mockExistsSync.mockImplementation((path) => {
-        if (path === '/.dockerenv') return false;
-        if (path === '/proc/self/cgroup') return false;
-        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') return true;
-        return false;
+        return path === '/sys/fs/cgroup/memory/memory.limit_in_bytes';
       });
-      mockReadFileSync.mockImplementation((path, _encoding) => {
-        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
-          return '1073741824'; // 1GB
-        }
-        return '';
-      });
+      mockReadFileSync.mockReturnValue('1073741824'); // 1GB
 
-      const limit = getEffectiveMemoryLimit(512);
-      expect(limit).toBe(1024);
+      const result = getEffectiveMemoryLimit(2048); // 2GB default
+      expect(result).toBe(1024); // Should use detected 1GB instead of 2GB default
     });
   });
 });

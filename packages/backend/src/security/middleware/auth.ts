@@ -25,9 +25,9 @@ export interface UserPayload {
   type?: TokenType;
   role?: string;
   // Enhanced JWT security fields
-  tokenId?: string;
-  fingerprint?: string;
-  tokenVersion?: number;
+  tokenId?: string | undefined;
+  fingerprint?: string | undefined;
+  tokenVersion?: number | undefined;
 }
 
 export interface TokenMetadata {
@@ -73,7 +73,7 @@ const extractAndVerifyToken = async (
   const token = authHeader.split(' ')[1];
 
   try {
-    const payload = await tokenService.verifyToken(token, tokenType);
+    const payload = await tokenService.verifyToken(token, tokenType ?? TokenType.ACCESS);
 
     const user: UserPayload = {
       userId: payload.userId,
@@ -150,7 +150,7 @@ export const authenticate = async (
  */
 export const optionalAuthenticate = async (
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   if (!req.headers.authorization) {
@@ -404,7 +404,7 @@ export const authenticateSocket = async (
 ): Promise<void> => {
   try {
     const token =
-      socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+      socket.handshake.auth['token'] || socket.handshake.headers.authorization?.split(' ')[1];
 
     if (!token) {
       return next(new Error('Authentication token required'));

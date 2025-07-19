@@ -4,7 +4,6 @@
 
 import { Redis } from 'ioredis';
 import { CacheManager, initializeCacheManager } from '../advancedCacheManager';
-import { EventEmitter } from 'events';
 
 // Mock dependencies
 jest.mock('ioredis');
@@ -17,8 +16,8 @@ jest.mock('../../db', () => ({
 
 // Mock zlib for compression tests
 jest.mock('zlib', () => ({
-  gzip: jest.fn((data, callback) => callback(null, Buffer.from('compressed'))),
-  gunzip: jest.fn((data, callback) => callback(null, Buffer.from(JSON.stringify({ test: 'data' })))),
+  gzip: jest.fn((_data, callback) => callback(null, Buffer.from('compressed'))),
+  gunzip: jest.fn((_data, callback) => callback(null, Buffer.from(JSON.stringify({ test: 'data' })))),
 }));
 
 describe('Advanced Cache Manager', () => {
