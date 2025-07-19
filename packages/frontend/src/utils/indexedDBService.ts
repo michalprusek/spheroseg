@@ -3,6 +3,7 @@
  * This service provides a way to store blob URLs and their corresponding binary data
  * in IndexedDB, which persists across page reloads.
  */
+import logger from '@/utils/logger';
 
 // Database configuration
 const DB_NAME = 'spheroseg-images';
@@ -15,7 +16,7 @@ const openDB = (): Promise<IDBDatabase> => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = (event) => {
-      console.error('Error opening IndexedDB:', event);
+      logger.error('Error opening IndexedDB:', event);
       reject('Error opening IndexedDB');
     };
 
@@ -31,7 +32,7 @@ const openDB = (): Promise<IDBDatabase> => {
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
         store.createIndex('projectId', 'projectId', { unique: false });
-        console.log('Created IndexedDB store for images');
+        logger.debug('Created IndexedDB store for images');
       }
     };
   });
@@ -68,12 +69,12 @@ export const storeImageBlob = async (imageId: string, projectId: string, blob: B
 
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        console.debug(`Stored image ${imageId} in IndexedDB`);
+        logger.debug(`Stored image ${imageId} in IndexedDB`);
         resolve();
       };
 
       request.onerror = (event) => {
-        console.error('Error storing image in IndexedDB:', event);
+        logger.error('Error storing image in IndexedDB:', event);
         reject('Error storing image');
       };
 
@@ -82,7 +83,7 @@ export const storeImageBlob = async (imageId: string, projectId: string, blob: B
       };
     });
   } catch (error) {
-    console.error('Failed to store image in IndexedDB:', error);
+    logger.error('Failed to store image in IndexedDB:', error);
     throw error;
   }
 };
@@ -103,17 +104,17 @@ export const getImageBlob = async (imageId: string): Promise<Blob | null> => {
       request.onsuccess = () => {
         const result = request.result as ImageData | undefined;
         if (result) {
-          console.debug(`Retrieved image ${imageId} from IndexedDB`);
+          logger.debug(`Retrieved image ${imageId} from IndexedDB`);
           resolve(result.blob);
         } else {
           // This is normal behavior when image hasn't been cached yet
-          console.debug(`Image ${imageId} not found in IndexedDB cache`);
+          logger.debug(`Image ${imageId} not found in IndexedDB cache`);
           resolve(null);
         }
       };
 
       request.onerror = (event) => {
-        console.error('Error retrieving image from IndexedDB:', event);
+        logger.error('Error retrieving image from IndexedDB:', event);
         reject('Error retrieving image');
       };
 
@@ -122,7 +123,7 @@ export const getImageBlob = async (imageId: string): Promise<Blob | null> => {
       };
     });
   } catch (error) {
-    console.error('Failed to retrieve image from IndexedDB:', error);
+    logger.error('Failed to retrieve image from IndexedDB:', error);
     return null;
   }
 };
@@ -147,23 +148,23 @@ export const deleteImageFromDB = async (imageId: string): Promise<void> => {
           const deleteRequest = store.delete(imageId);
 
           deleteRequest.onsuccess = () => {
-            console.log(`Deleted image ${imageId} from IndexedDB`);
+            logger.debug(`Deleted image ${imageId} from IndexedDB`);
             resolve();
           };
 
           deleteRequest.onerror = (event) => {
-            console.error('Error deleting image from IndexedDB:', event);
+            logger.error('Error deleting image from IndexedDB:', event);
             reject('Error deleting image');
           };
         } else {
           // Image doesn't exist, but we still consider it a success
-          console.log(`Image ${imageId} not found in IndexedDB, nothing to delete`);
+          logger.debug(`Image ${imageId} not found in IndexedDB, nothing to delete`);
           resolve();
         }
       };
 
       checkRequest.onerror = (event) => {
-        console.error('Error checking image existence in IndexedDB:', event);
+        logger.error('Error checking image existence in IndexedDB:', event);
         reject('Error checking image existence');
       };
 
@@ -172,7 +173,7 @@ export const deleteImageFromDB = async (imageId: string): Promise<void> => {
       };
     });
   } catch (error) {
-    console.error('Failed to delete image from IndexedDB:', error);
+    logger.error('Failed to delete image from IndexedDB:', error);
     // We'll resolve rather than throw to ensure deletion workflow continues
     // even if IndexedDB operations fail
     return Promise.resolve();
@@ -196,7 +197,7 @@ export const deleteProjectImages = async (projectId: string): Promise<void> => {
       images.forEach((image) => {
         store.delete(image.id);
       });
-      console.log(`Deleted ${images.length} images for project ${projectId} from IndexedDB`);
+      logger.debug(`Deleted ${images.length} images for project ${projectId} from IndexedDB`);
     };
 
     return new Promise((resolve, reject) => {
@@ -206,12 +207,12 @@ export const deleteProjectImages = async (projectId: string): Promise<void> => {
       };
 
       transaction.onerror = (event) => {
-        console.error('Error deleting project images from IndexedDB:', event);
+        logger.error('Error deleting project images from IndexedDB:', event);
         reject('Error deleting project images');
       };
     });
   } catch (error) {
-    console.error('Failed to delete project images from IndexedDB:', error);
+    logger.error('Failed to delete project images from IndexedDB:', error);
     throw error;
   }
 };
@@ -241,7 +242,7 @@ export const cleanupOldData = async (maxAgeMs: number = 7 * 24 * 60 * 60 * 1000)
         }
       });
 
-      console.log(`Cleaned up ${deletedCount} old images from IndexedDB`);
+      logger.debug(`Cleaned up ${deletedCount} old images from IndexedDB`);
     };
 
     return new Promise((resolve, reject) => {
@@ -251,12 +252,12 @@ export const cleanupOldData = async (maxAgeMs: number = 7 * 24 * 60 * 60 * 1000)
       };
 
       transaction.onerror = (event) => {
-        console.error('Error cleaning up old data from IndexedDB:', event);
+        logger.error('Error cleaning up old data from IndexedDB:', event);
         reject('Error cleaning up old data');
       };
     });
   } catch (error) {
-    console.error('Failed to clean up old data from IndexedDB:', error);
+    logger.error('Failed to clean up old data from IndexedDB:', error);
     throw error;
   }
 };
@@ -296,12 +297,12 @@ export const getDBStats = async (): Promise<{ count: number; totalSize: number }
       };
 
       transaction.onerror = (event) => {
-        console.error('Error getting database statistics:', event);
+        logger.error('Error getting database statistics:', event);
         reject('Error getting database statistics');
       };
     });
   } catch (error) {
-    console.error('Failed to get database statistics:', error);
+    logger.error('Failed to get database statistics:', error);
     return { count: 0, totalSize: 0 };
   }
 };
@@ -316,17 +317,17 @@ export const clearEntireDatabase = async (): Promise<void> => {
     const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
 
     deleteRequest.onsuccess = () => {
-      console.log('IndexedDB database completely cleared');
+      logger.debug('IndexedDB database completely cleared');
       resolve();
     };
 
     deleteRequest.onerror = (event) => {
-      console.error('Error clearing IndexedDB database:', event);
+      logger.error('Error clearing IndexedDB database:', event);
       reject(new Error('Error clearing database'));
     };
 
     deleteRequest.onblocked = () => {
-      console.warn('Database deletion blocked - close all tabs and try again');
+      logger.warn('Database deletion blocked - close all tabs and try again');
       reject(new Error('Database deletion blocked'));
     };
   });
