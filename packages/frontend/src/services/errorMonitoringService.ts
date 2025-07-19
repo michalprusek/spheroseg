@@ -211,7 +211,7 @@ class ErrorMonitoringService {
       osName = 'Linux';
     } else if (ua.includes('Android')) {
       osName = 'Android';
-    } else if (ua.includes('iOS')) {
+    } else if (ua.includes('iOS') || (ua.includes('iPhone') || ua.includes('iPad') || ua.includes('iPod'))) {
       osName = 'iOS';
     }
 
