@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { MockApiClientProvider } from '../../lib/__mocks__/enhanced/apiClient';
+import { MockApiClientProvider } from '../../lib/__mocks__/MockApiClientProvider';
 import { useProjectApi } from '../../hooks/api/useProjectApi';
 // Define ProjectStatus type locally since it's not exported from types
 type ProjectStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';

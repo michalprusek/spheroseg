@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { MockApiClientProvider } from '../../lib/__mocks__/enhanced/apiClient';
+import { MockApiClientProvider } from '../../lib/__mocks__/MockApiClientProvider';
 import { useImageApi } from '../../hooks/api/useImageApi';
 // Import ImageStatus as a type, not enum
 type ImageStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'saving' | 'without_segmentation';
