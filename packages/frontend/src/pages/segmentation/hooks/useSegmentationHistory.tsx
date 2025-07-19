@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * EditAction rozhraní pro atomické operace
  */
-interface EditAction {
+interface _EditAction {
   description: string;
   timestamp: number;
   apply: () => void;
@@ -160,7 +160,7 @@ export const useSegmentationHistory = (
     } else {
       toast.info('Nejsou k dispozici žádné akce pro Undo');
     }
-  }, [historyIndex, history, setSegmentation, createStateHash]);
+  }, [historyIndex, history, setSegmentation, createStateHash, t]);
 
   /**
    * Vylepšená funkce Redo s lepší zpětnou vazbou

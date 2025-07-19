@@ -109,16 +109,16 @@ describe('Memory Leak Prevention Utilities', () => {
 
   describe('useTimer', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should clear timeouts on unmount', () => {
       const { result, unmount } = renderHook(() => useTimer());
-      const callback = jest.fn();
+      const callback = vi.fn();
       
       act(() => {
         result.current.setTimeout(callback, 1000);
@@ -126,44 +126,44 @@ describe('Memory Leak Prevention Utilities', () => {
       
       unmount();
       
-      jest.advanceTimersByTime(1500);
+      vi.advanceTimersByTime(1500);
       
       expect(callback).not.toHaveBeenCalled();
     });
 
     it('should execute timeout when mounted', () => {
       const { result } = renderHook(() => useTimer());
-      const callback = jest.fn();
+      const callback = vi.fn();
       
       act(() => {
         result.current.setTimeout(callback, 1000);
       });
       
-      jest.advanceTimersByTime(1500);
+      vi.advanceTimersByTime(1500);
       
       expect(callback).toHaveBeenCalled();
     });
 
     it('should clear intervals on unmount', () => {
       const { result, unmount } = renderHook(() => useTimer());
-      const callback = jest.fn();
+      const callback = vi.fn();
       
       act(() => {
         result.current.setInterval(callback, 100);
       });
       
-      jest.advanceTimersByTime(250);
+      vi.advanceTimersByTime(250);
       expect(callback).toHaveBeenCalledTimes(2);
       
       unmount();
       
-      jest.advanceTimersByTime(250);
+      vi.advanceTimersByTime(250);
       expect(callback).toHaveBeenCalledTimes(2); // No additional calls
     });
 
     it('should manually clear timers', () => {
       const { result } = renderHook(() => useTimer());
-      const callback = jest.fn();
+      const callback = vi.fn();
       
       let timerId: NodeJS.Timeout;
       act(() => {
@@ -174,7 +174,7 @@ describe('Memory Leak Prevention Utilities', () => {
         result.current.clearTimeout(timerId);
       });
       
-      jest.advanceTimersByTime(1500);
+      vi.advanceTimersByTime(1500);
       
       expect(callback).not.toHaveBeenCalled();
     });
@@ -182,9 +182,9 @@ describe('Memory Leak Prevention Utilities', () => {
 
   describe('useEventListener', () => {
     it('should add and remove event listeners', () => {
-      const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
-      const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
-      const handler = jest.fn();
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+      const handler = vi.fn();
       
       const { unmount } = renderHook(() => 
         useEventListener('click', handler)
@@ -198,7 +198,7 @@ describe('Memory Leak Prevention Utilities', () => {
     });
 
     it('should handle events', () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       
       renderHook(() => useEventListener('click', handler));
       
@@ -210,8 +210,8 @@ describe('Memory Leak Prevention Utilities', () => {
 
     it('should work with custom elements', () => {
       const element = document.createElement('div');
-      const handler = jest.fn();
-      const addEventListenerSpy = jest.spyOn(element, 'addEventListener');
+      const handler = vi.fn();
+      const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       
       renderHook(() => useEventListener('click', handler, element));
       
@@ -220,13 +220,14 @@ describe('Memory Leak Prevention Utilities', () => {
   });
 
   describe('useBlobUrl', () => {
-    const mockCreateObjectURL = jest.fn();
-    const mockRevokeObjectURL = jest.fn();
+    const mockCreateObjectURL = vi.fn();
+    const mockRevokeObjectURL = vi.fn();
     
     beforeEach(() => {
+      let counter = 0;
       global.URL.createObjectURL = mockCreateObjectURL;
       global.URL.revokeObjectURL = mockRevokeObjectURL;
-      mockCreateObjectURL.mockImplementation(() => 'blob:test');
+      mockCreateObjectURL.mockImplementation(() => `blob:test${counter++}`);
     });
 
     it('should create and track blob URLs', () => {
@@ -239,7 +240,7 @@ describe('Memory Leak Prevention Utilities', () => {
       });
       
       expect(mockCreateObjectURL).toHaveBeenCalledWith(blob);
-      expect(url!).toBe('blob:test');
+      expect(url!).toBe('blob:test0');
     });
 
     it('should revoke all URLs on unmount', () => {
@@ -267,28 +268,28 @@ describe('Memory Leak Prevention Utilities', () => {
         result.current.revokeObjectURL(url);
       });
       
-      expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test');
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test0');
     });
   });
 
   describe('useResizeObserver', () => {
-    let mockObserve: jest.Mock;
-    let mockDisconnect: jest.Mock;
+    let mockObserve: ReturnType<typeof vi.fn>;
+    let mockDisconnect: ReturnType<typeof vi.fn>;
     
     beforeEach(() => {
-      mockObserve = jest.fn();
-      mockDisconnect = jest.fn();
+      mockObserve = vi.fn();
+      mockDisconnect = vi.fn();
       
-      global.ResizeObserver = jest.fn().mockImplementation(() => ({
+      global.ResizeObserver = vi.fn().mockImplementation(() => ({
         observe: mockObserve,
         disconnect: mockDisconnect,
-        unobserve: jest.fn(),
+        unobserve: vi.fn(),
       }));
     });
 
     it('should observe element and disconnect on unmount', () => {
       const ref = { current: document.createElement('div') };
-      const callback = jest.fn();
+      const callback = vi.fn();
       
       const { unmount } = renderHook(() => 
         useResizeObserver(ref, callback)
@@ -303,7 +304,7 @@ describe('Memory Leak Prevention Utilities', () => {
 
     it('should not observe if ref is null', () => {
       const ref = { current: null };
-      const callback = jest.fn();
+      const callback = vi.fn();
       
       renderHook(() => useResizeObserver(ref, callback));
       
@@ -314,8 +315,8 @@ describe('Memory Leak Prevention Utilities', () => {
   describe('SubscriptionManager', () => {
     it('should manage multiple subscriptions', () => {
       const manager = new SubscriptionManager();
-      const cleanup1 = jest.fn();
-      const cleanup2 = jest.fn();
+      const cleanup1 = vi.fn();
+      const cleanup2 = vi.fn();
       
       manager.add(cleanup1);
       manager.add(cleanup2);
@@ -328,7 +329,7 @@ describe('Memory Leak Prevention Utilities', () => {
 
     it('should return unsubscribe function', () => {
       const manager = new SubscriptionManager();
-      const cleanup = jest.fn();
+      const cleanup = vi.fn();
       
       const unsubscribe = manager.add(cleanup);
       
@@ -342,7 +343,7 @@ describe('Memory Leak Prevention Utilities', () => {
   describe('useSubscriptionManager', () => {
     it('should cleanup on unmount', () => {
       const { result, unmount } = renderHook(() => useSubscriptionManager());
-      const cleanup = jest.fn();
+      const cleanup = vi.fn();
       
       act(() => {
         result.current.add(cleanup);

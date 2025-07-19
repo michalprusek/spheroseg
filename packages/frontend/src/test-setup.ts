@@ -212,6 +212,10 @@ vi.mock('lucide-react', () => {
     ArrowDown: createIcon('ArrowDown'),
     ArrowLeft: createIcon('ArrowLeft'),
     ArrowRight: createIcon('ArrowRight'),
+    ArrowUpRight: createIcon('ArrowUpRight'),
+    ArrowDownRight: createIcon('ArrowDownRight'),
+    ArrowDownLeft: createIcon('ArrowDownLeft'),
+    ArrowUpLeft: createIcon('ArrowUpLeft'),
     Briefcase: createIcon('Briefcase'),
     DollarSign: createIcon('DollarSign'),
     CreditCard: createIcon('CreditCard'),
@@ -778,6 +782,20 @@ vi.mock('@/config/app.config.validated', () => ({
   getSupportedLanguages: () => ['en', 'cs', 'de', 'es', 'fr', 'zh'],
   getAllowedImageTypes: () => ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp'],
   getMaxFileSize: () => 50 * 1024 * 1024,
+}));
+
+// Mock useUndoRedo hook
+vi.mock('@/hooks/useUndoRedo', () => ({
+  useUndoRedo: vi.fn((initialState) => ({
+    state: initialState,
+    setState: vi.fn(),
+    undo: vi.fn(),
+    redo: vi.fn(),
+    canUndo: false,
+    canRedo: false,
+    clearHistory: vi.fn(),
+    setCurrentStateOnly: vi.fn(),
+  })),
 }));
 
 // Mock @radix-ui components

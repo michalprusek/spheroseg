@@ -1,4 +1,3 @@
-console.log('[useCoordinateTransform] module loaded');
 import { useCallback } from 'react';
 import { Point } from '@/lib/segmentation';
 

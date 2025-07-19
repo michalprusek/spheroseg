@@ -5,7 +5,7 @@
 import React from 'react';
 import { vi } from 'vitest';
 
-export const createMockRef = <T>(current: T | null = null) => {
+export const createMockRef = <T,>(current: T | null = null) => {
   const ref = { current };
   return ref as React.RefObject<T>;
 };
