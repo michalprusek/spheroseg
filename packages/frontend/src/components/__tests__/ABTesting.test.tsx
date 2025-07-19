@@ -10,6 +10,20 @@ import {
   TrackConversion,
 } from '../ABTesting';
 
+// Mock the config module first
+vi.mock('@/config/app.config', () => ({
+  getConfig: vi.fn(() => ({
+    api: {
+      baseUrl: 'http://localhost:5001',
+      prefix: '/api'
+    },
+    websocket: {
+      url: 'http://localhost:5001',
+      path: '/socket.io/'
+    }
+  }))
+}));
+
 // Mock the hooks
 vi.mock('@/hooks/useABTesting', () => ({
   useFeatureFlag: vi.fn(),
