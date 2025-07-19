@@ -2,6 +2,10 @@ import { ReactNode } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useProfile } from '@/contexts/ProfileContext';
 
 // Create a new QueryClient for each test
 const createTestQueryClient = () =>
@@ -112,10 +116,10 @@ export const MockedContextWrapper = ({
   const queryClient = createTestQueryClient();
 
   // Override the default mocks with custom values
-  vi.mocked(require('@/contexts/AuthContext').useAuth).mockReturnValue(authValues);
-  vi.mocked(require('@/contexts/LanguageContext').useLanguage).mockReturnValue(languageValues);
-  vi.mocked(require('@/contexts/ThemeContext').useTheme).mockReturnValue(themeValues);
-  vi.mocked(require('@/contexts/ProfileContext').useProfile).mockReturnValue(profileValues);
+  vi.mocked(useAuth).mockReturnValue(authValues);
+  vi.mocked(useLanguage).mockReturnValue(languageValues);
+  vi.mocked(useTheme).mockReturnValue(themeValues);
+  vi.mocked(useProfile).mockReturnValue(profileValues);
 
   return (
     <BrowserRouter>

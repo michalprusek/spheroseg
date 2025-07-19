@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv, type PluginOption } from 'vite';
+import { defineConfig, loadEnv, type PluginOption, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
@@ -36,12 +36,12 @@ export default defineConfig(({ mode }) => {
         algorithm: 'gzip',
         exclude: [/\.(br)$/, /\.(gz)$/],
         threshold: 10240, // Only compress files larger than 10kb
-      }) as any,
+      }) as unknown as Plugin,
       compression({
         algorithm: 'brotliCompress',
         exclude: [/\.(br)$/, /\.(gz)$/],
         threshold: 10240,
-      }) as any
+      }) as unknown as Plugin
     );
   }
 
@@ -53,7 +53,7 @@ export default defineConfig(({ mode }) => {
         filename: 'dist/stats.html',
         gzipSize: true,
         brotliSize: true,
-      }) as any
+      }) as unknown as Plugin
     );
   }
 

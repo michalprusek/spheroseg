@@ -15,7 +15,7 @@ import '@testing-library/jest-dom';
 
 // Mock the Radix UI Dialog components
 vi.mock('@radix-ui/react-dialog', () => {
-  const React = require('react');
+  const React = vi.importActual('react') as typeof import('react');
 
   // Create a context to share state between components
   const DialogContext = React.createContext({

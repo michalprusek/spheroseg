@@ -9,6 +9,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import '@testing-library/jest-dom';
 import mockApiClient from '@/lib/__mocks__/enhanced/apiClient';
+import { useNavigate } from 'react-router-dom';
 
 // Mock the API client module
 vi.mock('@/lib/apiClient', () => {
@@ -353,7 +354,7 @@ describe('Segmentation API Integration', () => {
 
     // This might trigger a navigation in the real app, which we're mocking
     // For testing, we can verify state changes or mock navigation calls
-    const navigate = require('react-router-dom').useNavigate();
+    const navigate = useNavigate();
     expect(navigate).toHaveBeenCalled();
   });
 });
