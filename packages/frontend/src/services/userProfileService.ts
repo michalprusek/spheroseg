@@ -164,7 +164,7 @@ class UserProfileService {
                 console.log(`[UserProfileService] Removed old cache entry: ${key} (${originalSize} chars)`);
               }
             }
-          } catch (e) {
+          } catch (_e) {
             // If we can't parse it, remove it
             localStorage.removeItem(key);
             spaceFreed += originalSize;
@@ -193,7 +193,7 @@ class UserProfileService {
                   console.log(
                     `[UserProfileService] Cleaned up ${images.length - filteredImages.length} old images from ${key}`,
                   );
-                } catch (e) {
+                } catch (_e) {
                   // If we can't save the filtered list, remove the whole key
                   localStorage.removeItem(key);
                   spaceFreed += originalSize;
@@ -201,8 +201,8 @@ class UserProfileService {
                 }
               }
             }
-          } catch (e) {
-            console.error(`[UserProfileService] Error cleaning up ${key}:`, e);
+          } catch (_e) {
+            console.error(`[UserProfileService] Error cleaning up ${key}:`, _e);
           }
         }
 
@@ -218,7 +218,7 @@ class UserProfileService {
                 console.log(`[UserProfileService] Removed old analytics data: ${key}`);
               }
             }
-          } catch (e) {
+          } catch (_e) {
             // If we can't parse it, remove it
             localStorage.removeItem(key);
             spaceFreed += originalSize;
@@ -259,7 +259,7 @@ class UserProfileService {
                 console.log(`[UserProfileService] Emergency removal of cache: ${key} (${size} chars)`);
               }
             }
-          } catch (e) {
+          } catch (_e) {
             localStorage.removeItem(key);
             spaceFreed += size;
           }
@@ -287,13 +287,13 @@ class UserProfileService {
                   const newData = JSON.stringify(filteredImages);
                   localStorage.setItem(key, newData);
                   spaceFreed += size - newData.length;
-                } catch (e) {
+                } catch (_e) {
                   localStorage.removeItem(key);
                   spaceFreed += size;
                 }
               }
             }
-          } catch (e) {
+          } catch (_e) {
             localStorage.removeItem(key);
             spaceFreed += size;
           }
@@ -317,7 +317,7 @@ class UserProfileService {
                 spaceFreed += size;
               }
             }
-          } catch (e) {
+          } catch (_e) {
             localStorage.removeItem(key);
             spaceFreed += size;
           }

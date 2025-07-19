@@ -554,7 +554,7 @@ class UnifiedImageProcessingService {
       if (options.maxHeight && dimensions.height > options.maxHeight) {
         errors.push(`Image height must not exceed ${options.maxHeight}px`);
       }
-    } catch (error) {
+    } catch (_error) {
       errors.push('Failed to read image dimensions');
     }
 

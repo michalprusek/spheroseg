@@ -1,4 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   useIsMounted,
   useSafeAsync,
@@ -15,8 +16,8 @@ import {
 
 describe('Memory Leak Prevention Utilities', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.clearAllTimers();
+    vi.clearAllMocks();
+    vi.clearAllTimers();
   });
 
   describe('useIsMounted', () => {
@@ -34,7 +35,7 @@ describe('Memory Leak Prevention Utilities', () => {
   describe('useSafeAsync', () => {
     it('should not execute callback after unmount', async () => {
       const { result, unmount } = renderHook(() => useSafeAsync());
-      const mockCallback = jest.fn().mockResolvedValue('test');
+      const mockCallback = vi.fn().mockResolvedValue('test');
       
       let promiseResult: any;
       
@@ -56,7 +57,7 @@ describe('Memory Leak Prevention Utilities', () => {
 
     it('should execute callback when mounted', async () => {
       const { result } = renderHook(() => useSafeAsync());
-      const mockCallback = jest.fn().mockResolvedValue('test');
+      const mockCallback = vi.fn().mockResolvedValue('test');
       
       let promiseResult: any;
       
