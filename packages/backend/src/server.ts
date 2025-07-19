@@ -100,6 +100,20 @@ const server = http.createServer(app);
  */
 const initializeServices = async (): Promise<void> => {
   try {
+    // Initialize Redis before other services that might use caching
+    try {
+      const redis = initializeRedis();
+      if (redis) {
+        logger.info('Redis initialized successfully');
+      } else {
+        logger.info('Redis is disabled or not configured');
+      }
+    } catch (redisError) {
+      logger.error('Failed to initialize Redis, continuing without caching', {
+        error: redisError instanceof Error ? redisError.message : String(redisError),
+      });
+    }
+
     // Initialize Socket.IO
     socketService.initializeSocketIO(server);
     logger.info('Socket.IO server initialized');
@@ -220,6 +234,16 @@ const shutdown = async (signal: string): Promise<void> => {
 
         // Socket.IO will be closed when HTTP server closes
         logger.info('Socket.IO server will close with HTTP server');
+
+        // Close Redis connection
+        try {
+          await closeRedis();
+          logger.info('Redis connection closed');
+        } catch (redisError) {
+          logger.error('Error closing Redis connection', {
+            error: redisError instanceof Error ? redisError.message : String(redisError),
+          });
+        }
 
         await db.closePool();
         logger.info('Database connections closed');

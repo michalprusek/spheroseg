@@ -34,7 +34,7 @@ const ProjectCardComponent: React.FC<ProjectCardProps> = ({ project, onProjectDe
   const { t } = useLanguage();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
-  const handleDelete = (_deletedProjectId: string) => {
+  const _handleDelete = (_deletedProjectId: string) => {
     if (!project.id) {
       console.error('ProjectCard: Cannot delete project with undefined ID');
       return;

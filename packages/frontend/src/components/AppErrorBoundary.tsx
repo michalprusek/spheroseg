@@ -38,7 +38,7 @@ const AppErrorFallback: React.FC = () => (
         </h1>
         
         <p className="text-gray-600 dark:text-gray-300 mb-6">
-          We're sorry, but the application has encountered a critical error and cannot continue.
+          We&apos;re sorry, but the application has encountered a critical error and cannot continue.
           This issue has been logged and our team has been notified.
         </p>
         

@@ -7,6 +7,7 @@ import { ApiError } from '../utils/errors';
 import tokenService from './tokenService';
 import { sendPasswordReset } from './emailService';
 import config from '../config';
+import { cacheService, CACHE_TTL } from './cacheService';
 
 // Response type interfaces
 interface RegisterResponse {
@@ -561,7 +562,16 @@ class AuthService {
       throw new ApiError('User ID is required', 400);
     }
 
-    logger.info('Fetching current user data', { userId });
+    // Try to get from cache first
+    const cacheKey = cacheService.generateKey('user:current:', userId);
+    const cached = await cacheService.get<UserResponse>(cacheKey);
+    
+    if (cached) {
+      logger.debug('Current user data retrieved from cache', { userId });
+      return cached;
+    }
+
+    logger.info('Fetching current user data from database', { userId });
 
     const client = await db.getPool().connect();
     try {
@@ -596,10 +606,15 @@ class AuthService {
       const profileData = profileResult.rows.length > 0 ? profileResult.rows[0] : {};
 
       // Return combined data
-      return {
+      const userData = {
         ...userResult.rows[0],
         ...profileData,
       };
+
+      // Cache the result
+      await cacheService.set(cacheKey, userData, CACHE_TTL.MEDIUM);
+
+      return userData;
     } catch (error) {
       logger.error('Error fetching current user', { error, userId });
       throw new ApiError(
@@ -663,6 +678,9 @@ class AuthService {
       await client.query('UPDATE refresh_tokens SET is_revoked = true WHERE user_id = $1', [
         userId,
       ]);
+
+      // Invalidate user cache since password has changed
+      await cacheService.invalidateRelated('user', userId);
 
       logger.info('Password changed successfully', { userId });
     } catch (error) {

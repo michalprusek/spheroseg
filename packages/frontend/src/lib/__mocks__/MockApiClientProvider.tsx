@@ -79,12 +79,8 @@ const createMockApiClient = (mockResponses: MockResponses, timeoutMs?: number) =
   };
 };
 
-// Mock the apiClient module at the module level
-let mockApiClient = createMockApiClient({});
-
-vi.mock('@/lib/apiClient', () => ({
-  default: mockApiClient,
-}));
+// Import the mock apiClient from test-setup
+import apiClient from '@/lib/apiClient';
 
 // Mock API client provider component
 export const MockApiClientProvider: React.FC<MockApiClientProviderProps> = ({
@@ -92,11 +88,59 @@ export const MockApiClientProvider: React.FC<MockApiClientProviderProps> = ({
   mockResponses = {},
   timeoutMs,
 }) => {
-  // Update the mock client with new responses
+  // Configure the existing mock client with the provided responses
   React.useEffect(() => {
-    mockApiClient = createMockApiClient(mockResponses, timeoutMs);
-    // Update the mock
-    vi.mocked(mockApiClient);
+    const findResponse = (url: string, method: string) => {
+      const key = getOperationKeyFromUrl(url, method);
+      return mockResponses[key] || null;
+    };
+
+    const handleResponse = async (url: string, method: string, _data?: unknown, options?: any) => {
+      const response = findResponse(url, method);
+      
+      if (!response) {
+        // Default successful response
+        return Promise.resolve({ data: {}, status: 200 });
+      }
+      
+      // Handle delay/timeout
+      if (response.delay) {
+        if (timeoutMs && response.delay > timeoutMs) {
+          return Promise.reject(new Error('Request timed out'));
+        }
+        await new Promise(resolve => setTimeout(resolve, response.delay));
+      }
+      
+      // Handle error responses
+      if (response.error) {
+        return Promise.reject(response.error);
+      }
+      
+      // Handle progress events for uploads
+      if (options?.onUploadProgress && response.progressEvents) {
+        for (const event of response.progressEvents) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+          options.onUploadProgress(event);
+        }
+      }
+      
+      // Return successful response
+      return Promise.resolve({
+        data: response.data || {},
+        status: response.status || 200,
+      });
+    };
+
+    // Update the mock implementations
+    apiClient.get.mockImplementation((url: string) => handleResponse(url, 'GET'));
+    apiClient.post.mockImplementation((url: string, data: unknown, options?: unknown) => 
+      handleResponse(url, 'POST', data, options));
+    apiClient.put.mockImplementation((url: string, data: unknown, options?: unknown) => 
+      handleResponse(url, 'PUT', data, options));
+    apiClient.patch.mockImplementation((url: string, data: unknown, options?: unknown) => 
+      handleResponse(url, 'PATCH', data, options));
+    apiClient.delete.mockImplementation((url: string, options?: unknown) => 
+      handleResponse(url, 'DELETE', undefined, options));
   }, [mockResponses, timeoutMs]);
 
   return <>{children}</>;

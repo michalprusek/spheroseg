@@ -100,7 +100,7 @@ const ProjectImages = ({
     onResegment(imageId);
   };
 
-  const toggleDebug = (imageId: string) => {
+  const _toggleDebug = (imageId: string) => {
     if (debugImageId === imageId) {
       setShowDebug(!showDebug);
     } else {

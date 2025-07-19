@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
@@ -9,7 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { io, Socket } from 'socket.io-client';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 import logger from '@/utils/logger';
-import { useIsMounted, useTimer, useEventListener } from '@/utils/memoryLeakFixes';
+import { useIsMounted, useTimer } from '@/utils/memoryLeakFixes';
 
 interface SegmentationProgressProps {
   projectId: string;

@@ -57,7 +57,7 @@ const ProjectImageProcessor: React.FC<ProjectImageProcessorProps> = ({ image, on
 
   // Function to save the segmentation result (called after processing or manual edit)
   // Keep this function for potential future use (e.g., saving manually edited polygons)
-  const saveSegmentationResult = async (result: SegmentationData) => {
+  const _saveSegmentationResult = async (result: SegmentationData) => {
     if (!image.id) return;
     setLoadingStatus('saving');
     try {
