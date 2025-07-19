@@ -8,6 +8,7 @@ import { deleteImageFromDB } from '@/utils/indexedDBService';
 import cacheService from '@/services/unifiedCacheService';
 import { SEGMENTATION_STATUS } from '@/constants/segmentationStatus';
 import { useTranslation } from 'react-i18next';
+import logger from '@/utils/logger';
 
 interface UseProjectImageActionsProps {
   projectId?: string;
@@ -88,7 +89,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                           }
                         });
                       } catch (cacheError) {
-                        console.error('Error updating image cache:', cacheError);
+                        logger.error('Error updating image cache:', cacheError);
                       }
 
                       // Break the loop if we successfully deleted the image
@@ -98,14 +99,14 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                     console.warn(`Invalid data format in localStorage for key ${storageKey}, expected array`);
                   }
                 } catch (parseError) {
-                  console.error(`Error parsing localStorage data for key ${storageKey}: ${parseError}`);
+                  logger.error(`Error parsing localStorage data for key ${storageKey}: ${parseError}`);
                 }
               } else {
                 console.warn(`No images found in localStorage for key ${storageKey}`);
               }
             }
           } catch (storageErr) {
-            console.error('Error updating localStorage after image deletion:', storageErr);
+            logger.error('Error updating localStorage after image deletion:', storageErr);
           }
         }
 
@@ -137,7 +138,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
               console.log(`Successfully deleted image ${legacyIdToDelete} using legacy endpoint`);
               deletionSuccessful = true;
             } catch (legacyErr) {
-              console.error(`Both delete attempts failed: ${legacyErr}`);
+              logger.error(`Both delete attempts failed: ${legacyErr}`);
 
               // If both API calls fail but it's a local image (not yet saved to backend),
               // still consider it a success if we already removed it from localStorage
@@ -176,7 +177,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                           }
                         });
                       } catch (cacheError) {
-                        console.error('Error updating image cache:', cacheError);
+                        logger.error('Error updating image cache:', cacheError);
                       }
                     }
                   }
@@ -200,7 +201,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
             await deleteImageFromDB(imageId);
             console.log(`Deleted image ${imageId} from IndexedDB`);
           } catch (dbError) {
-            console.error('Error deleting image from IndexedDB:', dbError);
+            logger.error('Error deleting image from IndexedDB:', dbError);
             // Continue even if IndexedDB deletion fails
           }
 
@@ -330,7 +331,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
       } catch (err: unknown) {
         // Permission errors are already handled by the API client interceptor
         // We just need to log the error for debugging
-        console.error('Error deleting image:', err);
+        logger.error('Error deleting image:', err);
         
         // Only show a generic error if it's not a permission error
         if (axios.isAxiosError(err)) {
@@ -355,7 +356,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
   const handleOpenSegmentationEditor = useCallback(
     (imageId: string) => {
       if (!projectId) {
-        console.error('Cannot open editor without project ID');
+        logger.error('Cannot open editor without project ID');
         toast.error('Cannot open editor: Project context missing.');
         return;
       }

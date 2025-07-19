@@ -7,6 +7,7 @@ import { Loader2, CheckCircle, AlertTriangle, Play } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import apiClient from '@/lib/apiClient'; // Import apiClient
 import axios from 'axios'; // Import axios for error checking
+import logger from '@/utils/logger';
 
 // Define ImageStatus type (moved to types/index.ts, imported)
 // type ImageStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'saving';
@@ -31,7 +32,7 @@ const ProjectImageProcessor: React.FC<ProjectImageProcessorProps> = ({ image, on
     toast.info(t('imageProcessor.segmentationStarted') || 'Segmentation process started...');
 
     try {
-      console.log(`Triggering segmentation for image ${image.id}`);
+      logger.debug(`Triggering segmentation for image ${image.id}`);
       // Replace simulation with API call to trigger segmentation
       await apiClient.post(`/api/images/${image.id}/segmentation`);
 
@@ -41,7 +42,7 @@ const ProjectImageProcessor: React.FC<ProjectImageProcessorProps> = ({ image, on
       // No need to simulate result or call save here.
       setLoadingStatus(null); // Clear internal loading state, rely on prop updates
     } catch (error: unknown) {
-      console.error('Error triggering segmentation:', error);
+      logger.error('Error triggering segmentation:', error);
       let message = t('imageProcessor.segmentationStartError') || 'Failed to start segmentation.';
       if (axios.isAxiosError(error) && error.response) {
         message = error.response.data?.message || message;
@@ -60,7 +61,7 @@ const ProjectImageProcessor: React.FC<ProjectImageProcessorProps> = ({ image, on
     if (!image.id) return;
     setLoadingStatus('saving');
     try {
-      console.log(`Saving result for image ${image.id}`);
+      logger.debug(`Saving result for image ${image.id}`);
       // Replace simulation with API call to save result
       const response = await apiClient.put<SegmentationApiResponse>(`/api/images/${image.id}/segmentation`, {
         result_data: result,
@@ -79,7 +80,7 @@ const ProjectImageProcessor: React.FC<ProjectImageProcessorProps> = ({ image, on
       toast.success(t('imageProcessor.resultSaveSuccess') || 'Result saved successfully.');
       setLoadingStatus(null); // Clear loading state after successful save
     } catch (error: unknown) {
-      console.error('Error saving segmentation result:', error);
+      logger.error('Error saving segmentation result:', error);
       let message = t('imageProcessor.resultSaveError') || 'Failed to save result.';
       if (axios.isAxiosError(error) && error.response) {
         message = error.response.data?.message || message;
