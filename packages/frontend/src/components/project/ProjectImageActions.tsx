@@ -37,12 +37,12 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         // Use the backend UUID if available, otherwise use the ID directly
         // This allows compatibility with both locally created images and backend images
         const imageUuid = image.imageUuid || imageId;
-        console.log(`UI image ID: ${imageId}, Backend image UUID: ${imageUuid}, Project ID: ${projectId}`);
+        logger.debug(`UI image ID: ${imageId}, Backend image UUID: ${imageUuid}, Project ID: ${projectId}`);
 
         // Ensure projectId is properly formatted - remove "project-" prefix if present
         const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
 
-        console.log(`Deleting image ${imageUuid} from project ${cleanProjectId} (formatted: ${cleanProjectId})`);
+        logger.debug(`Deleting image ${imageUuid} from project ${cleanProjectId} (formatted: ${cleanProjectId})`);
 
         // Check if this is a local image (starts with 'img-')
         const isLocalImage = imageId.startsWith('img-');
@@ -76,7 +76,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                           !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
                       );
                       localStorage.setItem(storageKey, JSON.stringify(filteredImages));
-                      console.log(`Removed image ${imageId} from localStorage (key: ${storageKey})`);
+                      logger.debug(`Removed image ${imageId} from localStorage (key: ${storageKey})`);
                       deletionSuccessful = true;
 
                       // Update the cache as well
@@ -91,7 +91,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                               (img: unknown) =>
                                 !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
                             );
-                            console.log(`Updated cache for project ${cacheKey}`);
+                            logger.debug(`Updated cache for project ${cacheKey}`);
                           }
                         });
                       } catch (cacheError) {
@@ -102,13 +102,13 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                       break;
                     }
                   } else {
-                    console.warn(`Invalid data format in localStorage for key ${storageKey}, expected array`);
+                    logger.warn(`Invalid data format in localStorage for key ${storageKey}, expected array`);
                   }
                 } catch (parseError) {
                   logger.error(`Error parsing localStorage data for key ${storageKey}: ${parseError}`);
                 }
               } else {
-                console.warn(`No images found in localStorage for key ${storageKey}`);
+                logger.debug(`No images found in localStorage for key ${storageKey}`);
               }
             }
           } catch (storageErr) {
@@ -124,24 +124,24 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           try {
             // Use the actual database ID from the backend if available
             const idToDelete = image.id || imageUuid;
-            console.log(
+            logger.debug(
               `Attempting to delete image ${idToDelete} using API endpoint: /api/projects/${cleanProjectId}/images/${idToDelete}`,
             );
             await apiClient.delete(`/api/projects/${cleanProjectId}/images/${idToDelete}`);
-            console.log(`Successfully deleted image ${idToDelete} using primary endpoint`);
+            logger.debug(`Successfully deleted image ${idToDelete} using primary endpoint`);
             deletionSuccessful = true;
           } catch (deleteErr) {
-            console.warn(`First delete attempt failed, trying legacy endpoint: ${deleteErr}`);
+            logger.warn(`First delete attempt failed, trying legacy endpoint: ${deleteErr}`);
 
             // If that fails, try with a legacy format
             try {
               // Try with the image UUID if different from ID
               const legacyIdToDelete = image.imageUuid || imageId;
-              console.log(
+              logger.debug(
                 `Attempting to delete image ${legacyIdToDelete} using legacy API endpoint: /api/images/${legacyIdToDelete}`,
               );
               await apiClient.delete(`/api/images/${legacyIdToDelete}`);
-              console.log(`Successfully deleted image ${legacyIdToDelete} using legacy endpoint`);
+              logger.debug(`Successfully deleted image ${legacyIdToDelete} using legacy endpoint`);
               deletionSuccessful = true;
             } catch (legacyErr) {
               logger.error(`Both delete attempts failed: ${legacyErr}`);
@@ -149,7 +149,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
               // If both API calls fail but it's a local image (not yet saved to backend),
               // still consider it a success if we already removed it from localStorage
               if (isLocalImage && deletionSuccessful) {
-                console.log(
+                logger.debug(
                   `Image ${imageId} was successfully removed from localStorage, considering deletion successful`,
                 );
                 // Already successful from localStorage removal
@@ -169,7 +169,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                           !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
                       );
                       localStorage.setItem(storageKey, JSON.stringify(filteredImages));
-                      console.log(`Removed image ${imageId} from localStorage as last resort`);
+                      logger.debug(`Removed image ${imageId} from localStorage as last resort`);
                       deletionSuccessful = true;
 
                       // Update the cache as well
@@ -183,7 +183,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                               (img: unknown) =>
                                 !(typeof img === 'object' && img !== null && 'id' in img && img.id === imageId),
                             );
-                            console.log(`Updated cache for project ${cacheKey}`);
+                            logger.debug(`Updated cache for project ${cacheKey}`);
                           }
                         });
                       } catch (cacheError) {
@@ -192,7 +192,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                     }
                   }
                 } catch (lastResortError) {
-                  console.error('Last resort localStorage deletion failed:', lastResortError);
+                  logger.error('Last resort localStorage deletion failed:', lastResortError);
                   throw legacyErr; // Re-throw the original error
                 }
 
@@ -209,7 +209,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           // Also delete from IndexedDB if it exists there
           try {
             await deleteImageFromDB(imageId);
-            console.log(`Deleted image ${imageId} from IndexedDB`);
+            logger.debug(`Deleted image ${imageId} from IndexedDB`);
           } catch (dbError) {
             logger.error('Error deleting image from IndexedDB:', dbError);
             // Continue even if IndexedDB deletion fails
@@ -226,7 +226,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
               // Also clear by tags
               await cacheService.deleteByTag(`project-${cleanedId}`);
 
-              console.log(`Invalidated unified cache for project ${cleanedId}`);
+              logger.debug(`Invalidated unified cache for project ${cleanedId}`);
             }
 
             // Vyčistíme legacy projectImagesCache
@@ -235,11 +235,11 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
               const { projectImagesCache } = await import('@/api/projectImages');
 
               if (cleanedId && projectImagesCache && projectImagesCache[cleanedId]) {
-                console.log(`Invalidating legacy project images cache for project ${cleanedId}`);
+                logger.debug(`Invalidating legacy project images cache for project ${cleanedId}`);
                 delete projectImagesCache[cleanedId]; // Kompletně vymažeme cache pro tento projekt
               }
             } catch (cacheError) {
-              console.error('Error invalidating legacy project images cache:', cacheError);
+              logger.error('Error invalidating legacy project images cache:', cacheError);
             }
 
             // Vyčistíme localStorage
@@ -260,63 +260,63 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                             !(typeof item === 'object' && item !== null && 'id' in item && item.id === imageId),
                         );
                         localStorage.setItem(key, JSON.stringify(updatedData));
-                        console.log(`Removed image ${imageId} from localStorage key ${key}`);
+                        logger.debug(`Removed image ${imageId} from localStorage key ${key}`);
                       }
                     } catch (parseError) {
-                      console.error(`Error parsing localStorage data for key ${key}:`, parseError);
+                      logger.error(`Error parsing localStorage data for key ${key}:`, parseError);
                     }
                   }
                 }
               }
             } catch (localStorageError) {
-              console.error('Error cleaning localStorage:', localStorageError);
+              logger.error('Error cleaning localStorage:', localStorageError);
             }
 
             // Garantovaně znovu načíst seznam obrázků z backendu
-            console.log(`ProjectImageActions: Fetching fresh project data after image deletion`);
+            logger.debug(`ProjectImageActions: Fetching fresh project data after image deletion`);
 
             // Je-li k dispozici projectId, použijeme ho k získání aktuálních dat
             if (projectId) {
               // Pokus získat čerstvá data
               try {
                 const cleanedId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
-                console.log(`Fetching images for project ${cleanedId} after image deletion`);
+                logger.debug(`Fetching images for project ${cleanedId} after image deletion`);
 
                 // Explicitně zavoláme getProjectImages pro aktuální data
                 const { getProjectImages } = await import('@/api/projectImages');
                 const freshImages = await getProjectImages(cleanedId);
-                console.log(`Successfully loaded ${freshImages.length} fresh images after deletion`);
+                logger.debug(`Successfully loaded ${freshImages.length} fresh images after deletion`);
 
                 // Aktualizovat UI s novými daty
                 onImagesChange(freshImages);
               } catch (fetchError) {
-                console.error('Error fetching fresh images after deletion:', fetchError);
+                logger.error('Error fetching fresh images after deletion:', fetchError);
 
                 // Jako záloha, pokud se nezdaří aktualizace z API, aktualizujeme lokálně
                 const updatedImages = images.filter((img) => img.id !== imageId);
-                console.log(`Falling back to local update after failed fetch. Images: ${updatedImages.length}`);
+                logger.debug(`Falling back to local update after failed fetch. Images: ${updatedImages.length}`);
                 onImagesChange(updatedImages);
               }
             } else {
               // Pokud nemáme projectId, aktualizujeme alespoň lokálně
               const updatedImages = images.filter((img) => img.id !== imageId);
-              console.log(`No projectId available, updating locally. Images: ${updatedImages.length}`);
+              logger.debug(`No projectId available, updating locally. Images: ${updatedImages.length}`);
               onImagesChange(updatedImages);
             }
           } catch (updateError) {
-            console.error('Failed to update images after deletion:', updateError);
+            logger.error('Failed to update images after deletion:', updateError);
 
             // Pokud selže vše ostatní, zkusíme základní aktualizaci
             try {
               const updatedImages = images.filter((img) => img.id !== imageId);
               onImagesChange(updatedImages);
             } catch (finalError) {
-              console.warn('Failed to update images with onImagesChange:', finalError);
+              logger.warn('Failed to update images with onImagesChange:', finalError);
             }
           }
 
           // Dispatch a custom event that can be listened to by other components
-          console.log(
+          logger.debug(
             `ProjectImageActions: Dispatching image-deleted event for ${imageId} in project ${cleanProjectId}`,
           );
           const event = new CustomEvent('image-deleted', {
@@ -382,13 +382,13 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
   // Funkce pro získání aktuálního stavu obrázku z backendu
   const fetchImageStatus = async (imageId: string, projectId: string) => {
     try {
-      console.log(`Fetching status for image ${imageId} in project ${projectId}`);
+      logger.debug(`Fetching status for image ${imageId} in project ${projectId}`);
 
       // Zkusíme získat stav obrázku z backendu - použijeme endpoint pro získání detailu obrázku
       const response = await apiClient.get(`/api/projects/${projectId}/images/${imageId}`);
 
       if (response.data && response.data.segmentationStatus) {
-        console.log(`Received status for image ${imageId}: ${response.data.segmentationStatus}`);
+        logger.debug(`Received status for image ${imageId}: ${response.data.segmentationStatus}`);
 
         // Aktualizujeme stav obrázku v UI
         const updateEvent = new CustomEvent('image-status-update', {
@@ -404,7 +404,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         handleUpdateImageStatus(imageId, response.data.segmentationStatus);
       } else {
         // Alternativně zkusíme získat stav z fronty
-        console.log(`Trying to get status from queue for image ${imageId}`);
+        logger.debug(`Trying to get status from queue for image ${imageId}`);
         const queueResponse = await apiClient.get(`/api/segmentation/queue-status/${projectId}`);
 
         if (queueResponse.data) {
@@ -413,7 +413,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           const pendingTasks = queueResponse.data.pendingTasks || [];
 
           if (processingImages.includes(imageId)) {
-            console.log(`Image ${imageId} is currently processing`);
+            logger.debug(`Image ${imageId} is currently processing`);
             // Aktualizujeme stav obrázku v UI
             const updateEvent = new CustomEvent('image-status-update', {
               detail: {
@@ -432,7 +432,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                 typeof task === 'object' && task !== null && 'imageId' in task && task.imageId === imageId,
             )
           ) {
-            console.log(`Image ${imageId} is pending in queue`);
+            logger.debug(`Image ${imageId} is pending in queue`);
             // Aktualizujeme stav obrázku v UI
             const updateEvent = new CustomEvent('image-status-update', {
               detail: {
@@ -449,7 +449,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         }
       }
     } catch (error) {
-      console.error(`Error fetching status for image ${imageId}:`, error);
+      logger.error(`Error fetching status for image ${imageId}:`, error);
 
       // I když se nepodařilo získat stav, aktualizujeme ukazatel fronty
       const queueUpdateEvent = new CustomEvent('queue-status-update', {
@@ -481,7 +481,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         try {
           onImagesChange(updatedImagesInitial);
         } catch (error) {
-          console.warn('Failed to update images with onImagesChange:', error);
+          logger.warn('Failed to update images with onImagesChange:', error);
         }
 
         // Always dispatch event to update status in all components
@@ -496,7 +496,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
 
         // Update queue status
         setTimeout(() => {
-          console.log('Dispatching queue-status-update event');
+          logger.debug('Dispatching queue-status-update event');
           const queueUpdateEvent = new CustomEvent('queue-status-update', {
             detail: { refresh: true, projectId },
           });
@@ -508,14 +508,14 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
           const cleanProjectId = projectId.startsWith('project-') ? projectId.substring(8) : projectId;
 
           try {
-            console.log(`Triggering resegmentation for image ${imageId} in project ${cleanProjectId}`);
+            logger.debug(`Triggering resegmentation for image ${imageId} in project ${cleanProjectId}`);
 
             // Use the dedicated resegment endpoint that deletes old data
             const response = await apiClient.post(`/api/segmentation/${imageId}/resegment`, {
               project_id: cleanProjectId,
             });
 
-            console.log('Resegmentation API response:', response.data);
+            logger.debug('Resegmentation API response:', response.data);
 
             // Update status to 'queued' after successful API call
             const updateEvent = new CustomEvent('image-status-update', {
@@ -551,7 +551,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
 
             toast.success('Resegmentation task has been queued successfully.');
           } catch (apiErr) {
-            console.error('Resegmentation API call failed:', apiErr);
+            logger.error('Resegmentation API call failed:', apiErr);
 
             // Permission errors are already handled by the API client interceptor
             // Only show generic error for non-permission errors
@@ -580,13 +580,13 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
                 }),
               );
             } catch (error) {
-              console.warn('Failed to update images with onImagesChange:', error);
+              logger.warn('Failed to update images with onImagesChange:', error);
             }
             throw apiErr;
           }
         } else {
           // Missing projectId
-          console.error('Missing projectId for segmentation');
+          logger.error('Missing projectId for segmentation');
           toast.error('Missing project ID for segmentation');
 
           // Reset status
@@ -603,7 +603,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
               }),
             );
           } catch (error) {
-            console.warn('Failed to update images with onImagesChange:', error);
+            logger.warn('Failed to update images with onImagesChange:', error);
           }
           throw new Error('Missing projectId for segmentation');
         }
@@ -664,7 +664,7 @@ export const useProjectImageActions = ({ projectId, onImagesChange, images }: Us
         try {
           onImagesChange(updatedImages);
         } catch (error) {
-          console.warn('Failed to update images with onImagesChange:', error);
+          logger.warn('Failed to update images with onImagesChange:', error);
         }
       } catch (error) {
         logger.error('Error clearing segmentation:', error);
