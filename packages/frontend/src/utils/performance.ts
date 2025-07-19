@@ -185,13 +185,13 @@ export const usePerformance = () => {
       }
 
       // Record web vitals
-      if ('web-vitals' in window) {
-        import('web-vitals').then(({ getCLS, getFID, getLCP }) => {
-          getCLS(sendToAnalytics);
-          getFID(sendToAnalytics);
-          getLCP(sendToAnalytics);
-        });
-      }
+      import('web-vitals').then(({ getCLS, getFID, getLCP }) => {
+        getCLS(sendToAnalytics);
+        getFID(sendToAnalytics);
+        getLCP(sendToAnalytics);
+      }).catch((error) => {
+        logger.debug('Web vitals not available', { error });
+      });
     }
   }, []);
 
