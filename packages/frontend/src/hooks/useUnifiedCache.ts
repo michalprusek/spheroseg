@@ -16,7 +16,7 @@ const logger = createLogger('useUnifiedCache');
 // Types and Interfaces
 // ===========================
 
-export interface UseCacheOptions<T = any> extends CacheOptions {
+export interface UseCacheOptions<T = unknown> extends CacheOptions {
   key: string | string[];
   fetcher?: () => Promise<T>;
   staleTime?: number;
@@ -31,14 +31,14 @@ export interface UseCacheOptions<T = any> extends CacheOptions {
   onError?: (error: Error) => void;
 }
 
-export interface UseCacheReturn<T = any> {
+export interface UseCacheReturn<T = unknown> {
   data: T | undefined;
   error: Error | null;
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
   isSuccess: boolean;
-  refetch: () => Promise<any>;
+  refetch: () => Promise<unknown>;
   invalidate: () => Promise<void>;
   prefetch: () => Promise<void>;
   remove: () => Promise<void>;
@@ -49,7 +49,7 @@ export interface UseCacheReturn<T = any> {
 // Main Hook
 // ===========================
 
-export function useUnifiedCache<T = any>(options: UseCacheOptions<T>): UseCacheReturn<T> {
+export function useUnifiedCache<T = unknown>(options: UseCacheOptions<T>): UseCacheReturn<T> {
   const {
     key,
     fetcher,
@@ -200,7 +200,7 @@ export function useUnifiedCache<T = any>(options: UseCacheOptions<T>): UseCacheR
 /**
  * Hook for caching API responses
  */
-export function useApiCache<T = any>(endpoint: string, options?: Partial<UseCacheOptions<T>>) {
+export function useApiCache<T = unknown>(endpoint: string, options?: Partial<UseCacheOptions<T>>) {
   return useUnifiedCache<T>({
     key: ['api', endpoint],
     fetcher: async () => {
@@ -217,9 +217,15 @@ export function useApiCache<T = any>(endpoint: string, options?: Partial<UseCach
         // }
 
         return response.data;
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error(`API error for ${endpoint}:`, error);
-        throw new Error(error.response?.data?.message || error.message || 'API request failed');
+        const errorMessage = error && typeof error === 'object' && 'response' in error && 
+          error.response && typeof error.response === 'object' && 'data' in error.response &&
+          error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data &&
+          typeof error.response.data.message === 'string' ? error.response.data.message :
+          error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message :
+          'API request failed';
+        throw new Error(errorMessage);
       }
     },
     ttl: 5 * 60 * 1000, // 5 minutes
@@ -231,7 +237,7 @@ export function useApiCache<T = any>(endpoint: string, options?: Partial<UseCach
 /**
  * Hook for caching user data
  */
-export function useUserCache<T = any>(
+export function useUserCache<T = unknown>(
   userId: string,
   fetcher: () => Promise<T>,
   options?: Partial<UseCacheOptions<T>>,
@@ -249,7 +255,7 @@ export function useUserCache<T = any>(
 /**
  * Hook for caching project data
  */
-export function useProjectCache<T = any>(
+export function useProjectCache<T = unknown>(
   projectId: string,
   fetcher: () => Promise<T>,
   options?: Partial<UseCacheOptions<T>>,
@@ -324,12 +330,12 @@ export function useCacheManager() {
     logger.info(`Cache cleared for tag: ${tag}`);
   }, []);
 
-  const warmUp = useCallback(async (data: Array<{ key: string; value: any; options?: CacheOptions }>) => {
+  const warmUp = useCallback(async (data: Array<{ key: string; value: unknown; options?: CacheOptions }>) => {
     await cacheService.warmUp(data);
     logger.info(`Cache warmed up with ${data.length} items`);
   }, []);
 
-  const configure = useCallback((config: any) => {
+  const configure = useCallback((config: Record<string, unknown>) => {
     cacheService.configure(config);
   }, []);
 
@@ -349,7 +355,7 @@ export function useCacheManager() {
 /**
  * Hook for cached mutations
  */
-export function useCachedMutation<TData = any, TVariables = any>(
+export function useCachedMutation<TData = unknown, TVariables = unknown>(
   mutationFn: (variables: TVariables) => Promise<TData>,
   options?: {
     cacheKey?: string | ((variables: TVariables) => string);
@@ -388,7 +394,7 @@ export function useCachedMutation<TData = any, TVariables = any>(
           acc[key] = queryClient.getQueryData([key]);
           return acc;
         },
-        {} as Record<string, any>,
+        {} as Record<string, unknown>,
       );
 
       // Optimistically update

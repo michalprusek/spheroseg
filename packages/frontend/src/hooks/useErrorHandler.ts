@@ -15,12 +15,17 @@ export const useToastErrorHandler = () => {
    * @param title Optional custom title
    * @param defaultMessage Optional default message if error doesn't have one
    */
-  const handleError = (error: any, title?: string, defaultMessage?: string) => {
+  const handleError = (error: unknown, title?: string, defaultMessage?: string) => {
     // Log the error
     logger.error('Error handled by toast handler', { error });
 
     // Determine the error message
-    const errorMessage = error?.message || error?.toString?.() || defaultMessage || t('error.handler.defaultMessage');
+    const errorMessage = 
+      (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : null) ||
+      (error && typeof error === 'object' && 'toString' in error && typeof error.toString === 'function' ? error.toString() : null) ||
+      (typeof error === 'string' ? error : null) ||
+      defaultMessage || 
+      t('error.handler.defaultMessage');
 
     // Show toast notification
     toast.error(errorMessage, {
@@ -38,7 +43,7 @@ export const useToastErrorHandler = () => {
    * @param errorMessage Optional custom error message
    * @returns The wrapped function
    */
-  const createAsyncErrorHandler = <T extends any[], R>(
+  const createAsyncErrorHandler = <T extends unknown[], R>(
     asyncFunction: (...args: T) => Promise<R>,
     onSuccess?: (result: R) => void,
     errorMessage?: string,

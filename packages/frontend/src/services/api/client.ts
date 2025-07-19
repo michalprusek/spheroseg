@@ -1,5 +1,5 @@
-import { configService } from '@/config';
-import { getAccessToken, clearAuthTokens } from '@/services/authService';
+import { getConfig } from '@/config/app.config';
+import { getAccessToken, removeTokens } from '@/services/authService';
 import toastService from '@/services/toastService';
 import logger from '@/utils/logger';
 import type { 
@@ -82,8 +82,9 @@ class ApiClient {
    * Get base URL from configuration
    */
   private getBaseURL(): string {
-    const apiUrl = configService.get<string>('api.baseUrl');
-    const apiPrefix = configService.get<string>('api.prefix', '/api');
+    const config = getConfig();
+    const apiUrl = config.api.baseUrl;
+    const apiPrefix = config.api.prefix || '/api';
     return `${apiUrl}${apiPrefix}`;
   }
 
@@ -116,7 +117,7 @@ class ApiClient {
           return this.request(error.config!);
         } catch (refreshError) {
           // Refresh failed, logout user
-          clearAuthTokens();
+          removeTokens();
           // Redirect to login page
           window.location.href = '/login';
           if (error.config?.showErrorToast) {
@@ -572,30 +573,6 @@ class ApiClient {
     return RETRY_STATUS_CODES.includes(error.status || 0);
   }
 
-  /**
-   * Refresh authentication token
-   */
-  private async refreshToken(): Promise<void> {
-    const refreshToken = useStore.getState().tokens?.refreshToken;
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    const response = await this.post(
-      '/auth/refresh',
-      { refreshToken },
-      {
-        skipAuth: true,
-        showErrorToast: false,
-      },
-    );
-
-    const { accessToken, refreshToken: newRefreshToken } = response.data;
-    useStore.getState().setTokens({
-      accessToken,
-      refreshToken: newRefreshToken || refreshToken,
-    });
-  }
 }
 
 // Create and export singleton instance

@@ -5,6 +5,47 @@ import apiClient from './client';
  * Provides a clean interface for all API calls with proper typing
  */
 
+// Generic metadata type
+export type GenericMetadata = Record<string, unknown>;
+
+// User preferences type
+export type UserPreferences = Record<string, string | number | boolean>;
+
+// Search result type
+export interface SearchResult {
+  id: string;
+  type?: string;
+  title?: string;
+  description?: string;
+  relevance?: number;
+  [key: string]: unknown;
+}
+
+// Task result type
+export interface TaskResult {
+  id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress?: number;
+  result?: unknown;
+  error?: string;
+}
+
+// Notification item type
+export interface NotificationItem {
+  id: string;
+  type?: string;
+  title?: string;
+  message?: string;
+  timestamp?: string;
+  read?: boolean;
+  [key: string]: unknown;
+}
+
+// Statistics type
+export interface StatisticsData {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 // Types for API responses
 export interface User {
   id: string;
@@ -38,7 +79,7 @@ export interface Image {
   width: number;
   height: number;
   status: 'pending' | 'processing' | 'completed' | 'failed';
-  metadata?: Record<string, any>;
+  metadata?: GenericMetadata;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,7 +90,7 @@ export interface Segment {
   polygon: Array<{ x: number; y: number }>;
   type: string;
   confidence?: number;
-  metadata?: Record<string, any>;
+  metadata?: GenericMetadata;
   createdAt: string;
   updatedAt: string;
 }
@@ -124,7 +165,7 @@ export const api = {
     updatePassword: (currentPassword: string, newPassword: string) =>
       apiClient.patch('/users/me/password', { currentPassword, newPassword }),
 
-    updatePreferences: (preferences: Record<string, any>) => apiClient.patch('/users/preferences', preferences),
+    updatePreferences: (preferences: UserPreferences) => apiClient.patch('/users/preferences', preferences),
 
     delete: (password: string) => apiClient.delete('/users/me', { data: { password } }),
 
@@ -208,18 +249,18 @@ export const api = {
 
   // Metadata
   metadata: {
-    update: (id: string, metadata: Record<string, any>) => apiClient.patch(`/metadata/${id}`, metadata),
+    update: (id: string, metadata: GenericMetadata) => apiClient.patch(`/metadata/${id}`, metadata),
 
     search: (query: string, type?: 'image' | 'project' | 'segment') =>
-      apiClient.get<any[]>('/metadata/search', { params: { q: query, type } }),
+      apiClient.get<SearchResult[]>('/metadata/search', { params: { q: query, type } }),
 
-    batchUpdate: (updates: Array<{ id: string; metadata: Record<string, any> }>) =>
+    batchUpdate: (updates: Array<{ id: string; metadata: GenericMetadata }>) =>
       apiClient.patch('/metadata/batch', { updates }),
 
     enrich: (ids: string[], provider: 'openai' | 'custom') => apiClient.post('/metadata/enrich', { ids, provider }),
 
     statistics: (projectId?: string) =>
-      apiClient.get<Record<string, any>>('/metadata/statistics', { params: { projectId } }),
+      apiClient.get<StatisticsData>('/metadata/statistics', { params: { projectId } }),
   },
 
   // Notifications
@@ -232,19 +273,12 @@ export const api = {
     unsubscribe: (endpoint: string) => apiClient.post('/notifications/unsubscribe', { endpoint }),
 
     getHistory: (params?: PaginationParams) =>
-      apiClient.get<{ data: any[]; total: number }>('/notifications/history', { params }),
+      apiClient.get<{ data: NotificationItem[]; total: number }>('/notifications/history', { params }),
   },
 
   // Tasks (for async operations)
   tasks: {
-    get: (taskId: string) =>
-      apiClient.get<{
-        id: string;
-        status: 'pending' | 'processing' | 'completed' | 'failed';
-        progress?: number;
-        result?: any;
-        error?: string;
-      }>(`/tasks/${taskId}`),
+    get: (taskId: string) => apiClient.get<TaskResult>(`/tasks/${taskId}`),
 
     cancel: (taskId: string) => apiClient.post(`/tasks/${taskId}/cancel`),
   },
@@ -259,9 +293,9 @@ export const api = {
         storageUsed: number;
       }>('/stats/overview'),
 
-    project: (projectId: string) => apiClient.get<Record<string, any>>(`/stats/projects/${projectId}`),
+    project: (projectId: string) => apiClient.get<StatisticsData>(`/stats/projects/${projectId}`),
 
-    user: () => apiClient.get<Record<string, any>>('/stats/user'),
+    user: () => apiClient.get<StatisticsData>('/stats/user'),
   },
 };
 

@@ -74,7 +74,8 @@
         "project": null
       },
       "rules": {
-        "@typescript-eslint/no-explicit-any": "off"
+        "@typescript-eslint/no-explicit-any": "off",
+        "no-console": "off"
       }
     },
     {
@@ -83,6 +84,13 @@
         "project": null
       },
       "rules": {}
+    },
+    {
+      "files": ["**/__mocks__/**/*", "**/scripts/**/*", "**/performance/**/*", "**/serviceWorkerRegistration.ts"],
+      "rules": {
+        "no-console": "off",
+        "@typescript-eslint/no-explicit-any": "warn"
+      }
     }
   ]
 }

@@ -14,7 +14,7 @@ interface MigrationRule {
   replacement: string;
 }
 
-const MIGRATION_RULES: MigrationRule[] = [
+const _MIGRATION_RULES: MigrationRule[] = [
   // Import migrations
   {
     pattern: /import\s+{\s*toast\s*}\s+from\s+['"]sonner['"]/g,

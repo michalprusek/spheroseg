@@ -15,9 +15,9 @@ interface PendingRequest {
 }
 
 interface CachedResponse {
-  data: any;
+  data: unknown;
   timestamp: number;
-  headers: any;
+  headers: Record<string, string>;
   status: number;
   statusText: string;
 }
@@ -258,7 +258,7 @@ export const requestDeduplicator = new RequestDeduplicator();
 /**
  * Axios interceptor for request deduplication
  */
-export function createDeduplicationInterceptor(axiosInstance: any) {
+export function createDeduplicationInterceptor(axiosInstance: { interceptors: { request: { use: (onSuccess: (config: AxiosRequestConfig) => AxiosRequestConfig, onError: (error: unknown) => Promise<never>) => void }; response: { use: (onSuccess: (response: AxiosResponse) => AxiosResponse, onError: (error: unknown) => Promise<never>) => void } }; request: (config: AxiosRequestConfig) => Promise<AxiosResponse> }) {
   // Request interceptor
   axiosInstance.interceptors.request.use(
     (config: AxiosRequestConfig) => {
@@ -266,7 +266,7 @@ export function createDeduplicationInterceptor(axiosInstance: any) {
       config.metadata = { startTime: Date.now() };
       return config;
     },
-    (error: any) => Promise.reject(error),
+    (error: unknown) => Promise.reject(error),
   );
 
   // Response interceptor
@@ -281,7 +281,7 @@ export function createDeduplicationInterceptor(axiosInstance: any) {
       });
       return response;
     },
-    (error: any) => {
+    (error: unknown) => {
       // Log error
       const duration = Date.now() - (error.config?.metadata?.startTime || 0);
       logger.error('Request failed', {

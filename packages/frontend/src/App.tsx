@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { toast } from 'sonner';
 import ErrorBoundary from './components/ErrorBoundary';
-import { routes, prefetchRoute } from './routing/routes';
+import { routes } from './routing/routes';
 
 // i18n
 import './i18n';
@@ -13,9 +13,6 @@ import '@/utils/debugI18next';
 
 // Import accessibility CSS
 import './components/a11y/SkipLink.css';
-
-// Export prefetchRoute for external use
-export { prefetchRoute };
 
 // Create a client for React Query
 const queryClient = new QueryClient({

@@ -1,7 +1,7 @@
 // Translation loader utility with error handling
 
 // Helper function to load translation with error handling
-async function loadSingleTranslation(importFunc: () => Promise<any>, fallback = {}) {
+async function loadSingleTranslation(importFunc: () => Promise<{ default?: unknown; [key: string]: unknown }>, fallback = {}) {
   try {
     const mod = await importFunc();
     // Handle different module formats

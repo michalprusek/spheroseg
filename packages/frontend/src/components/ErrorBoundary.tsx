@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import logger from '@/utils/logger';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { handleError, ErrorType, ErrorSeverity } from '@/utils/error/unifiedErrorHandler';
+import { markErrorAsHandled } from '@/utils/error/globalErrorHandler';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -43,6 +44,9 @@ class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryStat
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    // Mark error as handled to prevent double-handling by global error handler
+    markErrorAsHandled(error);
+    
     // Log the error to our logging service
     logger.error('Error caught by ErrorBoundary', {
       error: error.toString(),
@@ -54,13 +58,9 @@ class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryStat
     handleError(error, {
       showToast: false, // Don't show toast for UI errors
       logError: false, // Already logged above
-      context: `ErrorBoundary: ${this.props.componentName || 'Unknown'}`,
-      errorInfo: {
-        type: ErrorType.CLIENT,
-        severity: ErrorSeverity.ERROR,
-        details: {
-          componentStack: errorInfo.componentStack,
-        },
+      context: {
+        component: `ErrorBoundary: ${this.props.componentName || 'Unknown'}`,
+        componentStack: errorInfo.componentStack,
       },
     });
 

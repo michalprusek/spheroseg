@@ -8,7 +8,7 @@ import React, { ComponentType, memo } from 'react';
  * Custom memo comparison function that performs deep equality check
  * on specific props while ignoring functions and callbacks
  */
-export function arePropsEqual<P extends Record<string, any>>(
+export function arePropsEqual<P extends Record<string, unknown>>(
   prevProps: P,
   nextProps: P,
   propsToCompare?: (keyof P)[],

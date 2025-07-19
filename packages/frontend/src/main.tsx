@@ -8,22 +8,10 @@ import './styles/tailwind.css';
 import './App.css';
 import { initPerformanceMonitoring, markPerformance } from './utils/performance';
 import logger from './utils/logger';
+import { initializeGlobalErrorHandlers } from './utils/error/globalErrorHandler';
 
-// Global error handler
-const handleError = (error: ErrorEvent) => {
-  console.error('Global error:', error);
-
-  // Log detailed error information
-  if (error.error && error.error.stack) {
-    console.error('Error stack:', error.error.stack);
-  }
-};
-
-// Add global error listener
-window.addEventListener('error', handleError);
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
-});
+// Initialize global error handlers
+initializeGlobalErrorHandlers();
 
 // Add fallback for cursor reset in case mouse up events are missed
 window.addEventListener('mouseup', () => {

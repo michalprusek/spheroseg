@@ -8,6 +8,7 @@
 import { toast } from 'sonner';
 import axios from 'axios';
 import logger from '@/utils/logger';
+import { errorMonitoringService } from '@/services/errorMonitoringService';
 
 // ===========================
 // Error Types and Enums
@@ -607,6 +608,14 @@ export function handleError(
   // Dispatch custom event for global error handling
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('app:error', { detail: errorInfo }));
+  }
+
+  // Report error to monitoring service
+  try {
+    errorMonitoringService.reportError(errorInfo);
+  } catch (monitoringError) {
+    // Don't let monitoring errors break the app
+    logger.warn('Failed to report error to monitoring service', { monitoringError });
   }
 
   return errorInfo;

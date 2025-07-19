@@ -4,13 +4,13 @@ import { toast as sonnerToast } from 'sonner';
 
 // Mock sonner toast
 vi.mock('sonner', () => {
-  const mockToast = vi.fn((message: any, options?: any) => 'mock-toast-id');
-  mockToast.success = vi.fn((message: any, options?: any) => 'mock-toast-id');
-  mockToast.error = vi.fn((message: any, options?: any) => 'mock-toast-id');
-  mockToast.info = vi.fn((message: any, options?: any) => 'mock-toast-id');
-  mockToast.warning = vi.fn((message: any, options?: any) => 'mock-toast-id');
-  mockToast.loading = vi.fn((message: any, options?: any) => 'mock-toast-id');
-  mockToast.custom = vi.fn((message: any, options?: any) => 'mock-toast-id');
+  const mockToast = vi.fn((_message: any, _options?: any) => 'mock-toast-id');
+  mockToast.success = vi.fn((_message: any, _options?: any) => 'mock-toast-id');
+  mockToast.error = vi.fn((_message: any, _options?: any) => 'mock-toast-id');
+  mockToast.info = vi.fn((_message: any, _options?: any) => 'mock-toast-id');
+  mockToast.warning = vi.fn((_message: any, _options?: any) => 'mock-toast-id');
+  mockToast.loading = vi.fn((_message: any, _options?: any) => 'mock-toast-id');
+  mockToast.custom = vi.fn((_message: any, _options?: any) => 'mock-toast-id');
   mockToast.dismiss = vi.fn();
 
   return {
