@@ -1,57 +1,124 @@
-FROM node:18-slim
+# Backend Dockerfile with multi-stage build for development and production
 
+# Base stage for both dev and prod
+FROM node:20-alpine AS base
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    make \
-    g++ \
-    python3 \
-    python3-pip \
-    python3-pil \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ curl postgresql-client
 
-# Copy types package first
-COPY packages/types /types
+# Development stage
+FROM base AS development
 
-# Copy shared package
-COPY packages/shared /shared
+# Copy all package files
+COPY package*.json ./
+COPY packages/backend/package*.json ./packages/backend/
+COPY packages/shared/package*.json ./packages/shared/
+COPY packages/types/package*.json ./packages/types/
 
-# Copy package files
-COPY packages/backend/package*.json ./
-COPY packages/backend/tsconfig.json ./
-
-# Install dependencies
-RUN npm install --legacy-peer-deps
-# Ensure dev dependencies are also installed
-RUN npm install --legacy-peer-deps --include=dev
-RUN npm install -g nodemon ts-node ts-node-dev typescript tsconfig-paths
-
-# Link local types package globally
-RUN cd /types && npm link
-
-# Build and link local shared package
-RUN cd /shared && npm install && npm link @spheroseg/types && npm run build && npm link
-
-# Link shared and types packages to backend
-RUN npm link @spheroseg/shared @spheroseg/types
+# Install all dependencies (including dev)
+RUN npm ci
 
 # Copy source code
-COPY packages/backend/. .
+COPY packages/backend ./packages/backend
+COPY packages/shared ./packages/shared
+COPY packages/types ./packages/types
+COPY tsconfig.json ./
 
-# Create uploads directory
-RUN mkdir -p /app/uploads
+# Create necessary directories
+RUN mkdir -p logs uploads
 
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-# Set Node.js memory optimization flags
+# Set development environment
+ENV NODE_ENV=development
 ENV NODE_OPTIONS="--max-old-space-size=384 --expose-gc"
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:5001/api/health || exit 1
+EXPOSE 5001
 
-# Start command will be provided by docker-compose
-CMD ["npm", "run", "dev"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:5001/health || exit 1
+
+# Development command
+CMD ["npm", "run", "dev", "--workspace=@spheroseg/backend"]
+
+# Production dependencies stage
+FROM base AS deps
+
+# Copy package files
+COPY package*.json ./
+COPY packages/backend/package*.json ./packages/backend/
+COPY packages/shared/package*.json ./packages/shared/
+COPY packages/types/package*.json ./packages/types/
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Builder stage
+FROM base AS builder
+
+# Copy package files
+COPY package*.json ./
+COPY packages/backend/package*.json ./packages/backend/
+COPY packages/shared/package*.json ./packages/shared/
+COPY packages/types/package*.json ./packages/types/
+
+# Install all dependencies (including dev)
+RUN npm ci
+
+# Copy source code
+COPY packages/backend ./packages/backend
+COPY packages/shared ./packages/shared
+COPY packages/types ./packages/types
+COPY tsconfig.json ./
+
+# Build the application
+RUN npm run build --workspace=@spheroseg/backend
+
+# Production stage
+FROM node:20-alpine AS production
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache curl postgresql-client
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Copy production dependencies
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/packages ./packages
+
+# Copy built application
+COPY --from=builder --chown=nodejs:nodejs /app/packages/backend/dist ./packages/backend/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/types/dist ./packages/types/dist
+
+# Copy package.json files for runtime
+COPY --chown=nodejs:nodejs package*.json ./
+COPY --chown=nodejs:nodejs packages/backend/package*.json ./packages/backend/
+COPY --chown=nodejs:nodejs packages/shared/package*.json ./packages/shared/
+COPY --chown=nodejs:nodejs packages/types/package*.json ./packages/types/
+
+# Copy database scripts
+COPY --chown=nodejs:nodejs scripts/db ./scripts/db
+
+# Create necessary directories
+RUN mkdir -p logs uploads && \
+    chown -R nodejs:nodejs logs uploads
+
+# Switch to non-root user
+USER nodejs
+
+# Set production environment
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=1024"
+
+EXPOSE 5001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:5001/health || exit 1
+
+# Production command
+CMD ["node", "packages/backend/dist/server.js"]

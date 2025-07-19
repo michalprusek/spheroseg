@@ -1,0 +1,280 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with optimizations
+  db:
+    image: postgres:16-alpine
+    container_name: spheroseg-db-prod
+    environment:
+      POSTGRES_DB: spheroseg
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_user
+      - db_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/db:/docker-entrypoint-initdb.d:ro
+      - ./backup:/backup
+    ports:
+      - "5432:5432"
+    networks:
+      - spheroseg-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # Redis for session management and caching
+  redis:
+    image: redis:7-alpine
+    container_name: spheroseg-redis-prod
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    environment:
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+    secrets:
+      - redis_password
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - spheroseg-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  # Backend API with production optimizations
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+      target: production
+    container_name: spheroseg-backend-prod
+    environment:
+      NODE_ENV: production
+      DATABASE_URL_FILE: /run/secrets/database_url
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      JWT_REFRESH_SECRET_FILE: /run/secrets/jwt_refresh_secret
+      REDIS_URL_FILE: /run/secrets/redis_url
+      SESSION_SECRET_FILE: /run/secrets/session_secret
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://spheroseg.com}
+      ENABLE_PERFORMANCE_MONITORING: true
+      LOG_LEVEL: info
+      CONTAINER_MEMORY_LIMIT_MB: 1024
+    secrets:
+      - database_url
+      - jwt_secret
+      - jwt_refresh_secret
+      - redis_url
+      - session_secret
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./ssl:/app/ssl:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - spheroseg-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      replicas: 2
+
+  # ML Service with GPU support
+  ml:
+    build:
+      context: .
+      dockerfile: packages/ml/Dockerfile
+    container_name: spheroseg-ml-prod
+    environment:
+      FLASK_ENV: production
+      MODEL_PATH: /app/checkpoint_epoch_9.pth.tar
+      CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-0}
+    volumes:
+      - ./packages/ml/checkpoint_epoch_9.pth.tar:/app/checkpoint_epoch_9.pth.tar:ro
+      - ml-cache:/app/cache
+    networks:
+      - spheroseg-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Frontend with optimized build
+  frontend:
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://api.spheroseg.com}
+        VITE_API_BASE_URL: /api
+        VITE_ASSETS_URL: ${VITE_ASSETS_URL:-https://assets.spheroseg.com}
+    container_name: spheroseg-frontend-prod
+    networks:
+      - spheroseg-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # NGINX with SSL and optimizations
+  nginx:
+    image: nginx:alpine
+    container_name: spheroseg-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/prod.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - backend
+      - frontend
+      - assets
+    networks:
+      - spheroseg-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  # Static assets server with CDN-ready config
+  assets:
+    image: nginx:alpine
+    container_name: spheroseg-assets-prod
+    volumes:
+      - ./packages/frontend-static:/usr/share/nginx/html:ro
+      - ./nginx/assets.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - spheroseg-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # Automated backup service
+  backup:
+    build:
+      context: .
+      dockerfile: scripts/backup/Dockerfile
+    container_name: spheroseg-backup-prod
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: spheroseg
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 2 * * *}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      S3_BUCKET: ${BACKUP_S3_BUCKET}
+      AWS_ACCESS_KEY_ID_FILE: /run/secrets/aws_access_key_id
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/aws_secret_access_key
+    secrets:
+      - db_user
+      - db_password
+      - aws_access_key_id
+      - aws_secret_access_key
+    volumes:
+      - ./backup:/backup
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - spheroseg-network
+    restart: unless-stopped
+
+secrets:
+  db_user:
+    external: true
+  db_password:
+    external: true
+  database_url:
+    external: true
+  jwt_secret:
+    external: true
+  jwt_refresh_secret:
+    external: true
+  redis_url:
+    external: true
+  redis_password:
+    external: true
+  session_secret:
+    external: true
+  aws_access_key_id:
+    external: true
+  aws_secret_access_key:
+    external: true
+
+volumes:
+  postgres-data:
+  redis-data:
+  ml-cache:
+  nginx-cache:
+
+networks:
+  spheroseg-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
