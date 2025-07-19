@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
@@ -8,6 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { io, Socket } from 'socket.io-client';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
+import logger from '@/utils/logger';
+import { useIsMounted, useTimer, useEventListener } from '@/utils/memoryLeakFixes';
 
 interface SegmentationProgressProps {
   projectId: string;
@@ -83,11 +85,11 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           } catch (projectEndpointError) {
             // Check if this is a 404 error for non-existent project
             if (projectEndpointError.response?.status === 404) {
-              console.debug(`Project ${projectId} not found, skipping project-specific queue status`);
+              logger.debug(`Project ${projectId} not found, skipping project-specific queue status`);
               // Don't show error for non-existent projects, just continue to global status
               return;
             } else {
-              console.debug(`Project-specific queue status endpoint failed: ${projectEndpointError.message}`);
+              logger.debug(`Project-specific queue status endpoint failed: ${projectEndpointError.message}`);
             }
             // Continue to global endpoints
           }
@@ -103,7 +105,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
             return;
           }
         } catch (globalEndpointError) {
-          console.debug(`Primary global endpoint failed: ${globalEndpointError.message}`);
+          logger.debug(`Primary global endpoint failed: ${globalEndpointError.message}`);
 
           // Alternative endpoint: /api/queue-status
           try {
@@ -114,7 +116,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
               return;
             }
           } catch (altGlobalError) {
-            console.warn(`All queue status endpoints failed.`);
+            logger.warn(`All queue status endpoints failed.`);
             // Použijeme prázdný status fronty místo mockovaných dat
             setQueueStatus({
               queueLength: 0,
@@ -126,7 +128,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           }
         }
       } catch (error) {
-        console.error('Unexpected error in fetchQueueStatus:', error);
+        logger.error('Unexpected error in fetchQueueStatus:', error);
         // Při neočekávaných chybách nastavíme prázdnou frontu
         setQueueStatus({
           queueLength: 0,
@@ -173,7 +175,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     const intelligentPoll = async () => {
       // Skip polling if WebSocket is connected and working
       if (isWebSocketConnected) {
-        console.log('WebSocket connected, skipping polling');
+        logger.debug('WebSocket connected, skipping polling');
         return;
       }
 
@@ -194,7 +196,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       } catch (error) {
         // Increase interval on errors to reduce API spam
         pollInterval = Math.min(pollInterval * 2, maxInterval);
-        console.warn('Queue status polling failed, increasing interval:', pollInterval);
+        logger.warn('Queue status polling failed, increasing interval:', pollInterval);
       }
     };
 
@@ -283,7 +285,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           // Vyzkoušíme všechny endpointy
           for (const endpoint of endpoints) {
             try {
-              console.log(`Fetching queue status from ${endpoint}...`);
+              logger.debug(`Fetching queue status from ${endpoint}...`);
               const response = await apiClient.get(endpoint);
 
               if (isComponentMounted && response.data) {
@@ -293,14 +295,14 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
                 break; // Úspěch, ukončíme cyklus
               }
             } catch (error) {
-              console.debug(`Failed to fetch queue status from ${endpoint}: ${error}`);
+              logger.debug(`Failed to fetch queue status from ${endpoint}: ${error}`);
               // Pokračujeme k dalšímu endpointu
             }
           }
 
           // Pokud se nám nepodařilo získat data z žádného endpointu, zkusíme globální endpointy
           if (!success) {
-            console.log(`Failed to fetch project-specific queue status, trying global endpoints...`);
+            logger.debug(`Failed to fetch project-specific queue status, trying global endpoints...`);
           } else {
             return; // Podařilo se nám získat projektová data, končíme
           }
@@ -319,7 +321,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         // Vyzkoušíme všechny globální endpointy
         for (const endpoint of globalEndpoints) {
           try {
-            console.log(`Fetching global queue status from ${endpoint}...`);
+            logger.debug(`Fetching global queue status from ${endpoint}...`);
             const response = await apiClient.get(endpoint);
 
             if (isComponentMounted && response.data) {
@@ -359,14 +361,14 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
               break; // Úspěch, ukončíme cyklus
             }
           } catch (error) {
-            console.debug(`Failed to fetch global queue status from ${endpoint}: ${error}`);
+            logger.debug(`Failed to fetch global queue status from ${endpoint}: ${error}`);
             // Pokračujeme k dalšímu endpointu
           }
         }
 
         // Pokud se nám nepodařilo získat žádná data, nastavíme prázdnou frontu
         if (!globalSuccess && isComponentMounted) {
-          console.log('Failed to fetch any queue status data, setting empty queue');
+          logger.info('Failed to fetch any queue status data, setting empty queue');
           setQueueStatus({
             queueLength: 0,
             runningTasks: [],
@@ -377,7 +379,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           });
         }
       } catch (error) {
-        console.error('Unexpected error in updateQueueStatus:', error);
+        logger.error('Unexpected error in updateQueueStatus:', error);
         // Při neočekávaných chybách nastavíme prázdnou frontu
         if (isComponentMounted) {
           setQueueStatus({
@@ -398,7 +400,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     // Set a timeout to use mock data if WebSocket connection fails
     const socketConnectionTimeout = setTimeout(() => {
       if (isComponentMounted) {
-        console.log('WebSocket connection timed out, using mock data');
+        logger.debug('WebSocket connection timed out, using mock data');
         // Use mock data for offline mode
         updateQueueStatus();
       }
@@ -407,7 +409,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
     try {
       // Use relative path for Socket.IO to work with any domain
       // This will connect to the same origin as the page
-      console.log(`WebSocket: Using relative path for socket.io connection`);
+      logger.debug(`WebSocket: Using relative path for socket.io connection`);
 
       // Only include token in auth if it exists to avoid authentication errors
       const authOptions = token ? { auth: { token } } : {};
@@ -430,7 +432,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
 
       // Listen for global socket offline event
       const handleSocketOffline = (event: CustomEvent) => {
-        console.log('Received socket:offline event, using fallback data', event.detail);
+        logger.debug('Received socket:offline event, using fallback data', event.detail);
         updateQueueStatus();
       };
 
@@ -438,14 +440,14 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
 
       // Connection events
       newSocket.on('connect', () => {
-        console.log('WebSocket connected for segmentation progress');
+        logger.debug('WebSocket connected for segmentation progress');
         setIsWebSocketConnected(true);
         // Clear the timeout since we connected successfully
         clearTimeout(socketConnectionTimeout);
       });
 
       newSocket.on('connect_error', (error) => {
-        console.warn('WebSocket connection error:', error.message || error);
+        logger.warn('WebSocket connection error:', error.message || error);
         setIsWebSocketConnected(false);
         // Pokud se nepodaří připojit, aktualizujeme data z API
         updateQueueStatus();
@@ -454,7 +456,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       newSocket.on('disconnect', (reason) => {
         // Only log disconnect if it's not a normal client disconnect
         if (reason !== 'io client disconnect' && reason !== 'io server disconnect') {
-          console.warn('WebSocket disconnected:', reason);
+          logger.warn('WebSocket disconnected:', reason);
         }
         setIsWebSocketConnected(false);
         // Pokud se odpojíme, aktualizujeme data z API
@@ -462,7 +464,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       });
 
       newSocket.on('error', (error) => {
-        console.warn('WebSocket error:', error);
+        logger.warn('WebSocket error:', error);
         setIsWebSocketConnected(false);
         // Pokud nastane chyba, aktualizujeme data z API
         updateQueueStatus();
@@ -472,7 +474,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       newSocket.on('segmentation_queue_update', (data: unknown) => {
         if (!isComponentMounted) return;
 
-        console.log('Received segmentation_queue_update:', data);
+        logger.debug('Received segmentation_queue_update:', data);
         if (data) {
           // Pomocná funkce pro normalizaci dat z WebSocketu
           const normalizeQueueStatusData = (rawData: unknown) => {
@@ -539,7 +541,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
           if (projectId) {
             // IMPORTANT: WebSocket sends global queue data without project info
             // We cannot reliably filter it, so we should fetch project-specific data from the API
-            console.log('WebSocket data received for project view, fetching project-specific data from API');
+            logger.debug('WebSocket data received for project view, fetching project-specific data from API');
 
             // Trigger API call to get accurate project-specific queue status
             updateQueueStatus();
@@ -557,7 +559,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       newSocket.on('segmentation_update', (data) => {
         if (!isComponentMounted) return;
 
-        console.log('Received segmentation_update:', data);
+        logger.debug('Received segmentation_update:', data);
         updateQueueStatus();
       });
 
@@ -584,7 +586,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
         }
       };
     } catch (socketError) {
-      console.error('Error setting up WebSocket:', socketError);
+      logger.error('Error setting up WebSocket:', socketError);
       // Clear the timeout and use mock data immediately
       clearTimeout(socketConnectionTimeout);
       updateQueueStatus();
@@ -621,8 +623,8 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
       (displayQueueStatus.runningTasks?.length || 0);
 
     if (totalTasks > 0) {
-      console.log('Filtering queue status for project:', projectId);
-      console.log('Original queue status:', {
+      logger.debug('Filtering queue status for project:', projectId);
+      logger.debug('Original queue status:', {
         processingImagesCount: displayQueueStatus.processingImages?.length || 0,
         queuedImagesCount: displayQueueStatus.queuedImages?.length || 0,
         queuedTasksCount: displayQueueStatus.queuedTasks?.length || 0,
@@ -660,7 +662,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
 
     // Only log filtered results if there were originally some tasks
     if (totalTasks > 0) {
-      console.log('Filtered queue status:', {
+      logger.debug('Filtered queue status:', {
         processingImagesCount: filteredQueueStatus.processingImages?.length || 0,
         queuedImagesCount: filteredQueueStatus.queuedImages?.length || 0,
         queuedTasksCount: filteredQueueStatus.queuedTasks?.length || 0,
@@ -721,7 +723,7 @@ const SegmentationProgress: React.FC<SegmentationProgressProps> = ({ projectId }
   // Only log task counts if there are actually some tasks
   const totalCalculatedTasks = runningTasksCount + queuedTasksCount;
   if (totalCalculatedTasks > 0) {
-    console.log('Calculated task counts:', {
+    logger.debug('Calculated task counts:', {
       runningTasksCount,
       queuedTasksCount,
       queuedTasksLength: filteredQueueStatus.queuedTasks?.length ?? 0,
