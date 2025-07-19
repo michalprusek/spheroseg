@@ -11,7 +11,7 @@
  * - Concurrent upload limiting
  */
 
-import { SharedLogger } from '@shared/utils/logger';
+import logger from '../../utils/logger';
 import { 
   UploadFile, 
   UploadStatus, 
@@ -24,7 +24,7 @@ import {
 } from './types';
 import { createUploadStrategy, UploadStrategy } from './strategies';
 
-const logger = new SharedLogger('UnifiedUploadService');
+// Use the default shared logger
 
 export class UnifiedUploadService {
   private uploadQueue: Map<string, UploadQueueItem> = new Map();

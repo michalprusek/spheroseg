@@ -209,7 +209,7 @@ export function apiCacheMiddleware(defaultMaxAge: number = 300) {
       // Only cache successful responses
       if (res.statusCode >= 200 && res.statusCode < 300) {
         const isPrivate = !!req.headers.authorization;
-        const maxAge = res.locals.cacheMaxAge || defaultMaxAge;
+        const maxAge = res.locals['cacheMaxAge'] || defaultMaxAge;
 
         res.set({
           'Cache-Control': `${isPrivate ? 'private' : 'public'}, max-age=${maxAge}, stale-while-revalidate=60`,
@@ -257,7 +257,7 @@ export function imageCacheMiddleware() {
  */
 export function setCacheMaxAge(seconds: number) {
   return (_req: Request, res: Response, next: NextFunction) => {
-    res.locals.cacheMaxAge = seconds;
+    res.locals['cacheMaxAge'] = seconds;
     next();
   };
 }

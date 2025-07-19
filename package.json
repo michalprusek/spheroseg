@@ -89,7 +89,10 @@
     "db:migrate": "cd packages/backend && npm run migrate:up",
     "db:create-test-user": "node scripts/create-test-user.js",
     "test:validation-scripts": "node scripts/test-validation-scripts.js",
-    "validate:imports": "node scripts/validate-imports.js"
+    "validate:imports": "node scripts/validate-imports.js",
+    "test:backup-recovery": "bash scripts/test-backup-recovery.sh",
+    "backup:database": "bash scripts/backup/backup-database.sh",
+    "restore:database": "bash scripts/rollback/restore-database.sh"
   },
   "engines": {
     "node": ">=18.0.0"

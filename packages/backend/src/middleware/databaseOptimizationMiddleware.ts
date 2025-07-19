@@ -44,7 +44,7 @@ export function getOptimizationService(): DatabaseOptimizationService | null {
 /**
  * Middleware to add optimization service to request
  */
-export function addOptimizationService(req: Request, res: Response, next: NextFunction): void {
+export function addOptimizationService(req: Request, _res: Response, next: NextFunction): void {
   const service = getOptimizationService();
   if (service) {
     (req as unknown).optimizationService = service;
@@ -120,7 +120,7 @@ async function invalidateCacheBasedOnPath(
     if (path.includes('/images')) {
       if (req.method === 'POST' && statusCode === 201) {
         // New image uploaded
-        const projectId = req.body?.project_id || req.params?.projectId;
+        const projectId = req.body?.project_id || req.params?.['projectId'];
         if (projectId) {
           await service.invalidateRelatedCaches('project', projectId);
           logger.debug('Cache invalidated for new image', { projectId, path });
@@ -140,7 +140,7 @@ async function invalidateCacheBasedOnPath(
 
     if (path.includes('/segmentation')) {
       // Segmentation results changed
-      const imageId = req.body?.image_id || req.params?.imageId;
+      const imageId = req.body?.image_id || req.params?.['imageId'];
       if (imageId) {
         await service.invalidateRelatedCaches('image', imageId);
         logger.debug('Cache invalidated for segmentation update', { imageId, path });
@@ -149,7 +149,7 @@ async function invalidateCacheBasedOnPath(
 
     if (path.includes('/users') || path.includes('/profile')) {
       // User data changed
-      const userId = (req as unknown).user?.userId || req.params?.userId;
+      const userId = (req as unknown).user?.['userId'] || req.params?.['userId'];
       if (userId) {
         await service.invalidateRelatedCaches('user', userId);
         logger.debug('Cache invalidated for user update', { userId, path });
@@ -207,7 +207,7 @@ export function performanceMonitoringMiddleware(
 /**
  * Middleware for query optimization hints
  */
-export function queryOptimizationHints(req: Request, res: Response, next: NextFunction): void {
+export function queryOptimizationHints(req: Request, _res: Response, next: NextFunction): void {
   // Add optimization hints to request for use by route handlers
   (req as unknown).optimizationHints = {
     // Suggest caching for GET requests
@@ -257,7 +257,7 @@ function determineCacheStrategy(req: Request): 'HOT' | 'WARM' | 'COLD' | 'STATIC
 export function optimizationErrorHandler(
   error: Error,
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void {
   if (error.message.includes('optimization') || error.message.includes('cache')) {

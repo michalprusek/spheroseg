@@ -71,6 +71,10 @@ const extractAndVerifyToken = async (
   }
 
   const token = authHeader.split(' ')[1];
+  
+  if (!token) {
+    throw new Error('Token not provided');
+  }
 
   try {
     const payload = await tokenService.verifyToken(token, tokenType ?? TokenType.ACCESS);

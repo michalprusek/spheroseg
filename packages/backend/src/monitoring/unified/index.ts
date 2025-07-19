@@ -876,16 +876,16 @@ export async function monitorQuery<T extends Record<string, any> = any>(
     const durationSec = durationMs / 1000;
 
     databaseQueryDurationHistogram.observe(
-      { operation, table: primaryTable, status: 'success' },
+      { operation, table: primaryTable || 'unknown', status: 'success' },
       durationSec
     );
 
     if (result.rows) {
-      queryRowsHistogram.observe({ operation, table: primaryTable }, result.rowCount || 0);
+      queryRowsHistogram.observe({ operation, table: primaryTable || 'unknown' }, result.rowCount || 0);
     }
 
     if (durationMs > SLOW_QUERY_THRESHOLD_MS) {
-      slowQueryCounter.inc({ operation, table: primaryTable }, 1);
+      slowQueryCounter.inc({ operation, table: primaryTable || 'unknown' }, 1);
       logger.warn('Slow query detected', {
         query: queryText,
         params,
@@ -900,7 +900,7 @@ export async function monitorQuery<T extends Record<string, any> = any>(
     updateQueryPatternStats(queryText, durationMs, result.rowCount ?? undefined);
     monitoring.recordDatabaseQuery(
       operation,
-      primaryTable,
+      primaryTable || 'unknown',
       durationMs,
       result.rowCount ?? undefined
     );
@@ -911,11 +911,11 @@ export async function monitorQuery<T extends Record<string, any> = any>(
     const durationSec = durationMs / 1000;
 
     databaseQueryDurationHistogram.observe(
-      { operation, table: primaryTable, status: 'error' },
+      { operation, table: primaryTable || 'unknown', status: 'error' },
       durationSec
     );
     databaseErrorCounter
-      .labels(operation, primaryTable, error instanceof Error ? error.name : 'DatabaseError')
+      .labels(operation, primaryTable || 'unknown', error instanceof Error ? error.name : 'DatabaseError')
       .inc();
 
     logger.error('Database query error', {
@@ -928,7 +928,7 @@ export async function monitorQuery<T extends Record<string, any> = any>(
     });
 
     updateQueryPatternStats(queryText, durationMs);
-    monitoring.recordDatabaseQuery(operation, primaryTable, durationMs, 0);
+    monitoring.recordDatabaseQuery(operation, primaryTable || 'unknown', durationMs, 0);
 
     throw error;
   }
@@ -1089,7 +1089,7 @@ export function getQueryFrequencyStats(): Record<string, number> {
       stats[pattern.operation] = 0;
     }
     if (stats[pattern.operation]) {
-      stats[pattern.operation] += pattern.totalExecutions;
+      stats[pattern.operation]! += pattern.totalExecutions;
     } else {
       stats[pattern.operation] = pattern.totalExecutions;
     }

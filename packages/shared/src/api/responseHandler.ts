@@ -70,9 +70,8 @@ export class UnifiedResponseHandler {
       return this.createValidationError(error as ZodError, context);
     }
     
-    // Debug: Check if this might be a ZodError we missed
+    // Fallback check for ZodError-like objects
     if (error && typeof error === 'object' && 'issues' in error && Array.isArray((error as any).issues)) {
-      // This looks like a ZodError but wasn't caught above
       return this.createValidationError(error as ZodError, context);
     }
 

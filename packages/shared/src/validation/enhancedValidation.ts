@@ -113,8 +113,9 @@ export const filenameSchema = z.string()
     // Replace dangerous characters with underscores
     sanitized = sanitized.replace(/[<>:"|?*]/g, '_');
     
-    // Handle reserved names
-    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(sanitized)) {
+    // Handle reserved names (Windows reserved names) - check entire filename first
+    const baseName = sanitized.split('.')[0];
+    if (baseName && /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(baseName)) {
       sanitized = 'file';
     }
     
@@ -227,9 +228,18 @@ export const validateQuery = async <T>(
     let processedData: unknown;
     
     if (typeof data === 'string') {
-      // Try to convert string to number if schema expects a number
-      const numValue = Number(data);
-      processedData = !isNaN(numValue) && isFinite(numValue) ? numValue : data;
+      // Try to convert string to number if it looks like a number
+      const trimmed = data.trim();
+      if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+        const numValue = Number(trimmed);
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          processedData = numValue;
+        } else {
+          processedData = data;
+        }
+      } else {
+        processedData = data;
+      }
     } else {
       // Pre-process query parameters (convert strings to appropriate types)
       processedData = preprocessQueryParams(data);

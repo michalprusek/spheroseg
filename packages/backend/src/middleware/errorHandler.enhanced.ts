@@ -11,7 +11,6 @@
 
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import { ApiError, ErrorContext } from '../utils/ApiError.enhanced';
-import { isValidErrorCode } from '../utils/errorCodes';
 import logger from '../utils/logger';
 import config from '../config';
 import { v4 as uuidv4 } from 'uuid';
@@ -51,35 +50,6 @@ function buildErrorContext(req: ExtendedRequest): ErrorContext {
   };
 }
 
-/**
- * Sanitize error details for production
- */
-function sanitizeErrorForProduction(error: ApiError): Partial<ApiError> {
-  if (config.isDevelopment) {
-    return error;
-  }
-
-  // In production, hide sensitive details for 5xx errors
-  if (error.statusCode >= 500) {
-    return {
-      code: error.code,
-      message: 'An error occurred processing your request',
-      statusCode: error.statusCode,
-      timestamp: error.timestamp,
-      help: error.help,
-    };
-  }
-
-  // For client errors, return safe details
-  return {
-    code: error.code,
-    message: error.message,
-    statusCode: error.statusCode,
-    timestamp: error.timestamp,
-    details: error.details,
-    help: error.help,
-  };
-}
 
 /**
  * Track error metrics

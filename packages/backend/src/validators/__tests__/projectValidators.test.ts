@@ -100,8 +100,8 @@ describe('projectValidators', () => {
       const result = createProjectSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].path).toContain('title');
-        expect(result.error.errors[0].message).toContain('empty');
+        expect(result.error.errors[0]?.path).toContain('title');
+        expect(result.error.errors[0]?.message).toContain('empty');
       }
     });
 
@@ -115,8 +115,8 @@ describe('projectValidators', () => {
       const result = createProjectSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].path).toContain('title');
-        expect(result.error.errors[0].message.toLowerCase()).toContain('required');
+        expect(result.error.errors[0]?.path).toContain('title');
+        expect(result.error.errors[0]?.message.toLowerCase()).toContain('required');
       }
     });
   });
@@ -143,7 +143,7 @@ describe('projectValidators', () => {
       const result = projectIdSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].message).toContain('Invalid UUID format');
+        expect(result.error.errors[0]?.message).toContain('Invalid UUID format');
       }
     });
 
@@ -157,8 +157,8 @@ describe('projectValidators', () => {
       const result = projectIdSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].path).toContain('id');
-        expect(result.error.errors[0].message).toContain('Invalid UUID format');
+        expect(result.error.errors[0]?.path).toContain('id');
+        expect(result.error.errors[0]?.message).toContain('Invalid UUID format');
       }
     });
   });
@@ -185,8 +185,8 @@ describe('projectValidators', () => {
       const result = deleteProjectSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].path).toContain('id');
-        expect(result.error.errors[0].message).toContain('Invalid UUID format');
+        expect(result.error.errors[0]?.path).toContain('id');
+        expect(result.error.errors[0]?.message).toContain('Invalid UUID format');
       }
     });
 
@@ -200,8 +200,8 @@ describe('projectValidators', () => {
       const result = deleteProjectSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].path).toContain('id');
-        expect(result.error.errors[0].message).toContain('Invalid UUID format');
+        expect(result.error.errors[0]?.path).toContain('id');
+        expect(result.error.errors[0]?.message).toContain('Invalid UUID format');
       }
     });
   });

@@ -42,7 +42,7 @@ export interface ValidationOptions {
  * Create enhanced validation middleware
  */
 export function createValidationMiddleware(options: ValidationOptions) {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     const { body, query, params, onError, logValidation = true } = options;
 
     try {
@@ -237,7 +237,7 @@ export const commonSchemas = {
  * CSRF protection middleware
  */
 export function csrfProtection() {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     // Skip CSRF for GET, HEAD, OPTIONS
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
       return next();
@@ -265,7 +265,7 @@ export function csrfProtection() {
 export function rateLimitByIP(maxRequests: number = 100, windowMs: number = 15 * 60 * 1000) {
   const requests = new Map<string, { count: number; resetTime: number }>();
 
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     const ip = req.ip || req.connection.remoteAddress || 'unknown';
     const now = Date.now();
 
@@ -302,7 +302,7 @@ export function rateLimitByIP(maxRequests: number = 100, windowMs: number = 15 *
  * Content type validation
  */
 export function validateContentType(allowedTypes: string[] = ['application/json']) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     if (['GET', 'HEAD', 'DELETE'].includes(req.method)) {
       return next();
     }
@@ -333,7 +333,7 @@ export function validateContentType(allowedTypes: string[] = ['application/json'
  * Sanitize request data to prevent XSS and injection attacks
  */
 export function sanitizeRequest() {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     // Sanitize body
     if (req.body && typeof req.body === 'object') {
       req.body = sanitizeObject(req.body);
