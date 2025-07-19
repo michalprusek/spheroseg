@@ -92,7 +92,7 @@ export const AppLayout = () => {
 
     // Add debug function in dev mode
     if (import.meta.env.DEV) {
-      (window as any).clearImageCache = async () => {
+      (window as unknown as { clearImageCache?: () => Promise<void> }).clearImageCache = async () => {
         try {
           await clearEntireDatabase();
           toast.success('Image cache cleared successfully. Please refresh the page.');
