@@ -138,7 +138,7 @@ export const ImageDisplay = memo(
     useEffect(() => {
       if (!socket) return;
 
-      const handleSegmentationUpdate = (data: any) => {
+      const handleSegmentationUpdate = (data: unknown) => {
         if (data.imageId === image.id) {
           setCurrentStatus(data.status);
           // Update polling manager state

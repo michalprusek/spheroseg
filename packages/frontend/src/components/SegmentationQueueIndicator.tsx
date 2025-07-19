@@ -323,7 +323,7 @@ const SegmentationQueueIndicator: React.FC<SegmentationQueueIndicatorProps> = ({
 
   // Handle segmentation updates (individual image updates)
   const handleSegmentationUpdate = useCallback(
-    (data: any) => {
+    (data: unknown) => {
       console.log('Received segmentation update from WebSocket, refreshing queue status', data);
 
       // Clear cache for next fetch

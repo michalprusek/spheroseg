@@ -34,7 +34,7 @@ const createMockApiClient = (mockResponses: MockResponses, timeoutMs?: number) =
     return mockResponses[methodKey] || mockResponses[method.toLowerCase()] || null;
   };
 
-  const handleResponse = async (url: string, method: string, options?: any) => {
+  const handleResponse = async (url: string, method: string, options?: unknown) => {
     const response = findResponse(url, method);
     
     if (!response) {
@@ -72,10 +72,10 @@ const createMockApiClient = (mockResponses: MockResponses, timeoutMs?: number) =
 
   return {
     get: vi.fn((url: string) => handleResponse(url, 'get')),
-    post: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'post', options)),
-    put: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'put', options)),
-    patch: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'patch', options)),
-    delete: vi.fn((url: string, options?: any) => handleResponse(url, 'delete', options)),
+    post: vi.fn((url: string, _data: unknown, options?: unknown) => handleResponse(url, 'post', options)),
+    put: vi.fn((url: string, _data: unknown, options?: unknown) => handleResponse(url, 'put', options)),
+    patch: vi.fn((url: string, _data: unknown, options?: unknown) => handleResponse(url, 'patch', options)),
+    delete: vi.fn((url: string, options?: unknown) => handleResponse(url, 'delete', options)),
   };
 };
 

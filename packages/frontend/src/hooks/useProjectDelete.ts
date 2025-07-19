@@ -24,7 +24,7 @@ export const useProjectDelete = () => {
       toast.success(t('project.deleteSuccess'));
       logger.info(`Project ${projectId} deleted successfully`);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message = error.response?.data?.message || t('project.deleteError');
       toast.error(message);
       logger.error('Failed to delete project:', error);

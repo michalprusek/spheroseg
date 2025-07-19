@@ -915,7 +915,7 @@ for (const key in enTranslations) {
 }
 
 // Helper function to translate remaining sections
-function translateSection(section: any): any {
+function translateSection(section: unknown): any {
   if (typeof section === 'string') {
     // Return placeholder translation for now
     return `[需要翻译] ${section}`;

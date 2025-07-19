@@ -48,7 +48,7 @@ export interface Pool {
   query<T = any>(queryText: QueryParams, values?: any[]): Promise<QueryResult<T>>;
   connect(): Promise<PoolClient>;
   end(): Promise<void>;
-  on(event: string, listener: (...args: any[]) => void): this;
+  on(event: string, listener: (...args: unknown[]) => void): this;
 }
 
 export interface TableDefinition {
@@ -172,7 +172,7 @@ export class MockDatabase {
       end: (): Promise<void> => {
         return Promise.resolve();
       },
-      on: (_event: string, _listener: (...args: any[]) => void): Pool => {
+      on: (_event: string, _listener: (...args: unknown[]) => void): Pool => {
         // Do nothing
         return this.createMockPool();
       },
@@ -354,7 +354,7 @@ export class MockDatabase {
    * @param values Parameter values
    * @returns Query result
    */
-  public async query(text: QueryParams, values: any[] = []): Promise<QueryResult> {
+  public async query(text: QueryParams, values: unknown[] = []): Promise<QueryResult> {
     const queryText = typeof text === 'string' ? text : text.text;
 
     // Check for error patterns

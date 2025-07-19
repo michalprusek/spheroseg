@@ -31,7 +31,7 @@ export const renderWithProviders = (
   }: RenderOptions & {
     route?: string;
     initialEntries?: string[];
-    preloadedState?: any;
+    preloadedState?: unknown;
   } = {},
 ) => {
   // Use our new MemoryRouterWrapper

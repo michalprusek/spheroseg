@@ -30,35 +30,35 @@ const MAX_METRICS_BUFFER_SIZE = 100;
 
 // Logger interface for production-safe logging
 interface Logger {
-  debug: (message: string, ...args: any[]) => void;
-  info: (message: string, ...args: any[]) => void;
-  warn: (message: string, ...args: any[]) => void;
-  error: (message: string, error?: any) => void;
+  debug: (message: string, ...args: unknown[]) => void;
+  info: (message: string, ...args: unknown[]) => void;
+  warn: (message: string, ...args: unknown[]) => void;
+  error: (message: string, error?: unknown) => void;
 }
 
 // Production-safe logger
 class ProductionLogger implements Logger {
   private isDevelopment = import.meta.env.DEV;
 
-  debug(message: string, ...args: any[]): void {
+  debug(message: string, ...args: unknown[]): void {
     if (this.isDevelopment) {
       console.debug(`[AB Testing] ${message}`, ...args);
     }
   }
 
-  info(message: string, ...args: any[]): void {
+  info(message: string, ...args: unknown[]): void {
     if (this.isDevelopment) {
       console.info(`[AB Testing] ${message}`, ...args);
     }
   }
 
-  warn(message: string, ...args: any[]): void {
+  warn(message: string, ...args: unknown[]): void {
     if (this.isDevelopment) {
       console.warn(`[AB Testing] ${message}`, ...args);
     }
   }
 
-  error(message: string, error?: any): void {
+  error(message: string, error?: unknown): void {
     // Always log errors, but in production send to monitoring service
     if (this.isDevelopment) {
       console.error(`[AB Testing] ${message}`, error);
@@ -68,7 +68,7 @@ class ProductionLogger implements Logger {
     }
   }
 
-  private sendToMonitoring(message: string, error?: any): void {
+  private sendToMonitoring(message: string, error?: unknown): void {
     // Implement error monitoring integration
     // e.g., Sentry.captureException(error, { extra: { message } });
   }
@@ -199,7 +199,7 @@ export class SecureABTestingService {
   /**
    * Get feature flag value
    */
-  public getFeatureFlag(key: string, defaultValue: any = false): any {
+  public getFeatureFlag(key: string, defaultValue: unknown = false): any {
     // Check all running experiments for this feature
     for (const [experimentId, experiment] of this.experiments) {
       if (experiment.status !== 'running') continue;
@@ -364,7 +364,7 @@ export class SecureABTestingService {
     return true;
   }
 
-  private evaluateGeoTargeting(geoTargeting: any, geo: GeoInfo): boolean {
+  private evaluateGeoTargeting(geoTargeting: unknown, geo: GeoInfo): boolean {
     if (geoTargeting.countries && geo.country && !geoTargeting.countries.includes(geo.country)) {
       return false;
     }
@@ -380,7 +380,7 @@ export class SecureABTestingService {
     return true;
   }
 
-  private evaluateDeviceTargeting(deviceTargeting: any, device: DeviceInfo): boolean {
+  private evaluateDeviceTargeting(deviceTargeting: unknown, device: DeviceInfo): boolean {
     if (deviceTargeting.types && !deviceTargeting.types.includes(device.type)) {
       return false;
     }

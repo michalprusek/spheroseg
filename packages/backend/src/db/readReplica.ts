@@ -101,7 +101,7 @@ export function getPool(isReadQuery: boolean = true): Pool {
 // Enhanced query function with read/write routing
 export async function query(
   text: string,
-  params?: any[],
+  params?: unknown[],
   options?: {
     useReplica?: boolean;
     forceWrite?: boolean;
@@ -149,7 +149,7 @@ export async function query(
 }
 
 // Transaction helper (always uses write pool)
-export async function transaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
+export async function transaction<T>(callback: (client: unknown) => Promise<T>): Promise<T> {
   const pool = getPool(false); // Always use write pool for transactions
   const client = await pool.connect();
 

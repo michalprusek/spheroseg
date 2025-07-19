@@ -35,7 +35,7 @@ export class SegmentationQueue extends EventEmitter {
   public addTask(
     imageId: string,
     imagePath: string,
-    parameters: any = {},
+    parameters: unknown = {},
     priority: number = 1
   ): string {
     const taskId = `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;

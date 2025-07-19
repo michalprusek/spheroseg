@@ -58,7 +58,7 @@ export interface Task<T> {
   completedAt?: Date;
   timeoutTimer?: ReturnType<typeof setTimeout>;
   onProgress?: (progress: number) => void;
-  onComplete?: (result: any) => void;
+  onComplete?: (result: unknown) => void;
   onError?: (error: Error) => void;
 }
 
@@ -440,7 +440,7 @@ export function createTaskQueue<T = any>(options: TaskQueueOptions = {}): TaskQu
    * @param task The completed task
    * @param result The task result
    */
-  function handleTaskCompleted(task: Task<T>, result: any): void {
+  function handleTaskCompleted(task: Task<T>, result: unknown): void {
     // Clear timeout timer if exists
     if (task.timeoutTimer) {
       clearTimeout(task.timeoutTimer);

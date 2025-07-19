@@ -6,8 +6,8 @@ interface PieChartContainerProps {
   colors?: string[];
   dataKey?: string;
   nameKey?: string;
-  tooltipFormatter?: (value: any, name: string) => [string, string];
-  labelFormatter?: (props: any) => string;
+  tooltipFormatter?: (value: unknown, name: string) => [string, string];
+  labelFormatter?: (props: unknown) => string;
   outerRadius?: number;
 }
 

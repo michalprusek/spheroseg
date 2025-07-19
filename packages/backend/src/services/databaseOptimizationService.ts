@@ -217,7 +217,7 @@ class DatabaseOptimizationService {
     userId: string,
     page: number = 1,
     limit: number = 20,
-    filters: any = {}
+    filters: unknown = {}
   ): Promise<any> {
     const offset = (page - 1) * limit;
     const cacheKey = `project_list:${userId}:${page}:${limit}:${JSON.stringify(filters)}`;

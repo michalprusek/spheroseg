@@ -396,7 +396,7 @@ export default ${JSON.stringify(nestedTranslations, null, 2)};`;
   console.log(`Migration completed: ${outputPath}`);
 }
 
-function setNestedValue(obj: any, path: string, value: any) {
+function setNestedValue(obj: unknown, path: string, value: unknown) {
   const parts = path.split('.');
   let current = obj;
 

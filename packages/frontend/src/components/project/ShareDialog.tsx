@@ -31,7 +31,7 @@ interface ShareDialogProps {
 }
 
 // Validation schema for sharing form - will be created inside component
-const createShareFormSchema = (t: any) =>
+const createShareFormSchema = (t: unknown) =>
   z.object({
     email: z.string().email({ message: t('share.invalidEmail') || 'Invalid email address' }),
     permission: z.enum(['view', 'edit'], {
@@ -93,7 +93,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
     try {
       const response = await apiClient.get(`/api/project-shares/${projectId}`);
       // Convert snake_case to camelCase for frontend compatibility
-      const users = response.data.data.map((user: any) => ({
+      const users = response.data.data.map((user: unknown) => ({
         ...user,
         isPending: user.is_pending,
         userName: user.user_name || user.userName,

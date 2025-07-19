@@ -4,29 +4,29 @@
  */
 
 export interface Logger {
-  debug: (message: string, ...args: any[]) => void;
-  info: (message: string, ...args: any[]) => void;
-  warn: (message: string, ...args: any[]) => void;
-  error: (message: string, error?: any) => void;
+  debug: (message: string, ...args: unknown[]) => void;
+  info: (message: string, ...args: unknown[]) => void;
+  warn: (message: string, ...args: unknown[]) => void;
+  error: (message: string, error?: unknown) => void;
 }
 
 export class ProductionLogger implements Logger {
   private isDevelopment = import.meta.env.DEV;
   private prefix = '[AB Testing]';
 
-  debug(message: string, ...args: any[]): void {
+  debug(message: string, ...args: unknown[]): void {
     if (this.isDevelopment) {
       console.debug(`${this.prefix} ${message}`, ...args);
     }
   }
 
-  info(message: string, ...args: any[]): void {
+  info(message: string, ...args: unknown[]): void {
     if (this.isDevelopment) {
       console.info(`${this.prefix} ${message}`, ...args);
     }
   }
 
-  warn(message: string, ...args: any[]): void {
+  warn(message: string, ...args: unknown[]): void {
     if (this.isDevelopment) {
       console.warn(`${this.prefix} ${message}`, ...args);
     } else {
@@ -35,7 +35,7 @@ export class ProductionLogger implements Logger {
     }
   }
 
-  error(message: string, error?: any): void {
+  error(message: string, error?: unknown): void {
     // Always log errors, but in production send to monitoring service
     if (this.isDevelopment) {
       console.error(`${this.prefix} ${message}`, error);
@@ -45,7 +45,7 @@ export class ProductionLogger implements Logger {
     }
   }
 
-  private sendToMonitoring(level: 'warning' | 'error', message: string, data?: any): void {
+  private sendToMonitoring(level: 'warning' | 'error', message: string, data?: unknown): void {
     // Integration with monitoring service
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('event', 'exception', {

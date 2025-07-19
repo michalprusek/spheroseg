@@ -7,7 +7,7 @@ import { sendError, sendServerError } from '../utils/apiResponsei18n';
  * i18n-enabled error handling middleware
  */
 export const errorHandleri18n: ErrorRequestHandler = (
-  err: any,
+  err: unknown,
   req: Request,
   res: Response,
   next: NextFunction

@@ -1351,14 +1351,14 @@ export function mockFsModule(fileSystem: MockFileSystem): void {
   // Also mock the fs/promises API
   jest.mock('fs/promises', () => {
     return {
-      readFile: (path: string, options?: any) => fileSystem.readFile(path, options),
-      writeFile: (path: string, data: any, options?: any) =>
+      readFile: (path: string, options?: unknown) => fileSystem.readFile(path, options),
+      writeFile: (path: string, data: unknown, options?: unknown) =>
         fileSystem.writeFile(path, data, options),
-      mkdir: (path: string, options?: any) => fileSystem.mkdir(path, options),
-      readdir: (path: string, options?: any) => fileSystem.readdir(path, options),
-      stat: (path: string, options?: any) => fileSystem.stat(path, options),
+      mkdir: (path: string, options?: unknown) => fileSystem.mkdir(path, options),
+      readdir: (path: string, options?: unknown) => fileSystem.readdir(path, options),
+      stat: (path: string, options?: unknown) => fileSystem.stat(path, options),
       unlink: (path: string) => fileSystem.unlink(path),
-      rmdir: (path: string, options?: any) => fileSystem.rmdir(path, options),
+      rmdir: (path: string, options?: unknown) => fileSystem.rmdir(path, options),
       rename: (oldPath: string, newPath: string) => fileSystem.rename(oldPath, newPath),
     };
   });

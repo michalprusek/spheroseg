@@ -6,7 +6,7 @@ import logger from '../utils/logger';
 // Middleware to add CDN URL helper to response locals
 export function cdnUrlMiddleware(req: Request, res: Response, next: NextFunction) {
   // Add CDN URL helper to response locals
-  res.locals.getCDNUrl = (path: string, options?: any) => {
+  res.locals.getCDNUrl = (path: string, options?: unknown) => {
     const cdnService = getCDNService();
     return cdnService.getUrl(path, options);
   };
@@ -141,7 +141,7 @@ function setCDNHeaders(req: Request, res: Response) {
 }
 
 // Helper function to recursively rewrite URLs in data
-function rewriteUrls(data: any): any {
+function rewriteUrls(data: unknown): any {
   if (!data) return data;
 
   const cdnService = getCDNService();

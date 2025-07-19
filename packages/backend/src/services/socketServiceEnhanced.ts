@@ -354,7 +354,7 @@ export function broadcastBulkUpdates(
 export function sendTargetedMessage(
   userId: string,
   event: string,
-  data: any,
+  data: unknown,
   options?: {
     priority?: boolean;
     compress?: boolean;

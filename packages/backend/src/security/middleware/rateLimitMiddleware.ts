@@ -50,7 +50,7 @@ const commonOptions: Partial<Options> = {
  * Error handler for rate limit exceeded
  */
 const createErrorHandler = (type: string, retryAfter: number) => {
-  return (req: Request, res: Response, _next: NextFunction, options: any) => {
+  return (req: Request, res: Response, _next: NextFunction, options: unknown) => {
     logger.warn(`${type} rate limit exceeded`, {
       ip: req.ip,
       path: req.path,

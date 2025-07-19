@@ -6,7 +6,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      t: (key: string, options?: any) => string;
+      t: (key: string, options?: unknown) => string;
       language: string;
       i18n: any;
     }
@@ -40,7 +40,7 @@ export async function setUserLanguage(req: Request, res: Response, next: NextFun
 /**
  * Helper to get translated validation errors
  */
-export function getValidationErrors(errors: any[], req: Request): any[] {
+export function getValidationErrors(errors: unknown[], req: Request): any[] {
   return errors.map((error) => ({
     ...error,
     message: req.t(error.msg, error.params || {}),

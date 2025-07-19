@@ -466,11 +466,11 @@ export const getUserSettings = async (pool: Pool, userId: string): Promise<UserS
 /**
  * Set user setting
  */
-export const setUserSetting = async (
+export const setUserSetting = async(
   pool: Pool,
   userId: string,
   settingKey: string,
-  settingValue: any,
+  settingValue: unknown,
   category: string = 'general'
 ): Promise<UserSetting> => {
   try {

@@ -25,7 +25,7 @@ export interface ModalConfig {
   options?: ModalOptions;
   priority?: number;
   onClose?: () => void;
-  onConfirm?: (data?: any) => void;
+  onConfirm?: (data?: unknown) => void;
   onCancel?: () => void;
 }
 
@@ -79,7 +79,7 @@ export interface FormModalOptions extends ModalOptions {
   cancelText?: string;
   initialValues?: Record<string, any>;
   validationSchema?: any;
-  onSubmit: (values: any) => void | Promise<void>;
+  onSubmit: (values: unknown) => void | Promise<void>;
 }
 
 export interface ModalState {

@@ -26,7 +26,7 @@ export const loadImageFromDatabase = async (projectId: string, imageId: string):
       url: `/api/projects/${projectId}/images`,
       method: 'get',
       description: 'all images',
-      process: (data: any[]) => {
+      process: (data: unknown[]) => {
         if (!Array.isArray(data)) return null;
 
         // Try to find by ID first
@@ -50,7 +50,7 @@ export const loadImageFromDatabase = async (projectId: string, imageId: string):
       url: `/api/projects/${projectId}/images?name=${encodeURIComponent(imageId)}`,
       method: 'get',
       description: 'by name',
-      process: (data: any[]) => (Array.isArray(data) && data.length > 0 ? data[0] : null),
+      process: (data: unknown[]) => (Array.isArray(data) && data.length > 0 ? data[0] : null),
     },
     // 4. Alternative endpoint
     {

@@ -517,7 +517,7 @@ export function createMonitoredPool(pool: Pool): Pool {
   const originalQuery = pool.query.bind(pool);
 
   // Override query method
-  pool.query = async function (...args: any[]): Promise<any> {
+  pool.query = async function (...args: unknown[]): Promise<any> {
     const startTime = Date.now();
     const query = typeof args[0] === 'string' ? args[0] : args[0].text;
 

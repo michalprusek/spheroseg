@@ -8,7 +8,7 @@ import config from '../config';
  * Enhanced error handling middleware with proper logging and standardized responses
  */
 export const errorHandler: ErrorRequestHandler = (
-  err: any,
+  err: unknown,
   req: Request,
   res: Response,
   _next: NextFunction

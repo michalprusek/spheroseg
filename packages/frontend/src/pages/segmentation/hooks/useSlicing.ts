@@ -12,7 +12,7 @@ interface UseSlicingProps {
   setSelectedPolygonId: (id: string | null) => void;
   tempPoints: Point[];
   setTempPoints: (points: Point[]) => void;
-  setInteractionState: (state: any) => void;
+  setInteractionState: (state: unknown) => void;
   setEditMode?: (mode: EditMode) => void; // Optional to maintain backward compatibility
 }
 

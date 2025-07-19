@@ -355,7 +355,7 @@ export function useDuplicationProgress(options: UseDuplicationProgressOptions = 
 /**
  * Convert API response to normalized task data
  */
-function normalizeTaskData(data: any): DuplicationTask {
+function normalizeTaskData(data: unknown): DuplicationTask {
   return {
     id: data.id,
     status: data.status,

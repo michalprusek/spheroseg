@@ -152,7 +152,7 @@ export const AnalyticsDashboard = memo(() => {
   // Memoized chart data transformations
   const activityData = useMemo(() => {
     if (!analyticsData?.activity) return [];
-    return analyticsData.activity.map((item: any) => ({
+    return analyticsData.activity.map((item: unknown) => ({
       ...item,
       date: format(new Date(item.date), 'MMM dd'),
     }));
@@ -170,7 +170,7 @@ export const AnalyticsDashboard = memo(() => {
 
   const performanceData = useMemo(() => {
     if (!analyticsData?.performance) return [];
-    return analyticsData.performance.map((item: any) => ({
+    return analyticsData.performance.map((item: unknown) => ({
       ...item,
       time: format(new Date(item.timestamp), 'HH:mm'),
     }));

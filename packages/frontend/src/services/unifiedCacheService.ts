@@ -296,7 +296,7 @@ class UnifiedCacheService {
   /**
    * Warm cache with data
    */
-  public async warmUp(data: Array<{ key: string; value: any; options?: CacheOptions }>): Promise<void> {
+  public async warmUp(data: Array<{ key: string; value: unknown; options?: CacheOptions }>): Promise<void> {
     logger.info(`Warming up cache with ${data.length} items`);
 
     for (const item of data) {
@@ -316,7 +316,7 @@ class UnifiedCacheService {
       get: async (key: string) => {
         return this.get(`${keyPrefix}:${key}`);
       },
-      set: async (key: string, value: any) => {
+      set: async (key: string, value: unknown) => {
         return this.set(`${keyPrefix}:${key}`, value, { ttl });
       },
       invalidate: async (key: string) => {
@@ -526,7 +526,7 @@ class UnifiedCacheService {
     return Date.now() > entry.expiresAt;
   }
 
-  private estimateSize(value: any): number {
+  private estimateSize(value: unknown): number {
     try {
       return new Blob([JSON.stringify(value)]).size;
     } catch {
@@ -609,13 +609,13 @@ class UnifiedCacheService {
     return [...new Set(keys)];
   }
 
-  private async compress(value: any): Promise<any> {
+  private async compress(value: unknown): Promise<any> {
     // Placeholder for compression implementation
     // In production, use a library like pako or lz-string
     return value;
   }
 
-  private async encrypt(value: any): Promise<any> {
+  private async encrypt(value: unknown): Promise<any> {
     // Placeholder for encryption implementation
     // In production, use Web Crypto API
     return value;

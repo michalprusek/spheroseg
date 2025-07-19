@@ -105,7 +105,7 @@ export default router;
  * @param app - Express application instance
  * @param io - Socket.IO server instance
  */
-export const setupRoutes = (app: express.Application, _io: any) => {
+export const setupRoutes = (app: express.Application, _io: unknown) => {
   // Mount the API router at /api
   app.use('/api', router);
 };

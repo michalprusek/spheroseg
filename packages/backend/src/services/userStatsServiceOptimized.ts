@@ -5,7 +5,7 @@ import logger from '../utils/logger';
  * Interface for database operations
  */
 export interface IDatabase {
-  query(text: string, params?: any[]): Promise<any>;
+  query(text: string, params?: unknown[]): Promise<any>;
 }
 
 /**

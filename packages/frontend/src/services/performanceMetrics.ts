@@ -342,7 +342,7 @@ class PerformanceMetricsService {
   /**
    * Log slow operations
    */
-  private logSlowOperation(type: string, data: any): void {
+  private logSlowOperation(type: string, data: unknown): void {
     if (this.isDevelopment) {
       console.warn(`[Performance] Slow ${type} detected:`, data);
     }

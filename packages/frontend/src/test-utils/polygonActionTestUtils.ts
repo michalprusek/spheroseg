@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { vi } from 'vitest';
 
 type PolygonActions = {
-  [key: string]: (...args: any[]) => any;
+  [key: string]: (...args: unknown[]) => any;
 };
 
 /**
@@ -28,9 +28,9 @@ export const testPolygonAction = <T extends PolygonActions>(
   setSelectedPolygonId: jest.Mock | ReturnType<typeof vi.fn>,
   togglePointAddingMode: jest.Mock | ReturnType<typeof vi.fn>,
   toggleSlicingMode: jest.Mock | ReturnType<typeof vi.fn>,
-  renderHookFn: (params: any) => RenderHookResult<any, T>,
+  renderHookFn: (params: unknown) => RenderHookResult<any, T>,
   actionName: keyof T,
-  ...actionArgs: any[]
+  ...actionArgs: unknown[]
 ) => {
   const result = renderHookFn({
     segmentation,

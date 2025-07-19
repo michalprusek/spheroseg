@@ -1,12 +1,12 @@
 {
   "summary": {
-    "total": 984,
+    "total": 722,
     "byRisk": {
-      "high": 528,
-      "medium": 432,
-      "low": 24
+      "high": 317,
+      "medium": 405,
+      "low": 0
     },
-    "priorityFiles": 276
+    "priorityFiles": 248
   },
   "findings": [
     {
@@ -23,38 +23,6 @@
       "category": "array-any",
       "risk": "HIGH",
       "code": "(text: string, values?: any[]) => Promise<QueryResult<any>>",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/auth/jwtKeyRotation.ts",
-      "line": 333,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(req as any).user = payload;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/cacheService.ts",
-      "line": 258,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "async cacheSegmentationResult(imageId: string, result: any): Promise<void> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/cacheService.ts",
-      "line": 218,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "images: any[]",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/imageProcessingService.ts",
-      "line": 199,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "fit: opts.fit as any,",
       "isPriority": true
     },
     {
@@ -235,14 +203,6 @@
     },
     {
       "file": "packages/backend/src/services/websocketBatcher.ts",
-      "line": 331,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "for (const message of messages as any[]) {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/websocketBatcher.ts",
       "line": 306,
       "category": "function-param",
       "risk": "HIGH",
@@ -295,14 +255,6 @@
       "category": "function-param",
       "risk": "HIGH",
       "code": "const useDebounce = <T extends (...args: any[]) => any>(callback: T, delay: number): T => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useEmailValidation.ts",
-      "line": 105,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
       "isPriority": true
     },
     {
@@ -495,38 +447,6 @@
       "category": "array-any",
       "risk": "HIGH",
       "code": "const off = useCallback((event: string, handler?: (...args: any[]) => void) => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
-      "line": 51,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(window as any).XLSX = {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
-      "line": 52,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "...(window as any).XLSX,",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
-      "line": 60,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(window as any).XLSX = {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/pages/export/hooks/useExportFunctions.ts",
-      "line": 61,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "...(window as any).XLSX,",
       "isPriority": true
     },
     {
@@ -842,30 +762,6 @@
       "isPriority": true
     },
     {
-      "file": "packages/frontend/src/services/performanceMetrics.ts",
-      "line": 220,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "usedJSHeapSize: (performance as any).memory.usedJSHeapSize,",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/performanceMetrics.ts",
-      "line": 221,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "totalJSHeapSize: (performance as any).memory.totalJSHeapSize,",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/services/performanceMetrics.ts",
-      "line": 222,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit,",
-      "isPriority": true
-    },
-    {
       "file": "packages/frontend/src/services/unifiedCacheService.ts",
       "line": 319,
       "category": "function-param",
@@ -922,30 +818,6 @@
       "isPriority": true
     },
     {
-      "file": "packages/frontend/src/types/websocket.ts",
-      "line": 8,
-      "category": "api-response",
-      "risk": "HIGH",
-      "code": "data: any;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/shared/src/api/responseHandler.ts",
-      "line": 175,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "typeof (error as any).status === 'number'",
-      "isPriority": true
-    },
-    {
-      "file": "packages/shared/src/api/responseHandler.ts",
-      "line": 241,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const responseData = error.response.data as any;",
-      "isPriority": true
-    },
-    {
       "file": "packages/backend/src/__tests__/types/mocks.ts",
       "line": 26,
       "category": "generic-any",
@@ -962,24 +834,8 @@
       "isPriority": true
     },
     {
-      "file": "packages/backend/src/auth/jwtKeyRotation.ts",
-      "line": 251,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "public getJWKS(): any {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/auth/jwtKeyRotation.ts",
-      "line": 343,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "export function signJWTWithRotation(payload: any, options?: jwt.SignOptions): string | null {",
-      "isPriority": true
-    },
-    {
       "file": "packages/backend/src/services/cacheService.ts",
-      "line": 313,
+      "line": 314,
       "category": "generic-any",
       "risk": "MEDIUM",
       "code": "async getStats(): Promise<any> {",
@@ -987,58 +843,10 @@
     },
     {
       "file": "packages/backend/src/services/cacheService.ts",
-      "line": 108,
+      "line": 109,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "async set(key: string, value: any, ttl?: number): Promise<boolean> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/cacheService.ts",
-      "line": 185,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "async cacheProject(projectId: string, projectData: any): Promise<void> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/cacheService.ts",
-      "line": 218,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "images: any[]",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/cacheService.ts",
-      "line": 242,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "async cacheUser(userId: string, userData: any): Promise<void> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/cacheService.ts",
-      "line": 258,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "async cacheSegmentationResult(imageId: string, result: any): Promise<void> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/cacheService.ts",
-      "line": 274,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "async cacheQueueStatus(projectId: string, status: any): Promise<void> {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/backend/src/services/cacheService.ts",
-      "line": 290,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "async cacheProjectStats(projectId: string, stats: any): Promise<void> {",
       "isPriority": true
     },
     {
@@ -1527,14 +1335,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "const useDebounce = <T extends (...args: any[]) => any>(callback: T, delay: number): T => {",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useEmailValidation.ts",
-      "line": 105,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
       "isPriority": true
     },
     {
@@ -2194,30 +1994,6 @@
       "isPriority": true
     },
     {
-      "file": "packages/frontend/src/types/websocket.ts",
-      "line": 8,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "data: any;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/types/websocket.ts",
-      "line": 44,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "data?: any;",
-      "isPriority": true
-    },
-    {
-      "file": "packages/frontend/src/hooks/useEmailValidation.ts",
-      "line": 105,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": true
-    },
-    {
       "file": "packages/backend/src/__tests__/factories/image.factory.ts",
       "line": 96,
       "category": "api-response",
@@ -2242,27 +2018,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/app.ts",
-      "line": 33,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(req as any).rawBody = buf;",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/db/monitoring/index.ts",
       "line": 15,
       "category": "array-any",
       "risk": "HIGH",
       "code": "query: async function (text: string, params?: any[]): Promise<any> {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/performanceWrapper.ts",
-      "line": 70,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "client.query = wrappedQuery as any;",
       "isPriority": false
     },
     {
@@ -2291,14 +2051,6 @@
     },
     {
       "file": "packages/backend/src/db/readReplica.ts",
-      "line": 140,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/readReplica.ts",
       "line": 104,
       "category": "array-any",
       "risk": "HIGH",
@@ -2319,54 +2071,6 @@
       "category": "array-any",
       "risk": "HIGH",
       "code": "params?: any[],",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/lib/monitoring/index.ts",
-      "line": 22,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "return (performanceMonitoring as any).recordApiResponseTime(metric);",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/lib/monitoring/index.ts",
-      "line": 26,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "return (performanceMonitoring as any).recordDatabaseQuery(metric);",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/lib/monitoring/index.ts",
-      "line": 30,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "return (performanceMonitoring as any).recordFileOperation(metric);",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/lib/monitoring/index.ts",
-      "line": 34,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "return (performanceMonitoring as any).recordMLInference(metric);",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/lib/monitoring/index.ts",
-      "line": 38,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "return (performanceMonitoring as any).recordMemoryHeap(metric);",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/lib/monitoring/index.ts",
-      "line": 42,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "return (performanceMonitoring as any).recordCPUUsage(metric);",
       "isPriority": false
     },
     {
@@ -2499,74 +2203,10 @@
     },
     {
       "file": "packages/backend/src/middleware/cdn.ts",
-      "line": 83,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/cdn.ts",
       "line": 98,
       "category": "function-param",
       "risk": "HIGH",
       "code": "res.json = function (data: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/databaseOptimizationMiddleware.ts",
-      "line": 50,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(req as any).optimizationService = service;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/databaseOptimizationMiddleware.ts",
-      "line": 102,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const userId = (req as any).user?.userId;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/databaseOptimizationMiddleware.ts",
-      "line": 152,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const userId = (req as any).user?.userId || req.params?.userId;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/databaseOptimizationMiddleware.ts",
-      "line": 189,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "userId: (req as any).user?.userId,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/databaseOptimizationMiddleware.ts",
-      "line": 212,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(req as any).optimizationHints = {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/databaseOptimizationMiddleware.ts",
-      "line": 268,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "userId: (req as any).user?.userId,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/databaseOptimizationMiddleware.ts",
-      "line": 284,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const hints = (req as any).optimizationHints;",
       "isPriority": false
     },
     {
@@ -2583,14 +2223,6 @@
       "category": "function-param",
       "risk": "HIGH",
       "code": "res.send = function (body?: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/dbMonitoringMiddleware.ts",
-      "line": 319,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const pool = (dbMonitoring as any).pool || {};",
       "isPriority": false
     },
     {
@@ -2611,26 +2243,10 @@
     },
     {
       "file": "packages/backend/src/middleware/errorHandler.ts",
-      "line": 73,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "user: (req as any).user?.id || 'anonymous',",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/errorHandler.ts",
       "line": 10,
       "category": "function-param",
       "risk": "HIGH",
       "code": "export const errorHandler: ErrorRequestHandler = (",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/errorHandleri18n.ts",
-      "line": 28,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "user: (req as any).user?.id,",
       "isPriority": false
     },
     {
@@ -2663,14 +2279,6 @@
       "category": "array-any",
       "risk": "HIGH",
       "code": "export function getValidationErrors(errors: any[], req: Request): any[] {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/performance.ts",
-      "line": 321,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const poolStats = (pool as any).totalCount || 0; // Get pool statistics if available",
       "isPriority": false
     },
     {
@@ -2770,46 +2378,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/middleware/rateLimiter.ts",
-      "line": 22,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "userId: (req as any).user?.userId,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/rateLimiter.ts",
-      "line": 40,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const userId = (req as any).user?.userId;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/rateLimiter.ts",
-      "line": 74,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const user = (req as any).user;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/rateLimiter.ts",
-      "line": 79,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const userId = (req as any).user?.userId;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/requestLogger.ts",
-      "line": 38,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "userId: (req as any).user?.id,",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/middleware/requestLogger.ts",
       "line": 42,
       "category": "function-param",
@@ -2827,14 +2395,6 @@
     },
     {
       "file": "packages/backend/src/middleware/validation.ts",
-      "line": 133,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const file = req.file || (req.files as any)[field];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/validation.ts",
       "line": 115,
       "category": "function-param",
       "risk": "HIGH",
@@ -2847,14 +2407,6 @@
       "category": "object-any",
       "risk": "HIGH",
       "code": "const dataToValidate: { [key: string]: any } = {};",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/monitoring/errorTracker.ts",
-      "line": 422,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "userId: (req as any).user?.userId,",
       "isPriority": false
     },
     {
@@ -2978,59 +2530,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/routes/monitoring.ts",
-      "line": 233,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "resolvedBy: (req as any).user?.userId,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/security/middleware/advancedRateLimiter.ts",
-      "line": 167,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const user = (req as any).user;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/security/middleware/advancedRateLimiter.ts",
-      "line": 247,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "userId: (req as any).user?.id,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/security/middleware/advancedRateLimiter.ts",
-      "line": 224,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (rateLimiterRes: any) {",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/security/middleware/advancedRateLimiter.ts",
       "line": 211,
       "category": "array-any",
       "risk": "HIGH",
       "code": "const errors: any[] = [];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/security/middleware/rateLimitMiddleware.ts",
-      "line": 45,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "return (req as any).user?.userId || req.ip || 'unknown';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/security/middleware/rateLimitMiddleware.ts",
-      "line": 58,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "userId: (req as any).user?.userId,",
       "isPriority": false
     },
     {
@@ -3042,30 +2546,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/security/middleware/security.ts",
-      "line": 125,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(req as any).nonce = nonce;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/security/middleware/security.ts",
-      "line": 167,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(directives as any)['report-uri'] = [cspReportUri];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/security/SecurityManager.ts",
-      "line": 407,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const user = (req as any).user;",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/security/utils/securityHelpers.ts",
       "line": 206,
       "category": "api-response",
@@ -3074,67 +2554,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/backend/src/server.ts",
-      "line": 147,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 185,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 229,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 235,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockAuth.ts",
-      "line": 382,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(req as any).user = {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockAuth.ts",
-      "line": 390,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(req as any).deviceId = payload.deviceId;",
-      "isPriority": false
-    },
-    {
       "file": "packages/backend/src/test-utils/mockAuth.ts",
       "line": 418,
       "category": "type-assertion",
       "risk": "HIGH",
       "code": "} as any,",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockAuth.ts",
-      "line": 423,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(req as any).deviceId = tokenData.deviceId;",
       "isPriority": false
     },
     {
@@ -3247,894 +2671,6 @@
       "category": "api-response",
       "risk": "HIGH",
       "code": "writeFile: (path: string, data: any, options?: any) =>",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 296,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 297,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'open';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 298,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = filePath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 305,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'EISDIR';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 306,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'read';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 307,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = filePath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 337,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 338,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'open';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 339,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = filePath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 346,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'EISDIR';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 347,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'read';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 348,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = filePath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 481,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'EEXIST';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 482,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'mkdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 483,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = dirPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 495,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 496,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'mkdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 497,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = dirPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 534,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'EEXIST';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 535,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'mkdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 536,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = dirPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 547,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 548,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'mkdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 549,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = dirPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 598,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 599,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'scandir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 600,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = dirPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 607,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOTDIR';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 608,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'scandir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 609,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = dirPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 668,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 669,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'scandir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 670,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = dirPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 677,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOTDIR';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 678,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'scandir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 679,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = dirPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 750,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 751,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'stat';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 752,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 771,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 772,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'stat';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 773,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 802,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 803,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'unlink';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 804,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 811,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'EISDIR';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 812,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'unlink';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 813,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 832,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 833,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'unlink';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 834,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 841,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'EISDIR';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 842,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'unlink';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 843,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 880,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 881,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rmdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 882,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 889,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOTDIR';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 890,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rmdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 891,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 904,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOTEMPTY';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 905,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rmdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 906,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 935,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 936,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rmdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 937,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 944,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOTDIR';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 945,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rmdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 946,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 959,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOTEMPTY';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 960,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rmdir';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 961,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1005,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1006,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rename';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1007,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = oldPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1008,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).dest = newPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1018,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1019,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rename';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1020,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = oldPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1021,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).dest = newPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1036,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOTEMPTY';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1037,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rename';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1038,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = oldPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1039,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).dest = newPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1076,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1077,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rename';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1078,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = oldPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1079,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).dest = newPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1089,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1090,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rename';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1091,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = oldPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1092,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).dest = newPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1107,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOTEMPTY';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1108,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'rename';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1109,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = oldPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1110,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).dest = newPath;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1181,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1182,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'open';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1183,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1193,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'EISDIR';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1194,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'read';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1195,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1243,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).code = 'ENOENT';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1244,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).syscall = 'open';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1245,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(err as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1254,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(stream as any).path = path;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1255,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(stream as any).bytesWritten = 0;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1258,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(stream as any).write = (chunk: Buffer | string) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1261,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(stream as any).bytesWritten += buffer.length;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1265,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(stream as any).end = (chunk?: Buffer | string) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/test-utils/mockFileSystem.ts",
-      "line": 1267,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(stream as any).write(chunk);",
       "isPriority": false
     },
     {
@@ -4274,46 +2810,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/__mocks__/polygonWorker.ts",
-      "line": 75,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "this.onmessage = listener as any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/__mocks__/polygonWorker.ts",
-      "line": 77,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "this.onerror = listener as any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/App.enhanced.tsx",
-      "line": 265,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(window as any).clearImageCache = async () => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/__tests__/ImageUploaderTest.tsx",
-      "line": 35,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(apiClient.get as any).mockResolvedValue({",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/__tests__/ImageUploaderTest.tsx",
-      "line": 45,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(apiClient.post as any).mockResolvedValue({",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/components/analytics/AnalyticsDashboardOptimized.tsx",
       "line": 155,
       "category": "function-param",
@@ -4378,35 +2874,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/components/ImageUploader.tsx",
-      "line": 23,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "onUploadComplete: (projectId: string, uploadedImages: any[]) => void;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/ImageUploader.tsx",
-      "line": 23,
-      "category": "array-any",
-      "risk": "HIGH",
-      "code": "onUploadComplete: (projectId: string, uploadedImages: any[]) => void;",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/components/project/DebugSegmentationThumbnail.tsx",
       "line": 6,
       "category": "api-response",
       "risk": "HIGH",
       "code": "const segmentationCache = new Map<string, { data: any; timestamp: number }>();",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/project/DebugSegmentationThumbnail.tsx",
-      "line": 100,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (err: any) {",
       "isPriority": false
     },
     {
@@ -4442,14 +2914,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/components/project/ShareDialog.tsx",
-      "line": 122,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/components/SegmentationQueueIndicator.tsx",
       "line": 326,
       "category": "api-response",
@@ -4466,43 +2930,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/components/settings/AccountSection.tsx",
-      "line": 72,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/settings/AppearanceSection.tsx",
-      "line": 26,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "setLanguage(value as any);",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/settings/AppearanceSection.tsx",
-      "line": 31,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "setTheme(value as any);",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/components/settings/AvatarUploader.tsx",
       "line": 91,
       "category": "function-param",
       "risk": "HIGH",
       "code": "const handleCropComplete = async (cropData: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/settings/DeleteAccountDialog.tsx",
-      "line": 82,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
       "isPriority": false
     },
     {
@@ -4527,14 +2959,6 @@
       "category": "array-any",
       "risk": "HIGH",
       "code": "files: any[];",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/config/queryClient.ts",
-      "line": 21,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const status = (error as any).status;",
       "isPriority": false
     },
     {
@@ -4575,14 +2999,6 @@
       "category": "function-param",
       "risk": "HIGH",
       "code": "function StandardImageGallery({ lazyLoad }: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/i18n.ts",
-      "line": 45,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(window as any).i18next = i18nInstance;",
       "isPriority": false
     },
     {
@@ -4746,43 +3162,43 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/lib/monitoring/performanceMonitoring.ts",
-      "line": 119,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "if (performance && (performance as any).memory) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/monitoring/performanceMonitoring.ts",
-      "line": 256,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const memory = (performance as any).memory;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/lib/uploadClient.ts",
-      "line": 74,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const errorMessage = (error.response?.data as any)?.message?.toLowerCase() || '';",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/AcceptInvitation.tsx",
-      "line": 53,
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 37,
       "category": "function-param",
       "risk": "HIGH",
-      "code": "} catch (error: any) {",
+      "code": "const handleResponse = async (url: string, method: string, options?: any) => {",
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/pages/ForgotPassword.tsx",
-      "line": 38,
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 75,
       "category": "function-param",
       "risk": "HIGH",
-      "code": "} catch (error: any) {",
+      "code": "post: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'post', options)),",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 76,
+      "category": "function-param",
+      "risk": "HIGH",
+      "code": "put: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'put', options)),",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 77,
+      "category": "function-param",
+      "risk": "HIGH",
+      "code": "patch: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'patch', options)),",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 78,
+      "category": "function-param",
+      "risk": "HIGH",
+      "code": "delete: vi.fn((url: string, options?: any) => handleResponse(url, 'delete', options)),",
       "isPriority": false
     },
     {
@@ -4811,30 +3227,6 @@
     },
     {
       "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 588,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": ".filter((r) => r.status === 'fulfilled' && (r.value as any).success)",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 589,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": ".map((r) => (r.value as any).imageId);",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 624,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "results.filter((r) => r.status !== 'fulfilled' || !(r.value as any).success),",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
       "line": 130,
       "category": "function-param",
       "risk": "HIGH",
@@ -4855,62 +3247,6 @@
       "category": "function-param",
       "risk": "HIGH",
       "code": "const handleImageDeleted = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 171,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (joinErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 229,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (leaveErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 241,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 519,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 571,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (newEndpointErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 578,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (legacyErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 772,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
       "isPriority": false
     },
     {
@@ -5066,46 +3402,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/pages/segmentation/utils/fetchAllSegmentations.ts",
-      "line": 20,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (err: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/Settings.tsx",
-      "line": 57,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/VerifyEmail.tsx",
-      "line": 29,
-      "category": "function-param",
-      "risk": "HIGH",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-setup.ts",
-      "line": 608,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "global.Worker = MockWorker as any;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/test-setup.ts",
-      "line": 688,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(window as any).indexedDB = {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/test-setup.ts",
       "line": 55,
       "category": "function-param",
@@ -5123,7 +3419,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 780,
+      "line": 784,
       "category": "function-param",
       "risk": "HIGH",
       "code": "vi.mock('@/lib/radix-optimized', () => ({",
@@ -5131,7 +3427,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 782,
+      "line": 786,
       "category": "function-param",
       "risk": "HIGH",
       "code": "SelectItem: ({ children, value }: any) =>",
@@ -5139,7 +3435,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 784,
+      "line": 788,
       "category": "function-param",
       "risk": "HIGH",
       "code": "SelectTrigger: ({ children }: any) => React.createElement('button', { 'data-testid': 'select-trigger' }, children),",
@@ -5147,7 +3443,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 785,
+      "line": 789,
       "category": "function-param",
       "risk": "HIGH",
       "code": "SelectValue: ({ placeholder }: any) => React.createElement('span', { 'data-testid': 'select-value' }, placeholder),",
@@ -5155,7 +3451,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 786,
+      "line": 790,
       "category": "function-param",
       "risk": "HIGH",
       "code": "SelectRoot: ({ children }: any) => React.createElement('div', { 'data-testid': 'select-root' }, children),",
@@ -5163,7 +3459,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 787,
+      "line": 791,
       "category": "function-param",
       "risk": "HIGH",
       "code": "DialogRoot: ({ children, open }: any) =>",
@@ -5171,7 +3467,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 789,
+      "line": 793,
       "category": "function-param",
       "risk": "HIGH",
       "code": "DialogTrigger: ({ children }: any) => React.createElement('button', { 'data-testid': 'dialog-trigger' }, children),",
@@ -5179,7 +3475,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 790,
+      "line": 794,
       "category": "function-param",
       "risk": "HIGH",
       "code": "DialogPortal: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-portal' }, children),",
@@ -5187,7 +3483,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 791,
+      "line": 795,
       "category": "function-param",
       "risk": "HIGH",
       "code": "DialogOverlay: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-overlay' }, children),",
@@ -5195,7 +3491,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 792,
+      "line": 796,
       "category": "function-param",
       "risk": "HIGH",
       "code": "DialogContent: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-content' }, children),",
@@ -5203,7 +3499,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 793,
+      "line": 797,
       "category": "function-param",
       "risk": "HIGH",
       "code": "DialogTitle: ({ children }: any) => React.createElement('h2', { 'data-testid': 'dialog-title' }, children),",
@@ -5211,7 +3507,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 794,
+      "line": 798,
       "category": "function-param",
       "risk": "HIGH",
       "code": "DialogDescription: ({ children }: any) => React.createElement('p', { 'data-testid': 'dialog-description' }, children),",
@@ -5219,7 +3515,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 795,
+      "line": 799,
       "category": "function-param",
       "risk": "HIGH",
       "code": "DialogClose: ({ children }: any) => React.createElement('button', { 'data-testid': 'dialog-close' }, children),",
@@ -5354,22 +3650,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/utils/codeSplitting.ts",
-      "line": 298,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const size = (entry as any).transferSize || 0;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/consoleErrorDetector.ts",
-      "line": 118,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(window as any).consoleErrorDetector = consoleErrorDetector;",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/utils/consoleErrorDetector.ts",
       "line": 33,
       "category": "function-param",
@@ -5399,38 +3679,6 @@
       "category": "array-any",
       "risk": "HIGH",
       "code": "console.warn = (...args: any[]) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/debugI18next.ts",
-      "line": 6,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const i18n = (window as any).i18next;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/debugI18next.ts",
-      "line": 71,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(window as any).debugI18next = debugI18next;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/error/globalErrorHandler.ts",
-      "line": 112,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(error as any)._isHandledByBoundary = true;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/error/permissionErrorHandler.ts",
-      "line": 74,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const i18n = (window as any).i18n;",
       "isPriority": false
     },
     {
@@ -5439,38 +3687,6 @@
       "category": "api-response",
       "risk": "HIGH",
       "code": "const result: any = {};",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/localStorageTest.ts",
-      "line": 52,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(window as any).testLocalStoragePersistence = testLocalStoragePersistence;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/logging/unifiedLogger.ts",
-      "line": 408,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "(window as any).__originalConsole = originalConsole;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/logging/unifiedLogger.ts",
-      "line": 415,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "if (typeof window !== 'undefined' && (window as any).__originalConsole) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/utils/logging/unifiedLogger.ts",
-      "line": 416,
-      "category": "type-assertion",
-      "risk": "HIGH",
-      "code": "const original = (window as any).__originalConsole;",
       "isPriority": false
     },
     {
@@ -5591,14 +3807,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "params?: any[],",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/readReplica.ts",
-      "line": 140,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
       "isPriority": false
     },
     {
@@ -5759,14 +3967,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "res.sendFile = function (path: string, options?: any, callback?: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/cdn.ts",
-      "line": 83,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
       "isPriority": false
     },
     {
@@ -6179,14 +4379,6 @@
     },
     {
       "file": "packages/backend/src/security/middleware/advancedRateLimiter.ts",
-      "line": 224,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (rateLimiterRes: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/security/middleware/advancedRateLimiter.ts",
       "line": 271,
       "category": "variable-type",
       "risk": "MEDIUM",
@@ -6223,38 +4415,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "export const verifyTimeLimitedToken = (token: string): any | null => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 147,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 185,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 229,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 235,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
       "isPriority": false
     },
     {
@@ -6690,22 +4850,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/components/ImageUploader.tsx",
-      "line": 23,
-      "category": "event-handler",
-      "risk": "MEDIUM",
-      "code": "onUploadComplete: (projectId: string, uploadedImages: any[]) => void;",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/ImageUploader.tsx",
-      "line": 23,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "onUploadComplete: (projectId: string, uploadedImages: any[]) => void;",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/components/LazyLoadedComponents.tsx",
       "line": 153,
       "category": "generic-any",
@@ -6743,14 +4887,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "const segmentationCache = new Map<string, { data: any; timestamp: number }>();",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/project/DebugSegmentationThumbnail.tsx",
-      "line": 100,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (err: any) {",
       "isPriority": false
     },
     {
@@ -6794,14 +4930,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/components/project/ShareDialog.tsx",
-      "line": 122,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/components/SegmentationQueueIndicator.tsx",
       "line": 326,
       "category": "variable-type",
@@ -6810,27 +4938,11 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/components/settings/AccountSection.tsx",
-      "line": 72,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/components/settings/AvatarUploader.tsx",
       "line": 91,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "const handleCropComplete = async (cropData: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/settings/DeleteAccountDialog.tsx",
-      "line": 82,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
       "isPriority": false
     },
     {
@@ -7018,19 +5130,75 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/pages/AcceptInvitation.tsx",
-      "line": 53,
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 5,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
+      "code": "data?: any;",
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/pages/ForgotPassword.tsx",
-      "line": 38,
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 37,
       "category": "variable-type",
       "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
+      "code": "const handleResponse = async (url: string, method: string, options?: any) => {",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 75,
+      "category": "variable-type",
+      "risk": "MEDIUM",
+      "code": "post: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'post', options)),",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 75,
+      "category": "variable-type",
+      "risk": "MEDIUM",
+      "code": "post: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'post', options)),",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 76,
+      "category": "variable-type",
+      "risk": "MEDIUM",
+      "code": "put: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'put', options)),",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 76,
+      "category": "variable-type",
+      "risk": "MEDIUM",
+      "code": "put: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'put', options)),",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 77,
+      "category": "variable-type",
+      "risk": "MEDIUM",
+      "code": "patch: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'patch', options)),",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 77,
+      "category": "variable-type",
+      "risk": "MEDIUM",
+      "code": "patch: vi.fn((url: string, _data: any, options?: any) => handleResponse(url, 'patch', options)),",
+      "isPriority": false
+    },
+    {
+      "file": "packages/frontend/src/lib/__mocks__/MockApiClientProvider.tsx",
+      "line": 78,
+      "category": "variable-type",
+      "risk": "MEDIUM",
+      "code": "delete: vi.fn((url: string, options?: any) => handleResponse(url, 'delete', options)),",
       "isPriority": false
     },
     {
@@ -7039,14 +5207,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "const handleSegmentationUpdate = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 171,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (joinErr: any) {",
       "isPriority": false
     },
     {
@@ -7063,54 +5223,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "const handleImageDeleted = (data: any) => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 229,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (leaveErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 241,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 519,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 571,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (newEndpointErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 578,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (legacyErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 772,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
       "isPriority": false
     },
     {
@@ -7234,30 +5346,6 @@
       "isPriority": false
     },
     {
-      "file": "packages/frontend/src/pages/segmentation/utils/fetchAllSegmentations.ts",
-      "line": 20,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (err: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/Settings.tsx",
-      "line": 57,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/VerifyEmail.tsx",
-      "line": 29,
-      "category": "variable-type",
-      "risk": "MEDIUM",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
       "file": "packages/frontend/src/test-setup.ts",
       "line": 55,
       "category": "variable-type",
@@ -7331,7 +5419,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 781,
+      "line": 785,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "SelectContent: ({ children }: any) => React.createElement('div', { 'data-testid': 'select-content' }, children),",
@@ -7339,7 +5427,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 782,
+      "line": 786,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "SelectItem: ({ children, value }: any) =>",
@@ -7347,7 +5435,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 784,
+      "line": 788,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "SelectTrigger: ({ children }: any) => React.createElement('button', { 'data-testid': 'select-trigger' }, children),",
@@ -7355,7 +5443,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 785,
+      "line": 789,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "SelectValue: ({ placeholder }: any) => React.createElement('span', { 'data-testid': 'select-value' }, placeholder),",
@@ -7363,7 +5451,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 786,
+      "line": 790,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "SelectRoot: ({ children }: any) => React.createElement('div', { 'data-testid': 'select-root' }, children),",
@@ -7371,7 +5459,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 787,
+      "line": 791,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "DialogRoot: ({ children, open }: any) =>",
@@ -7379,7 +5467,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 789,
+      "line": 793,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "DialogTrigger: ({ children }: any) => React.createElement('button', { 'data-testid': 'dialog-trigger' }, children),",
@@ -7387,7 +5475,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 790,
+      "line": 794,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "DialogPortal: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-portal' }, children),",
@@ -7395,7 +5483,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 791,
+      "line": 795,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "DialogOverlay: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-overlay' }, children),",
@@ -7403,7 +5491,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 792,
+      "line": 796,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "DialogContent: ({ children }: any) => React.createElement('div', { 'data-testid': 'dialog-content' }, children),",
@@ -7411,7 +5499,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 793,
+      "line": 797,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "DialogTitle: ({ children }: any) => React.createElement('h2', { 'data-testid': 'dialog-title' }, children),",
@@ -7419,7 +5507,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 794,
+      "line": 798,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "DialogDescription: ({ children }: any) => React.createElement('p', { 'data-testid': 'dialog-description' }, children),",
@@ -7427,7 +5515,7 @@
     },
     {
       "file": "packages/frontend/src/test-setup.ts",
-      "line": 795,
+      "line": 799,
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "DialogClose: ({ children }: any) => React.createElement('button', { 'data-testid': 'dialog-close' }, children),",
@@ -7695,190 +5783,6 @@
       "category": "variable-type",
       "risk": "MEDIUM",
       "code": "export const setIntervalSafe = (callback: (...args: any[]) => void, delay?: number): NodeJS.Timeout => {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/db/readReplica.ts",
-      "line": 140,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/middleware/cdn.ts",
-      "line": 83,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/security/middleware/advancedRateLimiter.ts",
-      "line": 224,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (rateLimiterRes: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 147,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 185,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 229,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/backend/src/server.ts",
-      "line": 235,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/project/DebugSegmentationThumbnail.tsx",
-      "line": 100,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (err: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/project/ShareDialog.tsx",
-      "line": 122,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/settings/AccountSection.tsx",
-      "line": 72,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/components/settings/DeleteAccountDialog.tsx",
-      "line": 82,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/AcceptInvitation.tsx",
-      "line": 53,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ForgotPassword.tsx",
-      "line": 38,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 171,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (joinErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 229,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (leaveErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 241,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 519,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 571,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (newEndpointErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 578,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (legacyErr: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/ProjectDetail.tsx",
-      "line": 772,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/segmentation/utils/fetchAllSegmentations.ts",
-      "line": 20,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (err: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/Settings.tsx",
-      "line": 57,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
-      "isPriority": false
-    },
-    {
-      "file": "packages/frontend/src/pages/VerifyEmail.tsx",
-      "line": 29,
-      "category": "error-catch",
-      "risk": "LOW",
-      "code": "} catch (error: any) {",
       "isPriority": false
     }
   ]

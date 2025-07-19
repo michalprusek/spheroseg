@@ -12,7 +12,7 @@ export class MockWorker {
     // Mock constructor
   }
 
-  postMessage(message: any, _transfer?: Transferable[]): void {
+  postMessage(message: unknown, _transfer?: Transferable[]): void {
     if (this.terminated) {
       return;
     }

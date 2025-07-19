@@ -46,7 +46,7 @@ export const MockApiClientProvider: React.FC<MockApiClientProviderProps> = ({
             status: response?.status || 200,
           });
         }),
-        post: vi.fn((url: string, data: any) => {
+        post: vi.fn((url: string, data: unknown) => {
           const key = Object.keys(mockResponses).find(k => url.includes(k));
           const response = key ? mockResponses[key] : mockResponses[getOperationFromUrl(url)];
           
@@ -59,7 +59,7 @@ export const MockApiClientProvider: React.FC<MockApiClientProviderProps> = ({
             status: response?.status || 200,
           });
         }),
-        put: vi.fn((url: string, data: any) => {
+        put: vi.fn((url: string, data: unknown) => {
           const key = Object.keys(mockResponses).find(k => url.includes(k));
           const response = key ? mockResponses[key] : null;
           
@@ -121,7 +121,7 @@ export const createMockApiClient = (mockResponses: MockResponses = {}) => {
         status: response?.status || 200,
       });
     }),
-    post: vi.fn((url: string, data: any) => {
+    post: vi.fn((url: string, data: unknown) => {
       const key = Object.keys(mockResponses).find(k => url.includes(k));
       const response = key ? mockResponses[key] : mockResponses[getOperationFromUrl(url)];
       
@@ -134,7 +134,7 @@ export const createMockApiClient = (mockResponses: MockResponses = {}) => {
         status: response?.status || 200,
       });
     }),
-    put: vi.fn((url: string, data: any) => {
+    put: vi.fn((url: string, data: unknown) => {
       const key = Object.keys(mockResponses).find(k => url.includes(k));
       const response = key ? mockResponses[key] : null;
       

@@ -50,7 +50,7 @@ export function createI18nMiddleware() {
 export async function getUserTranslation(
   userId: string | null,
   key: string,
-  options?: any
+  options?: unknown
 ): Promise<string> {
   if (!userId) {
     return i18next.t(key, options);

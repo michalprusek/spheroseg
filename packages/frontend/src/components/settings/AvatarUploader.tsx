@@ -88,7 +88,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   };
 
   // Handle cropper completion
-  const handleCropComplete = async (cropData: any) => {
+  const handleCropComplete = async (cropData: unknown) => {
     if (!cropData.croppedImageData) {
       showError(t('profile.cropError') || 'Failed to crop image');
       setIsCropperOpen(false);

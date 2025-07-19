@@ -30,7 +30,7 @@ export function trackAPIPerformance() {
 
     // Override res.end to capture when response is complete
     const originalEnd = res.end;
-    res.end = function (...args: any[]) {
+    res.end = function (...args: unknown[]) {
       // Restore original end function
       res.end = originalEnd;
 
@@ -74,7 +74,7 @@ export function addResponseTimeHeader() {
 
     // Override res.end to add header before sending
     const originalEnd = res.end;
-    res.end = function (...args: any[]) {
+    res.end = function (...args: unknown[]) {
       // Calculate response time in milliseconds
       const endTime = process.hrtime.bigint();
       const responseTime = Number((endTime - startTime) / 1000000n);
@@ -107,7 +107,7 @@ export function trackMemoryUsage(endpoints: string[] = []) {
 
     // Override res.end to capture memory after request
     const originalEnd = res.end;
-    res.end = function (...args: any[]) {
+    res.end = function (...args: unknown[]) {
       res.end = originalEnd;
 
       const endMemory = process.memoryUsage();

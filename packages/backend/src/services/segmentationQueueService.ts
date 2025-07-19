@@ -192,7 +192,7 @@ class SegmentationQueueService extends EventEmitter {
       logger.info('Connected to RabbitMQ');
 
       // Nastavení handlerů pro události
-      this.connection.on('error', (err: any) => {
+      this.connection.on('error', (err: unknown) => {
         logger.error('RabbitMQ connection error:', err);
         this.reconnectRabbitMQ();
       });
@@ -422,7 +422,7 @@ class SegmentationQueueService extends EventEmitter {
     taskId: string,
     imageId: string,
     imagePath: string,
-    parameters: any,
+    parameters: unknown,
     retries: number
   ): Promise<void> {
     const dbPool = pool.getPool();
@@ -480,7 +480,7 @@ class SegmentationQueueService extends EventEmitter {
     taskId: string,
     imageId: string,
     imagePath: string,
-    parameters: any,
+    parameters: unknown,
     retries: number
   ): Promise<void> {
     if (!this.channel) {
@@ -635,7 +635,7 @@ class SegmentationQueueService extends EventEmitter {
   private async updateSegmentationResult(
     client: PoolClient,
     imageId: string,
-    resultData: any
+    resultData: unknown
   ): Promise<void> {
     try {
       // Uložení celého objektu resultData do databáze
@@ -661,7 +661,7 @@ class SegmentationQueueService extends EventEmitter {
   public async addTask(
     imageId: string,
     imagePath: string,
-    parameters: any = {},
+    parameters: unknown = {},
     priority: TaskPriority = TaskPriority.NORMAL
   ): Promise<string> {
     const dbPool = pool.getPool();
@@ -849,7 +849,7 @@ const segmentationQueueService = new SegmentationQueueService();
 export default segmentationQueueService;
 
 // Also export the individual methods for backward compatibility
-export const queueSegmentationJob = async (imageId: string, options: any) => {
+export const queueSegmentationJob = async (imageId: string, options: unknown) => {
   return segmentationQueueService.addTask(
     imageId,
     options.imagePath || '',

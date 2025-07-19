@@ -337,7 +337,7 @@ class UnifiedMonitoring {
   /**
    * Record a metric
    */
-  private recordMetric(metric: any): void {
+  private recordMetric(metric: unknown): void {
     if (!this.options.enabled) return;
 
     this.metricsQueue.push(metric);
@@ -752,7 +752,7 @@ export function requestLoggerMiddleware(req: Request, res: Response, next: NextF
 /**
  * Error handling middleware integrated with unified monitoring
  */
-export function errorHandlerMiddleware(err: any, req: Request, res: Response, next: NextFunction) {
+export function errorHandlerMiddleware(err: unknown, req: Request, res: Response, next: NextFunction) {
   // Don't respond if response was already sent
   if (res.headersSent) {
     return next(err);
@@ -817,7 +817,7 @@ export function errorHandlerMiddleware(err: any, req: Request, res: Response, ne
  */
 export async function monitorQuery<T extends Record<string, any> = any>(
   queryText: string,
-  params: any[],
+  params: unknown[],
   queryFn: () => Promise<QueryResult<T>>
 ): Promise<QueryResult<T>> {
   const startTime = Date.now();
@@ -966,7 +966,7 @@ export function updateSegmentationQueueSize(
 /**
  * Update connection pool metrics
  */
-export function updatePoolMetrics(pool: any) {
+export function updatePoolMetrics(pool: unknown) {
   if (!METRICS_ENABLED) return;
 
   try {
@@ -1095,9 +1095,9 @@ export default {
   resetPatternStats,
 
   // Events
-  on: (event: string, listener: (...args: any[]) => void) => metricsEmitter.on(event, listener),
-  off: (event: string, listener: (...args: any[]) => void) => metricsEmitter.off(event, listener),
-  once: (event: string, listener: (...args: any[]) => void) => metricsEmitter.once(event, listener),
+  on: (event: string, listener: (...args: unknown[]) => void) => metricsEmitter.on(event, listener),
+  off: (event: string, listener: (...args: unknown[]) => void) => metricsEmitter.off(event, listener),
+  once: (event: string, listener: (...args: unknown[]) => void) => metricsEmitter.once(event, listener),
 
   // Performance monitoring instance
   performanceMonitoring: monitoring,

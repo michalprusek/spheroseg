@@ -273,7 +273,7 @@ export function ABTestingDemoPage() {
 }
 
 // Helper components (simplified implementations)
-function PricingCard({ plan, price, highlighted, onSelect }: any) {
+function PricingCard({ plan, price, highlighted, onSelect }: unknown) {
   return (
     <Card className={`p-6 ${highlighted ? 'ring-2 ring-blue-500' : ''}`}>
       <h3 className="text-lg font-semibold">{plan}</h3>
@@ -285,11 +285,11 @@ function PricingCard({ plan, price, highlighted, onSelect }: any) {
   );
 }
 
-function ComparisonTable({ onSelect }: any) {
+function ComparisonTable({ onSelect }: unknown) {
   return <div>Comparison Table Implementation</div>;
 }
 
-function StandardPricingTable({ onSelect }: any) {
+function StandardPricingTable({ onSelect }: unknown) {
   return <div>Standard Pricing Table</div>;
 }
 
@@ -305,11 +305,11 @@ function VideoOnboarding() {
   return <div>Video-based Onboarding</div>;
 }
 
-function VirtualizedImageGallery({ lazyLoad }: any) {
+function VirtualizedImageGallery({ lazyLoad }: unknown) {
   return <div>Virtualized Gallery with {lazyLoad ? 'Lazy Loading' : 'Eager Loading'}</div>;
 }
 
-function StandardImageGallery({ lazyLoad }: any) {
+function StandardImageGallery({ lazyLoad }: unknown) {
   return <div>Standard Gallery with {lazyLoad ? 'Lazy Loading' : 'Eager Loading'}</div>;
 }
 

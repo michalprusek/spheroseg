@@ -104,8 +104,8 @@ export const isAuthorizationError = (error: any): boolean => {
 /**
  * Middleware to add error throwing helper methods to request object
  */
-export const errorHelpers = (req: any, res: any, next: any) => {
-  req.throwValidationError = (message: string, details?: any) => {
+export const errorHelpers = (req: unknown, res: unknown, next: unknown) => {
+  req.throwValidationError = (message: string, details?: unknown) => {
     throw ApiErrorClass.validation(message, details);
   };
 

@@ -503,7 +503,7 @@ export class MockAuth {
 export function createMockJwtSign(options: MockAuthOptions = {}): jest.Mock {
   const mockAuth = new MockAuth(options);
 
-  return jest.fn((payload: any, secret: string, options: any = {}) => {
+  return jest.fn((payload: unknown, secret: string, options: unknown = {}) => {
     // Get user ID from payload
     const userId = payload.id || payload.sub;
     if (!userId) {
@@ -538,7 +538,7 @@ export function createMockJwtSign(options: MockAuthOptions = {}): jest.Mock {
 export function createMockJwtVerify(options: MockAuthOptions = {}): jest.Mock {
   const mockAuth = new MockAuth(options);
 
-  return jest.fn((token: string, secret: string, _options: any = {}, callback?: (err: Error | null, decoded?: any) => void) => {
+  return jest.fn((token: string, secret: string, _options: unknown = {}, callback?: (err: Error | null, decoded?: unknown) => void) => {
     try {
       const payload = mockAuth.verifyToken(token);
 

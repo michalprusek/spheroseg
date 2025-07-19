@@ -88,7 +88,7 @@ export const createMockPolygon = (overrides = {}) => ({
   ...overrides,
 });
 
-export const createMockApiResponse = (data: any, status = 200) => ({
+export const createMockApiResponse = (data: unknown, status = 200) => ({
   data,
   status,
   statusText: 'OK',

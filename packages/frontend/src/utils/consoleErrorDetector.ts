@@ -30,7 +30,7 @@ class ConsoleErrorDetector {
   
   private interceptConsole() {
     // Intercept console.error
-    console.error = (...args: any[]) => {
+    console.error = (...args: unknown[]) => {
       const message = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');
@@ -53,7 +53,7 @@ class ConsoleErrorDetector {
     };
     
     // Intercept console.warn
-    console.warn = (...args: any[]) => {
+    console.warn = (...args: unknown[]) => {
       const message = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');

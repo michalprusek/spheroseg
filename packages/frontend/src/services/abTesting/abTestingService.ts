@@ -220,7 +220,7 @@ export class ABTestingService {
   /**
    * Get feature flag value
    */
-  public getFeatureFlag(key: string, defaultValue: any = false): any {
+  public getFeatureFlag(key: string, defaultValue: unknown = false): any {
     // Check all running experiments for this feature
     for (const [experimentId, experiment] of this.experiments) {
       if (experiment.status !== 'running') continue;

@@ -23,7 +23,7 @@ export function performanceMonitoringMiddleware() {
 
     // Track response
     const originalEnd = res.end;
-    res.end = function (this: Response, ...args: any[]) {
+    res.end = function (this: Response, ...args: unknown[]) {
       // Calculate duration
       const duration = Date.now() - startTime;
 

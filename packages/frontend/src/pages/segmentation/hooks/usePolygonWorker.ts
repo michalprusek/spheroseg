@@ -26,8 +26,8 @@ export const usePolygonWorker = () => {
     Map<
       string,
       {
-        resolve: (value: any) => void;
-        reject: (reason?: any) => void;
+        resolve: (value: unknown) => void;
+        reject: (reason?: unknown) => void;
       }
     >
   >(new Map());
@@ -107,7 +107,7 @@ export const usePolygonWorker = () => {
   }, []);
 
   // Function to send a request to the worker
-  const sendRequest = useCallback(<T>(operation: WorkerOperation, data: any): Promise<T> => {
+  const sendRequest = useCallback(<T>(operation: WorkerOperation, data: unknown): Promise<T> => {
     return new Promise((resolve, reject) => {
       // Check if the worker is ready
       if (!workerRef.current) {

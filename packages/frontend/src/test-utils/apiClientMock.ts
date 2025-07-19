@@ -243,7 +243,7 @@ export const createMockBlob = (data: string | object, type = 'application/json')
 /**
  * Setup mock for file upload responses
  */
-export const mockFileUpload = (api: any, response: any) => {
+export const mockFileUpload = (api: unknown, response: unknown) => {
   // Mock the form data append
   const formDataAppendMock = vi.fn();
 

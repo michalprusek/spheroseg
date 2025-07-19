@@ -50,7 +50,7 @@ export class WebSocketBatcher {
     // const originalIn = this.io.in.bind(this.io); // TODO: Implement .in() interception if needed
 
     // Override io.emit
-    this.io.emit = (event: string, ...args: any[]): boolean => {
+    this.io.emit = (event: string, ...args: unknown[]): boolean => {
       if (this.shouldBatch(event)) {
         this.addToBatch('global', event, args[0]);
         return true;
@@ -63,7 +63,7 @@ export class WebSocketBatcher {
       const chainableObj = originalTo(room);
       const originalRoomEmit = chainableObj.emit.bind(chainableObj);
 
-      chainableObj.emit = (event: string, ...args: any[]): boolean => {
+      chainableObj.emit = (event: string, ...args: unknown[]): boolean => {
         if (this.shouldBatch(event)) {
           this.addToBatch(room, event, args[0], room);
           return true;
@@ -94,7 +94,7 @@ export class WebSocketBatcher {
   }
 
   // Add message to batch
-  private addToBatch(key: string, event: string, data: any, room?: string, userId?: string): void {
+  private addToBatch(key: string, event: string, data: unknown, room?: string, userId?: string): void {
     const message: BatchedMessage = {
       event,
       data,
@@ -193,7 +193,7 @@ export class WebSocketBatcher {
   }
 
   // Compress payload if it's large enough
-  private compressPayload(data: any): any {
+  private compressPayload(data: unknown): any {
     const jsonStr = JSON.stringify(data);
 
     if (jsonStr.length < this.config.compressionThreshold) {
@@ -235,7 +235,7 @@ export class WebSocketBatcher {
   }
 
   // Force send a specific message immediately
-  public sendImmediate(event: string, data: any, target?: string | string[]): void {
+  public sendImmediate(event: string, data: unknown, target?: string | string[]): void {
     if (!target) {
       this.io.emit(event, data);
     } else if (Array.isArray(target)) {
@@ -303,10 +303,10 @@ export class WebSocketBatcher {
 
 // Helper class for handling batched messages on the client side
 export class BatchedMessageHandler {
-  private handlers: Map<string, ((data: any) => void)[]> = new Map();
+  private handlers: Map<string, ((data: unknown) => void)[]> = new Map();
 
   // Register handler for specific event
-  public on(event: string, handler: (data: any) => void): void {
+  public on(event: string, handler: (data: unknown) => void): void {
     if (!this.handlers.has(event)) {
       this.handlers.set(event, []);
     }
@@ -314,7 +314,7 @@ export class BatchedMessageHandler {
   }
 
   // Process batched update
-  public processBatch(batch: any): void {
+  public processBatch(batch: unknown): void {
     // Handle compressed payload
     if (batch.compressed) {
       // Decompress in production

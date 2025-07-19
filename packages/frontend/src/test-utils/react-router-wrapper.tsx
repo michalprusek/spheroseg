@@ -30,7 +30,7 @@ export const TestRouterWrapper: React.FC<{ children: React.ReactNode }> = ({ chi
 /**
  * Create a memory router with future flags for testing
  */
-export const createTestRouter = (routes: any[], initialEntries = ['/', '/about']) => {
+export const createTestRouter = (routes: unknown[], initialEntries = ['/', '/about']) => {
   return createMemoryRouter(routes, { 
     initialEntries,
     future: {

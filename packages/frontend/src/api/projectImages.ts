@@ -156,7 +156,7 @@ export const loadImagesFromStorage = (projectId: string): ProjectImage[] => {
 
       // Načteme obrázky z localStorage
       const images = parsedImages
-        .map((img: any) => {
+        .map((img: unknown) => {
           // Basic validation and transformation
           if (!img || typeof img.id !== 'string') {
             console.warn('Skipping invalid image data from localStorage:', img);

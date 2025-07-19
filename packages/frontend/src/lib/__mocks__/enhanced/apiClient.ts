@@ -13,7 +13,7 @@ type MockEndpoint = {
 
 type MockConfig = {
   endpoints: MockEndpoint[];
-  fallbackHandler?: (url: string, method: HttpMethod, data?: any) => Promise<any>;
+  fallbackHandler?: (url: string, method: HttpMethod, data?: unknown) => Promise<any>;
   defaultErrorStatus?: number;
   defaultDelay?: number;
   throwNetworkErrorProbability?: number;
@@ -87,7 +87,7 @@ const maybeThrowNetworkError = (): void => {
 };
 
 // Handler function for all HTTP methods
-const handleRequest = async (url: string, method: HttpMethod, data?: any): Promise<AxiosResponse> => {
+const handleRequest = async(url: string, method: HttpMethod, data?: unknown): Promise<AxiosResponse> => {
   console.log(`[MockApiClient] ${method.toUpperCase()} ${url}`, data);
 
   // Maybe throw random network error
@@ -124,9 +124,9 @@ const handleRequest = async (url: string, method: HttpMethod, data?: any): Promi
 
 // Implement mock functions for all HTTP methods
 mockGet.mockImplementation((url: string) => handleRequest(url, 'get'));
-mockPost.mockImplementation((url: string, data: any) => handleRequest(url, 'post', data));
-mockPut.mockImplementation((url: string, data: any) => handleRequest(url, 'put', data));
-mockPatch.mockImplementation((url: string, data: any) => handleRequest(url, 'patch', data));
+mockPost.mockImplementation((url: string, data: unknown) => handleRequest(url, 'post', data));
+mockPut.mockImplementation((url: string, data: unknown) => handleRequest(url, 'put', data));
+mockPatch.mockImplementation((url: string, data: unknown) => handleRequest(url, 'patch', data));
 mockDelete.mockImplementation((url: string) => handleRequest(url, 'delete'));
 
 // Configuration functions

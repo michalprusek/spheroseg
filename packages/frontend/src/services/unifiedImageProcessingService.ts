@@ -470,7 +470,7 @@ class UnifiedImageProcessingService {
     source: string | File | Blob,
     operations: Array<{
       type: 'resize' | 'crop' | 'rotate' | 'format' | 'thumbnail';
-      options: any;
+      options: unknown;
     }>,
   ): Promise<ProcessingResult> {
     try {

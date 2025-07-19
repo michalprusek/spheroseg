@@ -20,7 +20,7 @@ export interface UseWebSocketOptions {
   autoConnect?: boolean;
   reconnect?: boolean;
   room?: string | string[];
-  events?: Record<string, (...args: any[]) => void>;
+  events?: Record<string, (...args: unknown[]) => void>;
   onConnect?: () => void;
   onDisconnect?: (reason: string) => void;
   onError?: (error: Error) => void;
@@ -36,16 +36,16 @@ export interface UseWebSocketReturn {
   // Actions
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  emit: (event: string, ...args: any[]) => void;
-  emitWithAck: (event: string, ...args: any[]) => Promise<any>;
+  emit: (event: string, ...args: unknown[]) => void;
+  emitWithAck: (event: string, ...args: unknown[]) => Promise<any>;
 
   // Room management
   joinRoom: (room: string) => Promise<void>;
   leaveRoom: (room: string) => Promise<void>;
 
   // Event management
-  on: (event: string, handler: (...args: any[]) => void) => () => void;
-  off: (event: string, handler?: (...args: any[]) => void) => void;
+  on: (event: string, handler: (...args: unknown[]) => void) => () => void;
+  off: (event: string, handler?: (...args: unknown[]) => void) => void;
 }
 
 // ===========================
@@ -97,12 +97,12 @@ export function useUnifiedWebSocket(options: UseWebSocketOptions = {}): UseWebSo
   }, []);
 
   // Emit event
-  const emit = useCallback((event: string, ...args: any[]) => {
+  const emit = useCallback((event: string, ...args: unknown[]) => {
     webSocketService.emit(event, ...args);
   }, []);
 
   // Emit with acknowledgment
-  const emitWithAck = useCallback(async (event: string, ...args: any[]) => {
+  const emitWithAck = useCallback(async (event: string, ...args: unknown[]) => {
     return webSocketService.emitWithAck(event, ...args);
   }, []);
 
@@ -128,7 +128,7 @@ export function useUnifiedWebSocket(options: UseWebSocketOptions = {}): UseWebSo
   }, []);
 
   // Register event handler
-  const on = useCallback((event: string, handler: (...args: any[]) => void) => {
+  const on = useCallback((event: string, handler: (...args: unknown[]) => void) => {
     const id = webSocketService.on(event, handler);
 
     // Return cleanup function
@@ -138,7 +138,7 @@ export function useUnifiedWebSocket(options: UseWebSocketOptions = {}): UseWebSo
   }, []);
 
   // Remove event handler
-  const off = useCallback((event: string, handler?: (...args: any[]) => void) => {
+  const off = useCallback((event: string, handler?: (...args: unknown[]) => void) => {
     webSocketService.off(event, handler);
   }, []);
 
@@ -255,7 +255,7 @@ export function useUnifiedWebSocket(options: UseWebSocketOptions = {}): UseWebSo
 export function useProjectWebSocket(projectId: string | undefined) {
   const [updates, setUpdates] = useState<any[]>([]);
 
-  const handleUpdate = useCallback((update: any) => {
+  const handleUpdate = useCallback((update: unknown) => {
     setUpdates((prev) => [...prev, update]);
   }, []);
 
@@ -330,7 +330,7 @@ export function useSegmentationQueueWebSocket() {
 export function useNotificationWebSocket(userId: string | undefined) {
   const [notifications, setNotifications] = useState<any[]>([]);
 
-  const handleNotification = useCallback((notification: any) => {
+  const handleNotification = useCallback((notification: unknown) => {
     setNotifications((prev) => [notification, ...prev]);
   }, []);
 

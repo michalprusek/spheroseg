@@ -96,7 +96,7 @@ export class SecureStorage {
     return decoder.decode(decrypted);
   }
 
-  async setItem(key: string, value: any): Promise<void> {
+  async setItem(key: string, value: unknown): Promise<void> {
     if (!this.db) {
       await this.initialize();
     }

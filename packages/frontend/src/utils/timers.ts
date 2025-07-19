@@ -6,7 +6,7 @@
 /**
  * Wrapper for setTimeout that works in jsdom
  */
-export const setTimeoutSafe = (callback: (...args: any[]) => void, delay?: number): NodeJS.Timeout => {
+export const setTimeoutSafe = (callback: (...args: unknown[]) => void, delay?: number): NodeJS.Timeout => {
   if (typeof window !== 'undefined' && window.setTimeout) {
     return window.setTimeout(callback, delay) as unknown as NodeJS.Timeout;
   }
@@ -29,7 +29,7 @@ export const clearTimeoutSafe = (timeoutId: NodeJS.Timeout | null | undefined): 
 /**
  * Wrapper for setInterval that works in jsdom
  */
-export const setIntervalSafe = (callback: (...args: any[]) => void, delay?: number): NodeJS.Timeout => {
+export const setIntervalSafe = (callback: (...args: unknown[]) => void, delay?: number): NodeJS.Timeout => {
   if (typeof window !== 'undefined' && window.setInterval) {
     return window.setInterval(callback, delay) as unknown as NodeJS.Timeout;
   }

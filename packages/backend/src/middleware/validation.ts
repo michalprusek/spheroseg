@@ -112,7 +112,7 @@ export const validators = {
       .custom((items, { req }) => {
         if (itemValidator) {
           // Validate each item in the array
-          items.forEach((item: any, index: number) => {
+          items.forEach((item: unknown, index: number) => {
             req.body[`${field}[${index}]`] = item;
           });
         }

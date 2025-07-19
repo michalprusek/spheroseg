@@ -351,7 +351,7 @@ export function sanitizeRequest() {
 /**
  * Recursively sanitize object properties
  */
-function sanitizeObject(obj: any): any {
+function sanitizeObject(obj: unknown): any {
   if (!obj || typeof obj !== 'object') {
     return obj;
   }

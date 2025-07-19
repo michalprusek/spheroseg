@@ -10,7 +10,7 @@ export interface EmailValidationResult {
 }
 
 // Custom debounce hook
-const useDebounce = <T extends (...args: any[]) => any>(callback: T, delay: number): T => {
+const useDebounce = <T extends (...args: unknown[]) => any>(callback: T, delay: number): T => {
   const debounceRef = useRef<NodeJS.Timeout>();
 
   const debouncedCallback = useCallback(

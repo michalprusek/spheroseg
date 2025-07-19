@@ -16,7 +16,7 @@ export function wrapPoolClient(client: PoolClient): PoolClient {
   const originalQuery = client.query.bind(client);
 
   // Create a new query function that tracks performance
-  const wrappedQuery = async function (...args: any[]): Promise<any> {
+  const wrappedQuery = async function (...args: unknown[]): Promise<any> {
     const startTime = Date.now();
     let queryText = 'Unknown query';
 
@@ -87,7 +87,7 @@ export function wrapPool(pool: Pool): Pool {
   // Also wrap the pool's direct query method
   const originalQuery = pool.query.bind(pool);
 
-  pool.query = async function (...args: any[]): Promise<any> {
+  pool.query = async function (...args: unknown[]): Promise<any> {
     const startTime = Date.now();
     let queryText = 'Unknown query';
 
@@ -128,7 +128,7 @@ export function wrapPool(pool: Pool): Pool {
 /**
  * Create a performance-tracked pool
  */
-export function createTrackedPool(poolConfig: any): Pool {
+export function createTrackedPool(poolConfig: unknown): Pool {
   const pool = new Pool(poolConfig);
   return wrapPool(pool);
 }

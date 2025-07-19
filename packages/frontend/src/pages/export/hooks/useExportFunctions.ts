@@ -21,7 +21,7 @@ function s2ab(s: string): ArrayBuffer {
 }
 
 // Helper function to generate binary Excel data
-function generateXlsxBinary(workbook: any): string {
+function generateXlsxBinary(workbook: unknown): string {
   try {
     // Použijeme writeFile s dočasným přesměrováním výstupu
     let output = '';
@@ -212,7 +212,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
 
         // Handle different point formats
         if (Array.isArray(polygon.points)) {
-          normalizedPolygon.points = polygon.points.map((point: any, pointIndex: number) => {
+          normalizedPolygon.points = polygon.points.map((point: unknown, pointIndex: number) => {
             // Handle point as array [x, y]
             if (Array.isArray(point) && point.length >= 2) {
               return { x: point[0], y: point[1] };
@@ -243,7 +243,7 @@ export const useExportFunctions = (images: ProjectImage[], projectTitle: string)
         }
         // Handle other formats
         else if (polygon.vertices && Array.isArray(polygon.vertices)) {
-          normalizedPolygon.points = polygon.vertices.map((vertex: any, pointIndex: number) => {
+          normalizedPolygon.points = polygon.vertices.map((vertex: unknown, pointIndex: number) => {
             if (typeof vertex === 'object' && vertex !== null) {
               return {
                 x: typeof vertex.x === 'number' ? vertex.x : 0,

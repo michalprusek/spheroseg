@@ -108,7 +108,7 @@ export function gracefulDisconnect() {
 
 // Example 9: React Hook for batched WebSocket
 export function useWebSocketBatch() {
-  const sendBatchedMessage = async (event: string, data: any) => {
+  const sendBatchedMessage = async (event: string, data: unknown) => {
     if (!unifiedWebSocketService.isConnected()) {
       throw new Error('WebSocket not connected');
     }
@@ -116,7 +116,7 @@ export function useWebSocketBatch() {
     return unifiedWebSocketService.sendBatched(event, data);
   };
 
-  const sendImmediateMessage = (event: string, data: any) => {
+  const sendImmediateMessage = (event: string, data: unknown) => {
     if (!unifiedWebSocketService.isConnected()) {
       console.error('WebSocket not connected');
       return;

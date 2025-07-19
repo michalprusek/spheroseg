@@ -127,7 +127,7 @@ const ProjectDetail = () => {
       // Okamžitě načteme data projektu při otevření stránky
       refreshData();
 
-      const handleSegmentationUpdate = (data: any) => {
+      const handleSegmentationUpdate = (data: unknown) => {
         if (!isComponentMounted) return;
 
         logger.debug('Received segmentation update:', data);
@@ -175,7 +175,7 @@ const ProjectDetail = () => {
       };
 
       // Handle image created event - for real-time gallery updates
-      const handleImageCreated = (data: any) => {
+      const handleImageCreated = (data: unknown) => {
         if (!isComponentMounted) return;
 
         logger.info('Received image:created event:', data);
@@ -189,7 +189,7 @@ const ProjectDetail = () => {
       };
 
       // Handle image deleted event - for real-time gallery updates
-      const handleImageDeleted = (data: any) => {
+      const handleImageDeleted = (data: unknown) => {
         if (!isComponentMounted) return;
 
         logger.info('Received image:deleted event:', data);

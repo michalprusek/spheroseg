@@ -116,7 +116,7 @@ class StuckImageCleanupService {
   /**
    * Fix a single stuck image
    */
-  private async fixStuckImage(client: any, image: StuckImage): Promise<void> {
+  private async fixStuckImage(client: unknown, image: StuckImage): Promise<void> {
     try {
       logger.info(`Fixing stuck image: ${image.name} (${image.id})`);
 

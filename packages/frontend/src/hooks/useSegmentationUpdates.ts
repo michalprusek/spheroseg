@@ -117,7 +117,7 @@ export const useSegmentationUpdates = (options: UseSegmentationUpdatesOptions = 
           imageId &&
           (queueData.pendingTasks.includes(imageId) ||
             queueData.runningTasks.includes(imageId) ||
-            queueData.processingImages?.some((img: any) => img.id === imageId)) // Added any for processingImages
+            queueData.processingImages?.some((img: unknown) => img.id === imageId)) // Added any for processingImages
         ) {
           const statusUpdate: SegmentationUpdate = {
             imageId,

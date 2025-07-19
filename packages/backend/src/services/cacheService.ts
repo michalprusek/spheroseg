@@ -106,7 +106,7 @@ class CacheService {
   /**
    * Set value in cache with TTL
    */
-  async set(key: string, value: any, ttl?: number): Promise<boolean> {
+  async set(key: string, value: unknown, ttl?: number): Promise<boolean> {
     if (!this.isConnected || !this.redis) {
       return false;
     }

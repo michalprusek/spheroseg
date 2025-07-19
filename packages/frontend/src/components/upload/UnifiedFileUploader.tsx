@@ -47,7 +47,7 @@ export interface UnifiedFileUploaderProps extends UseFileUploadOptions {
     files: any[];
   }) => React.ReactNode;
 
-  renderFileItem?: (file: any, actions: any) => React.ReactNode;
+  renderFileItem?: (file: unknown, actions: unknown) => React.ReactNode;
 }
 
 // ===========================
@@ -142,7 +142,7 @@ export function UnifiedFileUploader({
   );
 
   // Default file item renderer
-  const defaultFileItemRenderer = (file: any) => (
+  const defaultFileItemRenderer = (file: unknown) => (
     <div
       key={file.id}
       className={cn(
