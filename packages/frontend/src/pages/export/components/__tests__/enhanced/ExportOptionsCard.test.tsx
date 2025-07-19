@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ExportOptionsCard, { AnnotationFormat, MetricsFormat } from '../../ExportOptionsCard';
+import { createMockTranslation, TestFactory } from '@/test-utils/enhancedTestUtils';
 import '@testing-library/jest-dom';
 
 // Mock the Lucide React icons

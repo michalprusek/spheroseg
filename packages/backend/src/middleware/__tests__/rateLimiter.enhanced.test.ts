@@ -4,7 +4,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import Redis from 'ioredis';
-import { DynamicRateLimiter, UserCategory, RATE_LIMITS } from '../rateLimiter.enhanced';
+import { DynamicRateLimiter, UserCategory } from '../rateLimiter.enhanced';
 import { ApiError } from '../../utils/ApiError.enhanced';
 
 // Mock Redis
@@ -14,8 +14,11 @@ describe('DynamicRateLimiter', () => {
   let rateLimiter: DynamicRateLimiter;
   let mockRedis: jest.Mocked<Redis>;
   let mockReq: Partial<Request>;
-  let mockRes: Partial<Response>;
-  let mockNext: NextFunction;
+  let mockRes: Partial<Response> & { 
+    setHeader: jest.MockedFunction<(name: string, value: string | number | readonly string[]) => Response>;
+    on: jest.MockedFunction<(event: string | symbol, callback: (...args: any[]) => void) => Response>;
+  };
+  let mockNext: jest.MockedFunction<NextFunction>;
 
   beforeEach(() => {
     // Create mock Redis instance
@@ -42,16 +45,18 @@ describe('DynamicRateLimiter', () => {
     // Setup request mock
     mockReq = {
       ip: '127.0.0.1',
-      path: '/api/test',
       user: { id: 'user123' },
-    };
+    } as Partial<Request> & { path?: string };
+    
+    // Set path separately to avoid readonly issues
+    (mockReq as any).path = '/api/test';
 
     // Setup response mock
     mockRes = {
-      setHeader: jest.fn(),
-      on: jest.fn(),
+      setHeader: jest.fn().mockReturnThis(),
+      on: jest.fn().mockReturnThis(),
       statusCode: 200,
-    };
+    } as any;
 
     // Setup next mock
     mockNext = jest.fn();
@@ -88,12 +93,12 @@ describe('DynamicRateLimiter', () => {
       await rateLimiter.middleware(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(ApiError));
-      const error = mockNext.mock.calls[0][0];
+      const error = (mockNext as any).mock.calls[0][0];
       expect(error.code).toBe('SYS_9003');
     });
 
     it('should apply endpoint-specific multipliers', async () => {
-      mockReq.path = '/api/auth/login';
+      (mockReq as any).path = '/api/auth/login';
 
       await rateLimiter.middleware(mockReq as Request, mockRes as Response, mockNext);
 
@@ -261,7 +266,7 @@ describe('DynamicRateLimiter', () => {
     });
 
     it('should handle multiple failed auth attempts', async () => {
-      mockReq.path = '/api/auth/login';
+      (mockReq as any).path = '/api/auth/login';
       
       // Mock high failed auth attempts
       mockRedis.hgetall = jest.fn()
@@ -272,8 +277,8 @@ describe('DynamicRateLimiter', () => {
 
       // Very restrictive limit due to failed auth attempts
       expect(mockRes.setHeader).toHaveBeenCalledWith('X-RateLimit-Limit', expect.any(String));
-      const limit = parseInt(mockRes.setHeader.mock.calls.find(
-        call => call[0] === 'X-RateLimit-Limit'
+      const limit = parseInt((mockRes.setHeader as any).mock.calls.find(
+        (call: any) => call[0] === 'X-RateLimit-Limit'
       )?.[1] as string);
       expect(limit).toBeLessThan(10);
     });

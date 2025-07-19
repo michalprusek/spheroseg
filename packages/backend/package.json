@@ -22,7 +22,8 @@
     "audit": "node scripts/dependency-audit.js",
     "audit:fix": "npm audit fix",
     "deps:check": "npm outdated",
-    "deps:update": "node scripts/update-dependencies.js"
+    "deps:update": "node scripts/update-dependencies.js",
+    "rotate-secrets": "ts-node -r tsconfig-paths/register ../../scripts/rotate-secrets.ts"
   },
   "dependencies": {
     "@spheroseg/shared": "file:../shared",
@@ -31,6 +32,7 @@
     "axios": "^1.9.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
+    "commander": "^12.0.0",
     "compression": "^1.8.0",
     "connect-redis": "^7.1.1",
     "cookie-parser": "^1.4.7",

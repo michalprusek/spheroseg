@@ -296,14 +296,72 @@ vi.mock('lucide-react', () => {
   };
 });
 
-// Mock react-i18next
+// Mock react-i18next with actual translation mappings
+const mockTranslations: Record<string, string> = {
+  // Common translations
+  'Export Options': 'Export Options',
+  'Include Project Metadata': 'Include Project Metadata',
+  'Include Segmentation': 'Include Segmentation',
+  'Include Object Metrics': 'Include Object Metrics',
+  'Include Original Images': 'Include Original Images',
+  'Select Export Format': 'Select Export Format',
+  'Select Metrics Format': 'Select Metrics Format',
+  'Export Metrics Only': 'Export Metrics Only',
+  
+  // Export specific translations
+  'export.metricsRequireSegmentation': 'Metrics require segmentation to be completed',
+  'export.selectImagesForExport': 'Select images for export',
+  'export.formats.COCO': 'COCO JSON',
+  'export.formats.YOLO': 'YOLO TXT',
+  'export.formats.MASK': 'Mask (TIFF)',
+  'export.formats.POLYGONS': 'Polygons (JSON)',
+  'export.metricsFormats.EXCEL': 'Excel (.xlsx)',
+  'export.metricsFormats.CSV': 'CSV (.csv)',
+  
+  // Common UI elements
+  'common.loading': 'Loading...',
+  'common.error': 'Error',
+  'common.success': 'Success',
+  'common.cancel': 'Cancel',
+  'common.save': 'Save',
+  'common.delete': 'Delete',
+  'common.edit': 'Edit',
+  'common.close': 'Close',
+  
+  // Auth translations
+  'auth.login': 'Login',
+  'auth.logout': 'Logout',
+  'auth.register': 'Register',
+  'auth.email': 'Email',
+  'auth.password': 'Password',
+  
+  // Project translations
+  'project.name': 'Project Name',
+  'project.description': 'Description',
+  'project.images': 'Images',
+  'project.create': 'Create Project',
+  'project.delete': 'Delete Project',
+  
+  // Navigation
+  'nav.home': 'Home',
+  'nav.projects': 'Projects',
+  'nav.profile': 'Profile',
+  'nav.settings': 'Settings',
+};
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, params?: any) => {
-      if (params) {
-        return `${key} ${JSON.stringify(params)}`;
+      // Return actual translation if available, otherwise return the key
+      const translation = mockTranslations[key] || key;
+      
+      if (params && typeof translation === 'string') {
+        // Simple parameter replacement for testing
+        return translation.replace(/\{\{(\w+)\}\}/g, (match, param) => {
+          return params[param] || match;
+        });
       }
-      return key;
+      return translation;
     },
     i18n: {
       changeLanguage: vi.fn().mockResolvedValue(undefined),
@@ -329,7 +387,17 @@ vi.mock('i18next', () => {
     use: vi.fn(),
     init: vi.fn().mockResolvedValue(undefined),
     changeLanguage: vi.fn().mockResolvedValue(undefined),
-    t: vi.fn((key) => key),
+    t: vi.fn((key: string, params?: any) => {
+      // Use the same translation logic
+      const translation = mockTranslations[key] || key;
+      
+      if (params && typeof translation === 'string') {
+        return translation.replace(/\{\{(\w+)\}\}/g, (match, param) => {
+          return params[param] || match;
+        });
+      }
+      return translation;
+    }),
     language: 'en',
     on: vi.fn(),
     off: vi.fn(),
@@ -644,7 +712,15 @@ global.Worker = MockWorker as unknown;
 const mockLanguageContext = React.createContext({
   language: 'en',
   setLanguage: vi.fn(),
-  t: vi.fn((key) => key),
+  t: vi.fn((key: string, params?: any) => {
+    const translation = mockTranslations[key] || key;
+    if (params && typeof translation === 'string') {
+      return translation.replace(/\{\{(\w+)\}\}/g, (match, param) => {
+        return params[param] || match;
+      });
+    }
+    return translation;
+  }),
   availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
 });
 
@@ -664,7 +740,15 @@ vi.mock('@/contexts/LanguageContext', () => {
           value: {
             language: 'en',
             setLanguage: vi.fn(),
-            t: vi.fn((key) => key),
+            t: vi.fn((key: string, params?: any) => {
+              const translation = mockTranslations[key] || key;
+              if (params && typeof translation === 'string') {
+                return translation.replace(/\{\{(\w+)\}\}/g, (match, param) => {
+                  return params[param] || match;
+                });
+              }
+              return translation;
+            }),
             availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
           },
         },
@@ -704,20 +788,29 @@ vi.mock('@/contexts/ThemeContext', () => {
 });
 
 // Ensure global timer functions are available for both global and window
+// This fixes the "clearInterval is not defined" error in jsdom
 if (typeof global !== 'undefined') {
   // Use the actual timer functions from Node.js
   global.setTimeout = global.setTimeout || setTimeout;
   global.clearTimeout = global.clearTimeout || clearTimeout;
   global.setInterval = global.setInterval || setInterval;
   global.clearInterval = global.clearInterval || clearInterval;
+  
+  // Also make them available as window properties for jsdom compatibility
+  if (typeof globalThis !== 'undefined') {
+    globalThis.setTimeout = global.setTimeout;
+    globalThis.clearTimeout = global.clearTimeout;
+    globalThis.setInterval = global.setInterval;
+    globalThis.clearInterval = global.clearInterval;
+  }
 }
 
-// Also ensure they're available on window for jsdom
+// Ensure they're available on window for jsdom
 if (typeof window !== 'undefined') {
-  window.setTimeout = window.setTimeout || setTimeout;
-  window.clearTimeout = window.clearTimeout || clearTimeout;
-  window.setInterval = window.setInterval || setInterval;
-  window.clearInterval = window.clearInterval || clearInterval;
+  window.setTimeout = window.setTimeout || global.setTimeout || setTimeout;
+  window.clearTimeout = window.clearTimeout || global.clearTimeout || clearTimeout;
+  window.setInterval = window.setInterval || global.setInterval || setInterval;
+  window.clearInterval = window.clearInterval || global.clearInterval || clearInterval;
 }
 
 // Mock window.indexedDB

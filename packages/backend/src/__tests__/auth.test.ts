@@ -108,9 +108,7 @@ describe('Authentication Endpoints', () => {
       };
 
       // Mock successful user query
-      mockQuery.mockResolvedValueOnce({
-        rows: [mockUser],
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser]));
 
       // Mock bcrypt.compare to return true (password matches)
       mockCompare.mockResolvedValueOnce(true);
@@ -139,9 +137,7 @@ describe('Authentication Endpoints', () => {
 
     it('should return 409 if email already exists', async () => {
       // Mock query to check if email exists - returns user found
-      mockQuery.mockResolvedValueOnce({
-        rows: [{ email: 'existing@example.com' }],
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([{ email: 'existing@example.com' }]));
 
       const response = await request(app).post('/api/auth/register').send({
         email: 'existing@example.com',
@@ -158,15 +154,15 @@ describe('Authentication Endpoints', () => {
       // Mock queries for registration
       mockQuery
         // First query: check if email exists (return empty result)
-        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce(createMockQueryResult([]))
         // Second query: start transaction
-        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce(createMockQueryResult([]))
         // Third query: insert user (return user ID)
-        .mockResolvedValueOnce({ rows: [{ id: '123' }] })
+        .mockResolvedValueOnce(createMockQueryResult([{ id: '123' }]))
         // Fourth query: insert profile
-        .mockResolvedValueOnce({ rows: [{ user_id: '123' }] })
+        .mockResolvedValueOnce(createMockQueryResult([{ user_id: '123' }]))
         // Fifth query: commit transaction
-        .mockResolvedValueOnce({});
+        .mockResolvedValueOnce(createMockQueryResult([]));
 
       // Mock bcrypt.hash for password
       mockHash.mockResolvedValueOnce('hashedPassword');
@@ -207,15 +203,13 @@ describe('Authentication Endpoints', () => {
       const token = jwt.sign(user, config.auth.jwtSecret, { expiresIn: '1h' });
 
       // Mock user query
-      mockQuery.mockResolvedValueOnce({
-        rows: [
-          {
-            id: '123',
-            email: 'test@example.com',
-            name: 'Test User',
-          },
-        ],
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([
+        {
+          id: '123',
+          email: 'test@example.com',
+          name: 'Test User',
+        },
+      ]));
 
       const response = await request(app)
         .get('/api/auth/me')
@@ -243,9 +237,7 @@ describe('Authentication Middleware', () => {
     const token = jwt.sign(user, config.auth.jwtSecret, { expiresIn: '1h' });
 
     // Mock project query
-    mockQuery.mockResolvedValueOnce({
-      rows: [],
-    });
+    mockQuery.mockResolvedValueOnce(createMockQueryResult([]));
 
     const response = await request(app)
       .get('/api/projects')
