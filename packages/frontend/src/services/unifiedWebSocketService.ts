@@ -702,7 +702,7 @@ class UnifiedWebSocketService {
   /**
    * Add batch event listener
    */
-  public onBatchEvent(event: string, handler: Function): void {
+  public onBatchEvent(event: string, handler: (...args: any[]) => void): void {
     if (this.batchingEnabled) {
       websocketBatchHandler.on(event, handler);
     } else {
@@ -713,7 +713,7 @@ class UnifiedWebSocketService {
   /**
    * Remove batch event listener
    */
-  public offBatchEvent(event: string, handler?: Function): void {
+  public offBatchEvent(event: string, handler?: (...args: any[]) => void): void {
     if (this.batchingEnabled) {
       websocketBatchHandler.off(event, handler);
     } else {

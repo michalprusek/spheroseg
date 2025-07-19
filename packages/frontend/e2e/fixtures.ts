@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, type Page } from '@playwright/test';
 
 // Extend basic test fixture
 export const test = base.extend({
@@ -65,33 +65,33 @@ export const testData = {
 } as const;
 
 // Helper functions
-export async function navigateAndWaitForLoad(page: any, url: string) {
+export async function navigateAndWaitForLoad(page: Page, url: string) {
   await page.goto(url);
   await page.waitForLoadState('networkidle');
 }
 
-export async function checkPageTitle(page: any, expectedTitle: string) {
+export async function checkPageTitle(page: Page, expectedTitle: string) {
   await expect(page).toHaveTitle(expectedTitle);
 }
 
-export async function checkHeading(page: any, level: 'h1' | 'h2' | 'h3', text: string) {
+export async function checkHeading(page: Page, level: 'h1' | 'h2' | 'h3', text: string) {
   await expect(page.locator(selectors.headings[level])).toContainText(text);
 }
 
-export async function checkNavigationLinks(page: any) {
+export async function checkNavigationLinks(page: Page) {
   for (const [name, selector] of Object.entries(selectors.navigation)) {
     await expect(page.locator(selector).first()).toBeVisible();
   }
 }
 
-export async function checkFooterLinks(page: any) {
+export async function checkFooterLinks(page: Page) {
   await expect(page.locator('footer')).toBeVisible();
   await expect(page.locator('footer').getByText('Documentation')).toBeVisible();
   await expect(page.locator('footer').getByText('Terms of Service')).toBeVisible();
   await expect(page.locator('footer').getByText('Privacy Policy')).toBeVisible();
 }
 
-export async function checkNoTranslationKeys(page: any) {
+export async function checkNoTranslationKeys(page: Page) {
   // Check that no translation keys are visible (e.g., "about.title")
   const pageContent = await page.content();
   const translationKeyPattern = /\b[a-z]+\.[a-z]+(?:\.[a-z]+)*\b/gi;

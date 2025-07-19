@@ -26,8 +26,8 @@ export class WebSocketBatchHandler {
   private messageIdCounter = 0;
   private config: BatchConfig;
   private capabilities: BatchCapabilities | null = null;
-  private pendingAcks: Map<string, { resolve: Function; reject: Function; timeout: NodeJS.Timeout }> = new Map();
-  private eventHandlers: Map<string, Set<Function>> = new Map();
+  private pendingAcks: Map<string, { resolve: (value: any) => void; reject: (reason?: any) => void; timeout: NodeJS.Timeout }> = new Map();
+  private eventHandlers: Map<string, Set<(...args: any[]) => void>> = new Map();
 
   constructor(config?: Partial<BatchConfig>) {
     this.config = {
@@ -239,7 +239,7 @@ export class WebSocketBatchHandler {
   /**
    * Register an event handler
    */
-  on(event: string, handler: Function): void {
+  on(event: string, handler: (...args: any[]) => void): void {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, new Set());
     }
@@ -249,7 +249,7 @@ export class WebSocketBatchHandler {
   /**
    * Unregister an event handler
    */
-  off(event: string, handler?: Function): void {
+  off(event: string, handler?: (...args: any[]) => void): void {
     if (!this.eventHandlers.has(event)) return;
 
     if (handler) {

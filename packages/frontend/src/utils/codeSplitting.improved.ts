@@ -45,7 +45,7 @@ class ChunkLogger {
   private isDevelopment = import.meta.env.DEV;
   private metrics: ChunkLoadMetrics[] = [];
 
-  log(level: 'debug' | 'info' | 'warn' | 'error', message: string, data?: any): void {
+  log(level: 'debug' | 'info' | 'warn' | 'error', message: string, data?: unknown): void {
     if (this.isDevelopment) {
       console[level](`[CodeSplitting] ${message}`, data);
     }
@@ -77,14 +77,14 @@ class ChunkLogger {
 }
 
 // Initialize caches and logger
-const componentCache = new LRUCache<string, LazyExoticComponent<ComponentType<any>>>(50);
+const componentCache = new LRUCache<string, LazyExoticComponent<ComponentType<unknown>>>(50);
 const loadingPromises = new PromiseCache<string>(30);
 const logger = new ChunkLogger();
 
 /**
  * Generate a stable cache key for components
  */
-function generateCacheKey(importFn: () => Promise<any>, options: CodeSplitOptions): string {
+function generateCacheKey(importFn: () => Promise<{ default: ComponentType<unknown> }>, options: CodeSplitOptions): string {
   if (options.cacheKey) {
     return options.cacheKey;
   }
@@ -120,7 +120,7 @@ function hashCode(str: string): number {
 /**
  * Enhanced lazy loading with retry logic, caching, and monitoring
  */
-export function lazyWithRetry<T extends ComponentType<any>>(
+export function lazyWithRetry<T extends ComponentType<unknown>>(
   importFn: () => Promise<{ default: T }>,
   options: CodeSplitOptions = {}
 ): LazyExoticComponent<T> {
@@ -132,7 +132,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
   const cacheKey = generateCacheKey(importFn, options);
 
   // Return cached component if available
-  const cached = componentCache.get(cacheKey);
+  const cached = componentCache.get(cacheKey) as LazyExoticComponent<T> | undefined;
   if (cached) {
     logger.log('debug', 'Returning cached component', { cacheKey });
     return cached as LazyExoticComponent<T>;
@@ -203,7 +203,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
  * Prefetch a component
  */
 export async function prefetchComponent(
-  importFn: () => Promise<any>,
+  importFn: () => Promise<{ default: ComponentType<unknown> }>,
   options: CodeSplitOptions = {}
 ): Promise<void> {
   const cacheKey = generateCacheKey(importFn, options);

@@ -13,8 +13,8 @@ vi.mock('@/lib/logger', () => ({
 
 // Mock Image class
 class MockImage {
-  onload: Function = () => {};
-  onerror: Function = () => {};
+  onload: () => void = () => {};
+  onerror: (event?: Event | string) => void = () => {};
   src: string = '';
   width: number = 0;
   height: number = 0;
@@ -90,8 +90,8 @@ describe('Image Loader Utilities', () => {
     it('handles image load error', async () => {
       // Mock image that fails to load
       global.Image = class FailingMockImage {
-        onload: Function = () => {};
-        onerror: Function = () => {};
+        onload: () => void = () => {};
+        onerror: (event?: Event | string) => void = () => {};
         src: string = '';
         width: number = 0;
         height: number = 0;
@@ -123,8 +123,8 @@ describe('Image Loader Utilities', () => {
     it('handles error when getting dimensions', async () => {
       // Mock image that fails to load
       global.Image = class FailingMockImage {
-        onload: Function = () => {};
-        onerror: Function = () => {};
+        onload: () => void = () => {};
+        onerror: (event?: Event | string) => void = () => {};
         src: string = '';
 
         constructor() {

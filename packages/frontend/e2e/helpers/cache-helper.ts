@@ -1,4 +1,4 @@
-import { test as base } from '@playwright/test';
+import { test as base, type TestInfo } from '@playwright/test';
 import { testCache } from '../../playwright-cache.config';
 import * as path from 'path';
 
@@ -29,14 +29,14 @@ export const cache = {
   /**
    * Force re-run of specific test
    */
-  invalidate(testInfo: any) {
+  invalidate(testInfo: TestInfo) {
     testCache.clearTestCache(testInfo.file);
   },
   
   /**
    * Check if test is cached
    */
-  isCached(testInfo: any): boolean {
+  isCached(testInfo: TestInfo): boolean {
     return !testCache.shouldRunTest(testInfo.file);
   },
   

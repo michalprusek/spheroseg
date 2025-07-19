@@ -1,4 +1,5 @@
-import { onCLS, onFCP, onFID, onLCP, onTTFB } from 'web-vitals';
+import { onCLS, onFCP, onFID, onLCP, onTTFB, type Metric } from 'web-vitals';
+import type { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import apiClient from '@/lib/apiClient';
 
 /**
@@ -8,7 +9,18 @@ class MetricsService {
   private static instance: MetricsService;
   private metricsEndpoint = '/api/metrics/frontend';
   private isEnabled = process.env.NODE_ENV === 'production' || process.env.METRICS_ENABLED === 'true';
-  private buffer: any[] = [];
+  private buffer: Array<{
+    type: string;
+    name?: string;
+    value: number;
+    id?: string;
+    timestamp: number;
+    component?: string;
+    count?: number;
+    page?: string;
+    endpoint?: string;
+    status?: number;
+  }> = [];
   private flushInterval = 10000; // 10 seconds
   private componentRenderTimes: Record<string, number[]> = {};
   private pageLoadTimes: Record<string, number[]> = {};
@@ -46,7 +58,7 @@ class MetricsService {
   /**
    * Handler for web vitals metrics
    */
-  private handleWebVital = (metric: any): void => {
+  private handleWebVital = (metric: Metric): void => {
     const { name, value, id } = metric;
     this.buffer.push({
       type: 'web_vital',
@@ -224,24 +236,24 @@ export function useComponentRenderTracking(componentName: string) {
 }
 
 // Axios interceptor for tracking API requests
-export function setupAxiosMetricsInterceptors(axiosInstance: any) {
-  axiosInstance.interceptors.request.use((config: any) => {
+export function setupAxiosMetricsInterceptors(axiosInstance: AxiosInstance) {
+  axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig & { metadata?: { startTime: number } }) => {
     config.metadata = { startTime: performance.now() };
     return config;
   });
 
   axiosInstance.interceptors.response.use(
-    (response: any) => {
-      const duration = performance.now() - response.config.metadata.startTime;
+    (response: AxiosResponse & { config: InternalAxiosRequestConfig & { metadata?: { startTime: number } } }) => {
+      const duration = performance.now() - (response.config.metadata?.startTime || 0);
       const endpoint = response.config.url.replace(/\/[0-9a-f-]+(?=\/|$)/g, '/:id');
 
       MetricsService.getInstance().trackApiRequest(endpoint, duration, response.status);
 
       return response;
     },
-    (error: any) => {
+    (error: AxiosError<unknown, InternalAxiosRequestConfig & { metadata?: { startTime: number } }>) => {
       if (error.config) {
-        const duration = performance.now() - error.config.metadata.startTime;
+        const duration = performance.now() - (error.config.metadata?.startTime || 0);
         const endpoint = error.config.url.replace(/\/[0-9a-f-]+(?=\/|$)/g, '/:id');
         const status = error.response ? error.response.status : 0;
 
