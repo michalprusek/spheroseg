@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { generateTiffPreview } from '@/utils/tiffPreview';
 import { generateClientSidePreview, generateFallbackPreview } from '@/utils/clientSidePreview';
 import type { Image } from '@spheroseg/types';
+import logger from '@/utils/logger';
 
 interface UploadedFile {
   id: string;
@@ -148,7 +149,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   }
                 })
                 .catch((error) => {
-                  console.warn('Server preview generation failed for TIFF:', error);
+                  logger.warn('Server preview generation failed for TIFF:', error);
                   // Keep using the fallback preview
                 });
             } else {
@@ -201,17 +202,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       setUploadProgress(0);
       setError(null);
 
-      console.log(
+      logger.debug(
         'Uploading files:',
         uploadedFiles.map((f) => f.file),
       );
-      console.log('Segment after upload:', internalSegmentAfterUpload);
+      logger.debug('Segment after upload:', internalSegmentAfterUpload);
 
       // Extract the File objects from the uploadedFiles
       const files = uploadedFiles.map((f) => f.file);
 
       // Log the number of files being uploaded
-      console.log(`Uploading ${files.length} files to project ${projectId}`);
+      logger.debug(`Uploading ${files.length} files to project ${projectId}`);
 
       // Inform user about upload start
       toast.info(t('uploader.uploadingImages', { count: files.length }, `Uploading ${files.length} images...`));
@@ -231,14 +232,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       const allUploadedImages = await uploadFilesWithFallback(projectId, files, onProgress);
 
       // Log the number of images returned from the upload function
-      console.log(`Received ${allUploadedImages.length} images from upload function`);
-      console.log('Uploaded images:', allUploadedImages);
+      logger.debug(`Received ${allUploadedImages.length} images from upload function`);
+      logger.debug('Uploaded images:', allUploadedImages);
 
       // Store the uploaded images in memory - použijeme IndexedDB místo localStorage
       try {
         await storeUploadedImages(projectId, allUploadedImages);
       } catch (storageError) {
-        console.warn('Chyba při ukládání obrázků do lokálního úložiště:', storageError);
+        logger.warn('Error storing images in local storage:', storageError);
         // Pokračujeme i při chybě ukládání do lokálního úložiště
       }
 
@@ -275,7 +276,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         ),
       );
     } catch (error) {
-      console.error('Error uploading files:', error);
+      logger.error('Error uploading files:', error);
       setError(t('uploader.uploadError', {}, 'An error occurred while uploading the files. Please try again.'));
       toast.error(t('uploader.uploadErrorGeneral', {}, 'Error uploading images. Please try again.'));
     } finally {
