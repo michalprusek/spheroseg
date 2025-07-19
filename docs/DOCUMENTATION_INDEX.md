@@ -126,6 +126,12 @@ npm run test:ml          # ML service tests
 
 ### 🐳 Deployment & Infrastructure
 
+#### Production Deployment NEW!
+- **[Deployment Guide](./DEPLOYMENT.md)** - Complete production deployment instructions
+- **[Operations Runbook](./OPERATIONS.md)** - Daily operations and troubleshooting
+- **[Architecture Documentation](./ARCHITECTURE.md)** - System design and technical details
+- **[API Documentation](./API.md)** - Comprehensive API reference with examples
+
 #### Container Architecture
 ```yaml
 # Docker Services
@@ -138,6 +144,7 @@ services:
   redis:           # Cache and session store
   nginx-dev:       # Development proxy
   nginx-prod:      # Production proxy with security
+  backup:          # Automated backup service (production)
 ```
 
 #### Service URLs
@@ -147,6 +154,7 @@ services:
 - **ML Service**: http://localhost:5002
 - **Database**: localhost:5432
 - **Redis Cache**: localhost:6379
+- **Monitoring**: Prometheus (9090), Grafana (3001), AlertManager (9093)
 
 ### 🔒 Security & Authentication
 
@@ -290,6 +298,12 @@ The documentation has been reorganized into logical categories:
 - **[docs/historical/](./historical/)** - Legacy documentation and historical summaries
 
 ### 🔄 Recent Updates & Changelog
+
+#### Production Documentation Suite (2025-07-19)
+1. **Deployment Guide**: Complete production deployment instructions with security
+2. **Operations Runbook**: Daily operations, troubleshooting, and incident response
+3. **Architecture Documentation**: System design, technology stack, and future roadmap
+4. **API Documentation**: Comprehensive API reference with examples and code samples
 
 #### Project Cleanup & Organization (2025-07-15)
 1. **Documentation Reorganization**: Moved all analysis, fixes, and reports to organized docs/ structure
