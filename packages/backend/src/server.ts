@@ -24,6 +24,7 @@ import { startPerformanceMonitoring } from './utils/performance';
 import performanceConfig from './config/performance';
 import performanceMonitor from './services/performanceMonitor';
 import { initializeRedis, closeRedis } from './config/redis';
+import { validateAndExit } from './utils/startupValidation';
 
 // Memory optimization settings
 // Note: Manual garbage collection should be used sparingly as V8's GC is highly optimized
@@ -170,6 +171,9 @@ const initializeServices = async (): Promise<void> => {
  */
 const startServer = async (): Promise<void> => {
   try {
+    // Validate configuration before starting
+    await validateAndExit();
+    
     // Initialize services first
     await initializeServices();
 

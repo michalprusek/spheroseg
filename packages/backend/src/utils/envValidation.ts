@@ -17,10 +17,14 @@ const envSchema = z.object({
   DB_PORT: z.coerce.number().min(1).max(65535).default(5432),
   DB_NAME: z.string().default('spheroseg'),
   DB_USER: z.string().default('postgres'),
-  DB_PASSWORD: z.string().default('postgres'),
+  DB_PASSWORD: z.string().optional(), // Now optional, will be loaded from secrets
+  DB_PASSWORD_FILE: z.string().optional(),
 
   // Authentication
-  JWT_SECRET: z.string().min(32).default('your-secret-key-change-in-production'),
+  JWT_SECRET: z.string().min(32).optional(), // Now optional, will be loaded from secrets
+  JWT_SECRET_FILE: z.string().optional(), // Path to JWT secret file
+  SESSION_SECRET: z.string().min(32).optional(),
+  SESSION_SECRET_FILE: z.string().optional(),
   TOKEN_SECURITY_MODE: z.enum(['standard', 'strict']).default('standard'),
 
   // Security
@@ -72,6 +76,9 @@ const envSchema = z.object({
   EMAIL_USER: z.string().optional(),
   EMAIL_PASS: z.string().optional(),
   RABBITMQ_URL: z.string().optional(),
+  RABBITMQ_USER: z.string().optional(),
+  RABBITMQ_HOST: z.string().optional(),
+  RABBITMQ_PORT: z.string().optional(),
   RABBITMQ_QUEUE: z.string().optional(),
   ML_MAX_RETRIES: z.string().optional(),
   ML_RETRY_DELAY: z.string().optional(),
@@ -93,6 +100,10 @@ const envSchema = z.object({
   REDIS_HOST: z.string().optional(),
   REDIS_PORT: z.string().optional(),
   REDIS_PASSWORD: z.string().optional(),
+  REDIS_PASSWORD_FILE: z.string().optional(),
+  RABBITMQ_PASSWORD: z.string().optional(),
+  RABBITMQ_PASSWORD_FILE: z.string().optional(),
+  EMAIL_PASSWORD_FILE: z.string().optional(),
   REDIS_DB: z.string().optional(),
   TEMP_UPLOAD_DIR: z.string().optional(),
   ALLOW_TIFF_BMP: z.string().optional(),
@@ -111,7 +122,8 @@ const envSchema = z.object({
   SESSION_COOKIE_SAMSITE: z.string().optional(),
   SESSION_COOKIE_PATH: z.string().optional(),
   SESSION_COOKIE_DOMAIN: z.string().optional(),
-  SESSION_SECRET: z.string().optional(),
+  SECURE_COOKIES: z.enum(['true', 'false']).optional(),
+  TRUST_PROXY: z.enum(['true', 'false']).optional(),
   SESSION_MAX_AGE: z.string().optional(),
   SESSION_RESAVE: z.string().optional(),
   SESSION_SAVE_UNINITIALIZED: z.string().optional(),

@@ -88,11 +88,11 @@ export async function exportMetricsAsXlsx(images: ProjectImage[], projectTitle: 
     const filename = `${projectTitle || 'project'}_metrics_${formatISODate(new Date())}.xlsx`;
     writeFile(workbook, filename);
 
-    logger.info(`Metriky úspěšně exportovány do souboru ${filename}`);
-    toast.success(`Metriky úspěšně exportovány do souboru ${filename}`);
+    logger.info(`Metrics successfully exported to ${filename}`);
+    toast.success(`Metrics successfully exported to ${filename}`);
   } catch (error) {
-    logger.error('Chyba při exportu metrik do Excel:', error);
-    toast.error(`Export selhal: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
+    logger.error('Error exporting metrics to Excel:', error);
+    toast.error(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -128,7 +128,7 @@ export async function exportMetricsAsCsv(images: ProjectImage[], projectTitle: s
     logger.info(`Metriky úspěšně exportovány do souboru ${filename}`);
     toast.success(`Metriky úspěšně exportovány do souboru ${filename}`);
   } catch (error) {
-    logger.error('Chyba při exportu metrik do CSV:', error);
+    logger.error('Error exporting metrics to CSV:', error);
     toast.error(`Export selhal: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
   }
 }
@@ -156,7 +156,7 @@ export async function exportSegmentationsAsCoco(
     logger.info(`Segmentace úspěšně exportovány do souboru ${filename}`);
     toast.success(`Segmentace úspěšně exportovány do souboru ${filename}`);
   } catch (error) {
-    logger.error('Chyba při exportu segmentací do COCO formátu:', error);
+    logger.error('Error exporting segmentations to COCO format:', error);
     toast.error(`Export selhal: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
   }
 }
@@ -209,7 +209,7 @@ Where:
         const filename = `${image.name.split('.')[0]}.txt`;
         zip.file(filename, yoloData);
       } catch (error) {
-        logger.error(`Chyba při zpracování obrázku ${image.id}:`, error);
+        logger.error(`Error processing image ${image.id}:`, error);
       }
     }
 
@@ -221,7 +221,7 @@ Where:
     logger.info(`Segmentace úspěšně exportovány do souboru ${filename}`);
     toast.success(`Segmentace úspěšně exportovány do souboru ${filename}`);
   } catch (error) {
-    logger.error('Chyba při exportu segmentací do YOLO formátu:', error);
+    logger.error('Error exporting segmentations to YOLO format:', error);
     toast.error(`Export selhal: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
   }
 }
@@ -362,7 +362,7 @@ ${options.includeMetadata ? '- Metadata for all images\n' : ''}${options.include
             const filename = `${image.name.split('.')[0]}.txt`;
             segmentationFolder.file(filename, yoloData);
           } catch (error) {
-            logger.error(`Chyba při zpracování obrázku ${image.id}:`, error);
+            logger.error(`Error processing image ${image.id}:`, error);
           }
         }
       } else {
@@ -378,7 +378,7 @@ ${options.includeMetadata ? '- Metadata for all images\n' : ''}${options.include
             const filename = `${image.name.split('.')[0]}.json`;
             segmentationFolder.file(filename, JSON.stringify(segData, null, 2));
           } catch (error) {
-            logger.error(`Chyba při zpracování obrázku ${image.id}:`, error);
+            logger.error(`Error processing image ${image.id}:`, error);
           }
         }
       }
@@ -400,7 +400,7 @@ ${options.includeMetadata ? '- Metadata for all images\n' : ''}${options.include
           // Přidání do ZIP
           imagesFolder.file(image.name, blob);
         } catch (error) {
-          logger.error(`Chyba při stahování obrázku ${image.id}:`, error);
+          logger.error(`Error downloading image ${image.id}:`, error);
         }
       }
     }
@@ -413,7 +413,7 @@ ${options.includeMetadata ? '- Metadata for all images\n' : ''}${options.include
     logger.info(`Data úspěšně exportována do souboru ${filename}`);
     toast.success(`Data úspěšně exportována do souboru ${filename}`);
   } catch (error) {
-    logger.error('Chyba při exportu dat do ZIP archivu:', error);
+    logger.error('Error exporting data to ZIP archive:', error);
     toast.error(`Export selhal: ${error instanceof Error ? error.message : 'Neznámá chyba'}`);
   }
 }
@@ -465,7 +465,7 @@ async function prepareMetricsData(images: ProjectImage[]): Promise<Record<string
         });
       });
     } catch (error) {
-      logger.error(`Chyba při zpracování metrik pro obrázek ${image.id}:`, error);
+      logger.error(`Error processing metrics for image ${image.id}:`, error);
     }
   }
 
@@ -491,7 +491,7 @@ async function getSegmentationData(image: ProjectImage): Promise<SegmentationRes
     const response = await apiClient.get(`/api/images/${image.id}/segmentation`);
     return response.data;
   } catch (error) {
-    logger.error(`Chyba při získávání segmentačních dat pro obrázek ${image.id}:`, error);
+    logger.error(`Error getting segmentation data for image ${image.id}:`, error);
     return null;
   }
 }
@@ -568,7 +568,7 @@ function convertToCOCO(images: ProjectImage[], projectTitle: string = 'project')
       return;
     }
 
-    // Zpracování polygonů
+    // Process polygons
     segData.polygons.forEach((polygon: Polygon) => {
       // Převod bodů na COCO formát
       const segmentation = [polygon.points.flat()];
@@ -618,7 +618,7 @@ function convertToYOLO(segData: SegmentationResult, width: number, height: numbe
     return '';
   }
 
-  // Zpracování pouze externích polygonů
+  // Process only external polygons
   const externalPolygons = segData.polygons.filter((polygon) => polygon.type === 'external');
 
   // Vytvoření YOLO formátu

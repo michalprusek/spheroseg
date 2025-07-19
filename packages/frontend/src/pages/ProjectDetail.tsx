@@ -521,9 +521,9 @@ const ProjectDetail = () => {
 
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
-        logger.debug(`Zpracování dávky ${i + 1}/${batches.length} s ${batch.length} obrázky`);
+        logger.debug(`Processing batch ${i + 1}/${batches.length} with ${batch.length} images`);
 
-        // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
+        // Add a short delay between batches to avoid overloading the server
         if (i > 0) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
@@ -767,15 +767,15 @@ const ProjectDetail = () => {
           );
         }
 
-        // Postupné zpracování všech dávek
+        // Process all batches gradually
         let successCount = 0;
         let failCount = 0;
 
         for (let i = 0; i < batches.length; i++) {
           const batch = batches[i];
-          logger.debug(`Zpracování dávky ${i + 1}/${batches.length} s ${batch.length} obrázky`);
+          logger.debug(`Processing batch ${i + 1}/${batches.length} with ${batch.length} images`);
 
-          // Přidáme krátké zpoždění mezi dávkami, aby se server nezahltil
+          // Add a short delay between batches to avoid overloading the server
           if (i > 0) {
             await new Promise((resolve) => setTimeout(resolve, 1000));
           }

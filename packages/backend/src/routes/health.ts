@@ -28,6 +28,7 @@ interface HealthCheckResponse {
     mlService: HealthCheckComponent;
     memory: HealthCheckComponent;
     fileSystem: HealthCheckComponent;
+    configuration: HealthCheckComponent;
   };
 }
 
@@ -38,11 +39,12 @@ router.get('/', async (req: Request, res: Response) => {
 
   try {
     // Run all checks in parallel
-    const [dbCheck, mlCheck, memoryCheck, fsCheck] = await Promise.all([
+    const [dbCheck, mlCheck, memoryCheck, fsCheck, configCheck] = await Promise.all([
       checkDatabase(),
       checkMLService(),
       checkMemory(),
       checkFileSystem(),
+      checkConfiguration(),
     ]);
 
     // Determine overall health status
@@ -52,6 +54,7 @@ router.get('/', async (req: Request, res: Response) => {
       mlService: mlCheck,
       memory: memoryCheck,
       fileSystem: fsCheck,
+      configuration: configCheck,
     };
 
     const statuses = Object.values(components).map((c) => c.status);
@@ -103,6 +106,7 @@ router.get('/', async (req: Request, res: Response) => {
         mlService: { status: 'unknown' },
         memory: { status: 'unknown' },
         fileSystem: { status: 'unknown' },
+        configuration: { status: 'unknown' },
       },
       error: error.message,
     });
@@ -310,6 +314,78 @@ async function checkFileSystem(): Promise<HealthCheckComponent> {
       status: 'unhealthy',
       message: 'File system not writable',
       responseTime: Date.now() - start,
+      details: { error: error.message },
+    };
+  }
+}
+
+async function checkConfiguration(): Promise<HealthCheckComponent> {
+  const issues: string[] = [];
+  const warnings: string[] = [];
+  
+  try {
+    // Check critical configuration
+    if (!config.auth.jwtSecret) {
+      issues.push('JWT secret not configured');
+    } else if (config.auth.jwtSecret.length < 32 && config.isProduction) {
+      issues.push('JWT secret too short for production');
+    }
+    
+    // Check if using default secrets in production
+    if (config.isProduction) {
+      if (config.auth.jwtSecret?.includes('your-secret-key')) {
+        issues.push('Default JWT secret detected in production');
+      }
+      
+      if (!config.auth.secureCookies) {
+        warnings.push('Secure cookies not enabled in production');
+      }
+      
+      if (!config.db.ssl) {
+        warnings.push('Database SSL not enabled in production');
+      }
+      
+      if (!config.email.host || !config.email.pass) {
+        warnings.push('Email configuration incomplete');
+      }
+    }
+    
+    // Check Redis configuration
+    if (config.redis.url.includes('localhost') && config.isProduction) {
+      warnings.push('Redis using localhost in production');
+    }
+    
+    // Determine status
+    if (issues.length > 0) {
+      return {
+        status: 'unhealthy',
+        message: 'Critical configuration issues detected',
+        details: { issues, warnings },
+      };
+    }
+    
+    if (warnings.length > 0) {
+      return {
+        status: 'degraded',
+        message: 'Configuration warnings detected',
+        details: { warnings },
+      };
+    }
+    
+    return {
+      status: 'healthy',
+      message: 'Configuration valid',
+      details: { 
+        environment: config.env,
+        jwtSecretConfigured: !!config.auth.jwtSecret,
+        dbSslEnabled: config.db.ssl,
+        secureCookies: config.auth.secureCookies,
+      },
+    };
+  } catch (error) {
+    return {
+      status: 'degraded',
+      message: 'Unable to validate configuration',
       details: { error: error.message },
     };
   }

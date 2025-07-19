@@ -57,7 +57,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     }
   }, [user, loading, navigate, location.pathname, isRedirecting, authCheckTimeElapsed]); // Added dependencies for clarity
 
-  // Pokud probíhá načítání nebo ještě neuplynul čas pro kontrolu přihlášení
+  // If loading is in progress or authentication check time hasn't elapsed yet
   if (loading || !authCheckTimeElapsed) {
     return (
       <div className="min-h-screen flex items-center justify-center">

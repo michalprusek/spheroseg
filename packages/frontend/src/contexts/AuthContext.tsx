@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   };
 
-  // KRITICKÉ: Zajistíme, že uživatel nebude nikdy null, pokud byl předtím přihlášen
+  // CRITICAL: Ensure that user is never null if they were previously logged in
   const ensureUserPersistence = (loadedUser: User | null): User | null => {
     const persistedUser = getPersistedUserFromSession();
 
@@ -250,16 +250,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [location.pathname, token]);
 
-  // KRITICKÉ: Při PRVNÍM načtení stránky zabráníme redirectu
+  // CRITICAL: Prevent redirect on the FIRST page load
   useEffect(() => {
-    // Toto bude provedeno pouze jednou při načtení stránky
+    // This will be executed only once when the page loads
     if (isPageLoadRef.current) {
       logger.info('Setting up page reload blocker...');
-      // Nastavení příznaku, že jsme v procesu načítání stránky
-      // Blokujeme veškeré navigační operace po dobu načítání
+      // Set a flag that we are in the page loading process
+      // Block all navigation operations during loading
       window.sessionStorage.setItem('spheroseg_page_loading', 'true');
 
-      // Po 2 sekundách zrušíme blokaci (sníženo z 5 sekund pro rychlejší načítání)
+      // After 2 seconds, remove the block (reduced from 5 seconds for faster loading)
       setTimeout(() => {
         isPageLoadRef.current = false;
         window.sessionStorage.removeItem('spheroseg_page_loading');

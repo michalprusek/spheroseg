@@ -108,7 +108,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
     }
   };
 
-  // Funkce pro zpracování formuláře
+  // Function to process the form
   const onSubmit = async (values: ShareFormValues) => {
     setIsLoading(true);
     try {

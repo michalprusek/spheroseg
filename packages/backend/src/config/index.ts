@@ -9,12 +9,21 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { validateEnv } from '../utils/envValidation';
+import { 
+  loadSecrets, 
+  constructDatabaseUrl, 
+  constructRedisUrl, 
+  constructRabbitmqUrl 
+} from '../utils/secretsLoader';
 
 // Load environment variables from .env file
 dotenv.config();
 
 // Validate environment variables early
 const validatedEnv = validateEnv();
+
+// Load secrets from Docker Secrets or environment variables
+const secrets = loadSecrets();
 
 // Define the root directory of the application
 const ROOT_DIR = path.resolve(__dirname, '../..');
@@ -55,13 +64,24 @@ const config = {
         : parseInt(validatedEnv.DB_PORT || '5432', 10),
     database: validatedEnv.DB_NAME || 'spheroseg',
     user: validatedEnv.DB_USER || 'postgres',
-    password: validatedEnv.DB_PASSWORD || 'postgres',
-    ssl: validatedEnv.DB_SSL === 'true',
+    password: secrets.dbPassword || validatedEnv.DB_PASSWORD || 'postgres',
+    ssl: validatedEnv.DB_SSL === 'true' || isProduction,
     maxConnections: parseInt(validatedEnv.DB_MAX_CONNECTIONS || '10', 10),
+    // Construct full database URL with secrets
+    connectionString: process.env.DATABASE_URL || constructDatabaseUrl(secrets, {
+      user: validatedEnv.DB_USER || 'postgres',
+      host: validatedEnv.DB_HOST || 'localhost',
+      port: typeof validatedEnv.DB_PORT === 'number' 
+        ? validatedEnv.DB_PORT 
+        : parseInt(validatedEnv.DB_PORT || '5432', 10),
+      database: validatedEnv.DB_NAME || 'spheroseg',
+      ssl: validatedEnv.DB_SSL === 'true' || isProduction
+    }),
   },
 
   auth: {
-    jwtSecret: validatedEnv.JWT_SECRET || 'your-secret-key-change-in-production',
+    jwtSecret: secrets.jwtSecret || validatedEnv.JWT_SECRET || '',
+    sessionSecret: secrets.sessionSecret || validatedEnv.SESSION_SECRET || secrets.jwtSecret || '',
     jwtExpiresIn: validatedEnv.JWT_EXPIRES_IN || '1d',
     accessTokenExpiry: validatedEnv.ACCESS_TOKEN_EXPIRY || '15m',
     refreshTokenExpiry: validatedEnv.REFRESH_TOKEN_EXPIRY || '7d',
@@ -71,6 +91,8 @@ const config = {
     tokenSecurityMode: validatedEnv.TOKEN_SECURITY_MODE || 'standard',
     jwksUri: validatedEnv.JWKS_URI,
     useKeyRotation: validatedEnv.USE_JWT_KEY_ROTATION === 'true',
+    secureCookies: validatedEnv.SECURE_COOKIES === 'true' || isProduction,
+    trustProxy: validatedEnv.TRUST_PROXY === 'true' || isProduction,
   },
 
   storage: {
@@ -142,10 +164,14 @@ const config = {
   },
 
   redis: {
-    url: validatedEnv.REDIS_URL || 'redis://localhost:6379',
+    url: process.env.REDIS_URL || constructRedisUrl(secrets, {
+      host: validatedEnv.REDIS_HOST || 'localhost',
+      port: parseInt(validatedEnv.REDIS_PORT || '6379', 10),
+      db: parseInt(validatedEnv.REDIS_DB || '0', 10),
+    }),
     host: validatedEnv.REDIS_HOST || 'localhost',
     port: parseInt(validatedEnv.REDIS_PORT || '6379', 10),
-    password: validatedEnv.REDIS_PASSWORD,
+    password: secrets.redisPassword || validatedEnv.REDIS_PASSWORD,
     db: parseInt(validatedEnv.REDIS_DB || '0', 10),
   },
 
@@ -155,11 +181,15 @@ const config = {
     port: parseInt(validatedEnv.EMAIL_PORT || '587', 10),
     secure: validatedEnv.EMAIL_SECURE === 'true',
     user: validatedEnv.EMAIL_USER,
-    pass: validatedEnv.EMAIL_PASS,
+    pass: secrets.emailPassword || validatedEnv.EMAIL_PASS,
   },
 
   rabbitmq: {
-    url: validatedEnv.RABBITMQ_URL || 'amqp://guest:guest@rabbitmq:5672',
+    url: process.env.RABBITMQ_URL || constructRabbitmqUrl(secrets, {
+      user: validatedEnv.RABBITMQ_USER || 'guest',
+      host: validatedEnv.RABBITMQ_HOST || 'rabbitmq',
+      port: parseInt(validatedEnv.RABBITMQ_PORT || '5672', 10),
+    }),
     queue: validatedEnv.RABBITMQ_QUEUE || 'segmentation_tasks',
   },
 };
