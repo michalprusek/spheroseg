@@ -168,8 +168,8 @@ describe('ProjectExport Component', () => {
 
   it('disables the export button when no images are selected', () => {
     // Override the getSelectedCount to return 0
-    require('../hooks/useExportFunctions').useExportFunctions.mockReturnValueOnce({
-      ...require('../hooks/useExportFunctions').useExportFunctions(),
+    (useExportFunctions as any).mockReturnValueOnce({
+      ...(useExportFunctions as any)(),
       getSelectedCount: vi.fn(() => 0),
     });
 
@@ -181,8 +181,8 @@ describe('ProjectExport Component', () => {
 
   it('shows loading state when exporting', () => {
     // Override the isExporting state to be true
-    require('../hooks/useExportFunctions').useExportFunctions.mockReturnValueOnce({
-      ...require('../hooks/useExportFunctions').useExportFunctions(),
+    (useExportFunctions as any).mockReturnValueOnce({
+      ...(useExportFunctions as any)(),
       isExporting: true,
     });
 
@@ -195,8 +195,8 @@ describe('ProjectExport Component', () => {
 
   it('handles loading state of project data', () => {
     // Override the loading state to be true
-    require('@/hooks/useProjectData').useProjectData.mockReturnValueOnce({
-      ...require('@/hooks/useProjectData').useProjectData(),
+    (useProjectData as any).mockReturnValueOnce({
+      ...(useProjectData as any)(),
       loading: true,
     });
 

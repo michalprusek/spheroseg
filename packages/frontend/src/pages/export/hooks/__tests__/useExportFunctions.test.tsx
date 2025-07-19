@@ -10,6 +10,8 @@ import {
   mockExportDependencies,
 } from '../../../../../shared/test-utils/export-test-utils';
 import { toast } from 'sonner';
+import JSZip from 'jszip';
+import apiClient from '@/lib/apiClient';
 
 // Mock dependencies
 mockLanguageContext();
@@ -243,8 +245,7 @@ describe('useExportFunctions', () => {
     const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
 
     // Mock JSZip to throw an error
-    const mockJSZip = require('jszip').default;
-    (mockJSZip as any).mockImplementationOnce(() => {
+    (JSZip as any).mockImplementationOnce(() => {
       throw new Error('ZIP creation error');
     });
 

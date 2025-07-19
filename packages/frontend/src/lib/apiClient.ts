@@ -33,7 +33,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Enhanced timeout configuration based on request type
-const getTimeoutForRequest = (config: any): number => {
+const getTimeoutForRequest = (config: InternalAxiosRequestConfig): number => {
   // Longer timeout for auth operations
   if (config.url?.includes('/auth/')) {
     return 15000; // 15 seconds for auth requests
@@ -78,7 +78,7 @@ apiClient.interceptors.request.use(
       }
 
       // Log FormData details for debugging
-      const formDataInfo: any = {};
+      const formDataInfo: { fields?: number; files?: number } = {};
       if (config.data instanceof FormData) {
         const entries = Array.from(config.data.entries());
         formDataInfo.fields = entries.length;
@@ -241,7 +241,7 @@ apiClient.interceptors.response.use(
         url,
         method,
         status,
-        message: error.response?.data?.message || error.message,
+        message: (error.response?.data as { message?: string })?.message || error.message,
       });
 
       // Check if page is still loading - don't clear tokens during initial load
@@ -253,7 +253,7 @@ apiClient.interceptors.response.use(
 
       // Only clear tokens if this is a legitimate auth failure
       // Don't clear tokens for malformed requests or other 401 scenarios
-      const errorMessage = error.response?.data?.message?.toLowerCase() || '';
+      const errorMessage = ((error.response?.data as { message?: string })?.message || '').toLowerCase();
       const shouldClearTokens =
         errorMessage.includes('token') ||
         errorMessage.includes('expired') ||
@@ -294,7 +294,7 @@ apiClient.interceptors.response.use(
           errorInfo: {
             type: ErrorType.AUTHORIZATION,
             severity: ErrorSeverity.WARNING,
-            message: error.response?.data?.message || 'Access denied',
+            message: (error.response?.data as { message?: string })?.message || 'Access denied',
           },
           showToast: false, // Don't show toast for permission errors
         });
@@ -336,7 +336,8 @@ apiClient.interceptors.response.use(
       }
 
       // Get the error message from the server if available
-      const serverMessage = error.response?.data?.message;
+      const responseData = error.response?.data as { message?: string } | undefined;
+      const serverMessage = responseData?.message;
       const isPermissionError = serverMessage?.includes('access denied') || serverMessage?.includes('permission');
       
       // Check if this is a polling request for segmentation status
