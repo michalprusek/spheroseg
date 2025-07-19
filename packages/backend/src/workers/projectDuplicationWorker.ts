@@ -235,17 +235,17 @@ function generateNewFilePaths(
   const newStoragePath = `/uploads/${newProjectId}/${fileBaseName}-copy-${timestamp}-${randomSuffix}.${fileExtension}`;
 
   // Generate new thumbnail path if original exists
-  let newThumbnailPath;
   if (originalThumbnailPath) {
     const originalThumbName = originalThumbnailPath.split('/').pop() || '';
     const thumbNameParts = originalThumbName.split('.');
     const thumbExtension = thumbNameParts.pop() || 'png';
     const thumbBaseName = thumbNameParts.join('.');
 
-    newThumbnailPath = `/uploads/${newProjectId}/thumb-${thumbBaseName}-copy-${timestamp}-${randomSuffix}.${thumbExtension}`;
+    const newThumbnailPath = `/uploads/${newProjectId}/thumb-${thumbBaseName}-copy-${timestamp}-${randomSuffix}.${thumbExtension}`;
+    return { newStoragePath, newThumbnailPath };
   }
 
-  return { newStoragePath, newThumbnailPath };
+  return { newStoragePath };
 }
 
 /**

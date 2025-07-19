@@ -61,11 +61,11 @@ export function initializeReadReplicas(): void {
 
     // Set up error handlers
     writePool.on('error', (err) => {
-      logger.error('Write pool error:', err);
+      logger.error('Write pool error:', { error: err });
     });
 
     readPool.on('error', (err) => {
-      logger.error('Read pool error:', err);
+      logger.error('Read pool error:', { error: err });
     });
 
     // Test connections
@@ -74,20 +74,20 @@ export function initializeReadReplicas(): void {
         logger.info('Read replica pools initialized successfully');
       })
       .catch((err) => {
-        logger.error('Failed to initialize read replica pools:', err);
+        logger.error('Failed to initialize read replica pools:', { error: err });
         replicasEnabled = false;
       });
   } catch (error) {
-    logger.error('Error initializing read replicas:', error);
+    logger.error('Error initializing read replicas:', { error });
     replicasEnabled = false;
   }
 }
 
 // Get appropriate pool based on query type
 export function getPool(isReadQuery: boolean = true): Pool {
-  // If replicas not enabled, use default pool from config
+  // If replicas not enabled, return a new pool with default config
   if (!replicasEnabled) {
-    return config.db;
+    return new Pool(createPoolConfig(config.db.connectionString));
   }
 
   // Use read pool for read queries, write pool for everything else
@@ -95,7 +95,7 @@ export function getPool(isReadQuery: boolean = true): Pool {
     return readPool;
   }
 
-  return writePool || config.db;
+  return writePool || new Pool(createPoolConfig(config.db.connectionString));
 }
 
 // Enhanced query function with read/write routing
@@ -139,9 +139,10 @@ export async function query(
     return result;
   } catch (error: unknown) {
     // If read replica fails, fallback to master
-    if (isReadQuery && replicasEnabled && error.code === 'ECONNREFUSED') {
+    if (isReadQuery && replicasEnabled && (error as any)?.code === 'ECONNREFUSED') {
       logger.warn('Read replica unavailable, falling back to master');
-      return config.db.query(text, params);
+      const fallbackPool = new Pool(createPoolConfig(config.db.connectionString));
+      return fallbackPool.query(text, params);
     }
 
     throw error;
@@ -198,7 +199,7 @@ export async function getReplicationLag(): Promise<number | null> {
 
     return result.rows[0]?.lag_seconds || 0;
   } catch (error) {
-    logger.error('Failed to get replication lag:', error);
+    logger.error('Failed to get replication lag:', { error });
     return null;
   }
 }

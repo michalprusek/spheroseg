@@ -102,7 +102,7 @@ export class SocketThrottler {
     // Clear timer
     if (batch.timer) {
       clearTimeout(batch.timer);
-      batch.timer = undefined;
+      delete batch.timer;
     }
     
     // Get unique events (last occurrence of each event type wins)
@@ -128,8 +128,8 @@ export class SocketThrottler {
     
     for (const event of events) {
       const data = event.data as Record<string, unknown>;
-      const uniqueKey = data.imageId 
-        ? `${event.event}:${data.imageId}`
+      const uniqueKey = data['imageId'] 
+        ? `${event.event}:${data['imageId']}`
         : `${event.event}:${JSON.stringify(event.data)}`;
       
       eventMap.set(uniqueKey, event);

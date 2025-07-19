@@ -31,21 +31,21 @@ export async function validateStartup(): Promise<ValidationResult> {
   try {
     validateJwtConfiguration(errors, warnings);
   } catch (error) {
-    errors.push(`JWT validation failed: ${error.message}`);
+    errors.push(`JWT validation failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // 2. Validate Database Connection
   try {
     await validateDatabaseConnection(errors, warnings);
   } catch (error) {
-    errors.push(`Database validation failed: ${error.message}`);
+    errors.push(`Database validation failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // 3. Validate File System
   try {
     validateFileSystem(errors, warnings);
   } catch (error) {
-    errors.push(`File system validation failed: ${error.message}`);
+    errors.push(`File system validation failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // 4. Validate Redis Connection (if enabled)
@@ -53,7 +53,7 @@ export async function validateStartup(): Promise<ValidationResult> {
     try {
       await validateRedisConnection(errors, warnings);
     } catch (error) {
-      warnings.push(`Redis validation failed: ${error.message}`);
+      warnings.push(`Redis validation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -61,7 +61,7 @@ export async function validateStartup(): Promise<ValidationResult> {
   try {
     await validateMLService(warnings);
   } catch (error) {
-    warnings.push(`ML service validation failed: ${error.message}`);
+    warnings.push(`ML service validation failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // 6. Production-specific validations
@@ -172,7 +172,7 @@ async function validateDatabaseConnection(errors: string[], warnings: string[]):
       }
     }
   } catch (error) {
-    errors.push(`Database connection failed: ${error.message}`);
+    errors.push(`Database connection failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -188,7 +188,7 @@ function validateFileSystem(errors: string[], warnings: string[]): void {
       fs.mkdirSync(uploadDir, { recursive: true });
       logger.info(`Created upload directory: ${uploadDir}`);
     } catch (error) {
-      errors.push(`Failed to create upload directory: ${error.message}`);
+      errors.push(`Failed to create upload directory: ${error instanceof Error ? error.message : String(error)}`);
       return;
     }
   }
@@ -199,7 +199,7 @@ function validateFileSystem(errors: string[], warnings: string[]): void {
     fs.writeFileSync(testFile, 'test');
     fs.unlinkSync(testFile);
   } catch (error) {
-    errors.push(`Upload directory not writable: ${error.message}`);
+    errors.push(`Upload directory not writable: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // Check available space (warning only)
@@ -242,7 +242,7 @@ async function validateRedisConnection(errors: string[], warnings: string[]): Pr
       warnings.push('Redis running without password in production');
     }
   } catch (error) {
-    throw new Error(`Redis connection failed: ${error.message}`);
+    throw new Error(`Redis connection failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -260,7 +260,7 @@ async function validateMLService(warnings: string[]): Promise<void> {
       warnings.push(`ML service returned status ${response.status}`);
     }
   } catch (error) {
-    warnings.push(`ML service not reachable: ${error.message}`);
+    warnings.push(`ML service not reachable: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -316,7 +316,11 @@ export async function validateAndExit(): Promise<void> {
   const result = await validateStartup();
 
   if (!result.valid) {
-    logger.error('Application startup failed due to validation errors', result);
+    logger.error('Application startup failed due to validation errors', { 
+      valid: result.valid, 
+      errors: result.errors, 
+      warnings: result.warnings 
+    });
     process.exit(1);
   }
 

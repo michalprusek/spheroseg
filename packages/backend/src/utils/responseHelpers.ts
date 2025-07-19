@@ -54,7 +54,7 @@ export function sendError(
     errorResponse = UnifiedResponseHandler.error(
       error.message,
       error.code,
-      error.validationErrors
+      error.details as any
     );
   } else {
     errorResponse = UnifiedResponseHandler.handleError(error, {

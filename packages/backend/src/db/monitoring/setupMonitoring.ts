@@ -21,10 +21,8 @@ export function setupDatabaseMonitoring(app: Express): void {
     // Add database monitoring middleware for metrics dashboard
     app.use(dbMonitoringMiddleware);
 
-    // Setup pool metrics updates
-    setInterval(() => {
-      dbMonitoring.updatePoolMetrics(pool);
-    }, 15000);
+    // Pool metrics are now handled by the unified monitoring system
+    // No need for separate pool metrics updates
 
     unifiedLogger.info('Database monitoring setup complete');
   } catch (error) {

@@ -50,7 +50,7 @@ async function runMigration() {
       logger.info(`  ${row.table_name}.${row.status}: ${row.count}`);
     });
   } catch (error) {
-    logger.error('Migration failed:', error);
+    logger.error('Migration failed:', { error });
     process.exit(1);
   } finally {
     await pool.end();

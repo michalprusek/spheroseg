@@ -556,76 +556,76 @@ export const formatImageForApi = (
     result.segmentationStatus = image.segmentationStatus;
   }
 
-  if (image.storage_path && typeof image.storage_path === 'string') {
+  if (image['storage_path'] && typeof image['storage_path'] === 'string') {
     // If the storage_path is already a full URL with internal Docker hostname, extract the path
     if (
-      image.storage_path.includes('://backend:') ||
-      image.storage_path.includes('://spheroseg-backend:')
+      image['storage_path'].includes('://backend:') ||
+      image['storage_path'].includes('://spheroseg-backend:')
     ) {
       try {
-        const url = new URL(image.storage_path);
+        const url = new URL(image['storage_path'] as string);
         // Extract just the pathname part
         const pathname = url.pathname;
         // If pathname starts with /app, remove it since nginx doesn't expect it
         const cleanPath = pathname.startsWith('/app/') ? pathname.substring(4) : pathname;
         result.storage_path = cleanPath;
         logger.debug('Extracted path from internal URL', {
-          original: image.storage_path,
+          original: image['storage_path'],
           extracted: cleanPath,
         });
       } catch (error) {
         logger.warn('Failed to parse internal URL, using as-is', {
-          path: image.storage_path,
+          path: image['storage_path'],
           error,
         });
-        result.storage_path = image.storage_path;
+        result.storage_path = image['storage_path'];
       }
     } else if (
-      image.storage_path.startsWith('http://') ||
-      image.storage_path.startsWith('https://')
+      (image['storage_path'] as string).startsWith('http://') ||
+      (image['storage_path'] as string).startsWith('https://')
     ) {
       // For other full URLs, keep them as-is
       result.storage_path = image.storage_path;
     } else {
       // For relative paths, ensure they start with /
-      const cleanPath = image.storage_path.startsWith('/')
-        ? image.storage_path
-        : `/${image.storage_path}`;
+      const cleanPath = (image['storage_path'] as string).startsWith('/')
+        ? image['storage_path']
+        : `/${image['storage_path']}`;
       result.storage_path = cleanPath;
     }
   }
 
-  if (image.thumbnail_path && typeof image.thumbnail_path === 'string') {
+  if (image['thumbnail_path'] && typeof image['thumbnail_path'] === 'string') {
     // Apply same logic for thumbnail_path
     if (
-      image.thumbnail_path.includes('://backend:') ||
-      image.thumbnail_path.includes('://spheroseg-backend:')
+      (image['thumbnail_path'] as string).includes('://backend:') ||
+      (image['thumbnail_path'] as string).includes('://spheroseg-backend:')
     ) {
       try {
-        const url = new URL(image.thumbnail_path);
+        const url = new URL(image['thumbnail_path'] as string);
         const pathname = url.pathname;
         const cleanPath = pathname.startsWith('/app/') ? pathname.substring(4) : pathname;
         result.thumbnail_path = cleanPath;
         logger.debug('Extracted thumbnail path from internal URL', {
-          original: image.thumbnail_path,
+          original: image['thumbnail_path'],
           extracted: cleanPath,
         });
       } catch (error) {
         logger.warn('Failed to parse internal thumbnail URL, using as-is', {
-          path: image.thumbnail_path,
+          path: image['thumbnail_path'],
           error,
         });
-        result.thumbnail_path = image.thumbnail_path;
+        result.thumbnail_path = image['thumbnail_path'];
       }
     } else if (
-      image.thumbnail_path.startsWith('http://') ||
-      image.thumbnail_path.startsWith('https://')
+      (image['thumbnail_path'] as string).startsWith('http://') ||
+      (image['thumbnail_path'] as string).startsWith('https://')
     ) {
       result.thumbnail_path = image.thumbnail_path;
     } else {
-      const cleanPath = image.thumbnail_path.startsWith('/')
-        ? image.thumbnail_path
-        : `/${image.thumbnail_path}`;
+      const cleanPath = (image['thumbnail_path'] as string).startsWith('/')
+        ? image['thumbnail_path']
+        : `/${image['thumbnail_path']}`;
       result.thumbnail_path = cleanPath;
     }
   }
@@ -646,7 +646,7 @@ export const copyFile = async (sourcePath: string, targetPath: string): Promise<
     await fsCopyFile(sourcePath, targetPath);
     logger.debug(`Copied file: ${sourcePath} -> ${targetPath}`);
   } catch (error) {
-    logger.error(`Error copying file: ${sourcePath} -> ${targetPath}`, error);
+    logger.error(`Error copying file: ${sourcePath} -> ${targetPath}`, error as Record<string, unknown>);
     throw error;
   }
 };
@@ -661,7 +661,7 @@ export const deleteFile = async (filePath: string): Promise<void> => {
       logger.debug(`Deleted file: ${filePath}`);
     }
   } catch (error) {
-    logger.error(`Error deleting file: ${filePath}`, error);
+    logger.error(`Error deleting file: ${filePath}`, error as Record<string, unknown>);
     throw error;
   }
 };
@@ -700,7 +700,7 @@ export const getFilesInDirectory = async (
 
     return files;
   } catch (error) {
-    logger.error(`Error getting files in directory: ${dirPath}`, error);
+    logger.error(`Error getting files in directory: ${dirPath}`, error as Record<string, unknown>);
     throw error;
   }
 };
@@ -754,10 +754,10 @@ export const verifyImageFilesForApi = (
   const result = { ...image, file_exists: true };
 
   // Check if the main image file exists
-  if (image.storage_path && typeof image.storage_path === 'string') {
-    const storagePath = image.storage_path.startsWith('http')
-      ? pathUtils.extractPathFromUrl(image.storage_path)
-      : image.storage_path;
+  if (image['storage_path'] && typeof image['storage_path'] === 'string') {
+    const storagePath = (image['storage_path'] as string).startsWith('http')
+      ? pathUtils.extractPathFromUrl(image['storage_path'] as string)
+      : image['storage_path'] as string;
 
     const fullStoragePath = dbPathToFilesystemPath(storagePath, uploadDir);
     const storageExists = fs.existsSync(fullStoragePath);

@@ -179,7 +179,11 @@ export interface Point {
 // File upload types
 export interface FileUploadRequest {
   projectId: string;
-  files: File[];
+  files: Array<{
+    name: string;
+    size: number;
+    type: string;
+  }>;
 }
 
 export interface FileUploadProgress {

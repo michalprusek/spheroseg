@@ -20,7 +20,7 @@ const upload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     // Check file type - allow all image types
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -35,7 +35,7 @@ export const uploadAvatar = upload.single('avatar');
 /**
  * Get user profile
  */
-export const getUserProfile = async (req: AuthenticatedRequest, res: Response) => {
+export const getUserProfile = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -48,17 +48,17 @@ export const getUserProfile = async (req: AuthenticatedRequest, res: Response) =
       return res.status(404).json({ error: 'Profile not found' });
     }
 
-    res.json(profile);
+    return res.json(profile);
   } catch (error) {
-    logger.error('Error fetching user profile:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error fetching user profile:', { error });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Get user profile with settings
  */
-export const getUserProfileWithSettings = async (req: AuthenticatedRequest, res: Response) => {
+export const getUserProfileWithSettings = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -79,17 +79,17 @@ export const getUserProfileWithSettings = async (req: AuthenticatedRequest, res:
       {} as Record<string, any>
     );
 
-    res.json({ profile, settings: settingsObj });
+    return res.json({ profile, settings: settingsObj });
   } catch (error) {
-    logger.error('Error fetching user profile with settings:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error fetching user profile with settings:', { error });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Create user profile
  */
-export const createUserProfile = async (req: AuthenticatedRequest, res: Response) => {
+export const createUserProfile = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -98,7 +98,7 @@ export const createUserProfile = async (req: AuthenticatedRequest, res: Response
 
     const profile = await userProfileService.createUserProfile(dbPool, userId, req.body);
 
-    res.status(201).json(profile);
+    return res.status(201).json(profile);
   } catch (error) {
     logger.error('Error creating user profile:', {
       error,
@@ -107,14 +107,14 @@ export const createUserProfile = async (req: AuthenticatedRequest, res: Response
       userId: req.user?.userId,
       body: req.body,
     });
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Update user profile
  */
-export const updateUserProfile = async (req: AuthenticatedRequest, res: Response) => {
+export const updateUserProfile = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -123,20 +123,20 @@ export const updateUserProfile = async (req: AuthenticatedRequest, res: Response
 
     const profile = await userProfileService.updateUserProfile(dbPool, userId, req.body);
 
-    res.json(profile);
+    return res.json(profile);
   } catch (error) {
-    logger.error('Error updating user profile:', error);
+    logger.error('Error updating user profile:', { error });
     if (error instanceof Error && error.message === 'Profile not found') {
       return res.status(404).json({ error: 'Profile not found' });
     }
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Upload avatar
  */
-export const uploadAvatarHandler = async (req: AuthenticatedRequest, res: Response) => {
+export const uploadAvatarHandler = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -155,7 +155,7 @@ export const uploadAvatarHandler = async (req: AuthenticatedRequest, res: Respon
       uploadsDir
     );
 
-    res.json({
+    return res.json({
       message: 'Avatar uploaded successfully',
       avatar: {
         filename: avatarFile.filename,
@@ -163,15 +163,15 @@ export const uploadAvatarHandler = async (req: AuthenticatedRequest, res: Respon
       },
     });
   } catch (error) {
-    logger.error('Error uploading avatar:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error uploading avatar:', { error });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Delete avatar
  */
-export const deleteAvatar = async (req: AuthenticatedRequest, res: Response) => {
+export const deleteAvatar = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -180,17 +180,17 @@ export const deleteAvatar = async (req: AuthenticatedRequest, res: Response) => 
 
     await userProfileService.deleteAvatarFile(dbPool, userId);
 
-    res.json({ message: 'Avatar deleted successfully' });
+    return res.json({ message: 'Avatar deleted successfully' });
   } catch (error) {
-    logger.error('Error deleting avatar:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error deleting avatar:', { error });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Get user setting
  */
-export const getUserSetting = async (req: AuthenticatedRequest, res: Response) => {
+export const getUserSetting = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     const { key } = req.params;
@@ -199,27 +199,27 @@ export const getUserSetting = async (req: AuthenticatedRequest, res: Response) =
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const setting = await userProfileService.getUserSetting(dbPool, userId, key);
+    const setting = await userProfileService.getUserSetting(dbPool, userId, key as string);
 
     if (!setting) {
       return res.status(404).json({ error: 'Setting not found' });
     }
 
-    res.json({
+    return res.json({
       key: setting.setting_key,
       value: setting.setting_value,
       category: setting.category,
     });
   } catch (error) {
-    logger.error('Error fetching user setting:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error fetching user setting:', { error });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Get all user settings
  */
-export const getUserSettings = async (req: AuthenticatedRequest, res: Response) => {
+export const getUserSettings = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -241,17 +241,17 @@ export const getUserSettings = async (req: AuthenticatedRequest, res: Response) 
       {} as Record<string, any>
     );
 
-    res.json(settingsObj);
+    return res.json(settingsObj);
   } catch (error) {
-    logger.error('Error fetching user settings:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error fetching user settings:', { error });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Set user setting
  */
-export const setUserSetting = async (req: AuthenticatedRequest, res: Response) => {
+export const setUserSetting = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     const { key } = req.params;
@@ -265,24 +265,24 @@ export const setUserSetting = async (req: AuthenticatedRequest, res: Response) =
       return res.status(400).json({ error: 'Value is required' });
     }
 
-    const setting = await userProfileService.setUserSetting(dbPool, userId, key, value, category);
+    const setting = await userProfileService.setUserSetting(dbPool, userId, key as string, value, category);
 
-    res.json({
+    return res.json({
       key: setting.setting_key,
       value: setting.setting_value,
       category: setting.category,
       updated_at: setting.updated_at,
     });
   } catch (error) {
-    logger.error('Error setting user setting:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error setting user setting:', { error });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Delete user setting
  */
-export const deleteUserSetting = async (req: AuthenticatedRequest, res: Response) => {
+export const deleteUserSetting = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     const { key } = req.params;
@@ -291,19 +291,19 @@ export const deleteUserSetting = async (req: AuthenticatedRequest, res: Response
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    await userProfileService.deleteUserSetting(dbPool, userId, key);
+    await userProfileService.deleteUserSetting(dbPool, userId, key as string);
 
-    res.json({ message: 'Setting deleted successfully' });
+    return res.json({ message: 'Setting deleted successfully' });
   } catch (error) {
-    logger.error('Error deleting user setting:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error deleting user setting:', { error });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Batch update user settings
  */
-export const batchUpdateUserSettings = async (req: AuthenticatedRequest, res: Response) => {
+export const batchUpdateUserSettings = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.userId;
     const { settings } = req.body;
@@ -335,17 +335,17 @@ export const batchUpdateUserSettings = async (req: AuthenticatedRequest, res: Re
       {} as Record<string, any>
     );
 
-    res.json(settingsObj);
+    return res.json(settingsObj);
   } catch (error) {
-    logger.error('Error batch updating user settings:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error batch updating user settings:', { error });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Generate preview for avatar (handles TIFF conversion)
  */
-export const generateAvatarPreview = async (req: AuthenticatedRequest, res: Response) => {
+export const generateAvatarPreview = async (req: AuthenticatedRequest, res: Response): Promise<Response | void> => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -362,10 +362,10 @@ export const generateAvatarPreview = async (req: AuthenticatedRequest, res: Resp
     res.set('Cache-Control', 'private, max-age=3600');
 
     // Send the converted image
-    res.send(convertedBuffer);
+    return res.send(convertedBuffer);
   } catch (error) {
-    logger.error('Error generating avatar preview:', error);
-    res.status(500).json({ error: 'Failed to generate preview' });
+    logger.error('Error generating avatar preview:', { error });
+    return res.status(500).json({ error: 'Failed to generate preview' });
   }
 };
 

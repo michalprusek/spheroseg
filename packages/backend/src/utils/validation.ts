@@ -32,7 +32,7 @@ export function safeValidateData<T>(
  * Express middleware for validating request body with Zod schema
  */
 export function validateBody<T>(schema: ZodType<T>) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
       req.body = validateData(schema, req.body);
       next();
@@ -43,7 +43,8 @@ export function validateBody<T>(schema: ZodType<T>) {
           message: err.message,
           code: err.code,
         }));
-        return sendBadRequest(res, 'Validation failed', 'VALIDATION_ERROR');
+        sendBadRequest(res, 'Validation failed', 'VALIDATION_ERROR');
+        return;
       }
       next(error);
     }
@@ -54,11 +55,11 @@ export function validateBody<T>(schema: ZodType<T>) {
  * Express middleware for validating query parameters
  */
 export function validateQuery<T>(schema: ZodType<T>) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
       const validated = validateData(schema, req.query);
-      // Type assertion is needed here as Express types are not fully compatible
-      (req as Request & { query: T }).query = validated;
+      // Replace the query object entirely
+      req.query = validated as any;
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -67,7 +68,8 @@ export function validateQuery<T>(schema: ZodType<T>) {
           message: err.message,
           code: err.code,
         }));
-        return sendBadRequest(res, 'Invalid query parameters', 'VALIDATION_ERROR');
+        sendBadRequest(res, 'Invalid query parameters', 'VALIDATION_ERROR');
+        return;
       }
       next(error);
     }
@@ -78,11 +80,11 @@ export function validateQuery<T>(schema: ZodType<T>) {
  * Express middleware for validating route parameters
  */
 export function validateParams<T>(schema: ZodType<T>) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
       const validated = validateData(schema, req.params);
-      // Type assertion is needed here as Express types are not fully compatible
-      (req as Request & { params: T }).params = validated;
+      // Replace the params object entirely
+      req.params = validated as any;
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -91,7 +93,8 @@ export function validateParams<T>(schema: ZodType<T>) {
           message: err.message,
           code: err.code,
         }));
-        return sendBadRequest(res, 'Invalid route parameters', 'VALIDATION_ERROR');
+        sendBadRequest(res, 'Invalid route parameters', 'VALIDATION_ERROR');
+        return;
       }
       next(error);
     }

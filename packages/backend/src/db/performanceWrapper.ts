@@ -26,16 +26,16 @@ export function wrapPoolClient(client: PoolClient): PoolClient {
         if (typeof args[0] === 'string') {
           queryText = args[0];
         } else if (args[0] && typeof args[0] === 'object' && 'text' in args[0]) {
-          queryText = args[0].text;
+          queryText = (args[0] as any).text;
         }
       }
 
       // Call original query method with all arguments
-      const result = await originalQuery.apply(client, args);
+      const result = await originalQuery.apply(client, args as any);
 
       // Calculate duration
       const duration = Date.now() - startTime;
-      const rowCount = result?.rowCount || 0;
+      const rowCount = (result as any)?.rowCount || 0;
 
       // Record the metric
       performanceMonitor.recordDatabaseMetric(queryText, duration, rowCount);
@@ -67,7 +67,7 @@ export function wrapPoolClient(client: PoolClient): PoolClient {
   };
 
   // Override the query method
-  client.query = wrappedQuery as unknown;
+  client.query = wrappedQuery as any;
 
   return client;
 }
@@ -97,7 +97,7 @@ export function wrapPool(pool: Pool): Pool {
         if (typeof args[0] === 'string') {
           queryText = args[0];
         } else if (args[0] && typeof args[0] === 'object' && 'text' in args[0]) {
-          queryText = args[0].text;
+          queryText = (args[0] as any).text;
         }
       }
 
@@ -106,7 +106,7 @@ export function wrapPool(pool: Pool): Pool {
 
       // Calculate duration
       const duration = Date.now() - startTime;
-      const rowCount = result?.rowCount || 0;
+      const rowCount = (result as any)?.rowCount || 0;
 
       // Record the metric
       performanceMonitor.recordDatabaseMetric(queryText, duration, rowCount);
@@ -128,7 +128,7 @@ export function wrapPool(pool: Pool): Pool {
 /**
  * Create a performance-tracked pool
  */
-export function createTrackedPool(poolConfig: unknown): Pool {
+export function createTrackedPool(poolConfig: any): Pool {
   const pool = new Pool(poolConfig);
   return wrapPool(pool);
 }

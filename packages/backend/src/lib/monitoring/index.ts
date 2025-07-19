@@ -19,27 +19,27 @@ export function createPerformanceMonitoring(_options?: unknown): any {
 // Create a dummy class for backward compatibility
 export class BackendPerformanceMonitoring {
   recordApiResponseTime(metric: any) {
-    return (performanceMonitoring as unknown).recordApiResponseTime(metric);
+    return (performanceMonitoring as any).recordApiResponseTime(metric);
   }
 
   recordDatabaseQuery(metric: any) {
-    return (performanceMonitoring as unknown).recordDatabaseQuery(metric);
+    return (performanceMonitoring as any).recordDatabaseQuery(metric);
   }
 
   recordFileOperation(metric: any) {
-    return (performanceMonitoring as unknown).recordFileOperation(metric);
+    return (performanceMonitoring as any).recordFileOperation(metric);
   }
 
   recordMLInference(metric: any) {
-    return (performanceMonitoring as unknown).recordMLInference(metric);
+    return (performanceMonitoring as any).recordMLInference(metric);
   }
 
   recordMemoryHeap(metric: any) {
-    return (performanceMonitoring as unknown).recordMemoryHeap(metric);
+    return (performanceMonitoring as any).recordMemoryHeap(metric);
   }
 
   recordCPUUsage(metric: any) {
-    return (performanceMonitoring as unknown).recordCPUUsage(metric);
+    return (performanceMonitoring as any).recordCPUUsage(metric);
   }
 }
 
