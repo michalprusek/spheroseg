@@ -29,6 +29,7 @@ import downloadRoutes from './download';
 import metricsApiRoutes from './metrics';
 import diagnosticsRoutes from './diagnostics';
 import monitoringRoutes from './monitoring';
+import errorsRoutes from './errors';
 
 // Create main router
 const router: Router = express.Router();
@@ -83,6 +84,9 @@ router.use('/diagnostics', diagnosticsRoutes);
 
 // Monitoring routes (comprehensive monitoring dashboard)
 router.use('/monitoring', monitoringRoutes);
+
+// Error reporting routes
+router.use('/errors', errorsRoutes);
 
 // Debug routes (only in development)
 if (process.env.NODE_ENV !== 'production') {
