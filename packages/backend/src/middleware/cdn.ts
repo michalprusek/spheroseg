@@ -4,15 +4,15 @@ import { getCDNService } from '../services/cdnService';
 import logger from '../utils/logger';
 
 // Middleware to add CDN URL helper to response locals
-export function cdnUrlMiddleware(req: Request, res: Response, next: NextFunction) {
+export function cdnUrlMiddleware(_req: Request, res: Response, next: NextFunction) {
   // Add CDN URL helper to response locals
-  res.locals.getCDNUrl = (path: string, options?: unknown) => {
+  res.locals['getCDNUrl'] = (path: string, options?: Record<string, unknown>) => {
     const cdnService = getCDNService();
     return cdnService.getUrl(path, options);
   };
 
   // Add helper to determine if CDN is enabled
-  res.locals.cdnEnabled = shouldUseCDN();
+  res.locals['cdnEnabled'] = shouldUseCDN();
 
   next();
 }
@@ -81,13 +81,14 @@ export async function cdnPurgeMiddleware(req: Request, res: Response, next: Next
       res.status(500).json({ success: false, error: 'Failed to purge CDN cache' });
     }
   } catch (error: unknown) {
-    logger.error('CDN purge error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error('CDN purge error:', error as Record<string, unknown>);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ success: false, error: errorMessage });
   }
 }
 
 // Middleware to rewrite asset URLs in JSON responses
-export function cdnRewriteMiddleware(req: Request, res: Response, next: NextFunction) {
+export function cdnRewriteMiddleware(_req: Request, res: Response, next: NextFunction) {
   if (!shouldUseCDN()) {
     return next();
   }
@@ -105,7 +106,7 @@ export function cdnRewriteMiddleware(req: Request, res: Response, next: NextFunc
 }
 
 // Helper function to set CDN headers
-function setCDNHeaders(req: Request, res: Response) {
+function setCDNHeaders(_req: Request, res: Response) {
   // Skip if headers already sent
   if (res.headersSent) return;
 

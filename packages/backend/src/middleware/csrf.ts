@@ -78,14 +78,14 @@ export function csrfProtection(req: CSRFRequest, res: Response, next: NextFuncti
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     // Add CSRF token function for GET requests
     req.csrfToken = () => {
-      const sessionId = req.sessionID || req.ip;
+      const sessionId = req.sessionID || req.ip || 'anonymous';
       return getOrCreateToken(sessionId);
     };
     return next();
   }
 
   // Get session ID (use sessionID if available, otherwise use IP)
-  const sessionId = req.sessionID || req.ip;
+  const sessionId = req.sessionID || req.ip || 'anonymous';
 
   // Get token from request
   const token =
@@ -108,7 +108,7 @@ export function csrfProtection(req: CSRFRequest, res: Response, next: NextFuncti
   }
 
   // Validate token
-  if (!validateToken(sessionId, token)) {
+  if (!validateToken(sessionId, token as string)) {
     logger.warn('Invalid CSRF token', {
       method: req.method,
       path: req.path,
@@ -140,7 +140,7 @@ export function csrfCookie(req: CSRFRequest, res: Response, next: NextFunction):
   }
 
   // Generate token
-  const sessionId = req.sessionID || req.ip;
+  const sessionId = req.sessionID || req.ip || 'anonymous';
   const token = getOrCreateToken(sessionId);
 
   // Set cookie
@@ -158,7 +158,7 @@ export function csrfCookie(req: CSRFRequest, res: Response, next: NextFunction):
  * Get CSRF token endpoint
  */
 export function csrfTokenEndpoint(req: CSRFRequest, res: Response): void {
-  const sessionId = req.sessionID || req.ip;
+  const sessionId = req.sessionID || req.ip || 'anonymous';
   const token = getOrCreateToken(sessionId);
 
   res.json({ csrfToken: token });

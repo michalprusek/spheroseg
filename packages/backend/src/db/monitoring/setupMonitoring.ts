@@ -8,7 +8,6 @@ import { Express } from 'express';
 import dbMonitoring from './index';
 import dbMonitoringMiddleware from '../../middleware/dbMonitoringMiddleware';
 import { unifiedLogger } from '../../monitoring/unified';
-import pool from '../optimized';
 
 /**
  * Setup the database monitoring module

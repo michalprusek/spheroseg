@@ -9,8 +9,6 @@ import { performanceMonitoring } from '../../monitoring/unified';
 
 // Re-export the unified monitoring instance as BackendPerformanceMonitoring
 export class BackendPerformanceMonitoring {
-  private static instance = performanceMonitoring;
-
   public static getInstance(_options?: unknown): typeof performanceMonitoring {
     return performanceMonitoring;
   }

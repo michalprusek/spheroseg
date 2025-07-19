@@ -105,7 +105,7 @@ export const combineCacheStrategies = (
     const runNext = () => {
       if (index < strategies.length) {
         const strategy = strategies[index++];
-        strategy(req, res, runNext);
+        strategy?.(req, res, runNext);
       } else {
         next();
       }

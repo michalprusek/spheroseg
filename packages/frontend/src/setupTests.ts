@@ -41,3 +41,24 @@ global.ResizeObserver = class ResizeObserver {
     // do nothing
   }
 };
+
+// Mock timers to fix clearInterval issues in jsdom
+// Store references to real timer functions
+const realSetTimeout = globalThis.setTimeout;
+const realClearTimeout = globalThis.clearTimeout;
+const realSetInterval = globalThis.setInterval;
+const realClearInterval = globalThis.clearInterval;
+
+// Ensure timer functions are properly defined in global scope
+globalThis.setTimeout = realSetTimeout;
+globalThis.clearTimeout = realClearTimeout;
+globalThis.setInterval = realSetInterval;
+globalThis.clearInterval = realClearInterval;
+
+// Also ensure they're available on window object
+if (typeof window !== 'undefined') {
+  window.setTimeout = realSetTimeout;
+  window.clearTimeout = realClearTimeout;
+  window.setInterval = realSetInterval;
+  window.clearInterval = realClearInterval;
+}
