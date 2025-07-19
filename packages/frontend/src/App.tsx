@@ -1,9 +1,9 @@
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { toast } from 'sonner';
 import ErrorBoundary from './components/ErrorBoundary';
 import { routes } from './routing/routes';
+import { queryClient } from './config/queryClient';
 
 // i18n
 import './i18n';
@@ -13,26 +13,6 @@ import '@/utils/debugI18next';
 
 // Import accessibility CSS
 import './components/a11y/SkipLink.css';
-
-// Create a client for React Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: false,
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes (reduces unnecessary refetches)
-      gcTime: 10 * 60 * 1000, // 10 minutes (cache time)
-    },
-    mutations: {
-      onError: () => {
-        // Display error to the user via toast notification
-        toast.error('Failed to update data. Please try again.');
-      },
-    },
-  },
-});
 
 // Prefetch critical routes on app initialization
 const prefetchRoute = (path: string) => {

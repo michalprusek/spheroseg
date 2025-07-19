@@ -6,6 +6,7 @@
 import uploadClient from '@/lib/uploadClient';
 import { Image as ApiImageType, ProjectImage } from '@/types';
 import { mapApiImageToProjectImage } from './projectImages';
+import logger from '@/utils/logger';
 
 const UNIFIED_UPLOAD_ENDPOINT = (projectId: string) => `/api/projects/${projectId}/images`;
 
@@ -36,7 +37,7 @@ export const uploadFile = async (projectId: string, file: File): Promise<Project
     // Fallback if backend returns a single Image-like object directly (less ideal but handle for robustness)
     // This case should ideally not happen if backend adheres to spec (always returning an array)
     if (response.data && !Array.isArray(response.data)) {
-      console.warn('Backend returned a single object for single file upload, expected an array. Attempting to map.');
+      logger.warn('Backend returned a single object for single file upload, expected an array. Attempting to map.');
       // We need to cast to 'any' then 'Image' if we are sure about the structure
       // but it's safer to assume the backend should always return an array.
       // If this path is hit, it indicates a backend deviation from spec.
@@ -45,7 +46,7 @@ export const uploadFile = async (projectId: string, file: File): Promise<Project
     }
     throw new Error('Invalid response from server after file upload');
   } catch (error) {
-    console.error('Error uploading single file:', error);
+    logger.error('Error uploading single file:', error);
     throw error;
   }
 };
@@ -81,7 +82,7 @@ export const uploadFiles = async (projectId: string, files: File[]): Promise<Pro
     }
     throw new Error('Invalid response from server after files upload; expected an array.');
   } catch (error) {
-    console.error('Error uploading multiple files:', error);
+    logger.error('Error uploading multiple files:', error);
     // The original error is re-thrown, no more internal fallbacks to other endpoints.
     // The `uploadFilesWithFallback` will handle the local storage fallback if this throws.
     throw error;
@@ -100,7 +101,7 @@ export const uploadFilesWithoutFallback = async (projectId: string, files: File[
     // Try to upload the files to the server using the now unified uploadFiles function
     return await uploadFiles(projectId, files);
   } catch (error) {
-    console.error('Error uploading files (no fallback):', error);
+    logger.error('Error uploading files (no fallback):', error);
     // Do not use fallback, just propagate the error
     throw error;
   }
@@ -120,7 +121,7 @@ export const uploadFilesWithFallback = async (
 ): Promise<ProjectImage[]> => {
   // Kontrola, zda máme nějaké soubory k nahrání
   if (!files || files.length === 0) {
-    console.log('No files to upload');
+    logger.info('No files to upload');
     return [];
   }
 
@@ -153,7 +154,7 @@ export const uploadFilesWithFallback = async (
     }
 
     // Pokud je souborů více, rozdělíme je na dávky
-    console.log(`Splitting ${files.length} files into batches of ${BATCH_SIZE}`);
+    logger.info(`Splitting ${files.length} files into batches of ${BATCH_SIZE}`);
 
     const allUploadedImages: ProjectImage[] = [];
 
@@ -163,7 +164,7 @@ export const uploadFilesWithFallback = async (
       const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
       const totalBatches = Math.ceil(files.length / BATCH_SIZE);
 
-      console.log(`Uploading batch ${batchNumber}/${totalBatches} with ${batch.length} files`);
+      logger.info(`Uploading batch ${batchNumber}/${totalBatches} with ${batch.length} files`);
 
       // Report progress for current batch start
       if (onProgress) {
@@ -176,7 +177,7 @@ export const uploadFilesWithFallback = async (
       try {
         // Nahrajeme dávku
         const batchImages = await uploadFiles(projectId, batch);
-        console.log(`Successfully uploaded batch ${batchNumber}/${totalBatches} with ${batchImages.length} images`);
+        logger.info(`Successfully uploaded batch ${batchNumber}/${totalBatches} with ${batchImages.length} images`);
 
         // Report progress for current batch completion progressively
         if (onProgress) {
@@ -190,7 +191,7 @@ export const uploadFilesWithFallback = async (
         // Přidáme nahraná data do celkového výsledku
         allUploadedImages.push(...batchImages);
       } catch (batchError) {
-        console.error(`Error uploading batch ${batchNumber}/${totalBatches}:`, batchError);
+        logger.error(`Error uploading batch ${batchNumber}/${totalBatches}:`, batchError);
 
         // Report progress for fallback processing
         if (onProgress) {
@@ -216,7 +217,7 @@ export const uploadFilesWithFallback = async (
 
     return allUploadedImages;
   } catch (error) {
-    console.error('Error uploading files to server, using local fallback:', error);
+    logger.error('Error uploading files to server, using local fallback:', error);
 
     // Report progress for fallback processing
     if (onProgress) {
