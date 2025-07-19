@@ -18,6 +18,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import logger from '@/utils/logger';
 
 // Enhanced StatCard with animation and hover effects
 interface StatCardProps {
@@ -279,7 +280,7 @@ const StatsOverview: React.FC = () => {
     const debouncedUpdate = () => {
       clearTimeout(updateTimeout);
       updateTimeout = setTimeout(() => {
-        console.log('Debounced statistics update');
+        logger.debug('Debounced statistics update');
         // Use React Query's invalidation instead of manually clearing cache
         // The hook will handle refetching if needed
         fetchStatistics();
@@ -288,7 +289,7 @@ const StatsOverview: React.FC = () => {
 
     const handleStatisticsUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
-      console.log('Statistics update needed event received', customEvent.detail);
+      logger.debug('Statistics update needed event received', customEvent.detail);
       debouncedUpdate();
     };
 
@@ -300,7 +301,7 @@ const StatsOverview: React.FC = () => {
       }>;
 
       if (customEvent.detail.updateStatistics) {
-        console.log('Project deleted, updating statistics', customEvent.detail);
+        logger.debug('Project deleted, updating statistics', customEvent.detail);
         debouncedUpdate();
       }
     };
@@ -312,7 +313,7 @@ const StatsOverview: React.FC = () => {
         forceRefresh?: boolean;
       }>;
 
-      console.log('Image deleted, updating statistics', customEvent.detail);
+      logger.debug('Image deleted, updating statistics', customEvent.detail);
       debouncedUpdate();
     };
 

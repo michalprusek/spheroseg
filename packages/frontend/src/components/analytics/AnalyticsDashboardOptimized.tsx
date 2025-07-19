@@ -34,6 +34,7 @@ import {
   Legend,
 } from 'recharts';
 import { format, subDays } from 'date-fns';
+import logger from '@/utils/logger';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -190,7 +191,7 @@ export const AnalyticsDashboard = memo(() => {
 
   const handleExport = useCallback(() => {
     // Export logic here
-    console.log('Exporting analytics data...');
+    logger.debug('Exporting analytics data...');
   }, []);
 
   if (isLoading) {
