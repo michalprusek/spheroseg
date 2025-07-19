@@ -4,7 +4,7 @@
  * Tests for the comprehensive validation and sanitization system
  */
 
-import { describe, it, expect } from 'vitest';
+/// <reference types="vitest/globals" />
 import { z } from 'zod';
 import {
   createTextSchema,

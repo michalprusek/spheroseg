@@ -140,9 +140,10 @@ export async function expectToThrow(
     await fn();
     throw new Error('Expected function to throw, but it did not');
   } catch (error) {
-    if (expectedMessage && !error.message.includes(expectedMessage)) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (expectedMessage && !errorMessage.includes(expectedMessage)) {
       throw new Error(
-        `Expected error message to include "${expectedMessage}", but got: "${error.message}"`
+        `Expected error message to include "${expectedMessage}", but got: "${errorMessage}"`
       );
     }
   }

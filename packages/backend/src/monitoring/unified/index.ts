@@ -1015,9 +1015,10 @@ export function updatePoolMetrics(pool: unknown) {
   if (!METRICS_ENABLED) return;
 
   try {
-    connectionPoolGauge.set({ state: 'total' }, pool.totalCount || 0);
-    connectionPoolGauge.set({ state: 'idle' }, pool.idleCount || 0);
-    connectionPoolGauge.set({ state: 'waiting' }, pool.waitingCount || 0);
+    const pgPool = pool as any; // Type assertion for pg Pool
+    connectionPoolGauge.set({ state: 'total' }, pgPool.totalCount || 0);
+    connectionPoolGauge.set({ state: 'idle' }, pgPool.idleCount || 0);
+    connectionPoolGauge.set({ state: 'waiting' }, pgPool.waitingCount || 0);
   } catch (error) {
     logger.error('Error updating pool metrics', error);
   }
@@ -1087,7 +1088,11 @@ export function getQueryFrequencyStats(): Record<string, number> {
     if (!stats[pattern.operation]) {
       stats[pattern.operation] = 0;
     }
-    stats[pattern.operation] += pattern.totalExecutions;
+    if (stats[pattern.operation]) {
+      stats[pattern.operation] += pattern.totalExecutions;
+    } else {
+      stats[pattern.operation] = pattern.totalExecutions;
+    }
   });
 
   return stats;

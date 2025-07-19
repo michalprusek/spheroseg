@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+/// <reference types="vitest/globals" />
 import { z, ZodError } from 'zod';
 import { UnifiedResponseHandler } from '../responseHandler';
 import { ApiResponse, ApiErrorResponse } from '../response.types';

@@ -4,7 +4,8 @@
  * Tests the complete upload workflow with mocked HTTP requests
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+/// <reference types="vitest/globals" />
+import { vi } from 'vitest';
 import { UnifiedUploadService } from '../UnifiedUploadService';
 import type { UploadFile, UploadOptions } from '../types';
 

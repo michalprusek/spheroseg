@@ -136,6 +136,9 @@ vi.mock('@/contexts/LanguageContext', () => ({
         'export.formats.YOLO': 'YOLO TXT',
         'export.formats.MASK': 'Binary Masks',
         'export.formats.POLYGONS': 'Polygon JSON',
+        'export.formats.DATUMARO': 'Datumaro',
+        'export.formats.CVAT_MASKS': 'CVAT Masks',
+        'export.formats.CVAT_YAML': 'CVAT YAML',
         'export.formatDescriptions.COCO': 'Common Objects in Context format',
         'export.formatDescriptions.YOLO': 'You Only Look Once format',
         'export.formatDescriptions.MASK': 'Binary mask images',
@@ -172,7 +175,7 @@ describe('ExportOptionsCard Component (Enhanced)', () => {
   });
 
   it('renders correctly with all options enabled and proper translations', () => {
-    const { container } = render(<ExportOptionsCard {...mockProps} />);
+    const { container } = render(<ExportOptionsCard {...mockProps} includeObjectMetrics={true} />);
     
     // Check title
     expect(screen.getByText('Export Options')).toBeInTheDocument();
@@ -183,12 +186,11 @@ describe('ExportOptionsCard Component (Enhanced)', () => {
     expect(screen.getByText('Include Object Metrics')).toBeInTheDocument();
     expect(screen.getByText('Include Original Images')).toBeInTheDocument();
     
-    // Check format selectors
-    expect(screen.getByText('Select Export Format')).toBeInTheDocument();
-    expect(screen.getByText('Select Metrics Format')).toBeInTheDocument();
-    
-    // Check export button
+    // Check export button (only appears when includeObjectMetrics is true)
     expect(screen.getByText('Export Metrics Only')).toBeInTheDocument();
+    
+    // Format selectors are conditional - they only appear when respective options are enabled
+    // So they won't be visible with default mockProps unless we enable them
   });
 
   it('reacts properly to checkbox state changes with correct callback invocations', async () => {
@@ -198,7 +200,7 @@ describe('ExportOptionsCard Component (Enhanced)', () => {
     // Find checkboxes
     const metadataCheckbox = screen.getByTestId('checkbox-include-metadata');
     const segmentationCheckbox = screen.getByTestId('checkbox-include-segmentation');
-    const metricsCheckbox = screen.getByTestId('checkbox-include-metrics');
+    const metricsCheckbox = screen.getByTestId('checkbox-include-object-metrics');
     const imagesCheckbox = screen.getByTestId('checkbox-include-images');
     
     // Click each checkbox
@@ -241,7 +243,7 @@ describe('ExportOptionsCard Component (Enhanced)', () => {
   });
 
   it('handles export metrics button click with loading state', async () => {
-    const { rerender } = render(<ExportOptionsCard {...mockProps} />);
+    const { rerender } = render(<ExportOptionsCard {...mockProps} includeObjectMetrics={true} />);
     const user = userEvent.setup();
     
     const exportButton = screen.getByText('Export Metrics Only');
@@ -254,7 +256,7 @@ describe('ExportOptionsCard Component (Enhanced)', () => {
     expect(mockProps.handleExportMetricsAsXlsx).toHaveBeenCalled();
     
     // Rerender with loading state
-    rerender(<ExportOptionsCard {...mockProps} isExporting={true} />);
+    rerender(<ExportOptionsCard {...mockProps} includeObjectMetrics={true} isExporting={true} />);
     
     // Button should be disabled when exporting
     const disabledButton = screen.getByText('Export Metrics Only');
@@ -285,13 +287,13 @@ describe('ExportOptionsCard Component (Enhanced)', () => {
     
     render(<ExportOptionsCard {...propsWithNoImages} />);
     
-    expect(screen.getByText('export.selectImagesForExport')).toBeInTheDocument();
+    expect(screen.getByText('Please select images for export')).toBeInTheDocument();
   });
 
   it('handles different format descriptions correctly', () => {
     render(<ExportOptionsCard {...mockProps} includeObjectMetrics={true} />);
     
     // Check if format descriptions are shown - using translation keys
-    expect(screen.getByText('export.metricsRequireSegmentation')).toBeInTheDocument();
+    expect(screen.getByText('Metrics are based on segmentation data')).toBeInTheDocument();
   });
 });

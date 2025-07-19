@@ -3,7 +3,7 @@
  */
 
 import { Request, Response } from 'express';
-import { createEnhancedCorsMiddleware, validateCorsConfiguration, getCorsConfiguration, isOriginAllowed, validateOriginStructure } from '../cors.enhanced';
+import { createEnhancedCorsMiddleware, validateCorsConfiguration, getCorsConfiguration } from '../cors.enhanced';
 
 // Mock modules
 jest.mock('../../utils/logger');
@@ -190,10 +190,10 @@ describe('Enhanced CORS Middleware', () => {
   });
 
   describe('validateCorsConfiguration', () => {
-    const originalEnv = process.env.NODE_ENV;
+    const originalEnv = process.env['NODE_ENV'];
 
     afterEach(() => {
-      process.env.NODE_ENV = originalEnv;
+      process.env['NODE_ENV'] = originalEnv;
     });
 
     it('should pass validation with valid configuration', () => {

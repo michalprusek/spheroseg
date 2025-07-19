@@ -4,7 +4,8 @@
  * Demonstrates how to test the unified upload service
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+/// <reference types="vitest/globals" />
+import { vi } from 'vitest';
 import { UnifiedUploadService } from '../../services/upload';
 import { setupAPIMocks, resetAPIMocks, mockUploadEndpoints } from '../mocks/api';
 import { createMockFile, testFiles } from '../mocks/files';

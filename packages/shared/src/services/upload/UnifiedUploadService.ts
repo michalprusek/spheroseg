@@ -11,7 +11,7 @@
  * - Concurrent upload limiting
  */
 
-import { SharedLogger } from '@/utils/logger';
+import { SharedLogger } from '@shared/utils/logger';
 import { 
   UploadFile, 
   UploadStatus, 
