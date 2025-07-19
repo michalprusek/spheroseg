@@ -593,7 +593,7 @@ class UnifiedAuthService {
 
       // Check if token is expired
       return Date.now() < exp * 1000;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
