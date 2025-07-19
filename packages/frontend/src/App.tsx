@@ -35,6 +35,14 @@ const queryClient = new QueryClient({
 });
 
 // Prefetch critical routes on app initialization
+const prefetchRoute = (path: string) => {
+  // Prefetch route by creating a link element with prefetch
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.href = path;
+  document.head.appendChild(link);
+};
+
 if (typeof window !== 'undefined') {
   // Prefetch sign-in page for faster navigation
   setTimeout(() => prefetchRoute('/sign-in'), 1000);
