@@ -26,11 +26,11 @@ vi.mock('react-i18next', () => ({
 }));
 
 // Mock slicePolygon utility
-vi.mock('../utils/slicePolygon', () => ({
+vi.mock('../../utils/slicePolygon', () => ({
   slicePolygon: vi.fn(),
 }));
 
-import { slicePolygon } from '../utils/slicePolygon';
+import { slicePolygon } from '../../utils/slicePolygon';
 
 describe('useSlicing hook', () => {
   // Reset mocks before each test

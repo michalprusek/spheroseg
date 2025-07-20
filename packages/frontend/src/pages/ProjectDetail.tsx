@@ -13,7 +13,7 @@ import { useImageFilter } from '@/hooks/useImageFilter';
 import { useProjectImageActions } from '@/components/project/ProjectImageActions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { Project, ProjectImage, ImageStatus } from '@/types';
 import { useSocket } from '@/contexts/SocketContext';
 import { useExportFunctions } from '@/pages/export/hooks/useExportFunctions';
@@ -809,7 +809,7 @@ const ProjectDetail = () => {
             });
 
             // Show specific error message
-            const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+            const errorMessage = error.data?.message || error.message || 'Unknown error';
             toast.error(`Failed to queue segmentation: ${errorMessage}`);
 
             // Informujeme uživatele o chybě

@@ -34,20 +34,120 @@ if (typeof window !== 'undefined') {
 console.log('React Router Future Flags set and warnings patched in test-setup.ts');
 
 // Mock i18n.ts module to avoid initialization
-vi.mock('@/i18n', () => ({
-  i18nInitializedPromise: Promise.resolve({
-    language: 'en',
-    changeLanguage: vi.fn().mockResolvedValue(undefined),
-    t: vi.fn((key) => key),
+vi.mock('@/i18n', () => {
+  // Global state that can be controlled by tests
+  let currentTestLanguage = 'en';
+  
+  // Define translations inside the mock factory
+  const allTranslations = {
+    en: { 
+      'hello': 'Hello',
+      'greeting.welcome': 'Welcome',
+      'greeting.morning': 'Good morning',
+      'greeting.evening': 'Good evening',
+      'items.zero': 'No items',
+      'items.one': 'One item',
+      'items.other': '{{count}} items',
+      'params': 'Hello, {{name}}! Today is {{date, date}}',
+      'nested.deeply.key': 'Deeply nested key',
+    },
+    cs: {
+      'hello': 'Ahoj',
+      'greeting.welcome': 'Vítejte',
+      'greeting.morning': 'Dobré ráno',
+      'greeting.evening': 'Dobrý večer',
+      'items.zero': 'Žádné položky',
+      'items.one': 'Jedna položka',
+      'items.few': '{{count}} položky',
+      'items.many': '{{count}} položek',
+      'items.other': '{{count}} položek',
+      'params': 'Ahoj, {{name}}! Dnes je {{date, date}}',
+      'nested.deeply.key': 'Hluboce vnořený klíč',
+    },
+    de: { hello: 'Hallo', 'greeting.welcome': 'Willkommen' },
+    es: { hello: 'Hola', 'greeting.welcome': 'Bienvenido' },
+    fr: { hello: 'Bonjour', 'greeting.welcome': 'Bienvenue' },
+    zh: { hello: '你好', 'greeting.welcome': '欢迎' },
+  };
+  
+  const mockTFunction = vi.fn().mockImplementation((key, options, fallback) => {
+    if (!key) return key;
+    
+    // Always get current language from global state - this ensures reactivity
+    const currentLang = (global as any).__testCurrentLanguage || currentTestLanguage;
+    const translations = allTranslations[currentLang] || allTranslations.en;
+    
+    // Debug logging for language mismatch
+    if (key === 'hello') {
+      console.log('[mockTFunction] Key:', key, 'currentTestLanguage:', currentTestLanguage, 'GlobalLang:', (global as any).__testCurrentLanguage, 'FinalLang:', currentLang, 'Translation:', translations[key]);
+    }
+    
+    // Return the translation, fallback, or key
+    if (translations[key]) {
+      let translated = translations[key];
+      
+      // Handle parameters in translation strings
+      if (options && typeof translated === 'string') {
+        Object.entries(options).forEach(([paramKey, paramValue]) => {
+          if (!paramKey.startsWith('_')) {
+            const regex = new RegExp(`{{${paramKey}}}`, 'g');
+            translated = translated.replace(regex, String(paramValue));
+            
+            // Handle date formatting
+            const dateRegex = new RegExp(`{{${paramKey},\\s*datetime}}`, 'g');
+            if (paramValue instanceof Date && dateRegex.test(translated)) {
+              translated = translated.replace(dateRegex, paramValue.toLocaleDateString());
+            }
+          }
+        });
+      }
+      
+      return translated;
+    }
+    
+    // If translation not found, return fallback or key
+    if (fallback) return fallback;
+    if (options?.defaultValue) return options.defaultValue;
+    return key;
+  });
+  
+  const i18nInstance = {
     isInitialized: true,
-  }),
-  default: {
-    language: 'en',
-    changeLanguage: vi.fn().mockResolvedValue(undefined),
-    t: vi.fn((key) => key),
-    isInitialized: true,
-  },
-}));
+    get language() { 
+      return (global as any).__testCurrentLanguage || currentTestLanguage; 
+    },
+    changeLanguage: vi.fn().mockImplementation(async (lang) => {
+      currentTestLanguage = lang;
+      (global as any).__testCurrentLanguage = lang;
+      return Promise.resolve();
+    }),
+    t: mockTFunction,
+    options: {
+      resources: {
+        en: { translation: allTranslations.en },
+        cs: { translation: allTranslations.cs },
+        de: { translation: allTranslations.de },
+        es: { translation: allTranslations.es },
+        fr: { translation: allTranslations.fr },
+        zh: { translation: allTranslations.zh }
+      }
+    }
+  };
+  
+  // Store global references for test control - make them accessible
+  (global as any).__testCurrentLanguage = currentTestLanguage;
+  (global as any).__testMockTFunction = mockTFunction;
+  (global as any).__testSetLanguage = (lang: string) => { 
+    currentTestLanguage = lang;
+    (global as any).__testCurrentLanguage = lang;
+  };
+  (global as any).__testTranslations = allTranslations;
+  
+  return {
+    i18nInitializedPromise: Promise.resolve(i18nInstance),
+    default: i18nInstance,
+  };
+});
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => {
@@ -317,6 +417,10 @@ vi.mock('lucide-react', () => {
 
 // Mock react-i18next with actual translation mappings
 const mockTranslations: Record<string, string> = {
+  // Basic test translations
+  'hello': 'Hello',
+  'greeting.welcome': 'Welcome',
+  
   // Common translations
   'Export Options': 'Export Options',
   'Include Project Metadata': 'Include Project Metadata',
@@ -435,46 +539,79 @@ const mockTranslations: Record<string, string> = {
   'navigation.register': 'Register',
 };
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, params?: any) => {
-      // Return actual translation if available, otherwise return the key
-      const translation = mockTranslations[key] || key;
-      
-      if (params && typeof translation === 'string') {
-        // Simple parameter replacement for testing
-        return translation.replace(/\{\{(\w+)\}\}/g, (match, param) => {
-          return params[param] || match;
-        });
-      }
-      return translation;
+vi.mock('react-i18next', () => {
+  return {
+    useTranslation: () => ({
+      t: vi.fn().mockImplementation((key: string, params?: any) => {
+        if (!key) return key;
+        
+        // Use the global mock function from i18n mock
+        if ((global as any).__testMockTFunction) {
+          return (global as any).__testMockTFunction(key, params);
+        }
+        
+        // Fallback to mockTranslations
+        let translation = mockTranslations[key] || key;
+        
+        // Handle parameter replacement
+        if (params && typeof translation === 'string') {
+          Object.entries(params).forEach(([paramKey, paramValue]) => {
+            if (!paramKey.startsWith('_')) {
+              const regex = new RegExp(`{{${paramKey}}}`, 'g');
+              translation = translation.replace(regex, String(paramValue));
+              
+              // Simple date format simulation
+              const dateRegex = new RegExp(`{{${paramKey}, date}}`, 'g');
+              if (paramValue instanceof Date && dateRegex.test(translation)) {
+                translation = translation.replace(dateRegex, paramValue.toLocaleDateString());
+              }
+            }
+          });
+        }
+        
+        return translation;
+      }),
+      i18n: {
+        changeLanguage: vi.fn().mockImplementation((lang) => {
+          currentTestLanguage = lang;
+          (global as any).__testCurrentLanguage = lang;
+          return Promise.resolve();
+        }),
+        get language() { 
+          return (global as any).__testCurrentLanguage || 'en';
+        },
+        languages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
+        isInitialized: true,
+        on: vi.fn(),
+        off: vi.fn(),
+        emit: vi.fn(),
+      },
+    }),
+    Trans: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
+    I18nextProvider: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
+    initReactI18next: {
+      type: '3rdParty',
+      init: vi.fn(),
     },
-    i18n: {
-      changeLanguage: vi.fn().mockResolvedValue(undefined),
-      language: 'en',
-      languages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
-      isInitialized: true,
-      on: vi.fn(),
-      off: vi.fn(),
-      emit: vi.fn(),
-    },
-  }),
-  Trans: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
-  I18nextProvider: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
-  initReactI18next: {
-    type: '3rdParty',
-    init: vi.fn(),
-  },
-}));
+  };
+});
 
 // Mock i18next
 vi.mock('i18next', () => {
   const mockI18next = {
     use: vi.fn(),
     init: vi.fn().mockResolvedValue(undefined),
-    changeLanguage: vi.fn().mockResolvedValue(undefined),
-    t: vi.fn((key: string, params?: any) => {
-      // Use the same translation logic
+    changeLanguage: vi.fn().mockImplementation((lang) => {
+      currentTestLanguage = lang;
+      (global as any).__testCurrentLanguage = lang;
+      return Promise.resolve();
+    }),
+    t: vi.fn().mockImplementation((key: string, params?: any) => {
+      // Use the global mock function from i18n mock
+      if ((global as any).__testMockTFunction) {
+        return (global as any).__testMockTFunction(key, params);
+      }
+      // Fallback to simple translation
       const translation = mockTranslations[key] || key;
       
       if (params && typeof translation === 'string') {
@@ -484,7 +621,9 @@ vi.mock('i18next', () => {
       }
       return translation;
     }),
-    language: 'en',
+    get language() { 
+      return (global as any).__testCurrentLanguage || 'en';
+    },
     on: vi.fn(),
     off: vi.fn(),
     emit: vi.fn(),
@@ -498,7 +637,14 @@ vi.mock('i18next', () => {
     reloadResources: vi.fn().mockResolvedValue(undefined),
     isInitialized: true,
     options: {
-      resources: {},
+      resources: {
+        en: {},
+        cs: {},
+        de: {},
+        es: {},
+        fr: {},
+        zh: {},
+      },
       lng: 'en',
     },
   };
@@ -662,75 +808,277 @@ vi.mock('@/lib/apiClient', () => ({
   },
 }));
 
-// Mock unified logger system
-vi.mock('@/utils/logging/unifiedLogger', () => ({
+// Mock @/services/api/client (for useAuthApi and other services)
+vi.mock('@/services/api/client', () => ({
   default: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    child: vi.fn(() => ({
-      debug: vi.fn(),
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-    })),
-  },
-  createLogger: vi.fn(() => ({
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  })),
-  getLogger: vi.fn(() => ({
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  })),
-  LogLevel: {
-    DEBUG: 0,
-    INFO: 1,
-    WARN: 2,
-    ERROR: 3,
-    NONE: 4,
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+    delete: vi.fn().mockResolvedValue({ data: {} }),
+    patch: vi.fn().mockResolvedValue({ data: {} }),
   },
 }));
 
-// Mock legacy logger (re-exports from unified logger)
-vi.mock('@/utils/logger', () => ({
-  default: {
+// Mock Socket.IO
+vi.mock('socket.io-client', () => ({
+  io: vi.fn(() => ({
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
+    emit: vi.fn(),
+  })),
+}));
+
+// Mock UnifiedWebSocketService
+vi.mock('@/services/unifiedWebSocketService', () => ({
+  UnifiedWebSocketService: {
+    getInstance: vi.fn(() => ({
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+      once: vi.fn(),
+      emit: vi.fn(),
+      joinRoom: vi.fn().mockResolvedValue(undefined),
+      leaveRoom: vi.fn().mockResolvedValue(undefined),
+      isConnected: vi.fn().mockReturnValue(false),
+      enableBatching: vi.fn(),
+      setQueueOptions: vi.fn(),
+    }))
+  }
+}));
+
+// Mock lib logger (re-exports from utils/logger)
+vi.mock('@/lib/logger', () => {
+  const mockLogs: any[] = [];
+  let mockLevel = 1; // INFO level by default
+  return {
+    default: {
+      debug: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 0) { // DEBUG level
+          mockLogs.push({ level: 0, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      info: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 1) { // INFO level
+          mockLogs.push({ level: 1, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      warn: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 2) { // WARN level
+          mockLogs.push({ level: 2, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      error: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 3) { // ERROR level
+          mockLogs.push({ level: 3, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      setLevel: vi.fn((level: number) => mockLevel = level),
+    },
+    createLogger: vi.fn(() => ({
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      setLevel: vi.fn(),
+    })),
+    createNamespacedLogger: vi.fn(() => ({
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      setLevel: vi.fn(),
+    })),
+    getLogger: vi.fn(() => ({
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      setLevel: vi.fn(),
+    })),
+    getLogs: vi.fn(() => mockLogs),
+    clearLogs: vi.fn(() => mockLogs.length = 0),
+  };
+});
+
+// Mock unified logger system
+vi.mock('@/utils/logging/unifiedLogger', () => {
+  const mockLogs: any[] = [];
+  let mockLevel = 1; // INFO level by default
+
+  return {
+    default: {
+      debug: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 0) { // DEBUG level
+          mockLogs.push({ level: 0, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      info: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 1) { // INFO level
+          mockLogs.push({ level: 1, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      warn: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 2) { // WARN level
+          mockLogs.push({ level: 2, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      error: vi.fn((message: string, error?: any, context?: any) => {
+        if (mockLevel <= 3) { // ERROR level
+          mockLogs.push({ level: 3, message, error, context, timestamp: new Date().toISOString() });
+        }
+      }),
+      getLogs: vi.fn(() => [...mockLogs]),
+      clearLogs: vi.fn(() => mockLogs.length = 0),
+      getLevel: vi.fn(() => mockLevel),
+      setLevel: vi.fn((level: number) => mockLevel = level),
+      child: vi.fn(() => ({
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        getLogs: vi.fn(() => []),
+        clearLogs: vi.fn(),
+        getLevel: vi.fn(() => mockLevel),
+        setLevel: vi.fn((level: number) => mockLevel = level),
+      })),
+    },
+  createLogger: vi.fn(() => ({
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
+    getLogs: vi.fn(() => []),
+    clearLogs: vi.fn(),
+    getLevel: vi.fn(() => 1),
+    setLevel: vi.fn(),
     child: vi.fn(() => ({
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),
     })),
-  },
-  createLogger: vi.fn(() => ({
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
   })),
   getLogger: vi.fn(() => ({
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
+    getLogs: vi.fn(() => []),
+    clearLogs: vi.fn(),
+    getLevel: vi.fn(() => 1),
+    setLevel: vi.fn(),
+    child: vi.fn(() => ({
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    })),
   })),
-  LogLevel: {
-    DEBUG: 0,
-    INFO: 1,
-    WARN: 2,
-    ERROR: 3,
-    NONE: 4,
-  },
-}));
+    LogLevel: {
+      DEBUG: 0,
+      INFO: 1,
+      WARN: 2,
+      ERROR: 3,
+      NONE: 4,
+    },
+  };
+});
+
+// Mock legacy logger (re-exports from unified logger)
+vi.mock('@/utils/logger', async (importOriginal) => {
+  const actual = await importOriginal();
+  const mockLogs: any[] = [];
+  let mockLevel = 1; // INFO level by default
+
+  return {
+    ...actual,
+    default: {
+      debug: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 0) { // DEBUG level
+          mockLogs.push({ level: 0, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      info: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 1) { // INFO level
+          mockLogs.push({ level: 1, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      warn: vi.fn((message: string, data?: any) => {
+        if (mockLevel <= 2) { // WARN level
+          mockLogs.push({ level: 2, message, data, timestamp: new Date().toISOString() });
+        }
+      }),
+      error: vi.fn((message: string, error?: any, context?: any) => {
+        if (mockLevel <= 3) { // ERROR level
+          mockLogs.push({ level: 3, message, error, context, timestamp: new Date().toISOString() });
+        }
+      }),
+      getLogs: vi.fn(() => [...mockLogs]),
+      clearLogs: vi.fn(() => mockLogs.length = 0),
+      getLevel: vi.fn(() => mockLevel),
+      setLevel: vi.fn((level: number) => mockLevel = level),
+      child: vi.fn(() => ({
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        getLogs: vi.fn(() => []),
+        clearLogs: vi.fn(),
+        getLevel: vi.fn(() => mockLevel),
+        setLevel: vi.fn((level: number) => mockLevel = level),
+      })),
+    },
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    getLogs: vi.fn(() => []),
+    clearLogs: vi.fn(),
+    getLevel: vi.fn(() => 1),
+    setLevel: vi.fn(),
+    child: vi.fn(() => ({
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    })),
+  })),
+  getLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    getLogs: vi.fn(() => []),
+    clearLogs: vi.fn(),
+    getLevel: vi.fn(() => 1),
+    setLevel: vi.fn(),
+    child: vi.fn(() => ({
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    })),
+  })),
+  createNamespacedLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    setLevel: vi.fn(),
+  })),
+    LogLevel: {
+      DEBUG: 0,
+      INFO: 1,
+      WARN: 2,
+      ERROR: 3,
+      NONE: 4,
+    },
+  };
+});
 
 // Mock sonner
 vi.mock('sonner', () => ({
@@ -794,55 +1142,7 @@ vi.mock('../workers/polygonWorker.ts', () => ({
 import { MockWorker } from './__mocks__/polygonWorker';
 global.Worker = MockWorker as unknown;
 
-// Mock LanguageContext with proper provider
-const mockLanguageContext = React.createContext({
-  language: 'en',
-  setLanguage: vi.fn(),
-  t: vi.fn((key: string, params?: any) => {
-    const translation = mockTranslations[key] || key;
-    if (params && typeof translation === 'string') {
-      return translation.replace(/\{\{(\w+)\}\}/g, (match, param) => {
-        return params[param] || match;
-      });
-    }
-    return translation;
-  }),
-  availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
-});
-
-vi.mock('@/contexts/LanguageContext', () => {
-  return {
-    useLanguage: () => {
-      const context = React.useContext(mockLanguageContext);
-      if (!context) {
-        throw new Error('useLanguage must be used within a LanguageProvider');
-      }
-      return context;
-    },
-    LanguageProvider: ({ children }: { children: React.ReactNode }) => {
-      return React.createElement(
-        mockLanguageContext.Provider,
-        {
-          value: {
-            language: 'en',
-            setLanguage: vi.fn(),
-            t: vi.fn((key: string, params?: any) => {
-              const translation = mockTranslations[key] || key;
-              if (params && typeof translation === 'string') {
-                return translation.replace(/\{\{(\w+)\}\}/g, (match, param) => {
-                  return params[param] || match;
-                });
-              }
-              return translation;
-            }),
-            availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
-          },
-        },
-        children,
-      );
-    },
-  };
-});
+// Don't mock LanguageContext here - let individual tests handle it as needed
 
 // Mock useAuth hook with proper React component
 vi.mock('@/contexts/AuthContext', () => {
@@ -927,6 +1227,69 @@ if (typeof window !== 'undefined' && !window.indexedDB) {
     deleteDatabase: vi.fn(),
   };
 }
+
+// Mock the main config file
+vi.mock('@/config', () => ({
+  default: {
+    apiUrl: '/api',
+    apiBaseUrl: '/api',
+    apiAuthPrefix: '/api/auth',
+    apiUsersPrefix: '/api/users',
+    isDevelopment: true,
+    isProduction: false,
+  }
+}));
+
+// Mock zod for validation tests
+vi.mock('zod', () => {
+  // Create a mock ZodError class
+  class ZodError extends Error {
+    constructor(issues: any[]) {
+      super('Validation error');
+      this.name = 'ZodError';
+      this.issues = issues || [];
+    }
+    issues: any[];
+  }
+  
+  // Make ZodError available on the constructor for instanceof checks
+  ZodError.prototype.constructor = ZodError;
+
+  // Create a chainable mock validator
+  const createChainableMock = () => ({
+    email: () => createChainableMock(),
+    min: () => createChainableMock(),
+    max: () => createChainableMock(),
+    optional: () => createChainableMock(),
+    refine: () => createChainableMock(),
+    safeParse: vi.fn((value: any) => ({
+      success: true,
+      data: value,
+    })),
+    parse: vi.fn((value: any) => value),
+  });
+  
+  return {
+    z: {
+      ZodError,
+      string: () => createChainableMock(),
+      number: () => createChainableMock(),
+      boolean: () => createChainableMock(),
+      object: () => createChainableMock(),
+      array: () => createChainableMock(),
+      enum: (values: any[], options?: any) => ({
+        ...createChainableMock(),
+        _values: values,
+        options,
+      }),
+      literal: (value: any) => createChainableMock(),
+      union: (...schemas: any[]) => createChainableMock(),
+      undefined: () => createChainableMock(),
+      null: () => createChainableMock(),
+      any: () => createChainableMock(),
+    },
+  };
+});
 
 // Mock app.config.validated
 vi.mock('@/config/app.config.validated', () => {
@@ -1020,36 +1383,43 @@ vi.mock('@/config/app.config.validated', () => {
     parse: vi.fn((data: any) => {
       // Simulate validation by checking for obvious invalid data
       if (data.contact?.email && !data.contact.email.includes('@')) {
-        throw new z.ZodError([]);
+        throw new z.ZodError([{ message: 'Invalid email' }]);
       }
       if (data.organization?.primary?.url && !data.organization.primary.url.startsWith('http')) {
-        throw new z.ZodError([]);
+        throw new z.ZodError([{ message: 'Invalid URL' }]);
       }
       if (data.app?.version && !/^\d+\.\d+\.\d+$/.test(data.app.version)) {
-        throw new z.ZodError([]);
+        throw new z.ZodError([{ message: 'Invalid version format' }]);
       }
       if (data.social?.twitter?.username && !data.social.twitter.username.startsWith('@')) {
-        throw new z.ZodError([]);
+        throw new z.ZodError([{ message: 'Invalid Twitter username' }]);
       }
       if (data.legal?.lastUpdated && !/^\d{4}-\d{2}-\d{2}$/.test(data.legal.lastUpdated)) {
-        throw new z.ZodError([]);
+        throw new z.ZodError([{ message: 'Invalid date format' }]);
       }
       if (data.api?.timeout && data.api.timeout <= 0) {
-        throw new z.ZodError([]);
+        throw new z.ZodError([{ message: 'Invalid timeout' }]);
       }
       if (data.api?.retryAttempts && (data.api.retryAttempts < 0 || data.api.retryAttempts > 5)) {
-        throw new z.ZodError([]);
+        throw new z.ZodError([{ message: 'Invalid retry attempts' }]);
       }
       if (data.ui?.defaultLanguage && data.ui.defaultLanguage.length !== 2) {
-        throw new z.ZodError([]);
+        throw new z.ZodError([{ message: 'Invalid language code' }]);
       }
       if (data.ui?.supportedLanguages && data.ui.supportedLanguages.length === 0) {
-        throw new z.ZodError([]);
+        throw new z.ZodError([{ message: 'Empty supported languages' }]);
       }
       return data;
     }),
     shape: {
-      app: { parse: vi.fn((data: any) => data) },
+      app: { 
+        parse: vi.fn((data: any) => {
+          if (data.version && !/^\d+\.\d+\.\d+$/.test(data.version)) {
+            throw new z.ZodError([{ message: 'Invalid version format' }]);
+          }
+          return data;
+        }) 
+      },
       contact: { parse: vi.fn((data: any) => data) },
       organization: { parse: vi.fn((data: any) => data) },
       social: { parse: vi.fn((data: any) => data) },
@@ -1064,8 +1434,11 @@ vi.mock('@/config/app.config.validated', () => {
 
   return {
     appConfig: mockAppConfig,
-    // Mock getConfig that returns actual sections from mock config
-    getConfig: vi.fn((section: string) => {
+    // Mock getConfig that returns actual sections from mock config or full config
+    getConfig: vi.fn((section?: string) => {
+      if (!section) {
+        return mockAppConfig;
+      }
       return mockAppConfig[section as keyof typeof mockAppConfig] || {};
     }),
     // Mock updateConfig that actually updates the mock
@@ -1279,3 +1652,115 @@ vi.mock('@/lib/radix-optimized', () => ({
   Slot: ({ children, ...props }: any) => 
     React.createElement('div', { 'data-testid': 'slot', ...props }, children),
 }));
+
+
+// Mock @/services/api/client
+vi.mock('@/services/api/client', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+    delete: vi.fn().mockResolvedValue({ data: {} }),
+    patch: vi.fn().mockResolvedValue({ data: {} }),
+    request: vi.fn().mockResolvedValue({ data: {} }),
+    upload: vi.fn().mockResolvedValue({ data: {} }),
+    cancel: vi.fn(),
+    cancelAll: vi.fn(),
+    addRequestInterceptor: vi.fn(),
+    addResponseInterceptor: vi.fn(),
+  },
+  apiClient: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+    delete: vi.fn().mockResolvedValue({ data: {} }),
+    patch: vi.fn().mockResolvedValue({ data: {} }),
+    request: vi.fn().mockResolvedValue({ data: {} }),
+    upload: vi.fn().mockResolvedValue({ data: {} }),
+    cancel: vi.fn(),
+    cancelAll: vi.fn(),
+    addRequestInterceptor: vi.fn(),
+    addResponseInterceptor: vi.fn(),
+  },
+  uploadClient: {
+    post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+  },
+  isApiSuccess: vi.fn().mockReturnValue(true),
+  isApiError: vi.fn().mockReturnValue(false),
+}));
+
+// Import and configure shared test utilities
+import { 
+  globalTestReporter
+} from '../../shared/test-utils/test-reporter';
+import { MockFactory } from '../../shared/test-utils/mock-utilities';
+import { globalPerformanceMonitor } from '../../shared/test-utils/performance-testing';
+
+// Configure shared test utilities for frontend
+MockFactory.configure({
+  autoReset: true,
+  trackCalls: true,
+  enableLogging: false, // Keep quiet in tests
+});
+
+// Suppress React act() warnings globally in tests
+// Store the original console methods to avoid infinite loops
+const originalConsoleWarn = console.warn;
+const originalConsoleError = console.error;
+
+// Override console.warn to filter React warnings
+console.warn = (...args) => {
+  // Filter out React act() warnings for better test output
+  if (args[0] && typeof args[0] === 'string' && (
+    args[0].includes('Warning: An update') || 
+    args[0].includes('act(...)')
+  )) {
+    return; // Ignore React update warnings in tests
+  }
+  originalConsoleWarn.apply(console, args);
+};
+
+// Override console.error to filter React warnings (some warnings come through error)
+console.error = (...args) => {
+  // Filter out React act() warnings for better test output
+  if (args[0] && typeof args[0] === 'string' && (
+    args[0].includes('Warning: An update') || 
+    args[0].includes('act(...)')
+  )) {
+    return; // Ignore React update warnings in tests
+  }
+  originalConsoleError.apply(console, args);
+};
+
+// Global test hooks for shared utilities
+beforeEach(() => {
+  // Start performance monitoring for each test
+  globalPerformanceMonitor.clear();
+  globalPerformanceMonitor.recordMemoryUsage('test_start');
+});
+
+afterEach(() => {
+  // Reset all mocks after each test if auto-reset is enabled
+  if (MockFactory.getAllMocks().size > 0) {
+    MockFactory.resetAllMocks();
+  }
+  
+  // Record end memory usage
+  globalPerformanceMonitor.recordMemoryUsage('test_end');
+});
+
+// Add a cleanup hook for test reporting
+afterAll(() => {
+  // Generate and log final test report if any tests were recorded
+  const stats = globalTestReporter.getStats();
+  if (stats.total > 0) {
+    console.log('\n--- Frontend Test Suite Report ---');
+    console.log(`Total: ${stats.total}, Passed: ${stats.passed}, Failed: ${stats.failed}, Skipped: ${stats.skipped}`);
+    
+    // Export full report for CI/CD integration
+    const report = globalTestReporter.generateJSONReport();
+    // Note: In real CI/CD, this would be written to a file
+    // require('fs').writeFileSync('./test-results/frontend-report.json', report);
+  }
+});

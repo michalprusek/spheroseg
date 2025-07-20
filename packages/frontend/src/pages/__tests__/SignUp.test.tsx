@@ -7,16 +7,11 @@ import { renderWithRouter } from '@/shared/test-utils';
 
 // Mock functions
 const mockSignUp = vi.fn();
-const mockToastError = vi.fn();
-const mockToastSuccess = vi.fn();
 
-// Mock toast
-vi.mock('sonner', () => ({
-  toast: {
-    error: mockToastError,
-    success: mockToastSuccess,
-  },
-}));
+// Import mocked toast functions (already mocked in test-setup.ts)
+import { toast } from 'sonner';
+const mockToastError = toast.error as any;
+const mockToastSuccess = toast.success as any;
 
 // Create a standalone SignUp component for testing
 const MockSignUp = ({ isLoggedIn = false }) => {

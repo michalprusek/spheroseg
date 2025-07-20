@@ -19,12 +19,23 @@ jest.mock('pg', () => {
 });
 
 // Mock the logger
-jest.mock('../utils/logger', () => ({
-  info: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  warn: jest.fn(),
-}));
+jest.mock('../utils/logger', () => {
+  const mockLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    http: jest.fn(),
+    silly: jest.fn(),
+  };
+
+  return {
+    __esModule: true,
+    default: mockLogger,
+    createLogger: jest.fn().mockReturnValue(mockLogger),
+  };
+});
 
 // Mock the config
 jest.mock('../config', () => ({

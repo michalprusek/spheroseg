@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { scalePolygons, createSvgPath } from '@/lib/svgUtils';
 import logger from '@/utils/logger';
 

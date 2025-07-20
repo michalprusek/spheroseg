@@ -42,12 +42,7 @@ function getDbPool(): Pool {
 // Initialize Redis client
 function getRedisClient(): Redis {
   if (!redisClient) {
-    redisClient = new Redis({
-      host: config.redis.host,
-      port: config.redis.port,
-      password: config.redis.password,
-      db: config.redis.db,
-      retryDelayOnFailover: 100,
+    redisClient = new Redis(config.redis.url, {
       maxRetriesPerRequest: 3,
       lazyConnect: true,
     });
@@ -100,7 +95,7 @@ export async function checkDatabaseHealth(): Promise<HealthCheckResult> {
     }
   } catch (error) {
     const latency = Date.now() - startTime;
-    logger.error('Database health check failed', error);
+    logger.error('Database health check failed', { error: error instanceof Error ? error.message : String(error) });
     
     return {
       status: 'unhealthy',
@@ -146,7 +141,7 @@ export async function checkRedisHealth(): Promise<HealthCheckResult> {
     }
   } catch (error) {
     const latency = Date.now() - startTime;
-    logger.error('Redis health check failed', error);
+    logger.error('Redis health check failed', { error: error instanceof Error ? error.message : String(error) });
     
     return {
       status: 'unhealthy',
@@ -195,7 +190,7 @@ export async function checkMLServiceHealth(): Promise<HealthCheckResult> {
     }
   } catch (error) {
     const latency = Date.now() - startTime;
-    logger.error('ML service health check failed', error);
+    logger.error('ML service health check failed', { error: error instanceof Error ? error.message : String(error) });
     
     if (axios.isAxiosError(error)) {
       return {
@@ -281,7 +276,7 @@ export async function cleanupHealthChecks(): Promise<void> {
   }
   
   if (redisClient) {
-    promises.push(redisClient.quit());
+    promises.push(redisClient.quit().then(() => {}));
     redisClient = null;
   }
   

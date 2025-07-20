@@ -13,7 +13,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { createLogger } from '@/lib/logger';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useDebounce } from '@/hooks/useDebounce';
 import { simplifyPolygon } from '../utils/polygonSimplification';

@@ -12,7 +12,7 @@
 import { Request as ExpressRequest, Response, NextFunction } from 'express';
 import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
 import winston from 'winston';
-import 'winston-daily-rotate-file';
+import DailyRotateFile from 'winston-daily-rotate-file';
 import { v4 as uuidv4 } from 'uuid';
 import os from 'os';
 import { EventEmitter } from 'events';
@@ -93,7 +93,7 @@ const transports: winston.transport[] = [
 if (config.logging.logToFile) {
   // Error log rotation
   transports.push(
-    new winston.transports.DailyRotateFile({
+    new DailyRotateFile({
       filename: `${config.logging.logDir}/error-%DATE%.log`,
       datePattern: 'YYYY-MM-DD',
       level: 'error',
@@ -110,7 +110,7 @@ if (config.logging.logToFile) {
 
   // Combined log rotation
   transports.push(
-    new winston.transports.DailyRotateFile({
+    new DailyRotateFile({
       filename: `${config.logging.logDir}/combined-%DATE%.log`,
       datePattern: 'YYYY-MM-DD',
       maxSize: '50m',
@@ -126,7 +126,7 @@ if (config.logging.logToFile) {
 
   // Separate HTTP access logs
   transports.push(
-    new winston.transports.DailyRotateFile({
+    new DailyRotateFile({
       filename: `${config.logging.logDir}/access-%DATE%.log`,
       datePattern: 'YYYY-MM-DD',
       level: 'http',
@@ -509,7 +509,7 @@ class UnifiedMonitoring {
       method,
       statusCode,
       responseTime,
-      userId,
+      ...(userId && { userId }),
     };
 
     this.recordMetric(metric);
@@ -526,7 +526,7 @@ class UnifiedMonitoring {
       operation,
       table,
       duration,
-      rowCount,
+      ...(rowCount !== undefined && { rowCount }),
     };
 
     this.recordMetric(metric);
@@ -548,7 +548,7 @@ class UnifiedMonitoring {
       operation,
       filePath,
       duration,
-      fileSize,
+      ...(fileSize !== undefined && { fileSize }),
     };
 
     this.recordMetric(metric);
@@ -570,7 +570,7 @@ class UnifiedMonitoring {
       model,
       inputSize,
       duration,
-      memoryUsage,
+      ...(memoryUsage !== undefined && { memoryUsage }),
     };
 
     this.recordMetric(metric);
@@ -627,7 +627,9 @@ function extractTables(query: string): string[] {
   patterns.forEach((regex) => {
     let match;
     while ((match = regex.exec(normalizedQuery)) !== null) {
-      tables.push(match[1].replace(/"/g, '').toLowerCase());
+      if (match[1]) {
+        tables.push(match[1].replace(/"/g, '').toLowerCase());
+      }
     }
   });
 
@@ -692,7 +694,7 @@ function updateQueryPatternStats(
   stats.executions.push({
     timestamp: Date.now(),
     durationMs,
-    rowCount,
+    ...(rowCount !== undefined && { rowCount }),
     query,
   });
 
@@ -810,13 +812,17 @@ export function errorHandlerMiddleware(
   // ApiError is already imported at the top
 
   // Convert to ApiError if needed
-  let apiError = err;
-  if (!(err instanceof ApiError)) {
+  let apiError: ApiError;
+  if (err instanceof ApiError) {
+    apiError = err;
+  } else {
+    // Handle unknown error types safely
+    const errorObj = err as any;
     apiError = new ApiError(
-      err.message || 'Internal Server Error',
-      err.statusCode || 500,
-      err.code || 'INTERNAL_SERVER_ERROR',
-      err.details,
+      errorObj?.message || 'Internal Server Error',
+      errorObj?.statusCode || 500,
+      errorObj?.code || 'INTERNAL_SERVER_ERROR',
+      errorObj?.details,
       false // Non-operational error
     );
   }

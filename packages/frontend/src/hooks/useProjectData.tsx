@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Project, ProjectImage, ImageStatus } from '@/types';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import axios from 'axios';
 import config from '@/config';
 import { getProjectImages } from '@/api/projectImages';

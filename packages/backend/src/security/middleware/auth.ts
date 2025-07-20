@@ -328,6 +328,7 @@ export const requireResourceOwnership = (resourceIdParam: string = 'id') => {
         message: 'Authentication required',
         error: 'NOT_AUTHENTICATED',
       });
+      return;
     }
 
     const resourceId = req.params[resourceIdParam];
@@ -528,10 +529,16 @@ export const createAuthMiddleware = (
 // EXPORTS
 // =============================================================================
 
+// Type-safe middleware wrappers for Express routing
+import { RequestHandler } from 'express';
+
+export const authMiddleware: RequestHandler = authenticate as RequestHandler;
+export const optionalAuthMiddleware: RequestHandler = optionalAuthenticate as RequestHandler;
+export const adminMiddleware: RequestHandler = requireAdmin as RequestHandler;
+export const approvedMiddleware: RequestHandler = requireApproved as RequestHandler;
+
 // Legacy exports for backward compatibility
 export default authenticate;
-export const authMiddleware = authenticate;
-export const optionalAuthMiddleware = optionalAuthenticate;
 export const isAdmin = requireAdmin;
 export const isUserApproved = requireApproved;
 export const socketAuthMiddleware = authenticateSocket;

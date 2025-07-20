@@ -1,7 +1,7 @@
 import express, { Response, Router } from 'express';
 import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
 import userStatsService from '../services/userStatsService';
-import pool from '../db';
+import { getPool, query } from '../db/unified';
 import logger from '../utils/logger';
 
 const router: Router = express.Router();
@@ -18,25 +18,25 @@ router.get('/stats', authMiddleware, async (req: AuthenticatedRequest, res: Resp
     logger.info('Debug: Fetching stats for user', { userId });
 
     // Get stats from service
-    const stats = await userStatsService.getUserStats(pool, userId);
+    const stats = await userStatsService.getUserStats(getPool(), userId);
 
     // Get raw counts from database
-    const projectsRes = await pool.query(
+    const projectsRes = await query(
       'SELECT COUNT(*) as count FROM projects WHERE user_id = $1',
       [userId]
     );
 
-    const imagesRes = await pool.query(
+    const imagesRes = await query(
       'SELECT COUNT(*) as count FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1',
       [userId]
     );
 
-    const completedRes = await pool.query(
+    const completedRes = await query(
       'SELECT COUNT(*) as count FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1 AND i.segmentation_status = $2',
       [userId, 'completed']
     );
 
-    const storageRes = await pool.query(
+    const storageRes = await query(
       'SELECT SUM(file_size) as sum FROM images i JOIN projects p ON i.project_id = p.id WHERE p.user_id = $1',
       [userId]
     );

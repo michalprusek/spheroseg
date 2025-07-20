@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { TFunction } from 'i18next';
 import axios from 'axios';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { createNamespacedLogger } from '@/utils/logger';
 
 // Create a logger for this module
@@ -1022,7 +1022,7 @@ export const useSegmentationV2 = (
       // Permission errors are already handled by the API client interceptor
       // Only show generic error for non-permission errors
       if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
+        const status = error.status;
         // Don't show additional errors for permission-related status codes
         if (status !== 403 && status !== 500 && status !== 404) {
           toast.error(t('segmentation.saveError') || 'Failed to save segmentation');

@@ -5,8 +5,7 @@
  */
 
 import express, { Router } from 'express';
-import { authenticate } from '../security/middleware/auth';
-import { authorize } from '../middleware/authorization';
+import { authenticate, requireAdmin } from '../security/middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler.enhanced';
 import { rateLimiter } from '../middleware/rateLimiter.enhanced';
 import { ApiError } from '../utils/ApiError.enhanced';
@@ -40,7 +39,7 @@ router.get('/status',
  */
 router.get('/status/:identifier',
   authenticate,
-  authorize(['admin']),
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const { identifier } = req.params;
 
@@ -67,7 +66,7 @@ router.get('/status/:identifier',
  */
 router.post('/reset/:identifier',
   authenticate,
-  authorize(['admin']),
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const { identifier } = req.params;
 
@@ -100,7 +99,7 @@ router.post('/reset/:identifier',
  */
 router.get('/config',
   authenticate,
-  authorize(['admin']),
+  requireAdmin,
   asyncHandler(async (req, res) => {
     // Import the configurations
     const { RATE_LIMITS, ENDPOINT_MULTIPLIERS, UserCategory } = await import('../middleware/rateLimiter.enhanced');
@@ -121,7 +120,7 @@ router.get('/config',
  */
 router.get('/metrics',
   authenticate,
-  authorize(['admin']),
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const { startTime, endTime, category } = req.query;
 

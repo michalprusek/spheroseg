@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { MockApiClientProvider } from '../../lib/__mocks__/enhanced/apiClient';
+import { MockApiClientProvider } from '../../lib/__mocks__/MockApiClientProvider';
 import { useExportApi } from '../../hooks/api/useExportApi';
 import { ExportFormat, ExportOptions } from '@spheroseg/types';
+import apiClient from '@/services/api/client';
 
 // Mock export data
 const mockExportOptions: ExportOptions = {
@@ -32,6 +33,22 @@ const mockExportDownloadUrl = {
 describe('Export API Integration Tests', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    // Ensure apiClient methods are mocked
+    if (apiClient.get && typeof apiClient.get.mockReset === 'function') {
+      apiClient.get.mockReset();
+    }
+    if (apiClient.post && typeof apiClient.post.mockReset === 'function') {
+      apiClient.post.mockReset();
+    }
+    if (apiClient.put && typeof apiClient.put.mockReset === 'function') {
+      apiClient.put.mockReset();
+    }
+    if (apiClient.patch && typeof apiClient.patch.mockReset === 'function') {
+      apiClient.patch.mockReset();
+    }
+    if (apiClient.delete && typeof apiClient.delete.mockReset === 'function') {
+      apiClient.delete.mockReset();
+    }
   });
 
   afterEach(() => {

@@ -8,10 +8,8 @@
 import crypto from 'crypto';
 import { promisify } from 'util';
 import * as cron from 'node-cron';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import logger from './logger';
-import { pool } from '../db';
+import pool from '../db';
 import { Redis } from 'ioredis';
 import { EventEmitter } from 'events';
 
@@ -457,7 +455,7 @@ class SecretRotationManager extends EventEmitter {
   }> {
     const errors: string[] = [];
     
-    for (const [name, config] of this.secretConfigs) {
+    for (const [name, _config] of this.secretConfigs) {
       // Check if secret has an active version
       const activeVersion = await this.getActiveSecretVersion(name);
       if (!activeVersion) {
@@ -499,7 +497,7 @@ class SecretRotationManager extends EventEmitter {
 
   // Helper methods
   
-  private getCronPattern(days: number): string {
+  private getCronPattern(_days: number): string {
     // Run daily at 3 AM and check if rotation is due
     return '0 3 * * *';
   }
@@ -535,9 +533,9 @@ class SecretRotationManager extends EventEmitter {
     const result = await this.redis.set(
       key,
       '1',
-      'NX',
       'EX',
-      this.ROTATION_LOCK_TTL
+      this.ROTATION_LOCK_TTL,
+      'NX'
     );
     return result === 'OK';
   }

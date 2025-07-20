@@ -1,22 +1,58 @@
-import { renderHook, act } from '@testing-library/react';
+import React from 'react';
+import { render, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useExportFunctions } from '../useExportFunctions';
 import { saveAs } from 'file-saver';
 import { utils, writeFile } from 'xlsx';
 import '@testing-library/jest-dom';
-import {
-  mockLanguageContext,
-  mockApiClient,
-  mockExportDependencies,
-} from '../../../../../shared/test-utils/export-test-utils';
 import { toast } from 'sonner';
 import JSZip from 'jszip';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
-// Mock dependencies
-mockLanguageContext();
-mockApiClient();
-mockExportDependencies();
+// Mock logger
+vi.mock('@/utils/logger', () => ({
+  default: {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
+// Mock calculateMetrics
+vi.mock('@/pages/segmentation/utils/metricCalculations', () => ({
+  calculateMetrics: vi.fn(() => ({
+    area: 100,
+    perimeter: 40,
+    centroid: { x: 50, y: 50 },
+    boundingBox: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
+  })),
+}));
+
+// Mock file-saver
+vi.mock('file-saver', () => ({
+  saveAs: vi.fn(),
+}));
+
+// Mock xlsx
+vi.mock('xlsx', () => ({
+  utils: {
+    json_to_sheet: vi.fn(() => ({})),
+    book_new: vi.fn(() => ({ SheetNames: [], Sheets: {} })),
+    book_append_sheet: vi.fn(),
+    sheet_to_csv: vi.fn(() => 'csv data'),
+  },
+  writeFile: vi.fn(),
+  write: vi.fn(() => 'binary data'),
+}));
+
+// Mock JSZip
+vi.mock('jszip', () => ({
+  default: vi.fn(() => ({
+    file: vi.fn(),
+    generateAsync: vi.fn(() => Promise.resolve(new Blob(['zip content']))),
+  })),
+}));
 
 // Mock toast
 vi.mock('sonner', () => ({
@@ -27,6 +63,77 @@ vi.mock('sonner', () => ({
     warning: vi.fn(),
   },
 }));
+
+// Mock apiClient
+vi.mock('@/services/api/client', () => ({
+  default: {
+    get: vi.fn(() => Promise.resolve({ 
+      data: { 
+        segmentationResult: {
+          polygons: []
+        }
+      } 
+    })),
+    post: vi.fn(() => Promise.resolve({ 
+      data: { 
+        exportId: 'export-123',
+        status: 'completed',
+        downloadUrl: 'https://example.com/download'
+      } 
+    })),
+  },
+}));
+
+
+// Mock LanguageContext which is used in the hook
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    t: (key: string) => key,
+    language: 'en',
+  }),
+}));
+
+// Simple wrapper without DOM dependencies
+const wrapper: React.FC<React.PropsWithChildren<unknown>> = ({ children }) => {
+  return <>{children}</>;
+};
+
+// Mock fetch globally
+global.fetch = vi.fn().mockImplementation(() =>
+  Promise.resolve({
+    ok: true,
+    blob: () => Promise.resolve(new Blob(['mock-image-data'], { type: 'image/jpeg' })),
+  }),
+);
+
+// Mock canvas
+const mockCanvas = {
+  getContext: vi.fn(() => ({
+    fillStyle: '',
+    fillRect: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    closePath: vi.fn(),
+    fill: vi.fn(),
+  })),
+  toBlob: vi.fn((callback) => callback(new Blob(['mock-mask-data'], { type: 'image/png' }))),
+  width: 0,
+  height: 0,
+};
+
+// Helper component to test the hook
+const TestComponent: React.FC<{ images: any[]; projectName: string; onResult: (result: any) => void }> = ({ 
+  images, 
+  projectName, 
+  onResult 
+}) => {
+  const hookResult = useExportFunctions(images, projectName);
+  React.useEffect(() => {
+    onResult(hookResult);
+  }, [hookResult, onResult]);
+  return null;
+};
 
 describe('useExportFunctions', () => {
   const mockImages = [
@@ -70,6 +177,18 @@ describe('useExportFunctions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Mock DOM methods for CSV export
+    const mockLink = {
+      href: '',
+      download: '',
+      click: vi.fn(),
+      remove: vi.fn(),
+    };
+    
+    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+    vi.spyOn(document.body, 'appendChild').mockReturnValue(mockLink as any);
+    vi.spyOn(document.body, 'removeChild').mockReturnValue(mockLink as any);
   });
 
   afterEach(() => {
@@ -77,102 +196,167 @@ describe('useExportFunctions', () => {
   });
 
   it('should initialize with default values', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
-
-    expect(result.current.includeMetadata).toBe(true);
-    expect(result.current.includeObjectMetrics).toBe(true);
-    expect(result.current.includeSegmentation).toBe(true);
-    expect(result.current.includeImages).toBe(true);
-    expect(result.current.annotationFormat).toBe('COCO');
-    expect(result.current.metricsFormat).toBe('EXCEL');
-    expect(result.current.isExporting).toBe(false);
+    let hookResult: any = null;
+    
+    const TestWrapper = () => {
+      const result = useExportFunctions(mockImages, 'Test Project');
+      hookResult = result;
+      return null;
+    };
+    
+    // Render the test component
+    const { unmount } = render(<TestWrapper />);
+    
+    // Verify the hook result
+    expect(hookResult).toBeTruthy();
+    expect(hookResult.includeMetadata).toBe(true);
+    expect(hookResult.includeObjectMetrics).toBe(true);
+    expect(hookResult.includeSegmentation).toBe(true);
+    expect(hookResult.includeImages).toBe(true);
+    expect(hookResult.annotationFormat).toBe('COCO');
+    expect(hookResult.metricsFormat).toBe('EXCEL');
+    expect(hookResult.isExporting).toBe(false);
     // The hook automatically selects all images on initialization
-    expect(Object.keys(result.current.selectedImages).length).toBe(2);
+    expect(Object.keys(hookResult.selectedImages).length).toBe(2);
+    
+    unmount();
   });
 
   it('should handle selecting all images', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
-
+    let hookResult: any = null;
+    
+    const TestWrapper = () => {
+      const result = useExportFunctions(mockImages, 'Test Project');
+      hookResult = result;
+      return null;
+    };
+    
+    const { rerender, unmount } = render(<TestWrapper />);
+    
     // First call to handleSelectAll should deselect all (since they're selected by default)
     act(() => {
-      result.current.handleSelectAll();
+      hookResult.handleSelectAll();
     });
-
-    expect(result.current.selectedImages).toEqual({
+    
+    rerender(<TestWrapper />);
+    
+    expect(hookResult.selectedImages).toEqual({
       'image-1': false,
       'image-2': false,
     });
 
     // Second call should select all
     act(() => {
-      result.current.handleSelectAll();
+      hookResult.handleSelectAll();
     });
+    
+    rerender(<TestWrapper />);
 
-    expect(result.current.selectedImages).toEqual({
+    expect(hookResult.selectedImages).toEqual({
       'image-1': true,
       'image-2': true,
     });
+    
+    unmount();
   });
 
   it('should handle selecting individual images', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    let hookResult: any = null;
+    
+    const TestWrapper = () => {
+      const result = useExportFunctions(mockImages, 'Test Project');
+      hookResult = result;
+      return null;
+    };
+    
+    const { rerender, unmount } = render(<TestWrapper />);
 
     // First deselect all images
     act(() => {
-      result.current.handleSelectAll();
+      hookResult.handleSelectAll();
     });
+    
+    rerender(<TestWrapper />);
 
     // Then select one image
     act(() => {
-      result.current.handleSelectImage('image-1');
+      hookResult.handleSelectImage('image-1');
     });
+    
+    rerender(<TestWrapper />);
 
-    expect(result.current.selectedImages).toEqual({
+    expect(hookResult.selectedImages).toEqual({
       'image-1': true,
       'image-2': false,
     });
 
     // Toggle selection
     act(() => {
-      result.current.handleSelectImage('image-1');
+      hookResult.handleSelectImage('image-1');
     });
+    
+    rerender(<TestWrapper />);
 
-    expect(result.current.selectedImages).toEqual({
+    expect(hookResult.selectedImages).toEqual({
       'image-1': false,
       'image-2': false,
     });
+    
+    unmount();
   });
 
   it('should get the correct selected count', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    let hookResult: any = null;
+    
+    const TestWrapper = () => {
+      const result = useExportFunctions(mockImages, 'Test Project');
+      hookResult = result;
+      return null;
+    };
+    
+    const { rerender, unmount } = render(<TestWrapper />);
 
     // Initially all images are selected
-    expect(result.current.getSelectedCount()).toBe(2);
+    expect(hookResult.getSelectedCount()).toBe(2);
 
     // Deselect all
     act(() => {
-      result.current.handleSelectAll();
+      hookResult.handleSelectAll();
     });
+    
+    rerender(<TestWrapper />);
 
-    expect(result.current.getSelectedCount()).toBe(0);
+    expect(hookResult.getSelectedCount()).toBe(0);
 
     // Select one image
     act(() => {
-      result.current.handleSelectImage('image-1');
+      hookResult.handleSelectImage('image-1');
     });
+    
+    rerender(<TestWrapper />);
 
-    expect(result.current.getSelectedCount()).toBe(1);
+    expect(hookResult.getSelectedCount()).toBe(1);
 
     // Select another image
     act(() => {
-      result.current.handleSelectImage('image-2');
+      hookResult.handleSelectImage('image-2');
     });
+    
+    rerender(<TestWrapper />);
 
-    expect(result.current.getSelectedCount()).toBe(2);
+    expect(hookResult.getSelectedCount()).toBe(2);
+    
+    unmount();
   });
 
   it('should export metrics as XLSX', async () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
+
+    // Mock the return values for XLSX utilities
+    const mockWorksheet = { '!ref': 'A1:M10' };
+    const mockWorkbook = { SheetNames: [], Sheets: {} };
+    vi.mocked(utils.json_to_sheet).mockReturnValue(mockWorksheet);
+    vi.mocked(utils.book_new).mockReturnValue(mockWorkbook);
 
     // Export metrics
     await act(async () => {
@@ -182,13 +366,13 @@ describe('useExportFunctions', () => {
     // Check if XLSX functions were called
     expect(utils.json_to_sheet).toHaveBeenCalled();
     expect(utils.book_new).toHaveBeenCalled();
-    expect(utils.book_append_sheet).toHaveBeenCalled();
+    expect(utils.book_append_sheet).toHaveBeenCalledWith(mockWorkbook, mockWorksheet, 'Metrics');
     expect(writeFile).toHaveBeenCalled();
     expect(toast.success).toHaveBeenCalledWith('export.metricsExported');
   });
 
   it('should handle export metrics with different formats', async () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 
     // Set format to CSV
     act(() => {
@@ -208,10 +392,10 @@ describe('useExportFunctions', () => {
   });
 
   it('should handle error during metrics export', async () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 
     // Mock XLSX utils to throw an error
-    (utils.json_to_sheet as unknown).mockImplementationOnce(() => {
+    vi.mocked(utils.json_to_sheet).mockImplementationOnce(() => {
       throw new Error('XLSX export error');
     });
 
@@ -225,7 +409,7 @@ describe('useExportFunctions', () => {
   });
 
   it('should handle full export with ZIP', async () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 
     // Export all data
     await act(async () => {
@@ -234,7 +418,7 @@ describe('useExportFunctions', () => {
 
     // Check if saveAs was called with a Blob
     expect(saveAs).toHaveBeenCalled();
-    const saveAsArgs = (saveAs as unknown).mock.calls[0];
+    const saveAsArgs = vi.mocked(saveAs).mock.calls[0];
     expect(saveAsArgs[0]).toBeInstanceOf(Blob);
     expect(typeof saveAsArgs[1]).toBe('string');
     expect(saveAsArgs[1]).toContain('Test Project');
@@ -242,10 +426,10 @@ describe('useExportFunctions', () => {
   });
 
   it('should handle errors during full export', async () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 
     // Mock JSZip to throw an error
-    (JSZip as unknown).mockImplementationOnce(() => {
+    vi.mocked(JSZip).mockImplementationOnce(() => {
       throw new Error('ZIP creation error');
     });
 
@@ -259,7 +443,7 @@ describe('useExportFunctions', () => {
   });
 
   it('should handle changing export options', () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 
     // Change export options
     act(() => {
@@ -281,7 +465,7 @@ describe('useExportFunctions', () => {
   });
 
   it('should handle export with different annotation formats', async () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 
     // Test YOLO format
     act(() => {
@@ -320,7 +504,7 @@ describe('useExportFunctions', () => {
   });
 
   it('should handle export with specific images', async () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 
     // Deselect all images
     act(() => {
@@ -337,7 +521,7 @@ describe('useExportFunctions', () => {
   });
 
   it('should initialize selected images only once', () => {
-    const { result, rerender } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result, rerender } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 
     // Initially all images are selected
     expect(result.current.getSelectedCount()).toBe(2);
@@ -377,7 +561,7 @@ describe('useExportFunctions', () => {
       },
     ];
 
-    const { result } = renderHook(() => useExportFunctions(imagesWithoutSegmentation, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(imagesWithoutSegmentation, 'Test Project'), { wrapper });
 
     // Export metrics
     await act(async () => {
@@ -398,7 +582,7 @@ describe('useExportFunctions', () => {
   });
 
   it('should attempt to fetch segmentation data if missing', async () => {
-    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(mockImages, 'Test Project'), { wrapper });
 
     // Export all data
     await act(async () => {
@@ -431,7 +615,7 @@ describe('useExportFunctions', () => {
       },
     ];
 
-    const { result } = renderHook(() => useExportFunctions(imagesWithStringData, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(imagesWithStringData, 'Test Project'), { wrapper });
 
     // Export metrics
     await act(async () => {
@@ -487,7 +671,7 @@ describe('useExportFunctions', () => {
       },
     ];
 
-    const { result } = renderHook(() => useExportFunctions(imagesWithDifferentFormats, 'Test Project'));
+    const { result } = renderHook(() => useExportFunctions(imagesWithDifferentFormats, 'Test Project'), { wrapper });
 
     // Export metrics
     await act(async () => {

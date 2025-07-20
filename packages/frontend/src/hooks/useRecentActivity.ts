@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import axios from 'axios';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';

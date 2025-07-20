@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { UnifiedAuthService } from '../unifiedAuthService';
+import authService from '../unifiedAuthService';
 import { api } from '../api/client';
 import { authEndpoints } from '../api/endpoints';
 
@@ -32,7 +32,6 @@ vi.mock('../socketClient', () => ({
 }));
 
 describe('UnifiedAuthService Integration Tests', () => {
-  let authService: UnifiedAuthService;
   const mockApi = api as any;
 
   beforeEach(() => {
@@ -41,9 +40,6 @@ describe('UnifiedAuthService Integration Tests', () => {
     
     // Reset mocks
     vi.clearAllMocks();
-    
-    // Create service instance
-    authService = UnifiedAuthService.getInstance();
     
     // Reset auth state
     authService.logout();

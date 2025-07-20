@@ -15,11 +15,19 @@ const mockAuthService = authService as jest.Mocked<typeof authService>;
 
 // Mock the auth middleware
 jest.mock('../../security/middleware/auth', () => ({
-  authenticate: (req: any, res: any, next: any) => {
+  authenticate: (req: any, _res: any, next: any) => {
     req.user = { userId: 'test-user-id' };
     next();
   },
-  optionalAuthenticate: (req: any, res: any, next: any) => {
+  optionalAuthenticate: (req: any, _res: any, next: any) => {
+    req.user = { userId: 'test-user-id' };
+    next();
+  },
+  authMiddleware: (req: any, _res: any, next: any) => {
+    req.user = { userId: 'test-user-id' };
+    next();
+  },
+  optionalAuthMiddleware: (req: any, _res: any, next: any) => {
     req.user = { userId: 'test-user-id' };
     next();
   },
@@ -40,8 +48,16 @@ describe('Enhanced Auth Routes', () => {
   describe('POST /api/auth/register', () => {
     it('should register user with valid data', async () => {
       const mockResult = {
-        user: { id: '123', email: 'test@example.com', name: 'Test User' },
-        token: 'mock-token',
+        user: { 
+          id: '123', 
+          email: 'test@example.com', 
+          name: 'Test User',
+          created_at: new Date(),
+          updated_at: new Date()
+        },
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        tokenType: 'Bearer'
       };
 
       mockAuthService.registerUser.mockResolvedValue(mockResult);
@@ -67,8 +83,16 @@ describe('Enhanced Auth Routes', () => {
 
     it('should sanitize XSS attempts in name field', async () => {
       const mockResult = {
-        user: { id: '123', email: 'test@example.com', name: 'Test User' },
-        token: 'mock-token',
+        user: { 
+          id: '123', 
+          email: 'test@example.com', 
+          name: 'Test User',
+          created_at: new Date(),
+          updated_at: new Date()
+        },
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        tokenType: 'Bearer'
       };
 
       mockAuthService.registerUser.mockResolvedValue(mockResult);
@@ -145,8 +169,16 @@ describe('Enhanced Auth Routes', () => {
   describe('POST /api/auth/login', () => {
     it('should login with valid credentials', async () => {
       const mockResult = {
-        user: { id: '123', email: 'test@example.com' },
-        token: 'mock-token',
+        user: { 
+          id: '123', 
+          email: 'test@example.com',
+          name: 'Test User',
+          created_at: new Date(),
+          updated_at: new Date()
+        },
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        tokenType: 'Bearer'
       };
 
       mockAuthService.loginUser.mockResolvedValue(mockResult);

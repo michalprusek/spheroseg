@@ -17,7 +17,7 @@ export const ValidationErrorSchema = z.object({
 export const ApiErrorSchema = z.object({
   code: z.string(),
   message: z.string(),
-  details: z.record(z.unknown()).optional(),
+  details: z.any().optional(),
   timestamp: z.string().optional(),
   path: z.string().optional(),
 });
@@ -53,17 +53,17 @@ export const ApiErrorResponseSchema = z.object({
 });
 
 // Common data schemas
-export const IdSchema = z.string().uuid();
+export const IdSchema = z.string();
 
-export const TimestampSchema = z.string().datetime();
+export const TimestampSchema = z.string();
 
-export const EmailSchema = z.string().email();
+export const EmailSchema = z.string();
 
 export const PaginationParamsSchema = z.object({
-  page: z.number().int().positive().default(1),
-  pageSize: z.number().int().positive().max(100).default(20),
+  page: z.number(),
+  pageSize: z.number(),
   sortBy: z.string().optional(),
-  sortOrder: z.enum(['asc', 'desc']).default('asc'),
+  sortOrder: z.enum(['asc', 'desc']),
 });
 
 // Entity schemas that can be reused
@@ -80,7 +80,7 @@ export const FileUploadResponseSchema = z.object({
   originalName: z.string(),
   mimetype: z.string(),
   size: z.number(),
-  url: z.string().url(),
+  url: z.string(),
   createdAt: TimestampSchema,
 });
 

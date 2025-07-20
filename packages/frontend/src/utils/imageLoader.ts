@@ -15,7 +15,7 @@
  * - frontend/src/pages/segmentation/utils/dockerDirectAccess.ts
  */
 
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { toast } from 'sonner';
 import { createLogger } from '@/lib/logger';
 

@@ -3,7 +3,7 @@
  *
  * This module provides functions for interacting with the segmentation queue
  */
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { QueueStatusUpdate } from '@/hooks/useSegmentationUpdates';
 import logger from '@/utils/logger';
 

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 // Import jwt-decode, which is now installed
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient'; // Import apiClient
+import apiClient from '@/services/api/client'; // Import apiClient
 import axios from 'axios'; // Import axios for direct requests and error checking
 import { Language } from './LanguageContext'; // Import Language type
 import logger from '@/utils/logger'; // Import centralized logger
@@ -349,13 +349,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 });
               } catch (error) {
                 // Don't retry if token is invalid (401 Unauthorized)
-                if (axios.isAxiosError(error) && error.response?.status === 401) {
+                if (axios.isAxiosError(error) && error.status === 401) {
                   logger.warn('Token is invalid (401), not retrying auth verification');
                   throw error;
                 }
 
                 // Don't retry if user is forbidden (403)
-                if (axios.isAxiosError(error) && error.response?.status === 403) {
+                if (axios.isAxiosError(error) && error.status === 403) {
                   logger.warn('User is forbidden (403), not retrying auth verification');
                   throw error;
                 }
@@ -632,7 +632,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               throw new Error('Request timed out. The server may be slow or unreachable.');
             }
 
-            if (axios.isAxiosError(error) && error.response?.status === 401) {
+            if (axios.isAxiosError(error) && error.status === 401) {
               logger.warn('Invalid credentials provided');
               throw error;
             }
@@ -653,8 +653,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Special handling for auth errors
         if (axios.isAxiosError(error)) {
-          const status = error.response?.status;
-          const errorMessage = error.response?.data?.message || error.message;
+          const status = error.status;
+          const errorMessage = error.data?.message || error.message;
 
           if (status === 401) {
             // Invalid credentials (wrong password)
@@ -767,7 +767,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   });
                 } catch (error) {
                   // Don't retry if user already exists (409 Conflict)
-                  if (axios.isAxiosError(error) && error.response?.status === 409) {
+                  if (axios.isAxiosError(error) && error.status === 409) {
                     logger.warn('User already exists, not retrying', { email });
                     throw error;
                   }

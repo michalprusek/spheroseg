@@ -97,7 +97,7 @@ export const createOptimizedComponent = <T extends Record<string, any>>(
   return getCachedMock(cachedKey, () => {
     return (props: Partial<T> = {}) => {
       const mergedProps = { ...defaultProps, ...props } as T;
-      return <ComponentClass {...mergedProps} />;
+      return React.createElement(ComponentClass, mergedProps);
     };
   });
 };

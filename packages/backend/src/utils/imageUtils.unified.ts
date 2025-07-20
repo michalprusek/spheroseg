@@ -34,7 +34,10 @@ function findLongestCommonSuffix<T>(arr1: T[], arr2: T[]): T[] {
 
   // While we have elements in both arrays and they match
   while (i >= 0 && j >= 0 && arr1[i] === arr2[j]) {
-    commonSuffix.unshift(arr1[i]);
+    const element = arr1[i];
+    if (element !== undefined) {
+      commonSuffix.unshift(element);
+    }
     i--;
     j--;
   }
@@ -126,8 +129,9 @@ const pathUtils = {
     let projectId = '';
     for (let i = 0; i < pathParts.length; i++) {
       // Look for UUID format pattern in path
-      if (pathParts[i].match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        projectId = pathParts[i];
+      const part = pathParts[i];
+      if (part && part.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        projectId = part;
         break;
       }
     }
@@ -330,7 +334,7 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
   try {
     return await fsExists(filePath);
   } catch (error) {
-    logger.error(`Error checking if file exists: ${filePath}`, error);
+    logger.error(`Error checking if file exists: ${filePath}`, { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 };
@@ -345,7 +349,7 @@ export const ensureDirectoryExists = async (dirPath: string): Promise<void> => {
       logger.debug(`Created directory: ${dirPath}`);
     }
   } catch (error) {
-    logger.error(`Error creating directory: ${dirPath}`, error);
+    logger.error(`Error creating directory: ${dirPath}`, { error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 };
@@ -542,18 +546,18 @@ export const formatImageForApi = (
   // Also handle the case where both might exist (from SQL alias)
   if ('segmentation_status' in image) {
     logger.debug('Converting segmentation_status to segmentationStatus', {
-      original: image.segmentation_status,
+      original: image['segmentation_status'],
     });
-    result.segmentationStatus = image.segmentation_status;
-    delete result.segmentation_status;
+    result['segmentationStatus'] = image['segmentation_status'];
+    delete result['segmentation_status'];
   }
 
   // If the SQL alias worked and we have segmentationStatus directly, keep it
   if ('segmentationStatus' in image && !('segmentationStatus' in result)) {
     logger.debug('Found segmentationStatus directly in image', {
-      value: image.segmentationStatus,
+      value: image['segmentationStatus'],
     });
-    result.segmentationStatus = image.segmentationStatus;
+    result['segmentationStatus'] = image['segmentationStatus'];
   }
 
   if (image['storage_path'] && typeof image['storage_path'] === 'string') {
@@ -568,7 +572,7 @@ export const formatImageForApi = (
         const pathname = url.pathname;
         // If pathname starts with /app, remove it since nginx doesn't expect it
         const cleanPath = pathname.startsWith('/app/') ? pathname.substring(4) : pathname;
-        result.storage_path = cleanPath;
+        result['storage_path'] = cleanPath;
         logger.debug('Extracted path from internal URL', {
           original: image['storage_path'],
           extracted: cleanPath,
@@ -578,20 +582,20 @@ export const formatImageForApi = (
           path: image['storage_path'],
           error,
         });
-        result.storage_path = image['storage_path'];
+        result['storage_path'] = image['storage_path'];
       }
     } else if (
       (image['storage_path'] as string).startsWith('http://') ||
       (image['storage_path'] as string).startsWith('https://')
     ) {
       // For other full URLs, keep them as-is
-      result.storage_path = image.storage_path;
+      result['storage_path'] = image['storage_path'];
     } else {
       // For relative paths, ensure they start with /
       const cleanPath = (image['storage_path'] as string).startsWith('/')
         ? image['storage_path']
         : `/${image['storage_path']}`;
-      result.storage_path = cleanPath;
+      result['storage_path'] = cleanPath;
     }
   }
 
@@ -605,7 +609,7 @@ export const formatImageForApi = (
         const url = new URL(image['thumbnail_path'] as string);
         const pathname = url.pathname;
         const cleanPath = pathname.startsWith('/app/') ? pathname.substring(4) : pathname;
-        result.thumbnail_path = cleanPath;
+        result['thumbnail_path'] = cleanPath;
         logger.debug('Extracted thumbnail path from internal URL', {
           original: image['thumbnail_path'],
           extracted: cleanPath,
@@ -615,18 +619,18 @@ export const formatImageForApi = (
           path: image['thumbnail_path'],
           error,
         });
-        result.thumbnail_path = image['thumbnail_path'];
+        result['thumbnail_path'] = image['thumbnail_path'];
       }
     } else if (
       (image['thumbnail_path'] as string).startsWith('http://') ||
       (image['thumbnail_path'] as string).startsWith('https://')
     ) {
-      result.thumbnail_path = image.thumbnail_path;
+      result['thumbnail_path'] = image['thumbnail_path'];
     } else {
       const cleanPath = (image['thumbnail_path'] as string).startsWith('/')
         ? image['thumbnail_path']
         : `/${image['thumbnail_path']}`;
-      result.thumbnail_path = cleanPath;
+      result['thumbnail_path'] = cleanPath;
     }
   }
 

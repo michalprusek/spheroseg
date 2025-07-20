@@ -3,6 +3,7 @@ import db from '../db';
 import { AuthenticatedRequest } from '../security/middleware/auth'; // Optional: To link logged-in user
 import { createLogger } from '../utils/logger';
 import emailService from '../services/emailService';
+import config from '../config';
 
 const logger = createLogger('accessRequests');
 const router: Router = express.Router();
@@ -55,10 +56,11 @@ router.post('/', async (req: Request, res: Response) => {
         name,
       });
       await emailService.sendAccessRequest({
-        email,
-        name,
-        organization,
-        reason,
+        to: config.email.from, // Send to admin email
+        requesterName: name,
+        requesterEmail: email,
+        message: `Organization: ${organization}\nReason: ${reason}`,
+        language: 'en',
       });
       logger.info('Access request email notification sent successfully');
     } catch (emailError) {
@@ -71,7 +73,7 @@ router.post('/', async (req: Request, res: Response) => {
       // Continue with the response as the DB entry was successful
     }
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Access request submitted successfully.',
       request: result.rows[0],
     });
@@ -105,7 +107,7 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
-    res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 

@@ -6,7 +6,7 @@
  */
 
 import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { securityConfig } from '../config/security';
 import logger from '../utils/logger';
 
@@ -33,7 +33,7 @@ function createRateLimiter(options: {
         const userId = (req as any).user?.id || (req as any).user?.userId;
         return userId || req.ip;
       }),
-    skip: options.skip,
+    ...(options.skip && { skip: options.skip }),
     handler: (req: Request, res: Response) => {
       logger.warn('Rate limit exceeded', {
         ip: req.ip,
@@ -63,12 +63,12 @@ export const diagnosticsLimiter = rateLimit({
     logger.warn('Rate limit exceeded for diagnostics', {
       ip: req.ip,
       path: req.path,
-      userId: (req as unknown).user?.userId,
+      userId: (req as any).user?.userId,
     });
     res.status(429).json({
       error: 'Too many diagnostic requests',
       message: 'Please wait before making additional diagnostic requests',
-      retryAfter: Math.ceil(req.rateLimit?.resetTime || Date.now() / 1000),
+      retryAfter: Math.ceil((req as any).rateLimit?.resetTime || Date.now() / 1000),
     });
   },
 });
@@ -123,7 +123,7 @@ export const passwordResetLimiter = createRateLimiter({
   max: 3,
   message: 'Too many password reset attempts, please try again later',
   keyGenerator: (req: Request) => {
-    const email = req.body?.email || req.params?.email || '';
+    const email = req.body?.email || req.params?.['email'] || '';
     return `reset:${email}:${req.ip}`;
   },
 });
@@ -144,19 +144,19 @@ export function createDynamicLimiter(options: {
   return rateLimit({
     windowMs: options.windowMs,
     max: (req: Request) => {
-      const user = (req as unknown).user;
+      const user = (req as any).user;
       const isPremium = user?.tier === 'premium';
       return isPremium ? options.premiumMax : options.standardMax;
     },
     keyGenerator: (req: Request) => {
-      const userId = (req as unknown).user?.userId;
+      const userId = (req as any).user?.userId;
       return userId || req.ip;
     },
   });
 }
 
 // Apply different rate limiters based on path
-export function dynamicRateLimiter(req: Request, res: Response, next: Function): void {
+export function dynamicRateLimiter(req: Request, res: Response, next: NextFunction): void {
   const path = req.path.toLowerCase();
 
   // Apply specific limiters based on path patterns

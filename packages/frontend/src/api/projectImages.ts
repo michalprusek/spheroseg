@@ -8,7 +8,7 @@
 import { Image, ProjectImage, ImageStatus } from '@/types';
 import { constructUrl } from '@/lib/urlUtils';
 import { storeImageBlob } from '@/utils/indexedDBService';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import cacheService, { CacheLayer } from '@/services/unifiedCacheService';
 import logger from '@/utils/logger';
 

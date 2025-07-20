@@ -5,8 +5,7 @@
  */
 
 import express, { Router } from 'express';
-import { authenticate } from '../security/middleware/auth';
-import { authorize } from '../middleware/authorization';
+import { authenticate, requireAdmin } from '../security/middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler.enhanced';
 import { getCorsConfiguration, validateCorsConfiguration } from '../middleware/cors.enhanced';
 import { ApiError } from '../utils/ApiError.enhanced';
@@ -19,7 +18,7 @@ const router: Router = express.Router();
  */
 router.get('/config',
   authenticate,
-  authorize(['admin']),
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const config = getCorsConfiguration();
 
@@ -40,7 +39,7 @@ router.get('/config',
  */
 router.post('/validate',
   authenticate,
-  authorize(['admin']),
+  requireAdmin,
   asyncHandler(async (req, res) => {
     try {
       validateCorsConfiguration();
@@ -69,7 +68,7 @@ router.post('/validate',
  */
 router.post('/test',
   authenticate,
-  authorize(['admin']),
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const { origin } = req.body;
 
@@ -119,7 +118,7 @@ router.post('/test',
  */
 router.get('/stats',
   authenticate,
-  authorize(['admin']),
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const { startTime, endTime } = req.query;
 

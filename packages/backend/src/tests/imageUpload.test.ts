@@ -118,12 +118,23 @@ jest.mock('multer', () => {
 });
 
 // Mock logger
-jest.mock('../utils/logger', () => ({
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn(),
-}));
+jest.mock('../utils/logger', () => {
+  const mockLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    http: jest.fn(),
+    silly: jest.fn(),
+  };
+
+  return {
+    __esModule: true,
+    default: mockLogger,
+    createLogger: jest.fn().mockReturnValue(mockLogger),
+  };
+});
 
 // Mock authentication middleware
 jest.mock('../security/middleware/auth', () => {

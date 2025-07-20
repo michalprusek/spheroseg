@@ -23,7 +23,7 @@ RUN npm ci
 COPY packages/backend ./packages/backend
 COPY packages/shared ./packages/shared
 COPY packages/types ./packages/types
-COPY tsconfig.json ./
+COPY tsconfig.base.json ./
 
 # Create necessary directories
 RUN mkdir -p logs uploads
@@ -69,7 +69,7 @@ RUN npm ci
 COPY packages/backend ./packages/backend
 COPY packages/shared ./packages/shared
 COPY packages/types ./packages/types
-COPY tsconfig.json ./
+COPY tsconfig.base.json ./
 
 # Build the application
 RUN npm run build --workspace=@spheroseg/backend
@@ -101,7 +101,7 @@ COPY --chown=nodejs:nodejs packages/shared/package*.json ./packages/shared/
 COPY --chown=nodejs:nodejs packages/types/package*.json ./packages/types/
 
 # Copy database scripts
-COPY --chown=nodejs:nodejs scripts/db ./scripts/db
+COPY --chown=nodejs:nodejs packages/backend/src/db ./src/db
 
 # Create necessary directories
 RUN mkdir -p logs uploads && \

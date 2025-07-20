@@ -3,6 +3,27 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Mock dependencies with proper types
+vi.mock('@/utils/logging/unifiedLogger', () => ({
+  createLogger: () => ({
+    info: vi.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  }),
+}));
+
+vi.mock('@/services/unifiedCacheService', () => ({
+  default: {
+    invalidate: vi.fn(),
+  },
+}));
+
+vi.mock('@/utils/indexedDBService', () => ({
+  deleteProjectImages: vi.fn(),
+}));
+
 import {
   clearProjectImageCache,
   clearAllCaches,
@@ -11,35 +32,14 @@ import {
   CacheOperationError,
   CACHE_CONFIG,
 } from '../cacheManager.improved';
+import unifiedCacheService from '@/services/unifiedCacheService';
+import { deleteProjectImages } from '@/utils/indexedDBService';
+import { createLogger } from '@/utils/logging/unifiedLogger';
 
-// Type-safe mocks
-const mockUnifiedCacheService = {
-  invalidate: vi.fn<[string[]], Promise<void>>(),
-};
-
-const mockIndexedDBService = {
-  deleteProjectImages: vi.fn<[string], Promise<void>>(),
-};
-
-const mockLogger = {
-  info: vi.fn(),
-  debug: vi.fn(),
-  error: vi.fn(),
-  warn: vi.fn(),
-};
-
-// Mock dependencies with proper types
-vi.mock('@/services/unifiedCacheService', () => ({
-  default: mockUnifiedCacheService,
-}));
-
-vi.mock('@/utils/indexedDBService', () => ({
-  deleteProjectImages: mockIndexedDBService.deleteProjectImages,
-}));
-
-vi.mock('@/utils/logging/unifiedLogger', () => ({
-  createLogger: () => mockLogger,
-}));
+// Get mocked instances
+const mockLogger = createLogger('test');
+const mockUnifiedCacheService = vi.mocked(unifiedCacheService);
+const mockIndexedDBService = { deleteProjectImages: vi.mocked(deleteProjectImages) };
 
 // Test factories
 function createMockLocalStorageItem(key: string, value: any): void {

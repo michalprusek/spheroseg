@@ -61,6 +61,7 @@ const AppConfigSchema = z.object({
   // API and external services
   api: z.object({
     baseUrl: z.string().min(1, 'API base URL is required'),
+    prefix: z.string().optional(),
     timeout: z.number().positive('Timeout must be positive').max(60000, 'Timeout too high'),
     retryAttempts: z.number().int().min(0).max(5, 'Retry attempts must be 0-5'),
   }),
@@ -165,7 +166,8 @@ const rawConfig = {
 
   // API and external services
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5001',
+    prefix: import.meta.env.VITE_API_BASE_URL || '/api',
     timeout: 30000,
     retryAttempts: 3,
   },

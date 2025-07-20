@@ -133,6 +133,10 @@ export class PolygonWasmProcessor {
       throw new Error('WASM module not initialized');
     }
     
+    if (!polygon || !Array.isArray(polygon) || polygon.length === 0) {
+      return false;
+    }
+    
     // Ray casting algorithm
     let inside = false;
     const n = polygon.length;
@@ -184,8 +188,14 @@ export function usePolygonWasm() {
   // This is a simplified version - the actual implementation should be in the frontend
   return {
     load: async () => initializeWasm(),
-    isPointInPolygon: (point: {x: number; y: number}, polygon: Array<{x: number; y: number}>) => 
-      polygonWasmProcessor.pointInPolygon(point, polygon),
+    isPointInPolygon: (point: {x: number; y: number}, polygon: Array<{x: number; y: number}>) => {
+      try {
+        return polygonWasmProcessor.pointInPolygon(point, polygon);
+      } catch (error) {
+        console.warn('WASM polygon operation failed, using fallback:', error);
+        return false;
+      }
+    },
     distanceToSegment: (point: {x: number; y: number}, segStart: {x: number; y: number}, segEnd: {x: number; y: number}) => {
       // Simple distance calculation
       const A = point.x - segStart.x;

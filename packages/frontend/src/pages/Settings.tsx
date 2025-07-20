@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import DashboardHeader from '@/components/DashboardHeader';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { Loader2 } from 'lucide-react';
 
 // Use the same UserProfile interface as in Profile.tsx
@@ -61,13 +61,13 @@ const Settings = () => {
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
-          console.error('Error response data:', error.response.data);
-          console.error('Error response status:', error.response.status);
+          console.error('Error response data:', error.data);
+          console.error('Error response status:', error.status);
           console.error('Error response headers:', error.response.headers);
 
           // Show more specific error message
           toast.error(
-            `Error fetching profile: ${error.response.status} - ${error.response.data?.message || 'Unknown error'}`,
+            `Error fetching profile: ${error.status} - ${error.data?.message || 'Unknown error'}`,
           );
         } else if (error.request) {
           // The request was made but no response was received

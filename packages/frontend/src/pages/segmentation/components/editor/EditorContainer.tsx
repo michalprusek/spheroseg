@@ -16,7 +16,7 @@ import { CanvasSegmentationData, ProjectImage, Polygon as CanvasPolygonType } fr
 import { Point } from '@/lib/segmentation';
 import type { TempPointsState as TempPointsStateType, VertexDragState as VertexDragStateType } from '../../types';
 import { EditMode } from '../../hooks/useSegmentationV2';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -226,7 +226,7 @@ const EditorContainer = ({
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error(
-          `${t('export.maskExportError') || 'Failed to export segmentation mask.'} Status: ${error.response?.status || 'N/A'}`,
+          `${t('export.maskExportError') || 'Failed to export segmentation mask.'} Status: ${error.status || 'N/A'}`,
         );
       } else {
         toast.error(t('export.maskExportError') || 'Failed to export segmentation mask.');

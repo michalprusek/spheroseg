@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 // Import axios directly
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';

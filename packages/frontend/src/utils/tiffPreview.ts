@@ -2,7 +2,7 @@
  * Utility for generating TIFF/BMP preview using backend service
  */
 
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 /**
  * Generate a preview for TIFF/BMP files using backend conversion

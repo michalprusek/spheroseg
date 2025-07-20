@@ -19,7 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ShareDialogProps {
@@ -93,7 +93,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
     try {
       const response = await apiClient.get(`/api/project-shares/${projectId}`);
       // Convert snake_case to camelCase for frontend compatibility
-      const users = response.data.data.map((user: unknown) => ({
+      const users = response.data.map((user: unknown) => ({
         ...user,
         isPending: user.is_pending,
         userName: user.user_name || user.userName,
@@ -123,11 +123,11 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
       console.error('Error sharing project:', error);
 
       // Zpracování různých typů chyb
-      if (error.response?.status === 409) {
+      if (error.status === 409) {
         toast.error(t('share.alreadyShared') || 'Project is already shared with this user');
-      } else if (error.response?.status === 400) {
+      } else if (error.status === 400) {
         toast.error(t('share.invalidEmailOrPermission') || 'Invalid email or permission');
-      } else if (error.response?.status === 404) {
+      } else if (error.status === 404) {
         toast.error(t('share.projectNotFound') || 'Project not found');
       } else {
         toast.error(t('share.failedToShare') || 'Failed to share project');
@@ -156,7 +156,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ projectId, projectName, isOwn
       const response = await apiClient.post(`/api/project-shares/${projectId}/invitation-link`, {
         permission: linkPermission,
       });
-      setInvitationLink(response.data.data.invitationUrl);
+      setInvitationLink(response.data.invitationUrl);
       toast.success(t('share.linkGenerated') || 'Invitation link has been generated');
     } catch (error) {
       console.error('Error generating invitation link:', error);

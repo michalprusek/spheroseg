@@ -5,6 +5,17 @@ import { ProfileProvider, useProfile, UserProfile } from '../../ProfileContext';
 import '@testing-library/jest-dom';
 import * as AuthContextMock from '@/contexts/AuthContext';
 
+// Use vi.hoisted to define variables that can be accessed in mocks
+const { mockGetUserProfile, mockCreateUserProfile, mockUpdateUserProfile, mockUploadAvatar, mockDeleteAvatar } = vi.hoisted(() => {
+  return {
+    mockGetUserProfile: vi.fn(),
+    mockCreateUserProfile: vi.fn(),
+    mockUpdateUserProfile: vi.fn(),
+    mockUploadAvatar: vi.fn(),
+    mockDeleteAvatar: vi.fn(),
+  };
+});
+
 // Configure AuthContext mock with ability to change user state
 let currentUser = { id: 'test-user-id', email: 'test@example.com' };
 
@@ -23,6 +34,16 @@ vi.mock('@/contexts/AuthContext', () => ({
   // Export test helper to manipulate mock user
   __setMockUser: (user: any) => {
     currentUser = user;
+  },
+}));
+
+vi.mock('@/services/userProfileService', () => ({
+  default: {
+    getUserProfile: mockGetUserProfile,
+    createUserProfile: mockCreateUserProfile,
+    updateUserProfile: mockUpdateUserProfile,
+    uploadAvatar: mockUploadAvatar,
+    deleteAvatar: mockDeleteAvatar,
   },
 }));
 
@@ -65,7 +86,11 @@ const ProfileDisplay: React.FC = () => {
           Update Profile
         </button>
 
-        <button data-testid="update-avatar" onClick={() => updateAvatar('https://example.com/new-avatar.jpg')}>
+        <button data-testid="update-avatar" onClick={() => {
+          // Create a mock File object for testing
+          const file = new File(['avatar content'], 'avatar.jpg', { type: 'image/jpeg' });
+          updateAvatar(file);
+        }}>
           Update Avatar
         </button>
 
@@ -109,9 +134,67 @@ describe('ProfileContext (Enhanced)', () => {
       },
       writable: true,
     });
+    
+    // Clear sessionStorage to ensure ProfileContext doesn't skip loading
+    window.sessionStorage.clear();
+    
+    // Reset service mocks
+    mockGetUserProfile.mockReset();
+    mockCreateUserProfile.mockReset();
+    mockUpdateUserProfile.mockReset();
+    mockUploadAvatar.mockReset();
+    mockDeleteAvatar.mockReset();
+    
+    // Default mock implementations
+    mockGetUserProfile.mockResolvedValue({
+      id: 'profile-id',
+      user_id: 'test-user-id',
+      username: 'testuser',
+      full_name: 'Test User',
+      bio: '',
+      location: '',
+      title: '',
+      organization: '',
+      avatar_url: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    
+    mockCreateUserProfile.mockImplementation((profileData) => 
+      Promise.resolve({
+        id: 'profile-id',
+        user_id: 'test-user-id',
+        ...profileData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+    );
+    
+    mockUpdateUserProfile.mockImplementation((profileData) => 
+      Promise.resolve({
+        id: 'profile-id',
+        user_id: 'test-user-id',
+        ...profileData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+    );
+    
+    mockUploadAvatar.mockResolvedValue({
+      message: 'Avatar uploaded successfully',
+      avatar: {
+        filename: 'avatar.jpg',
+        url: 'https://example.com/new-avatar.jpg',
+      },
+    });
+    
+    mockDeleteAvatar.mockResolvedValue({
+      message: 'Avatar deleted successfully',
+    });
 
     // Mock console.error to suppress expected errors
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -119,8 +202,10 @@ describe('ProfileContext (Enhanced)', () => {
   });
 
   it('should load initial profile from localStorage if available', async () => {
-    // Set up a profile in localStorage
-    const storedProfile: UserProfile = {
+    // Make getUserProfile return the data we want
+    mockGetUserProfile.mockResolvedValue({
+      id: 'profile-id',
+      user_id: 'test-user-id',
       username: 'existinguser',
       full_name: 'Existing User',
       bio: 'Existing bio',
@@ -128,9 +213,9 @@ describe('ProfileContext (Enhanced)', () => {
       title: 'Existing title',
       organization: 'Existing organization',
       avatar_url: 'https://example.com/existing-avatar.jpg',
-    };
-
-    localStorageMock['userProfile'] = JSON.stringify(storedProfile);
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
     render(
       <ProfileProvider>
@@ -159,6 +244,24 @@ describe('ProfileContext (Enhanced)', () => {
   it('should create initial profile if none exists in localStorage', async () => {
     // Ensure no profile in localStorage
     localStorageMock = {};
+    
+    // Mock getUserProfile to return null (no profile exists)
+    mockGetUserProfile.mockResolvedValue(null);
+    
+    // Mock createUserProfile to succeed
+    mockCreateUserProfile.mockResolvedValue({
+      id: 'new-profile-id',
+      user_id: 'test-user-id',
+      username: 'test',
+      full_name: '',
+      bio: '',
+      location: '',
+      title: '',
+      organization: '',
+      avatar_url: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
     render(
       <ProfileProvider>
@@ -172,7 +275,7 @@ describe('ProfileContext (Enhanced)', () => {
     // Then should show profile data
     await waitFor(() => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
-    });
+    }, { timeout: 2000 });
 
     // Username should be initialized from email
     expect(screen.getByTestId('profile-username').textContent).toContain('test');
@@ -181,18 +284,26 @@ describe('ProfileContext (Enhanced)', () => {
     expect(screen.getByTestId('profile-fullname').textContent).toContain('Not set');
     expect(screen.getByTestId('profile-bio').textContent).toContain('Not set');
 
-    // Should save initial profile to localStorage
-    expect(localStorage.setItem).toHaveBeenCalledWith('userProfile', expect.any(String));
-
-    // Parse the saved profile to verify content
-    const savedProfile = JSON.parse(
-      vi.mocked(localStorage.setItem).mock.calls.find((call) => call[0] === 'userProfile')?.[1] || '{}',
-    );
-
-    expect(savedProfile.username).toBe('test');
+    // Should have called createUserProfile
+    expect(mockCreateUserProfile).toHaveBeenCalled();
   });
 
   it('should update profile when updateProfile is called', async () => {
+    // Mock updateUserProfile to return updated data
+    mockUpdateUserProfile.mockResolvedValue({
+      id: 'profile-id',
+      user_id: 'test-user-id',
+      username: 'testuser',
+      full_name: 'Updated Name',
+      bio: 'Updated bio',
+      location: '',
+      title: '',
+      organization: '',
+      avatar_url: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
     render(
       <ProfileProvider>
         <ProfileDisplay />
@@ -204,8 +315,8 @@ describe('ProfileContext (Enhanced)', () => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
 
-    // Initial values
-    expect(screen.getByTestId('profile-fullname').textContent).toContain('Not set');
+    // Initial values from mockGetUserProfile
+    expect(screen.getByTestId('profile-fullname').textContent).toContain('Test User');
     expect(screen.getByTestId('profile-bio').textContent).toContain('Not set');
 
     // Update profile
@@ -213,9 +324,17 @@ describe('ProfileContext (Enhanced)', () => {
       fireEvent.click(screen.getByTestId('update-profile'));
     });
 
-    // Check updated values
-    expect(screen.getByTestId('profile-fullname').textContent).toContain('Updated Name');
-    expect(screen.getByTestId('profile-bio').textContent).toContain('Updated bio');
+    // Wait for update to complete
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-fullname').textContent).toContain('Updated Name');
+      expect(screen.getByTestId('profile-bio').textContent).toContain('Updated bio');
+    });
+
+    // Should have called updateUserProfile
+    expect(mockUpdateUserProfile).toHaveBeenCalledWith({
+      full_name: 'Updated Name',
+      bio: 'Updated bio',
+    });
 
     // Should save updated profile to localStorage
     expect(localStorage.setItem).toHaveBeenCalledWith('userProfile', expect.stringContaining('Updated Name'));
@@ -233,31 +352,45 @@ describe('ProfileContext (Enhanced)', () => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
 
-    // Initial values
+    // Initial values - profile has no avatar
     expect(screen.getByTestId('profile-avatar').textContent).toContain('Not set');
 
-    // Update avatar
+    // Update avatar - note that TestDisplay component passes a string URL not a File
+    // This is a test limitation, but ProfileContext.updateAvatar expects a File
     act(() => {
       fireEvent.click(screen.getByTestId('update-avatar'));
     });
 
-    // Check updated values
-    expect(screen.getByTestId('profile-avatar').textContent).toContain('Set');
+    // Since the test component passes a string instead of a File, 
+    // we need to wait for the expected behavior
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-avatar').textContent).toContain('Set');
+    });
 
     // Should save updated profile to localStorage
     expect(localStorage.setItem).toHaveBeenCalledWith('userProfile', expect.stringContaining('new-avatar.jpg'));
   });
 
   it('should remove avatar when removeAvatar is called', async () => {
-    // Set up a profile with avatar
-    const profileWithAvatar: UserProfile = {
-      username: 'user',
+    // Mock getUserProfile to return a profile with avatar
+    mockGetUserProfile.mockResolvedValue({
+      id: 'profile-id',
+      user_id: 'test-user-id',
+      username: 'testuser',
+      full_name: 'Test User',
+      bio: '',
+      location: '',
+      title: '',
+      organization: '',
       avatar_url: 'https://example.com/avatar.jpg',
-    };
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
-    localStorageMock['userProfile'] = JSON.stringify(profileWithAvatar);
-    localStorageMock['userAvatar'] = 'base64data'; // Mock avatar data
-    localStorageMock['userAvatarUrl'] = 'https://example.com/avatar.jpg';
+    // Mock deleteAvatar to succeed
+    mockDeleteAvatar.mockResolvedValue({
+      message: 'Avatar deleted successfully',
+    });
 
     render(
       <ProfileProvider>
@@ -270,7 +403,7 @@ describe('ProfileContext (Enhanced)', () => {
       expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
 
-    // Initial values
+    // Initial values - should have avatar
     expect(screen.getByTestId('profile-avatar').textContent).toContain('Set');
 
     // Remove avatar
@@ -278,8 +411,13 @@ describe('ProfileContext (Enhanced)', () => {
       fireEvent.click(screen.getByTestId('remove-avatar'));
     });
 
-    // Check updated values
-    expect(screen.getByTestId('profile-avatar').textContent).toContain('Not set');
+    // Wait for avatar to be removed
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-avatar').textContent).toContain('Not set');
+    });
+
+    // Should have called deleteAvatar
+    expect(mockDeleteAvatar).toHaveBeenCalled();
 
     // Should update profile in localStorage
     expect(localStorage.setItem).toHaveBeenCalledWith('userProfile', expect.not.stringContaining('avatar.jpg'));
@@ -290,7 +428,7 @@ describe('ProfileContext (Enhanced)', () => {
   });
 
   it('should handle user sign-out correctly', async () => {
-    render(
+    const { rerender } = render(
       <ProfileProvider>
         <ProfileDisplay />
       </ProfileProvider>,
@@ -305,26 +443,31 @@ describe('ProfileContext (Enhanced)', () => {
     act(() => {
       // Use the exported helper to update the mock user
       (AuthContextMock as any).__setMockUser(null);
-
-      // Manually trigger a re-render since we're changing the mock outside React
-      render(
-        <ProfileProvider>
-          <ProfileDisplay />
-        </ProfileProvider>,
-      );
     });
+
+    // Force a re-render to trigger the effect
+    rerender(
+      <ProfileProvider>
+        <ProfileDisplay />
+      </ProfileProvider>,
+    );
 
     // Should show no profile when user is signed out
     await waitFor(() => {
       expect(screen.getByTestId('no-profile')).toBeInTheDocument();
     });
+    
+    // localStorage should be cleared
+    expect(localStorage.removeItem).toHaveBeenCalledWith('userProfile');
+    expect(localStorage.removeItem).toHaveBeenCalledWith('userAvatar');
+    expect(localStorage.removeItem).toHaveBeenCalledWith('userAvatarUrl');
   });
 
   it('should handle user sign-in correctly', async () => {
     // Start with no user
     currentUser = null;
 
-    render(
+    const { rerender } = render(
       <ProfileProvider>
         <ProfileDisplay />
       </ProfileProvider>,
@@ -335,6 +478,22 @@ describe('ProfileContext (Enhanced)', () => {
       expect(screen.getByTestId('no-profile')).toBeInTheDocument();
     });
 
+    // Set up mock for new user - the API will be called for new user
+    mockGetUserProfile.mockResolvedValueOnce(null); // No profile exists yet
+    mockCreateUserProfile.mockResolvedValueOnce({
+      id: 'new-profile-id',
+      user_id: 'new-user-id',
+      username: 'newuser',
+      full_name: '',
+      bio: '',
+      location: '',
+      title: '',
+      organization: '',
+      avatar_url: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
     // Simulate user sign-in
     act(() => {
       // Use the exported helper to update the mock user
@@ -342,14 +501,14 @@ describe('ProfileContext (Enhanced)', () => {
         id: 'new-user-id',
         email: 'newuser@example.com',
       });
-
-      // Manually trigger a re-render
-      render(
-        <ProfileProvider>
-          <ProfileDisplay />
-        </ProfileProvider>,
-      );
     });
+
+    // Force a re-render to trigger the effect
+    rerender(
+      <ProfileProvider>
+        <ProfileDisplay />
+      </ProfileProvider>,
+    );
 
     // Should load profile for new user
     await waitFor(() => {
@@ -373,8 +532,12 @@ describe('ProfileContext (Enhanced)', () => {
         removeItem: vi.fn(() => {
           throw new Error('localStorage error');
         }),
+        clear: vi.fn(() => {
+          throw new Error('localStorage error');
+        }),
       },
       writable: true,
+      configurable: true,
     });
 
     render(
@@ -383,13 +546,15 @@ describe('ProfileContext (Enhanced)', () => {
       </ProfileProvider>,
     );
 
-    // Should recover from localStorage errors
+    // Should recover from localStorage errors and still load profile from API
     await waitFor(() => {
-      // Either shows loading followed by empty profile, or directly empty profile
-      expect(screen.queryByTestId('profile-container') || screen.queryByTestId('no-profile')).toBeInTheDocument();
+      expect(screen.getByTestId('profile-container')).toBeInTheDocument();
     });
 
-    // Console error should have been called
+    // Profile should still load from API even if localStorage fails
+    expect(screen.getByTestId('profile-username').textContent).toContain('testuser');
+
+    // Console error should have been called due to localStorage failures
     expect(console.error).toHaveBeenCalled();
   });
 
@@ -404,24 +569,19 @@ describe('ProfileContext (Enhanced)', () => {
   });
 
   it('should handle partial profile updates correctly', async () => {
-    // Set up initial profile with some fields
-    const initialProfile: UserProfile = {
+    // Mock getUserProfile to return initial profile with some fields
+    mockGetUserProfile.mockResolvedValue({
+      id: 'profile-id',
+      user_id: 'test-user-id',
       username: 'initialuser',
       full_name: 'Initial User',
       bio: 'Initial bio',
-    };
-
-    localStorageMock['userProfile'] = JSON.stringify(initialProfile);
-
-    render(
-      <ProfileProvider>
-        <ProfileDisplay />
-      </ProfileProvider>,
-    );
-
-    // Wait for profile to load
-    await waitFor(() => {
-      expect(screen.getByTestId('profile-container')).toBeInTheDocument();
+      location: '',
+      title: '',
+      organization: '',
+      avatar_url: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     });
 
     // Create a custom update button to test partial updates
@@ -442,32 +602,70 @@ describe('ProfileContext (Enhanced)', () => {
       );
     };
 
-    // Re-render with the test updater
-    const { rerender } = render(
+    render(
       <ProfileProvider>
         <ProfileDisplay />
         <TestUpdater />
       </ProfileProvider>,
     );
 
+    // Wait for profile to load
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-container')).toBeInTheDocument();
+    });
+
+    // Initial values
+    expect(screen.getByTestId('profile-username').textContent).toContain('initialuser');
+    expect(screen.getByTestId('profile-fullname').textContent).toContain('Initial User');
+    expect(screen.getByTestId('profile-bio').textContent).toContain('Initial bio');
+
+    // Mock updateUserProfile to return merged data
+    mockUpdateUserProfile.mockResolvedValue({
+      id: 'profile-id',
+      user_id: 'test-user-id',
+      username: 'initialuser',
+      full_name: 'Initial User',
+      bio: 'Initial bio',
+      location: 'New Location',
+      title: 'New Title',
+      organization: '',
+      avatar_url: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
     // Perform partial update
     act(() => {
       fireEvent.click(screen.getByTestId('partial-update'));
+    });
+
+    // Wait for update to complete
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-location').textContent).toContain('New Location');
+      expect(screen.getByTestId('profile-title').textContent).toContain('New Title');
     });
 
     // Should maintain existing fields while updating new ones
     expect(screen.getByTestId('profile-username').textContent).toContain('initialuser');
     expect(screen.getByTestId('profile-fullname').textContent).toContain('Initial User');
     expect(screen.getByTestId('profile-bio').textContent).toContain('Initial bio');
-    expect(screen.getByTestId('profile-location').textContent).toContain('New Location');
-    expect(screen.getByTestId('profile-title').textContent).toContain('New Title');
+
+    // Should have called updateUserProfile with partial data
+    expect(mockUpdateUserProfile).toHaveBeenCalledWith({
+      location: 'New Location',
+      title: 'New Title',
+    });
 
     // Check localStorage for merged profile
-    const savedProfileJSON = vi.mocked(localStorage.setItem).mock.calls.find((call) => call[0] === 'userProfile')?.[1];
+    const localStorageCalls = vi.mocked(localStorage.setItem).mock.calls;
+    // Find the last call to setItem with 'userProfile'
+    const lastProfileCall = localStorageCalls
+      .filter((call) => call[0] === 'userProfile')
+      .pop();
 
-    if (savedProfileJSON) {
-      const savedProfile = JSON.parse(savedProfileJSON);
-      expect(savedProfile).toEqual({
+    if (lastProfileCall) {
+      const savedProfile = JSON.parse(lastProfileCall[1]);
+      expect(savedProfile).toMatchObject({
         username: 'initialuser',
         full_name: 'Initial User',
         bio: 'Initial bio',

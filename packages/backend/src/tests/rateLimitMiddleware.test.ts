@@ -16,15 +16,20 @@ jest.mock('../config', () => ({
 
 // Mock logger with all required methods
 jest.mock('../utils/logger', () => {
+  const mockLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    http: jest.fn(),
+    silly: jest.fn(),
+  };
+
   return {
     __esModule: true,
-    default: {
-      warn: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      http: jest.fn(),
-    },
+    default: mockLogger,
+    createLogger: jest.fn().mockReturnValue(mockLogger),
   };
 });
 

@@ -6,6 +6,7 @@ import performanceConfig from '../config/performance';
 import { getContainerMemoryInfo } from '../utils/containerInfo';
 import axios from 'axios';
 import os from 'os';
+import { checkErrorTrackingHealth } from '../startup/errorTracking.startup';
 
 const router: Router = express.Router();
 
@@ -29,7 +30,9 @@ interface HealthCheckResponse {
     memory: HealthCheckComponent;
     fileSystem: HealthCheckComponent;
     configuration: HealthCheckComponent;
+    errorTracking?: HealthCheckComponent;
   };
+  [key: string]: unknown;
 }
 
 // GET /api/health - Basic health check endpoint
@@ -39,12 +42,13 @@ router.get('/', async (req: Request, res: Response) => {
 
   try {
     // Run all checks in parallel
-    const [dbCheck, mlCheck, memoryCheck, fsCheck, configCheck] = await Promise.all([
+    const [dbCheck, mlCheck, memoryCheck, fsCheck, configCheck, errorTrackingCheck] = await Promise.all([
       checkDatabase(),
       checkMLService(),
       checkMemory(),
       checkFileSystem(),
       checkConfiguration(),
+      checkErrorTracking(),
     ]);
 
     // Determine overall health status
@@ -55,6 +59,7 @@ router.get('/', async (req: Request, res: Response) => {
       memory: memoryCheck,
       fileSystem: fsCheck,
       configuration: configCheck,
+      errorTracking: errorTrackingCheck,
     };
 
     const statuses = Object.values(components).map((c) => c.status);
@@ -190,12 +195,13 @@ async function checkMLService(): Promise<HealthCheckComponent> {
     const mlServiceUrl = config.ml?.serviceUrl || process.env["ML_SERVICE_URL"] || 'http://ml:5002';
 
     // First check if checkpoint exists
-    if (!config.segmentation?.checkpointExists) {
+    const checkpointPath = config.segmentation?.checkpointPath;
+    if (checkpointPath && !require('fs').existsSync(checkpointPath)) {
       return {
         status: 'degraded',
         message: 'ML checkpoint missing',
         responseTime: 0,
-        details: { checkpointPath: config.segmentation?.checkpointPath },
+        details: { checkpointPath },
       };
     }
 
@@ -386,6 +392,37 @@ async function checkConfiguration(): Promise<HealthCheckComponent> {
     return {
       status: 'degraded',
       message: 'Unable to validate configuration',
+      details: { error: error.message },
+    };
+  }
+}
+
+async function checkErrorTracking(): Promise<HealthCheckComponent> {
+  const start = Date.now();
+  try {
+    const health = await checkErrorTrackingHealth();
+    const responseTime = Date.now() - start;
+    
+    if (!health.healthy) {
+      return {
+        status: 'degraded',
+        message: health.status,
+        responseTime,
+        details: health.details,
+      };
+    }
+    
+    return {
+      status: 'healthy',
+      message: 'Error tracking service operational',
+      responseTime,
+    };
+  } catch (error) {
+    // Error tracking being down is degraded, not unhealthy
+    return {
+      status: 'degraded',
+      message: 'Error tracking service unavailable',
+      responseTime: Date.now() - start,
       details: { error: error.message },
     };
   }

@@ -153,7 +153,7 @@ export const performanceMonitoring = () => {
  * Apply performance monitoring to the application
  */
 export const applyPerformanceMonitoring = (app: unknown) => {
-  app.use(performanceMonitoring());
+  (app as any).use(performanceMonitoring());
   logger.info('Performance monitoring middleware applied');
 };
 

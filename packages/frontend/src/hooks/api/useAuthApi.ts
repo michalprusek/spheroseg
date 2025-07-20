@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 export interface LoginData {
   email: string;
@@ -72,11 +72,21 @@ export const useAuthApi = () => {
     }
   }, []);
 
+  const getCurrentUser = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/auth/me');
+      return response.data.user;
+    } catch (err) {
+      throw err;
+    }
+  }, []);
+
   return {
     login,
     register,
     logout,
     refreshToken,
+    getCurrentUser,
     loading,
     error,
   };

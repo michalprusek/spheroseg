@@ -11,7 +11,7 @@ import type {
   Polygon,
   Point, // Import Point type
 } from '@/types';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { constructUrl } from '@/lib/urlUtils';
 import { v4 as uuidv4 } from 'uuid'; // Import UUID for polygon IDs
 

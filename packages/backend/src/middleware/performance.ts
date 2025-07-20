@@ -44,7 +44,7 @@ export interface PerformanceThresholds {
 
 export interface PerformanceRequest extends Request {
   startTime?: number;
-  memoryUsageStart?: ReturnType<typeof process.memoryUsage>;
+  memoryUsageStart?: ReturnType<typeof process.memoryUsage> | undefined;
 }
 
 // =============================================================================
@@ -318,7 +318,7 @@ export const createDatabaseMonitoringMiddleware = () => {
   // Update database metrics periodically
   const updateDatabaseMetrics = () => {
     try {
-      const poolStats = (pool as unknown).totalCount || 0; // Get pool statistics if available
+      const poolStats = (pool as any).totalCount || 0; // Get pool statistics if available
       databaseConnectionsActive.set(poolStats);
     } catch (error) {
       logger.warn('Failed to get database pool statistics', { error });
@@ -328,7 +328,7 @@ export const createDatabaseMonitoringMiddleware = () => {
   // Update metrics every 30 seconds
   setInterval(updateDatabaseMetrics, 30000);
 
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (_req: Request, _res: Response, next: NextFunction) => {
     // This middleware doesn't need to do anything per request
     // The actual monitoring happens in the interval
     next();
@@ -343,7 +343,7 @@ export const createDatabaseMonitoringMiddleware = () => {
  * Create metrics endpoint handler
  */
 export const createMetricsHandler = () => {
-  return async (req: Request, res: Response): Promise<void> => {
+  return async (_req: Request, res: Response): Promise<void> => {
     try {
       res.set('Content-Type', register.contentType);
       const metrics = await register.metrics();

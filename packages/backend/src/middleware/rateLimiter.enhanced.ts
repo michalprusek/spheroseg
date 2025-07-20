@@ -82,12 +82,18 @@ export class DynamicRateLimiter {
   private readonly prefix = 'ratelimit:';
 
   constructor(redisClient?: Redis) {
-    this.redis = redisClient || new Redis({
+    const redisOptions: any = {
       host: config.redis?.host || 'localhost',
       port: config.redis?.port || 6379,
-      password: config.redis?.password,
-      retryStrategy: (times) => Math.min(times * 50, 2000),
-    });
+      retryStrategy: (times: number) => Math.min(times * 50, 2000),
+    };
+    
+    // Only add password if it exists
+    if (config.redis?.password) {
+      redisOptions.password = config.redis.password;
+    }
+    
+    this.redis = redisClient || new Redis(redisOptions);
 
     // Fallback for when Redis is unavailable
     this.fallbackStore = new Map();
@@ -222,18 +228,18 @@ export class DynamicRateLimiter {
       const userKey = `${this.prefix}user:${userId}`;
       const userData = await this.redis.hgetall(userKey);
       
-      if (!userData.registeredAt) {
+      if (!userData['registeredAt']) {
         // New user
         return UserCategory.NEW;
       }
 
-      const accountAge = (Date.now() - parseInt(userData.registeredAt)) / (1000 * 60 * 60 * 24);
+      const accountAge = (Date.now() - parseInt(userData['registeredAt'])) / (1000 * 60 * 60 * 24);
       
       // Power user criteria
       if (
         accountAge > 30 &&
-        parseInt(userData.successfulRequests || '0') > 1000 &&
-        parseFloat(userData.errorRate || '1') < 0.05
+        parseInt(userData['successfulRequests'] || '0') > 1000 &&
+        parseFloat(userData['errorRate'] || '1') < 0.05
       ) {
         return UserCategory.POWER;
       }
@@ -259,13 +265,13 @@ export class DynamicRateLimiter {
       const data = await this.redis.hgetall(behaviorKey);
 
       return {
-        rapidRequests: parseInt(data.rapidRequests || '0'),
-        failedAuthAttempts: parseInt(data.failedAuthAttempts || '0'),
-        errorRate: parseFloat(data.errorRate || '0'),
-        uniqueEndpoints: parseInt(data.uniqueEndpoints || '0'),
-        dataVolume: parseFloat(data.dataVolume || '0'),
-        accountAge: parseInt(data.accountAge || '0'),
-        successfulRequests: parseInt(data.successfulRequests || '0'),
+        rapidRequests: parseInt(data['rapidRequests'] || '0'),
+        failedAuthAttempts: parseInt(data['failedAuthAttempts'] || '0'),
+        errorRate: parseFloat(data['errorRate'] || '0'),
+        uniqueEndpoints: parseInt(data['uniqueEndpoints'] || '0'),
+        dataVolume: parseFloat(data['dataVolume'] || '0'),
+        accountAge: parseInt(data['accountAge'] || '0'),
+        successfulRequests: parseInt(data['successfulRequests'] || '0'),
       };
     } catch (error) {
       logger.error('Error getting user behavior', { error, identifier });
@@ -428,7 +434,6 @@ export class DynamicRateLimiter {
   ): Promise<void> {
     try {
       const behaviorKey = `${this.prefix}behavior:${identifier}`;
-      const now = Date.now();
 
       // Update rapid requests counter
       const rapidKey = `${this.prefix}rapid:${identifier}`;
@@ -440,7 +445,10 @@ export class DynamicRateLimiter {
 
       // Track endpoints
       const endpointKey = `${this.prefix}endpoints:${identifier}`;
-      pipe.pfadd(endpointKey, new Date().toISOString().split('T')[0]);
+      const dateStr = new Date().toISOString().split('T')[0];
+      if (dateStr) {
+        pipe.pfadd(endpointKey, dateStr);
+      }
       
       // Update counters
       if (success) {
@@ -461,7 +469,7 @@ export class DynamicRateLimiter {
 
       // Calculate and update error rate
       const data = await this.redis.hgetall(behaviorKey);
-      const errorRate = parseInt(data.errorRequests || '0') / parseInt(data.totalRequests || '1');
+      const errorRate = parseInt(data['errorRequests'] || '0') / parseInt(data['totalRequests'] || '1');
       await this.redis.hset(behaviorKey, 'errorRate', errorRate.toString());
 
     } catch (error) {
@@ -472,7 +480,7 @@ export class DynamicRateLimiter {
   /**
    * Determine if user should be blocked
    */
-  private async shouldBlockUser(identifier: string, behavior: BehaviorPattern): Promise<boolean> {
+  private async shouldBlockUser(_identifier: string, behavior: BehaviorPattern): Promise<boolean> {
     // Block if multiple failed auth attempts
     if (behavior.failedAuthAttempts > 10) {
       return true;

@@ -53,7 +53,7 @@ export const securityHeaders = helmet({
   xssFilter: true,
 
   // Referrer Policy
-  referrerPolicy: { policy: securityConfig.headers.referrerPolicy },
+  referrerPolicy: { policy: securityConfig.headers.referrerPolicy as any },
 
   // Permissions Policy (replacing Feature Policy)
   permittedCrossDomainPolicies: false,
@@ -132,10 +132,11 @@ export function apiKeyValidation(req: Request, res: Response, next: NextFunction
   const apiKey = req.headers[securityConfig.api.apiKeyHeader.toLowerCase()] as string;
 
   if (!apiKey) {
-    return res.status(401).json({
+    res.status(401).json({
       error: 'API key required',
       code: 'API_KEY_MISSING',
     });
+    return;
   }
 
   // Validate API key (implement your validation logic)
@@ -143,10 +144,11 @@ export function apiKeyValidation(req: Request, res: Response, next: NextFunction
   const isValidApiKey = validateApiKey(apiKey);
 
   if (!isValidApiKey) {
-    return res.status(401).json({
+    res.status(401).json({
       error: 'Invalid API key',
       code: 'API_KEY_INVALID',
     });
+    return;
   }
 
   next();

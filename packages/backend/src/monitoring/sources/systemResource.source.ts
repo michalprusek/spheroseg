@@ -13,7 +13,6 @@ import { MonitoringSource } from '../unified/performanceCoordinator';
 import { PerformanceMetric } from '../optimized/performanceOptimizer';
 
 const readFile = promisify(fs.readFile);
-const stat = promisify(fs.stat);
 
 interface SystemResourceConfig {
   includeDetailedCpuStats: boolean;
@@ -105,7 +104,7 @@ class SystemResourceSource implements MonitoringSource {
     metrics.push({
       id: `load_avg_1m_${timestamp}`,
       name: 'load_average_1m',
-      value: loadAvg[0],
+      value: loadAvg[0] || 0,
       unit: 'count',
       category: 'system',
       timestamp,
@@ -115,7 +114,7 @@ class SystemResourceSource implements MonitoringSource {
     metrics.push({
       id: `load_avg_5m_${timestamp}`,
       name: 'load_average_5m',
-      value: loadAvg[1],
+      value: loadAvg[1] || 0,
       unit: 'count',
       category: 'system',
       timestamp,
@@ -418,20 +417,22 @@ class SystemResourceSource implements MonitoringSource {
     try {
       const statData = await readFile('/proc/stat', 'utf8');
       const cpuLine = statData.split('\n')[0];
+      if (!cpuLine) return null;
+      
       const values = cpuLine.split(/\s+/).slice(1).map(Number);
       
       const [user, nice, system, idle, iowait, irq, softirq, steal] = values;
       const total = values.reduce((sum, val) => sum + val, 0);
       
       return {
-        user: (user / total) * 100,
-        nice: (nice / total) * 100,
-        system: (system / total) * 100,
-        idle: (idle / total) * 100,
-        iowait: (iowait / total) * 100,
-        irq: (irq / total) * 100,
-        softirq: (softirq / total) * 100,
-        steal: (steal / total) * 100,
+        user: ((user || 0) / total) * 100,
+        nice: ((nice || 0) / total) * 100,
+        system: ((system || 0) / total) * 100,
+        idle: ((idle || 0) / total) * 100,
+        iowait: ((iowait || 0) / total) * 100,
+        irq: ((irq || 0) / total) * 100,
+        softirq: ((softirq || 0) / total) * 100,
+        steal: ((steal || 0) / total) * 100,
       };
     } catch (error) {
       return null;
@@ -447,16 +448,16 @@ class SystemResourceSource implements MonitoringSource {
       for (const line of lines) {
         if (line.trim()) {
           const parts = line.trim().split(/\s+/);
-          const interface_ = parts[0].replace(':', '');
+          const interface_ = parts[0]?.replace(':', '');
           
-          if (interface_ !== 'lo') { // Skip loopback
+          if (interface_ && interface_ !== 'lo') { // Skip loopback
             stats[interface_] = {
-              rx_bytes: parseInt(parts[1]),
-              rx_packets: parseInt(parts[2]),
-              rx_errors: parseInt(parts[3]),
-              tx_bytes: parseInt(parts[9]),
-              tx_packets: parseInt(parts[10]),
-              tx_errors: parseInt(parts[11]),
+              rx_bytes: parseInt(parts[1] || '0'),
+              rx_packets: parseInt(parts[2] || '0'),
+              rx_errors: parseInt(parts[3] || '0'),
+              tx_bytes: parseInt(parts[9] || '0'),
+              tx_packets: parseInt(parts[10] || '0'),
+              tx_errors: parseInt(parts[11] || '0'),
             };
           }
         }
@@ -468,9 +469,8 @@ class SystemResourceSource implements MonitoringSource {
     }
   }
 
-  private async getDiskStats(path: string): Promise<Record<string, number>> {
+  private async getDiskStats(_path: string): Promise<Record<string, number>> {
     try {
-      const stats = await stat(path);
       // This is a basic implementation - could be enhanced with statvfs on Linux
       return {
         total_space: 0, // Would need platform-specific implementation
@@ -493,9 +493,11 @@ class SystemResourceSource implements MonitoringSource {
       
       for (const line of lines) {
         if (line.startsWith('read_bytes:')) {
-          readBytes = parseInt(line.split(':')[1].trim());
+          const value = line.split(':')[1]?.trim();
+          readBytes = parseInt(value || '0');
         } else if (line.startsWith('write_bytes:')) {
-          writeBytes = parseInt(line.split(':')[1].trim());
+          const value = line.split(':')[1]?.trim();
+          writeBytes = parseInt(value || '0');
         }
       }
 

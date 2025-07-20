@@ -3,18 +3,9 @@
  */
 
 import { useState, useCallback } from 'react';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { saveAs } from 'file-saver';
-
-export interface ExportOptions {
-  includeImages: boolean;
-  includeMetadata: boolean;
-  includeSegmentation: boolean;
-  includeObjectMetrics: boolean;
-  annotationFormat: 'COCO' | 'YOLO' | 'JSON';
-  metricsFormat: 'EXCEL' | 'CSV' | 'JSON';
-  selectedImages: Record<string, boolean>;
-}
+import { ExportOptions } from '@spheroseg/types';
 
 export const useExportApi = () => {
   const [loading, setLoading] = useState(false);
@@ -78,9 +69,80 @@ export const useExportApi = () => {
     }
   }, []);
 
+  const startExport = useCallback(async (projectId: string, options: ExportOptions) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiClient.post(`/projects/${projectId}/export/start`, options);
+      return response.data;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getExportStatus = useCallback(async (projectId: string, jobId: string) => {
+    try {
+      const response = await apiClient.get(`/projects/${projectId}/export/${jobId}/status`);
+      return response.data;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  }, []);
+
+  const cancelExport = useCallback(async (projectId: string, jobId: string) => {
+    try {
+      const response = await apiClient.post(`/projects/${projectId}/export/${jobId}/cancel`);
+      return response.data;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  }, []);
+
+  const getExportDownloadUrl = useCallback(async (projectId: string, jobId: string) => {
+    try {
+      const response = await apiClient.get(`/projects/${projectId}/export/${jobId}/download-url`);
+      return response.data;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  }, []);
+
+  const getProjectExportHistory = useCallback(async (projectId: string) => {
+    try {
+      const response = await apiClient.get(`/projects/${projectId}/export/history`);
+      return response.data;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  }, []);
+
+  const getExportFormats = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/export/formats');
+      return response.data;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  }, []);
+
   return {
     exportProject,
     exportMetrics,
+    startExport,
+    getExportStatus,
+    cancelExport,
+    getExportDownloadUrl,
+    getProjectExportHistory,
+    getExportFormats,
     loading,
     error,
     progress,

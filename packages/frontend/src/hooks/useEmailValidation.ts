@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 export interface EmailValidationResult {
   isValidating: boolean;

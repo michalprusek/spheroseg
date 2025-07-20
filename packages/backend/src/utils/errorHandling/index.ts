@@ -7,10 +7,12 @@
  */
 
 // Import for internal use
-import { ApiError as ApiErrorClass, ErrorCode } from '../ApiError';
+import { ApiError as ApiErrorClass, ErrorCode, ErrorDetails } from '../ApiError';
+import { Request, Response, NextFunction } from 'express';
 
 // Export the main ApiError class and related types
-export { ApiError, ErrorCode, ErrorDetails } from '../ApiError';
+export { ApiError } from '../ApiError';
+export type { ErrorCode, ErrorDetails } from '../ApiError';
 
 // Export legacy error classes for backward compatibility
 export {
@@ -102,22 +104,34 @@ export const isAuthorizationError = (error: any): boolean => {
 };
 
 /**
+ * Extended Request interface with error helper methods
+ */
+interface RequestWithErrorHelpers extends Request {
+  throwValidationError: (message: string, details?: ErrorDetails[]) => never;
+  throwNotFound: (message: string) => never;
+  throwUnauthorized: (message: string) => never;
+  throwForbidden: (message: string) => never;
+}
+
+/**
  * Middleware to add error throwing helper methods to request object
  */
-export const errorHelpers = (req: unknown, res: unknown, next: unknown) => {
-  req.throwValidationError = (message: string, details?: unknown) => {
+export const errorHelpers = (req: Request, res: Response, next: NextFunction) => {
+  const extendedReq = req as RequestWithErrorHelpers;
+  
+  extendedReq.throwValidationError = (message: string, details?: ErrorDetails[]) => {
     throw ApiErrorClass.validation(message, details);
   };
 
-  req.throwNotFound = (message: string) => {
+  extendedReq.throwNotFound = (message: string) => {
     throw ApiErrorClass.notFound(message);
   };
 
-  req.throwUnauthorized = (message: string) => {
+  extendedReq.throwUnauthorized = (message: string) => {
     throw ApiErrorClass.unauthorized(message);
   };
 
-  req.throwForbidden = (message: string) => {
+  extendedReq.throwForbidden = (message: string) => {
     throw ApiErrorClass.forbidden(message);
   };
 

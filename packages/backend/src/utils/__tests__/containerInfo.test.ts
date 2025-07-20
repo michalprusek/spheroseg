@@ -6,15 +6,19 @@ import { jest } from '@jest/globals';
 
 // Mock logger first
 const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
   error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+  http: jest.fn(),
+  silly: jest.fn(),
 };
 
 jest.mock('../logger', () => ({
+  __esModule: true,
   default: mockLogger,
-  ...mockLogger,
+  createLogger: jest.fn().mockReturnValue(mockLogger),
 }));
 
 // Mock fs module

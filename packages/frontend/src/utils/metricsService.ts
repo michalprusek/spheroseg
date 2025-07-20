@@ -1,6 +1,6 @@
 import { onCLS, onFCP, onFID, onLCP, onTTFB, type Metric } from 'web-vitals';
 import type { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 /**
  * Service for collecting and reporting frontend performance metrics
@@ -255,7 +255,7 @@ export function setupAxiosMetricsInterceptors(axiosInstance: AxiosInstance) {
       if (error.config) {
         const duration = performance.now() - (error.config.metadata?.startTime || 0);
         const endpoint = error.config.url.replace(/\/[0-9a-f-]+(?=\/|$)/g, '/:id');
-        const status = error.response ? error.response.status : 0;
+        const status = error.response ? error.status : 0;
 
         MetricsService.getInstance().trackApiRequest(endpoint, duration, status);
       }

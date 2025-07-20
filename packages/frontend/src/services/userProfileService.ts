@@ -4,7 +4,7 @@
  */
 
 import apiClient, { type ApiError } from '@/services/api/client';
-import uploadClient from '@/lib/uploadClient';
+import { uploadClient } from '@/services/api/client';
 import logger from '@/utils/logger';
 
 export interface UserProfile {

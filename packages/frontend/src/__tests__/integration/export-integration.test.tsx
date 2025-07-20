@@ -1,5 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import '@testing-library/jest-dom';
 import ProjectExport from '@/pages/export/ProjectExport';
@@ -116,62 +116,64 @@ const mockImages = [
 // Set up MSW server
 const server = setupServer(
   // Get project details
-  rest.get('/api/projects/:projectId', (req, res, ctx) => {
-    return res(ctx.json(mockProject));
+  http.get('/api/projects/:projectId', () => {
+    return HttpResponse.json(mockProject);
   }),
 
   // Get project images
-  rest.get('/api/projects/:projectId/images', (req, res, ctx) => {
-    return res(ctx.json({ images: mockImages, total: mockImages.length }));
+  http.get('/api/projects/:projectId/images', () => {
+    return HttpResponse.json({ images: mockImages, total: mockImages.length });
   }),
 
   // Get segmentation results for each image
-  rest.get('/api/images/:imageId/segmentation', (req, res, ctx) => {
-    const imageId = req.params.imageId;
+  http.get('/api/images/:imageId/segmentation', ({ params }) => {
+    const imageId = params.imageId;
     const image = mockImages.find((img) => img.id === imageId);
 
     if (image?.segmentationResult) {
-      return res(
-        ctx.json({
-          id: `segmentation-${imageId}`,
-          image_id: imageId,
-          status: 'completed',
-          result_data: image.segmentationResult,
-        }),
-      );
+      return HttpResponse.json({
+        id: `segmentation-${imageId}`,
+        image_id: imageId,
+        status: 'completed',
+        result_data: image.segmentationResult,
+      });
     }
 
-    return res(ctx.status(404));
+    return new HttpResponse(null, { status: 404 });
   }),
 
   // Export project
-  rest.get('/api/projects/:projectId/export', (req, res, ctx) => {
-    return res(
-      ctx.set('Content-Type', 'application/zip'),
-      ctx.set('Content-Disposition', 'attachment; filename=project-export.zip'),
-      ctx.body('mock-zip-data'),
-    );
+  http.get('/api/projects/:projectId/export', () => {
+    return new HttpResponse('mock-zip-data', {
+      headers: {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': 'attachment; filename=project-export.zip',
+      },
+    });
   }),
 
   // Export metrics only
-  rest.get('/api/projects/:projectId/export/metrics', (req, res, ctx) => {
-    const format = req.url.searchParams.get('format') || 'EXCEL';
+  http.get('/api/projects/:projectId/export/metrics', ({ request }) => {
+    const url = new URL(request.url);
+    const format = url.searchParams.get('format') || 'EXCEL';
 
     if (format === 'EXCEL') {
-      return res(
-        ctx.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
-        ctx.set('Content-Disposition', 'attachment; filename=metrics.xlsx'),
-        ctx.body('mock-excel-data'),
-      );
+      return new HttpResponse('mock-excel-data', {
+        headers: {
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Disposition': 'attachment; filename=metrics.xlsx',
+        },
+      });
     } else if (format === 'CSV') {
-      return res(
-        ctx.set('Content-Type', 'text/csv'),
-        ctx.set('Content-Disposition', 'attachment; filename=metrics.csv'),
-        ctx.body('Image Name,Image ID,Object ID,Area\ntest-image-1.jpg,test-image-id-1,1,10000'),
-      );
+      return new HttpResponse('Image Name,Image ID,Object ID,Area\ntest-image-1.jpg,test-image-id-1,1,10000', {
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename=metrics.csv',
+        },
+      });
     }
 
-    return res(ctx.status(400));
+    return new HttpResponse(null, { status: 400 });
   }),
 );
 
@@ -189,6 +191,15 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'test-user-id', name: 'Test User' },
     isAuthenticated: true,
+  }),
+}));
+
+// Mock profile context
+vi.mock('@/contexts/ProfileContext', () => ({
+  useProfile: () => ({
+    profile: { id: 'test-user-id', name: 'Test User', email: 'test@example.com' },
+    updateProfile: vi.fn(),
+    isLoading: false,
   }),
 }));
 
@@ -325,12 +336,13 @@ describe('Export Integration Tests', () => {
 
     // Mock the server to return CSV data
     server.use(
-      rest.get('/api/projects/:projectId/export/metrics', (req, res, ctx) => {
-        return res(
-          ctx.set('Content-Type', 'text/csv'),
-          ctx.set('Content-Disposition', 'attachment; filename=metrics.csv'),
-          ctx.body('Image Name,Image ID,Object ID,Area\ntest-image-1.jpg,test-image-id-1,1,10000'),
-        );
+      http.get('/api/projects/:projectId/export/metrics', () => {
+        return new HttpResponse('Image Name,Image ID,Object ID,Area\ntest-image-1.jpg,test-image-id-1,1,10000', {
+          headers: {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': 'attachment; filename=metrics.csv',
+          },
+        });
       }),
     );
 
@@ -347,8 +359,8 @@ describe('Export Integration Tests', () => {
   test('should handle errors during export gracefully', async () => {
     // Mock server error for export
     server.use(
-      rest.get('/api/projects/:projectId/export', (req, res, ctx) => {
-        return res(ctx.status(500), ctx.json({ message: 'Server error during export' }));
+      http.get('/api/projects/:projectId/export', () => {
+        return HttpResponse.json({ message: 'Server error during export' }, { status: 500 });
       }),
     );
 

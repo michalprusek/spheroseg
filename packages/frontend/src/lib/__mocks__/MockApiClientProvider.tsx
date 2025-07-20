@@ -80,7 +80,7 @@ const createMockApiClient = (mockResponses: MockResponses, timeoutMs?: number) =
 };
 
 // Import the mock apiClient from test-setup
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 // Mock API client provider component
 export const MockApiClientProvider: React.FC<MockApiClientProviderProps> = ({
@@ -92,6 +92,7 @@ export const MockApiClientProvider: React.FC<MockApiClientProviderProps> = ({
   React.useEffect(() => {
     const findResponse = (url: string, method: string) => {
       const key = getOperationKeyFromUrl(url, method);
+      console.log(`[MockApiClientProvider] URL: ${url}, Method: ${method}, Key: ${key}, Found: ${!!mockResponses[key]}`);
       return mockResponses[key] || null;
     };
 
@@ -131,15 +132,22 @@ export const MockApiClientProvider: React.FC<MockApiClientProviderProps> = ({
       });
     };
 
+    // Check if apiClient is already mocked (with proper type checking)
+    const mockApiClient = apiClient as any;
+    if (!mockApiClient.get?.mockImplementation) {
+      console.warn('MockApiClientProvider: apiClient is not properly mocked');
+      return;
+    }
+
     // Update the mock implementations
-    apiClient.get.mockImplementation((url: string) => handleResponse(url, 'GET'));
-    apiClient.post.mockImplementation((url: string, data: unknown, options?: unknown) => 
+    mockApiClient.get.mockImplementation((url: string) => handleResponse(url, 'GET'));
+    mockApiClient.post.mockImplementation((url: string, data: unknown, options?: unknown) => 
       handleResponse(url, 'POST', data, options));
-    apiClient.put.mockImplementation((url: string, data: unknown, options?: unknown) => 
+    mockApiClient.put.mockImplementation((url: string, data: unknown, options?: unknown) => 
       handleResponse(url, 'PUT', data, options));
-    apiClient.patch.mockImplementation((url: string, data: unknown, options?: unknown) => 
+    mockApiClient.patch.mockImplementation((url: string, data: unknown, options?: unknown) => 
       handleResponse(url, 'PATCH', data, options));
-    apiClient.delete.mockImplementation((url: string, options?: unknown) => 
+    mockApiClient.delete.mockImplementation((url: string, options?: unknown) => 
       handleResponse(url, 'DELETE', undefined, options));
   }, [mockResponses, timeoutMs]);
 
@@ -148,14 +156,51 @@ export const MockApiClientProvider: React.FC<MockApiClientProviderProps> = ({
 
 // Helper to extract operation key from URL
 export function getOperationKeyFromUrl(url: string, method: string): string {
-  // Handle specific patterns
+  // Handle authentication endpoints
+  if (url.includes('/auth/login') && method === 'POST') {
+    return 'login';
+  }
+  if (url.includes('/auth/register') && method === 'POST') {
+    return 'register';
+  }
+  if (url.includes('/auth/logout') && method === 'POST') {
+    return 'logout';
+  }
+  if (url.includes('/auth/refresh') && method === 'POST') {
+    return 'refreshToken';
+  }
+  if (url.includes('/auth/me') && method === 'GET') {
+    return 'getCurrentUser';
+  }
+  if (url.includes('/user/current') && method === 'GET') {
+    return 'getCurrentUser';
+  }
+  
+  // Handle user management endpoints
+  if (url.includes('/users') && method === 'GET' && !url.match(/\/users\/[^/]+$/)) {
+    return 'getUsers';
+  }
+  if (url.match(/\/users\/[^/]+$/) && method === 'GET') {
+    return 'getUser';
+  }
+  if (url.includes('/users') && method === 'POST') {
+    return 'createUser';
+  }
+  if (url.match(/\/users\/[^/]+$/) && method === 'PUT') {
+    return 'updateUser';
+  }
+  if (url.match(/\/users\/[^/]+$/) && method === 'DELETE') {
+    return 'deleteUser';
+  }
+
+  // Handle project endpoints
   if (url.includes('/projects') && method === 'GET' && !url.includes('/images')) {
     return 'getProjects';
   }
   if (url.match(/\/projects\/[^/]+$/) && method === 'GET') {
     return 'getProjectDetails';
   }
-  if (url.includes('/projects') && method === 'POST') {
+  if (url.includes('/projects') && method === 'POST' && !url.includes('/images')) {
     return 'createProject';
   }
   if (url.match(/\/projects\/[^/]+$/) && method === 'PUT') {
@@ -179,14 +224,31 @@ export function getOperationKeyFromUrl(url: string, method: string): string {
   if (url.match(/\/projects\/[^/]+\/images\/[^/]+$/) && method === 'PATCH') {
     return 'updateImageStatus';
   }
-  if (url.includes('/export') && method === 'POST') {
+
+  // Handle export endpoints
+  if (url.includes('/export/start') && method === 'POST') {
     return 'startExport';
   }
-  if (url.includes('/export/download')) {
+  if (url.includes('/export') && url.includes('/status') && method === 'GET') {
+    return 'getExportStatus';
+  }
+  if (url.includes('/export') && url.includes('/cancel') && method === 'POST') {
+    return 'cancelExport';
+  }
+  if (url.includes('/export') && url.includes('/download-url') && method === 'GET') {
     return 'getExportDownloadUrl';
+  }
+  if (url.includes('/export') && method === 'POST' && !url.includes('/start') && !url.includes('/cancel')) {
+    return 'exportProject';
   }
   if (url.includes('/export/jobs')) {
     return 'getExportJob';
+  }
+  if (url.includes('/export/history') && method === 'GET') {
+    return 'getProjectExportHistory';
+  }
+  if (url.includes('/export/formats') && method === 'GET') {
+    return 'getExportFormats';
   }
   
   return '';

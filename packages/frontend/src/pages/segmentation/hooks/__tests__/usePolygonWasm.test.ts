@@ -3,7 +3,49 @@ import { renderHook, act } from '@testing-library/react';
 import { usePolygonWasm } from '../usePolygonWasm';
 import { Point, Polygon } from '@spheroseg/types';
 
-// Mock the WebAssembly module
+// Mock the shared polygon WASM utils
+vi.mock('@spheroseg/shared/utils/polygonWasmUtils', () => {
+  // Create mock inside the factory to avoid hoisting issues
+  const initWasm = vi.fn();
+  
+  const createMockPolygonWasm = (overrides = {}) => ({
+    load: initWasm,
+    isPointInPolygon: vi.fn((point, polygon) => {
+      // Simple mock implementation for isPointInPolygon
+      if (!polygon || !polygon.length) return false;
+      const xPoints = polygon.map((p) => p.x);
+      const yPoints = polygon.map((p) => p.y);
+      const minX = Math.min(...xPoints);
+      const maxX = Math.max(...xPoints);
+      const minY = Math.min(...yPoints);
+      const maxY = Math.max(...yPoints);
+
+      return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
+    }),
+    calculatePolygonArea: vi.fn((polygon) => {
+      // Very simple mock area calculation for rectangles
+      if (!polygon || polygon.length !== 4) return 0;
+      const width = Math.abs(polygon[0].x - polygon[2].x);
+      const height = Math.abs(polygon[0].y - polygon[2].y);
+      return width * height;
+    }),
+    distanceToSegment: vi.fn(),
+    calculateIntersection: vi.fn(),
+    calculatePolygonPerimeter: vi.fn(),
+    calculateBoundingBox: vi.fn(),
+    doPolygonsIntersect: vi.fn(),
+    ...overrides,
+  });
+
+  // Export both the factory and the initWasm for test control
+  return {
+    usePolygonWasm: vi.fn(() => createMockPolygonWasm()),
+    __createMockPolygonWasm: createMockPolygonWasm,
+    __initWasm: initWasm,
+  };
+});
+
+// Mock the original WebAssembly module (if it exists)
 vi.mock('@spheroseg/wasm-polygon', () => ({
   initWasm: vi.fn().mockResolvedValue({
     initialized: true,
@@ -59,9 +101,21 @@ vi.mock('@spheroseg/wasm-polygon', () => ({
   ready: vi.fn().mockResolvedValue(true),
 }));
 
+// Get the mocks from the module after it's been mocked
+import * as polygonWasmUtils from '@spheroseg/shared/utils/polygonWasmUtils';
+
 describe('usePolygonWasm', () => {
+  // Extract the mocks for easier access
+  const mockUsePolygonWasm = polygonWasmUtils.usePolygonWasm as any;
+  const createMockPolygonWasm = (polygonWasmUtils as any).__createMockPolygonWasm;
+  const initWasm = (polygonWasmUtils as any).__initWasm;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset the mock to default implementation
+    mockUsePolygonWasm.mockImplementation(() => createMockPolygonWasm());
+    // Reset initWasm to resolve successfully by default
+    initWasm.mockResolvedValue({});
   });
 
   it('initializes WebAssembly module correctly', async () => {
@@ -272,15 +326,21 @@ describe('usePolygonWasm', () => {
   });
 
   it('gracefully handles missing WebAssembly module', async () => {
+    // Mock the shared hook to simulate failed load
+    mockUsePolygonWasm.mockReturnValueOnce(
+      createMockPolygonWasm({
+        load: vi.fn().mockRejectedValue(new Error('Failed to load')),
+        isPointInPolygon: vi.fn(() => false),
+        calculatePolygonArea: vi.fn(() => 0),
+      })
+    );
+
     const { result } = renderHook(() => usePolygonWasm());
 
-    // Wait for initialization
+    // Wait for initialization to fail
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
-
-    // Simulate a case where the module isn't properly initialized
-    Object.defineProperty(result.current, 'wasmModule', { value: null });
 
     const polygon: Polygon = {
       points: [
@@ -292,6 +352,11 @@ describe('usePolygonWasm', () => {
       closed: true,
       color: '#FF0000',
     };
+
+    // Check that wasmModule is null and error is set
+    expect(result.current.wasmModule).toBeNull();
+    expect(result.current.isReady).toBe(false);
+    expect(result.current.error).not.toBeNull();
 
     // Should return fallback values without crashing
     expect(result.current.isPointInPolygon(polygon, { x: 200, y: 200 })).toBe(false);

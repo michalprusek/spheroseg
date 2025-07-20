@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Project } from '@/types';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 interface ProjectSelectorProps {
   selectedProjectId: string | null;

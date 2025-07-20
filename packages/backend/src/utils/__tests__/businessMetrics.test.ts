@@ -4,18 +4,18 @@
 
 import { Redis } from 'ioredis';
 import { BusinessMetricsService, initializeBusinessMetrics } from '../businessMetrics';
-import { pool } from '../../db';
+import { getPool } from '../../db';
 
 // Mock dependencies
 jest.mock('ioredis');
 jest.mock('../logger');
 jest.mock('../../db', () => ({
-  pool: {
+  getPool: jest.fn(() => ({
     query: jest.fn(),
-  },
+  })),
 }));
 jest.mock('node-cron', () => ({
-  schedule: jest.fn().mockImplementation((pattern, callback, options) => ({
+  schedule: jest.fn().mockImplementation((_pattern, _callback, _options) => ({
     start: jest.fn(),
     stop: jest.fn(),
   })),
@@ -24,8 +24,15 @@ jest.mock('node-cron', () => ({
 describe('BusinessMetricsService', () => {
   let redis: jest.Mocked<Redis>;
   let metricsService: BusinessMetricsService;
+  let mockPool: { query: jest.Mock };
   
   beforeEach(() => {
+    // Create mock pool
+    mockPool = {
+      query: jest.fn(),
+    };
+    (getPool as jest.Mock).mockReturnValue(mockPool);
+    
     // Create mock Redis instance
     redis = new Redis() as jest.Mocked<Redis>;
     
@@ -101,7 +108,7 @@ describe('BusinessMetricsService', () => {
     });
     
     it('should collect metric value from SQL query', async () => {
-      (pool.query as jest.Mock).mockResolvedValue({
+      (mockPool.query as jest.Mock).mockResolvedValue({
         rows: [{ value: 5 }],
       });
       
@@ -110,7 +117,7 @@ describe('BusinessMetricsService', () => {
       expect(result).not.toBeNull();
       expect(result?.value).toBe(5);
       expect(result?.metric).toBe('test-metric');
-      expect(pool.query).toHaveBeenCalledWith('SELECT 5 as value');
+      expect(mockPool.query).toHaveBeenCalledWith('SELECT 5 as value');
     });
     
     it('should collect metric value from calculator function', async () => {
@@ -131,7 +138,7 @@ describe('BusinessMetricsService', () => {
     });
     
     it('should handle collection errors gracefully', async () => {
-      (pool.query as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockPool.query as jest.Mock).mockRejectedValue(new Error('Database error'));
       
       const result = await metricsService.collectMetric('test-metric');
       
@@ -167,7 +174,7 @@ describe('BusinessMetricsService', () => {
     });
     
     it('should trigger warning alert when threshold exceeded', async () => {
-      (pool.query as jest.Mock).mockResolvedValue({
+      (mockPool.query as jest.Mock).mockResolvedValue({
         rows: [{ value: 15 }], // Between warning and critical
       });
       
@@ -185,7 +192,7 @@ describe('BusinessMetricsService', () => {
     });
     
     it('should trigger critical alert when threshold exceeded', async () => {
-      (pool.query as jest.Mock).mockResolvedValue({
+      (mockPool.query as jest.Mock).mockResolvedValue({
         rows: [{ value: 25 }], // Above critical
       });
       
@@ -203,7 +210,7 @@ describe('BusinessMetricsService', () => {
     });
     
     it('should not trigger alert when below thresholds', async () => {
-      (pool.query as jest.Mock).mockResolvedValue({
+      (mockPool.query as jest.Mock).mockResolvedValue({
         rows: [{ value: 5 }], // Below warning
       });
       
@@ -248,7 +255,7 @@ describe('BusinessMetricsService', () => {
         history.flatMap(h => [JSON.stringify(h), h.timestamp.getTime().toString()])
       );
       
-      (pool.query as jest.Mock).mockResolvedValue({
+      (mockPool.query as jest.Mock).mockResolvedValue({
         rows: [{ value: 200 }], // 100% increase from 100 to 200
       });
       
@@ -272,7 +279,7 @@ describe('BusinessMetricsService', () => {
         history.flatMap(h => [JSON.stringify(h), h.timestamp.getTime().toString()])
       );
       
-      (pool.query as jest.Mock).mockResolvedValue({
+      (mockPool.query as jest.Mock).mockResolvedValue({
         rows: [{ value: 50 }], // 50% decrease from 100 to 50
       });
       
@@ -421,7 +428,7 @@ describe('BusinessMetricsService', () => {
         lastUpdated: new Date(),
       };
       
-      redis.get.mockImplementation(async (key: string) => {
+      redis.get.mockImplementation(async (key: any) => {
         if (key.includes('current')) return JSON.stringify(metricValue);
         if (key.includes('stats')) return JSON.stringify(stats);
         return null;

@@ -10,7 +10,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { showError } from '@/utils/toastUtils';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { useExtendedUserStatistics } from '@/hooks/useExtendedUserStatistics';
 import { useQueryClient } from '@tanstack/react-query';
 

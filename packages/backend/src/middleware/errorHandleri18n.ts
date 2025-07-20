@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import { ApiError } from '../utils/errors';
+import { ErrorCode } from '../utils/ApiError';
 import logger from '../utils/logger';
 import { sendError, sendServerError } from '../utils/apiResponsei18n';
 
@@ -18,14 +19,15 @@ export const errorHandleri18n: ErrorRequestHandler = (
   }
 
   // Log the error
+  const errorObj = err as any;
   logger.error('Request error', {
-    error: err.message,
-    stack: err.stack,
+    error: errorObj.message,
+    stack: errorObj.stack,
     path: req.path,
     method: req.method,
     body: req.body,
     query: req.query,
-    user: (req as unknown).user?.id,
+    user: (req as any).user?.id,
   });
 
   // Handle specific error types with i18n
@@ -35,33 +37,33 @@ export const errorHandleri18n: ErrorRequestHandler = (
   }
 
   // Handle other known error types
-  if (err.name === 'ValidationError') {
-    return sendError(req, res, 'error.validationFailed', undefined, 400, err.details);
+  if (errorObj.name === 'ValidationError') {
+    return sendError(req, res, 'error.validationFailed', undefined, 400, errorObj.details);
   }
 
-  if (err.name === 'CastError') {
-    return sendError(req, res, 'validation.invalidFormat', { field: err.path }, 400);
+  if (errorObj.name === 'CastError') {
+    return sendError(req, res, 'validation.invalidFormat', { field: errorObj.path }, 400);
   }
 
-  if (err.code === 11000) {
+  if (errorObj.code === 11000) {
     // MongoDB duplicate key error
-    const field = Object.keys(err.keyValue)[0];
+    const field = errorObj.keyValue ? Object.keys(errorObj.keyValue)[0] : 'field';
     return sendError(req, res, 'validation.alreadyExists', { field }, 409);
   }
 
-  if (err.name === 'JsonWebTokenError') {
+  if (errorObj.name === 'JsonWebTokenError') {
     return sendError(req, res, 'auth.invalidToken', undefined, 401);
   }
 
-  if (err.name === 'TokenExpiredError') {
+  if (errorObj.name === 'TokenExpiredError') {
     return sendError(req, res, 'auth.tokenExpired', undefined, 401);
   }
 
-  if (err.code === 'LIMIT_FILE_SIZE') {
+  if (errorObj.code === 'LIMIT_FILE_SIZE') {
     return sendError(req, res, 'error.fileTooLarge', undefined, 413);
   }
 
-  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+  if (errorObj.code === 'LIMIT_UNEXPECTED_FILE') {
     return sendError(req, res, 'error.unexpectedField', undefined, 400);
   }
 
@@ -98,15 +100,13 @@ function getTranslationKeyForError(error: ApiError): string {
   switch (error.code) {
     case ErrorCode.AUTHENTICATION_REQUIRED:
       return 'auth.authRequired';
-    case ErrorCode.INVALID_CREDENTIALS:
-      return 'auth.invalidCredentials';
     case ErrorCode.INSUFFICIENT_PERMISSIONS:
       return 'auth.insufficientPermissions';
     case ErrorCode.RESOURCE_NOT_FOUND:
       return 'error.resourceNotFound';
     case ErrorCode.VALIDATION_ERROR:
       return 'error.validationFailed';
-    case ErrorCode.DUPLICATE_RESOURCE:
+    case ErrorCode.RESOURCE_CONFLICT:
       return 'error.resourceConflict';
     case ErrorCode.INTERNAL_SERVER_ERROR:
     default:

@@ -5,7 +5,7 @@
  * query performance, lock analysis, and transaction statistics.
  */
 
-import pool from '../../db';
+import { getPool } from '../../db';
 import logger from '../../utils/logger';
 import { MonitoringSource } from '../unified/performanceCoordinator';
 import { PerformanceMetric } from '../optimized/performanceOptimizer';
@@ -96,6 +96,7 @@ class DatabaseSource implements MonitoringSource {
 
   private async collectConnectionMetrics(metrics: PerformanceMetric[], timestamp: number): Promise<void> {
     try {
+      const pool = getPool();
       // Connection pool stats
       const poolStats = {
         totalCount: pool.totalCount,
@@ -137,7 +138,7 @@ class DatabaseSource implements MonitoringSource {
   private async collectBasicStats(metrics: PerformanceMetric[], timestamp: number): Promise<void> {
     try {
       // Database size
-      const sizeResult = await pool.query(`
+      const sizeResult = await getPool().query(`
         SELECT pg_database_size(current_database()) as database_size;
       `);
 
@@ -154,7 +155,7 @@ class DatabaseSource implements MonitoringSource {
       }
 
       // Transaction stats
-      const txnStatsResult = await pool.query(`
+      const txnStatsResult = await getPool().query(`
         SELECT 
           xact_commit,
           xact_rollback,
@@ -176,7 +177,7 @@ class DatabaseSource implements MonitoringSource {
           metrics.push({
             id: `db_stat_${key}_${timestamp}`,
             name: `database_${key}`,
-            value: parseInt(value) || 0,
+            value: parseInt(String(value)) || 0,
             unit: 'count',
             category: 'database',
             timestamp,
@@ -201,7 +202,7 @@ class DatabaseSource implements MonitoringSource {
       }
 
       // Active connections
-      const connectionsResult = await pool.query(`
+      const connectionsResult = await getPool().query(`
         SELECT 
           count(*) as total_connections,
           count(*) FILTER (WHERE state = 'active') as active_connections,
@@ -218,7 +219,7 @@ class DatabaseSource implements MonitoringSource {
           metrics.push({
             id: `connection_${key}_${timestamp}`,
             name: `database_${key}`,
-            value: parseInt(value) || 0,
+            value: parseInt(String(value)) || 0,
             unit: 'count',
             category: 'database',
             timestamp,
@@ -235,7 +236,7 @@ class DatabaseSource implements MonitoringSource {
   private async collectQueryMetrics(metrics: PerformanceMetric[], timestamp: number): Promise<void> {
     try {
       // Check if pg_stat_statements extension is available
-      const extensionCheck = await pool.query(`
+      const extensionCheck = await getPool().query(`
         SELECT EXISTS(
           SELECT 1 FROM pg_extension WHERE extname = 'pg_stat_statements'
         ) as has_pg_stat_statements;
@@ -243,7 +244,7 @@ class DatabaseSource implements MonitoringSource {
 
       if (extensionCheck.rows[0]?.has_pg_stat_statements) {
         // Get query performance stats
-        const queryStatsResult = await pool.query(`
+        const queryStatsResult = await getPool().query(`
           SELECT 
             count(*) as total_queries,
             sum(calls) as total_calls,
@@ -259,7 +260,7 @@ class DatabaseSource implements MonitoringSource {
           const stats = queryStatsResult.rows[0];
           
           Object.entries(stats).forEach(([key, value]) => {
-            const numValue = parseFloat(value) || 0;
+            const numValue = parseFloat(String(value)) || 0;
             metrics.push({
               id: `query_${key}_${timestamp}`,
               name: `query_${key}`,
@@ -273,7 +274,7 @@ class DatabaseSource implements MonitoringSource {
         }
 
         // Get top slow queries
-        const slowQueriesResult = await pool.query(`
+        const slowQueriesResult = await getPool().query(`
           SELECT 
             left(query, 100) as query_snippet,
             calls,
@@ -314,7 +315,7 @@ class DatabaseSource implements MonitoringSource {
   private async collectLockMetrics(metrics: PerformanceMetric[], timestamp: number): Promise<void> {
     try {
       // Current locks
-      const locksResult = await pool.query(`
+      const locksResult = await getPool().query(`
         SELECT 
           mode,
           count(*) as lock_count
@@ -339,7 +340,7 @@ class DatabaseSource implements MonitoringSource {
       });
 
       // Blocking queries
-      const blockingResult = await pool.query(`
+      const blockingResult = await getPool().query(`
         SELECT count(*) as blocking_queries
         FROM pg_stat_activity
         WHERE state = 'active' 
@@ -368,7 +369,7 @@ class DatabaseSource implements MonitoringSource {
   private async collectTableStats(metrics: PerformanceMetric[], timestamp: number): Promise<void> {
     try {
       // Table statistics for key application tables
-      const tableStatsResult = await pool.query(`
+      const tableStatsResult = await getPool().query(`
         SELECT 
           schemaname,
           tablename,
@@ -450,7 +451,7 @@ class DatabaseSource implements MonitoringSource {
   private async collectIndexStats(metrics: PerformanceMetric[], timestamp: number): Promise<void> {
     try {
       // Index usage statistics
-      const indexStatsResult = await pool.query(`
+      const indexStatsResult = await getPool().query(`
         SELECT 
           schemaname,
           tablename,
@@ -483,7 +484,7 @@ class DatabaseSource implements MonitoringSource {
       });
 
       // Unused indexes (potential optimization targets)
-      const unusedIndexesResult = await pool.query(`
+      const unusedIndexesResult = await getPool().query(`
         SELECT count(*) as unused_indexes
         FROM pg_stat_user_indexes
         WHERE schemaname = 'public'

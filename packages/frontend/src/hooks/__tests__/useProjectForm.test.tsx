@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { useProjectForm } from '../useProjectForm';
 import { useAuth } from '@/contexts/AuthContext';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -19,7 +19,7 @@ vi.mock('@/contexts/LanguageContext', () => ({
   })),
 }));
 
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     post: vi.fn(),
   },

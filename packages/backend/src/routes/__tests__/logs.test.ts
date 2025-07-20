@@ -3,14 +3,25 @@ import * as logsController from '../logs';
 import logger from '../../utils/logger';
 
 // Mock the unified logger
-jest.mock('../../utils/logger', () => ({
-  getLogs: jest.fn(),
-  getLog: jest.fn(),
-  error: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn(),
-}));
+jest.mock('../../utils/logger', () => {
+  const mockLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    http: jest.fn(),
+    silly: jest.fn(),
+    getLogs: jest.fn(),
+    getLog: jest.fn(),
+  };
+
+  return {
+    __esModule: true,
+    default: mockLogger,
+    createLogger: jest.fn().mockReturnValue(mockLogger),
+  };
+});
 
 // logger is already imported above
 

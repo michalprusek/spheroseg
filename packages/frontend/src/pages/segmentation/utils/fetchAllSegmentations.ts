@@ -1,4 +1,4 @@
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import type { ProjectImage, SegmentationResult } from '@/pages/segmentation/types';
 
 /**

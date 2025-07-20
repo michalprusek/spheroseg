@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 // import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient'; // Import apiClient
+import apiClient from '@/services/api/client'; // Import apiClient
 import { Project } from '@/types'; // Import Project type
 import axios from 'axios'; // Import axios
 import { useLanguage } from '@/contexts/LanguageContext';

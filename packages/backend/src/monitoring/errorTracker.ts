@@ -88,15 +88,15 @@ class ErrorTracker {
   public trackError(error: Error | ApiError, context: Partial<ErrorContext> = {}): void {
     const errorContext: ErrorContext = {
       requestId: context.requestId || this.generateRequestId(),
-      userId: context.userId,
-      sessionId: context.sessionId,
-      route: context.route,
-      method: context.method,
-      userAgent: context.userAgent,
-      ip: context.ip,
       timestamp: Date.now(),
-      stackTrace: error.stack,
-      additionalData: context.additionalData,
+      ...(context.userId && { userId: context.userId }),
+      ...(context.sessionId && { sessionId: context.sessionId }),
+      ...(context.route && { route: context.route }),
+      ...(context.method && { method: context.method }),
+      ...(context.userAgent && { userAgent: context.userAgent }),
+      ...(context.ip && { ip: context.ip }),
+      ...(error.stack && { stackTrace: error.stack }),
+      ...(context.additionalData && { additionalData: context.additionalData }),
     };
 
     // Update metrics
@@ -265,7 +265,9 @@ class ErrorTracker {
         const oldestPattern = Array.from(this.errorPatterns.entries()).sort(
           ([, a], [, b]) => a.lastSeen - b.lastSeen
         )[0];
-        this.errorPatterns.delete(oldestPattern[0]);
+        if (oldestPattern) {
+          this.errorPatterns.delete(oldestPattern[0]);
+        }
       }
 
       const pattern: ErrorPattern = {
@@ -343,7 +345,7 @@ class ErrorTracker {
       this.errorAlerts.shift();
     }
 
-    logger.warn('Error alert created', newAlert);
+    logger.warn('Error alert created', { ...newAlert });
   }
 
   private logError(error: Error | ApiError, context: ErrorContext): void {
@@ -414,22 +416,28 @@ setInterval(
 export const errorTrackingMiddleware = (
   err: any,
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void => {
+  const requestId = (req.headers['x-request-id'] as string) || req.requestId;
+  const userId = (req as any).user?.userId;
+  const route = req.route?.path || req.path;
+  const userAgent = req.get('User-Agent');
+  const ip = req.ip || req.connection.remoteAddress;
+  
   const context: Partial<ErrorContext> = {
-    requestId: (req.headers['x-request-id'] as string) || req.requestId,
-    userId: (req as unknown).user?.userId,
-    route: req.route?.path || req.path,
     method: req.method,
-    userAgent: req.get('User-Agent'),
-    ip: req.ip || req.connection.remoteAddress,
     additionalData: {
       body: req.body,
       params: req.params,
       query: req.query,
       headers: req.headers,
     },
+    ...(requestId && { requestId }),
+    ...(userId && { userId }),
+    ...(route && { route }),
+    ...(userAgent && { userAgent }),
+    ...(ip && { ip }),
   };
 
   errorTracker.trackError(err, context);

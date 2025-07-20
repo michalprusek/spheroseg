@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import logger from '@/utils/logger';

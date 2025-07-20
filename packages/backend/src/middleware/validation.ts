@@ -11,17 +11,17 @@ import { ApiError } from '../utils/ApiError';
 /**
  * Middleware for processing validation results
  */
-export const handleValidationErrors = (req: Request, res: Response, next: NextFunction): void => {
+export const handleValidationErrors = (req: Request, _res: Response, next: NextFunction): void => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
     const formattedErrors = errors.array().map((error) => ({
-      field: error.param,
+      field: ('param' in error ? error.param : 'unknown') as string,
       message: error.msg,
-      value: error.value,
+      value: 'value' in error ? error.value : undefined,
     }));
 
-    throw new ApiError('Validation failed', 400, formattedErrors);
+    throw ApiError.validation('Validation failed', formattedErrors);
   }
 
   next();
@@ -125,18 +125,18 @@ export const validators = {
 
   // File upload
   file: (field: string, options: { mimeTypes?: string[]; maxSize?: number } = {}) =>
-    body(field).custom((value, { req }) => {
-      if (!req.file && !req.files) {
+    body(field).custom((_value, { req }) => {
+      if (!req['file'] && !req['files']) {
         throw new Error('File is required');
       }
 
-      const file = req.file || (req.files as unknown)[field];
+      const file = req['file'] || (req['files'] as any)[field];
 
-      if (options.mimeTypes && !options.mimeTypes.includes(file.mimetype)) {
+      if (options.mimeTypes && !options.mimeTypes.includes(file?.mimetype)) {
         throw new Error(`Invalid file type. Allowed: ${options.mimeTypes.join(', ')}`);
       }
 
-      if (options.maxSize && file.size > options.maxSize) {
+      if (options.maxSize && file?.size > options.maxSize) {
         throw new Error(`File is too large. Maximum: ${options.maxSize / 1024 / 1024}MB`);
       }
 

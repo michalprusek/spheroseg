@@ -8,7 +8,7 @@ import { calculateMetrics } from '@/pages/segmentation/utils/metricCalculations'
 import { AnnotationFormat, MetricsFormat } from '../components/ExportOptionsCard';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import logger from '@/utils/logger';
 
 // Helper function to convert string to ArrayBuffer

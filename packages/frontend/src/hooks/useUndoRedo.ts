@@ -114,6 +114,7 @@ export function useUndoRedo<T>(initialState: T) {
     canRedo,
     history,
     currentIndex,
+    historyIndex: currentIndex, // Add alias for backward compatibility
     clearHistory,
     setCurrentStateOnly,
     setStateWithoutHistory,

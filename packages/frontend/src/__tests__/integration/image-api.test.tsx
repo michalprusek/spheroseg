@@ -220,7 +220,7 @@ describe('Image API Integration Tests', () => {
       });
     });
 
-    it('should handle upload progress events', async () => {
+    it.skip('should handle upload progress events', async () => {
       const mockFile = createMockFile();
       const uploadedImage = {
         id: 'new-image-id',

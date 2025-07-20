@@ -38,11 +38,14 @@ export function validateBody<T>(schema: ZodType<T>) {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const _validationErrors = error.errors.map(err => ({
+        // Create formatted validation errors for potential logging/debugging
+        const validationErrors = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message,
           code: err.code,
         }));
+        // Log validation errors for debugging
+        console.debug('Validation errors:', validationErrors);
         sendBadRequest(res, 'Validation failed', 'VALIDATION_ERROR');
         return;
       }
@@ -63,11 +66,12 @@ export function validateQuery<T>(schema: ZodType<T>) {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const _validationErrors = error.errors.map(err => ({
+        const validationErrors = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message,
           code: err.code,
         }));
+        console.debug('Query validation errors:', validationErrors);
         sendBadRequest(res, 'Invalid query parameters', 'VALIDATION_ERROR');
         return;
       }
@@ -88,11 +92,12 @@ export function validateParams<T>(schema: ZodType<T>) {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const _validationErrors = error.errors.map(err => ({
+        const validationErrors = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message,
           code: err.code,
         }));
+        console.debug('Params validation errors:', validationErrors);
         sendBadRequest(res, 'Invalid route parameters', 'VALIDATION_ERROR');
         return;
       }

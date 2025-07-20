@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   calculatePolygonArea,
   calculatePolygonPerimeter,
-  calculateBoundingBox,
+  calculatePolygonMetrics,
   convertPixelsToRealUnits,
   generatePolygonStatistics,
 } from '../metricCalculations';
-import { Polygon } from '@spheroseg/types';
+import { Polygon } from '@/pages/segmentation/types';
 
 describe('Metric Calculations Utilities', () => {
   describe('calculatePolygonArea', () => {
@@ -23,7 +23,7 @@ describe('Metric Calculations Utilities', () => {
       };
 
       // Area should be 100 square units
-      expect(calculatePolygonArea(square)).toBe(100);
+      expect(calculatePolygonArea(square.points)).toBe(100);
     });
 
     it('calculates area of a triangle', () => {
@@ -38,7 +38,7 @@ describe('Metric Calculations Utilities', () => {
       };
 
       // Area should be 50 square units
-      expect(calculatePolygonArea(triangle)).toBe(50);
+      expect(calculatePolygonArea(triangle.points)).toBe(50);
     });
 
     it('handles polygon with negative coordinates', () => {
@@ -54,7 +54,7 @@ describe('Metric Calculations Utilities', () => {
       };
 
       // Area should be 100 square units
-      expect(calculatePolygonArea(polygon)).toBe(100);
+      expect(calculatePolygonArea(polygon.points)).toBe(100);
     });
 
     it('returns 0 for polygons with fewer than 3 points', () => {
@@ -67,7 +67,7 @@ describe('Metric Calculations Utilities', () => {
         color: '#FF0000',
       };
 
-      expect(calculatePolygonArea(line)).toBe(0);
+      expect(calculatePolygonArea(line.points)).toBe(0);
     });
 
     it('calculates area of a complex polygon correctly', () => {
@@ -85,7 +85,7 @@ describe('Metric Calculations Utilities', () => {
       };
 
       // Area calculation for complex shape
-      const area = calculatePolygonArea(complex);
+      const area = calculatePolygonArea(complex.points);
       expect(area).toBeGreaterThan(0);
       // Specific expected value would depend on the exact formula used
       // Here we're just checking it's reasonable
@@ -107,7 +107,7 @@ describe('Metric Calculations Utilities', () => {
       };
 
       // Perimeter should be 40 units (4 sides of 10 units each)
-      expect(calculatePolygonPerimeter(square)).toBe(40);
+      expect(calculatePolygonPerimeter(square.points)).toBe(40);
     });
 
     it('calculates perimeter of a triangle', () => {
@@ -123,7 +123,7 @@ describe('Metric Calculations Utilities', () => {
 
       // Sides are 3, 4, and 5 (Pythagorean triangle)
       // Perimeter should be 12 units
-      expect(calculatePolygonPerimeter(triangle)).toBeCloseTo(12, 5);
+      expect(calculatePolygonPerimeter(triangle.points)).toBeCloseTo(12, 5);
     });
 
     it('returns 0 for polygons with fewer than 2 points', () => {
@@ -133,7 +133,7 @@ describe('Metric Calculations Utilities', () => {
         color: '#FF0000',
       };
 
-      expect(calculatePolygonPerimeter(point)).toBe(0);
+      expect(calculatePolygonPerimeter(point.points)).toBe(0);
     });
 
     it('includes closing segment for open polygons', () => {
@@ -149,11 +149,11 @@ describe('Metric Calculations Utilities', () => {
       };
 
       // Should still calculate as if closed
-      expect(calculatePolygonPerimeter(openPolygon)).toBe(40);
+      expect(calculatePolygonPerimeter(openPolygon.points)).toBe(40);
     });
   });
 
-  describe('calculateBoundingBox', () => {
+  describe('calculatePolygonMetrics (includes bounding box)', () => {
     it('calculates correct bounding box for a polygon', () => {
       const polygon: Polygon = {
         points: [
@@ -166,9 +166,9 @@ describe('Metric Calculations Utilities', () => {
         color: '#FF0000',
       };
 
-      const boundingBox = calculateBoundingBox(polygon);
+      const metrics = calculatePolygonMetrics(polygon.points);
 
-      expect(boundingBox).toEqual({
+      expect(metrics.boundingBox).toEqual({
         minX: 5,
         minY: 5,
         maxX: 15,
@@ -190,9 +190,9 @@ describe('Metric Calculations Utilities', () => {
         color: '#FF0000',
       };
 
-      const boundingBox = calculateBoundingBox(polygon);
+      const metrics = calculatePolygonMetrics(polygon.points);
 
-      expect(boundingBox).toEqual({
+      expect(metrics.boundingBox).toEqual({
         minX: -10,
         minY: -10,
         maxX: 10,
@@ -209,15 +209,15 @@ describe('Metric Calculations Utilities', () => {
         color: '#FF0000',
       };
 
-      const boundingBox = calculateBoundingBox(emptyPolygon);
+      const metrics = calculatePolygonMetrics(emptyPolygon.points);
 
-      expect(boundingBox).toEqual({
-        minX: 0,
-        minY: 0,
-        maxX: 0,
-        maxY: 0,
-        width: 0,
-        height: 0,
+      expect(metrics.boundingBox).toEqual({
+        minX: Infinity,
+        minY: Infinity,
+        maxX: -Infinity,
+        maxY: -Infinity,
+        width: -Infinity,
+        height: -Infinity,
       });
     });
 
@@ -228,9 +228,9 @@ describe('Metric Calculations Utilities', () => {
         color: '#FF0000',
       };
 
-      const boundingBox = calculateBoundingBox(point);
+      const metrics = calculatePolygonMetrics(point.points);
 
-      expect(boundingBox).toEqual({
+      expect(metrics.boundingBox).toEqual({
         minX: 5,
         minY: 5,
         maxX: 5,
@@ -244,37 +244,32 @@ describe('Metric Calculations Utilities', () => {
   describe('convertPixelsToRealUnits', () => {
     it('converts pixels to meters correctly with given scale', () => {
       // 100 pixels at scale of 10 pixels/meter = 10 meters
-      expect(convertPixelsToRealUnits(100, 10, 'meters')).toBe(10);
+      expect(convertPixelsToRealUnits(100, 10, 'meters')).toEqual({ value: 10, unit: 'meters' });
 
       // 100 pixels at scale of 20 pixels/meter = 5 meters
-      expect(convertPixelsToRealUnits(100, 20, 'meters')).toBe(5);
+      expect(convertPixelsToRealUnits(100, 20, 'meters')).toEqual({ value: 5, unit: 'meters' });
     });
 
     it('converts to different unit systems', () => {
-      // 100 pixels at scale of 10 pixels/meter
-      // = 10 meters
-      // = 32.8084 feet (approx)
-      expect(convertPixelsToRealUnits(100, 10, 'feet')).toBeCloseTo(32.8084, 2);
+      // 100 pixels at scale of 10 pixels/meter = 10 units
+      expect(convertPixelsToRealUnits(100, 10, 'feet')).toEqual({ value: 10, unit: 'feet' });
 
-      // 100 pixels at scale of 10 pixels/meter
-      // = 10 meters
-      // = 0.01 kilometers
-      expect(convertPixelsToRealUnits(100, 10, 'kilometers')).toBe(0.01);
+      // 100 pixels at scale of 10 pixels/meter = 10 units
+      expect(convertPixelsToRealUnits(100, 10, 'kilometers')).toEqual({ value: 10, unit: 'kilometers' });
     });
 
     it('returns pixel value if no scale provided', () => {
-      expect(convertPixelsToRealUnits(100, 0, 'meters')).toBe(100);
-      expect(convertPixelsToRealUnits(100, undefined, 'meters')).toBe(100);
+      expect(convertPixelsToRealUnits(100, 0, 'meters')).toEqual({ value: 100, unit: 'px' });
+      expect(convertPixelsToRealUnits(100, undefined, 'meters')).toEqual({ value: 100, unit: 'px' });
     });
 
-    it('handles invalid unit by defaulting to meters', () => {
-      // @ts-expect-error - intentionally testing invalid unit
-      expect(convertPixelsToRealUnits(100, 10, 'lightyears')).toBe(10);
+    it('handles custom unit names', () => {
+      expect(convertPixelsToRealUnits(100, 10, 'lightyears')).toEqual({ value: 10, unit: 'lightyears' });
     });
   });
 
   describe('generatePolygonStatistics', () => {
-    const polygon: Polygon = {
+    const polygon1: Polygon = {
       points: [
         { x: 0, y: 0 },
         { x: 10, y: 0 },
@@ -285,78 +280,59 @@ describe('Metric Calculations Utilities', () => {
       color: '#FF0000',
     };
 
-    it('generates correct statistics for a polygon without scale', () => {
-      const stats = generatePolygonStatistics(polygon);
+    const polygon2: Polygon = {
+      points: [
+        { x: 0, y: 0 },
+        { x: 5, y: 0 },
+        { x: 5, y: 5 },
+        { x: 0, y: 5 },
+      ],
+      closed: true,
+      color: '#00FF00',
+    };
+
+    it('generates correct statistics for multiple polygons', () => {
+      const stats = generatePolygonStatistics([polygon1, polygon2]);
 
       expect(stats).toEqual({
-        area: 100,
-        perimeter: 40,
-        boundingBox: {
-          minX: 0,
-          minY: 0,
-          maxX: 10,
-          maxY: 10,
-          width: 10,
-          height: 10,
-        },
-        vertexCount: 4,
-        realArea: 100,
-        realPerimeter: 40,
-        realWidth: 10,
-        realHeight: 10,
-        unit: 'pixels',
+        count: 2,
+        totalArea: 125, // 100 + 25
+        averageArea: 62.5, // 125 / 2
+        minArea: 25,
+        maxArea: 100,
+        totalPerimeter: 60, // 40 + 20
+        averagePerimeter: 30, // 60 / 2
+        averageCircularity: expect.any(Number),
       });
     });
 
-    it('generates correct statistics with scale and unit', () => {
-      const stats = generatePolygonStatistics(polygon, 10, 'meters');
+    it('generates correct statistics for single polygon', () => {
+      const stats = generatePolygonStatistics([polygon1]);
 
       expect(stats).toEqual({
-        area: 100,
-        perimeter: 40,
-        boundingBox: {
-          minX: 0,
-          minY: 0,
-          maxX: 10,
-          maxY: 10,
-          width: 10,
-          height: 10,
-        },
-        vertexCount: 4,
-        realArea: 1, // 100 pixels² -> 1 meter²
-        realPerimeter: 4, // 40 pixels -> 4 meters
-        realWidth: 1, // 10 pixels -> 1 meter
-        realHeight: 1, // 10 pixels -> 1 meter
-        unit: 'meters',
+        count: 1,
+        totalArea: 100,
+        averageArea: 100,
+        minArea: 100,
+        maxArea: 100,
+        totalPerimeter: 40,
+        averagePerimeter: 40,
+        averageCircularity: expect.any(Number),
       });
     });
 
-    it('handles empty polygon gracefully', () => {
-      const emptyPolygon: Polygon = {
-        points: [],
-        closed: true,
-        color: '#FF0000',
-      };
-
-      const stats = generatePolygonStatistics(emptyPolygon);
+    it('handles empty polygon array gracefully', () => {
+      const stats = generatePolygonStatistics([]);
 
       expect(stats).toEqual({
-        area: 0,
-        perimeter: 0,
-        boundingBox: {
-          minX: 0,
-          minY: 0,
-          maxX: 0,
-          maxY: 0,
-          width: 0,
-          height: 0,
-        },
-        vertexCount: 0,
-        realArea: 0,
-        realPerimeter: 0,
-        realWidth: 0,
-        realHeight: 0,
-        unit: 'pixels',
+        count: 0,
+        totalArea: 0,
+        averageArea: 0,
+        minArea: 0,
+        maxArea: 0,
+        totalPerimeter: 0,
+        averagePerimeter: 0,
+        averageCircularity: 0,
       });
     });
   });

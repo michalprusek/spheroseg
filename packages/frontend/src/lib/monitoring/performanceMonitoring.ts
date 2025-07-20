@@ -9,7 +9,7 @@ import {
   UserInteractionMetric,
   MemoryUsageMetric,
 } from '@spheroseg/shared';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 /**
  * Frontend implementation of performance monitoring

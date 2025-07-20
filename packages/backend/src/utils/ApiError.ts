@@ -47,7 +47,9 @@ export class ApiError extends Error {
     this.name = 'ApiError';
     this.statusCode = statusCode;
     this.code = code;
-    this.details = details;
+    if (details !== undefined) {
+      this.details = details;
+    }
     this.isOperational = isOperational;
     this.timestamp = new Date().toISOString();
 
@@ -139,7 +141,7 @@ export class ApiError extends Error {
       error: this.code,
       message: this.message,
       statusCode: this.statusCode,
-      details: this.details,
+      ...(this.details && { details: this.details }),
       timestamp: this.timestamp,
     };
   }

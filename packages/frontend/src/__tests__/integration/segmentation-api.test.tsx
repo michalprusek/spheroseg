@@ -11,15 +11,16 @@ import '@testing-library/jest-dom';
 import mockApiClient from '@/lib/__mocks__/enhanced/apiClient';
 import { useNavigate } from 'react-router-dom';
 
-// Mock the API client module
-vi.mock('@/lib/apiClient', () => {
+// Mock the services API client module (correct path used by segmentation hooks)
+vi.mock('@/services/api/client', () => {
   return {
     default: mockApiClient,
+    apiClient: mockApiClient,
   };
 });
 
 // Import components that use the API client
-import SegmentationEditor from '@/pages/segmentation/SegmentationEditorV2';
+import { SegmentationEditorV2 } from '@/pages/segmentation/SegmentationEditorV2';
 import { SegmentationProvider } from '@/contexts/SegmentationContext';
 
 // Mock context providers
@@ -50,9 +51,16 @@ vi.mock('react-hot-toast', () => ({
   toast: toastMock,
 }));
 
+// Import LanguageProvider for the test wrapper
+import { LanguageProvider } from '@/contexts/LanguageContext';
+
 // Test wrapper for context providers
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <SegmentationProvider>{children}</SegmentationProvider>;
+  return (
+    <LanguageProvider>
+      <SegmentationProvider>{children}</SegmentationProvider>
+    </LanguageProvider>
+  );
 };
 
 describe('Segmentation API Integration', () => {
@@ -69,14 +77,16 @@ describe('Segmentation API Integration', () => {
     // Render component
     render(
       <TestWrapper>
-        <SegmentationEditor projectId="project-1" imageId="image-1" />
+        <SegmentationEditorV2 projectId="project-1" imageId="image-1" />
       </TestWrapper>,
     );
 
     // Wait for data loading to complete
     await waitFor(() => {
-      // Check that the get method was called with the right URL
-      expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringMatching(/\/images\/image-1\/segmentation/));
+      // Check that the segmentation API was called (among multiple API calls)
+      const calls = mockApiClient.get.mock.calls;
+      const segmentationCall = calls.find(call => call[0].includes('/api/images/image-1/segmentation'));
+      expect(segmentationCall).toBeDefined();
     });
 
     // Verify data was loaded and rendered
@@ -95,7 +105,7 @@ describe('Segmentation API Integration', () => {
     // Render component
     render(
       <TestWrapper>
-        <SegmentationEditor projectId="project-1" imageId="image-1" />
+        <SegmentationEditorV2 projectId="project-1" imageId="image-1" />
       </TestWrapper>,
     );
 
@@ -119,7 +129,7 @@ describe('Segmentation API Integration', () => {
     // Render component
     render(
       <TestWrapper>
-        <SegmentationEditor projectId="project-1" imageId="image-1" />
+        <SegmentationEditorV2 projectId="project-1" imageId="image-1" />
       </TestWrapper>,
     );
 
@@ -136,7 +146,7 @@ describe('Segmentation API Integration', () => {
   it('should save segmentation changes successfully', async () => {
     // Setup successful save response
     mockApiClient.addMockEndpoint({
-      url: /\/images\/image-1\/segmentation/,
+      url: /\/api\/images\/image-1\/segmentation/,
       method: 'put',
       response: { success: true, message: 'Segmentation saved successfully' },
     });
@@ -144,7 +154,7 @@ describe('Segmentation API Integration', () => {
     // Render component
     render(
       <TestWrapper>
-        <SegmentationEditor projectId="project-1" imageId="image-1" />
+        <SegmentationEditorV2 projectId="project-1" imageId="image-1" />
       </TestWrapper>,
     );
 
@@ -160,7 +170,7 @@ describe('Segmentation API Integration', () => {
     // Verify save API was called
     await waitFor(() => {
       expect(mockApiClient.put).toHaveBeenCalledWith(
-        expect.stringMatching(/\/images\/image-1\/segmentation/),
+        expect.stringMatching(/\/api\/images\/image-1\/segmentation/),
         expect.any(Object),
       );
     });
@@ -172,7 +182,7 @@ describe('Segmentation API Integration', () => {
   it('should handle save errors correctly', async () => {
     // Setup error response for save
     mockApiClient.addMockEndpoint({
-      url: /\/images\/image-1\/segmentation/,
+      url: /\/api\/images\/image-1\/segmentation/,
       method: 'put',
       response: 'Failed to save segmentation',
       status: 500,
@@ -181,7 +191,7 @@ describe('Segmentation API Integration', () => {
     // Render component
     render(
       <TestWrapper>
-        <SegmentationEditor projectId="project-1" imageId="image-1" />
+        <SegmentationEditorV2 projectId="project-1" imageId="image-1" />
       </TestWrapper>,
     );
 
@@ -206,7 +216,7 @@ describe('Segmentation API Integration', () => {
   it('should handle slow network responses with loading indicators', async () => {
     // Configure slow responses
     mockApiClient.addMockEndpoint({
-      url: /\/images\/image-1\/segmentation/,
+      url: /\/api\/images\/image-1\/segmentation/,
       method: 'get',
       response: mockApiClient.mockData.segmentation,
       delay: 1000, // 1 second delay
@@ -215,7 +225,7 @@ describe('Segmentation API Integration', () => {
     // Render component
     render(
       <TestWrapper>
-        <SegmentationEditor projectId="project-1" imageId="image-1" />
+        <SegmentationEditorV2 projectId="project-1" imageId="image-1" />
       </TestWrapper>,
     );
 
@@ -237,7 +247,7 @@ describe('Segmentation API Integration', () => {
   it('should handle authentication token issues', async () => {
     // Setup unauthorized response
     mockApiClient.addMockEndpoint({
-      url: /\/images\/image-1\/segmentation/,
+      url: /\/api\/images\/image-1\/segmentation/,
       method: 'get',
       response: 'Unauthorized',
       status: 401,
@@ -246,7 +256,7 @@ describe('Segmentation API Integration', () => {
     // Render component
     render(
       <TestWrapper>
-        <SegmentationEditor projectId="project-1" imageId="image-1" />
+        <SegmentationEditorV2 projectId="project-1" imageId="image-1" />
       </TestWrapper>,
     );
 
@@ -265,7 +275,7 @@ describe('Segmentation API Integration', () => {
   it('should trigger resegmentation API when requested', async () => {
     // Set up successful resegmentation response
     mockApiClient.addMockEndpoint({
-      url: /\/projects\/project-1\/images\/image-1\/segment/,
+      url: /\/api\/segmentation\/image-1\/resegment/,
       method: 'post',
       response: { success: true, message: 'Resegmentation job queued' },
       delay: 500,
@@ -274,7 +284,7 @@ describe('Segmentation API Integration', () => {
     // Render component
     render(
       <TestWrapper>
-        <SegmentationEditor projectId="project-1" imageId="image-1" />
+        <SegmentationEditorV2 projectId="project-1" imageId="image-1" />
       </TestWrapper>,
     );
 
@@ -290,8 +300,8 @@ describe('Segmentation API Integration', () => {
     // Verify resegmentation API was called
     await waitFor(() => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        expect.stringMatching(/\/projects\/project-1\/images\/image-1\/segment/),
-        expect.objectContaining({ force: true }),
+        expect.stringMatching(/\/api\/segmentation\/image-1\/resegment/),
+        expect.any(Object),
       );
     });
 
@@ -304,7 +314,7 @@ describe('Segmentation API Integration', () => {
   it('should handle pagination and navigation between images', async () => {
     // Add mock data for navigation between images
     mockApiClient.addMockEndpoint({
-      url: /\/projects\/project-1\/images/,
+      url: /\/api\/projects\/project-1\/images/,
       method: 'get',
       response: {
         images: mockApiClient.mockData.images,
@@ -319,7 +329,7 @@ describe('Segmentation API Integration', () => {
 
     // Add mock data for next image
     mockApiClient.addMockEndpoint({
-      url: /\/images\/image-2\/segmentation/,
+      url: /\/api\/images\/image-2\/segmentation/,
       method: 'get',
       response: {
         ...mockApiClient.mockData.segmentation,
@@ -331,7 +341,7 @@ describe('Segmentation API Integration', () => {
     // Render component
     render(
       <TestWrapper>
-        <SegmentationEditor projectId="project-1" imageId="image-1" />
+        <SegmentationEditorV2 projectId="project-1" imageId="image-1" />
       </TestWrapper>,
     );
 
@@ -349,7 +359,7 @@ describe('Segmentation API Integration', () => {
 
     // Verify image list API was called
     await waitFor(() => {
-      expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringMatching(/\/projects\/project-1\/images/));
+      expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringMatching(/\/api\/projects\/project-1\/images/));
     });
 
     // This might trigger a navigation in the real app, which we're mocking

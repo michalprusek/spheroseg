@@ -13,12 +13,13 @@ const router = express.Router();
 /**
  * Route handler for receiving performance metrics
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const metrics = req.body;
 
     if (!metrics || typeof metrics !== 'object') {
-      return res.status(400).json({ error: 'Invalid metrics format' });
+      res.status(400).json({ error: 'Invalid metrics format' });
+      return;
     }
 
     // Log the metrics for now
@@ -70,11 +71,12 @@ router.post('/', async (req: Request, res: Response) => {
 /**
  * Route handler for getting performance metrics for the current user
  */
-router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user?.userId;
+router.get('/me', authMiddleware as any, async (req, res) => {
+  const userId = (req as AuthenticatedRequest).user?.userId;
 
   if (!userId) {
-    return res.status(401).json({ message: 'Authentication required' });
+    res.status(401).json({ message: 'Authentication required' });
+    return;
   }
 
   try {
@@ -89,7 +91,8 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
     `);
 
     if (!tableCheck.rows[0].exists) {
-      return res.status(200).json({ metrics: [] });
+      res.status(200).json({ metrics: [] });
+      return;
     }
 
     // Get metrics for the user
@@ -111,7 +114,7 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
 /**
  * Route handler for getting comprehensive performance report
  */
-router.get('/report', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/report', authMiddleware as any, async (_req, res) => {
   try {
     const report = await getPerformanceCoordinatorReport();
     res.status(200).json({
@@ -128,7 +131,7 @@ router.get('/report', authMiddleware, async (req: AuthenticatedRequest, res: Res
 /**
  * Route handler for getting monitoring source status
  */
-router.get('/sources', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/sources', authMiddleware as any, async (_req, res) => {
   try {
     const sourceStatus = getPerformanceCoordinatorSourceStatus();
     res.status(200).json({
@@ -145,7 +148,7 @@ router.get('/sources', authMiddleware, async (req: AuthenticatedRequest, res: Re
 /**
  * Route handler for getting performance insights
  */
-router.get('/insights', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/insights', authMiddleware as any, async (req, res) => {
   try {
     const { severity } = req.query;
     const report = await getPerformanceCoordinatorReport();
@@ -170,7 +173,7 @@ router.get('/insights', authMiddleware, async (req: AuthenticatedRequest, res: R
 /**
  * Route handler for getting performance recommendations
  */
-router.get('/recommendations', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/recommendations', authMiddleware as any, async (_req, res) => {
   try {
     const report = await getPerformanceCoordinatorReport();
     

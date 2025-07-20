@@ -80,12 +80,12 @@ class PerformanceOptimizer extends EventEmitter {
   private analysisInterval = 60000; // 1 minute
 
   // Prometheus metrics
-  private performanceMetricsCounter: Counter<string>;
-  private responseTimeHistogram: Histogram<string>;
-  private throughputGauge: Gauge<string>;
-  private errorRateGauge: Gauge<string>;
-  private systemHealthGauge: Gauge<string>;
-  private insightsCounter: Counter<string>;
+  private performanceMetricsCounter!: Counter<string>;
+  private responseTimeHistogram!: Histogram<string>;
+  private throughputGauge!: Gauge<string>;
+  private errorRateGauge!: Gauge<string>;
+  private systemHealthGauge!: Gauge<string>;
+  private insightsCounter!: Counter<string>;
 
   constructor(redis: Redis) {
     super();
@@ -161,7 +161,7 @@ class PerformanceOptimizer extends EventEmitter {
         condition: (metrics) => {
           const memoryMetrics = metrics.filter(m => m.name === 'memory_usage');
           const latestMemory = memoryMetrics[memoryMetrics.length - 1];
-          return latestMemory && latestMemory.value > 80; // > 80% memory usage
+          return !!(latestMemory && latestMemory.value > 80); // > 80% memory usage
         },
         action: async (metrics) => {
           await this.optimizeMemoryUsage(metrics);
@@ -190,7 +190,7 @@ class PerformanceOptimizer extends EventEmitter {
         condition: (metrics) => {
           const cacheMetrics = metrics.filter(m => m.name === 'cache_hit_rate');
           const latestHitRate = cacheMetrics[cacheMetrics.length - 1];
-          return latestHitRate && latestHitRate.value < 50; // < 50% hit rate
+          return !!(latestHitRate && latestHitRate.value < 50); // < 50% hit rate
         },
         action: async (metrics) => {
           await this.optimizeCacheStrategy(metrics);
@@ -251,7 +251,7 @@ class PerformanceOptimizer extends EventEmitter {
 
       logger.debug(`Flushed ${metricsToProcess.length} performance metrics`);
     } catch (error) {
-      logger.error('Error flushing performance metrics:', error);
+      logger.error('Error flushing performance metrics:', { error });
       // Put metrics back in buffer
       this.metricsBuffer.unshift(...metricsToProcess);
     } finally {
@@ -289,7 +289,7 @@ class PerformanceOptimizer extends EventEmitter {
       await this.applyOptimizationRules(metrics);
 
     } catch (error) {
-      logger.error('Error analyzing performance metrics:', error);
+      logger.error('Error analyzing performance metrics:', { error });
     }
   }
 
@@ -338,7 +338,7 @@ class PerformanceOptimizer extends EventEmitter {
     const errorMetrics = metrics.filter(m => m.name === 'error_rate');
     if (errorMetrics.length > 0) {
       const latestErrorRate = errorMetrics[errorMetrics.length - 1];
-      if (latestErrorRate.value > 5) {
+      if (latestErrorRate && latestErrorRate.value > 5) {
         insights.push({
           id: `insight_error_rate_${now}`,
           type: 'bottleneck',
@@ -358,7 +358,7 @@ class PerformanceOptimizer extends EventEmitter {
     const memoryMetrics = metrics.filter(m => m.name === 'memory_usage');
     if (memoryMetrics.length > 0) {
       const latestMemory = memoryMetrics[memoryMetrics.length - 1];
-      if (latestMemory.value > 85) {
+      if (latestMemory && latestMemory.value > 85) {
         insights.push({
           id: `insight_memory_${now}`,
           type: 'bottleneck',
@@ -378,7 +378,7 @@ class PerformanceOptimizer extends EventEmitter {
     const cacheMetrics = metrics.filter(m => m.name === 'cache_hit_rate');
     if (cacheMetrics.length > 0) {
       const latestHitRate = cacheMetrics[cacheMetrics.length - 1];
-      if (latestHitRate.value < 60) {
+      if (latestHitRate && latestHitRate.value < 60) {
         insights.push({
           id: `insight_cache_${now}`,
           type: 'optimization',
@@ -422,7 +422,7 @@ class PerformanceOptimizer extends EventEmitter {
           });
 
         } catch (error) {
-          logger.error(`Error applying optimization rule ${rule.name}:`, error);
+          logger.error(`Error applying optimization rule ${rule.name}:`, { error });
         }
       }
     }
@@ -437,7 +437,7 @@ class PerformanceOptimizer extends EventEmitter {
 
     // Identify slow endpoints
     responseTimeMetrics.forEach(metric => {
-      const endpoint = metric.metadata?.endpoint || 'unknown';
+      const endpoint = metric.metadata?.['endpoint'] || 'unknown';
       const currentTime = slowEndpoints.get(endpoint) || 0;
       if (metric.value > currentTime) {
         slowEndpoints.set(endpoint, metric.value);
@@ -461,7 +461,7 @@ class PerformanceOptimizer extends EventEmitter {
     }
   }
 
-  private async optimizeMemoryUsage(metrics: PerformanceMetric[]): Promise<void> {
+  private async optimizeMemoryUsage(_metrics: PerformanceMetric[]): Promise<void> {
     logger.info('Optimizing memory usage based on metrics');
     
     // Trigger garbage collection if available
@@ -534,7 +534,9 @@ class PerformanceOptimizer extends EventEmitter {
       for (const category of categories) {
         const keys = await this.redis.keys(`performance_metrics:${category}:*`);
         for (const key of keys) {
-          const keyTime = parseInt(key.split(':')[2]);
+          const keyTimePart = key.split(':')[2];
+          if (!keyTimePart) continue;
+          const keyTime = parseInt(keyTimePart, 10);
           if (keyTime >= startTime) {
             const metricList = await this.redis.lrange(key, 0, -1);
             for (const metricData of metricList) {
@@ -561,11 +563,11 @@ class PerformanceOptimizer extends EventEmitter {
         : 0;
 
       const latestErrorRate = errorMetrics.length > 0
-        ? errorMetrics[errorMetrics.length - 1].value
+        ? errorMetrics[errorMetrics.length - 1]?.value || 0
         : 0;
 
       const latestThroughput = throughputMetrics.length > 0
-        ? throughputMetrics[throughputMetrics.length - 1].value
+        ? throughputMetrics[throughputMetrics.length - 1]?.value || 0
         : 0;
 
       // Update Prometheus metrics
@@ -629,7 +631,7 @@ class PerformanceOptimizer extends EventEmitter {
       };
 
     } catch (error) {
-      logger.error('Error generating performance report:', error);
+      logger.error('Error generating performance report:', { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -646,7 +648,7 @@ class PerformanceOptimizer extends EventEmitter {
         const report = await this.getPerformanceReport();
         this.emit('performanceReport', report);
       } catch (error) {
-        logger.error('Error generating periodic performance report:', error);
+        logger.error('Error generating periodic performance report:', { error: error instanceof Error ? error.message : String(error) });
       }
     }, this.analysisInterval);
   }

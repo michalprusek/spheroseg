@@ -8,7 +8,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { validateBody, validateQuery } from '@spheroseg/shared/src/validation/enhancedValidation';
-import { ApiError } from '../utils/ApiError';
+import { ApiError } from '../utils/ApiError.enhanced';
 import logger from '../utils/logger';
 
 // ===========================
@@ -237,13 +237,13 @@ export function csrfProtection() {
     const token = req.headers['x-csrf-token'] || req.body._csrf;
 
     if (!token) {
-      throw new ApiError('CSRF token missing', 403);
+      throw new ApiError('CSRF_TOKEN_MISSING', 'CSRF token missing');
     }
 
     // TODO: Implement actual CSRF token validation
     // For now, just check that token exists
     if (typeof token !== 'string' || token.length < 10) {
-      throw new ApiError('Invalid CSRF token', 403);
+      throw new ApiError('CSRF_TOKEN_INVALID', 'Invalid CSRF token');
     }
 
     next();
@@ -281,7 +281,7 @@ export function rateLimitByIP(maxRequests: number = 100, windowMs: number = 15 *
 
     if (current.count >= maxRequests) {
       logger.warn('Rate limit exceeded', { ip, count: current.count, maxRequests });
-      throw new ApiError('Rate limit exceeded', 429);
+      throw new ApiError('RATE_LIMIT_EXCEEDED', 'Rate limit exceeded');
     }
 
     current.count++;
@@ -301,7 +301,7 @@ export function validateContentType(allowedTypes: string[] = ['application/json'
     const contentType = req.headers['content-type'];
 
     if (!contentType) {
-      throw new ApiError('Content-Type header required', 400);
+      throw new ApiError('CONTENT_TYPE_MISSING', 'Content-Type header required');
     }
 
     const isAllowed = allowedTypes.some((type) =>
@@ -309,7 +309,7 @@ export function validateContentType(allowedTypes: string[] = ['application/json'
     );
 
     if (!isAllowed) {
-      throw new ApiError(`Invalid Content-Type. Allowed: ${allowedTypes.join(', ')}`, 400);
+      throw new ApiError('CONTENT_TYPE_INVALID', `Invalid Content-Type. Allowed: ${allowedTypes.join(', ')}`);
     }
 
     next();

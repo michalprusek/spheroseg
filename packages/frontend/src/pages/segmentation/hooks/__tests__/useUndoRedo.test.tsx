@@ -29,7 +29,7 @@ describe('useUndoRedo hook', () => {
     expect(result.current.canRedo).toBe(false);
   });
 
-  it('should not update history when skipHistory is true', () => {
+  it('should overwrite history when overwrite is true', () => {
     const initialState = { value: 1 };
     const { result } = renderHook(() => useUndoRedo(initialState));
 
@@ -38,8 +38,8 @@ describe('useUndoRedo hook', () => {
     });
 
     expect(result.current.state).toEqual({ value: 2 });
-    expect(result.current.historyIndex).toBe(0); // Remains at 0
-    expect(result.current.history).toEqual([{ value: 1 }]); // History unchanged
+    expect(result.current.historyIndex).toBe(0); // Reset to 0 with overwrite
+    expect(result.current.history).toEqual([{ value: 2 }]); // History overwritten
     expect(result.current.canUndo).toBe(false);
     expect(result.current.canRedo).toBe(false);
   });
@@ -71,12 +71,18 @@ describe('useUndoRedo hook', () => {
     // Add two new states
     act(() => {
       result.current.setState({ value: 2 });
+    });
+    
+    act(() => {
       result.current.setState({ value: 3 });
     });
 
     // Undo twice
     act(() => {
       result.current.undo();
+    });
+    
+    act(() => {
       result.current.undo();
     });
 
@@ -98,6 +104,9 @@ describe('useUndoRedo hook', () => {
     // Add two new states
     act(() => {
       result.current.setState({ value: 2 });
+    });
+    
+    act(() => {
       result.current.setState({ value: 3 });
     });
 

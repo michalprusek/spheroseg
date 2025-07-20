@@ -4,12 +4,23 @@ import { cleanupProjectFiles } from '../fileCleanupService';
 import imageUtils from '../../utils/imageUtils.unified';
 
 // Mock dependencies
-jest.mock('../../utils/logger', () => ({
-  info: jest.fn(),
-  debug: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-}));
+jest.mock('../../utils/logger', () => {
+  const mockLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    http: jest.fn(),
+    silly: jest.fn(),
+  };
+
+  return {
+    __esModule: true,
+    default: mockLogger,
+    createLogger: jest.fn().mockReturnValue(mockLogger),
+  };
+});
 
 jest.mock('../../utils/imageUtils.unified', () => ({
   dbPathToFilesystemPath: jest.fn((path) => `/mock/upload/dir/${path}`),

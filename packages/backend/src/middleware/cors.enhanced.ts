@@ -71,7 +71,7 @@ const ADDITIONAL_ORIGINS = process.env['CORS_ALLOWED_ORIGINS']
 /**
  * Validate origin against whitelist
  */
-function isOriginAllowed(origin: string | undefined): OriginPattern | null {
+export function isOriginAllowed(origin: string | undefined): OriginPattern | null {
   if (!origin) {
     return null;
   }
@@ -102,7 +102,7 @@ function isOriginAllowed(origin: string | undefined): OriginPattern | null {
 /**
  * Validate origin URL structure
  */
-function validateOriginStructure(origin: string): boolean {
+export function validateOriginStructure(origin: string): boolean {
   try {
     const url = new URL(origin);
     

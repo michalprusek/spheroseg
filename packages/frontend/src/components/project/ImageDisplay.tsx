@@ -10,7 +10,7 @@ import { safeFormatDate } from '@/utils/dateUtils';
 import { getImageBlob } from '@/utils/indexedDBService';
 import SegmentationThumbnail from './SegmentationThumbnail';
 import useSocketConnection from '@/hooks/useSocketConnection';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { useTranslations } from '@/hooks/useTranslations';
 import { SEGMENTATION_STATUS, isProcessingStatus } from '@/constants/segmentationStatus';
 import { debouncedCacheUpdate } from '@/utils/debounce';
@@ -86,8 +86,8 @@ const ImageDisplayComponent = ({
             error.response &&
             typeof error.response === 'object' &&
             'status' in error.response &&
-            error.response.status !== 404 &&
-            error.response.status !== 429
+            error.status !== 404 &&
+            error.status !== 429
           ) {
             logger.debug(`ImageDisplay: Error checking initial segmentation status for image ${image.id}`);
           }
