@@ -19,6 +19,8 @@ import { ApiError, ErrorContext } from '../utils/ApiError.enhanced';
 import { unifiedRegistry } from '../monitoring/unified';
 import { Counter, Gauge, Histogram } from 'prom-client';
 import NodeCache from 'node-cache';
+import { PIISanitizer } from '../utils/piiSanitizer';
+import ERROR_TRACKING_CONFIG from '../config/errorTracking.config';
 
 export interface ErrorTrackingConfig {
   enableRealTimeAlerts: boolean;

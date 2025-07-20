@@ -1,6 +1,7 @@
 import React from 'react';
-import { vi } from 'vitest';
-import { renderWithProviders } from '../../../../../../../shared/test-utils/componentTestUtils';
+import { vi, expect } from 'vitest';
+import { render } from '@testing-library/react';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 // Mock segmentation data for tests
 export const mockVisualizationSegmentation = {
@@ -37,64 +38,15 @@ export const emptyVisualizationSegmentation = {
   polygons: [],
 };
 
-// Setup function to add common mocks before tests
-export function setupVisualizationMocks() {
-  // Mock the calculateMetrics function
-  vi.mock('../../../../utils/metricCalculations', () => ({
-    calculateMetrics: () => ({
-      Area: 1000,
-      Perimeter: 200,
-      EquivalentDiameter: 35.68,
-      Circularity: 0.785,
-      FeretDiameterMax: 50,
-      FeretDiameterMaxOrthogonalDistance: 30,
-      FeretDiameterMin: 25,
-      FeretAspectRatio: 2,
-      LengthMajorDiameterThroughCentroid: 45,
-      LengthMinorDiameterThroughCentroid: 22.5,
-      Compactness: 0.8,
-      Convexity: 0.95,
-      Solidity: 0.9,
-      Sphericity: 0.75,
-    }),
-  }));
-
-  // Mock the recharts components
-  vi.mock('recharts', () => ({
-    BarChart: ({ children }: any) => <div data-testid="bar-chart">{children}</div>,
-    Bar: ({ dataKey, name }: any) => <div data-testid={`bar-${dataKey}`} data-name={name}></div>,
-    XAxis: () => <div data-testid="x-axis"></div>,
-    YAxis: () => <div data-testid="y-axis"></div>,
-    CartesianGrid: () => <div data-testid="cartesian-grid"></div>,
-    ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
-    PieChart: ({ children }: any) => <div data-testid="pie-chart">{children}</div>,
-    Pie: ({ data, dataKey, label }: any) => (
-      <div data-testid="pie" data-items={data?.length || 0} data-key={dataKey}>
-        {typeof label === 'function' && <div data-testid="pie-label"></div>}
-      </div>
-    ),
-    Cell: () => <div data-testid="pie-cell"></div>,
-    Tooltip: () => <div data-testid="tooltip"></div>,
-    Legend: () => <div data-testid="legend"></div>,
-  }));
-
-  // Mock the language context
-  vi.mock('@/contexts/LanguageContext', () => ({
-    useLanguage: () => ({
-      t: (key: string) => key,
-      language: 'en',
-      setLanguage: vi.fn(),
-      availableLanguages: ['en', 'cs'],
-    }),
-  }));
-}
 
 // Render helper for visualization components
 export function renderVisualization(ui: React.ReactElement, options = {}) {
-  return renderWithProviders(ui, {
-    withLanguage: true,
-    ...options,
-  });
+  return render(
+    <LanguageProvider>
+      {ui}
+    </LanguageProvider>,
+    options
+  );
 }
 
 // Test helper functions for common visualization assertions

@@ -226,25 +226,22 @@ export function getOperationKeyFromUrl(url: string, method: string): string {
   }
 
   // Handle export endpoints
-  if (url.includes('/export/start') && method === 'POST') {
+  if (url.match(/\/projects\/[^/]+\/export\/start$/) && method === 'POST') {
     return 'startExport';
   }
-  if (url.includes('/export') && url.includes('/status') && method === 'GET') {
+  if (url.match(/\/projects\/[^/]+\/export\/[^/]+\/status$/) && method === 'GET') {
     return 'getExportStatus';
   }
-  if (url.includes('/export') && url.includes('/cancel') && method === 'POST') {
+  if (url.match(/\/projects\/[^/]+\/export\/[^/]+\/cancel$/) && method === 'POST') {
     return 'cancelExport';
   }
-  if (url.includes('/export') && url.includes('/download-url') && method === 'GET') {
+  if (url.match(/\/projects\/[^/]+\/export\/[^/]+\/download-url$/) && method === 'GET') {
     return 'getExportDownloadUrl';
   }
-  if (url.includes('/export') && method === 'POST' && !url.includes('/start') && !url.includes('/cancel')) {
+  if (url.match(/\/projects\/[^/]+\/export$/) && method === 'POST') {
     return 'exportProject';
   }
-  if (url.includes('/export/jobs')) {
-    return 'getExportJob';
-  }
-  if (url.includes('/export/history') && method === 'GET') {
+  if (url.match(/\/projects\/[^/]+\/export\/history$/) && method === 'GET') {
     return 'getProjectExportHistory';
   }
   if (url.includes('/export/formats') && method === 'GET') {

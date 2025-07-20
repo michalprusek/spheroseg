@@ -15,6 +15,7 @@ import { createValidationMiddleware, commonSchemas } from '../middleware/enhance
 import { z } from 'zod';
 import logger from '../utils/logger';
 import { apiCache, staleWhileRevalidate, cacheStrategies } from '../middleware/advancedApiCache';
+import { createErrorTrackingRateLimit, customErrorTrackingLimit } from '../middleware/errorTrackingRateLimit';
 
 const router = Router();
 
@@ -45,6 +46,9 @@ const alertQuerySchema = z.object({
 
 // All routes require authentication
 router.use(authenticate);
+
+// Apply base rate limiting to all error tracking routes
+router.use(createErrorTrackingRateLimit());
 
 /**
  * GET /errors
@@ -348,6 +352,7 @@ router.get('/insights',
  * Get dashboard data with summary statistics
  */
 router.get('/dashboard',
+  customErrorTrackingLimit(10, 1, 5), // 10 requests per minute, 5 min block
   apiCache({
     strategy: 'HOT',
     ttl: 60 * 1000, // 1 minute

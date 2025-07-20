@@ -2,6 +2,7 @@
  * Comprehensive test coverage utilities for ensuring complete test coverage
  */
 
+import React from 'react';
 import { vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -111,7 +112,8 @@ export class ComponentTestSuite {
         TestCoverageTracker.markPropCovered(this.componentName, propName);
       });
 
-      const { unmount } = render(<this.Component {...mergedProps} />);
+      const Component = this.Component;
+      const { unmount } = render(<Component {...mergedProps} />);
       
       // Basic rendering assertion
       expect(document.body).toBeInTheDocument();
@@ -141,7 +143,8 @@ export class ComponentTestSuite {
       }
     });
 
-    render(<this.Component {...propsWithMocks} />);
+    const Component = this.Component;
+    render(<Component {...propsWithMocks} />);
     const user = userEvent.setup();
 
     for (const interaction of interactions) {
@@ -204,7 +207,8 @@ export class ComponentTestSuite {
     for (const state of states) {
       TestCoverageTracker.markStateCovered(this.componentName, state.name);
 
-      const { unmount } = render(<this.Component {...this.defaultProps} {...state.props} />);
+      const Component = this.Component;
+      const { unmount } = render(<Component {...this.defaultProps} {...state.props} />);
 
       // Check expected elements
       if (state.expectedElement) {
@@ -236,7 +240,8 @@ export class ComponentTestSuite {
   async testAccessibility(): Promise<void> {
     TestCoverageTracker.markInteractionCovered(this.componentName, 'accessibility');
 
-    const { container } = render(<this.Component {...this.defaultProps} />);
+    const Component = this.Component;
+    const { container } = render(<Component {...this.defaultProps} />);
 
     // Check for basic accessibility attributes
     const interactiveElements = container.querySelectorAll('button, input, select, textarea, a[href]');

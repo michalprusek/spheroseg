@@ -4,6 +4,7 @@
  */
 
 import { act } from '@testing-library/react';
+import { vi } from 'vitest';
 
 /**
  * Wraps an async function in act() to prevent React warnings
