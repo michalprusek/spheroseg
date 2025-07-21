@@ -14,10 +14,10 @@ import fs from 'fs';
 import config from '../config';
 import performanceConfig from '../config/performance';
 import logger from '../utils/logger';
-import { errorHandler } from './errorHandler';
+import { createErrorHandler } from './errorHandler.unified';
 import { configureSecurity } from '../security';
 import { requestLoggerMiddleware } from '../monitoring/unified';
-import { trackAPIPerformance, addResponseTimeHeader } from './performanceTracking';
+import { createPerformanceMiddleware } from './performance.consolidated';
 import createSessionMiddleware, { sessionSecurityMiddleware } from '../config/session';
 // TODO: Fix i18n imports - temporarily disabled
 // import { createI18nMiddleware } from '../config/i18n';
@@ -188,6 +188,15 @@ export const configureErrorHandlingMiddleware = (app: Application): void => {
   });
 
   // Global error handler (must be last)
+  const errorHandler = createErrorHandler({
+    includeStack: process.env.NODE_ENV === 'development',
+    sanitizePII: true,
+    trackErrors: true,
+    i18n: {
+      enabled: true,
+      defaultLanguage: 'en',
+    },
+  });
   app.use(errorHandler);
 };
 
@@ -217,9 +226,16 @@ export const configureMiddleware = (app: Application): void => {
   // 7. Request monitoring middleware (unified monitoring system)
   app.use(requestLoggerMiddleware);
 
-  // 8. Performance tracking middleware
-  app.use(addResponseTimeHeader());
-  app.use(trackAPIPerformance());
+  // 8. Performance tracking middleware (consolidated)
+  const performanceMiddleware = createPerformanceMiddleware({
+    enabled: true,
+    enablePrometheus: true,
+    enableMemoryMonitoring: true,
+    enableResponseHeaders: true,
+    slowRequestThreshold: 1000,
+    skipPaths: ['/metrics', '/health', '/ready'],
+  });
+  app.use(performanceMiddleware);
 
   // 9. Static files middleware
   configureStaticFilesMiddleware(app);

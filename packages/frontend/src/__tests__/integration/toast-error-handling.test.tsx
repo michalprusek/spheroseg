@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { toast } from 'sonner';
 import { useToastErrorHandler } from '@/hooks/useErrorHandler';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 // Create persistent mock functions that can be tracked
 const mockHandleError = vi.fn((error) => {
@@ -40,7 +40,7 @@ vi.mock('@/hooks/useErrorHandler', () => ({
   })),
 }));
 
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),

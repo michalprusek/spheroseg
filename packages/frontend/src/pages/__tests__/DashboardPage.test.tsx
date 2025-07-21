@@ -5,7 +5,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import { BrowserRouter } from 'react-router-dom';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
@@ -32,7 +32,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 // Mock dependencies
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),

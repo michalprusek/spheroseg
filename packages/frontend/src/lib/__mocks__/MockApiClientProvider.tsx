@@ -194,11 +194,11 @@ export function getOperationKeyFromUrl(url: string, method: string): string {
   }
 
   // Handle project endpoints
-  if (url.includes('/projects') && method === 'GET' && !url.includes('/images')) {
-    return 'getProjects';
-  }
   if (url.match(/\/projects\/[^/]+$/) && method === 'GET') {
     return 'getProjectDetails';
+  }
+  if (url.includes('/projects') && method === 'GET' && !url.includes('/images')) {
+    return 'getProjects';
   }
   if (url.includes('/projects') && method === 'POST' && !url.includes('/images')) {
     return 'createProject';

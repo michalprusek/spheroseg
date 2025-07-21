@@ -5,7 +5,6 @@
  * Tests the complete flow from API request to database storage.
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import { Express } from 'express';
 import { Redis } from 'ioredis';
@@ -14,6 +13,9 @@ import { createTestUser, getAuthToken } from '../../test/helpers/auth';
 import { ErrorTrackingService } from '../../services/errorTracking.service';
 import { initializeErrorTracking } from '../../startup/errorTracking.startup';
 import { pool } from '../../db';
+
+// Mock Redis
+jest.mock('ioredis');
 
 describe('Error Tracking Integration', () => {
   let app: Express;
@@ -33,14 +35,14 @@ describe('Error Tracking Integration', () => {
 
     // Setup mock Redis for testing
     mockRedis = {
-      get: vi.fn(),
-      set: vi.fn(),
-      setex: vi.fn().mockResolvedValue('OK'),
-      zadd: vi.fn().mockResolvedValue(1),
-      zrangebyscore: vi.fn().mockResolvedValue([]),
-      zremrangebyscore: vi.fn().mockResolvedValue(0),
-      scan: vi.fn().mockResolvedValue(['0', []]),
-      ping: vi.fn().mockResolvedValue('PONG'),
+      get: jest.fn(),
+      set: jest.fn(),
+      setex: jest.fn().mockResolvedValue('OK'),
+      zadd: jest.fn().mockResolvedValue(1),
+      zrangebyscore: jest.fn().mockResolvedValue([]),
+      zremrangebyscore: jest.fn().mockResolvedValue(0),
+      scan: jest.fn().mockResolvedValue(['0', []]),
+      ping: jest.fn().mockResolvedValue('PONG'),
       status: 'ready',
     };
 
@@ -57,7 +59,7 @@ describe('Error Tracking Integration', () => {
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   async function setupTestTables(): Promise<void> {
@@ -156,7 +158,7 @@ describe('Error Tracking Integration', () => {
       };
 
       // Mock the service method
-      vi.spyOn(errorTrackingService, 'getErrorSummary').mockResolvedValue(mockSummary);
+      jest.spyOn(errorTrackingService, 'getErrorSummary').mockResolvedValue(mockSummary);
 
       const response = await request(app)
         .get('/api/error-tracking/errors')
@@ -184,7 +186,7 @@ describe('Error Tracking Integration', () => {
         topPatterns: [],
       };
 
-      vi.spyOn(errorTrackingService, 'getErrorSummary').mockResolvedValue(mockSummary);
+      jest.spyOn(errorTrackingService, 'getErrorSummary').mockResolvedValue(mockSummary);
 
       const response = await request(app)
         .get('/api/error-tracking/errors')
@@ -234,9 +236,9 @@ describe('Error Tracking Integration', () => {
         },
       ];
 
-      vi.spyOn(errorTrackingService, 'getErrorPattern').mockResolvedValue(mockPattern);
-      vi.spyOn(errorTrackingService, 'getRecentErrorOccurrences').mockResolvedValue(mockOccurrences);
-      vi.spyOn(errorTrackingService, 'getErrorInsights').mockResolvedValue(mockInsights);
+      jest.spyOn(errorTrackingService, 'getErrorPattern').mockResolvedValue(mockPattern);
+      jest.spyOn(errorTrackingService, 'getRecentErrorOccurrences').mockResolvedValue(mockOccurrences);
+      jest.spyOn(errorTrackingService, 'getErrorInsights').mockResolvedValue(mockInsights);
 
       const response = await request(app)
         .get(`/api/error-tracking/errors/${testFingerprint}`)
@@ -252,7 +254,7 @@ describe('Error Tracking Integration', () => {
     });
 
     it('should return 404 for non-existent pattern', async () => {
-      vi.spyOn(errorTrackingService, 'getErrorPattern').mockResolvedValue(null);
+      jest.spyOn(errorTrackingService, 'getErrorPattern').mockResolvedValue(null);
 
       const response = await request(app)
         .get(`/api/error-tracking/errors/${testFingerprint}`)
@@ -277,7 +279,7 @@ describe('Error Tracking Integration', () => {
     const testFingerprint = 'a1b2c3d4e5f6789012345678901234567';
 
     it('should resolve an error pattern', async () => {
-      vi.spyOn(errorTrackingService, 'resolveErrorPattern').mockResolvedValue(true);
+      jest.spyOn(errorTrackingService, 'resolveErrorPattern').mockResolvedValue(true);
 
       const response = await request(app)
         .post(`/api/error-tracking/errors/${testFingerprint}/resolve`)
@@ -296,7 +298,7 @@ describe('Error Tracking Integration', () => {
     });
 
     it('should return 404 for non-existent pattern', async () => {
-      vi.spyOn(errorTrackingService, 'resolveErrorPattern').mockResolvedValue(false);
+      jest.spyOn(errorTrackingService, 'resolveErrorPattern').mockResolvedValue(false);
 
       await request(app)
         .post(`/api/error-tracking/errors/${testFingerprint}/resolve`)
@@ -335,7 +337,7 @@ describe('Error Tracking Integration', () => {
         },
       ];
 
-      vi.spyOn(errorTrackingService, 'getAlerts').mockResolvedValue(mockAlerts);
+      jest.spyOn(errorTrackingService, 'getAlerts').mockResolvedValue(mockAlerts);
 
       const response = await request(app)
         .get('/api/error-tracking/alerts')
@@ -364,7 +366,7 @@ describe('Error Tracking Integration', () => {
         },
       ];
 
-      vi.spyOn(errorTrackingService, 'getAlerts').mockResolvedValue(criticalAlerts);
+      jest.spyOn(errorTrackingService, 'getAlerts').mockResolvedValue(criticalAlerts);
 
       const response = await request(app)
         .get('/api/error-tracking/alerts')
@@ -384,7 +386,7 @@ describe('Error Tracking Integration', () => {
     const testAlertId = 'test-alert-123';
 
     it('should acknowledge an alert', async () => {
-      vi.spyOn(errorTrackingService, 'acknowledgeAlert').mockResolvedValue(true);
+      jest.spyOn(errorTrackingService, 'acknowledgeAlert').mockResolvedValue(true);
 
       const response = await request(app)
         .post(`/api/error-tracking/alerts/${testAlertId}/acknowledge`)
@@ -403,7 +405,7 @@ describe('Error Tracking Integration', () => {
     });
 
     it('should return 404 for non-existent alert', async () => {
-      vi.spyOn(errorTrackingService, 'acknowledgeAlert').mockResolvedValue(false);
+      jest.spyOn(errorTrackingService, 'acknowledgeAlert').mockResolvedValue(false);
 
       await request(app)
         .post(`/api/error-tracking/alerts/${testAlertId}/acknowledge`)
@@ -443,7 +445,7 @@ describe('Error Tracking Integration', () => {
         },
       };
 
-      vi.spyOn(errorTrackingService, 'getDashboardData').mockResolvedValue(mockDashboard);
+      jest.spyOn(errorTrackingService, 'getDashboardData').mockResolvedValue(mockDashboard);
 
       const response = await request(app)
         .get('/api/error-tracking/dashboard')
@@ -483,7 +485,7 @@ describe('Error Tracking Integration', () => {
         ],
       };
 
-      vi.spyOn(errorTrackingService, 'getErrorStatistics').mockResolvedValue(mockStats);
+      jest.spyOn(errorTrackingService, 'getErrorStatistics').mockResolvedValue(mockStats);
 
       const response = await request(app)
         .get('/api/error-tracking/stats')
@@ -508,7 +510,7 @@ describe('Error Tracking Integration', () => {
   describe('Error Tracking Flow', () => {
     it('should track errors end-to-end when API errors occur', async () => {
       // Mock error tracking service methods
-      vi.spyOn(errorTrackingService, 'trackError').mockResolvedValue('tracked-error-id');
+      jest.spyOn(errorTrackingService, 'trackError').mockResolvedValue('tracked-error-id');
 
       // Make a request that will cause a validation error
       const response = await request(app)

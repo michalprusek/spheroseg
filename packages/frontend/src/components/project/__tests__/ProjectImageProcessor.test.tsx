@@ -13,7 +13,7 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     post: vi.fn(),
     put: vi.fn(),
@@ -38,7 +38,7 @@ vi.mock('@/contexts/LanguageContext', () => ({
 }));
 
 // Import the mocked modules
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 describe('ProjectImageProcessor Component', () => {
   const mockImage = {

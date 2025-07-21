@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import CanvasPolygon from '../CanvasPolygon';
@@ -12,6 +13,18 @@ enum EditMode {
   CreatePolygon = 4,
   DeletePolygon = 5,
 }
+
+// Mock the dependencies
+vi.mock('@/hooks/useTranslations', () => ({
+  useTranslations: () => ({ 
+    t: (key: string) => key
+  }),
+}));
+
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: () => ({ t: (key: string) => key }),
+  LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 
 // Mock the CanvasVertex component
 vi.mock('../CanvasVertex', () => ({
@@ -29,25 +42,13 @@ vi.mock('../CanvasVertex', () => ({
   ),
 }));
 
-// Mock the PolygonContextMenu component
+// Mock the PolygonContextMenu component - wraps children
 vi.mock('../context-menu/PolygonContextMenu', () => ({
-  default: ({ isOpen, position, onClose, onDelete, onSlice, onEdit }: any) =>
-    isOpen ? (
-      <div data-testid="polygon-context-menu" style={{ left: position.x, top: position.y }}>
-        <button data-testid="delete-button" onClick={onDelete}>
-          Delete
-        </button>
-        <button data-testid="slice-button" onClick={onSlice}>
-          Slice
-        </button>
-        <button data-testid="edit-button" onClick={onEdit}>
-          Edit
-        </button>
-        <button data-testid="close-button" onClick={onClose}>
-          Close
-        </button>
-      </div>
-    ) : null,
+  default: ({ children, onDelete, onSlice, onEdit, polygonId }: any) => (
+    <div data-testid="polygon-context-menu-wrapper" data-polygon-id={polygonId}>
+      {children}
+    </div>
+  ),
 }));
 
 describe('CanvasPolygon Component', () => {
@@ -131,7 +132,8 @@ describe('CanvasPolygon Component', () => {
     const { container } = render(<CanvasPolygon {...props} />);
 
     const polygon = container.querySelector('polygon');
-    expect(polygon).toHaveAttribute('fill', '#FF000033');
+    // The utility function returns rgba format, not hex with opacity
+    expect(polygon).toHaveAttribute('fill', 'rgba(255, 0, 0, 0.2)');
   });
 
   it('applies blue color for internal polygons', () => {

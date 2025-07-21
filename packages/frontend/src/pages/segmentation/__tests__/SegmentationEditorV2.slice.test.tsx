@@ -23,7 +23,7 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
@@ -35,6 +35,40 @@ const mockHandleSliceAction = vi.fn();
 const mockSetEditMode = vi.fn();
 const mockSetTempPoints = vi.fn();
 
+// Create a mocked hook that can be modified
+const mockSegmentationHook = vi.fn(() => ({
+  imageData: { id: 'test-image', width: 1000, height: 1000 },
+  segmentationData: { polygons: [{ id: 'poly1', points: [] }] },
+  transform: { zoom: 1, translateX: 0, translateY: 0 },
+  editMode: EditMode.Slice,
+  selectedPolygonId: 'poly1',
+  hoveredVertex: null,
+  tempPoints: [],
+  interactionState: {},
+  isLoading: false,
+  isSaving: false,
+  isResegmenting: false,
+  canUndo: false,
+  canRedo: false,
+  setEditMode: mockSetEditMode,
+  setSelectedPolygonId: vi.fn(),
+  setTransform: vi.fn(),
+  setTempPoints: mockSetTempPoints,
+  setInteractionState: vi.fn(),
+  setHoveredVertex: vi.fn(),
+  fetchData: vi.fn(),
+  setSegmentationDataWithHistory: vi.fn(),
+  handleSave: vi.fn(),
+  handleResegment: vi.fn(),
+  undo: vi.fn(),
+  redo: vi.fn(),
+  onMouseDown: vi.fn(),
+  onMouseMove: vi.fn(),
+  onMouseUp: vi.fn(),
+  getCanvasCoordinates: vi.fn(),
+  handleWheelEvent: vi.fn(),
+}));
+
 vi.mock('../hooks/segmentation', () => ({
   EditMode: {
     View: 'view',
@@ -42,38 +76,7 @@ vi.mock('../hooks/segmentation', () => ({
     CreatePolygon: 'create',
     EditVertices: 'edit',
   },
-  useSegmentationV2: () => ({
-    imageData: { id: 'test-image', width: 1000, height: 1000 },
-    segmentationData: { polygons: [{ id: 'poly1', points: [] }] },
-    transform: { zoom: 1, translateX: 0, translateY: 0 },
-    editMode: EditMode.Slice,
-    selectedPolygonId: 'poly1',
-    hoveredVertex: null,
-    tempPoints: [],
-    interactionState: {},
-    isLoading: false,
-    isSaving: false,
-    isResegmenting: false,
-    canUndo: false,
-    canRedo: false,
-    setEditMode: mockSetEditMode,
-    setSelectedPolygonId: vi.fn(),
-    setTransform: vi.fn(),
-    setTempPoints: mockSetTempPoints,
-    setInteractionState: vi.fn(),
-    setHoveredVertex: vi.fn(),
-    fetchData: vi.fn(),
-    setSegmentationDataWithHistory: vi.fn(),
-    handleSave: vi.fn(),
-    handleResegment: vi.fn(),
-    undo: vi.fn(),
-    redo: vi.fn(),
-    onMouseDown: vi.fn(),
-    onMouseMove: vi.fn(),
-    onMouseUp: vi.fn(),
-    getCanvasCoordinates: vi.fn(),
-    handleWheelEvent: vi.fn(),
-  }),
+  useSegmentationV2: mockSegmentationHook,
 }));
 
 vi.mock('../hooks/useSlicing', () => ({
@@ -81,6 +84,39 @@ vi.mock('../hooks/useSlicing', () => ({
     handleSliceAction: mockHandleSliceAction,
   }),
 }));
+
+const createMockSegmentationData = (tempPoints: Array<{ x: number; y: number }> = []) => ({
+  imageData: { id: 'test-image', width: 1000, height: 1000 },
+  segmentationData: { polygons: [{ id: 'poly1', points: [] }] },
+  transform: { zoom: 1, translateX: 0, translateY: 0 },
+  editMode: EditMode.Slice,
+  selectedPolygonId: 'poly1',
+  hoveredVertex: null,
+  tempPoints,
+  interactionState: {},
+  isLoading: false,
+  isSaving: false,
+  isResegmenting: false,
+  canUndo: false,
+  canRedo: false,
+  setEditMode: mockSetEditMode,
+  setSelectedPolygonId: vi.fn(),
+  setTransform: vi.fn(),
+  setTempPoints: mockSetTempPoints,
+  setInteractionState: vi.fn(),
+  setHoveredVertex: vi.fn(),
+  fetchData: vi.fn(),
+  setSegmentationDataWithHistory: vi.fn(),
+  handleSave: vi.fn(),
+  handleResegment: vi.fn(),
+  undo: vi.fn(),
+  redo: vi.fn(),
+  onMouseDown: vi.fn(),
+  onMouseMove: vi.fn(),
+  onMouseUp: vi.fn(),
+  getCanvasCoordinates: vi.fn(),
+  handleWheelEvent: vi.fn(),
+});
 
 describe('SegmentationEditorV2 - Slice Timing', () => {
   beforeEach(() => {
@@ -95,14 +131,10 @@ describe('SegmentationEditorV2 - Slice Timing', () => {
     const { rerender } = render(<SegmentationEditorV2 projectId="test-project" imageId="test-image" />);
 
     // Mock the hook to return 2 temp points
-    const mockHook = vi.mocked(useSegmentationV2);
-    mockHook.mockReturnValue({
-      ...(mockHook.getMockImplementation()?.() || {}),
-      tempPoints: [
-        { x: 100, y: 100 },
-        { x: 200, y: 200 },
-      ],
-    });
+    mockSegmentationHook.mockReturnValue(createMockSegmentationData([
+      { x: 100, y: 100 },
+      { x: 200, y: 200 },
+    ]));
 
     mockHandleSliceAction.mockReturnValue(true);
 

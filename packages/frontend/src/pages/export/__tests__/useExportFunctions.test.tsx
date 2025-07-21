@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useExportFunctions } from '../hooks/useExportFunctions';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { saveAs } from 'file-saver';
 import { utils, writeFile } from 'xlsx';
 import { AllProvidersWrapper } from '@/test-utils/test-wrapper';
@@ -30,7 +30,7 @@ vi.mock('xlsx', () => ({
   writeFile: vi.fn(),
 }));
 
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),

@@ -96,7 +96,7 @@ import { handlePermissionError } from '@/utils/error/permissionErrorHandler';
 import logger from '@/utils/logger';
 import { getAccessToken, removeTokens } from '@/services/authService';
 import axios from 'axios';
-import apiClient from '../apiClient';
+import apiClient from '@/api/apiClient';
 
 describe('apiClient', () => {
   let mockAxiosInstance: any;

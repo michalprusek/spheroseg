@@ -16,7 +16,7 @@ vi.mock('sonner', () => ({
 }));
 
 // Mock apiClient
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     get: mockApiGet,
   },

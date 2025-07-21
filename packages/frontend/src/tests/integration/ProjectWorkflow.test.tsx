@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 
 // Mock dependencies
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),

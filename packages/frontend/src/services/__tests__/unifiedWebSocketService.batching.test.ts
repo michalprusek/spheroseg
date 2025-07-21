@@ -1,9 +1,21 @@
+/**
+ * Tests for UnifiedWebSocketService batching functionality
+ * 
+ * These tests verify the integration between the WebSocket service
+ * and the batch handler for optimized message sending.
+ */
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { io } from 'socket.io-client';
-import unifiedWebSocketService from '../unifiedWebSocketService';
-import { websocketBatchHandler } from '../websocketBatchHandler';
+import type { Socket } from 'socket.io-client';
 
-// Mock dependencies
+// Unmock the service to test actual implementation
+vi.unmock('@/services/unifiedWebSocketService');
+
+// Create a mock socket instance
+let mockSocket: any;
+
+// Mock dependencies must be hoisted
 vi.mock('@/utils/logging/unifiedLogger', () => ({
   createLogger: () => ({
     info: vi.fn(),
@@ -14,7 +26,7 @@ vi.mock('@/utils/logging/unifiedLogger', () => ({
 }));
 
 vi.mock('@/utils/error/unifiedErrorHandler', () => ({
-  handleError: vi.fn((error) => ({ message: error.message || 'Error' })),
+  handleError: vi.fn((error: any) => ({ message: error.message || 'Error' })),
   ErrorType: { NETWORK: 'NETWORK' },
   ErrorSeverity: { ERROR: 'ERROR' },
 }));
@@ -23,35 +35,35 @@ vi.mock('../authService', () => ({
   getAccessToken: vi.fn().mockReturnValue('test-token'),
 }));
 
-// Mock socket.io-client
-const mockSocketConnected = false;
-const mockSocket = {
-  connected: false,
-  on: vi.fn((event, handler) => {
-    // Simulate connection events
-    if (event === 'connect') {
-      setTimeout(() => {
-        mockSocket.connected = true;
-        handler();
-      }, 0);
-    }
-  }),
-  emit: vi.fn(),
-  disconnect: vi.fn(() => {
-    mockSocket.connected = false;
-  }),
-  off: vi.fn(),
-  removeAllListeners: vi.fn(),
-  connect: vi.fn(() => {
-    mockSocket.connected = true;
-  }),
-};
-
 vi.mock('socket.io-client', () => ({
-  io: vi.fn(() => mockSocket),
+  io: vi.fn(() => {
+    if (!mockSocket) {
+      mockSocket = {
+        connected: false,
+        on: vi.fn((event: string, handler: Function) => {
+          if (event === 'connect') {
+            setTimeout(() => {
+              mockSocket.connected = true;
+              handler();
+            }, 0);
+          }
+        }),
+        emit: vi.fn(),
+        disconnect: vi.fn(() => {
+          mockSocket.connected = false;
+        }),
+        off: vi.fn(),
+        removeAllListeners: vi.fn(),
+        connect: vi.fn(() => {
+          mockSocket.connected = true;
+        }),
+      };
+    }
+    return mockSocket;
+  }),
 }));
 
-// Mock the batch handler
+// Mock the batch handler with inline definition
 vi.mock('../websocketBatchHandler', () => ({
   websocketBatchHandler: {
     initialize: vi.fn(),
@@ -71,17 +83,50 @@ vi.mock('../websocketBatchHandler', () => ({
   },
 }));
 
+// Import the service using path alias
+import unifiedWebSocketService from '@/services/unifiedWebSocketService';
+// Import to get access to mocked version
+import { websocketBatchHandler } from '../websocketBatchHandler';
+
 describe('UnifiedWebSocketService - Batching Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset the service state between tests
-    if (unifiedWebSocketService.getSocket()) {
-      unifiedWebSocketService.disconnect();
-    }
+    // Reset socket for each test
+    mockSocket = {
+      connected: false,
+      on: vi.fn((event: string, handler: Function) => {
+        if (event === 'connect') {
+          setTimeout(() => {
+            mockSocket.connected = true;
+            handler();
+          }, 0);
+        }
+      }),
+      emit: vi.fn(),
+      disconnect: vi.fn(() => {
+        mockSocket.connected = false;
+      }),
+      off: vi.fn(),
+      removeAllListeners: vi.fn(),
+      connect: vi.fn(() => {
+        mockSocket.connected = true;
+      }),
+    };
+    // Reset mock handler return values
+    vi.mocked(websocketBatchHandler.send).mockResolvedValue({ success: true });
+    vi.mocked(websocketBatchHandler.getStatus).mockReturnValue({
+      queueLength: 0,
+      pendingAcks: 0,
+      capabilities: { supportsBatching: true, supportsCompression: false, version: '1.0.0' },
+      isConnected: true,
+    });
   });
 
   afterEach(async () => {
-    await unifiedWebSocketService.disconnect();
+    // Disconnect if connected
+    if (unifiedWebSocketService && unifiedWebSocketService.getSocket()) {
+      await unifiedWebSocketService.disconnect();
+    }
     vi.clearAllMocks();
   });
 

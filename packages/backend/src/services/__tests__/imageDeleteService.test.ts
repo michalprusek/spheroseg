@@ -1,39 +1,87 @@
 /**
- * Image Delete Service Test Suite
+ * Integration tests for ImageDeleteService
  * 
- * Tests for the image deletion service including:
- * - Single image deletion
- * - Batch deletion
+ * Demonstrates proper database transaction handling for tests
+ * using the new testDatabase utilities
+ * 
+ * Tests include:
+ * - Single image deletion with transactions
+ * - Batch deletion with partial rollback
  * - Permission validation
- * - Transaction rollback
+ * - Transaction rollback on errors
  * - File cleanup
  * - Storage quota updates
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, MockedFunction } from 'vitest';
-import { deleteImage, deleteMultipleImages, canDeleteImage } from '../imageDeleteService';
-import { ApiError } from '../../utils/ApiError';
-import * as db from '../../db';
-import * as projectService from '../projectService';
-import * as cacheService from '../cacheService';
-import * as imageUtils from '../../utils/imageUtils.unified';
-import logger from '../../utils/logger';
-import fs from 'fs';
+describe('ImageDeleteService Integration Tests', () => {
+  let imageDeleteService: typeof import('../imageDeleteService').default;
+  let mockProjectService: jest.Mocked<typeof import('../projectService')>;
+  let mockCacheService: jest.Mocked<typeof import('../cacheService').default>;
+  let mockImageUtils: jest.Mocked<typeof import('../../utils/imageUtils.unified').default>;
+  let mockLogger: jest.Mocked<typeof import('../../utils/logger').default>;
+  let mockFs: jest.Mocked<typeof import('fs')>;
 
-// Mock dependencies
-vi.mock('../../db');
-vi.mock('../projectService');
-vi.mock('../cacheService');
-vi.mock('../../utils/imageUtils.unified');
-vi.mock('../../utils/logger');
-vi.mock('fs');
-vi.mock('../../config', () => ({
-  default: {
-    storage: {
-      uploadDir: '/test/uploads',
-    },
-  },
-}));
+  beforeAll(() => {
+    // Mock modules
+    jest.mock('../../utils/logger', () => ({
+      default: {
+        info: jest.fn(),
+        debug: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn()
+      }
+    }));
+
+    jest.mock('../cacheService', () => ({
+      default: {
+        invalidateImageList: jest.fn().mockResolvedValue(undefined)
+      }
+    }));
+
+    jest.mock('../../utils/imageUtils.unified', () => ({
+      default: {
+        dbPathToFilesystemPath: jest.fn((dbPath: string, uploadDir: string) => {
+          return `${uploadDir}/${dbPath}`;
+        }),
+        deleteFile: jest.fn().mockResolvedValue(undefined),
+        getFilesInDirectory: jest.fn().mockResolvedValue([])
+      }
+    }));
+
+    jest.mock('fs', () => ({
+      rmdirSync: jest.fn()
+    }));
+
+    jest.mock('../projectService', () => ({
+      getProjectById: jest.fn()
+    }));
+
+    jest.mock('../../config', () => ({
+      default: {
+        storage: {
+          uploadDir: '/test/uploads',
+        },
+      },
+    }));
+
+    // Get references to mocked modules
+    imageDeleteService = require('../imageDeleteService').default;
+    mockProjectService = require('../projectService') as any;
+    mockCacheService = require('../cacheService').default as any;
+    mockImageUtils = require('../../utils/imageUtils.unified').default as any;
+    mockLogger = require('../../utils/logger').default as any;
+    mockFs = require('fs') as any;
+  });
+
+  beforeEach(() => {
+    // Reset all mocks before each test
+    jest.clearAllMocks();
+    
+    // Reset mock implementations
+    mockImageUtils.deleteFile.mockResolvedValue(undefined);
+    mockImageUtils.getFilesInDirectory.mockResolvedValue([]);
+    mockCacheService.invalidateImageList.mockResolvedValue(undefined);
+  });
 
 describe('ImageDeleteService', () => {
   let mockPool: any;

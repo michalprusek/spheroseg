@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import SegmentationThumbnail from '../SegmentationThumbnail';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import * as svgUtils from '@/lib/svgUtils';
 
 // Mock the API client
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     get: vi.fn(),
   },
