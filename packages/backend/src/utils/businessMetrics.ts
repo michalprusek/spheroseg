@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { pool } from '../db';
+import { getPool } from '../db';
 import logger from '../utils/logger';
 import { Redis } from 'ioredis';
 import * as cron from 'node-cron';
@@ -126,7 +126,7 @@ export class BusinessMetricsService extends EventEmitter {
       
       if (config.query) {
         // Execute SQL query
-        const result = await pool.query(config.query);
+        const result = await getPool().query(config.query);
         value = result.rows[0]?.value || 0;
       } else if (config.calculator) {
         // Use custom calculator
@@ -140,7 +140,7 @@ export class BusinessMetricsService extends EventEmitter {
         value,
         timestamp: new Date(),
         unit: config.unit,
-        tags: config.tags,
+        ...(config.tags && { tags: config.tags }),
       };
       
       // Store current value
@@ -222,8 +222,11 @@ export class BusinessMetricsService extends EventEmitter {
     
     const history: MetricValue[] = [];
     for (let i = 0; i < values.length; i += 2) {
-      const data = JSON.parse(values[i]);
-      history.push(data);
+      const value = values[i];
+      if (value && typeof value === 'string') {
+        const data = JSON.parse(value);
+        history.push(data);
+      }
     }
     
     return history;
@@ -267,6 +270,9 @@ export class BusinessMetricsService extends EventEmitter {
     }
     
     const key = keys[0];
+    if (!key) {
+      throw new Error(`Alert ${alertId} not found`);
+    }
     const data = await this.redis.get(key);
     
     if (!data) {
@@ -297,7 +303,7 @@ export class BusinessMetricsService extends EventEmitter {
   }> {
     const metrics = [];
     
-    for (const [name, config] of this.metrics) {
+    for (const [name, config] of Array.from(this.metrics.entries())) {
       const current = await this.getMetricValue(name);
       const stats = await this.getMetricStats(name);
       
@@ -468,7 +474,7 @@ export class BusinessMetricsService extends EventEmitter {
       description: '95th percentile API response time',
       calculator: async () => {
         // This would typically come from APM or logs
-        const result = await pool.query(`
+        const result = await getPool().query(`
           SELECT PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time) as value
           FROM api_request_logs
           WHERE created_at > NOW() - INTERVAL '5 minutes'
@@ -624,7 +630,9 @@ export class BusinessMetricsService extends EventEmitter {
     
     if (history.length < 2) return;
     
-    const oldValue = history[0].value;
+    const firstHistoryItem = history[0];
+    if (!firstHistoryItem) return;
+    const oldValue = firstHistoryItem.value;
     const percentChange = ((currentValue - oldValue) / oldValue) * 100;
     
     if (trend.increase && percentChange >= trend.increase) {
@@ -751,7 +759,7 @@ export class BusinessMetricsService extends EventEmitter {
    * Stop all metric collection
    */
   public stopAll(): void {
-    for (const job of this.collectionJobs.values()) {
+    for (const job of Array.from(this.collectionJobs.values())) {
       job.stop();
     }
     this.collectionJobs.clear();

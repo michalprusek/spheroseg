@@ -1,4 +1,4 @@
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 // Email verification
 export const sendVerificationEmail = async (email: string) => {

@@ -23,7 +23,6 @@ router.get('/check', (_req: Request, res: Response) => {
 });
 
 // GET /api/queue-status - Get the current status of the segmentation queue with image details
-// @ts-expect-error - AuthenticatedRequest type not properly defined yet
 router.get(
   '/queue-status',
   authMiddleware,
@@ -82,7 +81,6 @@ router.get(
 );
 
 // GET /api/queue-status/:projectId - Get queue status filtered by project
-// @ts-expect-error - AuthenticatedRequest type not properly defined yet
 router.get(
   '/queue-status/:projectId',
   authMiddleware,
@@ -163,7 +161,6 @@ router.get(
 );
 
 // GET /api/mock-queue-status - Get mock queue status for development
-// @ts-expect-error - AuthenticatedRequest type not properly defined yet
 router.get(
   '/mock-queue-status',
   authMiddleware,
@@ -209,7 +206,6 @@ router.get(
 );
 
 // GET /api/mock-queue-status/:projectId - Get mock queue status for a specific project
-// @ts-expect-error - AuthenticatedRequest type not properly defined yet
 router.get(
   '/mock-queue-status/:projectId',
   authMiddleware,

@@ -78,7 +78,7 @@ export class AutoScaler extends EventEmitter {
   private evaluationTimers: Map<string, NodeJS.Timeout> = new Map();
   private enabled: boolean = true;
   
-  private readonly SCALING_PREFIX = 'scaling:';
+  private readonly _SCALING_PREFIX = 'scaling:';
   private readonly EVENT_PREFIX = 'scaling:event:';
   private readonly DECISION_PREFIX = 'scaling:decision:';
   
@@ -177,14 +177,15 @@ export class AutoScaler extends EventEmitter {
       });
       
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Error evaluating scaling policy', {
         policy: policy.name,
-        error: error.message,
+        error: errorMessage,
       });
       
       this.emit('evaluationError', {
         policy: policy.name,
-        error: error.message,
+        error: errorMessage,
       });
     }
   }
@@ -219,10 +220,11 @@ export class AutoScaler extends EventEmitter {
         values.set(metric.name, value);
         
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         logger.error('Error collecting metric', {
           metric: metric.name,
           source: metric.source,
-          error: error.message,
+          error: errorMessage,
         });
         
         // Use default value or skip metric
@@ -413,7 +415,7 @@ export class AutoScaler extends EventEmitter {
       const scalingEvent: ScalingEvent = {
         id: eventId,
         service: decision.service,
-        action: decision.action,
+        action: decision.action as 'scale_up' | 'scale_down',
         fromReplicas: decision.currentReplicas,
         toReplicas: decision.targetReplicas,
         reason: decision.reason,
@@ -437,11 +439,12 @@ export class AutoScaler extends EventEmitter {
       });
       
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       // Record failed scaling event
       const scalingEvent: ScalingEvent = {
         id: eventId,
         service: decision.service,
-        action: decision.action,
+        action: decision.action as 'scale_up' | 'scale_down',
         fromReplicas: decision.currentReplicas,
         toReplicas: decision.targetReplicas,
         reason: decision.reason,
@@ -449,7 +452,7 @@ export class AutoScaler extends EventEmitter {
         timestamp: new Date(),
         success: false,
         duration: Date.now() - startTime,
-        error: error.message,
+        error: errorMessage,
       };
       
       await this.storeScalingEvent(scalingEvent);
@@ -459,7 +462,7 @@ export class AutoScaler extends EventEmitter {
       logger.error('Scaling action failed', {
         service: decision.service,
         action: decision.action,
-        error: error.message,
+        error: errorMessage,
       });
       
       throw error;
@@ -489,7 +492,8 @@ export class AutoScaler extends EventEmitter {
       });
       
     } catch (error) {
-      throw new Error(`Failed to scale service ${service}: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to scale service ${service}: ${errorMessage}`);
     }
   }
 
@@ -504,9 +508,10 @@ export class AutoScaler extends EventEmitter {
       return parseInt(stdout.trim(), 10) || 1;
       
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.warn('Failed to get current replicas, assuming 1', {
         service,
-        error: error.message,
+        error: errorMessage,
       });
       return 1;
     }
@@ -525,7 +530,8 @@ export class AutoScaler extends EventEmitter {
       return isNaN(cpuPercent) ? 0 : cpuPercent;
       
     } catch (error) {
-      logger.warn('Failed to get CPU usage', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.warn('Failed to get CPU usage', { error: errorMessage });
       return 0;
     }
   }
@@ -543,7 +549,8 @@ export class AutoScaler extends EventEmitter {
       return isNaN(memPercent) ? 0 : memPercent;
       
     } catch (error) {
-      logger.warn('Failed to get memory usage', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.warn('Failed to get memory usage', { error: errorMessage });
       return 0;
     }
   }
@@ -565,7 +572,8 @@ export class AutoScaler extends EventEmitter {
       return 0;
       
     } catch (error) {
-      logger.warn('Failed to get request rate', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.warn('Failed to get request rate', { error: errorMessage });
       return 0;
     }
   }
@@ -607,7 +615,8 @@ export class AutoScaler extends EventEmitter {
           events.push(JSON.parse(eventData));
         }
       } catch (error) {
-        logger.warn('Failed to parse scaling event', { key, error: error.message });
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.warn('Failed to parse scaling event', { key, error: errorMessage });
       }
     }
     

@@ -3,7 +3,7 @@
  *
  * This module provides functions for uploading images to the server
  */
-import uploadClient from '@/lib/uploadClient';
+import { uploadClient } from '@/services/api/client';
 import { Image as ApiImageType, ProjectImage } from '@/types';
 import { mapApiImageToProjectImage } from './projectImages';
 import logger from '@/utils/logger';

@@ -2,7 +2,8 @@
  * Enhanced Authentication Routes
  * Handles user registration, login, token refresh with enhanced validation and sanitization
  */
-import express, { Response, Router } from 'express';
+import * as express from 'express';
+import { Response, Router, RequestHandler } from 'express';
 import { z } from 'zod';
 import {
   validateRequestBody,
@@ -13,7 +14,6 @@ import {
 } from '../middleware/enhancedValidation';
 import {
   userRegistrationSchema,
-  userLoginSchema,
   emailSchema,
   passwordSchema,
   createTextSchema,
@@ -26,6 +26,28 @@ import {
 import logger from '../utils/logger';
 import { ApiError } from '../utils/errors';
 import authService from '../services/authService';
+
+// Extend Express Request to include validated data
+interface ValidatedRequest<T = any> extends express.Request {
+  validatedBody: T;
+  validatedQuery?: any;
+}
+
+// Helper function to create type-safe handlers
+const createHandler = <T = any>(
+  handler: (req: ValidatedRequest<T>, res: Response) => Promise<express.Response | void>
+): RequestHandler => {
+  return async (req: express.Request, res: Response) => {
+    try {
+      await handler(req as ValidatedRequest<T>, res);
+    } catch (error) {
+      logger.error('Route handler error:', { error });
+      if (!res.headersSent) {
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+  };
+};
 
 const router: Router = express.Router();
 
@@ -41,10 +63,15 @@ const registerValidationSchema = userRegistrationSchema.extend({
     allowHtml: false,
     required: false,
   }),
-});
+}).transform((data) => ({
+  ...data,
+  name: `${data.firstName} ${data.lastName}`.trim(),
+}));
 
 // Login schema with enhanced validation
-const loginValidationSchema = userLoginSchema.extend({
+const loginValidationSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Password is required'),
   remember_me: z.boolean().optional(),
 });
 
@@ -132,7 +159,7 @@ router.use((req, res, next) => {
 // ===========================
 
 // GET /api/auth/test - Test route
-router.get('/test', (req: express.Request, res: Response) => {
+router.get('/test', (_req: express.Request, res: Response) => {
   logger.info('Enhanced auth test route hit');
   res.json({
     message: 'Enhanced auth routes are working',
@@ -150,25 +177,31 @@ router.get('/test', (req: express.Request, res: Response) => {
 router.post(
   '/register',
   validateRequestBody(registerValidationSchema),
-  async (req: express.Request, res: Response) => {
+  createHandler<z.infer<typeof registerValidationSchema>>(async (req, res) => {
+    const validatedData = req.validatedBody;
+    
+    if (!validatedData) {
+      return res.status(400).json({ message: 'Invalid request data' });
+    }
+    
     logger.info('Enhanced register endpoint hit', {
-      email: req.validatedBody?.email,
-      hasName: !!req.validatedBody?.name,
+      email: validatedData.email,
+      hasName: !!validatedData.name,
     });
 
-    const { email, password, name, preferred_language } = req.validatedBody;
+    const { email, password, name, preferred_language } = validatedData;
 
     try {
       const result = await authService.registerUser(email, password, name, preferred_language);
-      res.status(201).json(result);
+      return res.status(201).json(result);
     } catch (error) {
       logger.error('Registration error', { error, email });
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({ message: 'Failed to register user' });
+      return res.status(500).json({ message: 'Failed to register user' });
     }
-  }
+  })
 );
 
 // POST /api/auth/login - Login with enhanced validation
@@ -176,17 +209,23 @@ router.post(
   '/login',
   validateRequestBody(loginValidationSchema),
   async (req: express.Request, res: Response) => {
-    const { email, password, rememberMe } = req.validatedBody;
+    const validatedData = (req as ValidatedRequest<z.infer<typeof loginValidationSchema>>).validatedBody;
+    
+    if (!validatedData) {
+      return res.status(400).json({ message: 'Invalid request data' });
+    }
+    
+    const { email, password, remember_me: rememberMe } = validatedData;
 
     try {
       const result = await authService.loginUser(email, password, rememberMe);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
       logger.error('Login error', { error, email });
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({ message: 'Failed to login' });
+      return res.status(500).json({ message: 'Failed to login' });
     }
   }
 );
@@ -196,17 +235,22 @@ router.post(
   '/refresh',
   validateRequestBody(refreshTokenSchema),
   async (req: express.Request, res: Response) => {
-    const { refreshToken } = req.validatedBody;
+    const validatedData = (req as ValidatedRequest<z.infer<typeof refreshTokenSchema>>).validatedBody;
+    const { refreshToken } = validatedData;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: 'Refresh token is required' });
+    }
 
     try {
       const result = await authService.refreshAccessToken(refreshToken);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
       logger.warn('Token refresh failed', { error });
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({ message: 'Invalid refresh token' });
+      return res.status(500).json({ message: 'Invalid refresh token' });
     }
   }
 );
@@ -216,11 +260,12 @@ router.post(
   '/forgot-password',
   validateRequestBody(forgotPasswordSchema),
   async (req: express.Request, res: Response) => {
-    const { email } = req.validatedBody;
+    const validatedData = (req as ValidatedRequest<z.infer<typeof forgotPasswordSchema>>).validatedBody;
+    const { email } = validatedData;
 
     try {
       await authService.forgotPassword(email);
-      res.json({
+      return res.json({
         message: 'A new password has been sent to your email',
         success: true,
       });
@@ -229,7 +274,7 @@ router.post(
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({ message: 'Failed to process password reset request' });
+      return res.status(500).json({ message: 'Failed to process password reset request' });
     }
   }
 );
@@ -239,49 +284,60 @@ router.post(
   '/reset-password',
   validateRequestBody(resetPasswordSchema),
   async (req: express.Request, res: Response) => {
-    const { token, password } = req.validatedBody;
+    const validatedData = (req as ValidatedRequest<z.infer<typeof resetPasswordSchema>>).validatedBody;
+    const { token, password } = validatedData;
+
+    if (!token || !password) {
+      return res.status(400).json({ message: 'Token and password are required' });
+    }
 
     try {
       await authService.resetPassword(token, password);
-      res.json({ message: 'Password has been reset successfully' });
+      return res.json({ message: 'Password has been reset successfully' });
     } catch (error) {
       logger.error('Password reset error', { error });
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({ message: 'Failed to reset password' });
+      return res.status(500).json({ message: 'Failed to reset password' });
     }
   }
 );
 
 // POST /api/auth/logout - Invalidate refresh token on logout
-router.post('/logout', optionalAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/logout', optionalAuthMiddleware, async (req: express.Request, res: Response) => {
+  const authenticatedReq = req as AuthenticatedRequest;
   const { refreshToken } = req.body;
-  const userId = req.user?.userId;
+  const userId = authenticatedReq.user?.userId;
 
   try {
     await authService.logoutUser(refreshToken, userId);
-    res.json({ message: 'Logged out successfully' });
+    return res.json({ message: 'Logged out successfully' });
   } catch (error) {
     logger.error('Logout error', { error, userId });
     // Still return success to client
-    res.json({ message: 'Logged out successfully' });
+    return res.json({ message: 'Logged out successfully' });
   }
 });
 
 // POST /api/auth/revoke - Revoke all refresh tokens
-router.post('/revoke', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user?.userId;
+router.post('/revoke', authMiddleware, async (req: express.Request, res: Response) => {
+  const authenticatedReq = req as AuthenticatedRequest;
+  const userId = authenticatedReq.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
 
   try {
     await authService.revokeAllUserTokens(userId);
-    res.json({ message: 'All sessions revoked successfully' });
+    return res.json({ message: 'All sessions revoked successfully' });
   } catch (error) {
     logger.error('Error revoking sessions', { error, userId });
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({ message: error.message, code: error.code });
     }
-    res.status(500).json({ message: 'Failed to revoke sessions' });
+    return res.status(500).json({ message: 'Failed to revoke sessions' });
   }
 });
 
@@ -290,11 +346,12 @@ router.get(
   '/check-email',
   validateRequestQuery(z.object({ email: emailSchema })),
   async (req: express.Request, res: Response) => {
-    const { email } = req.validatedQuery;
+    const validatedData = (req as ValidatedRequest).validatedQuery as { email: string };
+    const { email } = validatedData;
 
     try {
       const { exists, hasAccessRequest } = await authService.checkEmailExists(email);
-      res.json({
+      return res.json({
         exists,
         hasAccessRequest,
         message: exists
@@ -308,7 +365,7 @@ router.get(
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({
+      return res.status(500).json({
         exists: false,
         error: 'Failed to check email',
       });
@@ -317,8 +374,9 @@ router.get(
 );
 
 // GET /api/auth/me - Get current user
-router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user?.userId;
+router.get('/me', authMiddleware, async (req: express.Request, res: Response) => {
+  const authenticatedReq = req as AuthenticatedRequest;
+  const userId = authenticatedReq.user?.userId;
 
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized' });
@@ -326,13 +384,13 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
 
   try {
     const user = await authService.getCurrentUser(userId);
-    res.json(user);
+    return res.json(user);
   } catch (error) {
     logger.error('Error fetching current user', { error, userId });
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({ message: error.message, code: error.code });
     }
-    res.status(500).json({ message: 'Failed to fetch user data' });
+    return res.status(500).json({ message: 'Failed to fetch user data' });
   }
 });
 
@@ -341,9 +399,11 @@ router.put(
   '/change-password',
   authMiddleware,
   validateRequestBody(changePasswordSchema),
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { current_password, new_password } = req.validatedBody;
-    const userId = req.user?.userId;
+  async (req: express.Request, res: Response) => {
+    const authenticatedReq = req as AuthenticatedRequest;
+    const validatedData = (req as ValidatedRequest<z.infer<typeof changePasswordSchema>>).validatedBody;
+    const { current_password, new_password } = validatedData;
+    const userId = authenticatedReq.user?.userId;
 
     if (!userId) {
       return res.status(401).json({ message: 'User not authenticated' });
@@ -351,13 +411,13 @@ router.put(
 
     try {
       await authService.changePassword(userId, current_password, new_password);
-      res.json({ message: 'Password changed successfully' });
+      return res.json({ message: 'Password changed successfully' });
     } catch (error) {
       logger.error('Error changing password', { error, userId });
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({ message: 'Failed to change password' });
+      return res.status(500).json({ message: 'Failed to change password' });
     }
   }
 );
@@ -367,9 +427,11 @@ router.delete(
   '/account',
   authMiddleware,
   validateRequestBody(deleteAccountSchema),
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { username, password } = req.validatedBody;
-    const userId = req.user?.userId;
+  async (req: express.Request, res: Response) => {
+    const authenticatedReq = req as AuthenticatedRequest;
+    const validatedData = (req as ValidatedRequest<z.infer<typeof deleteAccountSchema>>).validatedBody;
+    const { username, password } = validatedData;
+    const userId = authenticatedReq.user?.userId;
 
     if (!userId) {
       return res.status(401).json({ message: 'User not authenticated' });
@@ -377,13 +439,13 @@ router.delete(
 
     try {
       await authService.deleteAccount(userId, username, password);
-      res.json({ message: 'Account deleted successfully' });
+      return res.json({ message: 'Account deleted successfully' });
     } catch (error) {
       logger.error('Error deleting account', { error, userId });
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({ message: 'Failed to delete account' });
+      return res.status(500).json({ message: 'Failed to delete account' });
     }
   }
 );
@@ -393,17 +455,18 @@ router.post(
   '/send-verification-email',
   validateRequestBody(sendVerificationEmailSchema),
   async (req: express.Request, res: Response) => {
-    const { email } = req.validatedBody;
+    const validatedData = (req as ValidatedRequest<z.infer<typeof sendVerificationEmailSchema>>).validatedBody;
+    const { email } = validatedData;
 
     try {
       await authService.sendVerificationEmail(email);
-      res.json({ message: 'Verification email sent successfully' });
+      return res.json({ message: 'Verification email sent successfully' });
     } catch (error) {
       logger.error('Error sending verification email', { error, email });
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({ message: 'Failed to send verification email' });
+      return res.status(500).json({ message: 'Failed to send verification email' });
     }
   }
 );
@@ -413,17 +476,18 @@ router.get(
   '/verify-email',
   validateRequestQuery(verifyEmailSchema),
   async (req: express.Request, res: Response) => {
-    const { token } = req.validatedQuery;
+    const validatedData = (req as ValidatedRequest).validatedQuery as z.infer<typeof verifyEmailSchema>;
+    const { token } = validatedData;
 
     try {
       await authService.verifyEmail(token);
-      res.json({ message: 'Email verified successfully' });
+      return res.json({ message: 'Email verified successfully' });
     } catch (error) {
       logger.error('Error verifying email', { error });
       if (error instanceof ApiError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code });
       }
-      res.status(500).json({ message: 'Failed to verify email' });
+      return res.status(500).json({ message: 'Failed to verify email' });
     }
   }
 );

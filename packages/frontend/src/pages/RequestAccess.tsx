@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import axios from 'axios';
 import BackButton from '@/components/BackButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -75,12 +75,12 @@ const RequestAccess = () => {
       let errorMessage = t('requestAccess.submitError') || 'Failed to submit request.';
 
       if (axios.isAxiosError(error) && error.response) {
-        errorMessage = error.response.data?.message || errorMessage;
-        if (error.response.status === 409) {
+        errorMessage = error.data?.message || errorMessage;
+        if (error.status === 409) {
           errorMessage = t('requestAccess.alreadyPending') || 'An access request for this email is already pending.';
         }
-        if (error.response.status === 400 && error.response.data?.errors) {
-          const validationErrors = error.response.data.errors
+        if (error.status === 400 && error.data?.errors) {
+          const validationErrors = error.data.errors
             .map((err: { path: string; message: string }) => `${err.path}: ${err.message}`)
             .join('; ');
           errorMessage = `${t('common.validationFailed')}: ${validationErrors}`;

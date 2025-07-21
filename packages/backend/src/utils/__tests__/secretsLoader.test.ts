@@ -9,7 +9,10 @@ import {
 import fs from 'fs';
 
 // Mock fs module
-jest.mock('fs');
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+  readFileSync: jest.fn(),
+}));
 
 describe('secretsLoader', () => {
   const originalEnv = process.env;
@@ -151,11 +154,11 @@ describe('secretsLoader', () => {
       const secrets = { 
         dbPassword: 'secretpass',
         jwtSecret: 'jwt',
-        sessionSecret: null,
-        dbRootPassword: null,
-        redisPassword: null,
-        rabbitmqPassword: null,
-        emailPassword: null
+        sessionSecret: undefined,
+        dbRootPassword: undefined,
+        redisPassword: undefined,
+        rabbitmqPassword: undefined,
+        emailPassword: undefined
       };
       const config = {
         user: 'postgres',
@@ -174,11 +177,11 @@ describe('secretsLoader', () => {
       const secrets = { 
         dbPassword: 'pass',
         jwtSecret: 'jwt',
-        sessionSecret: null,
-        dbRootPassword: null,
-        redisPassword: null,
-        rabbitmqPassword: null,
-        emailPassword: null
+        sessionSecret: undefined,
+        dbRootPassword: undefined,
+        redisPassword: undefined,
+        rabbitmqPassword: undefined,
+        emailPassword: undefined
       };
       const config = {
         user: 'user',
@@ -199,11 +202,11 @@ describe('secretsLoader', () => {
       const secrets = {
         redisPassword: 'redispass',
         jwtSecret: 'jwt',
-        sessionSecret: null,
-        dbPassword: null,
-        dbRootPassword: null,
-        rabbitmqPassword: null,
-        emailPassword: null
+        sessionSecret: undefined,
+        dbPassword: undefined,
+        dbRootPassword: undefined,
+        rabbitmqPassword: undefined,
+        emailPassword: undefined
       };
       const config = {
         host: 'redis',
@@ -213,18 +216,18 @@ describe('secretsLoader', () => {
 
       const url = constructRedisUrl(secrets, config);
       
-      expect(url).toBe('redis://:redispass@redis:6379/0');
+      expect(url).toBe('redis://:redispass@redis:6379');
     });
 
     it('should construct Redis URL without password', () => {
       const secrets = {
-        redisPassword: null,
+        redisPassword: undefined,
         jwtSecret: 'jwt',
-        sessionSecret: null,
-        dbPassword: null,
-        dbRootPassword: null,
-        rabbitmqPassword: null,
-        emailPassword: null
+        sessionSecret: undefined,
+        dbPassword: undefined,
+        dbRootPassword: undefined,
+        rabbitmqPassword: undefined,
+        emailPassword: undefined
       };
       const config = {
         host: 'localhost',
@@ -242,11 +245,11 @@ describe('secretsLoader', () => {
       const secrets = {
         rabbitmqPassword: 'mqpass',
         jwtSecret: 'jwt',
-        sessionSecret: null,
-        dbPassword: null,
-        dbRootPassword: null,
-        redisPassword: null,
-        emailPassword: null
+        sessionSecret: undefined,
+        dbPassword: undefined,
+        dbRootPassword: undefined,
+        redisPassword: undefined,
+        emailPassword: undefined
       };
       const config = {
         user: 'admin',
@@ -261,13 +264,13 @@ describe('secretsLoader', () => {
 
     it('should use default password if not provided', () => {
       const secrets = {
-        rabbitmqPassword: null,
+        rabbitmqPassword: undefined,
         jwtSecret: 'jwt',
-        sessionSecret: null,
-        dbPassword: null,
-        dbRootPassword: null,
-        redisPassword: null,
-        emailPassword: null
+        sessionSecret: undefined,
+        dbPassword: undefined,
+        dbRootPassword: undefined,
+        redisPassword: undefined,
+        emailPassword: undefined
       };
       const config = {
         user: 'guest',

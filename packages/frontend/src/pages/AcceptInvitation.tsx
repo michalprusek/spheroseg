@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, CheckCircle, XCircle, UserPlus } from 'lucide-react';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { toast } from 'sonner';
 
 const AcceptInvitation: React.FC = () => {
@@ -36,7 +36,7 @@ const AcceptInvitation: React.FC = () => {
   const acceptInvitation = async () => {
     try {
       const response = await apiClient.post(`/api/project-shares/invitation/${token}`);
-      const project = response.data.data;
+      const project = response.data;
 
       setProjectInfo({
         title: project.title,
@@ -53,9 +53,9 @@ const AcceptInvitation: React.FC = () => {
     } catch (error: unknown) {
       setStatus('error');
 
-      if (error.response?.status === 404) {
+      if (error.status === 404) {
         setErrorMessage(t('invitation.expired') || 'This invitation link has expired or is invalid');
-      } else if (error.response?.status === 403) {
+      } else if (error.status === 403) {
         setErrorMessage(t('invitation.notForYou') || 'This invitation is not intended for your account');
       } else {
         setErrorMessage(t('invitation.genericError') || 'Failed to accept invitation. Please try again.');

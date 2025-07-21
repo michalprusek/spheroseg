@@ -1,6 +1,8 @@
 import React from 'react';
+import { render } from '@testing-library/react';
 import { EditMode } from '@/pages/segmentation/hooks/segmentation';
-import { renderWithProviders } from '../../../../../../shared/test-utils/componentTestUtils';
+import { LanguageProvider } from '@/contexts/LanguageContext';
+import { expect } from 'vitest';
 
 // Common test props for StatusBarV2 component
 export const defaultStatusBarProps = {
@@ -16,10 +18,12 @@ export const defaultStatusBarProps = {
 
 // Render helper for StatusBar components
 export function renderStatusBar(ui: React.ReactElement, options = {}) {
-  return renderWithProviders(ui, {
-    withLanguage: true,
-    ...options,
-  });
+  return render(
+    <LanguageProvider>
+      {ui}
+    </LanguageProvider>,
+    options
+  );
 }
 
 // Verification helpers for StatusBar tests

@@ -5,7 +5,8 @@
  * Provides gradual migration path from JWT to sessions.
  */
 
-import express, { Response, Router } from 'express';
+import * as express from 'express';
+import { Response, Router } from 'express';
 import { validate } from '../middleware/validationMiddleware';
 import {
   loginSchema,
@@ -31,7 +32,7 @@ const router: Router = express.Router();
 router.post(
   '/login',
   validate(loginSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler<void, AuthenticatedRequest>(async (req: AuthenticatedRequest, res: Response) => {
     const { email, password, remember_me } = req.body as LoginRequest;
 
     // Authenticate user with existing service
@@ -42,7 +43,7 @@ router.post(
       await createAuthSession(req, {
         id: result.user.id,
         email: result.user.email,
-        role: result.user.role,
+        role: (result.user as any).role || 'user',
       });
       
       // Set session cookie options based on remember_me
@@ -58,7 +59,7 @@ router.post(
     }
 
     // Return JWT tokens for backward compatibility
-    return sendSuccess(res, result, 'Login successful');
+    sendSuccess(res, result, 'Login successful');
   })
 );
 
@@ -69,20 +70,21 @@ router.post(
 router.post(
   '/session/login',
   validate(loginSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler<void, AuthenticatedRequest>(async (req: AuthenticatedRequest, res: Response) => {
     const { email, password, remember_me } = req.body as LoginRequest;
 
     // Authenticate user
     const user = await authService.authenticateUser(email, password);
     if (!user) {
-      return sendUnauthorized(res, 'Invalid email or password');
+      sendUnauthorized(res, 'Invalid email or password');
+      return;
     }
 
     // Create session only (no JWT)
     await createAuthSession(req, {
       id: user.id,
       email: user.email,
-      role: user.role,
+      role: (user as any).role || 'user',
     });
     
     // Set session cookie options
@@ -95,12 +97,12 @@ router.post(
       sessionId: req.sessionID,
     });
 
-    return sendSuccess(res, {
+    sendSuccess(res, {
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: (user as any).role || 'user',
       },
       sessionId: req.sessionID,
       authMethod: 'session',
@@ -114,7 +116,7 @@ router.post(
 router.post(
   '/logout',
   sessionAuth({ allowEither: true }),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler<void, AuthenticatedRequest>(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId || req.session?.userId;
     const sessionId = req.sessionID;
     
@@ -129,11 +131,11 @@ router.post(
       
       logger.info('User logged out', { userId, sessionId });
       
-      return sendSuccess(res, null, 'Logout successful');
+      sendSuccess(res, null, 'Logout successful');
     } catch (error) {
       logger.error('Logout error', { error, userId, sessionId });
       // Still return success to client
-      return sendSuccess(res, null, 'Logout completed');
+      sendSuccess(res, null, 'Logout completed');
     }
   })
 );
@@ -144,9 +146,10 @@ router.post(
 router.get(
   '/session/info',
   sessionAuth({ requireSession: true }),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler<void, AuthenticatedRequest>(async (req: AuthenticatedRequest, res: Response) => {
     if (!req.session || !req.session.userId) {
-      return sendUnauthorized(res, 'No active session');
+      sendUnauthorized(res, 'No active session');
+      return;
     }
 
     const sessionInfo = {
@@ -160,7 +163,7 @@ router.get(
       requiresReauth: req.session.requiresReauth,
     };
 
-    return sendSuccess(res, sessionInfo);
+    sendSuccess(res, sessionInfo);
   })
 );
 
@@ -170,11 +173,11 @@ router.get(
 router.get(
   '/session/list',
   sessionAuth({ requireSession: true }),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler<void, AuthenticatedRequest>(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.session!.userId!;
     const sessions = await sessionService.getUserSessions(userId);
     
-    return sendSuccess(res, {
+    sendSuccess(res, {
       sessions,
       currentSessionId: req.sessionID,
     });
@@ -187,7 +190,7 @@ router.get(
 router.post(
   '/session/invalidate-others',
   sessionAuth({ requireSession: true }),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler<void, AuthenticatedRequest>(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.session!.userId!;
     const currentSessionId = req.sessionID;
     
@@ -202,7 +205,7 @@ router.post(
       invalidatedCount: invalidated,
     });
     
-    return sendSuccess(res, {
+    sendSuccess(res, {
       invalidated,
       message: `${invalidated} session(s) invalidated`,
     });
@@ -215,20 +218,21 @@ router.post(
 router.get(
   '/session/stats',
   sessionAuth({ requireSession: true }),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler<void, AuthenticatedRequest>(async (req: AuthenticatedRequest, res: Response) => {
     // Check if user is admin
     if (req.session!.role !== 'admin') {
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         error: {
           code: 'FORBIDDEN',
           message: 'Admin access required',
         },
       });
+      return;
     }
     
     const stats = await sessionService.getSessionStats();
-    return sendSuccess(res, stats);
+    sendSuccess(res, stats);
   })
 );
 
@@ -238,9 +242,10 @@ router.get(
 router.post(
   '/session/extend',
   sessionAuth({ requireSession: true }),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler<void, AuthenticatedRequest>(async (req: AuthenticatedRequest, res: Response) => {
     if (!req.session) {
-      return sendUnauthorized(res, 'No active session');
+      sendUnauthorized(res, 'No active session');
+      return;
     }
     
     // Extend session by updating expiry
@@ -256,7 +261,7 @@ router.post(
       }
     });
     
-    return sendSuccess(res, {
+    sendSuccess(res, {
       expiresAt: newExpiry,
       extended: true,
     });

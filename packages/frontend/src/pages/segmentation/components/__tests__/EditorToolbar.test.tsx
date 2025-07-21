@@ -1,19 +1,76 @@
+import React from 'react';
 import { screen, fireEvent } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import '@testing-library/jest-dom';
 import EditorToolbar from '../EditorToolbar';
 import {
   resetAllMocks,
-  renderEditorComponent,
   defaultEditorToolbarProps,
-  verifyModeButtonState,
-} from '../../../../../shared/test-utils/componentTestUtils';
+  renderEditorComponent,
+} from './editorTestUtils';
 
-// Import shared mock setup
-import { setupEditorMocks } from '../../../../../shared/test-utils/mock-contexts';
+// Mock modules
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    t: (key: string) => key,
+    language: 'en',
+  }),
+  LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 
-// Setup all mocks
-setupEditorMocks();
+vi.mock('lucide-react', () => ({
+  ZoomIn: () => <div data-testid="zoom-in-icon" />,
+  ZoomOut: () => <div data-testid="zoom-out-icon" />,
+  Maximize2: () => <div data-testid="maximize-icon" />,
+  Pencil: () => <div data-testid="pencil-icon" />,
+  Scissors: () => <div data-testid="scissors-icon" />,
+  PlusCircle: () => <div data-testid="plus-circle-icon" />,
+  Undo2: () => <div data-testid="undo-icon" />,
+  Redo2: () => <div data-testid="redo-icon" />,
+}));
+
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}));
+
+vi.mock('@/components/ui/tooltip', () => ({
+  Tooltip: ({ children }: any) => <>{children}</>,
+  TooltipProvider: ({ children }: any) => <>{children}</>,
+  TooltipTrigger: ({ children }: any) => <>{children}</>,
+  TooltipContent: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/ui/separator', () => ({
+  Separator: () => <hr />,
+}));
+
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  },
+}));
+
+vi.mock('../EditorToolbarButton', () => ({
+  default: ({ onClick, testId, disabled, children, icon, isActive, activeVariant }: any) => (
+    <button 
+      onClick={onClick} 
+      data-testid={testId} 
+      disabled={disabled}
+      variant={isActive ? activeVariant : 'ghost'}
+    >
+      {icon}
+    </button>
+  ),
+}));
+
+// Helper function to verify button state
+function verifyModeButtonState(button: HTMLElement, isActive: boolean, activeClass: string) {
+  if (isActive) {
+    expect(button).toHaveClass(activeClass);
+  } else {
+    expect(button).not.toHaveClass(activeClass);
+  }
+}
 
 describe('EditorToolbar Component', () => {
   const renderComponent = (props = {}) => {
@@ -32,11 +89,10 @@ describe('EditorToolbar Component', () => {
     expect(screen.getByTestId('zoom-out-button')).toBeInTheDocument();
     expect(screen.getByTestId('reset-view-button')).toBeInTheDocument();
     expect(screen.getByTestId('edit-mode-button')).toBeInTheDocument();
-    expect(screen.getByTestId('slicing-mode-button')).toBeInTheDocument();
-    expect(screen.getByTestId('point-adding-mode-button')).toBeInTheDocument();
+    expect(screen.getByTestId('slice-mode-button')).toBeInTheDocument();
+    expect(screen.getByTestId('add-points-button')).toBeInTheDocument();
     expect(screen.getByTestId('undo-button')).toBeInTheDocument();
     expect(screen.getByTestId('redo-button')).toBeInTheDocument();
-    expect(screen.getByTestId('save-button')).toBeInTheDocument();
   });
 
   it('calls zoom functions when zoom buttons are clicked', () => {
@@ -72,12 +128,13 @@ describe('EditorToolbar Component', () => {
     });
 
     const editModeButton = screen.getByTestId('edit-mode-button');
-    const slicingModeButton = screen.getByTestId('slicing-mode-button');
-    const pointAddingModeButton = screen.getByTestId('point-adding-mode-button');
+    const slicingModeButton = screen.getByTestId('slice-mode-button');
+    const pointAddingModeButton = screen.getByTestId('add-points-button');
 
-    verifyModeButtonState(editModeButton, true, 'bg-primary');
-    verifyModeButtonState(slicingModeButton, false, 'bg-primary');
-    verifyModeButtonState(pointAddingModeButton, false, 'bg-primary');
+    // Edit mode button should have default variant when active (no bg-primary class)
+    expect(editModeButton).toHaveAttribute('variant', 'default');
+    expect(slicingModeButton).toHaveAttribute('variant', 'ghost');
+    expect(pointAddingModeButton).toHaveAttribute('variant', 'ghost');
   });
 
   it('disables undo/redo buttons based on history state', () => {
@@ -105,8 +162,8 @@ describe('EditorToolbar Component', () => {
     });
 
     const editModeButton = screen.getByTestId('edit-mode-button');
-    const slicingModeButton = screen.getByTestId('slicing-mode-button');
-    const pointAddingModeButton = screen.getByTestId('point-adding-mode-button');
+    const slicingModeButton = screen.getByTestId('slice-mode-button');
+    const pointAddingModeButton = screen.getByTestId('add-points-button');
 
     fireEvent.click(editModeButton);
     expect(mockToggleEditMode).toHaveBeenCalledTimes(1);

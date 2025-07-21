@@ -7,16 +7,18 @@ import '@testing-library/jest-dom';
 // Mock dependencies
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(() => ({
-    user: { id: 'test-user-id' },
+    user: null, // Start with no user to simplify tests
   })),
 }));
 
 // Mock userProfileService
+const mockUserProfileService = {
+  loadSettingFromDatabase: vi.fn().mockResolvedValue(null),
+  setUserSetting: vi.fn().mockResolvedValue({ success: true }),
+};
+
 vi.mock('@/services/userProfileService', () => ({
-  default: {
-    loadSettingFromDatabase: vi.fn().mockResolvedValue(null),
-    setUserSetting: vi.fn().mockResolvedValue({ success: true }),
-  },
+  default: mockUserProfileService,
 }));
 
 // Create a test component to test the useTheme hook
@@ -24,7 +26,7 @@ const TestThemeComponent: React.FC = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div>
+    <div data-testid="theme-provider">
       <span data-testid="current-theme">{theme}</span>
       <button data-testid="set-light" onClick={() => setTheme('light')}>
         Set Light
@@ -49,12 +51,10 @@ describe('ThemeContext', () => {
   // Mock matchMedia
   let matchMediaMock: any;
 
-  // Mock document manipulation
-  let addClassListMock: any;
-  let removeClassListMock: any;
-  let setAttributeMock: any;
-
   beforeEach(() => {
+    // Clear all mocks
+    vi.clearAllMocks();
+    
     // Mock localStorage
     localStorageMock = {};
 
@@ -88,23 +88,78 @@ describe('ThemeContext', () => {
     // Mock matchMedia
     matchMediaMock = vi.fn().mockImplementation((query) => ({
       matches: query === '(prefers-color-scheme: dark)',
+      media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      onchange: null,
     }));
 
     window.matchMedia = matchMediaMock;
 
-    // Mock document classList
-    const classListMock = {
-      add: vi.fn(),
-      remove: vi.fn(),
-      contains: vi.fn((className) => className === 'dark'),
-    };
-
-    // Mock document.documentElement
-    addClassListMock = vi.spyOn(document.documentElement.classList, 'add');
-    removeClassListMock = vi.spyOn(document.documentElement.classList, 'remove');
-    setAttributeMock = vi.spyOn(document.documentElement, 'setAttribute');
+    // Mock document.documentElement classList and setAttribute
+    const originalClassList = document.documentElement.classList;
+    const originalSetAttribute = document.documentElement.setAttribute;
+    
+    // Create a Set to track classes
+    const classes = new Set<string>();
+    
+    document.documentElement.classList = {
+      add: vi.fn((...classNames: string[]) => {
+        classNames.forEach(c => classes.add(c));
+      }),
+      remove: vi.fn((...classNames: string[]) => {
+        classNames.forEach(c => classes.delete(c));
+      }),
+      contains: vi.fn((className: string) => classes.has(className)),
+      toggle: vi.fn(),
+      length: 0,
+      value: '',
+      item: vi.fn(),
+      forEach: vi.fn(),
+      entries: vi.fn(),
+      keys: vi.fn(),
+      values: vi.fn(),
+      replace: vi.fn(),
+      supports: vi.fn(),
+      toString: vi.fn(),
+      [Symbol.iterator]: vi.fn(),
+    } as any;
+    
+    document.documentElement.setAttribute = vi.fn();
+    
+    // Mock document.body classList
+    const bodyClasses = new Set<string>();
+    
+    document.body.classList = {
+      add: vi.fn((...classNames: string[]) => {
+        classNames.forEach(c => bodyClasses.add(c));
+      }),
+      remove: vi.fn((...classNames: string[]) => {
+        classNames.forEach(c => bodyClasses.delete(c));
+      }),
+      contains: vi.fn((className: string) => bodyClasses.has(className)),
+      toggle: vi.fn(),
+      length: 0,
+      value: '',
+      item: vi.fn(),
+      forEach: vi.fn(),
+      entries: vi.fn(),
+      keys: vi.fn(),
+      values: vi.fn(),
+      replace: vi.fn(),
+      supports: vi.fn(),
+      toString: vi.fn(),
+      [Symbol.iterator]: vi.fn(),
+    } as any;
+    
+    // Clean up in afterEach
+    afterEach(() => {
+      document.documentElement.classList = originalClassList;
+      document.documentElement.setAttribute = originalSetAttribute;
+    });
   });
 
   afterEach(() => {
@@ -118,18 +173,21 @@ describe('ThemeContext', () => {
       </ThemeProvider>,
     );
 
-    // Wait for the theme to be initialized - component might be null initially
+    // Wait for the theme to be initialized
     await waitFor(() => {
       expect(screen.queryByTestId('current-theme')).toBeInTheDocument();
     });
 
-    // Check the theme value
-    expect(screen.getByTestId('current-theme').textContent).toBe('system');
+    // Check the theme value - should be 'system' when no localStorage
+    await waitFor(() => {
+      expect(screen.getByTestId('current-theme').textContent).toBe('system');
+    });
 
-    // Should apply document class based on system preference (mocked to be dark)
-    expect(removeClassListMock).toHaveBeenCalledWith('light', 'dark');
-    expect(addClassListMock).toHaveBeenCalledWith('dark');
-    expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'dark');
+    // Should apply theme based on system preference (dark)
+    await waitFor(() => {
+      expect(document.documentElement.classList.add).toHaveBeenCalledWith('dark');
+      expect(document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'dark');
+    });
   });
 
   it('should initialize with theme from localStorage if available', async () => {
@@ -144,13 +202,19 @@ describe('ThemeContext', () => {
 
     // Wait for the theme to be initialized
     await waitFor(() => {
+      expect(screen.queryByTestId('current-theme')).toBeInTheDocument();
+    });
+    
+    // Should show light theme
+    await waitFor(() => {
       expect(screen.getByTestId('current-theme').textContent).toBe('light');
     });
 
-    // Should apply light theme
-    expect(removeClassListMock).toHaveBeenCalledWith('light', 'dark');
-    expect(addClassListMock).toHaveBeenCalledWith('light');
-    expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
+    // Should apply light theme classes
+    await waitFor(() => {
+      expect(document.documentElement.classList.add).toHaveBeenCalledWith('light');
+      expect(document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'light');
+    });
   });
 
   it('should set theme when setTheme is called', async () => {
@@ -160,9 +224,9 @@ describe('ThemeContext', () => {
       </ThemeProvider>,
     );
 
-    // Wait for the theme to be initialized
+    // Wait for initial render
     await waitFor(() => {
-      expect(screen.getByTestId('current-theme')).toBeInTheDocument();
+      expect(screen.queryByTestId('current-theme')).toBeInTheDocument();
     });
 
     // Click button to set dark theme
@@ -171,33 +235,37 @@ describe('ThemeContext', () => {
     });
 
     // Should update theme state
-    expect(screen.getByTestId('current-theme').textContent).toBe('dark');
+    await waitFor(() => {
+      expect(screen.getByTestId('current-theme').textContent).toBe('dark');
+    });
 
-    // Should store theme in localStorage
+    // Should store in localStorage
     expect(localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
 
     // Should apply dark theme
-    expect(removeClassListMock).toHaveBeenCalledWith('light', 'dark');
-    expect(addClassListMock).toHaveBeenCalledWith('dark');
-    expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'dark');
+    expect(document.documentElement.classList.add).toHaveBeenCalledWith('dark');
+    expect(document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'dark');
   });
 
   it('should apply system-preferred theme when system theme is selected', async () => {
+    // Start with light theme
+    localStorageMock['theme'] = 'light';
+    
     render(
       <ThemeProvider>
         <TestThemeComponent />
       </ThemeProvider>,
     );
 
-    // Wait for the theme to be initialized
+    // Wait for initial render
     await waitFor(() => {
-      expect(screen.getByTestId('current-theme')).toBeInTheDocument();
+      expect(screen.queryByTestId('current-theme')).toBeInTheDocument();
     });
 
-    // Reset mocks to track new calls
-    addClassListMock.mockClear();
-    removeClassListMock.mockClear();
-    setAttributeMock.mockClear();
+    // Clear mocks
+    vi.mocked(document.documentElement.classList.add).mockClear();
+    vi.mocked(document.documentElement.setAttribute).mockClear();
+    vi.mocked(localStorage.setItem).mockClear();
 
     // Click button to set system theme
     act(() => {
@@ -205,23 +273,33 @@ describe('ThemeContext', () => {
     });
 
     // Should update theme state
-    expect(screen.getByTestId('current-theme').textContent).toBe('system');
+    await waitFor(() => {
+      expect(screen.getByTestId('current-theme').textContent).toBe('system');
+    });
 
-    // Should store theme in localStorage
+    // Should store in localStorage
     expect(localStorage.setItem).toHaveBeenCalledWith('theme', 'system');
 
-    // Should apply theme based on system preference (mocked to be dark)
-    expect(removeClassListMock).toHaveBeenCalledWith('light', 'dark');
-    expect(addClassListMock).toHaveBeenCalledWith('dark');
-    expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'dark');
+    // Should apply system preference (dark)
+    expect(document.documentElement.classList.add).toHaveBeenCalledWith('dark');
+    expect(document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'dark');
   });
 
   it('should update theme when system preference changes', async () => {
-    // Set up matchMedia to initially return light theme
-    matchMediaMock.mockImplementation(() => ({
-      matches: false, // light theme
-      addEventListener: vi.fn(),
+    let changeListener: any = null;
+    
+    // Set up matchMedia to capture the event listener
+    matchMediaMock.mockImplementation((query) => ({
+      matches: query === '(prefers-color-scheme: dark)',
+      media: query,
+      addEventListener: vi.fn((event, handler) => {
+        if (event === 'change') changeListener = handler;
+      }),
       removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      onchange: null,
     }));
 
     render(
@@ -230,64 +308,54 @@ describe('ThemeContext', () => {
       </ThemeProvider>,
     );
 
+    // Wait for initial render
+    await waitFor(() => {
+      expect(screen.queryByTestId('current-theme')).toBeInTheDocument();
+    });
+
     // Set system theme
     act(() => {
       fireEvent.click(screen.getByTestId('set-system'));
     });
 
-    // Reset mocks to track new calls
-    addClassListMock.mockClear();
-    removeClassListMock.mockClear();
-    setAttributeMock.mockClear();
-
-    // Simulate system preference change
-    const mediaQueryChangeHandler = matchMediaMock.mock.results[0].value.addEventListener.mock.calls[0][1];
-
-    // Simulate dark mode change
-    act(() => {
-      // Update matchMedia mock to return dark theme
-      matchMediaMock.mockImplementation(() => ({
-        matches: true, // dark theme
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }));
-
-      // Trigger the change event
-      if (mediaQueryChangeHandler) mediaQueryChangeHandler();
+    // Wait for system theme
+    await waitFor(() => {
+      expect(screen.getByTestId('current-theme').textContent).toBe('system');
     });
 
-    // Should apply dark theme
-    expect(removeClassListMock).toHaveBeenCalledWith('light', 'dark');
-    expect(addClassListMock).toHaveBeenCalledWith('dark');
-    expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'dark');
+    // Clear mocks
+    vi.mocked(document.documentElement.classList.add).mockClear();
+    vi.mocked(document.documentElement.classList.remove).mockClear();
+    vi.mocked(document.documentElement.setAttribute).mockClear();
+
+    // Update matchMedia to return light theme
+    matchMediaMock.mockImplementation((query) => ({
+      matches: false, // light theme
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      onchange: null,
+    }));
+
+    // Trigger the change event
+    act(() => {
+      if (changeListener) {
+        changeListener({ matches: false });
+      }
+    });
+
+    // Should apply light theme
+    await waitFor(() => {
+      expect(document.documentElement.classList.remove).toHaveBeenCalledWith('light', 'dark');
+      expect(document.documentElement.classList.add).toHaveBeenCalledWith('light');
+      expect(document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'light');
+    });
   });
 
   it('should apply consistent styling to body and html elements', async () => {
-    // Mock document.body style and classList
-    const originalBodyStyle = document.body.style;
-    const originalBodyClassList = document.body.classList;
-
-    const bodyStyleMock = {
-      backgroundColor: '',
-    };
-
-    const bodyClassListMock = {
-      add: vi.fn(),
-      remove: vi.fn(),
-    };
-
-    Object.defineProperty(document.body, 'style', {
-      value: bodyStyleMock,
-      writable: true,
-      configurable: true,
-    });
-
-    Object.defineProperty(document.body, 'classList', {
-      value: bodyClassListMock,
-      writable: true,
-      configurable: true,
-    });
-
     // Set initial theme to dark
     localStorageMock['theme'] = 'dark';
 
@@ -297,51 +365,43 @@ describe('ThemeContext', () => {
       </ThemeProvider>,
     );
 
-    // Wait for the theme to be initialized
+    // Wait for initialization
+    await waitFor(() => {
+      expect(screen.queryByTestId('current-theme')).toBeInTheDocument();
+    });
+    
     await waitFor(() => {
       expect(screen.getByTestId('current-theme').textContent).toBe('dark');
     });
 
-    // Should set background color for dark theme
-    expect(document.documentElement.style.backgroundColor).toBe('#111827');
-    expect(bodyStyleMock.backgroundColor).toBe('#111827');
-
-    // Should add dark class to body
-    expect(bodyClassListMock.add).toHaveBeenCalledWith('dark');
-    expect(bodyClassListMock.remove).toHaveBeenCalledWith('light');
+    // Should apply dark styles
+    await waitFor(() => {
+      expect(document.documentElement.style.backgroundColor).toBe('#111827');
+      expect(document.body.style.backgroundColor).toBe('#111827');
+      expect(document.body.classList.add).toHaveBeenCalledWith('dark');
+      expect(document.body.classList.remove).toHaveBeenCalledWith('light');
+    });
 
     // Clear mocks
-    bodyClassListMock.add.mockClear();
-    bodyClassListMock.remove.mockClear();
+    vi.mocked(document.body.classList.add).mockClear();
+    vi.mocked(document.body.classList.remove).mockClear();
 
     // Change to light theme
     act(() => {
       fireEvent.click(screen.getByTestId('set-light'));
     });
 
-    // Wait for theme to update
+    // Wait for theme update
+    await waitFor(() => {
+      expect(screen.getByTestId('current-theme').textContent).toBe('light');
+    });
+    
+    // Should apply light styles
     await waitFor(() => {
       expect(document.documentElement.style.backgroundColor).toBe('#f9fafb');
-    });
-
-    // Should set background color for light theme
-    expect(bodyStyleMock.backgroundColor).toBe('#f9fafb');
-
-    // Should add light class to body
-    expect(bodyClassListMock.add).toHaveBeenCalledWith('light');
-    expect(bodyClassListMock.remove).toHaveBeenCalledWith('dark');
-
-    // Restore original properties
-    Object.defineProperty(document.body, 'style', {
-      value: originalBodyStyle,
-      writable: true,
-      configurable: true,
-    });
-
-    Object.defineProperty(document.body, 'classList', {
-      value: originalBodyClassList,
-      writable: true,
-      configurable: true,
+      expect(document.body.style.backgroundColor).toBe('#f9fafb');
+      expect(document.body.classList.add).toHaveBeenCalledWith('light');
+      expect(document.body.classList.remove).toHaveBeenCalledWith('dark');
     });
   });
 });

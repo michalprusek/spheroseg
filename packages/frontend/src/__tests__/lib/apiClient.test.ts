@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 // Mock localStorage
 const localStorageMock = (() => {

@@ -14,6 +14,7 @@ import { ApiError, ErrorContext } from '../utils/ApiError.enhanced';
 import logger from '../utils/logger';
 import config from '../config';
 import { v4 as uuidv4 } from 'uuid';
+import { getErrorTrackingService } from '../startup/errorTracking.startup';
 
 // Extend Request to include custom properties
 interface ExtendedRequest extends Request {
@@ -36,9 +37,8 @@ function getRequestId(req: ExtendedRequest): string {
  * Build error context from request
  */
 function buildErrorContext(req: ExtendedRequest): ErrorContext {
-  return {
+  const context: ErrorContext = {
     requestId: getRequestId(req),
-    userId: req.user?.id,
     action: req.method,
     resource: req.route?.path || req.path,
     metadata: {
@@ -48,17 +48,59 @@ function buildErrorContext(req: ExtendedRequest): ErrorContext {
       host: req.get('Host'),
     },
   };
+  
+  if (req.user?.id) {
+    context.userId = req.user.id;
+  }
+  
+  return context;
 }
 
 
 /**
- * Track error metrics
+ * Track error metrics and send to error tracking service
  */
-function trackErrorMetrics(error: ApiError, req: ExtendedRequest): void {
+async function trackErrorMetrics(error: ApiError, req: ExtendedRequest): Promise<void> {
   const duration = req.startTime ? Date.now() - req.startTime : 0;
   
-  // You can integrate with monitoring services here
-  // For now, we'll just log the metrics
+  try {
+    // Get error tracking service
+    const errorTrackingService = getErrorTrackingService();
+    
+    // Build enhanced context for error tracking
+    const trackingContext = {
+      userId: req.user?.id,
+      requestId: getRequestId(req),
+      action: req.method,
+      resource: req.route?.path || req.path,
+      endpoint: req.originalUrl,
+      method: req.method,
+      statusCode: error.statusCode,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      requestDuration: duration,
+      metadata: {
+        referer: req.get('Referer'),
+        host: req.get('Host'),
+        params: req.params,
+        query: Object.keys(req.query).length > 0 ? req.query : undefined,
+        // Only include body in development
+        body: config.isDevelopment && req.body ? req.body : undefined,
+      },
+    };
+
+    // Track the error
+    await errorTrackingService.trackError(error, trackingContext);
+    
+  } catch (trackingError) {
+    // Don't let error tracking failures break the request
+    logger.warn('Failed to track error', {
+      originalError: error.code,
+      trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error',
+    });
+  }
+  
+  // Log basic metrics for immediate monitoring
   logger.info('Error metric', {
     errorCode: error.code,
     statusCode: error.statusCode,
@@ -88,17 +130,26 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Convert to ApiError if needed
   if (err instanceof ApiError) {
-    apiError = err;
-    // Add request context if not present
-    if (!apiError.context) {
-      apiError.context = context;
+    // If error already has context, use it; otherwise create new error with context
+    if (err.context) {
+      apiError = err;
+    } else {
+      apiError = new ApiError(
+        err.code,
+        err.message,
+        err.details,
+        context,
+        err.originalError
+      );
     }
   } else {
     apiError = ApiError.from(err, context);
   }
 
-  // Track error metrics
-  trackErrorMetrics(apiError, req);
+  // Track error metrics (async but don't wait for it)
+  trackErrorMetrics(apiError, req).catch(error => {
+    logger.warn('Error tracking failed', { error: error.message });
+  });
 
   // Log error with full context
   const logContext = {

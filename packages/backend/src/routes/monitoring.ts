@@ -71,7 +71,7 @@ router.get('/metrics', (req: Request, res: Response) => {
  * GET /api/monitoring/errors
  * Error tracking and analysis
  */
-router.get('/errors', requireAdmin, (req: Request, res: Response) => {
+router.get('/errors', requireAdmin as any, (req: Request, res: Response) => {
   try {
     const errorMetrics = getErrorMetrics();
     res.json(errorMetrics);
@@ -124,7 +124,7 @@ router.post('/errors', async (req: Request, res: Response) => {
  * GET /api/monitoring/performance
  * Performance tracking and analysis
  */
-router.get('/performance', requireAdmin, (req: Request, res: Response) => {
+router.get('/performance', requireAdmin as any, (req: Request, res: Response) => {
   try {
     const performanceMetrics = getPerformanceMetrics();
     res.json(performanceMetrics);
@@ -138,7 +138,7 @@ router.get('/performance', requireAdmin, (req: Request, res: Response) => {
  * GET /api/monitoring/dashboard
  * Unified monitoring dashboard data
  */
-router.get('/dashboard', requireAdmin, async (req: Request, res: Response) => {
+router.get('/dashboard', requireAdmin as any, async (req: Request, res: Response) => {
   try {
     const [errorMetrics, performanceMetrics, systemHealth] = await Promise.all([
       getErrorMetrics(),
@@ -194,7 +194,7 @@ router.get('/dashboard', requireAdmin, async (req: Request, res: Response) => {
  * GET /api/monitoring/logs
  * Recent logs endpoint (admin only)
  */
-router.get('/logs', requireAdmin, (req: Request, res: Response) => {
+router.get('/logs', requireAdmin as any, (req: Request, res: Response) => {
   try {
     const { level = 'info', limit = 100 } = req.query;
 
@@ -219,7 +219,7 @@ router.get('/logs', requireAdmin, (req: Request, res: Response) => {
  * POST /api/monitoring/alerts/:alertId/resolve
  * Resolve an alert
  */
-router.post('/alerts/:alertId/resolve', requireAdmin, (req: Request, res: Response) => {
+router.post('/alerts/:alertId/resolve', requireAdmin as any, (req: Request, res: Response) => {
   try {
     const { alertId } = req.params;
     const { resolution } = req.body;
@@ -228,7 +228,7 @@ router.post('/alerts/:alertId/resolve', requireAdmin, (req: Request, res: Respon
     logger.info('Alert resolved', {
       alertId,
       resolution,
-      resolvedBy: (req as unknown).user?.userId,
+      resolvedBy: (req as any).user?.userId,
     });
 
     res.json({
@@ -247,7 +247,7 @@ router.post('/alerts/:alertId/resolve', requireAdmin, (req: Request, res: Respon
  * GET /api/monitoring/system
  * System information and configuration
  */
-router.get('/system', requireAdmin, (req: Request, res: Response) => {
+router.get('/system', requireAdmin as any, (req: Request, res: Response) => {
   try {
     const systemInfo = {
       node: {
@@ -292,7 +292,7 @@ router.get('/system', requireAdmin, (req: Request, res: Response) => {
  * GET /api/monitoring/recommendations
  * Performance and optimization recommendations
  */
-router.get('/recommendations', requireAdmin, (req: Request, res: Response) => {
+router.get('/recommendations', requireAdmin as any, (req: Request, res: Response) => {
   try {
     const performanceMetrics = getPerformanceMetrics();
     const recommendations = performanceMetrics.report.recommendations;

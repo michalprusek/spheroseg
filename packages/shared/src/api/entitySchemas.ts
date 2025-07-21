@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BaseEntitySchema, IdSchema, TimestampSchema, EmailSchema } from './schemas';
+import { IdSchema, TimestampSchema, EmailSchema } from './schemas';
 
 /**
  * Entity-specific validation schemas
@@ -9,21 +9,34 @@ import { BaseEntitySchema, IdSchema, TimestampSchema, EmailSchema } from './sche
  */
 
 // User schemas
-export const UserSchema = BaseEntitySchema.extend({
+export const UserSchema = z.object({
+  id: IdSchema,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
   email: EmailSchema,
-  name: z.string().min(1).max(255),
-  preferredLanguage: z.enum(['en', 'cs', 'de', 'es', 'fr', 'zh']).default('en'),
-  emailVerified: z.boolean().default(false),
-  role: z.enum(['user', 'admin']).default('user'),
-  isActive: z.boolean().default(true),
-  lastLoginAt: TimestampSchema.nullable().optional(),
+  name: z.string(),
+  preferredLanguage: z.enum(['en', 'cs', 'de', 'es', 'fr', 'zh']),
+  emailVerified: z.boolean(),
+  role: z.enum(['user', 'admin']),
+  isActive: z.boolean(),
+  lastLoginAt: TimestampSchema.optional(),
 });
 
-export const UserProfileSchema = UserSchema.extend({
-  avatar: z.string().url().nullable().optional(),
-  bio: z.string().max(500).nullable().optional(),
-  organization: z.string().max(255).nullable().optional(),
-  location: z.string().max(255).nullable().optional(),
+export const UserProfileSchema = z.object({
+  id: IdSchema,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
+  email: EmailSchema,
+  name: z.string(),
+  preferredLanguage: z.enum(['en', 'cs', 'de', 'es', 'fr', 'zh']),
+  emailVerified: z.boolean(),
+  role: z.enum(['user', 'admin']),
+  isActive: z.boolean(),
+  lastLoginAt: TimestampSchema.optional(),
+  avatar: z.string().optional(),
+  bio: z.string().optional(),
+  organization: z.string().optional(),
+  location: z.string().optional(),
 });
 
 export const UserLoginResponseSchema = z.object({
@@ -36,85 +49,100 @@ export const UserLoginResponseSchema = z.object({
 });
 
 // Project schemas
-export const ProjectSchema = BaseEntitySchema.extend({
-  name: z.string().min(1).max(255),
-  description: z.string().max(1000).nullable().optional(),
+export const ProjectSchema = z.object({
+  id: IdSchema,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
+  name: z.string(),
+  description: z.string().optional(),
   userId: IdSchema,
-  imageCount: z.number().int().min(0).default(0),
-  isPublic: z.boolean().default(false),
-  tags: z.array(z.string()).default([]),
-  settings: z.record(z.unknown()).default({}),
+  imageCount: z.number(),
+  isPublic: z.boolean(),
+  tags: z.array(z.string()),
+  settings: z.any(),
 });
 
 export const ProjectStatsSchema = z.object({
-  totalImages: z.number().int().min(0),
-  segmentedImages: z.number().int().min(0),
-  totalCells: z.number().int().min(0),
-  averageCellsPerImage: z.number().min(0),
-  lastActivityAt: TimestampSchema.nullable().optional(),
+  totalImages: z.number(),
+  segmentedImages: z.number(),
+  totalCells: z.number(),
+  averageCellsPerImage: z.number(),
+  lastActivityAt: TimestampSchema.optional(),
 });
 
 // Image schemas
-export const ImageSchema = BaseEntitySchema.extend({
+export const ImageSchema = z.object({
+  id: IdSchema,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
   projectId: IdSchema,
-  name: z.string().min(1).max(255),
-  filename: z.string().min(1).max(255),
-  originalName: z.string().min(1).max(255),
+  name: z.string(),
+  filename: z.string(),
+  originalName: z.string(),
   mimetype: z.string(),
-  size: z.number().int().positive(),
-  width: z.number().int().positive().nullable().optional(),
-  height: z.number().int().positive().nullable().optional(),
+  size: z.number(),
+  width: z.number().optional(),
+  height: z.number().optional(),
   segmentationStatus: z.enum([
     'without_segmentation',
     'queued',
     'processing',
     'completed',
     'failed'
-  ]).default('without_segmentation'),
-  url: z.string().url(),
-  thumbnailUrl: z.string().url().nullable().optional(),
+  ]),
+  url: z.string(),
+  thumbnailUrl: z.string().optional(),
 });
 
 // Segmentation schemas
-export const SegmentationResultSchema = BaseEntitySchema.extend({
+export const SegmentationResultSchema = z.object({
+  id: IdSchema,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
   imageId: IdSchema,
   status: z.enum(['pending', 'processing', 'completed', 'failed']),
-  cellCount: z.number().int().min(0).nullable().optional(),
-  processingTime: z.number().min(0).nullable().optional(),
-  error: z.string().nullable().optional(),
-  metadata: z.record(z.unknown()).default({}),
+  cellCount: z.number().optional(),
+  processingTime: z.number().optional(),
+  error: z.string().optional(),
+  metadata: z.any(),
 });
 
-export const CellSchema = BaseEntitySchema.extend({
+export const CellSchema = z.object({
+  id: IdSchema,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
   segmentationResultId: IdSchema,
-  cellNumber: z.number().int().positive(),
-  area: z.number().positive(),
-  perimeter: z.number().positive(),
+  cellNumber: z.number(),
+  area: z.number(),
+  perimeter: z.number(),
   centroidX: z.number(),
   centroidY: z.number(),
-  eccentricity: z.number().min(0).max(1),
-  solidity: z.number().min(0).max(1),
-  circularity: z.number().min(0).max(1),
-  polygon: z.array(z.tuple([z.number(), z.number()])),
-  features: z.record(z.number()).default({}),
+  eccentricity: z.number(),
+  solidity: z.number(),
+  circularity: z.number(),
+  polygon: z.array(z.array(z.number())),
+  features: z.any(),
 });
 
 // Task schemas
-export const SegmentationTaskSchema = BaseEntitySchema.extend({
+export const SegmentationTaskSchema = z.object({
+  id: IdSchema,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
   imageId: IdSchema,
-  priority: z.number().int().min(0).max(10).default(5),
+  priority: z.number(),
   taskStatus: z.enum(['queued', 'processing', 'completed', 'failed']),
-  startedAt: TimestampSchema.nullable().optional(),
-  completedAt: TimestampSchema.nullable().optional(),
-  error: z.string().nullable().optional(),
-  retryCount: z.number().int().min(0).default(0),
+  startedAt: TimestampSchema.optional(),
+  completedAt: TimestampSchema.optional(),
+  error: z.string().optional(),
+  retryCount: z.number(),
 });
 
 // Settings schemas
 export const UserSettingSchema = z.object({
-  key: z.string().min(1).max(255),
-  value: z.union([z.string(), z.number(), z.boolean(), z.record(z.unknown())]),
-  category: z.string().max(100).nullable().optional(),
+  key: z.string(),
+  value: z.union([z.string(), z.number(), z.boolean(), z.any()]),
+  category: z.string().optional(),
   updatedAt: TimestampSchema,
 });
 
@@ -122,20 +150,20 @@ export const UserSettingSchema = z.object({
 export const ExportRequestSchema = z.object({
   projectId: IdSchema,
   format: z.enum(['csv', 'json', 'excel']),
-  includeImages: z.boolean().default(true),
-  includeFeatures: z.boolean().default(true),
+  includeImages: z.boolean(),
+  includeFeatures: z.boolean(),
   imageIds: z.array(IdSchema).optional(),
 });
 
 // Batch operation schemas
 export const BatchDeleteRequestSchema = z.object({
-  ids: z.array(IdSchema).min(1),
+  ids: z.array(IdSchema),
   type: z.enum(['images', 'projects', 'cells']),
 });
 
 export const BatchDeleteResponseSchema = z.object({
-  successful: z.number().int().min(0),
-  failed: z.number().int().min(0),
+  successful: z.number(),
+  failed: z.number(),
   errors: z.array(z.object({
     id: IdSchema,
     error: z.string(),
@@ -148,12 +176,12 @@ export const ProjectShareSchema = z.object({
   sharedWithUserId: IdSchema,
   permission: z.enum(['view', 'edit', 'admin']),
   sharedAt: TimestampSchema,
-  expiresAt: TimestampSchema.nullable().optional(),
+  expiresAt: TimestampSchema.optional(),
 });
 
 // Search/filter schemas
 export const SearchQuerySchema = z.object({
-  query: z.string().min(1).max(255),
+  query: z.string(),
   filters: z.object({
     projectId: IdSchema.optional(),
     status: z.string().optional(),
@@ -162,8 +190,8 @@ export const SearchQuerySchema = z.object({
     tags: z.array(z.string()).optional(),
   }).optional(),
   pagination: z.object({
-    page: z.number().int().positive().default(1),
-    pageSize: z.number().int().positive().max(100).default(20),
+    page: z.number(),
+    pageSize: z.number(),
   }).optional(),
 });
 

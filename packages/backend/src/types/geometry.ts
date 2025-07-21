@@ -3,4 +3,4 @@
  * Re-export from shared types
  */
 
-export { Point, Polygon } from '@spheroseg/types';
+export type { Point, Polygon } from '@spheroseg/types';

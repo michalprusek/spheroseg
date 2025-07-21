@@ -35,7 +35,7 @@ const segmentationDurationSeconds = new promClient.Histogram({
  * Note: HTTP metrics are handled by unified monitoring system
  * This middleware is kept for backwards compatibility but delegates to unified monitoring
  */
-export const metricsMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const metricsMiddleware = (_req: Request, _res: Response, next: NextFunction) => {
   // All HTTP metrics are now handled by requestLoggerMiddleware in unified monitoring
   // This middleware is kept for backwards compatibility
   next();
@@ -44,15 +44,16 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
 /**
  * Normalize path to avoid high cardinality in metrics
  * e.g. /api/users/123 -> /api/users/:id
+ * Currently unused but kept for future implementation
  */
-function _normalizePath(path: string): string {
-  // Replace numeric IDs with :id
-  return path
-    .replace(/\/api\/projects\/[0-9a-f-]+/g, '/api/projects/:id')
-    .replace(/\/api\/images\/[0-9a-f-]+/g, '/api/images/:id')
-    .replace(/\/api\/users\/[0-9a-f-]+/g, '/api/users/:id')
-    .replace(/\/api\/segmentation\/[0-9a-f-]+/g, '/api/segmentation/:id');
-}
+// function _normalizePath(path: string): string {
+//   // Replace numeric IDs with :id
+//   return path
+//     .replace(/\/api\/projects\/[0-9a-f-]+/g, '/api/projects/:id')
+//     .replace(/\/api\/images\/[0-9a-f-]+/g, '/api/images/:id')
+//     .replace(/\/api\/users\/[0-9a-f-]+/g, '/api/users/:id')
+//     .replace(/\/api\/segmentation\/[0-9a-f-]+/g, '/api/segmentation/:id');
+// }
 
 /**
  * Endpoint to expose metrics
@@ -64,7 +65,7 @@ export const metricsEndpoint = async (_req: Request, res: Response) => {
     const metrics = await register.metrics();
     res.end(metrics);
   } catch (error) {
-    logger.error('Error getting metrics', error);
+    logger.error('Error getting metrics', { error });
     res.status(500).json({ error: 'Failed to get metrics' });
   }
 };

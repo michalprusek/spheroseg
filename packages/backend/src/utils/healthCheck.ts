@@ -9,7 +9,7 @@ import db from '../db';
 import config from '../config';
 import performanceConfig from '../config/performance';
 import { getEffectiveMemoryLimit } from './containerInfo';
-import fs from 'fs';
+import * as fs from 'fs';
 
 export interface HealthStatus {
   status: 'healthy' | 'unhealthy' | 'degraded';

@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 import { render, RenderOptions, RenderResult } from '@testing-library/react';
 import { MemoryRouter, MemoryRouterProps } from 'react-router-dom';
 import React from 'react';
+import type { User, Project, Image, Cell, ApiResponse, ApiError } from './types';
 
 // Enhanced test data factory
 export class AdvancedTestDataFactory {

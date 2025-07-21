@@ -32,7 +32,7 @@ interface QueryMetric {
   duration: number;
   timestamp: Date;
   rowCount: number;
-  error?: string;
+  error?: string | undefined;
 }
 
 interface MemoryMetric {
@@ -60,7 +60,7 @@ class PerformanceMonitor extends EventEmitter {
 
   private readonly maxQueryHistory = PerformanceMonitor.MAX_QUERY_HISTORY;
   private readonly maxMemoryHistory = PerformanceMonitor.MAX_MEMORY_HISTORY;
-  private memoryCheckInterval?: NodeJS.Timeout;
+  private memoryCheckInterval?: NodeJS.Timeout | undefined;
   private isUnderMemoryPressure = false;
 
   constructor() {
@@ -109,7 +109,7 @@ class PerformanceMonitor extends EventEmitter {
           });
         }
       } catch (error) {
-        logger.error('Error in memory monitoring', error);
+        logger.error('Error in memory monitoring', error as Record<string, unknown>);
       }
     }, PerformanceMonitor.MEMORY_CHECK_INTERVAL_MS);
   }
@@ -212,8 +212,8 @@ class PerformanceMonitor extends EventEmitter {
     this.metrics.apiCalls.clear();
     activeEndpoints.forEach((key) => {
       this.metrics.apiCalls.set(key, {
-        endpoint: key.split(':')[1],
-        method: key.split(':')[0],
+        endpoint: key.split(':')[1] || '',
+        method: key.split(':')[0] || '',
         count: 0,
         totalTime: 0,
         avgTime: 0,
@@ -286,7 +286,7 @@ class PerformanceMonitor extends EventEmitter {
       duration,
       timestamp: new Date(),
       rowCount,
-      error,
+      error: error || undefined,
     };
 
     this.metrics.dbQueries.push(metric);
@@ -334,7 +334,7 @@ class PerformanceMonitor extends EventEmitter {
       return sanitized;
     } catch (error) {
       // If sanitization fails, return a safe placeholder
-      logger.error('Query sanitization failed', error);
+      logger.error('Query sanitization failed', error as Record<string, unknown>);
       return 'QUERY_SANITIZATION_FAILED';
     }
   }
@@ -516,23 +516,23 @@ export function apiPerformanceMiddleware() {
 export function createMonitoredPool(pool: Pool): Pool {
   const originalQuery = pool.query.bind(pool);
 
-  // Override query method
-  pool.query = async function (...args: unknown[]): Promise<any> {
+  // Override query method with proper typing
+  (pool as any).query = async function (...args: any[]): Promise<any> {
     const startTime = Date.now();
-    const query = typeof args[0] === 'string' ? args[0] : args[0].text;
+    const query = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].text) || '';
 
     try {
-      const result = await originalQuery.apply(pool, args);
+      const result: any = await originalQuery(args[0], args[1], args[2]);
       const duration = Date.now() - startTime;
 
-      performanceMonitor.trackQuery(query, duration, result.rowCount || 0);
+      performanceMonitor.trackQuery(query, duration, result?.rowCount || 0);
 
       // Log slow queries
       if (duration > 100) {
         logger.warn('Slow database query', {
           query: performanceMonitor['sanitizeQuery'](query),
           duration,
-          rowCount: result.rowCount,
+          rowCount: result?.rowCount || 0,
         });
       }
 

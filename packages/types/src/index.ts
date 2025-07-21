@@ -8,7 +8,7 @@
  */
 
 // Export all from polygon except types that conflict with api.ts
-export {
+export type {
   VertexHoverInfo,
   VertexDragInfo,
   DragInfo,
@@ -19,10 +19,10 @@ export {
 } from './polygon';
 
 // Export polygon types with aliases to avoid conflicts
-export { Point as PolygonPoint, Polygon as PolygonType } from './polygon';
+export type { Point as PolygonPoint, Polygon as PolygonType } from './polygon';
 
 // Export all from segmentation except types that conflict with api.ts
-export {
+export type {
   ImageStatus,
   SegmentationData,
   SegmentationResultData,
@@ -31,19 +31,19 @@ export {
 } from './segmentation';
 
 // Export segmentation types with aliases to avoid conflicts
-export {
+export type {
   SegmentationStatus as SegmentationStatusEnum,
   SegmentationResult as SegmentationResultType,
 } from './segmentation';
 
 // Export all from project except types that conflict with api.ts
-export { ProjectCreatePayload, ProjectStatsResponse } from './project';
+export type { ProjectCreatePayload, ProjectStatsResponse } from './project';
 
 // Export project type with alias to avoid conflicts
-export { Project as ProjectType } from './project';
+export type { Project as ProjectType } from './project';
 
 // Export all from user except types that conflict with api.ts
-export {
+export type {
   UserProfile,
   RefreshTokenResponse,
   UserProfileUpdatePayload,
@@ -52,13 +52,13 @@ export {
 } from './user';
 
 // Export user types with aliases to avoid conflicts
-export { User as UserType, LoginResponse as LoginResponseType } from './user';
+export type { User as UserType, LoginResponse as LoginResponseType } from './user';
 
 // Export all from image except types that conflict with api.ts
-export { ImageData, ProjectImage } from './image';
+export type { ImageData, ProjectImage } from './image';
 
 // Export image type with alias to avoid conflicts
-export { Image as ImageType } from './image';
+export type { Image as ImageType } from './image';
 
 // Export all from export (no conflicts)
 export * from './export';
@@ -70,7 +70,7 @@ export * from './api';
 export * from './queue';
 
 // Export all from auth except types that conflict with api.ts
-export {
+export type {
   JWTPayload,
   RefreshTokenPayload,
   JWK,
@@ -86,4 +86,4 @@ export {
 } from './auth';
 
 // Export auth types with aliases to avoid conflicts
-export { LoginRequest as AuthLoginRequest } from './auth';
+export type { LoginRequest as AuthLoginRequest } from './auth';

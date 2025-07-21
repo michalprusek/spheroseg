@@ -30,7 +30,7 @@ const mockProjects = [
 ];
 
 const mockNewProject = {
-  name: 'New Project',
+  title: 'New Project',
   description: 'A new project description',
 };
 
@@ -124,8 +124,9 @@ describe('Project API Integration Tests', () => {
   describe('createProject', () => {
     it('should create a project successfully', async () => {
       const createdProject = {
-        ...mockNewProject,
         id: 'new-project-id',
+        name: mockNewProject.title,  // Convert title to name
+        description: mockNewProject.description,
         status: 'ACTIVE' as ProjectStatus,
         createdAt: '2023-06-10T12:00:00Z',
         updatedAt: '2023-06-10T12:00:00Z',
@@ -173,7 +174,7 @@ describe('Project API Integration Tests', () => {
       });
 
       await act(async () => {
-        await expect(result.current.createProject({ description: 'Missing name' })).rejects.toThrow(
+        await expect(result.current.createProject({ description: 'Missing title' } as any)).rejects.toThrow(
           'Project name is required',
         );
       });
@@ -208,7 +209,8 @@ describe('Project API Integration Tests', () => {
 
       let project;
       await act(async () => {
-        project = await result.current.updateProject(mockUpdatedProject);
+        const { id, ...updateData } = mockUpdatedProject;
+        project = await result.current.updateProject(id, updateData);
       });
 
       expect(project).toEqual(updatedProject);
@@ -231,7 +233,7 @@ describe('Project API Integration Tests', () => {
       });
 
       await act(async () => {
-        await expect(result.current.updateProject({ id: 'non-existent', name: 'Test' })).rejects.toThrow(
+        await expect(result.current.updateProject('non-existent', { name: 'Test' })).rejects.toThrow(
           'Project not found',
         );
       });

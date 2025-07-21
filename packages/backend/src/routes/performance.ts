@@ -3,18 +3,23 @@ import { Request, Response } from 'express';
 import pool from '../db';
 import logger from '../utils/logger';
 import { authenticate as authMiddleware, AuthenticatedRequest } from '../security/middleware/auth';
+import { 
+  getPerformanceCoordinatorReport, 
+  getPerformanceCoordinatorSourceStatus 
+} from '../startup/performanceCoordinator.startup';
 
 const router = express.Router();
 
 /**
  * Route handler for receiving performance metrics
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const metrics = req.body;
 
     if (!metrics || typeof metrics !== 'object') {
-      return res.status(400).json({ error: 'Invalid metrics format' });
+      res.status(400).json({ error: 'Invalid metrics format' });
+      return;
     }
 
     // Log the metrics for now
@@ -66,11 +71,12 @@ router.post('/', async (req: Request, res: Response) => {
 /**
  * Route handler for getting performance metrics for the current user
  */
-router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user?.userId;
+router.get('/me', authMiddleware as any, async (req, res) => {
+  const userId = (req as AuthenticatedRequest).user?.userId;
 
   if (!userId) {
-    return res.status(401).json({ message: 'Authentication required' });
+    res.status(401).json({ message: 'Authentication required' });
+    return;
   }
 
   try {
@@ -85,7 +91,8 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
     `);
 
     if (!tableCheck.rows[0].exists) {
-      return res.status(200).json({ metrics: [] });
+      res.status(200).json({ metrics: [] });
+      return;
     }
 
     // Get metrics for the user
@@ -101,6 +108,86 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
   } catch (error) {
     logger.error('Error fetching performance metrics', { error, userId });
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Route handler for getting comprehensive performance report
+ */
+router.get('/report', authMiddleware as any, async (_req, res) => {
+  try {
+    const report = await getPerformanceCoordinatorReport();
+    res.status(200).json({
+      success: true,
+      report,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error generating performance report', { error });
+    res.status(500).json({ error: 'Failed to generate performance report' });
+  }
+});
+
+/**
+ * Route handler for getting monitoring source status
+ */
+router.get('/sources', authMiddleware as any, async (_req, res) => {
+  try {
+    const sourceStatus = getPerformanceCoordinatorSourceStatus();
+    res.status(200).json({
+      success: true,
+      sources: sourceStatus,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error getting source status', { error });
+    res.status(500).json({ error: 'Failed to get source status' });
+  }
+});
+
+/**
+ * Route handler for getting performance insights
+ */
+router.get('/insights', authMiddleware as any, async (req, res) => {
+  try {
+    const { severity } = req.query;
+    const report = await getPerformanceCoordinatorReport();
+    
+    let insights = report.insights;
+    if (severity && typeof severity === 'string') {
+      insights = insights.filter((insight: any) => insight.severity === severity);
+    }
+
+    res.status(200).json({
+      success: true,
+      insights,
+      correlations: report.correlations,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error getting performance insights', { error });
+    res.status(500).json({ error: 'Failed to get performance insights' });
+  }
+});
+
+/**
+ * Route handler for getting performance recommendations
+ */
+router.get('/recommendations', authMiddleware as any, async (_req, res) => {
+  try {
+    const report = await getPerformanceCoordinatorReport();
+    
+    res.status(200).json({
+      success: true,
+      recommendations: report.recommendations,
+      optimizations: report.optimizations,
+      systemHealth: report.summary.systemHealth,
+      resourceUtilization: report.summary.resourceUtilization,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error getting performance recommendations', { error });
+    res.status(500).json({ error: 'Failed to get performance recommendations' });
   }
 });
 

@@ -5,7 +5,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { toast } from 'sonner';
 
 // Mock dependencies
-vi.mock('@/lib/apiClient');
+vi.mock('@/services/api/client');
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),

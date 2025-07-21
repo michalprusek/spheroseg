@@ -7,8 +7,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { getBusinessMetrics } from '../utils/businessMetrics';
 import logger from '../utils/logger';
-import { auth } from '../middleware/auth';
-import { requireRole } from '../middleware/roleAuth';
+import { authenticate } from '../security/middleware/auth';
 
 const router = Router();
 
@@ -17,8 +16,7 @@ const router = Router();
  * GET /api/metrics/:metricName
  */
 router.get('/:metricName', 
-  auth,
-  requireRole(['admin', 'manager']),
+  authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { metricName } = req.params;
@@ -52,8 +50,7 @@ router.get('/:metricName',
  * GET /api/metrics/:metricName/stats
  */
 router.get('/:metricName/stats', 
-  auth,
-  requireRole(['admin', 'manager']),
+  authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { metricName } = req.params;
@@ -87,8 +84,7 @@ router.get('/:metricName/stats',
  * GET /api/metrics/:metricName/history
  */
 router.get('/:metricName/history', 
-  auth,
-  requireRole(['admin', 'manager']),
+  authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { metricName } = req.params;
@@ -133,8 +129,7 @@ router.get('/:metricName/history',
  * GET /api/metrics/dashboard
  */
 router.get('/dashboard/data', 
-  auth,
-  requireRole(['admin', 'manager']),
+  authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const metricsService = getBusinessMetrics();
@@ -158,8 +153,7 @@ router.get('/dashboard/data',
  * GET /api/metrics/alerts
  */
 router.get('/alerts/active', 
-  auth,
-  requireRole(['admin', 'manager']),
+  authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { metric, severity } = req.query;
@@ -188,8 +182,7 @@ router.get('/alerts/active',
  * POST /api/metrics/alerts/:alertId/acknowledge
  */
 router.post('/alerts/:alertId/acknowledge', 
-  auth,
-  requireRole(['admin', 'manager']),
+  authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { alertId } = req.params;
@@ -217,8 +210,7 @@ router.post('/alerts/:alertId/acknowledge',
  * POST /api/metrics/:metricName/collect
  */
 router.post('/:metricName/collect', 
-  auth,
-  requireRole(['admin']),
+  authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { metricName } = req.params;

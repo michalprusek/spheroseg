@@ -41,8 +41,11 @@ export async function setUserLanguage(req: Request, res: Response, next: NextFun
  * Helper to get translated validation errors
  */
 export function getValidationErrors(errors: unknown[], req: Request): any[] {
-  return errors.map((error) => ({
-    ...error,
-    message: req.t(error.msg, error.params || {}),
-  }));
+  return errors.map((error) => {
+    const errorObj = error as any;
+    return {
+      ...errorObj,
+      message: req.t(errorObj.msg, errorObj.params || {}),
+    };
+  });
 }

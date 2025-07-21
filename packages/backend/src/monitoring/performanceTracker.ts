@@ -144,7 +144,7 @@ class PerformanceTracker {
       component,
       startTime: performance.now(),
       status: 'success',
-      metadata,
+      ...(metadata && { metadata }),
     };
 
     const key = `${operation}:${component}`;
@@ -167,7 +167,7 @@ class PerformanceTracker {
    * Stop tracking a performance operation
    */
   public stopTracking(
-    trackingId: string,
+    _trackingId: string,
     operation: string,
     component: string,
     status: 'success' | 'error' | 'timeout' = 'success'
@@ -403,7 +403,11 @@ class PerformanceTracker {
 
   private updateBaselines(): void {
     for (const [key, metrics] of this.metrics.entries()) {
-      const [operation, component] = key.split(':');
+      const parts = key.split(':');
+      const operation = parts[0];
+      const component = parts[1];
+      if (!operation || !component) continue;
+      
       const validMetrics = metrics.filter((m) => m.duration !== undefined);
 
       if (validMetrics.length === 0) continue;
@@ -469,7 +473,7 @@ class PerformanceTracker {
       this.alerts.shift();
     }
 
-    logger.warn('Performance alert created', newAlert);
+    logger.warn('Performance alert created', { ...newAlert });
   }
 
   private generateTrackingId(): string {

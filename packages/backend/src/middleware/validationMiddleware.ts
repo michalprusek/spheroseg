@@ -14,13 +14,13 @@ export const validate =
 
       // Dynamicky přidáme části požadavku, které jsou definovány ve schématu
       if ('body' in schema.shape) {
-        dataToValidate.body = req.body;
+        dataToValidate['body'] = req.body;
       }
       if ('query' in schema.shape) {
-        dataToValidate.query = req.query;
+        dataToValidate['query'] = req.query;
       }
       if ('params' in schema.shape) {
-        dataToValidate.params = req.params;
+        dataToValidate['params'] = req.params;
       }
 
       logger.debug('Validating request data:', { dataToValidate });

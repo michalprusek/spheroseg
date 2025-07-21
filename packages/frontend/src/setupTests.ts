@@ -5,6 +5,7 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 // Set up React Router future flags for testing
 // This ensures the same flags that are in index.html are applied during tests
@@ -62,3 +63,8 @@ if (typeof window !== 'undefined') {
   window.setInterval = realSetInterval;
   window.clearInterval = realClearInterval;
 }
+
+// Mock URL.createObjectURL and URL.revokeObjectURL for tests
+global.URL = global.URL || {};
+global.URL.createObjectURL = global.URL.createObjectURL || vi.fn(() => 'blob:mock-url');
+global.URL.revokeObjectURL = global.URL.revokeObjectURL || vi.fn();

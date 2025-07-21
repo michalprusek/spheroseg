@@ -316,7 +316,7 @@ export async function dbMetricsEndpoint(_req: Request, res: Response) {
  */
 export function dbMetricsData(_req: Request, res: Response) {
   // Collect pool statistics (using any because we're accessing internal properties)
-  const pool = (dbMonitoring as unknown).pool || {};
+  const pool = (dbMonitoring as any).pool || {};
   const poolStats = {
     total: pool.totalCount || 0,
     idle: pool.idleCount || 0,

@@ -11,7 +11,7 @@ import { safeFormatDate } from '@/utils/dateUtils';
 import { getImageBlob, storeImageBlob } from '@/utils/indexedDBService';
 import SegmentationThumbnail from './SegmentationThumbnail';
 import useSocketConnection from '@/hooks/useSocketConnection';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { useTranslations } from '@/hooks/useTranslations';
 import { SEGMENTATION_STATUS, isProcessingStatus } from '@/constants/segmentationStatus';
 import { debouncedCacheUpdate } from '@/utils/debounce';

@@ -5,6 +5,9 @@
  */
 
 import { Alert } from './businessMetrics';
+
+// Re-export Alert type for use in tests
+export type { Alert };
 import logger from './logger';
 import nodemailer from 'nodemailer';
 import axios from 'axios';
@@ -12,8 +15,8 @@ import axios from 'axios';
 export interface AlertHandlerConfig {
   email?: {
     enabled: boolean;
-    recipients: string[];
-    smtp: {
+    recipients?: string[];
+    smtp?: {
       host: string;
       port: number;
       secure: boolean;
@@ -25,13 +28,13 @@ export interface AlertHandlerConfig {
   };
   slack?: {
     enabled: boolean;
-    webhookUrl: string;
+    webhookUrl?: string;
     channel?: string;
     username?: string;
   };
   webhook?: {
     enabled: boolean;
-    url: string;
+    url?: string;
     headers?: Record<string, string>;
     method?: 'POST' | 'PUT';
   };
@@ -48,6 +51,12 @@ export class EmailAlertHandler {
   private recipients: string[];
   
   constructor(config: NonNullable<AlertHandlerConfig['email']>) {
+    if (!config.recipients || config.recipients.length === 0) {
+      throw new Error('Email handler requires at least one recipient');
+    }
+    if (!config.smtp) {
+      throw new Error('Email handler requires SMTP configuration');
+    }
     this.recipients = config.recipients;
     this.transporter = nodemailer.createTransport(config.smtp);
   }
@@ -121,10 +130,13 @@ export class EmailAlertHandler {
  */
 export class SlackAlertHandler {
   private webhookUrl: string;
-  private channel?: string;
-  private username?: string;
+  private channel?: string | undefined;
+  private username?: string | undefined;
   
   constructor(config: NonNullable<AlertHandlerConfig['slack']>) {
+    if (!config.webhookUrl) {
+      throw new Error('Slack handler requires webhook URL');
+    }
     this.webhookUrl = config.webhookUrl;
     this.channel = config.channel;
     this.username = config.username || 'SpherosegV4 Alerts';
@@ -201,6 +213,9 @@ export class WebhookAlertHandler {
   private method: 'POST' | 'PUT';
   
   constructor(config: NonNullable<AlertHandlerConfig['webhook']>) {
+    if (!config.url) {
+      throw new Error('Webhook handler requires URL');
+    }
     this.url = config.url;
     this.headers = config.headers || {};
     this.method = config.method || 'POST';
@@ -380,8 +395,8 @@ export function createDefaultAlertConfig(): AlertHandlerConfig {
     slack: {
       enabled: process.env['ALERT_SLACK_ENABLED'] === 'true',
       webhookUrl: process.env['ALERT_SLACK_WEBHOOK'] || '',
-      channel: process.env['ALERT_SLACK_CHANNEL'],
-      username: process.env['ALERT_SLACK_USERNAME'],
+      ...(process.env['ALERT_SLACK_CHANNEL'] && { channel: process.env['ALERT_SLACK_CHANNEL'] }),
+      ...(process.env['ALERT_SLACK_USERNAME'] && { username: process.env['ALERT_SLACK_USERNAME'] }),
     },
     webhook: {
       enabled: process.env['ALERT_WEBHOOK_ENABLED'] === 'true',

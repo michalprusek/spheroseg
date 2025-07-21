@@ -1,7 +1,7 @@
 import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { handleError, ErrorType, ErrorSeverity } from '@/utils/errorHandling';
 import logger from '@/utils/logger';
 

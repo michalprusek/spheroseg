@@ -308,7 +308,7 @@ export async function closePool(): Promise<void> {
 // Re-export common types
 // =====================
 
-export { PoolClient, QueryResult } from 'pg';
+export type { PoolClient, QueryResult } from 'pg';
 
 // Default export for convenience
 export default {

@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { TestRouterWrapper } from '@/test-utils/react-router-wrapper';
 
 // Mock the toast
@@ -15,7 +15,7 @@ vi.mock('sonner', () => ({
 }));
 
 // Mock the API client
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     post: vi.fn(),
   },

@@ -222,8 +222,9 @@ export const setupApiClientMock = () => {
   const { mockApi, mockAll } = createApiClientMock();
 
   // Mock the API client module
-  vi.mock('@/lib/apiClient', () => ({
+  vi.mock('@/services/api/client', () => ({
     default: mockApi,
+    apiClient: mockApi,
   }));
 
   // Setup default mocks for common endpoints

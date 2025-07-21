@@ -279,7 +279,7 @@ class CacheService {
     try {
       const values = await redis.mget(...keys);
       
-      return values.map((value, index) => {
+      return values.map((value, _index) => {
         if (value === null) {
           this.stats.misses++;
           return null;
@@ -686,19 +686,19 @@ class CacheService {
       const redisStats = this.parseRedisStats(info);
       
       // Calculate hit rate
-      const hitRate = redisStats.keyspace_hits && redisStats.keyspace_misses
-        ? (redisStats.keyspace_hits / (redisStats.keyspace_hits + redisStats.keyspace_misses)) * 100
+      const hitRate = redisStats['keyspace_hits'] && redisStats['keyspace_misses']
+        ? (redisStats['keyspace_hits'] / (redisStats['keyspace_hits'] + redisStats['keyspace_misses'])) * 100
         : 0;
 
       return {
         available: true,
         dbSize,
         redis: {
-          hits: redisStats.keyspace_hits || 0,
-          misses: redisStats.keyspace_misses || 0,
+          hits: redisStats['keyspace_hits'] || 0,
+          misses: redisStats['keyspace_misses'] || 0,
           hitRate,
-          evictedKeys: redisStats.evicted_keys || 0,
-          expiredKeys: redisStats.expired_keys || 0,
+          evictedKeys: redisStats['evicted_keys'] || 0,
+          expiredKeys: redisStats['expired_keys'] || 0,
         },
         local: this.getStats(),
         timestamp: new Date().toISOString(),
@@ -707,7 +707,7 @@ class CacheService {
       logger.error('Failed to get extended cache stats', { error });
       return { 
         available: false, 
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         local: this.getStats()
       };
     }
@@ -723,9 +723,11 @@ class CacheService {
     lines.forEach((line) => {
       if (line.includes(':')) {
         const [key, value] = line.split(':');
-        const numValue = parseInt(value, 10);
-        if (!isNaN(numValue)) {
-          stats[key] = numValue;
+        if (key && value) {
+          const numValue = parseInt(value, 10);
+          if (!isNaN(numValue)) {
+            stats[key] = numValue;
+          }
         }
       }
     });

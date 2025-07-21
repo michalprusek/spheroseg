@@ -9,6 +9,7 @@ import logger from '../utils/logger';
 import { initializeSecretRotationOnStartup } from './secretRotation.startup';
 import { initializeAdvancedCacheOnStartup } from './advancedCache.startup';
 import { initializeBusinessMetricsSystem } from './businessMetrics.startup';
+import { initializePerformanceCoordinatorOnStartup } from './performanceCoordinator.startup';
 
 export async function initializeAllStartupModules(redisClient: Redis | null): Promise<void> {
   logger.info('Initializing all startup modules...');
@@ -45,6 +46,16 @@ export async function initializeAllStartupModules(redisClient: Redis | null): Pr
           await initializeBusinessMetricsSystem();
         } else {
           logger.warn('Skipping business metrics initialization - Redis not available');
+        }
+      },
+    },
+    {
+      name: 'Performance Coordinator',
+      init: async () => {
+        if (redisClient) {
+          await initializePerformanceCoordinatorOnStartup(redisClient);
+        } else {
+          logger.warn('Skipping performance coordinator initialization - Redis not available');
         }
       },
     },

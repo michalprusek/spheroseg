@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { useSocket } from '@/contexts/SocketContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import logger from '@/lib/logger';

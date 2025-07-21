@@ -90,6 +90,7 @@ export const generateAccessToken = (
   const payload = {
     userId,
     email,
+    role: 'user', // Default role for standard users
     type: TokenType.ACCESS,
     jti,
     version: tokenVersion,
@@ -166,6 +167,7 @@ export const generateRefreshToken = async (
   const payload = {
     userId,
     email,
+    role: 'user', // Default role for standard users
     type: TokenType.REFRESH,
     jti,
     fid: familyId,
@@ -530,9 +532,9 @@ export const rotateRefreshToken = async (
     }
 
     const newRefreshToken = await generateRefreshToken(userId, email, {
-      familyId: oldDecoded.fid,
-      userAgent,
-      ipAddress,
+      ...(oldDecoded.fid && { familyId: oldDecoded.fid }),
+      ...(userAgent && { userAgent }),
+      ...(ipAddress && { ipAddress }),
     });
 
     return newRefreshToken;
@@ -683,9 +685,9 @@ export const createTokenResponse = async (
   });
 
   const refreshToken = await generateRefreshToken(userId, email, {
-    expiry: refreshTokenExpiresIn,
-    userAgent,
-    ipAddress,
+    ...(refreshTokenExpiresIn && { expiry: refreshTokenExpiresIn }),
+    ...(userAgent && { userAgent }),
+    ...(ipAddress && { ipAddress }),
   });
 
   const expiresInNumeric = ms(accessTokenExpiresIn as StringValue) / 1000;

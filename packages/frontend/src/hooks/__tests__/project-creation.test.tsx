@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useProjectForm } from '../useProjectForm';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 // Mock dependencies
 vi.mock('sonner', () => ({
@@ -11,7 +11,7 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   post: vi.fn(),
 }));
 

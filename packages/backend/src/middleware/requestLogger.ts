@@ -30,12 +30,14 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
   const originalJson = res.json;
 
   // Capture request details
+  const userAgent = req.get('User-Agent');
+  const userId = (req as any).user?.id;
   const requestMetrics: RequestMetrics = {
     method: req.method,
     url: req.originalUrl || req.url,
-    userAgent: req.get('User-Agent'),
+    ...(userAgent && { userAgent }),
     ip: req.ip || req.connection.remoteAddress || 'unknown',
-    userId: (req as unknown).user?.id,
+    ...(userId && { userId }),
   };
 
   // Override res.end to capture response details
@@ -45,9 +47,10 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 
     requestMetrics.statusCode = res.statusCode;
     requestMetrics.responseTime = responseTime;
-    requestMetrics.contentLength = res.get('Content-Length')
-      ? parseInt(res.get('Content-Length')!)
-      : undefined;
+    const contentLengthHeader = res.get('Content-Length');
+    if (contentLengthHeader) {
+      requestMetrics.contentLength = parseInt(contentLengthHeader);
+    }
 
     // Log the request based on status code
     logRequest(requestMetrics);
@@ -140,6 +143,6 @@ function sanitizeUrl(url: string): string {
     return urlObj.pathname + urlObj.search;
   } catch {
     // Fallback for invalid URLs
-    return url.split('?')[0]; // Just return pathname
+    return url.split('?')[0] || url; // Just return pathname
   }
 }

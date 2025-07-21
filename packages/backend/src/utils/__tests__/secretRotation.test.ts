@@ -4,7 +4,7 @@
 
 import { Redis } from 'ioredis';
 import { initializeSecretRotation, SecretConfig } from '../secretRotation';
-import { EventEmitter } from 'events';
+// import { EventEmitter } from 'events'; // unused import
 
 // Mock dependencies
 jest.mock('ioredis');

@@ -4,7 +4,7 @@ import CreateProjectDialog from '@/components/project/CreateProjectDialog';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { BrowserRouter } from 'react-router-dom';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
@@ -29,7 +29,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 // Mock dependencies
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     post: vi.fn(),
   },

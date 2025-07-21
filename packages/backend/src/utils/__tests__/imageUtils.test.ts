@@ -7,15 +7,27 @@ import logger from '../logger';
 // Mock dependencies
 jest.mock('fs');
 jest.mock('sharp');
-jest.mock('../logger', () => ({
-  debug: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-}));
+jest.mock('../logger', () => {
+  const mockLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    http: jest.fn(),
+    silly: jest.fn(),
+  };
+
+  return {
+    __esModule: true,
+    default: mockLogger,
+    createLogger: jest.fn().mockReturnValue(mockLogger),
+  };
+});
 
 // Mock child_process for BMP handling
 jest.mock('child_process', () => ({
-  exec: jest.fn((cmd, callback) => callback(null, { stdout: '', stderr: '' })),
+  exec: jest.fn((_cmd, callback) => callback(null, { stdout: '', stderr: '' })),
 }));
 
 describe('imageUtils', () => {
@@ -61,7 +73,7 @@ describe('imageUtils', () => {
 
       // Verify sharp was called correctly
       expect(sharp).toHaveBeenCalledWith(sourcePath);
-      const sharpInstance = (sharp as unknown as jest.Mock).mock.results[0].value;
+      const sharpInstance = (sharp as unknown as jest.Mock).mock.results[0]?.value;
       expect(sharpInstance.resize).toHaveBeenCalledWith({ width: 300, height: 300, fit: 'inside' });
       expect(sharpInstance.png).toHaveBeenCalled();
       expect(sharpInstance.toFile).toHaveBeenCalledWith(validTargetPath);
@@ -102,7 +114,7 @@ describe('imageUtils', () => {
 
       // Verify sharp was used for TIFF
       expect(sharp).toHaveBeenCalledWith(sourcePath);
-      const sharpInstance = (sharp as unknown as jest.Mock).mock.results[0].value;
+      const sharpInstance = (sharp as unknown as jest.Mock).mock.results[0]?.value;
       expect(sharpInstance.png).toHaveBeenCalledWith({
         compressionLevel: 9,
         adaptiveFiltering: true,

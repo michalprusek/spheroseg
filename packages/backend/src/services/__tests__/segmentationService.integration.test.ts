@@ -4,7 +4,6 @@
  * Tests segmentation workflow with real database and ML service mocking
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { SegmentationService } from '../segmentationService';
 import { SegmentationQueueService } from '../segmentationQueueService';
 import pool from '../../config/database';
@@ -12,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 
 // Mock axios for ML service calls
-vi.mock('axios');
+jest.mock('axios');
 const mockedAxios = axios as any;
 
 describe('SegmentationService Integration Tests', () => {
@@ -99,7 +98,7 @@ describe('SegmentationService Integration Tests', () => {
     );
 
     // Reset mocks
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('queueSegmentation', () => {

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Microscope, Image, FolderKanban, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import axios from 'axios';
 import { toast } from 'sonner';
 import logger from '@/utils/logger';
@@ -92,7 +92,7 @@ const StatsOverview = () => {
         logger.error('Error fetching overview stats:', error);
         let message = t('statsOverview.fetchError') || 'Failed to load statistics.';
         if (axios.isAxiosError(error) && error.response) {
-          message = error.response.data?.message || message;
+          message = error.data?.message || message;
         } else if (error instanceof Error) {
           message = error.message;
         }

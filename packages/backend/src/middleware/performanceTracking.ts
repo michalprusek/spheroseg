@@ -30,7 +30,7 @@ export function trackAPIPerformance() {
 
     // Override res.end to capture when response is complete
     const originalEnd = res.end;
-    res.end = function (...args: unknown[]) {
+    (res as any).end = function(...args: any[]) {
       // Restore original end function
       res.end = originalEnd;
 
@@ -58,7 +58,7 @@ export function trackAPIPerformance() {
       }
 
       // Call original end function
-      return originalEnd.apply(res, args);
+      return originalEnd.call(this, args[0], args[1], args[2]);
     };
 
     next();
@@ -69,12 +69,12 @@ export function trackAPIPerformance() {
  * Middleware to add X-Response-Time header
  */
 export function addResponseTimeHeader() {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (_req: Request, res: Response, next: NextFunction) => {
     const startTime = process.hrtime.bigint();
 
     // Override res.end to add header before sending
     const originalEnd = res.end;
-    res.end = function (...args: unknown[]) {
+    (res as any).end = function(...args: any[]) {
       // Calculate response time in milliseconds
       const endTime = process.hrtime.bigint();
       const responseTime = Number((endTime - startTime) / 1000000n);
@@ -86,7 +86,7 @@ export function addResponseTimeHeader() {
 
       // Call original end function
       res.end = originalEnd;
-      return originalEnd.apply(res, args);
+      return originalEnd.call(this, args[0], args[1], args[2]);
     };
 
     next();
@@ -107,7 +107,7 @@ export function trackMemoryUsage(endpoints: string[] = []) {
 
     // Override res.end to capture memory after request
     const originalEnd = res.end;
-    res.end = function (...args: unknown[]) {
+    (res as any).end = function(...args: any[]) {
       res.end = originalEnd;
 
       const endMemory = process.memoryUsage();
@@ -137,7 +137,7 @@ export function trackMemoryUsage(endpoints: string[] = []) {
         });
       }
 
-      return originalEnd.apply(res, args);
+      return originalEnd.call(this, args[0], args[1], args[2]);
     };
 
     next();

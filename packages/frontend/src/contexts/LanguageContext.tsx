@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import i18n, { i18nInitializedPromise } from '../i18n';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import userProfileService from '../services/userProfileService';
 import { toast } from 'sonner';
 import logger from '@/utils/logger';
@@ -315,9 +315,24 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (!isI18nReady || !i18n.isInitialized || !isContextInitialized) {
         return fallback || key;
       }
-      return i18n.t(key, options) || fallback || key;
+      // Ensure i18n is using the correct language before translation
+      if (i18n.language !== language) {
+        logger.debug(`[LanguageContext] i18n language (${i18n.language}) differs from context language (${language}), syncing...`);
+      }
+      
+      // Force i18n to use the current language - this ensures reactivity in tests
+      if (i18n.language !== language) {
+        i18n.changeLanguage(language);
+      }
+      
+      const translation = i18n.t(key, options);
+      // If translation equals the key, it means no translation was found
+      if (translation === key && fallback) {
+        return fallback;
+      }
+      return translation || fallback || key;
     },
-    [isI18nReady, isContextInitialized],
+    [isI18nReady, isContextInitialized, language],
   );
 
   // Always render children to avoid breaking the app while translations load
@@ -326,7 +341,6 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   logger.debug('[LanguageContext] LanguageProvider fully initialized, rendering children.');
   return (
     <LanguageContext.Provider
-      key={language}
       value={{ language, setLanguage, t, availableLanguages, isLanguageReady: isContextInitialized }}
     >
       {children}

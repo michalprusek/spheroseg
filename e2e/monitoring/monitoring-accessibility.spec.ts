@@ -186,7 +186,7 @@ test.describe('Monitoring Dashboard Accessibility', () => {
         // Numeric metrics should include units
         if (textContent && /\d+/.test(textContent)) {
           // Should include units like ms, MB, %, etc.
-          expect(textContent).toMatch(/\d+\s*(ms|MB|GB|%|rpm|rps|/s)/i);
+          expect(textContent).toMatch(/\d+\s*(ms|MB|GB|%|rpm|rps|\/s)/i);
         }
       }
     }

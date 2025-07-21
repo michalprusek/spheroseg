@@ -428,8 +428,8 @@ async function processAndStoreImage(
  */
 router.post(
   '/:projectId/images',
-  authMiddleware,
-  validate(uploadImagesSchema),
+  authMiddleware as any,
+  validate(uploadImagesSchema) as any,
   (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     logger.info('Upload endpoint hit - before multer', {
       projectId: req.params["projectId"],
@@ -446,7 +446,7 @@ router.post(
     });
     next();
   },
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     // Get database pool at the beginning
     const pool = getPool();
 
@@ -546,7 +546,7 @@ router.post(
 
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
-      const project = await projectService.getProjectById(getPool(), projectId, requestingUserId);
+      const project = await projectService.getProjectById(getPool(), projectId!, requestingUserId);
 
       if (!project) {
         if (files) files.forEach((file) => allUploadedFilePaths.push(file.path));
@@ -555,7 +555,7 @@ router.post(
       }
 
       // Check if user has edit permission (owner or shared with 'edit' permission)
-      const hasEditPermission = project.is_owner || project.permission === 'edit';
+      const hasEditPermission = project.is_owner || (project as any).permission === 'edit';
       if (!hasEditPermission) {
         if (files) files.forEach((file) => allUploadedFilePaths.push(file.path));
         next(new ApiError("You need 'edit' or 'owner' permission to upload images", 403));
@@ -575,7 +575,7 @@ router.post(
 
         // Přímo použijeme requestingUserId jako string (UUID)
         const processingPromises = files.map((file) =>
-          processAndStoreImage(file, projectId, requestingUserId, client)
+          processAndStoreImage(file, projectId!, requestingUserId, client)
         );
 
         const insertedImages = await Promise.all(processingPromises);
@@ -618,7 +618,7 @@ router.post(
         // It's generally safer to update the aggregate count *after* the main transaction succeeds.
         // Calculate the total size of *successfully* processed and inserted images.
         const successfullyUploadedSize = insertedImages.reduce(
-          (sum, img) => sum + BigInt(img.file_size || 0),
+          (sum, img) => sum + BigInt(img['file_size'] || 0),
           0n
         );
 
@@ -659,7 +659,7 @@ router.post(
         // --- Update User Storage Usage --- END
 
         // Invalidate image list cache for this project
-        await cacheService.invalidateImageList(projectId);
+        await cacheService.invalidateImageList(projectId!);
 
         // Format results before sending
         const origin = req.get('origin') || config.baseUrl;
@@ -674,14 +674,14 @@ router.post(
           setTimeout(() => {
             // Emit to project room for each uploaded image
             formattedImages.forEach((image) => {
-              io.to(`project-${projectId}`).emit('image:created', {
+              io.to(`project-${projectId!}`).emit('image:created', {
                 projectId,
                 image,
                 timestamp: new Date().toISOString(),
               });
 
               // Also emit to alternative room formats for compatibility
-              io.to(`project_${projectId}`).emit('image:created', {
+              io.to(`project_${projectId!}`).emit('image:created', {
                 projectId,
                 image,
                 timestamp: new Date().toISOString(),
@@ -785,9 +785,9 @@ router.post(
  */
 router.delete(
   '/:projectId/images/:imageId',
-  authMiddleware,
-  validate(deleteImageSchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  authMiddleware as any,
+  validate(deleteImageSchema) as any,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
     const imageId = req.params["imageId"];
@@ -831,7 +831,7 @@ router.delete(
           });
 
           // Use the actual ID for deletion
-          const result = await imageDeleteService.deleteImage(actualImageId, projectId, userId!);
+          const result = await imageDeleteService.deleteImage(actualImageId, projectId!, userId!);
 
           if (!result.success) {
             if (result.error?.includes('not found') || result.error?.includes('access denied')) {
@@ -840,14 +840,16 @@ router.delete(
                 imageId: actualImageId,
                 error: result.error,
               });
-              return res.status(404).json({ message: result.error });
+              res.status(404).json({ message: result.error });
+              return;
             }
             logger.error('Failed to delete image', {
               projectId,
               imageId: actualImageId,
               error: result.error,
             });
-            return res.status(500).json({ message: result.error || 'Failed to delete image' });
+            res.status(500).json({ message: result.error || 'Failed to delete image' });
+            return;
           }
 
           // Emit WebSocket event for real-time updates
@@ -873,7 +875,7 @@ router.delete(
           }
 
           // Return success with no content
-          return res.status(204).send();
+          res.status(204).send();
         }
       } catch (lookupError) {
         logger.error('Error looking up image by frontend ID', {
@@ -883,10 +885,11 @@ router.delete(
         });
       }
 
-      return res.status(404).json({
+      res.status(404).json({
         error: 'ImageNotFound',
         message: 'Image with this ID does not exist in the database',
       });
+      return;
     }
 
     try {
@@ -894,7 +897,7 @@ router.delete(
       if (!userId) {
         throw new Error('User ID is required');
       }
-      const result = await imageDeleteService.deleteImage(imageId, projectId, userId);
+      const result = await imageDeleteService.deleteImage(imageId, projectId!, userId!);
 
       if (!result.success) {
         if (result.error?.includes('not found') || result.error?.includes('access denied')) {
@@ -904,7 +907,7 @@ router.delete(
             imageId,
             error: result.error,
           });
-          return res.status(404).json({ message: result.error });
+          res.status(404).json({ message: result.error });
         }
         logger.error('Failed to delete image', {
           projectId,
@@ -969,9 +972,9 @@ router.post(
 // Legacy route for backward compatibility - will be deprecated
 router.delete(
   '/:id',
-  authMiddleware,
-  validate(imageIdSchema),
-  async (req: AuthenticatedRequest, res: Response) => {
+  authMiddleware as any,
+  validate(imageIdSchema) as any,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
     const imageId = req.params["id"];
 
@@ -1032,7 +1035,7 @@ router.delete(
           }
 
           // Return success with no content
-          return res.status(204).send();
+          res.status(204).send();
         }
       } catch (lookupError) {
         logger.error('Error looking up image by frontend ID (legacy route)', {
@@ -1041,10 +1044,11 @@ router.delete(
         });
       }
 
-      return res.status(404).json({
+      res.status(404).json({
         error: 'ImageNotFound',
         message: 'Image with this ID does not exist in the database',
       });
+      return;
     }
 
     try {
@@ -1055,7 +1059,7 @@ router.delete(
       );
 
       if (imageRes.rows.length === 0) {
-        return res.status(404).json({ message: 'Image not found or access denied' });
+        res.status(404).json({ message: 'Image not found or access denied' });
       }
 
       const projectId = imageRes.rows[0].project_id;
@@ -1138,9 +1142,9 @@ router.delete(
  */
 router.get(
   '/:projectId/images/:imageId',
-  authMiddleware,
+  authMiddleware as any,
   combineCacheStrategies(cacheControl.short, cacheControl.etag),
-  validate(imageDetailSchema),
+  validate(imageDetailSchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     let { projectId } = req.params;
@@ -1148,8 +1152,8 @@ router.get(
 
     // Handle project IDs with "project-" prefix
     const originalProjectId = projectId;
-    if (projectId.startsWith('project-')) {
-      projectId = projectId.substring(8); // Remove "project-" prefix for database query
+    if (projectId!.startsWith('project-')) {
+      projectId = projectId!.substring(8); // Remove "project-" prefix for database query
       logger.debug('Removed project- prefix for database query', {
         originalId: originalProjectId,
         cleanedId: projectId,
@@ -1168,7 +1172,7 @@ router.get(
 
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
-      const project = await projectService.getProjectById(pool, projectId, userId);
+      const project = await projectService.getProjectById(pool, projectId!, userId!);
 
       if (!project) {
         logger.warn('Project access denied', {
@@ -1226,10 +1230,10 @@ router.get(
  */
 router.get(
   '/:projectId/images',
-  authMiddleware,
+  authMiddleware as any,
   combineCacheStrategies(cacheControl.short, cacheControl.etag),
-  validate(listImagesSchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  validate(listImagesSchema) as any,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
     const { name, limit = 50, page } = req.query;
@@ -1252,7 +1256,7 @@ router.get(
       // Try to get from cache first (only if no filters)
       if (!name && !req.query["verifyFiles"]) {
         const cached = await cacheService.getCachedImageList(
-          projectId,
+          projectId!,
           Number(page || 1),
           Number(limit)
         );
@@ -1266,7 +1270,7 @@ router.get(
 
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
-      const project = await projectService.getProjectById(pool, projectId, userId);
+      const project = await projectService.getProjectById(pool, projectId!, userId!);
 
       if (!project) {
         logger.warn('Project access denied', {
@@ -1433,7 +1437,7 @@ router.get(
 
       // Use projectService to check access (ownership or sharing)
       const projectService = await import('../services/projectService');
-      const project = await projectService.getProjectById(pool, projectId, userId);
+      const project = await projectService.getProjectById(pool, projectId!, userId!);
 
       if (!project) {
         logger.warn('Project access denied', {
@@ -1502,7 +1506,7 @@ router.get(
 
       if (imageResult.rows.length === 0) {
         logger.warn('Image not found for verification', { imageId });
-        return res.status(404).json({ exists: false });
+        res.status(404).json({ exists: false });
       }
 
       const projectId = imageResult.rows[0].project_id;
@@ -1577,7 +1581,7 @@ router.get(
 
       if (imageResult.rows.length === 0) {
         logger.warn('Image not found or access denied', { imageId, userId, isUUID });
-        return res.status(404).json({
+        res.status(404).json({
           message: 'Image not found or access denied',
           error: 'NOT_FOUND',
         });
@@ -1635,7 +1639,7 @@ router.get(
           userId,
           isUUID,
         });
-        return res.status(404).json({
+        res.status(404).json({
           message: 'Image not found or access denied',
           error: 'NOT_FOUND',
         });
@@ -1655,7 +1659,7 @@ router.get(
 
       if (!segmentationResultsTableCheck.rows[0].exists) {
         logger.warn('Segmentation results table does not exist');
-        return res.status(404).json({
+        res.status(404).json({
           message: 'Segmentation not found',
           error: 'NOT_FOUND',
         });
@@ -1669,7 +1673,7 @@ router.get(
 
       if (segmentationResult.rows.length === 0) {
         logger.info('No segmentation found for image', { imageId, actualImageId });
-        return res.status(404).json({
+        res.status(404).json({
           message: 'Segmentation not found for this image',
           error: 'NOT_FOUND',
         });

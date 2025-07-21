@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 export interface ProjectImage {
   id: string;

@@ -1,6 +1,35 @@
+/**
+ * Unified Email Service
+ * 
+ * Consolidates all email functionality with i18n support
+ */
+
+import nodemailer from 'nodemailer';
 import { createLogger } from '../utils/logger';
+import config from '../config';
+import i18next from '../config/i18n';
 
 const logger = createLogger('emailService');
+
+// Create reusable transporter
+const transporter = nodemailer.createTransport({
+  host: config.email.host,
+  port: config.email.port,
+  secure: config.email.secure,
+  auth: {
+    user: config.email.user,
+    pass: config.email.pass,
+  },
+});
+
+// Verify transporter configuration on startup
+transporter.verify((error) => {
+  if (error) {
+    logger.error('Email transporter verification failed:', error);
+  } else {
+    logger.info('Email transporter is ready');
+  }
+});
 
 interface SendProjectInvitationParams {
   to: string;
@@ -8,142 +37,345 @@ interface SendProjectInvitationParams {
   ownerName: string;
   invitationToken: string;
   permission: 'view' | 'edit';
+  recipientLanguage?: string;
+}
+
+interface SendInvitationAcceptedParams {
+  to: string;
+  projectTitle: string;
+  acceptedByName: string;
+  acceptedByEmail: string;
+  ownerLanguage?: string;
+}
+
+interface SendPasswordResetParams {
+  to: string;
+  resetToken: string;
+  userName?: string;
+  language?: string;
+}
+
+interface SendVerificationEmailParams {
+  to: string;
+  verificationToken: string;
+  userName?: string;
+  language?: string;
+}
+
+interface SendAccessRequestParams {
+  to: string;
+  requesterName: string;
+  requesterEmail: string;
+  message?: string;
+  language?: string;
 }
 
 /**
- * Sends a project invitation email to the specified recipient
- * Note: This is a placeholder implementation. In production, you would integrate
- * with an email service provider like SendGrid, AWS SES, or similar.
+ * Get translation function for a specific language
+ */
+function getTranslator(language?: string) {
+  return i18next.getFixedT(language || 'en');
+}
+
+/**
+ * Generate email HTML template
+ */
+function generateEmailTemplate(content: {
+  title: string;
+  greeting: string;
+  body: string;
+  actionText?: string;
+  actionUrl?: string;
+  footer: string;
+}): { html: string; text: string } {
+  const { title, greeting, body, actionText, actionUrl, footer } = content;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #333;">${title}</h2>
+      <p>${greeting}</p>
+      <p>${body}</p>
+      ${
+        actionUrl
+          ? `
+        <div style="margin: 30px 0;">
+          <a href="${actionUrl}" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">
+            ${actionText}
+          </a>
+        </div>
+        `
+          : ''
+      }
+      <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+      <p style="color: #666; font-size: 14px;">${footer}</p>
+    </div>
+  `;
+
+  const text = `
+${title}
+
+${greeting}
+
+${body}
+
+${actionUrl ? `${actionText}: ${actionUrl}` : ''}
+
+---
+${footer}
+  `.trim();
+
+  return { html, text };
+}
+
+/**
+ * Send project invitation email
  */
 export async function sendProjectInvitation(params: SendProjectInvitationParams): Promise<void> {
-  const { to, projectTitle, ownerName, invitationToken, permission } = params;
+  const { to, projectTitle, ownerName, invitationToken, permission, recipientLanguage } = params;
+  const t = getTranslator(recipientLanguage);
 
   try {
-    // In production, replace this with actual email service integration
-    const invitationUrl = `${process.env["FRONTEND_URL"] || 'http://localhost:3000'}/accept-invitation/${invitationToken}`;
+    const invitationUrl = `${config.appUrl}/accept-invitation?token=${invitationToken}`;
+    
+    const { html, text } = generateEmailTemplate({
+      title: t('email.projectInvitation.title'),
+      greeting: t('email.projectInvitation.greeting'),
+      body: t('email.projectInvitation.body', {
+        ownerName,
+        projectTitle,
+        permission: t(`email.projectInvitation.permission.${permission}`),
+      }),
+      actionText: t('email.projectInvitation.action'),
+      actionUrl: invitationUrl,
+      footer: t('email.projectInvitation.footer'),
+    });
 
-    const emailContent = {
+    const mailOptions = {
+      from: `"SpherosegV4" <${config.email.from}>`,
       to,
-      subject: `You've been invited to collaborate on "${projectTitle}"`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Project Invitation</h2>
-          <p>Hi,</p>
-          <p>${ownerName} has invited you to collaborate on the project "<strong>${projectTitle}</strong>" with ${permission} permissions.</p>
-          <p>Click the link below to accept the invitation:</p>
-          <p><a href="${invitationUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Accept Invitation</a></p>
-          <p>Or copy and paste this link into your browser:</p>
-          <p>${invitationUrl}</p>
-          <p>This invitation will expire in 48 hours.</p>
-          <p>Best regards,<br>The SpherosegV4 Team</p>
-        </div>
-      `,
-      text: `
-        Project Invitation
-        
-        Hi,
-        
-        ${ownerName} has invited you to collaborate on the project "${projectTitle}" with ${permission} permissions.
-        
-        Click the link below to accept the invitation:
-        ${invitationUrl}
-        
-        This invitation will expire in 48 hours.
-        
-        Best regards,
-        The SpherosegV4 Team
-      `,
+      subject: t('email.projectInvitation.subject', { projectTitle }),
+      html,
+      text,
     };
 
-    // Log email sending attempt (in production, actually send the email here)
-    logger.info('Email would be sent:', {
-      to: emailContent.to,
-      subject: emailContent.subject,
-      invitationUrl,
-    });
-
-    // In development, you can log the email content to console
-    if (process.env["NODE_ENV"] === 'development') {
-      console.log('📧 Email Service (Development Mode)');
-      console.log('================================');
-      console.log('To:', emailContent.to);
-      console.log('Subject:', emailContent.subject);
-      console.log('Invitation URL:', invitationUrl);
-      console.log('================================');
-    }
-
-    // TODO: Integrate with actual email service provider
-    // Example with SendGrid:
-    // const msg = {
-    //   to: emailContent.to,
-    //   from: 'noreply@spheroseg.com',
-    //   subject: emailContent.subject,
-    //   text: emailContent.text,
-    //   html: emailContent.html,
-    // };
-    // await sgMail.send(msg);
+    await transporter.sendMail(mailOptions);
+    logger.info('Project invitation email sent', { to, projectTitle });
   } catch (error) {
-    logger.error('Failed to send project invitation email', {
-      error,
-      to,
-      projectTitle,
-      invitationToken,
-    });
-    // Don't throw the error - we don't want to fail the share operation if email fails
-    // The user can still share the invitation link manually
+    logger.error('Failed to send project invitation email', { error, to });
+    throw error;
   }
 }
 
 /**
- * Sends a notification email when someone accepts a project invitation
- * @param ownerEmail - Email of the project owner
- * @param acceptorName - Name of the person who accepted the invitation
- * @param projectTitle - Title of the project
+ * Send invitation accepted notification
  */
 export async function sendInvitationAcceptedNotification(
-  ownerEmail: string,
-  acceptorName: string,
-  projectTitle: string
+  params: SendInvitationAcceptedParams
 ): Promise<void> {
+  const { to, projectTitle, acceptedByName, acceptedByEmail, ownerLanguage } = params;
+  const t = getTranslator(ownerLanguage);
+
   try {
-    const emailContent = {
-      to: ownerEmail,
-      subject: `${acceptorName} accepted your invitation to "${projectTitle}"`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Invitation Accepted</h2>
-          <p>Good news!</p>
-          <p><strong>${acceptorName}</strong> has accepted your invitation to collaborate on "<strong>${projectTitle}</strong>".</p>
-          <p>They now have access to the project based on the permissions you granted.</p>
-          <p>Best regards,<br>The SpherosegV4 Team</p>
-        </div>
-      `,
-      text: `
-        Invitation Accepted
-        
-        Good news!
-        
-        ${acceptorName} has accepted your invitation to collaborate on "${projectTitle}".
-        
-        They now have access to the project based on the permissions you granted.
-        
-        Best regards,
-        The SpherosegV4 Team
-      `,
+    const { html, text } = generateEmailTemplate({
+      title: t('email.invitationAccepted.title'),
+      greeting: t('email.invitationAccepted.greeting'),
+      body: t('email.invitationAccepted.body', {
+        acceptedByName,
+        acceptedByEmail,
+        projectTitle,
+      }),
+      footer: t('email.invitationAccepted.footer'),
+    });
+
+    const mailOptions = {
+      from: `"SpherosegV4" <${config.email.from}>`,
+      to,
+      subject: t('email.invitationAccepted.subject', { projectTitle }),
+      html,
+      text,
     };
 
-    logger.info('Acceptance notification would be sent:', {
-      to: emailContent.to,
-      subject: emailContent.subject,
-    });
-
-    // TODO: Send actual email in production
+    await transporter.sendMail(mailOptions);
+    logger.info('Invitation accepted notification sent', { to, projectTitle });
   } catch (error) {
-    logger.error('Failed to send invitation acceptance notification', {
-      error,
-      ownerEmail,
-      acceptorName,
-      projectTitle,
-    });
+    logger.error('Failed to send invitation accepted notification', { error, to });
+    throw error;
   }
 }
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(params: SendPasswordResetParams): Promise<void> {
+  const { to, resetToken, userName, language } = params;
+  const t = getTranslator(language);
+
+  try {
+    const resetUrl = `${config.appUrl}/reset-password?token=${resetToken}`;
+    
+    const { html, text } = generateEmailTemplate({
+      title: t('email.passwordReset.title'),
+      greeting: userName 
+        ? t('email.passwordReset.greetingWithName', { name: userName })
+        : t('email.passwordReset.greeting'),
+      body: t('email.passwordReset.body'),
+      actionText: t('email.passwordReset.action'),
+      actionUrl: resetUrl,
+      footer: t('email.passwordReset.footer'),
+    });
+
+    const mailOptions = {
+      from: `"SpherosegV4" <${config.email.from}>`,
+      to,
+      subject: t('email.passwordReset.subject'),
+      html,
+      text,
+    };
+
+    await transporter.sendMail(mailOptions);
+    logger.info('Password reset email sent', { to });
+  } catch (error) {
+    logger.error('Failed to send password reset email', { error, to });
+    throw error;
+  }
+}
+
+// Alias for backward compatibility
+export const sendPasswordReset = sendPasswordResetEmail;
+
+/**
+ * Send new password email (deprecated - should use reset token instead)
+ * This is used by the forgotPassword method that generates a new password
+ * @deprecated Use sendPasswordResetEmail with reset token instead
+ */
+export async function sendNewPasswordEmail(
+  email: string, 
+  userName: string, 
+  newPassword: string,
+  language?: string
+): Promise<{ testUrl?: string }> {
+  const t = getTranslator(language);
+
+  try {
+    const { html, text } = generateEmailTemplate({
+      title: t('email.newPassword.title', { defaultValue: 'Your New Password' }),
+      greeting: userName 
+        ? t('email.newPassword.greetingWithName', { name: userName, defaultValue: `Hello ${userName},` })
+        : t('email.newPassword.greeting', { defaultValue: 'Hello,' }),
+      body: t('email.newPassword.body', { 
+        password: newPassword,
+        defaultValue: `Your new password is: <strong>${newPassword}</strong><br><br>Please log in with this password and change it immediately for security reasons.`
+      }),
+      footer: t('email.newPassword.footer', { 
+        defaultValue: 'For security reasons, please change this password after logging in.'
+      }),
+    });
+
+    const mailOptions = {
+      from: `"SpherosegV4" <${config.email.from}>`,
+      to: email,
+      subject: t('email.newPassword.subject', { defaultValue: 'Your New Password for SpherosegV4' }),
+      html,
+      text,
+    };
+
+    await transporter.sendMail(mailOptions);
+    logger.info('New password email sent', { to: email });
+    
+    // Return test URL for development/testing
+    const testUrl = process.env.NODE_ENV === 'development' 
+      ? `http://localhost:3000/login?email=${encodeURIComponent(email)}` 
+      : undefined;
+    
+    return { testUrl };
+  } catch (error) {
+    logger.error('Failed to send new password email', { error, to: email });
+    throw error;
+  }
+}
+
+// Alias for backward compatibility with authService
+export { sendNewPasswordEmail as sendPasswordResetDirect };
+
+/**
+ * Send email verification
+ */
+export async function sendVerificationEmail(params: SendVerificationEmailParams): Promise<void> {
+  const { to, verificationToken, userName, language } = params;
+  const t = getTranslator(language);
+
+  try {
+    const verificationUrl = `${config.appUrl}/verify-email?token=${verificationToken}`;
+    
+    const { html, text } = generateEmailTemplate({
+      title: t('email.verification.title'),
+      greeting: userName 
+        ? t('email.verification.greetingWithName', { name: userName })
+        : t('email.verification.greeting'),
+      body: t('email.verification.body'),
+      actionText: t('email.verification.action'),
+      actionUrl: verificationUrl,
+      footer: t('email.verification.footer'),
+    });
+
+    const mailOptions = {
+      from: `"SpherosegV4" <${config.email.from}>`,
+      to,
+      subject: t('email.verification.subject'),
+      html,
+      text,
+    };
+
+    await transporter.sendMail(mailOptions);
+    logger.info('Verification email sent', { to });
+  } catch (error) {
+    logger.error('Failed to send verification email', { error, to });
+    throw error;
+  }
+}
+
+/**
+ * Send access request notification
+ */
+export async function sendAccessRequest(params: SendAccessRequestParams): Promise<void> {
+  const { to, requesterName, requesterEmail, message, language } = params;
+  const t = getTranslator(language);
+
+  try {
+    const { html, text } = generateEmailTemplate({
+      title: t('email.accessRequest.title'),
+      greeting: t('email.accessRequest.greeting'),
+      body: t('email.accessRequest.body', {
+        requesterName,
+        requesterEmail,
+        message: message || t('email.accessRequest.noMessage'),
+      }),
+      footer: t('email.accessRequest.footer'),
+    });
+
+    const mailOptions = {
+      from: `"SpherosegV4" <${config.email.from}>`,
+      to,
+      subject: t('email.accessRequest.subject'),
+      html,
+      text,
+    };
+
+    await transporter.sendMail(mailOptions);
+    logger.info('Access request notification sent', { to, requesterEmail });
+  } catch (error) {
+    logger.error('Failed to send access request notification', { error, to });
+    throw error;
+  }
+}
+
+// Default export for services expecting it
+export default {
+  sendProjectInvitation,
+  sendInvitationAcceptedNotification,
+  sendPasswordReset,
+  sendPasswordResetEmail,
+  sendNewPasswordEmail,
+  sendVerificationEmail,
+  sendAccessRequest,
+};

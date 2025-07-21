@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { DuplicationTask } from '@/hooks/useDuplicationProgress';
 import DuplicationProgress from './DuplicationProgress';
 import { toast } from 'sonner';

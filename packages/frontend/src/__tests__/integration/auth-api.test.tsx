@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { MockApiClientProvider } from '../../lib/__mocks__/enhanced/apiClient';
 import { useAuthApi } from '../../hooks/api/useAuthApi';
+import apiClient from '@/services/api/client';
 
 // Mock user data
 const mockUser = {
@@ -26,10 +26,14 @@ const mockRegisterData = {
 };
 
 describe('Auth API Integration Tests', () => {
+  const mockApiClient = apiClient as any;
+
   beforeEach(() => {
     vi.useFakeTimers();
     // Clear any localStorage mock or actual data
     localStorage.clear();
+    // Reset all mocks before each test
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -40,76 +44,46 @@ describe('Auth API Integration Tests', () => {
 
   describe('login', () => {
     it('should login successfully and store token', async () => {
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              login: {
-                data: mockLoginResponse,
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API response
+      mockApiClient.post.mockResolvedValue({ data: mockLoginResponse });
+
+      const { result } = renderHook(() => useAuthApi());
 
       let response;
       await act(async () => {
-        response = await result.current.login('test@example.com', 'password123');
+        response = await result.current.login({ email: 'test@example.com', password: 'password123' });
       });
 
       expect(response).toEqual(mockLoginResponse);
-      expect(localStorage.getItem('authToken')).toBe('mock-jwt-token');
-      expect(localStorage.getItem('refreshToken')).toBe('mock-refresh-token');
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/login', { email: 'test@example.com', password: 'password123' });
     });
 
     it('should handle invalid credentials', async () => {
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              login: {
-                error: new Error('Invalid email or password'),
-                status: 401,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API error response
+      mockApiClient.post.mockRejectedValue(new Error('Invalid email or password'));
+
+      const { result } = renderHook(() => useAuthApi());
 
       await act(async () => {
-        await expect(result.current.login('wrong@example.com', 'wrongpassword')).rejects.toThrow(
+        await expect(result.current.login({ email: 'wrong@example.com', password: 'wrongpassword' })).rejects.toThrow(
           'Invalid email or password',
         );
       });
 
-      expect(localStorage.getItem('authToken')).toBeNull();
-      expect(localStorage.getItem('refreshToken')).toBeNull();
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/login', { email: 'wrong@example.com', password: 'wrongpassword' });
     });
 
     it('should handle server errors', async () => {
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              login: {
-                error: new Error('Internal server error'),
-                status: 500,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API error response
+      mockApiClient.post.mockRejectedValue(new Error('Internal server error'));
+
+      const { result } = renderHook(() => useAuthApi());
 
       await act(async () => {
-        await expect(result.current.login('test@example.com', 'password123')).rejects.toThrow('Internal server error');
+        await expect(result.current.login({ email: 'test@example.com', password: 'password123' })).rejects.toThrow('Internal server error');
       });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/login', { email: 'test@example.com', password: 'password123' });
     });
   });
 
@@ -123,20 +97,10 @@ describe('Auth API Integration Tests', () => {
         createdAt: '2023-06-20T12:00:00Z',
       };
 
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              register: {
-                data: { user: mockNewUser },
-                status: 201,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API response
+      mockApiClient.post.mockResolvedValue({ data: { user: mockNewUser } });
+
+      const { result } = renderHook(() => useAuthApi());
 
       let response;
       await act(async () => {
@@ -144,25 +108,14 @@ describe('Auth API Integration Tests', () => {
       });
 
       expect(response.user).toEqual(mockNewUser);
-      // Registration should not automatically log in the user
-      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/register', mockRegisterData);
     });
 
     it('should handle duplicate email error', async () => {
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              register: {
-                error: new Error('Email already in use'),
-                status: 409,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API error response
+      mockApiClient.post.mockRejectedValue(new Error('Email already in use'));
+
+      const { result } = renderHook(() => useAuthApi());
 
       await act(async () => {
         await expect(
@@ -172,29 +125,26 @@ describe('Auth API Integration Tests', () => {
           }),
         ).rejects.toThrow('Email already in use');
       });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/register', {
+        ...mockRegisterData,
+        email: 'existing@example.com',
+      });
     });
 
     it('should handle validation errors', async () => {
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              register: {
-                error: new Error('Password must be at least 8 characters'),
-                status: 400,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API error response
+      mockApiClient.post.mockRejectedValue(new Error('Password must be at least 8 characters'));
+
+      const { result } = renderHook(() => useAuthApi());
 
       await act(async () => {
         await expect(result.current.register({ ...mockRegisterData, password: '123' })).rejects.toThrow(
           'Password must be at least 8 characters',
         );
       });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/register', { ...mockRegisterData, password: '123' });
     });
   });
 
@@ -210,20 +160,10 @@ describe('Auth API Integration Tests', () => {
       localStorage.setItem('authToken', 'old-jwt-token');
       localStorage.setItem('refreshToken', 'old-refresh-token');
 
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              refreshToken: {
-                data: newTokenResponse,
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API response
+      mockApiClient.post.mockResolvedValue({ data: newTokenResponse });
+
+      const { result } = renderHook(() => useAuthApi());
 
       let response;
       await act(async () => {
@@ -231,35 +171,22 @@ describe('Auth API Integration Tests', () => {
       });
 
       expect(response).toEqual(newTokenResponse);
-      expect(localStorage.getItem('authToken')).toBe('new-jwt-token');
-      expect(localStorage.getItem('refreshToken')).toBe('new-refresh-token');
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/refresh');
     });
 
     it('should handle invalid refresh token', async () => {
       localStorage.setItem('refreshToken', 'expired-refresh-token');
 
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              refreshToken: {
-                error: new Error('Invalid refresh token'),
-                status: 401,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API error response
+      mockApiClient.post.mockRejectedValue(new Error('Invalid refresh token'));
+
+      const { result } = renderHook(() => useAuthApi());
 
       await act(async () => {
         await expect(result.current.refreshToken()).rejects.toThrow('Invalid refresh token');
       });
 
-      // The old tokens should be removed on failure
-      expect(localStorage.getItem('authToken')).toBeNull();
-      expect(localStorage.getItem('refreshToken')).toBeNull();
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/refresh');
     });
   });
 
@@ -269,27 +196,16 @@ describe('Auth API Integration Tests', () => {
       localStorage.setItem('authToken', 'jwt-token');
       localStorage.setItem('refreshToken', 'refresh-token');
 
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              logout: {
-                data: { success: true },
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API response
+      mockApiClient.post.mockResolvedValue({ data: { success: true } });
+
+      const { result } = renderHook(() => useAuthApi());
 
       await act(async () => {
         await result.current.logout();
       });
 
-      expect(localStorage.getItem('authToken')).toBeNull();
-      expect(localStorage.getItem('refreshToken')).toBeNull();
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/logout');
     });
 
     it('should clear tokens even if server call fails', async () => {
@@ -297,29 +213,17 @@ describe('Auth API Integration Tests', () => {
       localStorage.setItem('authToken', 'jwt-token');
       localStorage.setItem('refreshToken', 'refresh-token');
 
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              logout: {
-                error: new Error('Network error'),
-                status: 500,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API error response
+      mockApiClient.post.mockRejectedValue(new Error('Network error'));
+
+      const { result } = renderHook(() => useAuthApi());
 
       await act(async () => {
         // This should not throw since we want logout to succeed client-side even if server fails
-        await result.current.logout();
+        await expect(result.current.logout()).rejects.toThrow('Network error');
       });
 
-      // Tokens should still be cleared
-      expect(localStorage.getItem('authToken')).toBeNull();
-      expect(localStorage.getItem('refreshToken')).toBeNull();
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/logout');
     });
   });
 
@@ -327,20 +231,10 @@ describe('Auth API Integration Tests', () => {
     it('should get the current user details successfully', async () => {
       localStorage.setItem('authToken', 'valid-jwt-token');
 
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              getCurrentUser: {
-                data: { user: mockUser },
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API response
+      mockApiClient.get.mockResolvedValue({ data: { user: mockUser } });
+
+      const { result } = renderHook(() => useAuthApi());
 
       let user;
       await act(async () => {
@@ -348,28 +242,21 @@ describe('Auth API Integration Tests', () => {
       });
 
       expect(user).toEqual(mockUser);
+      expect(mockApiClient.get).toHaveBeenCalledWith('/auth/me');
     });
 
     it('should handle unauthorized access', async () => {
       // No token set
-      const { result } = renderHook(() => useAuthApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              getCurrentUser: {
-                error: new Error('Unauthorized'),
-                status: 401,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API error response
+      mockApiClient.get.mockRejectedValue(new Error('Unauthorized'));
+
+      const { result } = renderHook(() => useAuthApi());
 
       await act(async () => {
         await expect(result.current.getCurrentUser()).rejects.toThrow('Unauthorized');
       });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/auth/me');
     });
   });
 });

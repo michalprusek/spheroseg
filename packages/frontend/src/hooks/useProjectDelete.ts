@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import logger from '@/utils/logger';
 
 export const useProjectDelete = () => {
@@ -25,7 +25,7 @@ export const useProjectDelete = () => {
       logger.info(`Project ${projectId} deleted successfully`);
     },
     onError: (error: unknown) => {
-      const message = error.response?.data?.message || t('project.deleteError');
+      const message = error.data?.message || t('project.deleteError');
       toast.error(message);
       logger.error('Failed to delete project:', error);
     },

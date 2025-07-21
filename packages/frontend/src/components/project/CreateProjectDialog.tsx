@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import {
   Dialog,
   DialogContent,
@@ -23,8 +23,7 @@ const formSchema = z.object({
   title: z
     .string()
     .min(1, { message: 'project.titleRequired' })
-    .trim()
-    .refine((val) => val.length > 0, { message: 'project.titleRequired' }),
+    .refine((val) => val.trim().length > 0, { message: 'project.titleRequired' }),
   description: z.string().optional(),
 });
 
@@ -80,10 +79,10 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ open, onClose
       logger.error('Error creating project:', error);
 
       // Show error message to user
-      if (error.response?.data?.message) {
+      if (error.data?.message) {
         form.setError('title', {
           type: 'manual',
-          message: error.response.data.message,
+          message: error.data.message,
         });
       } else {
         form.setError('title', {

@@ -104,39 +104,7 @@ router.post(
   }
 );
 
-/**
- * GET /api/diagnostics/health
- * Basic health check endpoint
- */
-router.get('/health', async (req: Request, res: Response) => {
-  try {
-    const { getPool } = await import('../db');
-    const pool = getPool();
-
-    // Test database connection
-    const dbResult = await pool.query('SELECT NOW()');
-
-    res.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      database: {
-        connected: true,
-        time: dbResult.rows[0].now,
-      },
-      uptime: process.uptime(),
-      memory: {
-        used: process.memoryUsage().heapUsed,
-        total: process.memoryUsage().heapTotal,
-      },
-    });
-  } catch (error) {
-    logger.error('Health check failed', { error });
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+// Health check endpoint removed - use /api/health instead
+// The main health endpoint provides comprehensive system health checks
 
 export default router;

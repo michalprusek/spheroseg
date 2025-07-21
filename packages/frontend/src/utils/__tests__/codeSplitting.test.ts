@@ -2,14 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { lazyWithRetry, prefetchComponent, createCodeSplitComponent } from '../codeSplitting';
 
-// Mock React.lazy
 vi.mock('react', async () => {
   const actual = await vi.importActual('react');
   return {
     ...actual,
     lazy: vi.fn((importFn) => {
       const Component = () => null;
-      (Component as unknown)._importFn = importFn;
+      (Component as any)._importFn = importFn;
       return Component;
     }),
   };
@@ -33,7 +32,7 @@ describe('codeSplitting', () => {
       const mockImport = vi.fn().mockResolvedValue({ default: () => null });
       const component = lazyWithRetry(mockImport);
 
-      expect(React.lazy as unknown).toHaveBeenCalled();
+      expect(vi.mocked(React.lazy)).toHaveBeenCalled();
       expect(component).toBeDefined();
     });
 
@@ -44,13 +43,14 @@ describe('codeSplitting', () => {
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce({ default: () => null });
 
-      const lazyFn = (React.lazy as unknown).mock.calls[0][0];
-
-      // Execute the lazy function with our mock import
+      // Call lazyWithRetry first to trigger React.lazy
       const component = lazyWithRetry(mockImport);
-      const importFn = (component as unknown)._importFn || lazyFn;
+      
+      // Now get the lazy function that was passed to React.lazy
+      const lazyFn = vi.mocked(React.lazy).mock.calls[0][0];
 
-      await importFn();
+      // Execute the lazy function
+      await lazyFn();
 
       // Should have been called 3 times (2 failures + 1 success)
       expect(mockImport).toHaveBeenCalledTimes(3);
@@ -60,8 +60,12 @@ describe('codeSplitting', () => {
       const mockImport = vi.fn().mockRejectedValue(new Error('Import failed'));
       const chunkName = 'test-chunk';
 
+      // Call lazyWithRetry first
       const component = lazyWithRetry(mockImport, { chunkName, retryAttempts: 1 });
-      const lazyFn = (React.lazy as unknown).mock.calls[0][0];
+      
+      // Get the lazy function - need to get the latest call
+      const calls = vi.mocked(React.lazy).mock.calls;
+      const lazyFn = calls[calls.length - 1][0];
 
       try {
         await lazyFn();
@@ -78,8 +82,13 @@ describe('codeSplitting', () => {
       localStorage.setItem('failedImports', JSON.stringify([chunkName]));
 
       const mockImport = vi.fn().mockRejectedValue(new Error('Import failed'));
+      
+      // Call lazyWithRetry first
       const component = lazyWithRetry(mockImport, { chunkName });
-      const lazyFn = (React.lazy as unknown).mock.calls[0][0];
+      
+      // Get the lazy function - need to get the latest call
+      const calls = vi.mocked(React.lazy).mock.calls;
+      const lazyFn = calls[calls.length - 1][0];
 
       try {
         await lazyFn();
@@ -133,7 +142,7 @@ describe('codeSplitting', () => {
       expect(result.Component).toBeDefined();
       expect(result.prefetch).toBeDefined();
       expect(result.preload).toBeDefined();
-      expect(React.lazy as unknown).toHaveBeenCalled();
+      expect(vi.mocked(React.lazy)).toHaveBeenCalled();
     });
 
     it('should provide prefetch function', async () => {
@@ -171,7 +180,7 @@ describe('codeSplitting', () => {
       });
 
       expect(SplitComponent).toBeDefined();
-      expect(React.lazy as unknown).toHaveBeenCalled();
+      expect(vi.mocked(React.lazy)).toHaveBeenCalled();
 
       // Verify component structure
       expect(SplitComponent.Component).toBeDefined();
@@ -184,8 +193,12 @@ describe('codeSplitting', () => {
         .fn()
         .mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve({ default: () => null }), 100)));
 
+      // Call lazyWithRetry first
       const component = lazyWithRetry(mockImport, { chunkName: 'perf-test' });
-      const lazyFn = (React.lazy as unknown).mock.calls[0][0];
+      
+      // Get the lazy function - need to get the latest call
+      const calls = vi.mocked(React.lazy).mock.calls;
+      const lazyFn = calls[calls.length - 1][0];
 
       const start = Date.now();
       await lazyFn();

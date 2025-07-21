@@ -1,6 +1,7 @@
 /**
- * Re-export API client from lib
+ * Re-export unified API client
+ * This file provides backward compatibility for imports using '@/api/apiClient'
  */
 
-export * from '@/lib/apiClient';
-export { default } from '@/lib/apiClient';
+export * from '@/services/api/client';
+export { default } from '@/services/api/client';

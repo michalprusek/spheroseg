@@ -5,7 +5,7 @@
  */
 import { useEffect, useState, useCallback } from 'react';
 import useSocketConnection from './useSocketConnection';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 export interface SegmentationUpdate {
   imageId: string;

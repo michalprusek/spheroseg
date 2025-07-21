@@ -13,7 +13,7 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     post: vi.fn(),
     put: vi.fn(),
@@ -38,7 +38,7 @@ vi.mock('@/contexts/LanguageContext', () => ({
 }));
 
 // Import the mocked modules
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 describe('ProjectImageProcessor Component', () => {
   const mockImage = {
@@ -97,7 +97,7 @@ describe('ProjectImageProcessor Component', () => {
     expect(button).toBeDisabled();
 
     // Check for loading spinner
-    const loadingIcon = document.querySelector('.lucide-loader-circle');
+    const loadingIcon = document.querySelector('.lucide-loader2');
     expect(loadingIcon).toBeInTheDocument();
     expect(loadingIcon).toHaveClass('animate-spin');
   });
@@ -122,7 +122,7 @@ describe('ProjectImageProcessor Component', () => {
     expect(button).toBeDisabled();
 
     // Check for check icon
-    const checkIcon = document.querySelector('.lucide-circle-check-big');
+    const checkIcon = document.querySelector('.lucide-check-circle');
     expect(checkIcon).toBeInTheDocument();
     expect(checkIcon).toHaveClass('text-green-500');
   });
@@ -146,7 +146,7 @@ describe('ProjectImageProcessor Component', () => {
     expect(button).toBeInTheDocument();
 
     // Check for alert icon
-    const alertIcon = document.querySelector('.lucide-triangle-alert');
+    const alertIcon = document.querySelector('.lucide-alert-triangle');
     expect(alertIcon).toBeInTheDocument();
     expect(alertIcon).toHaveClass('text-red-500');
   });
@@ -168,7 +168,7 @@ describe('ProjectImageProcessor Component', () => {
     fireEvent.click(button);
 
     // Check if API was called with correct parameters
-    expect(apiClient.post).toHaveBeenCalledWith(`/images/${mockImage.id}/segmentation`);
+    expect(apiClient.post).toHaveBeenCalledWith(`/api/images/${mockImage.id}/segmentation`);
 
     // Check if status change callback was called
     expect(mockOnStatusChange).toHaveBeenCalledWith(mockImage.id, 'processing');

@@ -2,8 +2,23 @@
  * Performance test utilities for optimizing test execution speed and reliability
  */
 
+import React from 'react';
 import { vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+
+// Type definitions
+export interface PerformanceMetrics {
+  average: number;
+  runs: number;
+  min: number;
+  max: number;
+}
+
+export interface CallHistory {
+  args: any[];
+  timestamp: number;
+  callCount: number;
+}
 
 // Performance tracking utilities
 export class TestPerformanceTracker {
@@ -37,8 +52,8 @@ export class TestPerformanceTracker {
     return times.length > 0 ? times.reduce((a, b) => a + b, 0) / times.length : 0;
   }
 
-  static getAllMetrics(): Record<string, { average: number; runs: number; min: number; max: number }> {
-    const results: Record<string, { average: number; runs: number; min: number; max: number }> = {};
+  static getAllMetrics(): Record<string, PerformanceMetrics> {
+    const results: Record<string, PerformanceMetrics> = {};
     
     this.metrics.forEach((times, testName) => {
       if (times.length > 0) {
@@ -97,7 +112,7 @@ export const createOptimizedComponent = <T extends Record<string, any>>(
   return getCachedMock(cachedKey, () => {
     return (props: Partial<T> = {}) => {
       const mergedProps = { ...defaultProps, ...props } as T;
-      return <ComponentClass {...mergedProps} />;
+      return React.createElement(ComponentClass, mergedProps);
     };
   });
 };

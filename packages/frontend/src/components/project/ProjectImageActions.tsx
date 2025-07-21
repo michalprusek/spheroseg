@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { ProjectImage, ImageStatus } from '@/types'; // Import ImageStatus
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import axios from 'axios';
 import { deleteImageFromDB } from '@/utils/indexedDBService';
 import cacheService from '@/services/unifiedCacheService';

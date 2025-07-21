@@ -14,6 +14,7 @@ import * as projectService from '../services/projectService';
 import type { ProjectResponse } from '../services/projectService';
 import { cacheControl, combineCacheStrategies } from '../middleware/cache';
 import cacheService from '../services/cacheService';
+import { apiCache, staleWhileRevalidate, conditionalCache, cacheStrategies } from '../middleware/advancedApiCache';
 
 const router: Router = express.Router();
 
@@ -80,12 +81,15 @@ const router: Router = express.Router();
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/',
-  authMiddleware,
-  combineCacheStrategies(cacheControl.short, cacheControl.etag),
-  validate(listProjectsSchema),
+  authMiddleware as any,
+  staleWhileRevalidate({
+    ...cacheStrategies.projectData,
+    varyBy: ['query'],
+    tags: ['projects', 'user']
+  }),
+  validate(listProjectsSchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const {
@@ -221,11 +225,10 @@ router.get(
  *       500:
  *         description: Internal server error or database schema error
  */
-// @ts-expect-error - Router middleware type mismatch with validate function
 router.post(
   '/',
-  authMiddleware,
-  validate(createProjectSchema),
+  authMiddleware as any,
+  validate(createProjectSchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { title, description } = req.body;
@@ -374,12 +377,11 @@ router.post(
  *       500:
  *         description: Internal server error or database schema error
  */
-// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/:id',
-  authMiddleware,
+  authMiddleware as any,
   combineCacheStrategies(cacheControl.short, cacheControl.etag),
-  validate(projectIdSchema),
+  validate(projectIdSchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { id: projectId } = req.params;
@@ -530,11 +532,10 @@ router.get(
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error - Router middleware type mismatch with validate function
 router.put(
   '/:id',
-  authMiddleware,
-  validate(updateProjectSchema),
+  authMiddleware as any,
+  validate(updateProjectSchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { id: projectId } = req.params;
@@ -554,7 +555,7 @@ router.put(
       }
 
       // Check if user has edit permission (owner or shared with 'edit' permission)
-      const hasEditPermission = project.is_owner || project.permission === 'edit';
+      const hasEditPermission = project.is_owner || (project as any).permission === 'edit';
       if (!hasEditPermission) {
         return res
           .status(403)
@@ -653,11 +654,10 @@ router.put(
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error - Router middleware type mismatch with validate function
 router.delete(
   '/:id',
-  authMiddleware,
-  validate(deleteProjectSchema),
+  authMiddleware as any,
+  validate(deleteProjectSchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const { id: projectId } = req.params;
@@ -754,10 +754,9 @@ router.delete(
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/:id/images',
-  authMiddleware,
+  authMiddleware as any,
   combineCacheStrategies(cacheControl.short, cacheControl.etag),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;

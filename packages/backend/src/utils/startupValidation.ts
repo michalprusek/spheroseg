@@ -5,6 +5,9 @@
  * Fails fast if critical issues are detected.
  */
 
+import { execSync } from 'child_process';
+import * as redis from 'redis';
+
 import config from '../config';
 import logger from './logger';
 import pool from '../db';
@@ -204,7 +207,6 @@ function validateFileSystem(errors: string[], warnings: string[]): void {
 
   // Check available space (warning only)
   try {
-    const { execSync } = require('child_process');
     const dfOutput = execSync(`df -B1 ${uploadDir}`).toString();
     const lines = dfOutput.trim().split('\n');
     if (lines.length > 1) {
@@ -224,9 +226,8 @@ function validateFileSystem(errors: string[], warnings: string[]): void {
 /**
  * Validate Redis connection
  */
-async function validateRedisConnection(errors: string[], warnings: string[]): Promise<void> {
+async function validateRedisConnection(_errors: string[], warnings: string[]): Promise<void> {
   try {
-    const redis = require('redis');
     const client = redis.createClient({
       url: config.redis.url,
     });

@@ -69,6 +69,8 @@ router.get(
 
       // Handle range requests for partial downloads
       const range = req.headers.range;
+      let stream: fs.ReadStream;
+      
       if (range) {
         const parts = range.replace(/bytes=/, '').split('-');
         const start = parseInt(parts[0], 10);
@@ -80,34 +82,21 @@ router.get(
         res.setHeader('Content-Length', chunksize.toString());
 
         // Create read stream with range
-        const stream = fs.createReadStream(filePath, { start, end });
-
-        // Stream the file
-        stream.on('error', (error) => {
-          logger.error('Error streaming file', { imageId, error });
-          if (!res.headersSent) {
-            res.status(500).json({ error: 'Failed to stream file' });
-          }
-        });
-
-        stream.pipe(res);
+        stream = fs.createReadStream(filePath, { start, end });
       } else {
         // Stream entire file
-        const stream = fs.createReadStream(filePath, {
+        stream = fs.createReadStream(filePath, {
           highWaterMark: 64 * 1024, // 64KB chunks
         });
-
-        // Handle stream errors
-        stream.on('error', (error) => {
-          logger.error('Error streaming file', { imageId, error });
-          if (!res.headersSent) {
-            res.status(500).json({ error: 'Failed to stream file' });
-          }
-        });
-
-        // Stream the file
-        stream.pipe(res);
       }
+
+      // Handle stream errors
+      stream.on('error', (error) => {
+        logger.error('Error streaming file', { imageId, error });
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Failed to stream file' });
+        }
+      });
 
       // Log successful download
       stream.on('end', () => {
@@ -117,6 +106,9 @@ router.get(
           userId,
         });
       });
+
+      // Stream the file
+      stream.pipe(res);
     } catch (error) {
       logger.error('Error in download endpoint', { imageId, error });
       next(error);

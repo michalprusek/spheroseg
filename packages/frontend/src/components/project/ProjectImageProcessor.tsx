@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext'; // Add useLanguage imp
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, AlertTriangle, Play } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import apiClient from '@/lib/apiClient'; // Import apiClient
+import apiClient from '@/services/api/client'; // Import apiClient
 import axios from 'axios'; // Import axios for error checking
 import logger from '@/utils/logger';
 
@@ -45,7 +45,7 @@ const ProjectImageProcessor: React.FC<ProjectImageProcessorProps> = ({ image, on
       logger.error('Error triggering segmentation:', error);
       let message = t('imageProcessor.segmentationStartError') || 'Failed to start segmentation.';
       if (axios.isAxiosError(error) && error.response) {
-        message = error.response.data?.message || message;
+        message = error.data?.message || message;
       } else if (error instanceof Error) {
         message = error.message;
       }
@@ -83,7 +83,7 @@ const ProjectImageProcessor: React.FC<ProjectImageProcessorProps> = ({ image, on
       logger.error('Error saving segmentation result:', error);
       let message = t('imageProcessor.resultSaveError') || 'Failed to save result.';
       if (axios.isAxiosError(error) && error.response) {
-        message = error.response.data?.message || message;
+        message = error.data?.message || message;
       } else if (error instanceof Error) {
         message = error.message;
       }

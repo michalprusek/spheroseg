@@ -3,7 +3,7 @@ import { fetchQueueStatus, clearQueueStatusCache } from '@/api/segmentationQueue
 import { useSocket } from '@/hooks/useSocketConnection';
 import { formatTime } from '@/utils/dateUtils';
 import { X } from 'lucide-react';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { toast } from '@/hooks/useToast';
 import { FixedSizeList as List } from 'react-window';
 import logger from '@/utils/logger';

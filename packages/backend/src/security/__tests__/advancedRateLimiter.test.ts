@@ -26,13 +26,23 @@ jest.mock('../../config', () => ({
 }));
 
 // Mock logger
-jest.mock('../../utils/logger', () => ({
-  default: {
-    info: jest.fn(),
-    warn: jest.fn(),
+jest.mock('../../utils/logger', () => {
+  const mockLogger = {
     error: jest.fn(),
-  },
-}));
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    http: jest.fn(),
+    silly: jest.fn(),
+  };
+
+  return {
+    __esModule: true,
+    default: mockLogger,
+    createLogger: jest.fn().mockReturnValue(mockLogger),
+  };
+});
 
 describe('HierarchicalRateLimiter', () => {
   let app: express.Application;

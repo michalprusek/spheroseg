@@ -1,19 +1,20 @@
+import React from 'react';
 import { screen } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { StatusBarV2 } from '../StatusBarV2';
 import { EditMode } from '@/pages/segmentation/hooks/segmentation';
 import '@testing-library/jest-dom';
-import { resetAllMocks } from '../../../../../../shared/test-utils/componentTestUtils';
 import { defaultStatusBarProps, renderStatusBar, verifyStatusBarValues } from './statusBarTestUtils';
 
 // Mock dependencies
 vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({ t: (key: string) => key }),
+  LanguageProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 describe('StatusBarV2', () => {
   beforeEach(() => {
-    resetAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders without crashing', () => {

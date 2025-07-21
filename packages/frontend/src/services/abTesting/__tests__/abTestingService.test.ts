@@ -18,7 +18,14 @@ describe('ABTestingService', () => {
   let mockUser: User;
 
   beforeEach(() => {
-    service = new ABTestingService();
+    // Clear all storage before creating service
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    service = new ABTestingService({
+      analyticsEndpoint: 'https://analytics.test.com',
+      apiKey: 'test-api-key'
+    });
     mockUser = {
       id: 'test-user-123',
       email: 'test@example.com',
@@ -29,15 +36,16 @@ describe('ABTestingService', () => {
       },
     };
 
-    // Clear localStorage
-    localStorage.clear();
-
     // Mock console methods
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
+    // Clean up the service
+    if (service && typeof service.destroy === 'function') {
+      service.destroy();
+    }
     vi.restoreAllMocks();
   });
 
@@ -322,7 +330,7 @@ describe('ABTestingService', () => {
       const variant = service.getVariant('tracking-test');
       service.trackEvent('button_click', { buttonId: 'cta' });
 
-      const events = service.getEvents();
+      const events = service.getEvents().filter(e => e.eventName !== 'experiment_assigned');
       expect(events).toHaveLength(1);
       expect(events[0]).toMatchObject({
         eventName: 'button_click',
@@ -353,7 +361,7 @@ describe('ABTestingService', () => {
       service.getVariant('conversion-test');
       service.trackConversion('purchase', 99.99);
 
-      const events = service.getEvents();
+      const events = service.getEvents().filter(e => e.eventName !== 'experiment_assigned');
       expect(events).toHaveLength(1);
       expect(events[0]).toMatchObject({
         eventName: 'conversion',

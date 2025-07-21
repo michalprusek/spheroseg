@@ -38,7 +38,7 @@ export function getContainerLimits(): ContainerLimits {
       }
     }
   } catch (error) {
-    logger.debug('Could not detect container environment:', error);
+    logger.debug('Could not detect container environment:', { error: error instanceof Error ? error.message : String(error) });
   }
 
   // Get memory limits from cgroup v1
@@ -57,7 +57,7 @@ export function getContainerLimits(): ContainerLimits {
       }
     }
   } catch (error) {
-    logger.debug('Could not read cgroup v1 memory limit:', error);
+    logger.debug('Could not read cgroup v1 memory limit:', { error: error instanceof Error ? error.message : String(error) });
   }
 
   // Get memory limits from cgroup v2
@@ -75,7 +75,7 @@ export function getContainerLimits(): ContainerLimits {
       }
     }
   } catch (error) {
-    logger.debug('Could not read cgroup v2 memory limit:', error);
+    logger.debug('Could not read cgroup v2 memory limit:', { error: error instanceof Error ? error.message : String(error) });
   }
 
   // Docker Desktop on macOS/Windows may not expose cgroup limits
@@ -130,5 +130,29 @@ export async function getContainerInfo(): Promise<{
     memoryLimit,
     memoryUsage: currentUsage,
     memoryUsagePercentage: (currentUsage / memoryLimit) * 100,
+  };
+}
+
+/**
+ * Get container memory information (synchronous version for health checks)
+ */
+export function getContainerMemoryInfo(): {
+  used: number;
+  limit: number;
+  percentage: number;
+} {
+  const containerLimits = getContainerLimits();
+
+  // Get current memory usage
+  const memUsage = process.memoryUsage();
+  const currentUsage = memUsage.rss; // Resident Set Size
+
+  // Default to OS total memory if not in container
+  const memoryLimit = containerLimits.memoryLimitBytes || totalmem();
+
+  return {
+    used: currentUsage,
+    limit: memoryLimit,
+    percentage: (currentUsage / memoryLimit) * 100,
   };
 }

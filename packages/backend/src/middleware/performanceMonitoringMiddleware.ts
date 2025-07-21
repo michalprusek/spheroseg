@@ -23,7 +23,8 @@ export function performanceMonitoringMiddleware() {
 
     // Track response
     const originalEnd = res.end;
-    res.end = function (this: Response, ...args: unknown[]) {
+    // Override with proper typing to match Express's overloaded end() method
+    (res as any).end = function(...args: any[]) {
       // Calculate duration
       const duration = Date.now() - startTime;
 
@@ -34,7 +35,7 @@ export function performanceMonitoringMiddleware() {
       const userId = req.user?.id || req.user?.userId;
 
       // Record metric
-      performanceMonitoring.recordApiResponseTimeMetric(
+      performanceMonitoring.recordApiResponseTime(
         route,
         req.method,
         res.statusCode,
@@ -43,7 +44,7 @@ export function performanceMonitoringMiddleware() {
       );
 
       // Call original end method
-      return originalEnd.apply(this, args);
+      return originalEnd.call(this, args[0], args[1], args[2]);
     };
 
     next();

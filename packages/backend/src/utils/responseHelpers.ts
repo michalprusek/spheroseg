@@ -166,10 +166,10 @@ export function sendPaginated<T>(
 /**
  * Wrap an async route handler to automatically handle errors
  */
-export function asyncHandler<T = void>(
-  fn: (req: Request, res: Response) => Promise<T>
+export function asyncHandler<T = any, TRequest extends Request = Request>(
+  fn: (req: TRequest, res: Response) => Promise<T>
 ) {
-  return async (req: Request, res: Response) => {
+  return async (req: TRequest, res: Response) => {
     try {
       await fn(req, res);
     } catch (error) {

@@ -1,4 +1,4 @@
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import { ImageData, SegmentationData, Polygon } from './types';
 import { loadImageDirectly } from '@/pages/segmentation/utils/directImageLoader';
 import { createLogger } from '@/lib/logger';

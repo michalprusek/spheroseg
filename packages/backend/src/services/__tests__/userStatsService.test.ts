@@ -3,12 +3,23 @@ import { UserStatsService } from '../userStatsService';
 import logger from '../../utils/logger';
 
 // Mock the logger
-jest.mock('../../utils/logger', () => ({
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-}));
+jest.mock('../../utils/logger', () => {
+  const mockLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    http: jest.fn(),
+    silly: jest.fn(),
+  };
+
+  return {
+    __esModule: true,
+    default: mockLogger,
+    createLogger: jest.fn().mockReturnValue(mockLogger),
+  };
+});
 
 describe('UserStatsService', () => {
   let userStatsService: UserStatsService;

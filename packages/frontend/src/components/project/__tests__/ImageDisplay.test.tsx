@@ -78,7 +78,7 @@ vi.mock('@/utils/indexedDBService', () => ({
   storeImageBlob: vi.fn(),
 }));
 
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     get: vi.fn(),
   },

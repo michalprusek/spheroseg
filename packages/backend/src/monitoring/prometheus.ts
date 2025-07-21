@@ -212,7 +212,7 @@ export function prometheusMiddleware(req: Request, res: Response, next: NextFunc
 }
 
 // Metrics endpoint handler
-export function metricsHandler(req: Request, res: Response) {
+export function metricsHandler(_req: Request, res: Response) {
   res.set('Content-Type', register.contentType);
   register
     .metrics()

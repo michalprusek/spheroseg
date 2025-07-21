@@ -2,7 +2,7 @@
  * Utility for loading images directly from the database
  */
 
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 /**
  * Attempts to load image data directly from the database

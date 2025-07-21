@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 // Import jwt-decode, which is now installed
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import apiClient from '@/lib/apiClient'; // Import apiClient
+import apiClient from '@/services/api/client'; // Import apiClient
 import axios from 'axios'; // Import axios for direct requests and error checking
 import { Language } from './LanguageContext'; // Import Language type
 import logger from '@/utils/logger'; // Import centralized logger
@@ -349,13 +349,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 });
               } catch (error) {
                 // Don't retry if token is invalid (401 Unauthorized)
-                if (axios.isAxiosError(error) && error.response?.status === 401) {
+                if (axios.isAxiosError(error) && error.status === 401) {
                   logger.warn('Token is invalid (401), not retrying auth verification');
                   throw error;
                 }
 
                 // Don't retry if user is forbidden (403)
-                if (axios.isAxiosError(error) && error.response?.status === 403) {
+                if (axios.isAxiosError(error) && error.status === 403) {
                   logger.warn('User is forbidden (403), not retrying auth verification');
                   throw error;
                 }
@@ -632,7 +632,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               throw new Error('Request timed out. The server may be slow or unreachable.');
             }
 
-            if (axios.isAxiosError(error) && error.response?.status === 401) {
+            if (axios.isAxiosError(error) && error.status === 401) {
               logger.warn('Invalid credentials provided');
               throw error;
             }
@@ -653,8 +653,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Special handling for auth errors
         if (axios.isAxiosError(error)) {
-          const status = error.response?.status;
-          const errorMessage = error.response?.data?.message || error.message;
+          const status = error.status;
+          const errorMessage = error.data?.message || error.message;
 
           if (status === 401) {
             // Invalid credentials (wrong password)
@@ -767,7 +767,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   });
                 } catch (error) {
                   // Don't retry if user already exists (409 Conflict)
-                  if (axios.isAxiosError(error) && error.response?.status === 409) {
+                  if (axios.isAxiosError(error) && error.status === 409) {
                     logger.warn('User already exists, not retrying', { email });
                     throw error;
                   }
@@ -827,6 +827,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem('spheroseg_theme_last_user');
     sessionStorage.removeItem('spheroseg_profile_last_user');
     sessionStorage.removeItem('spheroseg_last_auth_error');
+
+    // Clear user-specific caches to prevent data leakage between users
+    try {
+      const { deleteByTag } = await import('@/services/unifiedCacheService');
+      await deleteByTag('user-data');
+      await deleteByTag('user-statistics');
+      await deleteByTag('dashboard-data');
+      
+      // Clear legacy cache keys that might not be user-specific
+      const keysToRemove = [
+        'spheroseg_recent_activities',
+        'spheroseg_recent_activities_timestamp',
+      ];
+      
+      // Also clear any user-specific activity cache keys
+      if (user?.id) {
+        keysToRemove.push(
+          `spheroseg_recent_activities_${user.id}`,
+          `spheroseg_recent_activities_timestamp_${user.id}`
+        );
+      }
+      
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          logger.warn(`Failed to remove cache key: ${key}`, e);
+        }
+      });
+      
+      logger.info('Cleared user-specific caches');
+    } catch (error) {
+      logger.error('Failed to clear user caches:', error);
+    }
 
     // Call the backend logout endpoint to invalidate the refresh token
     if (refreshToken) {

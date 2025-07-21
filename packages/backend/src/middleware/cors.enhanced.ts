@@ -71,7 +71,7 @@ const ADDITIONAL_ORIGINS = process.env['CORS_ALLOWED_ORIGINS']
 /**
  * Validate origin against whitelist
  */
-function isOriginAllowed(origin: string | undefined): OriginPattern | null {
+export function isOriginAllowed(origin: string | undefined): OriginPattern | null {
   if (!origin) {
     return null;
   }
@@ -102,7 +102,7 @@ function isOriginAllowed(origin: string | undefined): OriginPattern | null {
 /**
  * Validate origin URL structure
  */
-function validateOriginStructure(origin: string): boolean {
+export function validateOriginStructure(origin: string): boolean {
   try {
     const url = new URL(origin);
     
@@ -152,7 +152,7 @@ function logCorsRequest(req: Request, origin: string | undefined, allowed: boole
 /**
  * Dynamic CORS options based on request
  */
-const corsOptionsDelegate: CorsOptionsDelegate = (req: Request, callback) => {
+const corsOptionsDelegate: CorsOptionsDelegate = (req: any, callback: any) => {
   const origin = req.header('Origin');
   
   // Validate origin structure
@@ -283,7 +283,7 @@ export function validateCorsConfiguration(): void {
   }
   
   if (errors.length > 0) {
-    errors.forEach(error => logger.error('CORS configuration error:', error));
+    errors.forEach(error => logger.error('CORS configuration error:', { error }));
     if (config.env === 'production') {
       throw new Error('Invalid CORS configuration for production');
     }

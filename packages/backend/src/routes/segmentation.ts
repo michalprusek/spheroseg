@@ -19,6 +19,7 @@ import {
 } from '../validators/segmentationValidators';
 import { SEGMENTATION_STATUS } from '../constants/segmentationStatus';
 import { broadcastSegmentationUpdate } from '../services/socketService';
+import { apiCache, staleWhileRevalidate, cacheStrategies } from '../middleware/advancedApiCache';
 
 // Type definitions
 interface QueuedImageDetail {
@@ -86,11 +87,14 @@ const _triggerBatchSchema = z.object({
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/images/:id/segmentation',
-  authMiddleware,
-  validate(getSegmentationSchema),
+  authMiddleware as any,
+  staleWhileRevalidate({
+    ...cacheStrategies.segmentationResults,
+    tags: ['segmentation', 'image']
+  }),
+  validate(getSegmentationSchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const imageId = req.params["id"];
@@ -249,11 +253,10 @@ const triggerSingleWithPrioritySchema = z.object({
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.post(
   '/images/:id/segmentation',
-  authMiddleware,
-  validate(triggerSingleWithPrioritySchema),
+  authMiddleware as any,
+  validate(triggerSingleWithPrioritySchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const imageId = req.params["id"];
@@ -539,10 +542,9 @@ const authOrInternalMiddleware = async (
 
 // PUT /api/images/:id/segmentation - Update segmentation result (e.g., after manual edit or completion)
 // This might be called by the segmentation service itself upon completion, or by the frontend after editing.
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.put(
   '/images/:id/segmentation',
-  authOrInternalMiddleware,
+  authOrInternalMiddleware as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Log incoming request first
     logger.info('PUT /images/:id/segmentation raw request', {
@@ -834,11 +836,10 @@ router.put(
  *       500:
  *         description: Internal server error
  */
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.post(
   '/projects/:projectId/segmentation/batch-trigger',
-  authMiddleware,
-  validate(triggerProjectBatchSegmentationSchema),
+  authMiddleware as any,
+  validate(triggerProjectBatchSegmentationSchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     // projectId is now validated by the middleware
@@ -924,10 +925,9 @@ router.post(
 );
 
 // GET /api/segmentation/queue - Get current segmentation queue status
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/queue',
-  authMiddleware,
+  authMiddleware as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const queueStatus = await getSegmentationQueueStatus();
@@ -949,10 +949,9 @@ router.get(
 );
 
 // GET /api/queue-status/:projectId - Get segmentation queue status for a specific project
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/queue-status/:projectId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     const userId = req.user?.userId;
     const { projectId } = req.params;
@@ -1057,10 +1056,9 @@ router.get(
 // Removed mock-queue-status endpoint - Instead, use the real queue status endpoint at /api/segmentation/queue
 
 // GET /api/segmentation/jobs/:projectId - Get segmentation jobs for a project
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/jobs/:projectId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       // TODO: Implement logic - verify project access, query jobs
@@ -1072,10 +1070,9 @@ router.get(
 );
 
 // GET /api/segmentation/job/:jobId - Get details of a specific segmentation job
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.get(
   '/job/:jobId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       // TODO: Implement logic - verify job access, query job details
@@ -1087,11 +1084,10 @@ router.get(
 );
 
 // POST /api/segmentation/job - Create a new segmentation job
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.post(
   '/job',
-  authMiddleware,
-  validate(createSegmentationJobSchema),
+  authMiddleware as any,
+  validate(createSegmentationJobSchema) as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const { imageIds, priority = 1, parameters = {} } = req.body;
@@ -1111,9 +1107,7 @@ router.post(
       const taskIds = [];
       for (const imageId of imageIds) {
         // Get image details
-        const imageQuery = await pool
-          .getPool()
-          .query('SELECT id, storage_path FROM images WHERE id = $1', [imageId]);
+        const imageQuery = await pool.query('SELECT id, storage_path FROM images WHERE id = $1', [imageId]);
 
         if (imageQuery.rows.length === 0) {
           logger.warn('Image not found for segmentation job', { imageId });
@@ -1145,20 +1139,18 @@ router.post(
 );
 
 // DELETE /api/segmentation/job/:jobId - Delete a segmentation job
-// @ts-expect-error - Router middleware type mismatch with validate function Keep ignore for now
 router.delete(
   '/job/:jobId',
-  authMiddleware,
+  authMiddleware as any,
   async (_req: AuthenticatedRequest, _res: Response, _next: NextFunction) => {
     // ... handler code ...
   }
 );
 
 // POST /api/segmentation/:imageId/resegment - Trigger resegmentation for an image
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769: No overload matches this call.
 router.post(
   '/:imageId/resegment',
-  authMiddleware,
+  authMiddleware as any,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.userId;
     const imageId = req.params["imageId"];
@@ -1268,10 +1260,9 @@ router.post(
 );
 
 // Fetch all polygons for a specific image
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769
 router.get(
   '/:imageId/polygons',
-  authMiddleware,
+  authMiddleware as any,
   async (req: AuthenticatedRequest, _res: Response) => {
     const { imageId: _imageId } = req.params;
     // ... existing code ...
@@ -1279,10 +1270,9 @@ router.get(
 );
 
 // Save or update polygons for a specific image
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769
 router.post(
   '/:imageId/polygons',
-  authMiddleware,
+  authMiddleware as any,
   /* validatePolygonData, */ async (req: AuthenticatedRequest, _res: Response) => {
     // TODO: Uncomment validatePolygonData when implemented
     const { imageId: _imageId } = req.params;
@@ -1292,10 +1282,9 @@ router.post(
 );
 
 // Clear all polygons for a specific image
-// @ts-expect-error - Router middleware type mismatch with validate function TS2769
 router.delete(
   '/:imageId/polygons',
-  authMiddleware,
+  authMiddleware as any,
   async (req: AuthenticatedRequest, _res: Response) => {
     const { imageId: _imageId } = req.params;
     // ... existing code ...
@@ -1409,7 +1398,6 @@ router.post(
 );
 
 // GET /api/segmentation/queue-status - Get the current status of the segmentation queue
-// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/queue-status',
   authMiddleware,
@@ -1468,7 +1456,6 @@ router.get(
 );
 
 // GET /api/segmentation/queue-status/:projectId - Get queue status filtered by project
-// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/queue-status/:projectId',
   authMiddleware,
@@ -1562,7 +1549,6 @@ router.get(
 );
 
 // GET /api/segmentation/queue - Get the current segmentation queue
-// @ts-expect-error - Router middleware type mismatch with validate function
 router.get(
   '/queue',
   authMiddleware,

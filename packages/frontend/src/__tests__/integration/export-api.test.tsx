@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { MockApiClientProvider } from '../../lib/__mocks__/enhanced/apiClient';
 import { useExportApi } from '../../hooks/api/useExportApi';
 import { ExportFormat, ExportOptions } from '@spheroseg/types';
+import apiClient from '@/services/api/client';
 
 // Mock export data
 const mockExportOptions: ExportOptions = {
@@ -29,9 +29,16 @@ const mockExportDownloadUrl = {
   expiresAt: '2023-06-15T11:00:00Z',
 };
 
+// Mock saveAs from file-saver
+vi.mock('file-saver', () => ({
+  saveAs: vi.fn(),
+}));
+
 describe('Export API Integration Tests', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    // Reset all mocks before each test
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -41,44 +48,28 @@ describe('Export API Integration Tests', () => {
 
   describe('startExport', () => {
     it('should start an export job successfully', async () => {
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              startExport: {
-                data: mockExportJob,
-                status: 202,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
+      // Mock the API response
+      vi.mocked(apiClient.post).mockResolvedValueOnce({
+        data: mockExportJob,
+        status: 202,
       });
+
+      const { result } = renderHook(() => useExportApi());
 
       let job;
       await act(async () => {
         job = await result.current.startExport('project-1', mockExportOptions);
       });
 
+      expect(apiClient.post).toHaveBeenCalledWith('/projects/project-1/export/start', mockExportOptions);
       expect(job).toEqual(mockExportJob);
     });
 
     it('should handle validation errors', async () => {
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              startExport: {
-                error: new Error('Invalid export format'),
-                status: 400,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API to reject with an error
+      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Invalid export format'));
+
+      const { result } = renderHook(() => useExportApi());
 
       await act(async () => {
         // @ts-expect-error - Intentionally passing invalid format
@@ -89,29 +80,23 @@ describe('Export API Integration Tests', () => {
           }),
         ).rejects.toThrow('Invalid export format');
       });
+
+      expect(apiClient.post).toHaveBeenCalled();
     });
 
     it('should handle project not found error', async () => {
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              startExport: {
-                error: new Error('Project not found'),
-                status: 404,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API to reject with an error
+      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Project not found'));
+
+      const { result } = renderHook(() => useExportApi());
 
       await act(async () => {
         await expect(result.current.startExport('non-existent', mockExportOptions)).rejects.toThrow(
           'Project not found',
         );
       });
+
+      expect(apiClient.post).toHaveBeenCalledWith('/projects/non-existent/export/start', mockExportOptions);
     });
   });
 
@@ -124,50 +109,36 @@ describe('Export API Integration Tests', () => {
         updatedAt: '2023-06-15T10:05:00Z',
       };
 
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              getExportStatus: {
-                data: inProgressJob,
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
+      // Mock the API response
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: inProgressJob,
+        status: 200,
       });
+
+      const { result } = renderHook(() => useExportApi());
 
       let status;
       await act(async () => {
         status = await result.current.getExportStatus('project-1', 'export-job-1');
       });
 
+      expect(apiClient.get).toHaveBeenCalledWith('/projects/project-1/export/export-job-1/status');
       expect(status).toEqual(inProgressJob);
     });
 
     it('should handle job not found error', async () => {
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              getExportStatus: {
-                error: new Error('Export job not found'),
-                status: 404,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API to reject with an error
+      vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('Export job not found'));
+
+      const { result } = renderHook(() => useExportApi());
 
       await act(async () => {
         await expect(result.current.getExportStatus('project-1', 'non-existent')).rejects.toThrow(
           'Export job not found',
         );
       });
+
+      expect(apiClient.get).toHaveBeenCalledWith('/projects/project-1/export/non-existent/status');
     });
   });
 
@@ -180,24 +151,18 @@ describe('Export API Integration Tests', () => {
         updatedAt: '2023-06-15T10:10:00Z',
       };
 
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              getExportStatus: {
-                data: completedJob,
-                status: 200,
-              },
-              getExportDownloadUrl: {
-                data: mockExportDownloadUrl,
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API responses
+      vi.mocked(apiClient.get)
+        .mockResolvedValueOnce({
+          data: completedJob,
+          status: 200,
+        })
+        .mockResolvedValueOnce({
+          data: mockExportDownloadUrl,
+          status: 200,
+        });
+
+      const { result } = renderHook(() => useExportApi());
 
       // First check status
       let status;
@@ -211,6 +176,7 @@ describe('Export API Integration Tests', () => {
       await act(async () => {
         downloadUrl = await result.current.getExportDownloadUrl('project-1', 'export-job-1');
       });
+      expect(apiClient.get).toHaveBeenNthCalledWith(2, '/projects/project-1/export/export-job-1/download-url');
       expect(downloadUrl).toEqual(mockExportDownloadUrl);
     });
 
@@ -222,24 +188,15 @@ describe('Export API Integration Tests', () => {
         updatedAt: '2023-06-15T10:05:00Z',
       };
 
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              getExportStatus: {
-                data: inProgressJob,
-                status: 200,
-              },
-              getExportDownloadUrl: {
-                error: new Error('Export job is not yet complete'),
-                status: 400,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API responses
+      vi.mocked(apiClient.get)
+        .mockResolvedValueOnce({
+          data: inProgressJob,
+          status: 200,
+        })
+        .mockRejectedValueOnce(new Error('Export job is not yet complete'));
+
+      const { result } = renderHook(() => useExportApi());
 
       // First check status
       let status;
@@ -265,50 +222,36 @@ describe('Export API Integration Tests', () => {
         updatedAt: '2023-06-15T10:07:00Z',
       };
 
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              cancelExport: {
-                data: cancelledJob,
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
+      // Mock the API response
+      vi.mocked(apiClient.post).mockResolvedValueOnce({
+        data: cancelledJob,
+        status: 200,
       });
+
+      const { result } = renderHook(() => useExportApi());
 
       let job;
       await act(async () => {
         job = await result.current.cancelExport('project-1', 'export-job-1');
       });
 
+      expect(apiClient.post).toHaveBeenCalledWith('/projects/project-1/export/export-job-1/cancel');
       expect(job).toEqual(cancelledJob);
     });
 
     it('should handle job already completed error', async () => {
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              cancelExport: {
-                error: new Error('Cannot cancel a completed export job'),
-                status: 400,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
-      });
+      // Mock the API to reject with an error
+      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Cannot cancel a completed export job'));
+
+      const { result } = renderHook(() => useExportApi());
 
       await act(async () => {
         await expect(result.current.cancelExport('project-1', 'export-job-1')).rejects.toThrow(
           'Cannot cancel a completed export job',
         );
       });
+
+      expect(apiClient.post).toHaveBeenCalledWith('/projects/project-1/export/export-job-1/cancel');
     });
   });
 
@@ -337,26 +280,20 @@ describe('Export API Integration Tests', () => {
         },
       ];
 
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              getExportFormats: {
-                data: mockFormats,
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
+      // Mock the API response
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: mockFormats,
+        status: 200,
       });
+
+      const { result } = renderHook(() => useExportApi());
 
       let formats;
       await act(async () => {
         formats = await result.current.getExportFormats();
       });
 
+      expect(apiClient.get).toHaveBeenCalledWith('/export/formats');
       expect(formats).toEqual(mockFormats);
     });
   });
@@ -384,50 +321,38 @@ describe('Export API Integration Tests', () => {
         },
       ];
 
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              getProjectExportHistory: {
-                data: mockHistory,
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
+      // Mock the API response
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: mockHistory,
+        status: 200,
       });
+
+      const { result } = renderHook(() => useExportApi());
 
       let history;
       await act(async () => {
         history = await result.current.getProjectExportHistory('project-1');
       });
 
+      expect(apiClient.get).toHaveBeenCalledWith('/projects/project-1/export/history');
       expect(history).toEqual(mockHistory);
     });
 
     it('should handle empty export history', async () => {
-      const { result } = renderHook(() => useExportApi(), {
-        wrapper: ({ children }) => (
-          <MockApiClientProvider
-            mockResponses={{
-              getProjectExportHistory: {
-                data: [],
-                status: 200,
-              },
-            }}
-          >
-            {children}
-          </MockApiClientProvider>
-        ),
+      // Mock the API response with empty array
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: [],
+        status: 200,
       });
+
+      const { result } = renderHook(() => useExportApi());
 
       let history;
       await act(async () => {
         history = await result.current.getProjectExportHistory('project-1');
       });
 
+      expect(apiClient.get).toHaveBeenCalledWith('/projects/project-1/export/history');
       expect(history).toEqual([]);
     });
   });

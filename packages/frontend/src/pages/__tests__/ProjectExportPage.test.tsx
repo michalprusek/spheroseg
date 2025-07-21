@@ -5,7 +5,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 
 // Mock radix-optimized library
 vi.mock('@/lib/radix-optimized', () => ({
@@ -47,7 +47,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 // Mock dependencies
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: {
     get: vi.fn(),
   },

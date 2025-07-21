@@ -24,7 +24,7 @@ const mockApi = {
 };
 
 // Mock the API client
-vi.mock('@/lib/apiClient', () => ({
+vi.mock('@/services/api/client', () => ({
   default: mockApi,
 }));
 

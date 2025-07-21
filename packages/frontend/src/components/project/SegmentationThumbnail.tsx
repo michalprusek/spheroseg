@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/services/api/client';
 import {
   Point as ApiPoint,
   Polygon as ApiPolygon,

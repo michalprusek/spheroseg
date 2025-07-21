@@ -1,5 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { loadImage, getImageDimensions, applyImageFilters, resizeImage, cropImage, rotateImage } from '../imageLoader';
+import { 
+  loadImage, 
+  getImageDimensions, 
+  loadImageFromUrl,
+  loadImageFromFile,
+  checkImageExists,
+  addCacheBuster,
+  generatePossibleImageUrls,
+  tryMultipleImageUrls,
+  loadImageFromApi,
+  universalImageLoader,
+  imageToCanvas,
+  getImageData
+} from '../imageLoader';
 
 // Mock logger
 vi.mock('@/lib/logger', () => ({
@@ -11,6 +24,22 @@ vi.mock('@/lib/logger', () => ({
   })),
 }));
 
+// Mock toast
+vi.mock('sonner', () => ({
+  toast: {
+    info: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+// Mock API client
+vi.mock('@/services/api/client', () => ({
+  default: {
+    get: vi.fn(),
+  },
+}));
+
 // Mock Image class
 class MockImage {
   onload: () => void = () => {};
@@ -18,6 +47,9 @@ class MockImage {
   src: string = '';
   width: number = 0;
   height: number = 0;
+  naturalWidth: number = 800;
+  naturalHeight: number = 600;
+  crossOrigin: string = '';
 
   constructor() {
     // Schedule onload callback asynchronously
@@ -29,33 +61,49 @@ class MockImage {
   }
 }
 
+// Mock FileReader
+class MockFileReader {
+  onload: ((event: ProgressEvent<FileReader>) => void) | null = null;
+  onerror: ((event: ProgressEvent<FileReader>) => void) | null = null;
+  result: string | ArrayBuffer | null = null;
+
+  readAsDataURL(file: File) {
+    setTimeout(() => {
+      this.result = 'data:image/png;base64,mockDataUrl';
+      if (this.onload) {
+        this.onload({ target: { result: this.result } } as any);
+      }
+    }, 10);
+  }
+}
+
 // Mock canvas API
 const mockContext = {
   drawImage: vi.fn(),
-  getImageData: vi.fn(),
-  putImageData: vi.fn(),
-  translate: vi.fn(),
-  rotate: vi.fn(),
-  scale: vi.fn(),
-  filter: '',
-  save: vi.fn(),
-  restore: vi.fn(),
+  getImageData: vi.fn().mockReturnValue({
+    data: new Uint8ClampedArray(100),
+    width: 10,
+    height: 10,
+  }),
 };
 
 const mockCanvas = {
   getContext: vi.fn().mockReturnValue(mockContext),
   width: 0,
   height: 0,
-  toDataURL: vi.fn().mockReturnValue('data:image/png;base64,mockDataUrl'),
 };
 
 // Mock document.createElement
+const originalCreateElement = document.createElement;
 document.createElement = vi.fn((tagName: string) => {
   if (tagName === 'canvas') {
     return mockCanvas as unknown as HTMLCanvasElement;
   }
-  return {} as any;
+  return originalCreateElement.call(document, tagName);
 });
+
+// Mock fetch
+global.fetch = vi.fn();
 
 describe('Image Loader Utilities', () => {
   beforeEach(() => {
@@ -64,12 +112,12 @@ describe('Image Loader Utilities', () => {
     // Reset global Image constructor
     // @ts-expect-error: Override global Image constructor with mock for testing
     global.Image = MockImage;
+    
+    // @ts-expect-error: Override global FileReader constructor with mock for testing
+    global.FileReader = MockFileReader;
 
-    // Reset mocks
-    mockContext.drawImage.mockClear();
-    mockContext.getImageData.mockClear();
-    mockContext.putImageData.mockClear();
-    mockCanvas.toDataURL.mockClear();
+    // Reset fetch mock
+    (global.fetch as any).mockReset();
   });
 
   describe('loadImage', () => {
@@ -84,7 +132,7 @@ describe('Image Loader Utilities', () => {
       expect(image).toBeDefined();
       expect(image.width).toBe(800);
       expect(image.height).toBe(600);
-      expect(image.src).toBe(url);
+      expect(image.src).toContain(url);
     });
 
     it('handles image load error', async () => {
@@ -95,6 +143,7 @@ describe('Image Loader Utilities', () => {
         src: string = '';
         width: number = 0;
         height: number = 0;
+        crossOrigin: string = '';
 
         constructor() {
           // Simulate error
@@ -108,6 +157,15 @@ describe('Image Loader Utilities', () => {
 
       // Should reject with error
       await expect(loadImage(url)).rejects.toThrow();
+    });
+
+    it('loads an image from File', async () => {
+      const file = new File([''], 'test.png', { type: 'image/png' });
+
+      const image = await loadImage(file);
+
+      expect(image).toBeDefined();
+      expect(image.src).toBe('data:image/png;base64,mockDataUrl');
     });
   });
 
@@ -126,6 +184,7 @@ describe('Image Loader Utilities', () => {
         onload: () => void = () => {};
         onerror: (event?: Event | string) => void = () => {};
         src: string = '';
+        crossOrigin: string = '';
 
         constructor() {
           // Simulate error
@@ -137,227 +196,151 @@ describe('Image Loader Utilities', () => {
 
       const url = 'https://example.com/invalid.jpg';
 
-      // Should reject with error
-      await expect(getImageDimensions(url)).rejects.toThrow();
+      // Should return null on error
+      const dimensions = await getImageDimensions(url);
+      expect(dimensions).toBeNull();
     });
   });
 
-  describe('applyImageFilters', () => {
-    it('applies filters to an image', async () => {
-      // Mock image data
-      const mockImageData = {
-        data: new Uint8ClampedArray(100),
-        width: 10,
-        height: 10,
-      };
-      mockContext.getImageData.mockReturnValue(mockImageData);
-
-      const image = await loadImage('https://example.com/test.jpg');
-
-      // Apply filters
-      const filters = {
-        brightness: 120,
-        contrast: 110,
-        saturation: 90,
-      };
-
-      await applyImageFilters(image, filters);
-
-      // Should set filter on context
-      expect(mockContext.filter).toContain('brightness(120%)');
-      expect(mockContext.filter).toContain('contrast(110%)');
-      expect(mockContext.filter).toContain('saturate(90%)');
-
-      // Should draw image on canvas
-      expect(mockContext.drawImage).toHaveBeenCalledWith(image, 0, 0);
-
-      // Should return data URL
-      expect(mockCanvas.toDataURL).toHaveBeenCalled();
+  describe('addCacheBuster', () => {
+    it('adds cache buster to URL without query params', () => {
+      const url = 'https://example.com/image.jpg';
+      const result = addCacheBuster(url);
+      
+      expect(result).toMatch(/\?_cb=\d+$/);
     });
 
-    it('uses default values for missing filters', async () => {
-      const image = await loadImage('https://example.com/test.jpg');
-
-      // Apply partial filters
-      const filters = {
-        brightness: 120,
-        // contrast and saturation missing
-      };
-
-      await applyImageFilters(image, filters);
-
-      // Should set filter with defaults for missing values
-      expect(mockContext.filter).toContain('brightness(120%)');
-      expect(mockContext.filter).toContain('contrast(100%)'); // Default
-      expect(mockContext.filter).toContain('saturate(100%)'); // Default
-    });
-
-    it('returns original image if no filters are applied', async () => {
-      const image = await loadImage('https://example.com/test.jpg');
-
-      // Apply default filters
-      const filters = {
-        brightness: 100,
-        contrast: 100,
-        saturation: 100,
-      };
-
-      const result = await applyImageFilters(image, filters);
-
-      // Should return original image since no actual filtering is needed
-      expect(result).toBe(image);
+    it('adds cache buster to URL with existing query params', () => {
+      const url = 'https://example.com/image.jpg?size=large';
+      const result = addCacheBuster(url);
+      
+      expect(result).toMatch(/&_cb=\d+$/);
     });
   });
 
-  describe('resizeImage', () => {
-    it('resizes an image', async () => {
-      const image = await loadImage('https://example.com/test.jpg');
+  describe('checkImageExists', () => {
+    it('returns true for existing image', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+      });
 
-      await resizeImage(image, 400, 300);
-
-      // Should set canvas dimensions
-      expect(mockCanvas.width).toBe(400);
-      expect(mockCanvas.height).toBe(300);
-
-      // Should draw resized image
-      expect(mockContext.drawImage).toHaveBeenCalledWith(image, 0, 0, 400, 300);
-
-      // Should return data URL
-      expect(mockCanvas.toDataURL).toHaveBeenCalled();
-    });
-
-    it('maintains aspect ratio when only width is specified', async () => {
-      const image = await loadImage('https://example.com/test.jpg');
-
-      await resizeImage(image, 400); // Only width specified
-
-      // Should calculate height to maintain aspect ratio
-      const expectedHeight = Math.round(400 * (600 / 800)); // 300
-
-      expect(mockCanvas.width).toBe(400);
-      expect(mockCanvas.height).toBe(expectedHeight);
-    });
-
-    it('maintains aspect ratio when only height is specified', async () => {
-      const image = await loadImage('https://example.com/test.jpg');
-
-      await resizeImage(image, undefined, 300); // Only height specified
-
-      // Should calculate width to maintain aspect ratio
-      const expectedWidth = Math.round(300 * (800 / 600)); // 400
-
-      expect(mockCanvas.width).toBe(expectedWidth);
-      expect(mockCanvas.height).toBe(300);
-    });
-  });
-
-  describe('cropImage', () => {
-    it('crops an image to specified region', async () => {
-      const image = await loadImage('https://example.com/test.jpg');
-
-      // Crop region
-      const cropRegion = {
-        x: 100,
-        y: 100,
-        width: 200,
-        height: 200,
-      };
-
-      await cropImage(image, cropRegion);
-
-      // Should set canvas dimensions to crop size
-      expect(mockCanvas.width).toBe(cropRegion.width);
-      expect(mockCanvas.height).toBe(cropRegion.height);
-
-      // Should draw cropped region
-      expect(mockContext.drawImage).toHaveBeenCalledWith(
-        image,
-        cropRegion.x,
-        cropRegion.y,
-        cropRegion.width,
-        cropRegion.height,
-        0,
-        0,
-        cropRegion.width,
-        cropRegion.height,
+      const exists = await checkImageExists('https://example.com/image.jpg');
+      
+      expect(exists).toBe(true);
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://example.com/image.jpg',
+        expect.objectContaining({
+          method: 'HEAD',
+          cache: 'no-cache',
+        })
       );
     });
 
-    it('handles invalid crop regions gracefully', async () => {
-      const image = await loadImage('https://example.com/test.jpg');
+    it('returns false for non-existing image', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: false,
+      });
 
-      // Crop region outside image bounds
-      const invalidRegion = {
-        x: 900, // Beyond image width
-        y: 100,
-        width: 200,
-        height: 200,
-      };
+      const exists = await checkImageExists('https://example.com/missing.jpg');
+      
+      expect(exists).toBe(false);
+    });
 
-      // Should adjust crop region to fit within image
-      await cropImage(image, invalidRegion);
+    it('returns false on fetch error', async () => {
+      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
 
-      // x should be clamped to image width
-      expect(mockContext.drawImage).toHaveBeenCalledWith(
-        image,
-        expect.any(Number),
-        expect.any(Number),
-        expect.any(Number),
-        expect.any(Number),
-        0,
-        0,
-        expect.any(Number),
-        expect.any(Number),
-      );
-
-      // First x parameter should be clamped
-      const actualX = mockContext.drawImage.mock.calls[0][1];
-      expect(actualX).toBeLessThan(image.width);
+      const exists = await checkImageExists('https://example.com/error.jpg');
+      
+      expect(exists).toBe(false);
     });
   });
 
-  describe('rotateImage', () => {
-    it('rotates an image by specified angle', async () => {
-      const image = await loadImage('https://example.com/test.jpg');
+  describe('generatePossibleImageUrls', () => {
+    it('generates multiple URL variations', () => {
+      const originalUrl = 'https://example.com/uploads/image.jpg';
+      const projectId = 'proj123';
+      const imageId = 'img456';
 
-      // Rotate 90 degrees
-      await rotateImage(image, 90);
+      const urls = generatePossibleImageUrls(originalUrl, projectId, imageId);
 
-      // Should set save context state
-      expect(mockContext.save).toHaveBeenCalled();
-
-      // Should translate and rotate
-      expect(mockContext.translate).toHaveBeenCalled();
-      expect(mockContext.rotate).toHaveBeenCalledWith(Math.PI / 2); // 90 degrees in radians
-
-      // Should restore context
-      expect(mockContext.restore).toHaveBeenCalled();
+      expect(urls).toContain(originalUrl);
+      expect(urls).toContain('/uploads/image.jpg');
+      expect(urls).toContain('/api/uploads/image.jpg');
+      expect(urls).toContain('/uploads/proj123/image.jpg');
+      expect(urls).toContain('/uploads/proj123/img456.png');
     });
 
-    it('swaps width and height for 90/270 degree rotations', async () => {
-      const image = await loadImage('https://example.com/test.jpg');
+    it('adds extensions for files without extension', () => {
+      const originalUrl = 'https://example.com/uploads/image';
+      
+      const urls = generatePossibleImageUrls(originalUrl);
 
-      // Original dimensions: 800x600
+      expect(urls).toContain('https://example.com/uploads/image.png');
+      expect(urls).toContain('https://example.com/uploads/image.jpg');
+      expect(urls).toContain('https://example.com/uploads/image.jpeg');
+    });
+  });
 
-      // Rotate 90 degrees
-      await rotateImage(image, 90);
+  describe('tryMultipleImageUrls', () => {
+    it('tries multiple URLs and returns first successful', async () => {
+      const urls = [
+        'https://example.com/fail1.jpg',
+        'https://example.com/fail2.jpg',
+        'https://example.com/success.jpg',
+        'https://example.com/unused.jpg',
+      ];
 
-      // Should swap dimensions
-      expect(mockCanvas.width).toBe(600); // Was height
-      expect(mockCanvas.height).toBe(800); // Was width
+      // Mock fetch responses
+      (global.fetch as any)
+        .mockResolvedValueOnce({ ok: false }) // fail1
+        .mockResolvedValueOnce({ ok: false }) // fail2
+        .mockResolvedValueOnce({ ok: true });  // success
+
+      const result = await tryMultipleImageUrls(urls);
+
+      expect(result).toEqual({
+        url: 'https://example.com/success.jpg',
+        width: 800,
+        height: 600,
+      });
     });
 
-    it('maintains original dimensions for 180 degree rotation', async () => {
+    it('returns null if all URLs fail', async () => {
+      const urls = [
+        'https://example.com/fail1.jpg',
+        'https://example.com/fail2.jpg',
+      ];
+
+      (global.fetch as any).mockResolvedValue({ ok: false });
+
+      const result = await tryMultipleImageUrls(urls);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('imageToCanvas', () => {
+    it('converts image to canvas', async () => {
       const image = await loadImage('https://example.com/test.jpg');
+      
+      const canvas = imageToCanvas(image);
 
-      // Original dimensions: 800x600
-
-      // Rotate 180 degrees
-      await rotateImage(image, 180);
-
-      // Should maintain dimensions
       expect(mockCanvas.width).toBe(800);
       expect(mockCanvas.height).toBe(600);
+      expect(mockContext.drawImage).toHaveBeenCalledWith(image, 0, 0);
+    });
+  });
+
+  describe('getImageData', () => {
+    it('gets image data from image', async () => {
+      const image = await loadImage('https://example.com/test.jpg');
+      
+      const imageData = getImageData(image);
+
+      expect(imageData).toBeDefined();
+      expect(imageData?.width).toBe(10);
+      expect(imageData?.height).toBe(10);
+      expect(mockContext.getImageData).toHaveBeenCalled();
     });
   });
 });

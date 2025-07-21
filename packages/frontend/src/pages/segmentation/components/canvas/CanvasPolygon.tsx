@@ -9,7 +9,7 @@ import {
   getPolygonFillColor,
   getPolygonStrokeWidth,
   findRelatedHoles,
-} from '../../../../../shared/utils/CanvasPolygonUtils';
+} from './utils/canvasPolygonUtils';
 
 // Constants remain the same for now, but remove zoom-dependent ones if unused
 // const VERTEX_RENDER_ZOOM_THRESHOLD = 1.5; // This logic needs revisiting

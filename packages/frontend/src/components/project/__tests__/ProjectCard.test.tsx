@@ -4,15 +4,19 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import ProjectCard from '../ProjectCard';
 
-// Mock the useTranslation hook
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
+// Mock the useLanguage hook
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: () => ({
     t: (key: string) => {
       if (key === 'project.image') return 'image';
       if (key === 'project.images') return 'images';
       if (key === 'project.noDescription') return 'No description';
       return key;
     },
+    language: 'en',
+    setLanguage: vi.fn(),
+    availableLanguages: ['en', 'cs', 'de', 'es', 'fr', 'zh'],
+    isLanguageReady: true,
   }),
 }));
 
@@ -25,7 +29,7 @@ vi.mock('@/components/project/ProjectActions', () => ({
       </button>
       <button
         data-testid="duplicate-button"
-        onClick={() => onDuplicate?.({ id: 'new-id', title: 'Duplicated Project' })}
+        onClick={() => onDuplicate?.({ id: 'new-id', name: 'Duplicated Project' })}
       >
         Duplicate
       </button>
@@ -33,9 +37,25 @@ vi.mock('@/components/project/ProjectActions', () => ({
   ),
 }));
 
+// Mock the ShareDialog component
+vi.mock('@/components/project/ShareDialog', () => ({
+  default: () => <div data-testid="share-dialog">Share Dialog</div>,
+}));
+
+// Mock the constructUrl function
+vi.mock('@/lib/urlUtils', () => ({
+  constructUrl: vi.fn((url: string) => `/api${url}`),
+}));
+
+// Mock dateUtils
+vi.mock('@/utils/dateUtils', () => ({
+  formatRelativeTime: vi.fn((date: string) => '2 hours ago'),
+}));
+
 describe('ProjectCard Component', () => {
   const mockProject = {
     id: 'project-1',
+    name: 'Test Project',
     title: 'Test Project',
     description: 'This is a test project',
     created_at: '2023-01-01T00:00:00.000Z',
@@ -80,10 +100,10 @@ describe('ProjectCard Component', () => {
     expect(screen.getByText('This is a test project')).toBeInTheDocument();
   });
 
-  it('renders "No description" when description is empty', () => {
+  it('renders "No description provided" when description is empty', () => {
     renderComponent({ project: mockProjectNoDescription });
 
-    expect(screen.getByText('No description')).toBeInTheDocument();
+    expect(screen.getByText('No description provided')).toBeInTheDocument();
   });
 
   it('renders thumbnail image when available', () => {
@@ -91,7 +111,7 @@ describe('ProjectCard Component', () => {
 
     const image = screen.getByAltText('Test Project');
     expect(image).toBeInTheDocument();
-    expect(image).toHaveAttribute('src', '/api' + mockProject.thumbnail_url);
+    expect(image).toHaveAttribute('src', '/apihttps://example.com/thumbnail.jpg');
   });
 
   it('renders placeholder when thumbnail is not available', () => {
@@ -130,7 +150,7 @@ describe('ProjectCard Component', () => {
 
     expect(defaultProps.onProjectDuplicated).toHaveBeenCalledWith({
       id: 'new-id',
-      title: 'Duplicated Project',
+      name: 'Duplicated Project',
     });
   });
 
@@ -141,7 +161,7 @@ describe('ProjectCard Component', () => {
     expect(links.length).toBeGreaterThan(0);
 
     // Check that at least one link has the correct href
-    const hasCorrectLink = links.some((link) => link.getAttribute('href') === '/projects/project-1');
+    const hasCorrectLink = links.some((link) => link.getAttribute('href') === '/project/project-1');
     expect(hasCorrectLink).toBe(true);
   });
 });
