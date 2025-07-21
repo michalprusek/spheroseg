@@ -201,8 +201,26 @@ export function useUnifiedCache<T = unknown>(options: UseCacheOptions<T>): UseCa
  * Hook for caching API responses
  */
 export function useApiCache<T = unknown>(endpoint: string, options?: Partial<UseCacheOptions<T>>) {
+  // Get current user ID from localStorage to make cache user-specific
+  const getUserId = () => {
+    try {
+      const userStr = localStorage.getItem('spheroseg_user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.id || 'anonymous';
+      }
+    } catch (error) {
+      logger.debug('Could not parse user from localStorage');
+    }
+    return 'anonymous';
+  };
+
+  // Include user ID in cache key for user-specific endpoints
+  const cacheKey = endpoint.includes('/me/') || endpoint.includes('user-stats') 
+    ? ['api', endpoint, getUserId()]
+    : ['api', endpoint];
   return useUnifiedCache<T>({
-    key: ['api', endpoint],
+    key: cacheKey,
     fetcher: async () => {
       try {
         const response = await apiClient.get<T>(endpoint);

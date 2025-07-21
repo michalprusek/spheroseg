@@ -76,9 +76,9 @@ interface UseRecentActivityReturn {
   clearCache: () => void;
 }
 
-// Cache key for localStorage
-const ACTIVITY_CACHE_KEY = 'spheroseg_recent_activities';
-const ACTIVITY_CACHE_TIMESTAMP_KEY = 'spheroseg_recent_activities_timestamp';
+// Cache key for localStorage - make it user-specific
+const getActivityCacheKey = (userId?: string) => `spheroseg_recent_activities_${userId || 'anonymous'}`;
+const getActivityCacheTimestampKey = (userId?: string) => `spheroseg_recent_activities_timestamp_${userId || 'anonymous'}`;
 
 /**
  * Hook for fetching recent user activities
@@ -130,13 +130,15 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
   // Function to save activities to cache
   const saveToCache = useCallback((data: ActivityItem[]) => {
     try {
-      localStorage.setItem(ACTIVITY_CACHE_KEY, JSON.stringify(data));
-      localStorage.setItem(ACTIVITY_CACHE_TIMESTAMP_KEY, Date.now().toString());
-      logger.debug('Saved activities to cache', { count: data.length });
+      const cacheKey = getActivityCacheKey(user?.id);
+      const timestampKey = getActivityCacheTimestampKey(user?.id);
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+      localStorage.setItem(timestampKey, Date.now().toString());
+      logger.debug('Saved activities to cache', { count: data.length, userId: user?.id });
     } catch (err) {
       logger.warn('Failed to save activities to cache', { error: err });
     }
-  }, []);
+  }, [user?.id]);
 
   // Function to load activities from cache
   const loadFromCache = useCallback((): {
@@ -144,8 +146,10 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
     timestamp: number;
   } => {
     try {
-      const cachedData = localStorage.getItem(ACTIVITY_CACHE_KEY);
-      const cachedTimestamp = localStorage.getItem(ACTIVITY_CACHE_TIMESTAMP_KEY);
+      const cacheKey = getActivityCacheKey(user?.id);
+      const timestampKey = getActivityCacheTimestampKey(user?.id);
+      const cachedData = localStorage.getItem(cacheKey);
+      const cachedTimestamp = localStorage.getItem(timestampKey);
 
       if (cachedData && cachedTimestamp) {
         const timestamp = parseInt(cachedTimestamp, 10);
@@ -153,6 +157,7 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
         logger.debug('Loaded activities from cache', {
           count: data.length,
           timestamp,
+          userId: user?.id,
         });
         return { data, timestamp };
       }
@@ -161,18 +166,20 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
     }
 
     return { data: null, timestamp: 0 };
-  }, []);
+  }, [user?.id]);
 
   // Function to clear cache
   const clearCache = useCallback(() => {
     try {
-      localStorage.removeItem(ACTIVITY_CACHE_KEY);
-      localStorage.removeItem(ACTIVITY_CACHE_TIMESTAMP_KEY);
-      logger.debug('Cleared activities cache');
+      const cacheKey = getActivityCacheKey(user?.id);
+      const timestampKey = getActivityCacheTimestampKey(user?.id);
+      localStorage.removeItem(cacheKey);
+      localStorage.removeItem(timestampKey);
+      logger.debug('Cleared activities cache', { userId: user?.id });
     } catch (err) {
       logger.warn('Failed to clear activities cache', { error: err });
     }
-  }, []);
+  }, [user?.id]);
 
   // Function to fetch activities from API
   const fetchActivities = useCallback(async (): Promise<void> => {
